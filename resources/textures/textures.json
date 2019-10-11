@@ -1,0 +1,22 @@
+{
+	"textures" : {
+		"enemies" : {
+		},
+		"fonts" : {
+			"test-bitmap" : "test.png",
+			"04b-bitmap" : "04b.png",
+			"pixel1-bitmap" : "pixelfont1.png"
+		},
+		 "gui": {
+			 "button-unhover" : "GUIButton.png",
+			 "button-hover" : "GUIButton-hover.png"
+		},
+		"hud" : {
+		},
+		"game" : {
+		},
+		"players" : {
+		},
+		"container" : "container.jpg"
+	}
+}

@@ -1,0 +1,53 @@
+package MightyLibrary.util;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+
+
+public abstract class FileMethods {
+    public static boolean copy(File source, File dest) {
+        try (InputStream sourceFile = new FileInputStream(source);
+             OutputStream destinationFile = new FileOutputStream(dest)) {
+            // Lecture par segment de 0.5Mo
+            byte[] buffer = new byte[512 * 1024];
+            int nbLecture;
+            while ((nbLecture = sourceFile.read(buffer)) != -1){
+                destinationFile.write(buffer, 0, nbLecture);
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+            return false; // Erreur
+        }
+        return true; // Résultat OK
+    }
+
+    public static boolean copy(String source, String dest) {
+        return copy(new File(source), new File(dest));
+    }
+
+    public static String readFileAsString(String filename){
+        StringBuilder source = new StringBuilder();
+
+        BufferedReader reader;
+        Exception exception = null;
+
+        try {
+            FileInputStream in = new FileInputStream(filename);
+            reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
+
+            String line;
+            while((line = reader.readLine()) != null) {
+                source.append(line).append('\n');
+            }
+
+            reader.close();
+
+            in.close();
+
+        } catch (Exception e) {
+            return "error";
+        }
+
+        return source.toString();
+    }
+}
