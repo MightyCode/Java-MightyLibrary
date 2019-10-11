@@ -174,7 +174,7 @@ public class Window{
             }
 
             if (timer.getDuration() - lastSecond >= SECOND) {
-                if(OpengGl.admin) glfwSetWindowTitle(wParams.windowId, "OPEN GL | FPS:" + frames + "; TPS:" + ticks);
+                if(Main.admin) glfwSetWindowTitle(wParams.windowId, "OPEN GL | FPS:" + frames + "; TPS:" + ticks);
                 ticks = frames = 0;
                 lastSecond += SECOND;
             }
