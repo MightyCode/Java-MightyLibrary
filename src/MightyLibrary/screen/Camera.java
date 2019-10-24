@@ -14,7 +14,7 @@ public class Camera {
     private Matrix4f projection, view;
     public Vector3f camPos;
     private Vector3f camFront, camUp;
-    private FloatBuffer projectionf, viewf;
+    private FloatBuffer projectionBuffer, viewBuffer;
 
     public static Vector3f speed;
 
@@ -28,8 +28,8 @@ public class Camera {
 
         projection = new Matrix4f();
         view = new Matrix4f();
-        projectionf = BufferUtils.createFloatBuffer(16);
-        viewf = BufferUtils.createFloatBuffer(16);
+        projectionBuffer = BufferUtils.createFloatBuffer(16);
+        viewBuffer = BufferUtils.createFloatBuffer(16);
 
         setViewAngle(fov);
         camFront = new Vector3f(0.0f, 0.0f, -1.0f);
@@ -42,8 +42,8 @@ public class Camera {
     }
 
     public void setToCursor(){
-        float offsetX = (manContainer.mouseManager.pos.x - manContainer.mouseManager.oldPos.x) * sensitivity;
-        float offsetY = (-manContainer.mouseManager.pos.y + manContainer.mouseManager.oldPos.y) * sensitivity;
+        float offsetX = (manContainer.mouseManager.posX() - manContainer.mouseManager.oldPosX()) * sensitivity;
+        float offsetY = (-manContainer.mouseManager.posY() + manContainer.mouseManager.oldPosY()) * sensitivity;
 
         yaw += offsetX;
         pitch += offsetY;
@@ -68,12 +68,12 @@ public class Camera {
     public void updateView(){
         view.identity();
         view.lookAt(camPos, camPos.add(camFront, new Vector3f()), camUp);
-        viewf = view.get(viewf);
+        viewBuffer = view.get(viewBuffer);
     }
 
     public Camera setViewAngle(float fov){
         projection.perspective(fov, manContainer.wParams.ratio, 0.01f, 1000f);
-        projectionf = projection.get(projectionf);
+        projectionBuffer = projection.get(projectionBuffer);
         return this;
     }
 
@@ -98,11 +98,11 @@ public class Camera {
     }
 
     public FloatBuffer getProjection(){
-        return projectionf;
+        return projectionBuffer;
     }
 
     public FloatBuffer getView(){
-        return viewf;
+        return viewBuffer;
     }
 
 

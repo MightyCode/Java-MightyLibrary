@@ -24,11 +24,13 @@ public class MouseManager {
     private final boolean[] state = new boolean[MOUSE_BUTTONS];
     private final boolean[] oldState = new boolean[MOUSE_BUTTONS];
 
-    public Vector2f pos;
-    public Vector2f oldPos;
+    private Vector2f pos;
+    private Vector2f oldPos;
 
-    public Vector2f relativePos;
-    public Vector2f relativeOldPos;
+    private Vector2f relativePos;
+    private Vector2f relativeOldPos;
+
+    private boolean displayCursor;
 
     /**
      * Mouse manager class.
@@ -46,6 +48,7 @@ public class MouseManager {
         Arrays.fill(oldState, false);
         mouseUpdate();
         dispose();
+
     }
 
     public boolean getButton(int buttonId){
@@ -82,7 +85,12 @@ public class MouseManager {
         return pos.y;
     }
 
-    public Vector2f getPos(){return new Vector2f(pos);}
+    public Vector2f pos(){return new Vector2f(pos);}
+
+    public float oldPosX() { return oldPos.x;}
+    public float oldPosY() { return oldPos.y;}
+
+    public Vector2f oldPos() { return new Vector2f(oldPos);}
 
     public void dispose(){
         oldPos.set(pos);
@@ -98,9 +106,18 @@ public class MouseManager {
         }
     }
 
+    public void invertCursorState(){
+        setCursor(!displayCursor);
+    }
+
     // Glfw settings
     public void setCursor(boolean state){
-        if(state)glfwSetInputMode(wParams.windowId, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        this.displayCursor = state;
+        glfwSetCursor();
+    }
+
+    private void glfwSetCursor(){
+        if(displayCursor)glfwSetInputMode(wParams.windowId, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         else glfwSetInputMode(wParams.windowId, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 }

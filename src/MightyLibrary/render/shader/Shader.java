@@ -31,14 +31,14 @@ public class Shader extends ObjectId{
             bf = FileMethods.readFileAsString(PATH + vertexSource);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.print("Error path :" + PATH + vertexSource + " not found");
+            System.err.print("Error path :" + PATH + vertexSource + " not found");
         }
 
         glShaderSource(vShader, bf);
         glCompileShader(vShader);
         if(!glGetShaderInfoLog(vShader).equals("")){
-            System.out.println("Shader path " + PATH + vertexSource);
-            System.out.println("Error from Vertex:\n" + glGetShaderInfoLog(vShader));
+            System.err.println("Shader path " + PATH + vertexSource);
+            System.err.println("Error from Vertex:\n" + glGetShaderInfoLog(vShader));
         }
 
         int fShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -46,21 +46,21 @@ public class Shader extends ObjectId{
             bf = FileMethods.readFileAsString(PATH + fragmentSource);
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.print("Error path :" + PATH + fragmentSource + " not found");
+            System.err.print("Error path :" + PATH + fragmentSource + " not found");
         }
 
         glShaderSource(fShader,bf);
         glCompileShader(fShader);
         if(!glGetShaderInfoLog(fShader).equals("")){
-            System.out.println("Shader path " + PATH + fragmentSource);
-            System.out.println("Error from Fragment:\n" + glGetShaderInfoLog(fShader));
+            System.err.println("Shader path " + PATH + fragmentSource);
+            System.err.println("Error from Fragment:\n" + glGetShaderInfoLog(fShader));
         }
 
         shaderProgram = glCreateProgram();
         glAttachShader(shaderProgram,vShader);
         glAttachShader(shaderProgram,fShader);
         glLinkProgram(shaderProgram);
-        if(!glGetShaderInfoLog(shaderProgram).equals("")) System.out.println("Error from Shader Program:\n" + glGetShaderInfoLog(shaderProgram));
+        if(!glGetShaderInfoLog(shaderProgram).equals("")) System.err.println("Error from Shader Program:\n" + glGetShaderInfoLog(shaderProgram));
 
         glDeleteShader(vShader);
         glDeleteShader(fShader);
@@ -74,6 +74,7 @@ public class Shader extends ObjectId{
     }
 
     public Shader addLink(String valueName){
+        use();
         valuesLink.put(valueName, glGetUniformLocation(shaderProgram, valueName));
         return this;
     }

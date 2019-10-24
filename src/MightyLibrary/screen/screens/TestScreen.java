@@ -21,6 +21,8 @@ public class TestScreen extends Screen {
     private FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 
     private Shape sBlock;
+    private Shape hudBar;
+    // Texture
     private Id block;
 
     private final int lineSize = 8;
@@ -44,24 +46,36 @@ public class TestScreen extends Screen {
         World.lightColor = new Vector3f(0.3f, 0.3f, 0.5f);
         World.lightStrength = 0.8f;
 
-        sBlock = new Shape(manContainer.shadManager, "texture3D", false, false);
+        sBlock = new Shape(manContainer.shadManager, "textureLight3D", false, false);
+        // Texture
         block = manContainer.texManager.getIdShaderFromString("container");
 
         // init cube
-        float bVertex[] = createCrates(592);
+        float vertex0[] = createCrates(592);
 
         sBlock.setReading(new int[]{3, 2, 3});
-        sBlock.setVbo(bVertex);
+        sBlock.setVbo(vertex0);
 
         model.identity();
         model.get(fb);
         manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("model", fb);
         //fb.clear();
 
-        manContainer.shadManager.getShader(sBlock.getShaderId()).addLink("worldColor");
-        manContainer.shadManager.getShader(sBlock.getShaderId()).addLink("lightColor");
-        manContainer.shadManager.getShader(sBlock.getShaderId()).addLink("lightPos");
-        manContainer.shadManager.getShader(sBlock.getShaderId()).addLink("viewPos");
+        hudBar = new Shape(manContainer.shadManager, "colorShape2D", false, true);
+        float vertex1[] = new float[]{
+            -1f, -0.75f,
+            -1f, -1f,
+            -0.75f, -1f,
+
+            -1f, -0.75f,
+            -0.75f, -0.75f,
+            -0.75f, -1f
+        };
+        manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 0.5f);
+
+        hudBar.setReading(new int[]{2});
+        hudBar.setVbo(vertex1);
+
 
         manContainer.mouseManager.setCursor(false);
         Render.setClearColor(World.lightColor.x, World.lightColor.y, World.lightColor.z,1f);
@@ -102,8 +116,10 @@ public class TestScreen extends Screen {
         if(manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_SHIFT)) {
             manContainer.cam.setY(manContainer.cam.camPos.y -= Camera.speed.y);
         }
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_ESCAPE)) {
-           manContainer.screenManager.exit();
+
+        if(manContainer.keyManager.keyPressed(GLFW_KEY_ESCAPE)) {
+            manContainer.mouseManager.invertCursorState();
+           //manContainer.screenManager.exit();
         }
 
         World.calcLightColor();
@@ -127,20 +143,7 @@ public class TestScreen extends Screen {
         manContainer.texManager.bind(block);
 
         sBlock.display();
-
-        /*sBlock.applyDimension();
-        sBlock.bind();
-
-        for(int i = 0; i < 32; i++) {
-            model.identity();
-            model.translate(i-16,0,0-16);
-            for(int a = 0; a < 32; a++) {
-                model.translate(0,0,1);
-                model.get(fb);
-                manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("model", fb);
-                sBlock.draw();
-            }
-        }*/
+        hudBar.display();
     }
 
     public void unload(){

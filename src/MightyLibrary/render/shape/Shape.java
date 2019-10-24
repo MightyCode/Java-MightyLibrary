@@ -112,7 +112,7 @@ public class Shape{
     public Shape setEbo(int[] indices){
         bind();
         this.indices = indices;
-        if (!useEbo) System.out.print(">(Shape.java) Providing EBO without using EBO !");
+        if (!useEbo) System.err.print(">(Shape.java) Providing EBO without using EBO !");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, this.indices, GL_STATIC_DRAW);

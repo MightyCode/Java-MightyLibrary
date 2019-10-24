@@ -18,7 +18,6 @@ public class Light extends Shape{
 
     public Light(ShaderManager shadManager, Vector3f position, float size){
         super(shadManager, "colorShape3D", false, false);
-        shadManager.getShader(shaderId).addLink("Color");
 
         float[] table = { -size, -size, -size,   size, -size, -size,   size,  size, -size,   size,  size, -size,   -size,  size, -size,   -size, -size, -size,
 
@@ -54,10 +53,10 @@ public class Light extends Shape{
     }
 
     public void updateColor(){
-        shadManager.getShader(shaderId).glUniform("Color", color.x, color.y, color.z);
+        shadManager.getShader(shaderId).glUniform("color", color.x, color.y, color.z);
     }
 
-    public void setIntancity(Vector3f intensity){
+    public void setIntensity(Vector3f intensity){
         this.intensity = intensity;
     }
 

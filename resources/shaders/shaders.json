@@ -5,34 +5,63 @@
 				"colorShape2DV.glsl",
 				"colorShape2DF.glsl"
 			],
-			"mode" : ["none"]
+			"mode" : ["none"],
+			"links": [
+				"color"
+			]
 		},
+
 		"colorShape3D": {
 			"files": [
 				"colorShape3DV.glsl",
 				"colorShape3DF.glsl"
 			],
-			"mode" : ["camView"]
+			"mode" : ["camView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"color"
+			]
 		},
+
 		"textureLight3D": {
 			"files": [
 				"textureLight3DV.glsl",
 				"textureLight3DF.glsl"
 			],
-			"mode" : ["camView"]
-		},"texture3D": {
+			"mode" : ["camView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"worldColor",
+				"lightColor",
+				"lightPos",
+				"viewPos"
+			]
+		},
+
+		"texture3D": {
 			"files": [
 				"texture3DV.glsl",
 				"texture3DF.glsl"
 			],
-			"mode" : ["camView"]
+			"mode" : ["camView"],
+			"links": [
+				"projection",
+				"view",
+				"model"
+			]
 		},
+
 		"texture2D": {
 			"files": [
 				"texture2DV.glsl",
 				"texture2DF.glsl"
 			],
-			"mode" : ["none"]
+			"mode" : ["none"],
+			"links": []
 		}
 	}
 }

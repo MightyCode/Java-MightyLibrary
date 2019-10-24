@@ -36,33 +36,38 @@ public class ShaderManager {
         Iterator<String> arrayShader = obj.keys();
 
         do{
+            // Name
             String currentShader = arrayShader.next();
 
             JSONObject JShader = obj.getJSONObject(currentShader);
+            // "Table" of the string path
             JSONArray files = JShader.getJSONArray("files");
 
+            // Get id the access the shader more easily
             Id currentId = shaders.add(new Shader(files.getString(0), files.getString(1)));
-
             shaders.get(currentId).setName(currentShader);
+            shaders.get(currentId).load();
 
-            // Cam mode
-            String camMode = JShader.getJSONArray("mode").getString(0);
-            if(!camMode.equals("none")){
-                shaders.get(currentId).load().use().addLink("projection").addLink("view").addLink("model");
-                shaders.get(currentId).glUniform("projection", cam.getProjection());
+            // Links-uniform creation
+            JSONArray linksName = JShader.getJSONArray("links");
+            for(int i = 0; i < linksName.length(); i++){
+                shaders.get(currentId).addLink(linksName.getString(i));
             }
 
+            // Cam mode initialization
+            String camMode = JShader.getJSONArray("mode").getString(0);
 
             if(camMode.equals("static")){
-
                 Matrix4f model = new Matrix4f();
                 model._m32(-8.572f);
                 FloatBuffer temp = BufferUtils.createFloatBuffer(16);
                 shaders.get(currentId).glUniform("view", model.get(temp));
-
             } else if(camMode.equals("camView")){
                 camReload.add(currentId);
+                shaders.get(currentId).glUniform("projection", cam.getProjection());
             }
+
+
 
         } while(arrayShader.hasNext());
 
