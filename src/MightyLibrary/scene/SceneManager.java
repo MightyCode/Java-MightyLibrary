@@ -29,7 +29,7 @@ public class SceneManager {
         manContainer.setManager(new MouseManager(this.manContainer.wParams)).setManager( new KeyboardManager(this.manContainer.wParams));
         manContainer.setManager(new InputManager(this.manContainer.keyManager,this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
 
-        manContainer.setManager(new Camera(70f, new Vector3f(0.0f, 0.0f, 10.0f)));
+        manContainer.setManager(new Camera(120f, new Vector3f(0.0f, 0.0f, 10.0f)));
 
         manContainer.setManager(new ShaderManager(manContainer.cam));
 

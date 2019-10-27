@@ -1,11 +1,11 @@
 package MightyLibrary.main;
 
-import MightyLibrary.render.Render;
 import MightyLibrary.scene.SceneManager;
 import MightyLibrary.util.Timer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.*;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.NativeType;
 
 
 import java.nio.IntBuffer;
@@ -31,7 +31,6 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public class Window{
 
     private WindowParams wParams;
-    private ManagerContainer manContainer;
     private final float SECOND = 1000000000.0f;
     public final float TPS = 60.0f;
 
@@ -40,11 +39,10 @@ public class Window{
     private final double TICK_TIME = SECOND / TPS;
     private final double FRAME_TIME = SECOND / FPS;
 
-    private SceneManager screenManager;
     public Window(){
         // Get the game global configurations.
         wParams = new WindowParams();
-        manContainer = ManagerContainer.getInstance();
+        ManagerContainer manContainer = ManagerContainer.getInstance();
         manContainer.setManager(wParams);
         createWindow();
     }
@@ -105,7 +103,8 @@ public class Window{
         createCapabilities();
         glfwSwapInterval(0);
 
-        Render.setViewPort(wParams.size.x, wParams.size.y);
+        setViewPort(wParams.size.x, wParams.size.y);
+        //setViewPort(1920, 1920);
 
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
@@ -182,11 +181,42 @@ public class Window{
         screenManager.unload();
     }
 
+    /**
+     * Set the 2D view.
+     */
+    public static void glEnable2D() {
+        int[] vPort = new int[4];
+
+        glGetIntegerv(GL_VIEWPORT, vPort);
+
+        glMatrixMode(GL_PROJECTION);
+        glPushMatrix();
+        glLoadIdentity();
+
+        glOrtho(0, vPort[2], vPort[3], 0, -1, 1);
+        glMatrixMode(GL_MODELVIEW);
+        glPushMatrix();
+        glLoadIdentity();
+    }
+    /**
+     * Set the 3D view.
+     */
+    public static void glDisable2D() {
+        glMatrixMode(GL_PROJECTION);
+        glPopMatrix();
+        glMatrixMode(GL_MODELVIEW);
+        glPopMatrix();
+    }
+
+    public static void setViewPort(int width, int height){
+        glViewport(0, 0, width, height);
+    }
 
     /**
      * Exit the game.
      */
     public void exit() {
+
         destroyWindow();
         // Terminate GLFW and free the error callback
         glfwTerminate();

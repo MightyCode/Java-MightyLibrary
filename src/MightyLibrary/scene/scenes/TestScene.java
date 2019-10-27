@@ -19,8 +19,8 @@ public class TestScene extends Scene {
     private Shape sBlock;
     private Shape hudBar;
     private Shape textHudBlock;
-    // Texture
-    private Id block;
+    // Textures
+    private Id block, displacementMap;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
@@ -37,9 +37,12 @@ public class TestScene extends Scene {
         light = new ColoredCubeRenderer(new Vector3f(3.0f, 3.0f, -3.0f), 0.5f);
         light.setColor(new Vector3f(1.0f, 0.2f, 0.4f));
 
-        sBlock = new Shape("texture3D", false, false);
-        // Texture
+        sBlock = new Shape("textureComplex3D", false, false);
+
+        // Textures
         block = manContainer.texManager.getIdShaderFromString("container");
+        displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
+
 
         // init cube
         float vertex0[] = createCrates(16 * 16);
@@ -50,6 +53,7 @@ public class TestScene extends Scene {
         model.identity();
         model.get(fb);
         manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("model", fb);
+        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("displacementMap", 1);
         fb.clear();
 
         hudBar = new Shape("colorShape2D", false, true);
@@ -112,10 +116,12 @@ public class TestScene extends Scene {
         }
 
         light.setColor(new Vector3f(counter / 360.0f));
+        light.setColor(new Vector3f(counter / 360.0f));
         light.updateColor();
+        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("time", counter / 720);
 
-        counter += 2f;
-        if(counter > 360) counter = 0;
+        counter += 1f;
+        if(counter > 720) counter = 0;
         manContainer.cam.updateView();
     }
 
@@ -123,6 +129,7 @@ public class TestScene extends Scene {
         clear();
         light.display();
         manContainer.texManager.bind(block);
+        manContainer.texManager.bind(displacementMap, 1);
 
         sBlock.display();
         hudBar.display();

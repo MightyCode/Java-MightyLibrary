@@ -45,6 +45,10 @@ public class TextureManager {
     public void bind(Id id){
         textures.get(id).bind();
     }
+    public void bind(Id id, int position){
+        textures.get(id).bind(position);
+    }
+
 
     public Id getIdShaderFromString(String shaderId) {
         return textures.getIdFromString(shaderId);

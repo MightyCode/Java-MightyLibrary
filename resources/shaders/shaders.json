@@ -54,7 +54,21 @@
 				"model"
 			]
 		},
-
+		"textureComplex3D": {
+			"files": [
+				"textureComplex3DV.glsl",
+				"textureComplex3DF.glsl"
+			],
+			"mode" : ["camView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"time",
+				"ourTexture",
+				"displacementMap"
+			]
+		},
 		"texture2D": {
 			"files": [
 				"texture2DV.glsl",

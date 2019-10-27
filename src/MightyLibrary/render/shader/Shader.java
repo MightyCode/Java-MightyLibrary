@@ -1,9 +1,11 @@
 package MightyLibrary.render.shader;
 
 import MightyLibrary.util.FileMethods;
+import MightyLibrary.util.ManagerList;
 import MightyLibrary.util.ObjectId;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static org.lwjgl.opengl.GL20.*;
@@ -11,8 +13,10 @@ import static org.lwjgl.opengl.GL20.*;
 public class Shader extends ObjectId{
     private String fragmentSource, vertexSource;
     private int shaderProgram;
+
     private HashMap<String, Integer> valuesLink;
     private final String PATH = "resources/shaders/";
+    public ArrayList<Integer> properties;
 
     public Shader(String vertexSource, String fragmentSource){
         // Base value
@@ -21,6 +25,7 @@ public class Shader extends ObjectId{
         this.fragmentSource = fragmentSource;
         this.vertexSource = vertexSource;
         valuesLink = new HashMap<>();
+        properties = new ArrayList<>();
     }
 
     public Shader load(){
@@ -91,7 +96,6 @@ public class Shader extends ObjectId{
         glDeleteShader(shaderProgram);
     }
 
-
     public Shader glUniform(String valueName, float value1){
         this.use();
         glUniform1f(this.getLink(valueName), value1);
@@ -125,6 +129,12 @@ public class Shader extends ObjectId{
     public Shader glUniform(String valueName, FloatBuffer value1){
         this.use();
         glUniformMatrix4fv(getLink(valueName), false, value1);
+        return this;
+    }
+
+    public Shader glUniform(String valueName, int value1){
+        this.use();
+        glUniform1i(getLink(valueName), value1);
         return this;
     }
 }

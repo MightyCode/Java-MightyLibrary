@@ -29,6 +29,7 @@ import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 
 
@@ -58,8 +59,14 @@ public class Texture extends ObjectId {
     }
 
     public void bind() {
-        if (correctLoaded) glBindTexture(GL_TEXTURE_2D, textureId);
-        else glBindTexture(GL_TEXTURE_2D, 1);
+        bind(0);
+    }
+
+    public void bind(int texturePos) {
+        glActiveTexture(GL_TEXTURE0 + texturePos);
+        if (correctLoaded){
+            glBindTexture(GL_TEXTURE_2D, textureId);
+        } else glBindTexture(GL_TEXTURE_2D, 1);
     }
 
     public void load(String path) {

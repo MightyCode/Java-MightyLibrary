@@ -17,6 +17,9 @@
 		},
 		"players" : {
 		},
+		"shaderEffects" : {
+			"dispMap1" : "displacementMap1.png"
+		},
 		"container" : "container.jpg"
 	}
 }

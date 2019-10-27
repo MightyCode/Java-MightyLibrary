@@ -14,10 +14,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ShaderManager {
-    public static final int TEXTURE = 0;
-    public static final int BOX = 1;
-
-    public static final int CAMERA_RELOADING = 0;
+    public static final int USE_PROJECTION_MATRIX = 0;
 
     private ManagerList<Shader> shaders;
     private ArrayList<Id> camReload;
@@ -45,13 +42,14 @@ public class ShaderManager {
 
             // Get id the access the shader more easily
             Id currentId = shaders.add(new Shader(files.getString(0), files.getString(1)));
-            shaders.get(currentId).setName(currentShader);
-            shaders.get(currentId).load();
+            Shader shad = shaders.get(currentId);
+            shad.setName(currentShader);
+            shad.load();
 
             // Links-uniform creation
             JSONArray linksName = JShader.getJSONArray("links");
             for(int i = 0; i < linksName.length(); i++){
-                shaders.get(currentId).addLink(linksName.getString(i));
+                shad.addLink(linksName.getString(i));
             }
 
             // Cam mode initialization
@@ -61,17 +59,25 @@ public class ShaderManager {
                 Matrix4f model = new Matrix4f();
                 model._m32(-8.572f);
                 FloatBuffer temp = BufferUtils.createFloatBuffer(16);
-                shaders.get(currentId).glUniform("view", model.get(temp));
+                shad.glUniform("view", model.get(temp));
             } else if(camMode.equals("camView")){
                 camReload.add(currentId);
-                shaders.get(currentId).glUniform("projection", cam.getProjection());
+                shad.properties.add(USE_PROJECTION_MATRIX);
             }
-
-
-
         } while(arrayShader.hasNext());
 
+        reloadProjection();
         dispose();
+    }
+
+    public void reloadProjection(){
+        for(int i = 0; i < shaders.size(); i++){
+            if(shaders.get(new Id(i)).properties.contains(USE_PROJECTION_MATRIX)) reloadProjection(new Id(i));
+        }
+    }
+
+    public void reloadProjection(Id id){
+        shaders.get(id).glUniform("projection", cam.getProjection());
     }
 
     public void dispose(){
