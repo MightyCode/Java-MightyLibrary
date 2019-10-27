@@ -1,7 +1,7 @@
 package MightyLibrary.main;
 
 import MightyLibrary.render.Render;
-import MightyLibrary.screen.ScreenManager;
+import MightyLibrary.scene.SceneManager;
 import MightyLibrary.util.ManagerContainer;
 import MightyLibrary.util.Timer;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -41,7 +41,7 @@ public class Window{
     private final double TICK_TIME = SECOND / TPS;
     private final double FRAME_TIME = SECOND / FPS;
 
-    private ScreenManager screenManager;
+    private SceneManager screenManager;
     public Window(){
         // Get the game global configurations.
         wParams = new WindowParams();
@@ -150,7 +150,7 @@ public class Window{
         double lastFrame = 0.0;
         double lastSecond = 0.0;
 
-        ScreenManager screenManager = new ScreenManager(this, manContainer);
+        SceneManager screenManager = new SceneManager(this, manContainer);
 
         while(!glfwWindowShouldClose(wParams.windowId)){
             if (timer.getDuration() - lastTick >= TICK_TIME) {

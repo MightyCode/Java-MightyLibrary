@@ -20,7 +20,7 @@ public class Main {
      * Run the game.
      */
     public static void main(String[] args) {
-            admin = true;
+        admin = true;
 
         window = new Window();
         window.run();

@@ -5,8 +5,8 @@ import MightyLibrary.inputs.KeyboardManager;
 import MightyLibrary.inputs.MouseManager;
 import MightyLibrary.main.WindowParams;
 import MightyLibrary.render.texture.TextureManager;
-import MightyLibrary.screen.Camera;
-import MightyLibrary.screen.ScreenManager;
+import MightyLibrary.scene.Camera;
+import MightyLibrary.scene.SceneManager;
 import MightyLibrary.render.shader.ShaderManager;
 
 public class ManagerContainer {
@@ -19,7 +19,7 @@ public class ManagerContainer {
 
     public Camera cam;
 
-    public ScreenManager screenManager;
+    public SceneManager screenManager;
 
     public ShaderManager shadManager;
     public TextureManager texManager;
@@ -52,7 +52,7 @@ public class ManagerContainer {
         return this;
     }
 
-    public ManagerContainer setManager(ScreenManager scManager){
+    public ManagerContainer setManager(SceneManager scManager){
         this.screenManager = scManager;
         return this;
     }

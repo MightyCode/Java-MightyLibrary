@@ -1,6 +1,6 @@
 package MightyLibrary.render.shader;
 
-import MightyLibrary.screen.Camera;
+import MightyLibrary.scene.Camera;
 import MightyLibrary.util.FileMethods;
 import MightyLibrary.util.Id;
 import MightyLibrary.util.ManagerList;
