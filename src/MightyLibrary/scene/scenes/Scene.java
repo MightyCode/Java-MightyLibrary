@@ -1,21 +1,15 @@
 package MightyLibrary.scene.scenes;
 
-import MightyLibrary.util.ManagerContainer;
+import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.util.math.Color4f;
 
 import static org.lwjgl.opengl.GL11.*;
 
 public class Scene {
-    private boolean isATrueSceneScreen;
     protected ManagerContainer manContainer;
 
     public Scene(){
-       isATrueSceneScreen = false;
-    }
-
-    public Scene(ManagerContainer manContainer){
-        this.manContainer = manContainer;
-        isATrueSceneScreen = true;
+        this.manContainer = ManagerContainer.getInstance();
     }
 
     public void init(){}

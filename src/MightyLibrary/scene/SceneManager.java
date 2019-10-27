@@ -8,7 +8,7 @@ import MightyLibrary.render.shader.ShaderManager;
 import MightyLibrary.render.texture.TextureManager;
 import MightyLibrary.scene.scenes.Scene;
 import MightyLibrary.scene.scenes.TestScene;
-import MightyLibrary.util.ManagerContainer;
+import MightyLibrary.main.ManagerContainer;
 import org.joml.Vector3f;
 
 public class SceneManager {
@@ -21,15 +21,15 @@ public class SceneManager {
 
     private Window window;
 
-    public SceneManager(Window window, ManagerContainer manContainer){
+    public SceneManager(Window window){
         this.window = window;
-        this.manContainer = manContainer;
+        manContainer = ManagerContainer.getInstance();
 
         manContainer.setManager(this);
         manContainer.setManager(new MouseManager(this.manContainer.wParams)).setManager( new KeyboardManager(this.manContainer.wParams));
         manContainer.setManager(new InputManager(this.manContainer.keyManager,this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
 
-        manContainer.setManager(new Camera(manContainer, 70f, new Vector3f(0.0f, 0.0f, 10.0f)));
+        manContainer.setManager(new Camera(70f, new Vector3f(0.0f, 0.0f, 10.0f)));
 
         manContainer.setManager(new ShaderManager(manContainer.cam));
 
@@ -74,7 +74,7 @@ public class SceneManager {
         }
 
         if(newSceneName.equals("testscene") || newSceneName.equals("testScene") || newSceneName.equals("TestScene")){
-            currentScene = new TestScene(manContainer, changeArgs);
+            currentScene = new TestScene(changeArgs);
         }
 
         assert currentScene != null;

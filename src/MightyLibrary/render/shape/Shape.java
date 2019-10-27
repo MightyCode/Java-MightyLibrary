@@ -2,7 +2,7 @@ package MightyLibrary.render.shape;
 
 import MightyLibrary.render.shader.ShaderManager;
 import MightyLibrary.util.Id;
-import MightyLibrary.util.ManagerContainer;
+import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.util.math.Math;
 import org.lwjgl.opengl.GL15;
 
@@ -33,21 +33,13 @@ public class Shape{
     protected ShaderManager shadManager;
     protected Id shaderId;
 
-    public Shape(ManagerContainer manContainer, String shaderName, boolean useEbo){
-        this(manContainer.shadManager, shaderName, useEbo);
+    public Shape(String shaderName, boolean useEbo){
+        this(shaderName, useEbo, true);
     }
 
-    public Shape(ManagerContainer manContainer, String shaderName, boolean useEbo, boolean in2D){
-        this(manContainer.shadManager, shaderName, useEbo, in2D);
-    }
-
-    public Shape(ShaderManager shadManager, String shaderName, boolean useEbo){
-        this(shadManager, shaderName, useEbo, true);
-    }
-
-    public Shape(ShaderManager shadManager, String shaderName, boolean useEbo, boolean in2D){
+    public Shape(String shaderName, boolean useEbo, boolean in2D){
         setDimensionTo2D(in2D).setStorage(STATIC_STORE, STATIC_STORE);
-        this.shadManager = shadManager;
+        this.shadManager = ManagerContainer.getInstance().shadManager;
         this.shaderId = this.shadManager.getIdShaderFromString(shaderName);
 
         verticesDraw = 0;

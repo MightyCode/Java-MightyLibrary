@@ -1,11 +1,9 @@
 package MightyLibrary.scene.scenes;
 
-import MightyLibrary.main.World;
 import MightyLibrary.scene.Camera;
-import MightyLibrary.render.shape.Light;
+import MightyLibrary.render.shape.Renderer.ColoredCubeRenderer;
 import MightyLibrary.render.shape.Shape;
 import MightyLibrary.util.Id;
-import MightyLibrary.util.ManagerContainer;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
@@ -28,24 +26,18 @@ public class TestScene extends Scene {
     private final int faceSize = lineSize * 6;
     private final int boxSize = faceSize * 6;
 
-    private Light light;
+    private ColoredCubeRenderer light;
 
     private float counter = 0;
 
-    public TestScene(ManagerContainer managerContainer, String[] args){
-        super(managerContainer);
+    public TestScene(String[] args){
     }
 
     public void init(){
-        light = new Light(manContainer.shadManager, new Vector3f(3.0f, 3.0f, -3.0f), 0.5f);
+        light = new ColoredCubeRenderer(new Vector3f(3.0f, 3.0f, -3.0f), 0.5f);
         light.setColor(new Vector3f(1.0f, 0.2f, 0.4f));
-        light.enable();
 
-        World.init();
-        World.lightColor = new Vector3f(0.3f, 0.3f, 0.5f);
-        World.lightStrength = 0.8f;
-
-        sBlock = new Shape(manContainer.shadManager, "texture3D", false, false);
+        sBlock = new Shape("texture3D", false, false);
         // Texture
         block = manContainer.texManager.getIdShaderFromString("container");
 
@@ -60,7 +52,7 @@ public class TestScene extends Scene {
         manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("model", fb);
         fb.clear();
 
-        hudBar = new Shape(manContainer.shadManager, "colorShape2D", false, true);
+        hudBar = new Shape("colorShape2D", false, true);
         float vertex1[] = new float[]{
             1f, 0.75f,
             1f, 1f,
@@ -75,7 +67,7 @@ public class TestScene extends Scene {
         hudBar.setReading(new int[]{2});
         hudBar.setVbo(vertex1);
 
-        textHudBlock = new Shape(manContainer.shadManager, "texture2D", false, true);
+        textHudBlock = new Shape("texture2D", false, true);
         float vertex2[] = new float[]{
                 -1f, -0.75f,        0.0f, 1.0f,
                 -1f, -1f,           0.0f, 0.0f,
@@ -89,25 +81,11 @@ public class TestScene extends Scene {
         textHudBlock.setVbo(vertex2);
 
         manContainer.mouseManager.setCursor(false);
-        setClearColor(World.lightColor.x, World.lightColor.y, World.lightColor.z,1f);
+        setClearColor(52, 189, 235, 1f);
     }
 
     public void update() {
         manContainer.cam.setToCursor();
-
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_PAGE_UP)){
-            World.lightColor.x += 0.01;
-            World.lightColor.y += 0.01;
-            World.lightColor.z += 0.01;
-            setClearColor(World.lightColor.x + 0.1f, World.lightColor.y + 0.1f, World.lightColor.z + 0.1f, 0);
-        }
-
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_PAGE_DOWN)){
-            World.lightColor.x -= 0.01;
-            World.lightColor.y -= 0.01;
-            World.lightColor.z -= 0.01;
-            setClearColor(World.lightColor.x + 0.1f, World.lightColor.y + 0.1f , World.lightColor.z + 0.1f, 0);
-        }
 
         if(manContainer.keyManager.getKeyState(GLFW_KEY_A)){
             manContainer.cam.speedAngX(Camera.speed.x);
@@ -133,15 +111,8 @@ public class TestScene extends Scene {
            //manContainer.screenManager.exit();
         }
 
-        World.calcLightColor();
-        //manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("worldColor", World.lightColorS.x, World.lightColorS.y, World.lightColorS.z);
-
         light.setColor(new Vector3f(counter / 360.0f));
-        //light.setColor(new Vector3f(1));
         light.updateColor();
-       /* manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("lightColor", light.color.x, light.color.y, light.color.z);
-        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("lightPos", light.position.x, light.position.y, light.position.z);
-        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("viewPos", manContainer.cam.camPos.x, manContainer.cam.camPos.y, manContainer.cam.camPos.z);*/
 
         counter += 2f;
         if(counter > 360) counter = 0;

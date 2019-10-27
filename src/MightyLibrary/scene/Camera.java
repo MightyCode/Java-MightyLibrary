@@ -1,6 +1,6 @@
 package MightyLibrary.scene;
 
-import MightyLibrary.util.ManagerContainer;
+import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.util.math.Math;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -23,8 +23,8 @@ public class Camera {
     private float yaw = 180.0f, pitch = 0.0f;
     private float yawCos, yawSin;
 
-    public Camera(ManagerContainer manContainer, float fov, Vector3f pos){
-        this.manContainer = manContainer;
+    public Camera(float fov, Vector3f pos){
+        this.manContainer = ManagerContainer.getInstance();
 
         projection = new Matrix4f();
         view = new Matrix4f();

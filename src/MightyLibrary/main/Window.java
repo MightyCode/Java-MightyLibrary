@@ -2,7 +2,6 @@ package MightyLibrary.main;
 
 import MightyLibrary.render.Render;
 import MightyLibrary.scene.SceneManager;
-import MightyLibrary.util.ManagerContainer;
 import MightyLibrary.util.Timer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.*;
@@ -45,7 +44,7 @@ public class Window{
     public Window(){
         // Get the game global configurations.
         wParams = new WindowParams();
-        manContainer = new ManagerContainer();
+        manContainer = ManagerContainer.getInstance();
         manContainer.setManager(wParams);
         createWindow();
     }
@@ -150,7 +149,7 @@ public class Window{
         double lastFrame = 0.0;
         double lastSecond = 0.0;
 
-        SceneManager screenManager = new SceneManager(this, manContainer);
+        SceneManager screenManager = new SceneManager(this);
 
         while(!glfwWindowShouldClose(wParams.windowId)){
             if (timer.getDuration() - lastTick >= TICK_TIME) {
