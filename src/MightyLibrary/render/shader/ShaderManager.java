@@ -32,7 +32,6 @@ public class ShaderManager {
     public void init(){
         shaders.clear();
         camReload.clear();
-
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/shaders/shaders.json"));
         obj = obj.getJSONObject("shaders");
 

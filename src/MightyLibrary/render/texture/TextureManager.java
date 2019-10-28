@@ -4,6 +4,7 @@ import MightyLibrary.util.FileMethods;
 import MightyLibrary.util.Id;
 import MightyLibrary.util.ManagerList;
 import org.json.JSONObject;
+
 import java.util.Iterator;
 
 public class TextureManager {
