@@ -76,6 +76,8 @@ public class Texture extends ObjectId {
             createImage(image);
         } catch (Exception e) {
             //e.printStackTrace();
+            System.err.println("Can't find the path for :");
+            System.out.println(PATH +  this.path + "\n");
             correctLoaded = false;
         }
     }
@@ -151,7 +153,7 @@ public class Texture extends ObjectId {
 
     private void setParam(int param, int value) {
         bind();
-        glTexParameteri(GL_TEXTURE_2D, param, value);
+        if (correctLoaded)  glTexParameteri(GL_TEXTURE_2D, param, value);
     }
 
     public void unload() {

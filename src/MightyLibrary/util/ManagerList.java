@@ -44,4 +44,8 @@ public class ManagerList<E>{
     public int size(){
         return  objects.size();
     }
+
+    public void clear(){
+        objects.clear();
+    }
 }

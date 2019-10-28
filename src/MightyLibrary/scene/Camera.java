@@ -15,6 +15,7 @@ public class Camera {
     public Vector3f camPos;
     private Vector3f camFront, camUp;
     private FloatBuffer projectionBuffer, viewBuffer;
+    private boolean lockViewCursor = false;
 
     public static Vector3f speed;
 
@@ -66,9 +67,22 @@ public class Camera {
     }
 
     public void updateView(){
+        if (!lockViewCursor) {
+            setToCursor();
+        }
+
         view.identity();
         view.lookAt(camPos, camPos.add(camFront, new Vector3f()), camUp);
         viewBuffer = view.get(viewBuffer);
+    }
+
+    public Camera setLockViewCursor(boolean state){
+        lockViewCursor = state;
+        return this;
+    }
+
+    public Camera invertLockViewCursor(){
+        return setLockViewCursor(!lockViewCursor);
     }
 
     public Camera setViewAngle(float fov){

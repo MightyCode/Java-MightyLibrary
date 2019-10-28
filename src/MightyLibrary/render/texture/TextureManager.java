@@ -11,9 +11,11 @@ public class TextureManager {
 
     public TextureManager(){
         textures = new ManagerList<>();
+        this.init();
     }
 
     public void init(){
+        textures.clear();
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/textures.json"));
         obj = obj.getJSONObject("textures");
 
@@ -23,6 +25,7 @@ public class TextureManager {
         textures.add(error);
 
         load(obj, "");
+        System.out.println("\n");
     }
 
     public void load(JSONObject node, String path){
@@ -49,14 +52,20 @@ public class TextureManager {
         textures.get(id).bind(position);
     }
 
-
     public Id getIdShaderFromString(String shaderId) {
         return textures.getIdFromString(shaderId);
+    }
+
+    public void reload(){
+        unload();
+        System.out.println("Reload textures");
+        init();
     }
 
     public void unload() {
         for(int i = 0; i < textures.size(); ++i){
             textures.get(new Id(i)).unload();
         }
+        System.out.println("Unload all textures \n");
     }
 }

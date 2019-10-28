@@ -21,11 +21,17 @@ public class ShaderManager {
 
     private Camera cam;
 
-    public ShaderManager(Camera cam){
+    public ShaderManager(Camera cam) {
         shaders = new ManagerList<>();
 
         camReload = new ArrayList<>();
         this.cam = cam;
+        this.init();
+    }
+
+    public void init(){
+        shaders.clear();
+        camReload.clear();
 
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/shaders/shaders.json"));
         obj = obj.getJSONObject("shaders");
@@ -92,6 +98,12 @@ public class ShaderManager {
 
     public Shader getShader(Id shaderId){
         return shaders.get(shaderId);
+    }
+
+    public void reload(){
+        unload();
+        System.out.println("Reload shaders");
+        init();
     }
 
     public void unload(){

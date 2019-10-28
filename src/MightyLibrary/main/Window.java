@@ -62,7 +62,6 @@ public class Window{
         glfwDefaultWindowHints(); // optional, the current window hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
@@ -158,21 +157,15 @@ public class Window{
                 lastTick += TICK_TIME;
             } else if (timer.getDuration() - lastFrame >= FRAME_TIME) {
                 screenManager.display();
-                //System.out.println(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
                 glfwSwapBuffers(wParams.windowId);
                 glfwPollEvents();
                 frames++;
                 lastFrame += FRAME_TIME;
-            } else {
-                try {
-                    Thread.sleep(1);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
             }
 
             if (timer.getDuration() - lastSecond >= SECOND) {
                 if(Main.admin) glfwSetWindowTitle(wParams.windowId, "OPEN GL | FPS:" + frames + "; TPS:" + ticks);
+                //System.out.println(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
                 ticks = frames = 0;
                 lastSecond += SECOND;
             }

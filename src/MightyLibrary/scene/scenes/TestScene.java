@@ -89,8 +89,6 @@ public class TestScene extends Scene {
     }
 
     public void update() {
-        manContainer.cam.setToCursor();
-
         if(manContainer.keyManager.getKeyState(GLFW_KEY_A)){
             manContainer.cam.speedAngX(Camera.speed.x);
         }
@@ -111,8 +109,14 @@ public class TestScene extends Scene {
         }
 
         if(manContainer.keyManager.keyPressed(GLFW_KEY_ESCAPE)) {
+            //manContainer.texManager.reload();
+            manContainer.cam.invertLockViewCursor();
             manContainer.mouseManager.invertCursorState();
-           //manContainer.screenManager.exit();
+            //manContainer.screenManager.exit();
+        }
+
+        if(manContainer.keyManager.keyPressed(GLFW_KEY_F5)) {
+            manContainer.texManager.reload();
         }
 
         light.setColor(new Vector3f(counter / 360.0f));

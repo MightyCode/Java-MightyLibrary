@@ -17,9 +17,12 @@
 		},
 		"players" : {
 		},
+		"world" : {
+			"container" : "container.jpg",
+			"water1" : "water1.jpg"
+		},
 		"shaderEffects" : {
 			"dispMap1" : "displacementMap1.png"
-		},
-		"container" : "container.jpg"
+		}
 	}
 }

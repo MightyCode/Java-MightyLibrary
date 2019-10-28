@@ -9,6 +9,7 @@ import MightyLibrary.render.texture.TextureManager;
 import MightyLibrary.scene.scenes.Scene;
 import MightyLibrary.scene.scenes.TestScene;
 import MightyLibrary.main.ManagerContainer;
+import MightyLibrary.util.commands.Commands;
 import org.joml.Vector3f;
 
 public class SceneManager {
@@ -21,13 +22,15 @@ public class SceneManager {
 
     private Window window;
 
+    private Commands commands;
+
     public SceneManager(Window window){
         this.window = window;
         manContainer = ManagerContainer.getInstance();
 
         manContainer.setManager(this);
         manContainer.setManager(new MouseManager(this.manContainer.wParams)).setManager( new KeyboardManager(this.manContainer.wParams));
-        manContainer.setManager(new InputManager(this.manContainer.keyManager,this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
+        manContainer.setManager(new InputManager(this.manContainer.keyManager, this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
 
         manContainer.setManager(new Camera(120f, new Vector3f(0.0f, 0.0f, 10.0f)));
 
@@ -35,7 +38,6 @@ public class SceneManager {
 
         manContainer.setManager(new TextureManager());
         // Load every texture
-        manContainer.texManager.init();
 
         setNewScene("testScene", new String[]{""});
         changeScene();
@@ -71,10 +73,10 @@ public class SceneManager {
 
         if(newSceneName.equals("menuscene") || newSceneName.equals("menuScene") || newSceneName.equals("MenuScene")){
             //currentscene = new MenuScreeen(manContainer, changeArgs);
-        }
-
-        if(newSceneName.equals("testscene") || newSceneName.equals("testScene") || newSceneName.equals("TestScene")){
+        } else if (newSceneName.equals("testscene") || newSceneName.equals("testScene") || newSceneName.equals("TestScene")){
             currentScene = new TestScene(changeArgs);
+        } else {
+            System.err.println("Unknown scene : " + newSceneName);
         }
 
         assert currentScene != null;
