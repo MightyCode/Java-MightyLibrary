@@ -5,8 +5,6 @@ import MightyLibrary.util.Timer;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.*;
 import org.lwjgl.system.MemoryStack;
-import org.lwjgl.system.NativeType;
-import org.lwjgl.vulkan.VK10;
 
 
 import java.nio.IntBuffer;

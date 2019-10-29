@@ -48,7 +48,6 @@ public class MouseManager {
         Arrays.fill(oldState, false);
         mouseUpdate();
         dispose();
-
     }
 
     public boolean getButton(int buttonId){
@@ -119,5 +118,9 @@ public class MouseManager {
     private void glfwSetCursor(){
         if(displayCursor)glfwSetInputMode(wParams.windowId, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         else glfwSetInputMode(wParams.windowId, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+
+    public boolean getCursorState(){
+        return displayCursor;
     }
 }

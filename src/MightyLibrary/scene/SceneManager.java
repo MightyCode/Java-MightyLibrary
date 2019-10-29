@@ -3,6 +3,7 @@ package MightyLibrary.scene;
 import MightyLibrary.inputs.InputManager;
 import MightyLibrary.inputs.KeyboardManager;
 import MightyLibrary.inputs.MouseManager;
+import MightyLibrary.main.Main;
 import MightyLibrary.main.Window;
 import MightyLibrary.render.shader.ShaderManager;
 import MightyLibrary.render.texture.TextureManager;
@@ -11,6 +12,9 @@ import MightyLibrary.scene.scenes.TestScene;
 import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.util.commands.Commands;
 import org.joml.Vector3f;
+import org.lwjgl.glfw.*;
+
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F1;
 
 public class SceneManager {
     private ManagerContainer manContainer;
@@ -40,10 +44,16 @@ public class SceneManager {
         // Load every texture
 
         setNewScene("testScene", new String[]{""});
+
+        commands  = new Commands();
         changeScene();
     }
 
     public void update(){
+        // Command
+        if (Main.admin) if(manContainer.keyManager.keyPressed(GLFW_KEY_F1) || commands.isWriteCommands) commands.writeCommand();
+
+
         if(wantChange){
             changeScene();
         }
@@ -67,6 +77,8 @@ public class SceneManager {
     }
 
     private void changeScene(){
+        if (Main.admin) commands.removeSpecificCommand();
+
         if(currentScene != null){
             currentScene.unload();
         }
