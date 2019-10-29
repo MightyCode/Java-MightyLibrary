@@ -7,28 +7,32 @@ public class ReloadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "reload";
 
     public ReloadGenCom() {
-        super(COMMAND_NAME);
+        super(COMMAND_NAME, GENERAL_COMMAND);
     }
 
     @Override
     public void sendCommand(String command) {
         String[] sub = command.split(" ");
-        if (sub[0].equals("texture")) {
-            ManagerContainer manContainer = ManagerContainer.getInstance();
-            manContainer.texManager.reload();
-        } else if (sub[0].equals("shader")) {
-            ManagerContainer manContainer = ManagerContainer.getInstance();
-            manContainer.shadManager.reload();
-        } else if (sub[0].equals("help")) {
-            help();
+        if(checkArgumentHelp(sub)) return;
+
+        if (sub.length > 1) {
+            if (sub[1].equals("texture")) {
+                ManagerContainer manContainer = ManagerContainer.getInstance();
+                manContainer.texManager.reload();
+            } else if (sub[1].equals("shader")) {
+                ManagerContainer manContainer = ManagerContainer.getInstance();
+                manContainer.shadManager.reload();
+            } else {
+                unknownArgumentError(sub[1]);
+            }
         } else {
-            error(command);
+            noEnoughArgumentError();
         }
     }
 
-    @Override
+
     public void help() {
-        System.out.println("Help for Reload General Command");
+        super.help();
         System.out.println("3 uses : ");
         System.out.println("1. reload texture : refresh/reload all texture from the json textures in resources");
         System.out.println("2. reload shader : reload all shaders");

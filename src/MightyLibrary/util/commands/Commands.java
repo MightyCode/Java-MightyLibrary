@@ -24,10 +24,11 @@ public class Commands {
 
         // Add commands -> General
         commands = new ArrayList<>();
-        ListGeneralCommand.addCommand(commands);
+        ListGeneralCommand.addCommands(this);
         // Size
         endGeneralCommand = commands.size();
     }
+
 
     public void writeCommand(){
         boolean previousMouseState = mouseManager.getCursorState();
@@ -36,15 +37,14 @@ public class Commands {
         isWriteCommands = true;
         System.out.println("Write a command:");
 
-        String hey = scan.nextLine();
-        if(hey.equals("echap") || hey.equals("exit")){
-            isWriteCommands = false;
-        } else {
-            System.out.println("");
-            checkCommand(hey);
-        }
+        String command = scan.nextLine();
+
+        System.out.println("");
+        checkCommand(command);
+
         mouseManager.setCursor(previousMouseState);
     }
+
 
     private void checkCommand(String command) {
         // Return -1 if error on detection
@@ -53,23 +53,43 @@ public class Commands {
         else System.err.println("Error on the message : \n invalids chars or nothing in the char");
     }
 
+
     private void submitCommand(String command, String firstWord) {
         boolean found = false;
         int i = 0;
-        while (!found && i < commands.size()){
+        while (!found && i < commands.size()) {
             // If write command and command in the array match
-            if (commands.get(i).isCommand(firstWord)){
+            if (commands.get(i).isCommand(firstWord)) {
                 // Send and remove the unused first word
-                commands.get(i).sendCommand(command.substring(commands.get(i).size() + 1));
+                if(command.length() > firstWord.length())  commands.get(i).sendCommand(command);
+                else                                       commands.get(i).sendCommand(command);
                 found = true;
             }
             i++;
         }
 
-        if(!found){
-            System.err.println("No command with its name ->"  + firstWord + "<-");
+        if (!found) {
+                System.err.println("No command with its name ->" + firstWord + "<-");
         }
     }
+
+
+    public void cancelWritingCommand(Object o){
+        if (o instanceof BaseCommand){
+            isWriteCommands = false;
+        }
+    }
+
+
+    public ArrayList<BaseCommand> getCommands(){
+        return commands;
+    }
+
+
+    public void addCommand(BaseCommand command){
+        commands.add(command);
+    }
+
 
     public void removeSpecificCommand(){
         if (commands.size() > endGeneralCommand) {
