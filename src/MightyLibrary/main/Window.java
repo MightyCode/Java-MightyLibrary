@@ -65,6 +65,8 @@ public class Window{
         glfwWindowHint(GLFW_SAMPLES, 4);
 
         wParams.setSize(1280, 720);
+        wParams.setVirtualSize(wParams.size.x, wParams.size.y);
+        //wParams.setVirtualSize(64, 64);
 
         wParams.windowId = glfwCreateWindow(wParams.size.x, wParams.size.y, "Opengl test", NULL, NULL);
         System.out.println(wParams.size.x + " " + wParams.size.y);
