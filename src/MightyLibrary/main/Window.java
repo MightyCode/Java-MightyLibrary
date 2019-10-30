@@ -57,8 +57,8 @@ public class Window{
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        if (fullscreen) windowId = glfwCreateWindow(size.x, size.y, "", glfwGetPrimaryMonitor(), NULL);
-        else            windowId = glfwCreateWindow(size.x, size.y, "", NULL, NULL);
+        if (fullscreen) windowId = glfwCreateWindow(size.x, size.y, windowName, glfwGetPrimaryMonitor(), NULL);
+        else            windowId = glfwCreateWindow(size.x, size.y, windowName, NULL, NULL);
 
 
         System.out.println("\nWindow with id : "+ windowId +" created");
@@ -95,7 +95,6 @@ public class Window{
         glfwSwapInterval(0);
 
         setViewPort(size.x, size.y);
-        //setViewPort(1920, 1920);
 
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
@@ -121,7 +120,23 @@ public class Window{
 
 
     public void setTitle(String title){
-        glfwSetWindowTitle(windowId, title);
+        if (windowCreated){
+            windowName = title;
+            glfwSetWindowTitle(windowId, windowName);
+        }
+
+    }
+
+    public void setFullscreen(boolean fullscreen){
+        if (windowCreated) {
+            if (this.fullscreen != fullscreen){
+                destroyWindow();
+
+            }
+        }
+
+        this.fullscreen = fullscreen;
+        if (windowCreated) createNewWindow();
     }
 
     /**
@@ -133,6 +148,7 @@ public class Window{
             glfwFreeCallbacks(windowId);
             glfwDestroyWindow(windowId);
             System.out.println("Window with id : " + windowId + " deleted");
+            windowId = 0;
         }
     }
 

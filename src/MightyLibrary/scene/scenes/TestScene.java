@@ -40,6 +40,7 @@ public class TestScene extends Scene {
     Window window;
 
     public TestScene(String[] args){
+        // DONT WORK IF THE WINDOW IS RESIZABLE OR CHANGE TO FULLSCREEN
         window = ManagerContainer.getInstance().window;
         fbo = glGenFramebuffers();
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);

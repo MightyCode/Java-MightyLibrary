@@ -18,24 +18,24 @@ public class MainLoop {
     private final double TICK_TIME = SECOND / TPS;
     private final double FRAME_TIME = SECOND / FPS;
 
-    private boolean librariesLoaded;
-
     public MainLoop(){
         if (initLibraries() == -1){
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
         window = new Window();
-        window.setSize(1280, 720);
-        window.setVirtualSize(1280, 720);
 
+        // First instancing of manager container
         ManagerContainer manContainer = ManagerContainer.getInstance();
         manContainer.setManager(window);
 
         // Load or create config
+        window.setSize(1280, 720);
+        window.setVirtualSize(1280, 720);
 
-        window.createNewWindow();
         window.setTitle("Opengl test");
+        window.setFullscreen(false);
+        window.createNewWindow();
 
         sceneManager = new SceneManager(this);
     }
