@@ -10,11 +10,7 @@ public class Main {
 
     public static boolean admin;
 
-    /**
-     * Window.
-     * This global variable contains all of the main game structure.
-     */
-    public static Window window;
+    public static MainLoop mainLoop;
 
     /**
      * Run the game.
@@ -22,7 +18,7 @@ public class Main {
     public static void main(String[] args) {
         admin = true;
 
-        window = new Window();
-        window.run();
+        mainLoop = new MainLoop();
+        mainLoop.run();
     }
 }

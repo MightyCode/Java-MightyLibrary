@@ -1,6 +1,7 @@
 package MightyLibrary.inputs;
 
-import MightyLibrary.main.WindowParams;
+import MightyLibrary.main.ManagerContainer;
+import MightyLibrary.main.Window;
 
 import java.util.Arrays;
 
@@ -14,7 +15,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetKey;
  */
 public class KeyboardManager {
 
-    public WindowParams wParams;
+    public Window window;
 
     private static final int KEYS = 348;
     private static final int BEGIN_KEYS = 32;
@@ -25,8 +26,8 @@ public class KeyboardManager {
      * Keyboard manager class.
      * Instance the class.
      */
-    public KeyboardManager(WindowParams wParams){
-        this.wParams = wParams;
+    public KeyboardManager(){
+        this.window = ManagerContainer.getInstance().window;
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
     }
@@ -37,7 +38,7 @@ public class KeyboardManager {
     }
 
     private boolean testState(int keyID){
-        return glfwGetKey(wParams.windowId, keyID) == 1;
+        return glfwGetKey(window.windowId, keyID) == 1;
     }
 
     /**

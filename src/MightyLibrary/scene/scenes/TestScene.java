@@ -1,5 +1,6 @@
 package MightyLibrary.scene.scenes;
 
+import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.main.Window;
 import MightyLibrary.render.texture.TextureParameters;
 import MightyLibrary.scene.Camera;
@@ -36,26 +37,23 @@ public class TestScene extends Scene {
     // VARIABLES TEST
     int fbo, rbo;
     int screen;
-    int virtualWidth;
-    int virtualHeight;
+    Window window;
 
     public TestScene(String[] args){
-        virtualWidth = manContainer.wParams.virtualSize.x;
-        virtualHeight = manContainer.wParams.virtualSize.y;
-
+        window = ManagerContainer.getInstance().window;
         fbo = glGenFramebuffers();
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
         screen = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, screen);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, virtualWidth, virtualHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.virtualSize.x, window.virtualSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
         TextureParameters.realisticParameters();
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen, 0);
 
         rbo = glGenRenderbuffers();
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, virtualWidth, virtualHeight);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window.virtualSize.x, window.virtualSize.y);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -165,7 +163,7 @@ public class TestScene extends Scene {
 
     public void display() {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        Window.setViewPort(virtualWidth, virtualHeight);
+        window.setVirtualViewport();
 
         clear();
         light.display();
@@ -174,7 +172,7 @@ public class TestScene extends Scene {
         sBlock.display();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        Window.setViewPort(manContainer.wParams.size.x, manContainer.wParams.size.y);
+        window.setRealViewport();
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, screen);
         screenShape.display();
