@@ -29,11 +29,11 @@ public class MainLoop {
         manContainer.setManager(window);
 
         // Load or create config
-        window.setSize(1280, 720);
-        window.setVirtualSize(1280, 720);
+        window.setSize(1920, 1080);
+        window.setVirtualSize(1920, 1080);
 
         window.setTitle("Opengl test");
-        window.setFullscreen(false);
+        window.setFullscreen(true);
         window.createNewWindow();
 
         if (!window.windowCreated){

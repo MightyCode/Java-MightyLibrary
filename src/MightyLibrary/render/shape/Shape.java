@@ -20,12 +20,12 @@ public class Shape{
     protected int vboStorage, eboStorage;
 
     protected int vao, vbo, ebo;
-    protected int indices[];
+    protected int indicesSize;
 
     protected int[] info;
 
     protected boolean useEbo;
-    protected float[] vertices;
+    protected int verticesSize;
     protected int verticesDraw;
 
     protected boolean in2D;
@@ -43,9 +43,9 @@ public class Shape{
         this.shaderId = this.shadManager.getIdShaderFromString(shaderName);
 
         verticesDraw = 0;
-        vertices = new float[0];
+        verticesSize = 0;
         info = new int[0];
-        indices = new int[0];
+        indicesSize = 0;
 
         vao = glGenVertexArrays();
         bind();
@@ -61,11 +61,11 @@ public class Shape{
     }
 
     public Shape setUseEbo(boolean state){
-        if(this.useEbo && ebo != 0) glDeleteBuffers(this.ebo);
+        if (this.useEbo && ebo != 0) glDeleteBuffers(this.ebo);
 
         this.useEbo = state;
 
-        if(this.useEbo) glGenBuffers();
+        if (this.useEbo) ebo =  glGenBuffers();
         return this;
     }
 
@@ -76,10 +76,8 @@ public class Shape{
         int total = 0;
         int sum = Math.sum(info);
 
-        if(vertices.length == 0){
-            this.setVbo(new float[sum]);
-        }
-        else verticesDraw = vertices.length / sum;
+        if(verticesSize == 0)     this.setVbo(new float[sum]);
+        else                         verticesDraw = verticesSize / sum;
 
         for(int i = 0; i < info.length; i++) {
             glVertexAttribPointer(i, info[i], GL_FLOAT, false,4 * sum, total);
@@ -91,10 +89,10 @@ public class Shape{
 
     public Shape setVbo(float[] vertices){
         bind();
-        this.vertices = vertices;
+        this.verticesSize = vertices.length;
 
-        if (info.length == 0) verticesDraw = 0;
-        else verticesDraw = vertices.length / Math.sum(info);
+        if (info.length == 0)   verticesDraw = 0;
+        else                    verticesDraw = vertices.length / Math.sum(info);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
@@ -103,11 +101,11 @@ public class Shape{
 
     public Shape setEbo(int[] indices){
         bind();
-        this.indices = indices;
+        this.indicesSize = indices.length;
         if (!useEbo) System.err.print(">(Shape.java) Providing EBO without using EBO !");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, this.indices, GL_STATIC_DRAW);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
         return this;
     }
 
@@ -129,8 +127,8 @@ public class Shape{
     }
 
     public void applyDimension() {
-        if (in2D) glDisable(GL_DEPTH_TEST);
-        else glEnable(GL_DEPTH_TEST);
+        if (in2D)   glDisable(GL_DEPTH_TEST);
+        else        glEnable(GL_DEPTH_TEST);
     }
 
     public Shape setDimensionTo2D(boolean state){
@@ -139,8 +137,13 @@ public class Shape{
     }
 
     public void draw(){
-        if (useEbo) glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+
+        if (useEbo) glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
         else glDrawArrays(GL_TRIANGLES, 0, verticesDraw);
+    }
+
+    public void printStatus(){
+        System.out.println("ebo" +  ebo + " vao  " + vao + " vbo " + vbo + " size " + indicesSize);
     }
 
     public void applyShader(){

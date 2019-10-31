@@ -1,9 +1,5 @@
 package MightyLibrary.scene.scenes;
 
-import MightyLibrary.main.ManagerContainer;
-import MightyLibrary.main.Window;
-import MightyLibrary.render.shape.Renderer.FrameBuffer;
-import MightyLibrary.render.texture.TextureParameters;
 import MightyLibrary.scene.Camera;
 import MightyLibrary.render.shape.Renderer.ColoredCubeRenderer;
 import MightyLibrary.render.shape.Shape;
@@ -61,20 +57,24 @@ public class TestScene extends Scene {
         manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("displacementMap", 1);
         fb.clear();
 
-        hudBar = new Shape("colorShape2D", false, true);
+        hudBar = new Shape("colorShape2D", true, true);
         float vertex1[] = new float[]{
-            1f, 0.0f,
             1f, 1f,
             0.0f, 1f,
-
             1f, 0.0f,
-            0.0f, 0.0f,
-            0.0f, 1f
+            0.0f, 0.0f
+
         };
+
+        int ebo1[] = new int[]{
+                0, 1, 2, 1, 2, 3
+        };
+
         manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
 
-        hudBar.setReading(new int[]{2});
+        hudBar.setEbo(ebo1);
         hudBar.setVbo(vertex1);
+        hudBar.setReading(new int[]{2});
 
         manContainer.mouseManager.setCursor(false);
         setClearColor(52, 189, 235, 1f);
@@ -138,9 +138,9 @@ public class TestScene extends Scene {
         manContainer.texManager.bind(displacementMap, 1);
         sBlock.display();
 
-        hudBar.display();
         super.setAndDisplayRealScene();
-        // Better to draw the hud here
+        // Better to draw the hud here and be not affected by the post processing shader
+        hudBar.display();
     }
 
 
