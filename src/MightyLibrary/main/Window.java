@@ -27,7 +27,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  */
 public class Window{
 
-    private boolean windowCreated;
+    public boolean windowCreated;
 
     public long windowId;
     public Vector2i size;
@@ -144,8 +144,6 @@ public class Window{
      */
     public void destroyWindow(){
         if (windowCreated) {
-            // Free the window callbacks and destroy the window
-            glfwFreeCallbacks(windowId);
             glfwDestroyWindow(windowId);
             System.out.println("Window with id : " + windowId + " deleted");
             windowId = 0;

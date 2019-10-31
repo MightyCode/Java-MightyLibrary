@@ -2,7 +2,6 @@ package MightyLibrary.main;
 
 import MightyLibrary.scene.SceneManager;
 import MightyLibrary.util.Timer;
-import org.lwjgl.glfw.GLFWErrorCallback;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -30,12 +29,16 @@ public class MainLoop {
         manContainer.setManager(window);
 
         // Load or create config
-        window.setSize(1280, 720);
-        window.setVirtualSize(1280, 720);
+        window.setSize(1800, 900);
+        window.setVirtualSize(1800, 900);
 
         window.setTitle("Opengl test");
         window.setFullscreen(false);
         window.createNewWindow();
+
+        if (!window.windowCreated){
+            exit(ListError.WINDOW_CREATION_FAIL);
+        }
 
         sceneManager = new SceneManager(this);
     }
@@ -81,13 +84,21 @@ public class MainLoop {
             // Terminate GLFW and free the error callback
             glfwTerminate();
         }
-        System.exit(status);
+
+        if (status != ListError.WINDOW_CREATION_FAIL) {
+            window.destroyWindow();
+        }
+
+        if (status != ListError.NO_ERROR){
+            System.err.println("Exit with error "  + status);
+            System.exit(-1);
+        } else {
+            System.out.println("Exit without error");
+            System.exit(0);
+        }
     }
 
     private int initLibraries() {
-        // Setup an error callback.
-        GLFWErrorCallback.createPrint(System.err).set();
-
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit()) {
             System.err.println("GLFW fail to initialize");

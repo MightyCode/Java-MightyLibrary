@@ -2,8 +2,8 @@
 	"shaders": {
 		"colorShape2D": {
 			"files": [
-				"colorShape2DV.glsl",
-				"colorShape2DF.glsl"
+				"basic/colorShape2DV.glsl",
+				"basic/colorShape2DF.glsl"
 			],
 			"mode" : ["none"],
 			"links": [
@@ -13,8 +13,8 @@
 
 		"colorShape3D": {
 			"files": [
-				"colorShape3DV.glsl",
-				"colorShape3DF.glsl"
+				"basic/colorShape3DV.glsl",
+				"basic/colorShape3DF.glsl"
 			],
 			"mode" : ["camView"],
 			"links": [
@@ -41,11 +41,10 @@
 				"viewPos"
 			]
 		},
-
 		"texture3D": {
 			"files": [
-				"texture3DV.glsl",
-				"texture3DF.glsl"
+				"basic/texture3DV.glsl",
+				"basic/texture3DF.glsl"
 			],
 			"mode" : ["camView"],
 			"links": [
@@ -71,8 +70,16 @@
 		},
 		"texture2D": {
 			"files": [
-				"texture2DV.glsl",
-				"texture2DF.glsl"
+				"basic/texture2DV.glsl",
+				"basic/texture2DF.glsl"
+			],
+			"mode" : ["none"],
+			"links": []
+		},
+		"postProcessing": {
+			"files": [
+				"framebuffers/postProcessingV.glsl",
+				"framebuffers/postProcessingF.glsl"
 			],
 			"mode" : ["none"],
 			"links": []

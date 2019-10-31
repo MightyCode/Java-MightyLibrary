@@ -52,10 +52,7 @@ public class SceneManager {
         // Command
         if (Main.admin) if(manContainer.keyManager.keyPressed(GLFW_KEY_F1) || commands.isWriteCommands) commands.writeCommand();
 
-
-        if(wantChange){
-            changeScene();
-        }
+        if(wantChange)  changeScene();
 
         currentScene.update();
     }

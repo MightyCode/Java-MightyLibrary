@@ -67,7 +67,7 @@ public class TestScene extends Scene {
         light = new ColoredCubeRenderer(new Vector3f(3.0f, 3.0f, -3.0f), 0.5f);
         light.setColor(new Vector3f(1.0f, 0.2f, 0.4f));
 
-        sBlock = new Shape("texture3D", false, false);
+        sBlock = new Shape("textureComplex3D", false, false);
 
         // Textures
         block = manContainer.texManager.getIdShaderFromString("container");
@@ -83,7 +83,7 @@ public class TestScene extends Scene {
         model.identity();
         model.get(fb);
         manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("model", fb);
-        //manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("displacementMap", 1);
+        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("displacementMap", 1);
         fb.clear();
 
         hudBar = new Shape("colorShape2D", false, true);
@@ -101,7 +101,7 @@ public class TestScene extends Scene {
         hudBar.setReading(new int[]{2});
         hudBar.setVbo(vertex1);
 
-        screenShape = new Shape("texture2D", false, true);
+        screenShape = new Shape("postProcessing", false, true);
         float vertex2[] = new float[]{
                 -1.0f,  1.0f,  0.0f, 1.0f,
                 -1.0f, -1.0f,  0.0f, 0.0f,
@@ -121,22 +121,28 @@ public class TestScene extends Scene {
 
 
     public void update() {
+        int speed = 1;
+        if (manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_SHIFT)) {
+            speed = 3;
+        }
+
+
         if(manContainer.keyManager.getKeyState(GLFW_KEY_A)){
-            manContainer.cam.speedAngX(Camera.speed.x);
+            manContainer.cam.speedAngX(Camera.speed.x * speed);
         }
         if(manContainer.keyManager.getKeyState(GLFW_KEY_D)){
-            manContainer.cam.speedAngX(-Camera.speed.x);
+            manContainer.cam.speedAngX(-Camera.speed.x * speed);
         }
         if(manContainer.keyManager.getKeyState(GLFW_KEY_W)){
-            manContainer.cam.speedAngZ(-Camera.speed.z);
+            manContainer.cam.speedAngZ(-Camera.speed.z * speed);
         }
         if(manContainer.keyManager.getKeyState(GLFW_KEY_S)) {
-            manContainer.cam.speedAngZ(Camera.speed.z);
+            manContainer.cam.speedAngZ(Camera.speed.z * speed);
         }
         if(manContainer.keyManager.getKeyState(GLFW_KEY_SPACE)) {
             manContainer.cam.setY(manContainer.cam.camPos.y += Camera.speed.y);
         }
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_SHIFT)) {
+        if(manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_CONTROL)) {
             manContainer.cam.setY(manContainer.cam.camPos.y -= Camera.speed.y);
         }
 
@@ -154,7 +160,7 @@ public class TestScene extends Scene {
         light.setColor(new Vector3f(counter / 360.0f));
         light.setColor(new Vector3f(counter / 360.0f));
         light.updateColor();
-        //manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("time", counter / 720);
+        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("time", counter / 720);
 
         counter += 1f;
         if(counter > 720) counter = 0;
