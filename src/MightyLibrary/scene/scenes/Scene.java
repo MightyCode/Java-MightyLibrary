@@ -1,22 +1,43 @@
 package MightyLibrary.scene.scenes;
 
 import MightyLibrary.main.ManagerContainer;
+import MightyLibrary.render.shape.Renderer.VirtualSceneRenderer;
 import MightyLibrary.util.math.Color4f;
 
 import static org.lwjgl.opengl.GL11.*;
 
 public class Scene {
     protected ManagerContainer manContainer;
+    VirtualSceneRenderer scRenderer;
 
     public Scene(){
         this.manContainer = ManagerContainer.getInstance();
+        scRenderer = new VirtualSceneRenderer();
     }
+
 
     public void init(){}
 
+
     public void update(){}
 
+
     public void display(){}
+
+
+    public void setVirtualScene(){
+        scRenderer.bindFrameBuffer();
+        manContainer.window.setVirtualViewport();
+    }
+
+    public void setAndDisplayRealScene(){
+        scRenderer.unbindFrameBuffer();
+        manContainer.window.setRealViewport();
+        scRenderer.bindRenderTexture();
+
+        scRenderer.display();
+        scRenderer.unbindRenderTexture();
+    }
 
     protected void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
@@ -29,5 +50,7 @@ public class Scene {
 
     public void setScreen(String newScreen, String args){}
 
-    public void unload() { }
+    public void unload() {
+        scRenderer.unload();
+    }
 }

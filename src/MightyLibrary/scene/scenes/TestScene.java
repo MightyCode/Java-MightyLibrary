@@ -2,6 +2,7 @@ package MightyLibrary.scene.scenes;
 
 import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.main.Window;
+import MightyLibrary.render.shape.Renderer.FrameBuffer;
 import MightyLibrary.render.texture.TextureParameters;
 import MightyLibrary.scene.Camera;
 import MightyLibrary.render.shape.Renderer.ColoredCubeRenderer;
@@ -14,7 +15,6 @@ import org.lwjgl.BufferUtils;
 import java.nio.FloatBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL30.*;
 
 public class TestScene extends Scene {
     private Matrix4f model = new Matrix4f();
@@ -22,7 +22,6 @@ public class TestScene extends Scene {
 
     private Shape sBlock;
     private Shape hudBar;
-    private Shape screenShape;
     // Textures
     private Id block, displacementMap;
 
@@ -34,32 +33,8 @@ public class TestScene extends Scene {
 
     private float counter = 0;
 
-    // VARIABLES TEST
-    int fbo, rbo;
-    int screen;
-    Window window;
-
     public TestScene(String[] args){
-        // DONT WORK IF THE WINDOW IS RESIZABLE OR CHANGE TO FULLSCREEN
-        window = ManagerContainer.getInstance().window;
-        fbo = glGenFramebuffers();
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-        screen = glGenTextures();
-        glBindTexture(GL_TEXTURE_2D, screen);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.virtualSize.x, window.virtualSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-        TextureParameters.realisticParameters();
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen, 0);
-
-        rbo = glGenRenderbuffers();
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window.virtualSize.x, window.virtualSize.y);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            System.err.println("ARCHTUNG DIE FRAMEBUFFER IST KAPUTT");
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        super();
     }
 
 
@@ -75,7 +50,7 @@ public class TestScene extends Scene {
 
 
         // init cube
-        float vertex0[] = createCrates(16 * 16);
+        float[] vertex0 = createCrates(16 * 16);
 
         sBlock.setReading(new int[]{3, 2});
         sBlock.setVbo(vertex0);
@@ -88,32 +63,18 @@ public class TestScene extends Scene {
 
         hudBar = new Shape("colorShape2D", false, true);
         float vertex1[] = new float[]{
-            1f, 0.75f,
+            1f, 0.0f,
             1f, 1f,
-            0.75f, 1f,
+            0.0f, 1f,
 
-            1f, 0.75f,
-            0.75f, 0.75f,
-            0.75f, 1f
+            1f, 0.0f,
+            0.0f, 0.0f,
+            0.0f, 1f
         };
         manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
 
         hudBar.setReading(new int[]{2});
         hudBar.setVbo(vertex1);
-
-        screenShape = new Shape("postProcessing", false, true);
-        float vertex2[] = new float[]{
-                -1.0f,  1.0f,  0.0f, 1.0f,
-                -1.0f, -1.0f,  0.0f, 0.0f,
-                1.0f, -1.0f,  1.0f, 0.0f,
-
-                -1.0f,  1.0f,  0.0f, 1.0f,
-                1.0f, -1.0f,  1.0f, 0.0f,
-                1.0f,  1.0f,  1.0f, 1.0f
-        };
-
-        screenShape.setReading(new int[]{2, 2});
-        screenShape.setVbo(vertex2);
 
         manContainer.mouseManager.setCursor(false);
         setClearColor(52, 189, 235, 1f);
@@ -169,32 +130,25 @@ public class TestScene extends Scene {
 
 
     public void display() {
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-        window.setVirtualViewport();
-
+        super.setVirtualScene();
+        // Better to draw the world here
         clear();
         light.display();
         manContainer.texManager.bind(block);
         manContainer.texManager.bind(displacementMap, 1);
         sBlock.display();
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        window.setRealViewport();
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, screen);
-        screenShape.display();
         hudBar.display();
+        super.setAndDisplayRealScene();
+        // Better to draw the hud here
     }
 
 
     public void unload(){
+        super.unload();
         sBlock.unload();
         light.unload();
         hudBar.unload();
-        screenShape.unload();
-
-        glDeleteFramebuffers(fbo);
-        glDeleteTextures(screen);
     }
 
 
