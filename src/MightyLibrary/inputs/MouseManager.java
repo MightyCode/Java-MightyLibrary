@@ -1,6 +1,7 @@
 package MightyLibrary.inputs;
 
-import MightyLibrary.main.WindowParams;
+import MightyLibrary.main.ManagerContainer;
+import MightyLibrary.main.Window;
 import org.joml.Vector2f;
 import org.lwjgl.BufferUtils;
 
@@ -18,7 +19,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
  */
 public class MouseManager {
 
-    private WindowParams wParams;
+    private Window window;
 
     private static final int MOUSE_BUTTONS = 7;
     private final boolean[] state = new boolean[MOUSE_BUTTONS];
@@ -36,13 +37,13 @@ public class MouseManager {
      * Mouse manager class.
      * Instance the class
      */
-    public MouseManager(WindowParams wParams){
+    public MouseManager(){
         pos = new Vector2f(0);
         oldPos = new Vector2f(0);
         relativePos = new Vector2f(0);
         relativeOldPos = new Vector2f(0);
 
-        this.wParams = wParams;
+        this.window = ManagerContainer.getInstance().window;
 
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
@@ -58,7 +59,7 @@ public class MouseManager {
     }
 
     public boolean getState(int buttonId){
-        return glfwGetMouseButton(wParams.windowId, buttonId) == 1;
+        return glfwGetMouseButton(window.windowId, buttonId) == 1;
     }
 
     public boolean buttonPressed(int buttonID){
@@ -73,7 +74,7 @@ public class MouseManager {
         DoubleBuffer x = BufferUtils.createDoubleBuffer(1);
         DoubleBuffer y = BufferUtils.createDoubleBuffer(1);
 
-        glfwGetCursorPos(wParams.windowId, x, y);
+        glfwGetCursorPos(window.windowId, x, y);
         pos.set((float)x.get(0), (float)y.get(0));
     }
 
@@ -96,8 +97,8 @@ public class MouseManager {
         mouseUpdate();
 
         relativeOldPos = new Vector2f(relativePos);
-        relativePos.x = posX() / wParams.size.x;
-        relativePos.y = posY() / wParams.size.y;
+        relativePos.x = posX() / window.size.x;
+        relativePos.y = posY() / window.size.y;
 
         for(int key = 0; key < state.length; key++){
             oldState[key] = state[key];
@@ -116,8 +117,8 @@ public class MouseManager {
     }
 
     private void glfwSetCursor(){
-        if(displayCursor)glfwSetInputMode(wParams.windowId, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        else glfwSetInputMode(wParams.windowId, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if(displayCursor)glfwSetInputMode(window.windowId, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        else glfwSetInputMode(window.windowId, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     public boolean getCursorState(){

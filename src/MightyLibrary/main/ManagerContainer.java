@@ -10,7 +10,7 @@ import MightyLibrary.render.shader.ShaderManager;
 
 public class ManagerContainer {
 
-    public WindowParams wParams;
+    public Window window;
 
     public InputManager inpManager;
     public KeyboardManager keyManager;
@@ -18,7 +18,7 @@ public class ManagerContainer {
 
     public Camera cam;
 
-    public SceneManager screenManager;
+    public SceneManager sceneManager;
 
     public ShaderManager shadManager;
     public TextureManager texManager;
@@ -56,13 +56,13 @@ public class ManagerContainer {
         return this;
     }
 
-    public ManagerContainer setManager(WindowParams wParams){
-        this.wParams = wParams;
+    public ManagerContainer setManager(Window window){
+        this.window = window;
         return this;
     }
 
     public ManagerContainer setManager(SceneManager scManager){
-        this.screenManager = scManager;
+        this.sceneManager = scManager;
         return this;
     }
 

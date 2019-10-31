@@ -4,7 +4,7 @@ import MightyLibrary.inputs.InputManager;
 import MightyLibrary.inputs.KeyboardManager;
 import MightyLibrary.inputs.MouseManager;
 import MightyLibrary.main.Main;
-import MightyLibrary.main.Window;
+import MightyLibrary.main.MainLoop;
 import MightyLibrary.render.shader.ShaderManager;
 import MightyLibrary.render.texture.TextureManager;
 import MightyLibrary.scene.scenes.Scene;
@@ -12,7 +12,6 @@ import MightyLibrary.scene.scenes.TestScene;
 import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.util.commands.Commands;
 import org.joml.Vector3f;
-import org.lwjgl.glfw.*;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F1;
 
@@ -24,16 +23,16 @@ public class SceneManager {
     private String[] changeArgs;
     private String newSceneName = "";
 
-    private Window window;
+    private MainLoop loop;
 
     private Commands commands;
 
-    public SceneManager(Window window){
-        this.window = window;
+    public SceneManager(MainLoop mLoop){
+        this.loop = mLoop;
         manContainer = ManagerContainer.getInstance();
 
         manContainer.setManager(this);
-        manContainer.setManager(new MouseManager(this.manContainer.wParams)).setManager( new KeyboardManager(this.manContainer.wParams));
+        manContainer.setManager(new MouseManager()).setManager( new KeyboardManager());
         manContainer.setManager(new InputManager(this.manContainer.keyManager, this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
 
         manContainer.setManager(new Camera(120f, new Vector3f(0.0f, 0.0f, 10.0f)));
@@ -53,10 +52,7 @@ public class SceneManager {
         // Command
         if (Main.admin) if(manContainer.keyManager.keyPressed(GLFW_KEY_F1) || commands.isWriteCommands) commands.writeCommand();
 
-
-        if(wantChange){
-            changeScene();
-        }
+        if(wantChange)  changeScene();
 
         currentScene.update();
     }
@@ -98,8 +94,8 @@ public class SceneManager {
         newSceneName = "";
     }
 
-    public void exit(){
-        window.exit();
+    public void exit(int status){
+        loop.exit(status);
     }
 
     public void unload(){

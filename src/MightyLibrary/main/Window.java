@@ -1,8 +1,7 @@
 package MightyLibrary.main;
 
-import MightyLibrary.scene.SceneManager;
-import MightyLibrary.util.Timer;
-import org.lwjgl.glfw.GLFWErrorCallback;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.lwjgl.glfw.*;
 import org.lwjgl.system.MemoryStack;
 
@@ -10,7 +9,6 @@ import org.lwjgl.system.MemoryStack;
 import java.nio.IntBuffer;
 import java.util.Objects;
 
-import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL.createCapabilities;
 import static org.lwjgl.opengl.GL11.*;
@@ -26,53 +24,47 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author MightyCode
  * @version of game : 2.2
  */
-@SuppressWarnings("InfiniteLoopStatement")
 public class Window{
 
-    private WindowParams wParams;
-    private final float SECOND = 1000000000.0f;
-    public final float TPS = 60.0f;
+    public boolean windowCreated;
 
-    public final float FPS = 100000.0f;
+    public long windowId;
+    public Vector2i size;
+    public float ratio;
+    public Vector2i virtualSize;
 
-    private final double TICK_TIME = SECOND / TPS;
-    private final double FRAME_TIME = SECOND / FPS;
+    public String windowName;
+
+    public boolean fullscreen;
+
 
     public Window(){
-        // Get the game global configurations.
-        wParams = new WindowParams();
-        ManagerContainer manContainer = ManagerContainer.getInstance();
-        manContainer.setManager(wParams);
-        createWindow();
-    }
-    private void createWindow() {
-        // Setup an error callback.
-        GLFWErrorCallback.createPrint(System.err).set();
-
-        // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if (!glfwInit())
-            throw new IllegalStateException("Unable to initialize GLFW");
-
-        createNewWindow();
+        windowCreated = false;
+        windowId = 0;
+        size = new Vector2i(1, 1);
+        virtualSize = new Vector2i(1,1);
+        windowName = "";
+        fullscreen = false;
     }
 
     public void createNewWindow(){
-        // Configure GLFW
+        // Configure GLFW for this window
         glfwDefaultWindowHints(); // optional, the current window hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        wParams.setSize(1280, 720);
+        if (fullscreen) windowId = glfwCreateWindow(size.x, size.y, windowName, glfwGetPrimaryMonitor(), NULL);
+        else            windowId = glfwCreateWindow(size.x, size.y, windowName, NULL, NULL);
 
-        wParams.windowId = glfwCreateWindow(wParams.size.x, wParams.size.y, "Opengl test", NULL, NULL);
-        System.out.println(wParams.size.x + " " + wParams.size.y);
 
-        System.out.println("\nWindow with id : "+ wParams.windowId +" created");
+        System.out.println("\nWindow with id : "+ windowId +" created");
 
-        if (wParams.windowId == NULL)
-            throw new RuntimeException("Failed to create the GLFW window");
+        if (windowId == NULL) {
+            System.out.println("Window won't created");
+        }
 
         // Get the thread stack and push a new frame
         try (MemoryStack stack = stackPush()) {
@@ -80,29 +72,28 @@ public class Window{
             IntBuffer pHeight = stack.mallocInt(1); // int*
 
             // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(wParams.windowId, pWidth, pHeight);
+            glfwGetWindowSize(windowId, pWidth, pHeight);
 
             // Get the resolution of the primary monitor
             GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
             // Center the window
             glfwSetWindowPos(
-                    wParams.windowId,
+                    windowId,
                     (Objects.requireNonNull(vidmode).width() - pWidth.get(0)) / 2,
                     (vidmode.height() - pHeight.get(0)) / 2
             );
         } // the stack frame is popped automatically
 
         // Make the OpenGL context current
-        glfwMakeContextCurrent(wParams.windowId);
+        glfwMakeContextCurrent(windowId);
 
         // Make the window visible
-        glfwShowWindow(wParams.windowId);
+        glfwShowWindow(windowId);
         createCapabilities();
         glfwSwapInterval(0);
 
-        setViewPort(wParams.size.x, wParams.size.y);
-        //setViewPort(1920, 1920);
+        setViewPort(size.x, size.y);
 
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
@@ -112,65 +103,104 @@ public class Window{
 
         // Enable antiAliasing
         glEnable(GL_MULTISAMPLE);
+        windowCreated = true;
+    }
+
+
+    public boolean wantExit(){
+        return glfwWindowShouldClose(windowId) && windowCreated;
+    }
+
+
+    public void dispose(){
+        glfwSwapBuffers(windowId);
+        glfwPollEvents();
+    }
+
+
+    public void setTitle(String title){
+        if (windowCreated){
+            windowName = title;
+            glfwSetWindowTitle(windowId, windowName);
+        }
+
+    }
+
+    public void setFullscreen(boolean fullscreen){
+        if (windowCreated) {
+            if (this.fullscreen != fullscreen){
+                destroyWindow();
+
+            }
+        }
+
+        this.fullscreen = fullscreen;
+        if (windowCreated) createNewWindow();
     }
 
     /**
      * Destroy the current window.
      */
     public void destroyWindow(){
-        // Free the window callbacks and destroy the window
-        glfwFreeCallbacks(wParams.windowId);
-        glfwDestroyWindow(wParams.windowId);
-        System.out.println("Window with id : " + wParams.windowId + " deleted");
-    }
-
-    /**
-     * Method call by main class to begin the game.
-     */
-    void run() {
-        loop();
-        exit();
-    }
-
-    /**
-     * Main method of game.
-     */
-    private void loop() {
-        // Set render parameters
-        int ticks = 0;
-        int frames = 0;
-
-        Timer timer = new Timer();
-
-        double lastTick = 0.0;
-        double lastFrame = 0.0;
-        double lastSecond = 0.0;
-
-        SceneManager screenManager = new SceneManager(this);
-
-        while(!glfwWindowShouldClose(wParams.windowId)){
-            if (timer.getDuration() - lastTick >= TICK_TIME) {
-                screenManager.update();
-                screenManager.dispose();
-                ticks++;
-                lastTick += TICK_TIME;
-            } else if (timer.getDuration() - lastFrame >= FRAME_TIME) {
-                screenManager.display();
-                glfwSwapBuffers(wParams.windowId);
-                glfwPollEvents();
-                frames++;
-                lastFrame += FRAME_TIME;
-            }
-
-            if (timer.getDuration() - lastSecond >= SECOND) {
-                if(Main.admin) glfwSetWindowTitle(wParams.windowId, "OPEN GL | FPS:" + frames + "; TPS:" + ticks);
-                //System.out.println(Runtime.getRuntime().totalMemory()-Runtime.getRuntime().freeMemory());
-                ticks = frames = 0;
-                lastSecond += SECOND;
-            }
+        if (windowCreated) {
+            glfwDestroyWindow(windowId);
+            System.out.println("Window with id : " + windowId + " deleted");
+            windowId = 0;
         }
+    }
 
-        screenManager.unload();
+
+    public Window setSize(Vector2f size){
+        return setSize(size.x, size.y);
+    }
+
+
+    public Window setSize(float width, float height){
+        return setSize((int)width, (int)height);
+    }
+
+
+    public Window setWidth(int width){
+        return setSize(width, size.y);
+    }
+
+
+    public Window setHeight(int height){
+        return setSize(size.x, height);
+    }
+
+
+    public Window setSize(int width, int height){
+        size.x = width;
+        size.y = height;
+        this.ratio = (float) this.size.x / (float) this.size.y;
+        if (windowCreated)
+            glfwSetWindowSize(windowId, size.x, size.y);
+        return this;
+    }
+
+
+    public Window setVirtualSize(int virtualWidth, int virtualHeight){
+        virtualSize.x = virtualWidth;
+        virtualSize.y = virtualHeight;
+        return this;
+    }
+
+    public Window setVirtualViewport(){
+        setViewPort(virtualSize.x, virtualSize.y);
+        return this;
+    }
+
+
+    public Window setRealViewport(){
+        setViewPort(size.x, size.y);
+        return this;
+    }
+
+
+    public Window forceRatio(float ratio){
+        this.ratio = ratio;
+        return this;
     }
 
     /**
@@ -200,19 +230,7 @@ public class Window{
         glPopMatrix();
     }
 
-    public static void setViewPort(int width, int height){
+    private void setViewPort(int width, int height){
         glViewport(0, 0, width, height);
-    }
-
-    /**
-     * Exit the game.
-     */
-    public void exit() {
-
-        destroyWindow();
-        // Terminate GLFW and free the error callback
-        glfwTerminate();
-        Objects.requireNonNull(glfwSetErrorCallback(null)).free();
-        System.exit(0);
     }
 }
