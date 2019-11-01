@@ -1,12 +1,8 @@
-package MightyLibrary.render.shape.Renderer;
+package MightyLibrary.render.shape._3D;
 
-import MightyLibrary.render.shader.ShaderManager;
-import MightyLibrary.render.shape.Renderer.Renderer;
-import org.joml.Matrix4f;
+import MightyLibrary.render.shape.Renderer;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
 
 public class ColoredCubeRenderer extends Renderer {
     public Vector3f color;

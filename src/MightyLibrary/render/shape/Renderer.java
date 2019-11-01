@@ -1,4 +1,4 @@
-package MightyLibrary.render.shape.Renderer;
+package MightyLibrary.render.shape;
 
 import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.render.shader.ShaderManager;

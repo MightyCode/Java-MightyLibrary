@@ -1,8 +1,8 @@
-package MightyLibrary.render.shape.Renderer;
+package MightyLibrary.render.shape._2D;
 
 import MightyLibrary.render.shape.Shape;
 
-public class VirtualSceneRenderer extends FrameBuffer{
+public class VirtualSceneRenderer extends FrameBuffer {
     private Shape screenShape;
 
     public VirtualSceneRenderer(){

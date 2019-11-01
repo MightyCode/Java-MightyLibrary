@@ -1,7 +1,7 @@
 package MightyLibrary.scene.scenes;
 
 import MightyLibrary.main.ManagerContainer;
-import MightyLibrary.render.shape.Renderer.VirtualSceneRenderer;
+import MightyLibrary.render.shape._2D.VirtualSceneRenderer;
 import MightyLibrary.util.math.Color4f;
 
 import static org.lwjgl.opengl.GL11.*;

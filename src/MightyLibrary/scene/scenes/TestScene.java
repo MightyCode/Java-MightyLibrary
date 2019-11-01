@@ -1,7 +1,8 @@
 package MightyLibrary.scene.scenes;
 
+import MightyLibrary.render.shape._3D.OBJLoader;
 import MightyLibrary.scene.Camera;
-import MightyLibrary.render.shape.Renderer.ColoredCubeRenderer;
+import MightyLibrary.render.shape._3D.ColoredCubeRenderer;
 import MightyLibrary.render.shape.Shape;
 import MightyLibrary.util.Id;
 import org.joml.Matrix4f;
@@ -18,8 +19,9 @@ public class TestScene extends Scene {
 
     private Shape sBlock;
     private Shape hudBar;
+    private Shape _3DModels;
     // Textures
-    private Id block, displacementMap;
+    private Id block, displacementMap, stall;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
@@ -55,7 +57,6 @@ public class TestScene extends Scene {
         model.get(fb);
         manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("model", fb);
         manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("displacementMap", 1);
-        fb.clear();
 
         hudBar = new Shape("colorShape2D", true, true);
         float vertex1[] = new float[]{
@@ -78,6 +79,10 @@ public class TestScene extends Scene {
 
         manContainer.mouseManager.setCursor(false);
         setClearColor(52, 189, 235, 1f);
+
+        _3DModels = OBJLoader.loadObjModel("stand/stall");
+        manContainer.shadManager.getShader(_3DModels.getShaderId()).glUniform("model", fb);
+        stall = manContainer.texManager.getIdShaderFromString("stall");
     }
 
 
@@ -135,12 +140,14 @@ public class TestScene extends Scene {
         clear();
         light.display();
         manContainer.texManager.bind(block);
-        manContainer.texManager.bind(displacementMap, 1);
-        sBlock.display();
+       // manContainer.texManager.bind(displacementMap, 1);
+       // sBlock.display();
+        manContainer.texManager.bind(stall);
+       _3DModels.display();
 
         super.setAndDisplayRealScene();
         // Better to draw the hud here and be not affected by the post processing shader
-        hudBar.display();
+        //hudBar.display();
     }
 
 
@@ -149,6 +156,8 @@ public class TestScene extends Scene {
         sBlock.unload();
         light.unload();
         hudBar.unload();
+        _3DModels.unload();
+        fb.clear();
     }
 
 
