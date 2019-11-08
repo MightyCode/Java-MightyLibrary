@@ -19,9 +19,10 @@ public class TestScene extends Scene {
 
     private Shape sBlock;
     private Shape hudBar;
-    private Shape _3DModels;
+    private Shape trunk, leaves;
+    private Shape stand;
     // Textures
-    private Id block, displacementMap, stall;
+    private Id block, displacementMap, standTex;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
@@ -37,14 +38,15 @@ public class TestScene extends Scene {
 
 
     public void init(){
-        light = new ColoredCubeRenderer(new Vector3f(3.0f, 3.0f, -3.0f), 0.5f);
+        light = new ColoredCubeRenderer(new Vector3f(0f, 0f, -2.0f), 1f);
         light.setColor(new Vector3f(1.0f, 0.2f, 0.4f));
 
         sBlock = new Shape("textureComplex3D", false, false);
 
         // Textures
-        block = manContainer.texManager.getIdShaderFromString("container");
+        block = manContainer.texManager.getIdShaderFromString("water1");
         displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
+        standTex = manContainer.texManager.getIdShaderFromString("stall");
 
 
         // init cube
@@ -64,14 +66,11 @@ public class TestScene extends Scene {
             0.0f, 1f,
             1f, 0.0f,
             0.0f, 0.0f
-
         };
 
         int ebo1[] = new int[]{
                 0, 1, 2, 1, 2, 3
         };
-
-        manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
 
         hudBar.setEbo(ebo1);
         hudBar.setVbo(vertex1);
@@ -80,9 +79,10 @@ public class TestScene extends Scene {
         manContainer.mouseManager.setCursor(false);
         setClearColor(52, 189, 235, 1f);
 
-        _3DModels = OBJLoader.loadObjModel("stand/stall");
-        manContainer.shadManager.getShader(_3DModels.getShaderId()).glUniform("model", fb);
-        stall = manContainer.texManager.getIdShaderFromString("stall");
+       /* trunk = OBJLoader.loadObjTexturedModel("world/tree/trunk");
+        leaves = OBJLoader.loadObjTexturedModel("world/tree/leaves");*/
+        stand = OBJLoader.loadObjTexturedModel("stand/stall");
+        manContainer.shadManager.getShader(stand.getShaderId()).glUniform("model", fb);
     }
 
 
@@ -138,12 +138,19 @@ public class TestScene extends Scene {
         super.setVirtualScene();
         // Better to draw the world here
         clear();
+        manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
         light.display();
+        manContainer.texManager.bind(displacementMap, 1);
+        manContainer.texManager.bind(standTex);
+        stand.display();
+
+       /* manContainer.shadManager.getShader(trunk.getShaderId()).glUniform("color", 0.3450f, 0.1607f, 0.0f, 1f);
+        trunk.display();
+
+        manContainer.shadManager.getShader(leaves.getShaderId()).glUniform("color", 0.1333f, 0.5450f, 0.1333f, 1f);
+        leaves.display();*/
         manContainer.texManager.bind(block);
-       // manContainer.texManager.bind(displacementMap, 1);
-       // sBlock.display();
-        manContainer.texManager.bind(stall);
-       _3DModels.display();
+        sBlock.display();
 
         super.setAndDisplayRealScene();
         // Better to draw the hud here and be not affected by the post processing shader
@@ -156,7 +163,9 @@ public class TestScene extends Scene {
         sBlock.unload();
         light.unload();
         hudBar.unload();
-        _3DModels.unload();
+        /*trunk.unload();
+        leaves.unload();*/
+        stand.unload();
         fb.clear();
     }
 
