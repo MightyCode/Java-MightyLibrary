@@ -8,18 +8,28 @@ public class VirtualSceneRenderer extends FrameBuffer {
     public VirtualSceneRenderer(){
         super();
         screenShape = new Shape("postProcessing", false, true);
-        float vertex[] = new float[]{
-                -1.0f,  1.0f,  0.0f, 1.0f,
-                -1.0f, -1.0f,  0.0f, 0.0f,
-                1.0f, -1.0f,  1.0f, 0.0f,
+        float realPos[] = new float[]{
+                -1.0f,  1.0f,
+                -1.0f, -1.0f,
+                1.0f, -1.0f,
 
-                -1.0f,  1.0f,  0.0f, 1.0f,
-                1.0f, -1.0f,  1.0f, 0.0f,
-                1.0f,  1.0f,  1.0f, 1.0f
+                -1.0f,  1.0f,
+                1.0f, -1.0f,
+                1.0f,  1.0f
         };
 
-        screenShape.setReading(new int[]{2, 2});
-        screenShape.setVbo(vertex);
+        float virtualPos[] = new float[]{
+                0.0f, 1.0f,
+                0.0f, 0.0f,
+                1.0f, 0.0f,
+
+                0.0f, 1.0f,
+                1.0f, 0.0f,
+                1.0f, 1.0f
+        };
+
+        screenShape.addVbo(realPos, 2, Shape.STATIC_STORE);
+        screenShape.addVbo(virtualPos, 2, Shape.STATIC_STORE);
     }
 
     public void display(){

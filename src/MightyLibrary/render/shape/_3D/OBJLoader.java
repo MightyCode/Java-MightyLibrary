@@ -1,5 +1,6 @@
 package MightyLibrary.render.shape._3D;
 
+import MightyLibrary.render.shader.Shader;
 import MightyLibrary.render.shape.Shape;
 import MightyLibrary.util.FileMethods;
 import org.joml.Vector2f;
@@ -92,10 +93,12 @@ public abstract class OBJLoader {
         }
 
         Shape shape = new Shape("texture3D", true, false);
+        shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indicesArray);
-        shape.setReading(new int[]{3, 2});
+        shape.addVbo(verticesArray, 3, Shape.STATIC_STORE);
+        shape.addVbo(texturesArray, 2,  Shape.STATIC_STORE);
 
-        float[] vertex = new float[verticesArray.length + texturesArray.length];
+        /*float[] vertex = new float[verticesArray.length + texturesArray.length];
         for (int i = 0; i < vertex.length / 5; i++) {
             vertex[i * 5] = verticesArray[i * 3];
             vertex[i * 5 + 1] = verticesArray[i * 3 + 1];
@@ -105,7 +108,7 @@ public abstract class OBJLoader {
 
         }
 
-        shape.setVbo(vertex);
+        shape.setVbo(vertex);*/
         return shape;
     }
 
@@ -184,15 +187,15 @@ public abstract class OBJLoader {
         }
 
         Shape shape = new Shape("colorShape3D", true, false);
+        shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indicesArray);
-        shape.setReading(new int[]{3});
 
-        shape.setVbo(verticesArray);
+        shape.addVbo(verticesArray, 3, Shape.STATIC_STORE);
         return shape;
     }
 
     private static void processVertexWithTexture(String[] vertexData, List<Integer> indices, List<Vector2f> textures,
-                                      List<Vector3f> normals, float[] texturesArray, float[] normalsArray) {
+                                                 List<Vector3f> normals, float[] texturesArray, float[] normalsArray) {
 
         int currentVertexPointer = Integer.parseInt(vertexData[0]) - 1;
         indices.add(currentVertexPointer);
@@ -208,7 +211,7 @@ public abstract class OBJLoader {
     }
 
     private static void processVertexWithoutTexture(String[] vertexData, List<Integer> indices,
-                                                 List<Vector3f> normals, float[] normalsArray) {
+                                                    List<Vector3f> normals, float[] normalsArray) {
 
         int currentVertexPointer = Integer.parseInt(vertexData[0]) - 1;
         indices.add(currentVertexPointer);

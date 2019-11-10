@@ -46,10 +46,9 @@ public class TestScene extends Scene {
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
 
-        float[] vertex0 = createCrates(16 * 16);
+        float[] cratesInfo = createCrates(16 * 16);
 
-        sBlock.getShape().setReading(new int[]{3, 2});
-        sBlock.getShape().setVbo(vertex0);
+        sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
 
         stand = new GlobalRenderer("texture3D", true, false);
         stand.setTexture("stall");
@@ -61,20 +60,20 @@ public class TestScene extends Scene {
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
         hudBar = new Shape("colorShape2D", true, true);
-        float[] vertex1 = new float[]{
+        float[] vertex = new float[]{
             1f, 1f,
             0.0f, 1f,
             1f, 0.0f,
             0.0f, 0.0f
         };
 
-        int[] ebo1 = new int[]{
+        int[] ebo = new int[]{
                 0, 1, 2, 1, 2, 3
         };
 
-        hudBar.setEbo(ebo1);
-        hudBar.setVbo(vertex1);
-        hudBar.setReading(new int[]{2});
+        hudBar.setEboStorage(Shape.STATIC_STORE);
+        hudBar.setEbo(ebo);
+        hudBar.addVbo(vertex, 2, Shape.STATIC_STORE);
     }
 
 
