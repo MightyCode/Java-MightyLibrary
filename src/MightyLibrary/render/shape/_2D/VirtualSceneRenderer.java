@@ -8,7 +8,7 @@ public class VirtualSceneRenderer extends FrameBuffer {
     public VirtualSceneRenderer(){
         super();
         screenShape = new Shape("postProcessing", false, true);
-        float vertex2[] = new float[]{
+        float vertex[] = new float[]{
                 -1.0f,  1.0f,  0.0f, 1.0f,
                 -1.0f, -1.0f,  0.0f, 0.0f,
                 1.0f, -1.0f,  1.0f, 0.0f,
@@ -19,7 +19,7 @@ public class VirtualSceneRenderer extends FrameBuffer {
         };
 
         screenShape.setReading(new int[]{2, 2});
-        screenShape.setVbo(vertex2);
+        screenShape.setVbo(vertex);
     }
 
     public void display(){
