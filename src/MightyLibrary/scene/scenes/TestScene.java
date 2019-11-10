@@ -141,7 +141,7 @@ public class TestScene extends Scene {
         super.setAndDisplayRealScene();
         // Better to draw the hud here and be not affected by the post processing shader
         manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
-        //hudBar.display();
+        hudBar.display();
     }
 
 
