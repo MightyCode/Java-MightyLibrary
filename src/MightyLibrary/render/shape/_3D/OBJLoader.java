@@ -98,17 +98,6 @@ public abstract class OBJLoader {
         shape.addVbo(verticesArray, 3, Shape.STATIC_STORE);
         shape.addVbo(texturesArray, 2,  Shape.STATIC_STORE);
 
-        /*float[] vertex = new float[verticesArray.length + texturesArray.length];
-        for (int i = 0; i < vertex.length / 5; i++) {
-            vertex[i * 5] = verticesArray[i * 3];
-            vertex[i * 5 + 1] = verticesArray[i * 3 + 1];
-            vertex[i * 5 + 2] = verticesArray[i * 3 + 2];
-            vertex[i * 5 + 3] = texturesArray[i * 2];
-            vertex[i * 5 + 4] = texturesArray[i * 2 + 1];
-
-        }
-
-        shape.setVbo(vertex);*/
         return shape;
     }
 

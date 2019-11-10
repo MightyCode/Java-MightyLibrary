@@ -3,6 +3,7 @@ package MightyLibrary.render.shape;
 import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.render.shader.ShaderManager;
 import MightyLibrary.render.texture.TextureManager;
+import MightyLibrary.util.EShapeType;
 import MightyLibrary.util.Id;
 import MightyLibrary.util.math.Color4f;
 import MightyLibrary.util.math.ColorList;
@@ -12,7 +13,7 @@ import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 
-public abstract class Renderer{
+public class Renderer{
     public Vector3f modelV;
     protected Matrix4f model;
     protected boolean display;
@@ -21,7 +22,6 @@ public abstract class Renderer{
     protected ShaderManager shadManager;
     protected TextureManager textureManager;
 
-
     protected boolean coloredMode;
 
     // Textured
@@ -29,6 +29,8 @@ public abstract class Renderer{
 
     // Colored
     public Color4f color;
+
+    private EShapeType type;
 
     public Renderer(String shaderName, boolean useEbo, boolean in2D){
         shadManager = ManagerContainer.getInstance().shadManager;
@@ -54,15 +56,12 @@ public abstract class Renderer{
     }
 
 
-
     public void updateShader(){
         // Apply model matrix
-        shadManager.getShader(shape.getShaderId()).glUniform("model", translateF);
-        if (coloredMode){
-            shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
-        } else {
-            textureManager.bind(textureId, 0);
-        }
+        if (!shape.getIn2D()) shadManager.getShader(shape.getShaderId()).glUniform("model", translateF);
+
+        if (coloredMode)      shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
+        else                  textureManager.bind(textureId, 0);
     }
 
 
@@ -78,8 +77,10 @@ public abstract class Renderer{
         this.model.get(translateF);
     }
 
+
     public void setDisplayState(boolean state) {display = state;}
     public void invertDisplayState() {display = !display;}
+
 
     public void setTexture(String texture){
         coloredMode = false;
@@ -90,6 +91,17 @@ public abstract class Renderer{
         coloredMode = true;
         this.color = color.copy();
     }
+
+
+    public Shape getShape(){
+        return shape;
+    }
+
+
+    public void setShape(Shape shape){
+        this.shape = shape;
+    }
+
 
     public void unload(){
         shape.unload();

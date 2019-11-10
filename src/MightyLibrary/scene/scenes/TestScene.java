@@ -1,6 +1,7 @@
 package MightyLibrary.scene.scenes;
 
-import MightyLibrary.render.shape.GlobalRenderer;
+import MightyLibrary.render.shape.Renderer;
+import MightyLibrary.render.shape._2D.HudRectangleRenderer;
 import MightyLibrary.render.shape._3D.OBJLoader;
 import MightyLibrary.scene.Camera;
 import MightyLibrary.render.shape._3D.CubeRenderer;
@@ -13,9 +14,9 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class TestScene extends Scene {
 
-    private GlobalRenderer sBlock;
-    private GlobalRenderer stand;
-    private Shape hudBar;
+    private Renderer sBlock;
+    private Renderer stand;
+    private HudRectangleRenderer hudBar;
     // Textures
     private Id displacementMap;
 
@@ -39,18 +40,16 @@ public class TestScene extends Scene {
         // RENDERER
 
         light = new CubeRenderer("colorShape3D", new Vector3f(-1f, 1.0f, -4f), 1f);
-        //light.setColor(new Color4f(1.0f, 0.2f, 0.4f, 1.0f));
 
         // Init cube
-        sBlock = new GlobalRenderer("textureComplex3D", false, false);
+        sBlock = new Renderer("textureComplex3D", false, false);
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
-
         float[] cratesInfo = createCrates(16 * 16);
 
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
 
-        stand = new GlobalRenderer("texture3D", true, false);
+        stand = new Renderer("texture3D", true, false);
         stand.setTexture("stall");
         stand.setPosition(new Vector3f(0.0f));
         stand.setShape(OBJLoader.loadObjTexturedModel("stand/stall"));
@@ -59,21 +58,9 @@ public class TestScene extends Scene {
         displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
-        hudBar = new Shape("colorShape2D", true, true);
-        float[] vertex = new float[]{
-            1f, 1f,
-            0.0f, 1f,
-            1f, 0.0f,
-            0.0f, 0.0f
-        };
-
-        int[] ebo = new int[]{
-                0, 1, 2, 1, 2, 3
-        };
-
-        hudBar.setEboStorage(Shape.STATIC_STORE);
-        hudBar.setEbo(ebo);
-        hudBar.addVbo(vertex, 2, Shape.STATIC_STORE);
+        hudBar = new HudRectangleRenderer("colorShape2D", window.size.x * 0.4f, window.size.y * 0.4f);
+        hudBar.setPosition(1, 1);
+        hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));
     }
 
 
@@ -139,7 +126,6 @@ public class TestScene extends Scene {
 
         super.setAndDisplayRealScene();
         // Better to draw the hud here and be not affected by the post processing shader
-        manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
         hudBar.display();
     }
 

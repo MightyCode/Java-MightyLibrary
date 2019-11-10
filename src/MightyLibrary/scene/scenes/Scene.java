@@ -1,6 +1,7 @@
 package MightyLibrary.scene.scenes;
 
 import MightyLibrary.main.ManagerContainer;
+import MightyLibrary.main.Window;
 import MightyLibrary.render.shape._2D.VirtualSceneRenderer;
 import MightyLibrary.util.math.Color4f;
 
@@ -8,10 +9,12 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class Scene {
     protected ManagerContainer manContainer;
-    VirtualSceneRenderer scRenderer;
+    protected Window window;
+    protected VirtualSceneRenderer scRenderer;
 
     public Scene(){
         this.manContainer = ManagerContainer.getInstance();
+        window = manContainer.window;
         scRenderer = new VirtualSceneRenderer();
     }
 

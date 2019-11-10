@@ -153,18 +153,12 @@ public class Window{
     public Window setSize(Vector2f size){
         return setSize(size.x, size.y);
     }
-
-
     public Window setSize(float width, float height){
         return setSize((int)width, (int)height);
     }
-
-
     public Window setWidth(int width){
         return setSize(width, size.y);
     }
-
-
     public Window setHeight(int height){
         return setSize(size.x, height);
     }

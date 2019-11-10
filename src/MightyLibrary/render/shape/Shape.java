@@ -23,6 +23,7 @@ public class Shape{
 
     protected int vao, ebo;
     protected ArrayList<Integer> vbos;
+    protected ArrayList<Integer> vbosStorage;
     protected int vboCount;
     protected int indicesSize;
 
@@ -52,13 +53,14 @@ public class Shape{
         vao = glGenVertexArrays();
         bind();
         vbos = new ArrayList<>();
+        vbosStorage = new ArrayList<>();
         vboCount = 0;
         ebo = 0;
         eboStorage = STATIC_STORE;
         setUseEbo(useEbo);
     }
 
-    public void addVbo(float[] vertices, int vertexSize, int storage){
+    public int addVbo(float[] vertices, int vertexSize, int storage){
         bind();
         int vbo = glGenBuffers();
 
@@ -69,8 +71,17 @@ public class Shape{
 
         verticesDraw = vertices.length / vertexSize;
         vbos.add(vbo);
+        vbosStorage.add(storage);
         vboCount++;
+        return vbos.size() - 1;
     }
+
+
+    public void resetVbo(float[] vertices, int vboPosition){
+        bind();
+        glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+    }
+
 
     public void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
         int oneLineSize = Math.sum(vertexSizes);
@@ -88,6 +99,7 @@ public class Shape{
             currentSum += vertexSizes[i];
         }
     }
+
 
     public Shape setUseEbo(boolean state){
         if (this.useEbo && ebo != 0) glDeleteBuffers(this.ebo);
@@ -145,6 +157,11 @@ public class Shape{
     public Shape setDimensionTo2D(boolean state){
         this.in2D = state;
         return this;
+    }
+
+
+    public boolean getIn2D(){
+        return this.in2D;
     }
 
 
