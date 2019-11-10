@@ -1,31 +1,29 @@
 package MightyLibrary.scene.scenes;
 
+import MightyLibrary.render.shape.GlobalRenderer;
+import MightyLibrary.render.shape._3D.OBJLoader;
 import MightyLibrary.scene.Camera;
-import MightyLibrary.render.shape.Renderer.ColoredCubeRenderer;
+import MightyLibrary.render.shape._3D.CubeRenderer;
 import MightyLibrary.render.shape.Shape;
 import MightyLibrary.util.Id;
-import org.joml.Matrix4f;
+import MightyLibrary.util.math.Color4f;
 import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 public class TestScene extends Scene {
-    private Matrix4f model = new Matrix4f();
-    private FloatBuffer fb = BufferUtils.createFloatBuffer(16);
 
-    private Shape sBlock;
+    private GlobalRenderer sBlock;
+    private GlobalRenderer stand;
     private Shape hudBar;
     // Textures
-    private Id block, displacementMap;
+    private Id displacementMap;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
     private final int boxSize = faceSize * 6;
 
-    private ColoredCubeRenderer light;
+    private CubeRenderer light;
 
     private float counter = 0;
 
@@ -35,49 +33,48 @@ public class TestScene extends Scene {
 
 
     public void init(){
-        light = new ColoredCubeRenderer(new Vector3f(3.0f, 3.0f, -3.0f), 0.5f);
-        light.setColor(new Vector3f(1.0f, 0.2f, 0.4f));
+        manContainer.mouseManager.setCursor(false);
+        setClearColor(52, 189, 235, 1f);
 
-        sBlock = new Shape("textureComplex3D", false, false);
+        // RENDERER
 
-        // Textures
-        block = manContainer.texManager.getIdShaderFromString("container");
-        displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
+        light = new CubeRenderer("colorShape3D", new Vector3f(-1f, 1.0f, -4f), 1f);
+        //light.setColor(new Color4f(1.0f, 0.2f, 0.4f, 1.0f));
 
+        // Init cube
+        sBlock = new GlobalRenderer("textureComplex3D", false, false);
+        sBlock.setPosition(new Vector3f(0.0f));
+        sBlock.setTexture("water1");
 
-        // init cube
         float[] vertex0 = createCrates(16 * 16);
 
-        sBlock.setReading(new int[]{3, 2});
-        sBlock.setVbo(vertex0);
+        sBlock.getShape().setReading(new int[]{3, 2});
+        sBlock.getShape().setVbo(vertex0);
 
-        model.identity();
-        model.get(fb);
-        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("model", fb);
-        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("displacementMap", 1);
-        fb.clear();
+        stand = new GlobalRenderer("texture3D", true, false);
+        stand.setTexture("stall");
+        stand.setPosition(new Vector3f(0.0f));
+        stand.setShape(OBJLoader.loadObjTexturedModel("stand/stall"));
+
+        // Textures
+        displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
+        manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
         hudBar = new Shape("colorShape2D", true, true);
-        float vertex1[] = new float[]{
+        float[] vertex1 = new float[]{
             1f, 1f,
             0.0f, 1f,
             1f, 0.0f,
             0.0f, 0.0f
-
         };
 
-        int ebo1[] = new int[]{
+        int[] ebo1 = new int[]{
                 0, 1, 2, 1, 2, 3
         };
-
-        manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
 
         hudBar.setEbo(ebo1);
         hudBar.setVbo(vertex1);
         hudBar.setReading(new int[]{2});
-
-        manContainer.mouseManager.setCursor(false);
-        setClearColor(52, 189, 235, 1f);
     }
 
 
@@ -86,7 +83,6 @@ public class TestScene extends Scene {
         if (manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_SHIFT)) {
             speed = 3;
         }
-
 
         if(manContainer.keyManager.getKeyState(GLFW_KEY_A)){
             manContainer.cam.speedAngX(Camera.speed.x * speed);
@@ -118,29 +114,34 @@ public class TestScene extends Scene {
             manContainer.texManager.reload();
         }
 
-        light.setColor(new Vector3f(counter / 360.0f));
-        light.setColor(new Vector3f(counter / 360.0f));
-        light.updateColor();
-        manContainer.shadManager.getShader(sBlock.getShaderId()).glUniform("time", counter / 720);
+        light.setColor(new Color4f(counter / 360.0f));
+        manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("time", counter / 720);
 
         counter += 1f;
-        if(counter > 720) counter = 0;
+        if(counter > 720) counter = 0f;
         manContainer.cam.updateView();
     }
 
 
     public void display() {
         super.setVirtualScene();
-        // Better to draw the world here
         clear();
+        // Better to draw the world here
         light.display();
-        manContainer.texManager.bind(block);
         manContainer.texManager.bind(displacementMap, 1);
+        stand.display();
+
+       /* manContainer.shadManager.getShader(trunk.getShaderId()).glUniform("color", 0.3450f, 0.1607f, 0.0f, 1f);
+        trunk.display();
+
+        manContainer.shadManager.getShader(leaves.getShaderId()).glUniform("color", 0.1333f, 0.5450f, 0.1333f, 1f);
+        leaves.display();*/
         sBlock.display();
 
         super.setAndDisplayRealScene();
         // Better to draw the hud here and be not affected by the post processing shader
-        hudBar.display();
+        manContainer.shadManager.getShader(hudBar.getShaderId()).glUniform("color", 0.5f, 0.5f, 0.5f, 1f);
+        //hudBar.display();
     }
 
 
@@ -149,6 +150,9 @@ public class TestScene extends Scene {
         sBlock.unload();
         light.unload();
         hudBar.unload();
+        /*trunk.unload();
+        leaves.unload();*/
+        stand.unload();
     }
 
 

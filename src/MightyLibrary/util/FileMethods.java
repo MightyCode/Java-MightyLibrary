@@ -25,18 +25,16 @@ public abstract class FileMethods {
         return copy(new File(source), new File(dest));
     }
 
-    public static String readFileAsString(String filename){
+    public static String readFileAsString(String filePath){
         StringBuilder source = new StringBuilder();
-
-        BufferedReader reader;
-        Exception exception = null;
-
         try {
-            FileInputStream in = new FileInputStream(filename);
+
+            BufferedReader reader;
+            FileInputStream in = new FileInputStream(filePath);
             reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
 
             String line;
-            while((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
                 source.append(line).append('\n');
             }
 
@@ -44,8 +42,12 @@ public abstract class FileMethods {
 
             in.close();
 
-        } catch (Exception e) {
-            return "error";
+        } catch (FileNotFoundException e) {
+            System.err.println("Can't find the file" + filePath);
+            e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("reader can't read a part of the file");
+            e.printStackTrace();
         }
 
         return source.toString();
