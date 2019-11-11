@@ -58,8 +58,8 @@ public class TestScene extends Scene {
         displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
-        hudBar = new HudRectangleRenderer("colorShape2D", window.size.x * 0.4f, window.size.y * 0.4f);
-        hudBar.setPosition(1, 1);
+        hudBar = new HudRectangleRenderer("colorShape2D", window.size.x * 0.5f, window.size.y * 0.5f);
+        hudBar.setPosition(window.size.x * 0.48f, window.size.y * 0.48f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));
     }
 

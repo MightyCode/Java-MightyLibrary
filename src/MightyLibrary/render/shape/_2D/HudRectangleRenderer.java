@@ -18,8 +18,8 @@ public class HudRectangleRenderer extends Renderer {
         posX = 0;
         posY = 0;
 
-        float windowW = width * 2.0f / window.size.x - 1.0f;
-        float windowH = height * 2.0f / window.size.y - 1.0f;
+        windowW = width * 2.0f / window.size.x - 1.0f;
+        windowH = height * 2.0f / window.size.y - 1.0f;
 
         float[] positions = calculatePosition();
         int[] indices = { 0, 1, 2, 2, 1, 3 };
@@ -43,7 +43,7 @@ public class HudRectangleRenderer extends Renderer {
         setPosition(position.x, position.y);
     }
 
-    
+
     public void setPosition(float posX, float posY){
         this.posX = posX * 2.0f / window.size.x;
         this.posY = posY * 2.0f / window.size.y;;
