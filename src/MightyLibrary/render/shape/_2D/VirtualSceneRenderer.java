@@ -1,43 +1,31 @@
 package MightyLibrary.render.shape._2D;
 
-import MightyLibrary.render.shape.Shape;
-
-public class VirtualSceneRenderer extends FrameBuffer {
-    private Shape screenShape;
+public class VirtualSceneRenderer extends HudRectangleRenderer {
+    private FrameBuffer frameBuffer;
 
     public VirtualSceneRenderer(){
-        super();
-        screenShape = new Shape("postProcessing", false, true);
-        float realPos[] = new float[]{
-                -1.0f,  1.0f,
-                -1.0f, -1.0f,
-                1.0f, -1.0f,
-
-                -1.0f,  1.0f,
-                1.0f, -1.0f,
-                1.0f,  1.0f
-        };
-
-        float virtualPos[] = new float[]{
-                0.0f, 1.0f,
-                0.0f, 0.0f,
-                1.0f, 0.0f,
-
-                0.0f, 1.0f,
-                1.0f, 0.0f,
-                1.0f, 1.0f
-        };
-
-        screenShape.addVbo(realPos, 2, Shape.STATIC_STORE);
-        screenShape.addVbo(virtualPos, 2, Shape.STATIC_STORE);
+        super("postProcessing");
+        frameBuffer = new FrameBuffer();
     }
 
-    public void display(){
-        screenShape.display();
+    public FrameBuffer getFrameBuffer(){
+        return frameBuffer;
     }
+
+
+    public void bindFrameBuff(){
+        frameBuffer.bindFrameBuffer();
+    }
+
+
+    public void unbindFrameBuff(){
+        frameBuffer.unbindFrameBuffer();
+        frameBuffer.bindRenderTexture();
+    }
+
 
     public void unload(){
         super.unload();
-        screenShape.unload();
+        frameBuffer.unload();
     }
 }

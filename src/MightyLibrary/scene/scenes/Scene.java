@@ -29,17 +29,15 @@ public class Scene {
 
 
     public void setVirtualScene(){
-        scRenderer.bindFrameBuffer();
+        scRenderer.bindFrameBuff();
         manContainer.window.setVirtualViewport();
     }
 
     public void setAndDisplayRealScene(){
-        scRenderer.unbindFrameBuffer();
+        scRenderer.unbindFrameBuff();
         manContainer.window.setRealViewport();
-        scRenderer.bindRenderTexture();
 
         scRenderer.display();
-        scRenderer.unbindRenderTexture();
     }
 
     protected void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }

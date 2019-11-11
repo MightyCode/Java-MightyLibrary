@@ -14,13 +14,13 @@ public class HudRectangleRenderer extends Renderer {
     public HudRectangleRenderer(String shaderName) {
         super(shaderName, true, true);
         window = ManagerContainer.getInstance().window;
-        posX = 0.2f;
-        posY = 0.2f;
+        posX = 0.0f;
+        posY = 0.0f;
 
-        windowW = 0f;
-        windowH = 0f;
+        windowW = 1.0f;
+        windowH = 1.0f;
 
-        int[] indices = { 0, 1, 2, 2, 1, 3 };
+        int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.STATIC_STORE);
@@ -32,8 +32,9 @@ public class HudRectangleRenderer extends Renderer {
         return new float[]{
                 -1.0f + posX, 1.0f - posY,
                 -1.0f + posX, -windowH - posY,
-                windowW + posX, 1.0f - posY,
-                windowW + posX, -windowH - posY
+                windowW + posX, -windowH - posY,
+                windowW + posX, 1.0f - posY
+
         };
     }
 

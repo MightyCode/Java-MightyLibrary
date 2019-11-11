@@ -14,6 +14,11 @@ import org.lwjgl.BufferUtils;
 import java.nio.FloatBuffer;
 
 public class Renderer{
+    public static final int NOTHING = 0;
+    public static final int COLOR = 1;
+    public static final int TEXTURE = 2;
+
+
     public Vector3f modelV;
     protected Matrix4f model;
     protected boolean display;
@@ -22,7 +27,7 @@ public class Renderer{
     protected ShaderManager shadManager;
     protected TextureManager textureManager;
 
-    protected boolean coloredMode;
+    protected int displaydMode;
 
     // Textured
     protected Id textureId;
@@ -43,7 +48,7 @@ public class Renderer{
 
         // Display mode
         textureId = new Id(0);
-        coloredMode = true;
+        displaydMode = NOTHING;
         color = ColorList.BLACK;
     }
 
@@ -60,8 +65,8 @@ public class Renderer{
         // Apply model matrix
         if (!shape.getIn2D()) shadManager.getShader(shape.getShaderId()).glUniform("model", translateF);
 
-        if (coloredMode)      shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
-        else                  textureManager.bind(textureId, 0);
+        if (displaydMode == COLOR)          shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
+        else if (displaydMode == TEXTURE)   textureManager.bind(textureId, 0);
     }
 
 
@@ -83,19 +88,19 @@ public class Renderer{
 
 
     public void setTexture(String texture){
-        coloredMode = false;
+        displaydMode = TEXTURE;
         textureId = textureManager.getIdShaderFromString(texture);
         shape.enableVbo(1);
     }
 
     public void setTexture(Id texture){
-        coloredMode = false;
+        displaydMode = TEXTURE;
         textureId = texture;
         shape.enableVbo(1);
     }
 
     public void setColor(Color4f color){
-        coloredMode = true;
+        displaydMode = COLOR;
         this.color = color.copy();
         shape.disableVbo(1);
     }

@@ -60,14 +60,13 @@ public class TestScene extends Scene {
         stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
 
         // Grey Rect in Hud
-        hudBar = new HudRectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
+        /*hudBar = new HudRectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
-        hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));
-       /* hudBar = new HudRectangleRenderer("texture2D");
+        hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
+        hudBar = new HudRectangleRenderer("texture2D");
         hudBar.setTexture("water1");
         hudBar.setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);*/
-
+        hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
     }
 
 
