@@ -3,6 +3,7 @@ package MightyLibrary.render.shape._2D;
 import MightyLibrary.main.ManagerContainer;
 import MightyLibrary.main.Window;
 import MightyLibrary.render.texture.TextureParameters;
+import MightyLibrary.util.Id;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
@@ -14,14 +15,14 @@ public class FrameBuffer {
     private int fbo;
     private int rbo;
 
-    private int renderTexture;
+    private Id renderTexture;
 
     private Window window;
 
     public FrameBuffer(){
         fbo = 0;
         rbo = 0;
-        renderTexture = 0;
+        renderTexture = new Id(0);
         window = ManagerContainer.getInstance().window;
 
         fbo = glGenFramebuffers();
@@ -31,12 +32,12 @@ public class FrameBuffer {
     }
 
     public void update(){
-        renderTexture = glGenTextures();
-        glBindTexture(GL_TEXTURE_2D, renderTexture);
+        renderTexture.id = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, renderTexture.id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.virtualSize.x, window.virtualSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
         TextureParameters.realisticParameters();
         glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture.id, 0);
 
         rbo = glGenRenderbuffers();
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
@@ -63,16 +64,22 @@ public class FrameBuffer {
 
     public void bindRenderTexture(int position){
         glActiveTexture(GL_TEXTURE0 + position);
-        glBindTexture(GL_TEXTURE_2D, renderTexture);
+        glBindTexture(GL_TEXTURE_2D, renderTexture.id);
     }
 
     public void unbindRenderTexture(){
         glBindTexture(GL_TEXTURE_2D, 0);
     }
 
+
+    public Id getTexture(){
+        return renderTexture;
+    }
+
+
     public void unload(){
         glDeleteFramebuffers(fbo);
-        glDeleteTextures(renderTexture);
+        glDeleteTextures(renderTexture.id);
         glDeleteRenderbuffers(rbo);
     }
 }

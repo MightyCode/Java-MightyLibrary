@@ -24,6 +24,7 @@ public class Shape{
     protected int vao, ebo;
     protected ArrayList<Integer> vbos;
     protected ArrayList<Integer> vbosStorage;
+    protected ArrayList<Boolean> vbosEnable;
     protected int vboCount;
     protected int indicesSize;
 
@@ -54,6 +55,7 @@ public class Shape{
         bind();
         vbos = new ArrayList<>();
         vbosStorage = new ArrayList<>();
+        vbosEnable = new ArrayList<>();
         vboCount = 0;
         ebo = 0;
         eboStorage = STATIC_STORE;
@@ -67,7 +69,9 @@ public class Shape{
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices, storage);
         glVertexAttribPointer(vboCount, vertexSize, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(vboCount);
+
+        vbosEnable.add(false);
+        enableVbo(vboCount);
 
         verticesDraw = vertices.length / vertexSize;
         vbos.add(vbo);
@@ -80,6 +84,23 @@ public class Shape{
     public void resetVbo(float[] vertices, int vboPosition){
         bind();
         glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+    }
+
+
+    public void disableVbo(int pos){
+        if (vbosEnable.get(pos)) {
+            bind();
+            glDisableVertexAttribArray(pos);
+            vbosEnable.set(pos, false);
+        }
+    }
+
+    public void enableVbo(int pos){
+        if (!vbosEnable.get(pos)) {
+            bind();
+            glEnableVertexAttribArray(vboCount);
+            vbosEnable.set(pos, true);
+        }
     }
 
 

@@ -56,12 +56,12 @@ public class TestScene extends Scene {
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
         // 3D Model
-        stand = new ModelRenderer("texture3D", "stand/stall", "stall");
-        stand.setPosition(new Vector3f(0.0f));
+        stand = new ModelRenderer("texture3D", "weapon/sabre1", "stall");
+        stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
 
         // Grey Rect in Hud
-        hudBar = new HudRectangleRenderer("colorShape2D", window.size.x * 0.5f, window.size.y * 0.5f);
-        hudBar.setPosition(window.size.x * 0.48f, window.size.y * 0.48f);
+        hudBar = new HudRectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
+        hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));
     }
 

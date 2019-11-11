@@ -87,6 +87,11 @@ public class Renderer{
         textureId = textureManager.getIdShaderFromString(texture);
     }
 
+    public void setTexture(Id texture){
+        coloredMode = false;
+        textureId = texture;
+    }
+
     public void setColor(Color4f color){
         coloredMode = true;
         this.color = color.copy();
