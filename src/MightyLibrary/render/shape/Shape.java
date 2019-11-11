@@ -83,11 +83,14 @@ public class Shape{
 
     public void resetVbo(float[] vertices, int vboPosition){
         bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
     }
 
 
     public void disableVbo(int pos){
+        if(vbosEnable.size() <= pos) return;
+
         if (vbosEnable.get(pos)) {
             bind();
             glDisableVertexAttribArray(pos);
@@ -96,6 +99,8 @@ public class Shape{
     }
 
     public void enableVbo(int pos){
+        if(vbosEnable.size() <= pos) return;
+
         if (!vbosEnable.get(pos)) {
             bind();
             glEnableVertexAttribArray(vboCount);

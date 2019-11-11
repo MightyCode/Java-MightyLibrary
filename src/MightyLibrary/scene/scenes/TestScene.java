@@ -47,10 +47,10 @@ public class TestScene extends Scene {
 
         // Platform of cubes
         sBlock = new Renderer("textureComplex3D", false, false);
-        sBlock.setPosition(new Vector3f(0.0f));
-        sBlock.setTexture("water1");
         float[] cratesInfo = createCrates(16 * 16);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
+        sBlock.setPosition(new Vector3f(0.0f));
+        sBlock.setTexture("water1");
             // Displacement texture for cubes/crate
         displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
@@ -63,6 +63,11 @@ public class TestScene extends Scene {
         hudBar = new HudRectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));
+       /* hudBar = new HudRectangleRenderer("texture2D");
+        hudBar.setTexture("water1");
+        hudBar.setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
+        hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);*/
+
     }
 
 

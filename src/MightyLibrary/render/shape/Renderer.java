@@ -85,16 +85,19 @@ public class Renderer{
     public void setTexture(String texture){
         coloredMode = false;
         textureId = textureManager.getIdShaderFromString(texture);
+        shape.enableVbo(1);
     }
 
     public void setTexture(Id texture){
         coloredMode = false;
         textureId = texture;
+        shape.enableVbo(1);
     }
 
     public void setColor(Color4f color){
         coloredMode = true;
         this.color = color.copy();
+        shape.disableVbo(1);
     }
 
 
