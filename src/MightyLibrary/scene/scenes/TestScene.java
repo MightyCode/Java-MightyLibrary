@@ -2,6 +2,7 @@ package MightyLibrary.scene.scenes;
 
 import MightyLibrary.render.shape.Renderer;
 import MightyLibrary.render.shape._2D.HudRectangleRenderer;
+import MightyLibrary.render.shape._3D.ModelRenderer;
 import MightyLibrary.render.shape._3D.OBJLoader;
 import MightyLibrary.scene.Camera;
 import MightyLibrary.render.shape._3D.CubeRenderer;
@@ -15,7 +16,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public class TestScene extends Scene {
 
     private Renderer sBlock;
-    private Renderer stand;
+    private ModelRenderer stand;
     private HudRectangleRenderer hudBar;
     // Textures
     private Id displacementMap;
@@ -34,30 +35,31 @@ public class TestScene extends Scene {
 
 
     public void init(){
+        /// SCENE INFORMATIONS ///
+
         manContainer.mouseManager.setCursor(false);
         setClearColor(52, 189, 235, 1f);
 
-        // RENDERER
+        /// RENDERERS ///
 
+        // Cube
         light = new CubeRenderer("colorShape3D", new Vector3f(-1f, 1.0f, -4f), 1f);
 
-        // Init cube
+        // Platform of cubes
         sBlock = new Renderer("textureComplex3D", false, false);
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
         float[] cratesInfo = createCrates(16 * 16);
-
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
-
-        stand = new Renderer("texture3D", true, false);
-        stand.setTexture("stall");
-        stand.setPosition(new Vector3f(0.0f));
-        stand.setShape(OBJLoader.loadObjTexturedModel("stand/stall"));
-
-        // Textures
+            // Displacement texture for cubes/crate
         displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
+        // 3D Model
+        stand = new ModelRenderer("texture3D", "stand/stall", "stall");
+        stand.setPosition(new Vector3f(0.0f));
+
+        // Grey Rect in Hud
         hudBar = new HudRectangleRenderer("colorShape2D", window.size.x * 0.5f, window.size.y * 0.5f);
         hudBar.setPosition(window.size.x * 0.48f, window.size.y * 0.48f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));
@@ -90,10 +92,8 @@ public class TestScene extends Scene {
         }
 
         if(manContainer.keyManager.keyPressed(GLFW_KEY_ESCAPE)) {
-            //manContainer.texManager.reload();
             manContainer.cam.invertLockViewCursor();
             manContainer.mouseManager.invertCursorState();
-            //manContainer.screenManager.exit();
         }
 
         if(manContainer.keyManager.keyPressed(GLFW_KEY_F5)) {
@@ -116,12 +116,6 @@ public class TestScene extends Scene {
         light.display();
         manContainer.texManager.bind(displacementMap, 1);
         stand.display();
-
-       /* manContainer.shadManager.getShader(trunk.getShaderId()).glUniform("color", 0.3450f, 0.1607f, 0.0f, 1f);
-        trunk.display();
-
-        manContainer.shadManager.getShader(leaves.getShaderId()).glUniform("color", 0.1333f, 0.5450f, 0.1333f, 1f);
-        leaves.display();*/
         sBlock.display();
 
         super.setAndDisplayRealScene();
@@ -135,8 +129,6 @@ public class TestScene extends Scene {
         sBlock.unload();
         light.unload();
         hudBar.unload();
-        /*trunk.unload();
-        leaves.unload();*/
         stand.unload();
     }
 
@@ -149,7 +141,6 @@ public class TestScene extends Scene {
                 placeCrates(array, a, 1, -i, a, i, size);
             }
         }
-
         return array;
     }
 
