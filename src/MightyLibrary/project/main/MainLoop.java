@@ -49,7 +49,7 @@ public class MainLoop {
     }
 
     public void run(){
-        // Set render parameters
+        // Set loop parameters
         int ticks = 0;
         int frames = 0;
 
@@ -58,6 +58,7 @@ public class MainLoop {
         double lastTick = 0.0;
         double lastFrame = 0.0;
         double lastSecond = 0.0;
+
 
         while(!window.wantExit()){
             if (timer.getDuration() - lastTick >= TICK_TIME) {
@@ -83,6 +84,7 @@ public class MainLoop {
         sceneManager.unload();
         exit(ListError.NO_ERROR);
     }
+
 
     public void exit(int status){
         if (status != ListError.LIBRARIES_LOAD_FAIL){
@@ -110,6 +112,7 @@ public class MainLoop {
             System.err.println("GLFW fail to initialize");
             return -1;
         }
+
         return 0;
     }
 

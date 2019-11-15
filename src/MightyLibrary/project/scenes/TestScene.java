@@ -64,7 +64,6 @@ public class TestScene extends Scene {
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
     }
 
-
     public void update() {
         int speed = 1;
         if (manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_SHIFT)) {
