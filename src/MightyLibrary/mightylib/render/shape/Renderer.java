@@ -39,7 +39,7 @@ public class Renderer{
 
     public Renderer(String shaderName, boolean useEbo, boolean in2D){
         shadManager = ManagerContainer.getInstance().shadManager;
-        textureManager = ManagerContainer.getInstance().texManager;
+        textureManager = ManagerContainer.getInstance().textureManager;
 
         shape = new Shape(shaderName, useEbo, in2D);
         model = new Matrix4f().identity();

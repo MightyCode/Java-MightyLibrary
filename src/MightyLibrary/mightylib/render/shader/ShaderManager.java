@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ShaderManager {
+    private static final String SHADER_INFO_PATH = "resources/shaders/shaders.json";
     public static final int USE_PROJECTION_MATRIX = 0;
 
     private ManagerList<Shader> shaders;
@@ -32,16 +33,17 @@ public class ShaderManager {
     public void init(){
         shaders.clear();
         camReload.clear();
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/shaders/shaders.json"));
-        obj = obj.getJSONObject("shaders");
+        JSONObject file = new JSONObject(FileMethods.readFileAsString(SHADER_INFO_PATH));
+        file = file.getJSONObject("shaders");
 
-        Iterator<String> arrayShader = obj.keys();
+        Iterator<String> arrayShader = file.keys();
 
         do{
-            // Name
+            // Name of the shader key (used by renderer)
             String currentShader = arrayShader.next();
 
-            JSONObject JShader = obj.getJSONObject(currentShader);
+            JSONObject JShader = file.getJSONObject(currentShader);
+
             // "Table" of the string path
             JSONArray files = JShader.getJSONArray("files");
 

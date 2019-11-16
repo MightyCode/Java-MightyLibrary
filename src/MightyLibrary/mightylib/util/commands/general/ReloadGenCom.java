@@ -18,7 +18,7 @@ public class ReloadGenCom extends BaseCommand {
         if (sub.length > 1) {
             if (sub[1].equals("texture")) {
                 ManagerContainer manContainer = ManagerContainer.getInstance();
-                manContainer.texManager.reload();
+                manContainer.textureManager.reload();
             } else if (sub[1].equals("shader")) {
                 ManagerContainer manContainer = ManagerContainer.getInstance();
                 manContainer.shadManager.reload();

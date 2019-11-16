@@ -47,7 +47,7 @@ public class TestScene extends Scene {
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
             // Displacement texture for cubes/crate
-        displacementMap = manContainer.texManager.getIdShaderFromString("dispMap1");
+        displacementMap = manContainer.textureManager.getIdShaderFromString("dispMap1");
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
         // 3D Model
@@ -62,6 +62,9 @@ public class TestScene extends Scene {
         hudBar.setTexture("water1");
         hudBar.setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
+
+
+        System.out.println(Integer.valueOf('è'));
     }
 
     public void update() {
@@ -95,7 +98,7 @@ public class TestScene extends Scene {
         }
 
         if(manContainer.keyManager.keyPressed(GLFW_KEY_F5)) {
-            manContainer.texManager.reload();
+            manContainer.textureManager.reload();
         }
 
         light.setColor(new Color4f(counter / 360.0f));
@@ -112,7 +115,7 @@ public class TestScene extends Scene {
         clear();
         // Better to draw the world here
         light.display();
-        manContainer.texManager.bind(displacementMap, 1);
+        manContainer.textureManager.bind(displacementMap, 1);
         stand.display();
         sBlock.display();
 

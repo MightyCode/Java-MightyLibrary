@@ -3,8 +3,6 @@ package MightyLibrary.mightylib.scene;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
 import MightyLibrary.mightylib.render.shader.ShaderManager;
@@ -100,6 +98,6 @@ public class SceneManager {
     public void unload(){
         currentScene.unload();
         manContainer.shadManager.unload();
-        manContainer.texManager.unload();
+        manContainer.textureManager.unload();
     }
 }

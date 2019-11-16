@@ -21,7 +21,7 @@ public class ManagerContainer {
     public SceneManager sceneManager;
 
     public ShaderManager shadManager;
-    public TextureManager texManager;
+    public TextureManager textureManager;
 
     // Singleton pattern
     private static ManagerContainer manContainer;
@@ -72,7 +72,7 @@ public class ManagerContainer {
     }
 
     public ManagerContainer setManager(TextureManager textureManager){
-        this.texManager = textureManager;
+        this.textureManager = textureManager;
         return this;
     }
 }
