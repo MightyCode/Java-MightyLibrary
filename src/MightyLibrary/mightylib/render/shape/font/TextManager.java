@@ -14,7 +14,7 @@ public class TextManager {
     public TextManager(){
         fonts = new ManagerList<>();
         JSONObject file = new JSONObject(FileMethods.readFileAsString(FONTS_INFO_PATH));
-        file = file.getJSONObject("shaders");
+        file = file.getJSONObject("fonts");
 
         Iterator<String> arrayShader = file.keys();
 
@@ -24,12 +24,11 @@ public class TextManager {
             String currentFont = arrayShader.next();
 
             JSONObject JShader = file.getJSONObject(currentFont);
-            // "Table" of the string path
 
-            JSONArray textureName = JShader.getJSONArray("texture");
-            JSONArray info = JShader.getJSONArray("info");
+            String textureName = JShader.getString("texture");
+            String info = JShader.getString("info");
 
-            fonts.add(new Font(currentFont, textureName.getString(0), info.getString(0)));
+            fonts.add(new Font(currentFont, textureName, info));
         } while(arrayShader.hasNext());
     }
 

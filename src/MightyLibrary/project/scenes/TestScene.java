@@ -64,7 +64,7 @@ public class TestScene extends Scene {
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
 
 
-        System.out.println(Integer.valueOf('è'));
+        System.out.println("a ".lastIndexOf("a"));
     }
 
     public void update() {

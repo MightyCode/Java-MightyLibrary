@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.scene;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
+import MightyLibrary.mightylib.render.shape.font.TextManager;
 import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
 import MightyLibrary.mightylib.render.shader.ShaderManager;
@@ -37,8 +38,11 @@ public class SceneManager {
 
         manContainer.setManager(new ShaderManager(manContainer.cam));
 
-        manContainer.setManager(new TextureManager());
         // Load every texture
+        manContainer.setManager(new TextureManager());
+
+        manContainer.setManager(new TextManager());
+
 
         setNewScene(new Scene(), new String[]{""});
 

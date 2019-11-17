@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.main;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
+import MightyLibrary.mightylib.render.shape.font.TextManager;
 import MightyLibrary.mightylib.render.texture.TextureManager;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.SceneManager;
@@ -22,6 +23,7 @@ public class ManagerContainer {
 
     public ShaderManager shadManager;
     public TextureManager textureManager;
+    public TextManager textManager;
 
     // Singleton pattern
     private static ManagerContainer manContainer;
@@ -73,6 +75,11 @@ public class ManagerContainer {
 
     public ManagerContainer setManager(TextureManager textureManager){
         this.textureManager = textureManager;
+        return this;
+    }
+
+    public ManagerContainer setManager(TextManager textManager){
+        this.textManager = textManager;
         return this;
     }
 }
