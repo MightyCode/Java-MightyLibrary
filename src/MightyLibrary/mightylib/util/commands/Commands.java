@@ -64,7 +64,7 @@ public class Commands {
                 else                                       commands.get(i).sendCommand(command);
                 found = true;
             }
-            i++;
+            ++i;;
         }
 
         if (!found) {

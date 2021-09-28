@@ -26,7 +26,7 @@ public class InputManager {
         inputs = new int[input.length];
         type = new int[input.length];
 
-        for(int i = 0; i < input.length; i++){
+        for(int i = 0; i < input.length; ++i){
             if(input[i][0] == -1){
                 inputs[i] = input[i][1];
                 type[i] = 1;

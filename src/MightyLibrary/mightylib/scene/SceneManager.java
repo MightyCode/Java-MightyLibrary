@@ -33,7 +33,6 @@ public class SceneManager {
         manContainer.setManager(this);
         manContainer.setManager(new MouseManager()).setManager( new KeyboardManager());
         manContainer.setManager(new InputManager(this.manContainer.keyManager, this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
-
         manContainer.setManager(new Camera(120f, new Vector3f(0.0f, 0.0f, 10.0f)));
 
         manContainer.setManager(new ShaderManager(manContainer.cam));

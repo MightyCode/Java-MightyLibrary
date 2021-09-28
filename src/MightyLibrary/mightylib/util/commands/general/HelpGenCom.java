@@ -28,7 +28,7 @@ public class HelpGenCom extends BaseCommand {
                     listCommands.get(i).help();
                     found = true;
                 }
-                i++;
+                ++i;;
             }
 
             if (!found) {

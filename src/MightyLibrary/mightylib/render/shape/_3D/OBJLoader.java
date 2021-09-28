@@ -87,7 +87,7 @@ public abstract class OBJLoader {
             verticesArray[vertexPointer++] = vertex.z;
         }
 
-        for (int i = 0; i < indices.size(); i++) {
+        for (int i = 0; i < indices.size(); ++i) {
             indicesArray[i] = indices.get(i);
         }
 
@@ -170,7 +170,7 @@ public abstract class OBJLoader {
             verticesArray[vertexPointer++] = vertex.z;
         }
 
-        for (int i = 0; i < indices.size(); i++) {
+        for (int i = 0; i < indices.size(); ++i) {
             indicesArray[i] = indices.get(i);
         }
 
@@ -216,7 +216,7 @@ public abstract class OBJLoader {
         int i = currentIndex + 1;
         while (!found && i < file.length()){
             if (file.charAt(i) == '\n')  found = true;
-            else                         i++;
+            else                         ++i;;
         }
         return i;
     }

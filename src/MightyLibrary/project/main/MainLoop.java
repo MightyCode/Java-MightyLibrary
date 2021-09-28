@@ -64,12 +64,12 @@ public class MainLoop {
             if (timer.getDuration() - lastTick >= TICK_TIME) {
                 sceneManager.update();
                 sceneManager.dispose();
-                ticks++;
+                ++ticks;
                 lastTick += TICK_TIME;
             } else if (timer.getDuration() - lastFrame >= FRAME_TIME) {
                 sceneManager.display();
                 window.dispose();
-                frames++;
+                ++frames;
                 lastFrame += FRAME_TIME;
             }
 

@@ -3,7 +3,7 @@ package MightyLibrary.mightylib.render.shape;
 import MightyLibrary.mightylib.render.shader.ShaderManager;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.util.math.Math;
+import MightyLibrary.mightylib.util.math.MightyMath;
 import org.lwjgl.opengl.GL15;
 
 import java.util.ArrayList;
@@ -76,7 +76,7 @@ public class Shape{
         verticesDraw = vertices.length / vertexSize;
         vbos.add(vbo);
         vbosStorage.add(storage);
-        vboCount++;
+        ++vboCount;
         return vbos.size() - 1;
     }
 
@@ -110,7 +110,7 @@ public class Shape{
 
 
     public void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
-        int oneLineSize = Math.sum(vertexSizes);
+        int oneLineSize = MightyMath.sum(vertexSizes);
         int currentSum = 0;
 
         for (int i = 0; i < vertexSizes.length; ++i){

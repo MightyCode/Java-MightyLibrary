@@ -11,5 +11,7 @@ public enum EShapeType {
     RectangularBasedPyramid,
     CircularBasedPyramid,
     Sphere,
-    Polygon3D
+    Polygon3D,
+    BoudingVoulume,
+    UndifinedShape
 }

@@ -100,7 +100,7 @@ public class MouseManager {
         relativePos.x = posX() / window.size.x;
         relativePos.y = posY() / window.size.y;
 
-        for(int key = 0; key < state.length; key++){
+        for(int key = 0; key < state.length; ++key){
             oldState[key] = state[key];
             state[key] = getState(key);
         }

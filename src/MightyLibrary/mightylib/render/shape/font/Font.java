@@ -5,9 +5,11 @@ import MightyLibrary.mightylib.render.texture.TextureManager;
 import MightyLibrary.mightylib.util.FileMethods;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.ObjectId;
+import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Font extends ObjectId {
@@ -54,10 +56,10 @@ public class Font extends ObjectId {
         boolean beginChar = false;
         while (!beginChar){
             if (lines[count].contains("char id="))  beginChar = true;
-            else count++;
+            else ++count;
         }
 
-        for(int i = 0; i < numberChar; i++){
+        for(int i = 0; i < numberChar; ++i){
             int id = getValueOfI(lines[count], "id=");
 
             int x = getValueOfI(lines[count], "x=");
@@ -65,7 +67,7 @@ public class Font extends ObjectId {
             int width = getValueOfI(lines[count], "width=");
             int height = getValueOfI(lines[count], "height=");
 
-            count++;
+            ++count;
 
             chars.put(id, new Vector4i(x, y, width, height));
             //System.out.println(chars.get(id).x + " " + chars.get(id).y + " " + chars.get(id).z  + " " +chars.get(id).w );
@@ -73,7 +75,7 @@ public class Font extends ObjectId {
     }
 
     private int searchValueOfI(String[] lines, String key){
-        for (int i = 0; i < lines.length; i++){
+        for (int i = 0; i < lines.length; ++i){
             if (lines[i].contains(key)){
                 return getValueOfI(lines[i], key);
             }
@@ -92,8 +94,70 @@ public class Font extends ObjectId {
     }
 
 
-    public float[] constructVbo(){
-        return null;
+    public float[][] constructVbo(String text, float size){
+        return constructVbo(text, size, "center");
+    }
+
+    public float[][] constructVbo(String text, float size, String centering){
+        String[] lines = text.split("\n");
+        int numberChars = text.length() - lines.length + 1;
+        int[] partAdvancement = new int[lines.length];
+
+        float[][] vbo = new float[2][];
+        float[] positions = new float[4 * 2 * numberChars];
+        float[] texturePos = new float[4 * 2 * numberChars];
+
+        // Calculations and securities
+        for (int i = 0; i < lines.length; ++i){
+            if (i != 0) {
+                partAdvancement[i] = partAdvancement[i - 1];
+                partAdvancement[i] += lines[i - 1].length();
+            }
+
+            float[] sizes = new float[lines[i].length()];
+            for (int j = 0; j < lines[i].length(); ++j){
+                if (!chars.containsValue(chars.get((int)lines[i].charAt(j)))){
+                    lines[i].replace(lines[i].charAt(j), ' ');
+                }
+
+                sizes[j] = (size * chars.get((int)lines[i].charAt(j)).get(SIZE_X) /
+                        chars.get((int)lines[i].charAt(j)).get(SIZE_Y));
+            }
+
+            // Left
+            float halfSizeX = 0;
+            // Up
+            float halfSizeY = 0;
+
+            if (centering.contains("right")){
+                halfSizeX = MightyMath.sum(sizes);
+            // Center
+            } else {
+                halfSizeX = MightyMath.sum(sizes) / 2;
+            }
+
+            if (centering.contains("down")){
+                halfSizeY = size * (3.0f / 2 * lines.length - 0.5f);
+            // Center
+            } else {
+                halfSizeY = size * (3.0f / 2 * lines.length - 0.5f) / 2;
+            }
+
+            for (int j = 0; j < sizes.length; ++j){
+                // posX
+                positions[(partAdvancement[i] + j) * 8] = MightyMath.sum(sizes, 0, j) - halfSizeX;
+                positions[(partAdvancement[i] + j) * 8 + 2] = MightyMath.sum(sizes, 0, j+1) - halfSizeX;
+                positions[(partAdvancement[i] + j) * 8 + 4] = positions[(partAdvancement[i] + j) * 8 + 2];
+                positions[(partAdvancement[i] + j) * 8 + 6] = positions[(partAdvancement[i] + j) * 8];
+
+            }
+
+        }
+
+        vbo[0] = positions;
+        vbo[1] = texturePos;
+
+        return vbo;
     }
 
     public void bind(){

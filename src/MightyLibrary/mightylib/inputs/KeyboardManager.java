@@ -62,7 +62,7 @@ public class KeyboardManager {
     }
 
     public void dispose(){
-        for(int key = BEGIN_KEYS; key < state.length; key++){
+        for(int key = BEGIN_KEYS; key < state.length; ++key){
             oldState[key] = state[key];
             state[key] = testState(key);
         }

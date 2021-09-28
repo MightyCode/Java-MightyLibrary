@@ -55,7 +55,7 @@ public class ShaderManager {
 
             // Links-uniform creation
             JSONArray linksName = JShader.getJSONArray("links");
-            for(int i = 0; i < linksName.length(); i++){
+            for(int i = 0; i < linksName.length(); ++i){
                 shad.addLink(linksName.getString(i));
             }
 
@@ -78,7 +78,7 @@ public class ShaderManager {
     }
 
     public void reloadProjection(){
-        for(int i = 0; i < shaders.size(); i++){
+        for(int i = 0; i < shaders.size(); ++i){
             if(shaders.get(new Id(i)).properties.contains(USE_PROJECTION_MATRIX)) reloadProjection(new Id(i));
         }
     }

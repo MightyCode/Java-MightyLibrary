@@ -1,5 +1,7 @@
 package MightyLibrary.mightylib.util.math;
 
+import java.util.ArrayList;
+
 /**
  * Math class.
  * This class is used to compute complicated calculations.
@@ -7,7 +9,7 @@ package MightyLibrary.mightylib.util.math;
  * @author MightyCode
  * @version 1.0
  */
-public class Math {
+public class MightyMath {
 
 	/**
 	 * Calculate the position of a number in the first interval to transpose this number in an second interval.
@@ -29,8 +31,32 @@ public class Math {
 		int sum = 0;
 		while (i < table.length){
 			sum+=table[i];
-			i++;
+			++i;;
 		}
+		return sum;
+	}
+
+	public static float sum(float[] sum){
+		return sum(sum, 0, sum.length);
+	}
+
+	public static float sum(float[] sum, int start, int end){
+		float result = 0;
+		for (int  i = start; i < end; ++i){
+			result += sum[i];
+		}
+
+		return result;
+	}
+
+
+
+	public static Float sum(ArrayList<Float> list){
+		float sum = 0;
+		for (Float value : list){
+			sum += value;
+		}
+
 		return sum;
 	}
 

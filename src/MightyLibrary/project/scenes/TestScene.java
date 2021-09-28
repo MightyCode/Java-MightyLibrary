@@ -42,7 +42,7 @@ public class TestScene extends Scene {
 
         // Platform of cubes
         sBlock = new Renderer("textureComplex3D", false, false);
-        float[] cratesInfo = createCrates(16 * 16);
+        float[] cratesInfo = createCrates(1500);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
@@ -63,8 +63,10 @@ public class TestScene extends Scene {
         hudBar.setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
 
-
         System.out.println("a ".lastIndexOf("a"));
+
+        System.out.println(cratesInfo.length);
+        System.out.println(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
     }
 
     public void update() {
@@ -114,9 +116,10 @@ public class TestScene extends Scene {
         super.setVirtualScene();
         clear();
         // Better to draw the world here
-        light.display();
+        //light.display();
         manContainer.textureManager.bind(displacementMap, 1);
         stand.display();
+
         sBlock.display();
 
         super.setAndDisplayRealScene();
@@ -137,11 +140,12 @@ public class TestScene extends Scene {
     public float [] createCrates(int size){
         float[] array = new float[size * size * boxSize];
 
-        for(int i = 0; i < size; i++) {
-            for(int a = 0; a < size; a++) {
+        for(int i = 0; i < size; ++i) {
+            for(int a = 0; a < size; ++a) {
                 placeCrates(array, a, 1, -i, a, i, size);
             }
         }
+
         return array;
     }
 
@@ -249,7 +253,7 @@ public class TestScene extends Scene {
 
 
     public void placeText(float[] array, int index){
-        for(int i = 0; i < 6; i++){
+        for(int i = 0; i < 6; ++i){
             placeValueToCoords(array, new float[]{0.0f, 0.0f}, index + (i) * faceSize + 3);
             placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * faceSize + 3 + lineSize);
             placeValueToCoords(array, new float[]{1.0f, 1.0f}, index + (i) * faceSize + 3 + 2 * lineSize);
@@ -284,7 +288,7 @@ public class TestScene extends Scene {
 
 
     public void placeValueToCoords(float[] array, float[] value, int coordStart){
-        for(int i = 0; i < value.length; i++){
+        for(int i = 0; i < value.length; ++i){
             array[coordStart + i] = value[i];
         }
     }

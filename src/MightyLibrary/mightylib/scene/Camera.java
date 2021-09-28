@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.scene;
 
 import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.util.math.Math;
+import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
@@ -57,12 +57,12 @@ public class Camera {
         if(pitch < -89.0f)
             pitch = -89.0f;
 
-        yawCos = (float)java.lang.Math.cos(Math.rads(yaw));
-        yawSin = (float)java.lang.Math.sin(Math.rads(yaw));
+        yawCos = (float)java.lang.Math.cos(MightyMath.rads(yaw));
+        yawSin = (float)java.lang.Math.sin(MightyMath.rads(yaw));
 
-        camFront.x = (float)(java.lang.Math.cos(Math.rads(pitch)) * yawCos);
-        camFront.y = (float)(java.lang.Math.sin(Math.rads(pitch)));
-        camFront.z = (float)(java.lang.Math.cos(Math.rads(pitch)) * java.lang.Math.sin(Math.rads(yaw)));
+        camFront.x = (float)(java.lang.Math.cos(MightyMath.rads(pitch)) * yawCos);
+        camFront.y = (float)(java.lang.Math.sin(MightyMath.rads(pitch)));
+        camFront.z = (float)(java.lang.Math.cos(MightyMath.rads(pitch)) * java.lang.Math.sin(MightyMath.rads(yaw)));
         camFront.normalize();
     }
 
@@ -86,7 +86,8 @@ public class Camera {
     }
 
     public Camera setViewAngle(float fov){
-        projection.perspective(fov, manContainer.window.ratio, 0.01f, 1000f);
+        projection.perspective(fov, manContainer.window.ratio, 0.01f, 10000f);
+
         projectionBuffer = projection.get(projectionBuffer);
         return this;
     }
