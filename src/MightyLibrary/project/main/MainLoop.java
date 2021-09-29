@@ -5,7 +5,7 @@ import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.scene.SceneManager;
 import MightyLibrary.mightylib.util.Timer;
-import MightyLibrary.project.scenes.TestScene;
+import MightyLibrary.project.scenes.Test3DScene;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -45,7 +45,7 @@ public class MainLoop {
         }
 
         sceneManager = new SceneManager(this);
-        sceneManager.setNewScene(new TestScene(), new String[]{""});
+        sceneManager.setNewScene(new Test3DScene(), new String[]{""});
     }
 
     public void run(){

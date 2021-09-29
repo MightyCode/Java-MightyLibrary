@@ -13,7 +13,7 @@ import org.joml.Vector3f;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class TestScene extends Scene {
+public class Test3DScene extends Scene {
 
     private Renderer sBlock;
     private ModelRenderer stand;
@@ -42,7 +42,7 @@ public class TestScene extends Scene {
 
         // Platform of cubes
         sBlock = new Renderer("textureComplex3D", false, false);
-        float[] cratesInfo = createCrates(1500);
+        float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
@@ -51,7 +51,7 @@ public class TestScene extends Scene {
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
         // 3D Model
-        stand = new ModelRenderer("texture3D", "weapon/sabre1", "stall");
+        stand = new ModelRenderer("texture3D", "stand/stall", "stall");
         stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
 
         // Grey Rect in Hud

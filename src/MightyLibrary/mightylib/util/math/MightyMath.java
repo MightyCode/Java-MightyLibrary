@@ -1,5 +1,8 @@
 package MightyLibrary.mightylib.util.math;
 
+import MightyLibrary.mightylib.util.EDirection;
+import MightyLibrary.mightylib.util.EShapeType;
+
 import java.util.ArrayList;
 
 /**
@@ -74,5 +77,63 @@ public class MightyMath {
 
 	public static float angles(float rad){
 		return (float)(rad * (180.0/java.lang.Math.PI));
+	}
+
+
+	public EDirection addToAnotherDirectoin(EDirection a, EDirection b) {
+		if (a == EDirection.None) return b;
+		else if (b == EDirection.None) return a;
+
+		if (a == EDirection.Down) {
+			if (b == EDirection.Up) {
+				return EDirection.None;
+			} else if (b == EDirection.Left) {
+				return EDirection.LeftDown;
+			} else if (b == EDirection.Right) {
+				return EDirection.RightDown;
+			} else if (b == EDirection.Down) {
+				return EDirection.Down;
+			} else {
+				return EDirection.None;
+			}
+		} else if (a == EDirection.Right) {
+			if (b == EDirection.Up) {
+				return EDirection.RightUp;
+			} else if (b == EDirection.Left) {
+				return EDirection.None;
+			} else if (b == EDirection.Right) {
+				return EDirection.Right;
+			} else if (b == EDirection.Down) {
+				return EDirection.RightDown;
+			} else {
+				return EDirection.None;
+			}
+		} else if (a == EDirection.Up) {
+			if (b == EDirection.Up) {
+				return EDirection.Up;
+			} else if (b == EDirection.Left) {
+				return EDirection.LeftUp;
+			} else if (b == EDirection.Right) {
+				return EDirection.RightUp;
+			} else if (b == EDirection.Down) {
+				return EDirection.None;
+			} else {
+				return EDirection.None;
+			}
+		} else if (a == EDirection.Left) {
+			if (b == EDirection.Up) {
+				return EDirection.LeftUp;
+			} else if (b == EDirection.Left) {
+				return EDirection.Left;
+			} else if (b == EDirection.Right) {
+				return EDirection.None;
+			} else if (b == EDirection.Down) {
+				return EDirection.LeftDown;
+			} else {
+				return EDirection.None;
+			}
+		}
+
+		return EDirection.None;
 	}
 }
