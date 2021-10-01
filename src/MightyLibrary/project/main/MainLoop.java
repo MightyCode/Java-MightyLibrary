@@ -5,7 +5,6 @@ import MightyLibrary.mightylib.main.ListError;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.scene.SceneManager;
-import MightyLibrary.mightylib.util.Timer;
 import MightyLibrary.project.scenes.Test3DScene;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -64,7 +63,7 @@ public class MainLoop {
 
         long start = System.nanoTime();
 
-        while(!window.wantExit()){
+        while (!window.wantExit()){
             if (System.nanoTime() - start - lastTick >= TICK_TIME) {
                 GameTime.update();
                 sceneManager.update();
@@ -79,7 +78,7 @@ public class MainLoop {
             }
 
             if (System.nanoTime() - start - lastSecond >= SECOND) {
-                if(Main.admin) window.setTitle("3D Project | FPS:" + frames + "; TPS:" + ticks);
+                if (Main.admin) window.setTitle("3D Project | FPS:" + frames + "; TPS:" + ticks);
 
                 ticks = frames = 0;
                 lastSecond += SECOND;
