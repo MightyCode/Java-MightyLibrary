@@ -10,7 +10,7 @@ import static org.lwjgl.opengl.GL11.*;
 public class Scene {
     protected ManagerContainer manContainer;
     protected Window window;
-    protected VirtualSceneRenderer scRenderer;
+    private VirtualSceneRenderer scRenderer;
 
     public Scene(){
         this.manContainer = ManagerContainer.getInstance();
@@ -28,12 +28,12 @@ public class Scene {
     public void display(){}
 
 
-    public void setVirtualScene(){
+    protected void setVirtualScene(){
         scRenderer.bindFrameBuff();
         manContainer.window.setVirtualViewport();
     }
 
-    public void setAndDisplayRealScene(){
+    protected void setAndDisplayRealScene(){
         scRenderer.unbindFrameBuff();
         manContainer.window.setRealViewport();
 
@@ -48,8 +48,6 @@ public class Scene {
     protected void setClearColor(float color1, float color2, float color3){                 glClearColor(color1, color2, color3, 1f);}
     protected void setClearColor(float color, float alpha){                                 glClearColor(color, color, color, alpha);}
     protected void setClearColor(float color){                                              glClearColor(color, color, color, 1f);}
-
-    public void setScreen(String newScreen, String args){}
 
     public void unload() {
         scRenderer.unload();

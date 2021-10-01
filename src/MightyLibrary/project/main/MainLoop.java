@@ -14,14 +14,14 @@ public class MainLoop {
     private SceneManager sceneManager;
 
     private final float SECOND = 1000000000.0f;
-    public final float TPS = 60.0f;
+    private final float TPS = 60.0f;
 
-    public final float FPS = 100000.0f;
+    private final float FPS = 100000.0f;
 
     private final double TICK_TIME = SECOND / TPS;
     private final double FRAME_TIME = SECOND / FPS;
 
-    public MainLoop(){
+    MainLoop(){
         if (loadLibraries() == -1){
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
@@ -46,6 +46,10 @@ public class MainLoop {
 
         sceneManager = new SceneManager(this);
         sceneManager.setNewScene(new Test3DScene(), new String[]{""});
+
+        ProjectLoading.Loading(manContainer);
+
+        sceneManager.init();
     }
 
     public void run(){

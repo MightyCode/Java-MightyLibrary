@@ -32,7 +32,9 @@ public class SceneManager {
 
         manContainer.setManager(this);
         manContainer.setManager(new MouseManager()).setManager( new KeyboardManager());
-        manContainer.setManager(new InputManager(this.manContainer.keyManager, this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
+        manContainer.setManager(new InputManager(this.manContainer.keyManager, this.manContainer.mouseManager));
+        manContainer.inpManager.init(new int[0][]);
+
         manContainer.setManager(new Camera(120f, new Vector3f(0.0f, 0.0f, 10.0f)));
 
         manContainer.setManager(new ShaderManager(manContainer.cam));
@@ -46,17 +48,31 @@ public class SceneManager {
         setNewScene(new Scene(), new String[]{""});
 
         commands  = new Commands();
+    }
+
+
+    public void init(){
         changeScene();
     }
 
 
     public void update(){
         // Command
-        if (Main.admin) if(manContainer.keyManager.keyPressed(GLFW_KEY_F1) || commands.isWriteCommands) commands.writeCommand();
+        if (Main.admin){
+            updateMain();
+
+        }
 
         if(wantChange)  changeScene();
 
         currentScene.update();
+    }
+
+
+    private void updateMain(){
+        if (manContainer.inpManager.inputPressed(InputManager.COMMAND) || commands.isWriteCommands) commands.writeCommand();
+
+        if (manContainer.inpManager.inputPressed(InputManager.RELOAD_TEXTURE)) manContainer.textureManager.reload();
     }
 
 

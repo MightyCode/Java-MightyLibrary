@@ -33,9 +33,9 @@ public class Window{
     public float ratio;
     public Vector2i virtualSize;
 
-    public String windowName;
+    private String windowName;
 
-    public boolean fullscreen;
+    private boolean fullscreen;
 
 
     public Window(){

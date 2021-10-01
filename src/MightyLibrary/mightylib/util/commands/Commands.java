@@ -38,7 +38,7 @@ public class Commands {
 
         String command = scan.nextLine();
 
-        System.out.println("");
+        System.out.print("\n");
         checkCommand(command);
 
         mouseManager.setCursor(previousMouseState);
@@ -64,7 +64,7 @@ public class Commands {
                 else                                       commands.get(i).sendCommand(command);
                 found = true;
             }
-            ++i;;
+            ++i;
         }
 
         if (!found) {

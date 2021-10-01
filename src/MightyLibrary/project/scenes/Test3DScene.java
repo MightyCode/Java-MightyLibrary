@@ -1,5 +1,6 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.render.shape.Renderer;
 import MightyLibrary.mightylib.render.shape._2D.HudRectangleRenderer;
 import MightyLibrary.mightylib.render.shape._3D.ModelRenderer;
@@ -9,6 +10,7 @@ import MightyLibrary.mightylib.render.shape.Shape;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector3f;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -42,7 +44,7 @@ public class Test3DScene extends Scene {
 
         // Platform of cubes
         sBlock = new Renderer("textureComplex3D", false, false);
-        float[] cratesInfo = createCrates(10);
+        float[] cratesInfo = createCrates(100);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
@@ -70,44 +72,52 @@ public class Test3DScene extends Scene {
     }
 
     public void update() {
+        super.update();
+
+        InputManager inputManager = manContainer.inpManager;
+
         int speed = 1;
-        if (manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_SHIFT)) {
+        if (inputManager.inputPressed(ActionId.SHIFT)) {
             speed = 3;
         }
 
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_A)){
+        if(inputManager.input(ActionId.MOVE_LEFT)){
             manContainer.cam.speedAngX(Camera.speed.x * speed);
         }
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_D)){
+
+        if(inputManager.input(ActionId.MOVE_RIGHT)){
             manContainer.cam.speedAngX(-Camera.speed.x * speed);
         }
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_W)){
+
+        if(inputManager.input(ActionId.MOVE_FORWARD)){
             manContainer.cam.speedAngZ(-Camera.speed.z * speed);
         }
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_S)) {
+
+        if(inputManager.input(ActionId.MOVE_BACKWARD)) {
             manContainer.cam.speedAngZ(Camera.speed.z * speed);
         }
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_SPACE)) {
+
+        if(inputManager.input(ActionId.MOVE_UP)) {
             manContainer.cam.setY(manContainer.cam.camPos.y += Camera.speed.y);
         }
-        if(manContainer.keyManager.getKeyState(GLFW_KEY_LEFT_CONTROL)) {
+
+        if(inputManager.input(ActionId.MOVE_DOWN)) {
             manContainer.cam.setY(manContainer.cam.camPos.y -= Camera.speed.y);
         }
 
-        if(manContainer.keyManager.keyPressed(GLFW_KEY_ESCAPE)) {
+        if(inputManager.inputPressed(ActionId.ESCAPE)) {
             manContainer.cam.invertLockViewCursor();
             manContainer.mouseManager.invertCursorState();
         }
 
-        if(manContainer.keyManager.keyPressed(GLFW_KEY_F5)) {
-            manContainer.textureManager.reload();
-        }
 
         light.setColor(new Color4f(counter / 360.0f));
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("time", counter / 720);
 
         counter += 1f;
+
         if(counter > 720) counter = 0f;
+
         manContainer.cam.updateView();
     }
 
