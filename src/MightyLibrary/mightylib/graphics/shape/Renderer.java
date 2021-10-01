@@ -1,9 +1,9 @@
-package MightyLibrary.mightylib.render.shape;
+package MightyLibrary.mightylib.graphics.shape;
 
 import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.render.shader.ShaderManager;
-import MightyLibrary.mightylib.render.texture.TextureManager;
-import MightyLibrary.mightylib.util.EShapeType;
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.graphics.texture.TextureManager;
+import MightyLibrary.mightylib.util.math.EShapeType;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
@@ -27,7 +27,7 @@ public class Renderer{
     protected ShaderManager shadManager;
     protected TextureManager textureManager;
 
-    protected int displaydMode;
+    protected int displayMode;
 
     // Textured
     protected Id textureId;
@@ -48,7 +48,7 @@ public class Renderer{
 
         // Display mode
         textureId = new Id(0);
-        displaydMode = NOTHING;
+        displayMode = NOTHING;
         color = ColorList.BLACK;
     }
 
@@ -63,10 +63,17 @@ public class Renderer{
 
     public void updateShader(){
         // Apply model matrix
-        if (!shape.getIn2D()) shadManager.getShader(shape.getShaderId()).glUniform("model", translateF);
+        if (!shape.getIn2D()){
+            shadManager.getShader(shape.getShaderId()).glUniform("model", translateF);
+        }
 
-        if (displaydMode == COLOR)          shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
-        else if (displaydMode == TEXTURE)   textureManager.bind(textureId, 0);
+        if (displayMode == COLOR) {
+            shadManager.getShader(
+                    shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA()
+            );
+        } else if (displayMode == TEXTURE){
+            textureManager.bind(textureId, 0);
+        }
     }
 
 
@@ -83,24 +90,32 @@ public class Renderer{
     }
 
 
-    public void setDisplayState(boolean state) {display = state;}
-    public void invertDisplayState() {display = !display;}
+    public void setDisplayState(boolean state) {
+        display = state;
+    }
+
+
+    public void invertDisplayState() {
+        display = !display;
+    }
 
 
     public void setTexture(String texture){
-        displaydMode = TEXTURE;
+        displayMode = TEXTURE;
         textureId = textureManager.getIdShaderFromString(texture);
         shape.enableVbo(1);
     }
 
+
     public void setTexture(Id texture){
-        displaydMode = TEXTURE;
+        displayMode = TEXTURE;
         textureId = texture;
         shape.enableVbo(1);
     }
 
+
     public void setColor(Color4f color){
-        displaydMode = COLOR;
+        displayMode = COLOR;
         this.color = color.copy();
         shape.disableVbo(1);
     }

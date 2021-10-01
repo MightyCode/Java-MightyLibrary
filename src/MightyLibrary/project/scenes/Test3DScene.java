@@ -1,25 +1,23 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.render.shape.Renderer;
-import MightyLibrary.mightylib.render.shape._2D.HudRectangleRenderer;
-import MightyLibrary.mightylib.render.shape._3D.ModelRenderer;
+import MightyLibrary.mightylib.graphics.shape.Renderer;
+import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
 import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.render.shape._3D.CubeRenderer;
-import MightyLibrary.mightylib.render.shape.Shape;
+import MightyLibrary.mightylib.graphics.shape._3D.CubeRenderer;
+import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector3f;
 
-import static org.lwjgl.glfw.GLFW.*;
-
 public class Test3DScene extends Scene {
 
     private Renderer sBlock;
     private ModelRenderer stand;
-    private HudRectangleRenderer hudBar;
+    private RectangleRenderer hudBar;
     // Textures
     private Id displacementMap;
 
@@ -57,13 +55,13 @@ public class Test3DScene extends Scene {
         stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
 
         // Grey Rect in Hud
-        /*hudBar = new HudRectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
+        /*hudBar = new RectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
-        hudBar = new HudRectangleRenderer("texture2D");
+        hudBar = new RectangleRenderer("texture2D");
         hudBar.setTexture("water1");
-        hudBar.setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
+        hudBar.setSizePix( 30, 30);//window.size.x * 0.3f, window.size.y * 0.3f);
+        hudBar.setPosition(30, 30); //window.size.x * 0.7f, window.size.y * 0.7f);
 
         System.out.println("a ".lastIndexOf("a"));
 

@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.render.shader;
+package MightyLibrary.mightylib.graphics.shader;
 
 import java.nio.FloatBuffer;
 

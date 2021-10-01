@@ -1,15 +1,13 @@
-package MightyLibrary.mightylib.render.shape.font;
+package MightyLibrary.mightylib.graphics.shape.font;
 
 import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.render.texture.TextureManager;
+import MightyLibrary.mightylib.graphics.texture.TextureManager;
 import MightyLibrary.mightylib.util.FileMethods;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.ObjectId;
 import MightyLibrary.mightylib.util.math.MightyMath;
-import org.joml.Vector4f;
 import org.joml.Vector4i;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Font extends ObjectId {

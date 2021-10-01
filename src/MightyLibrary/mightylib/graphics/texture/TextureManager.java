@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.render.texture;
+package MightyLibrary.mightylib.graphics.texture;
 
 import MightyLibrary.mightylib.util.FileMethods;
 import MightyLibrary.mightylib.util.Id;
@@ -12,7 +12,6 @@ public class TextureManager {
 
     public TextureManager(){
         textures = new ManagerList<>();
-        this.init();
     }
 
     public void init(){
@@ -28,6 +27,7 @@ public class TextureManager {
         load(obj, "");
         System.out.println("\n");
     }
+
 
     public void load(JSONObject node, String path){
         Iterator<String> arrayNodes = node.keys();
@@ -46,6 +46,7 @@ public class TextureManager {
         } while(arrayNodes.hasNext());
     }
 
+
     public void bind(Id id){
         textures.get(id).bind();
     }
@@ -53,9 +54,11 @@ public class TextureManager {
         textures.get(id).bind(position);
     }
 
+
     public Id getIdShaderFromString(String shaderId) {
         return textures.getIdFromString(shaderId);
     }
+
 
     public void reload(){
         unload();

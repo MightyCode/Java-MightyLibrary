@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.render.texture;
+package MightyLibrary.mightylib.graphics.texture;
 
 import MightyLibrary.mightylib.util.ObjectId;
 import org.lwjgl.BufferUtils;

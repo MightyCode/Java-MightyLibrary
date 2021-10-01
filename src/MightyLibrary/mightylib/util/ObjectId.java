@@ -13,13 +13,16 @@ public class ObjectId {
         this.name = name;
     }
 
+
     public ObjectId(int id){
         this(id, "null");
     }
 
+
     public ObjectId(String name){
         this(0, name);
     }
+
 
     public ObjectId setId(int id){
         this.id.id = id;
@@ -31,9 +34,11 @@ public class ObjectId {
         return this;
     }
 
+
     public Id getId(){
         return id;
     }
+
 
     public ObjectId linkId(Id id){
         this.id = id;
@@ -44,6 +49,7 @@ public class ObjectId {
     public String getName(){
         return name;
     }
+
 
     public ObjectId setName(String name){
         this.name = name;

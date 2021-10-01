@@ -1,6 +1,6 @@
-package MightyLibrary.mightylib.render.shape._2D;
+package MightyLibrary.mightylib.graphics.shape._2D;
 
-public class VirtualSceneRenderer extends HudRectangleRenderer {
+public class VirtualSceneRenderer extends RectangleRenderer {
     private FrameBuffer frameBuffer;
 
     public VirtualSceneRenderer(){

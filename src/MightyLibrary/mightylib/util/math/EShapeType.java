@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util;
+package MightyLibrary.mightylib.util.math;
 
 public enum EShapeType {
     Square,

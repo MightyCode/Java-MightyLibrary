@@ -1,8 +1,7 @@
-package MightyLibrary.mightylib.render.shape.font;
+package MightyLibrary.mightylib.graphics.shape.font;
 
 import MightyLibrary.mightylib.util.FileMethods;
 import MightyLibrary.mightylib.util.ManagerList;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import java.util.Iterator;
 

@@ -1,7 +1,7 @@
-package MightyLibrary.mightylib.render.shape._3D;
+package MightyLibrary.mightylib.graphics.shape._3D;
 
-import MightyLibrary.mightylib.render.shape.Renderer;
-import MightyLibrary.mightylib.render.shape.Shape;
+import MightyLibrary.mightylib.graphics.shape.Renderer;
+import MightyLibrary.mightylib.graphics.shape.Shape;
 import org.joml.Vector3f;
 
 public class CubeRenderer extends Renderer {

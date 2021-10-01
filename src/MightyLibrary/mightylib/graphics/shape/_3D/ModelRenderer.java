@@ -1,6 +1,6 @@
-package MightyLibrary.mightylib.render.shape._3D;
+package MightyLibrary.mightylib.graphics.shape._3D;
 
-import MightyLibrary.mightylib.render.shape.Renderer;
+import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.util.math.Color4f;
 
 public class ModelRenderer extends Renderer {

@@ -1,5 +1,6 @@
 package MightyLibrary.project.main;
 
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.main.ListError;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
@@ -57,27 +58,27 @@ public class MainLoop {
         int ticks = 0;
         int frames = 0;
 
-        Timer timer = new Timer();
-
         double lastTick = 0.0;
         double lastFrame = 0.0;
         double lastSecond = 0.0;
 
+        long start = System.nanoTime();
 
         while(!window.wantExit()){
-            if (timer.getDuration() - lastTick >= TICK_TIME) {
+            if (System.nanoTime() - start - lastTick >= TICK_TIME) {
+                GameTime.update();
                 sceneManager.update();
                 sceneManager.dispose();
                 ++ticks;
                 lastTick += TICK_TIME;
-            } else if (timer.getDuration() - lastFrame >= FRAME_TIME) {
+            } else if (System.nanoTime() - start - lastFrame >= FRAME_TIME) {
                 sceneManager.display();
                 window.dispose();
                 ++frames;
                 lastFrame += FRAME_TIME;
             }
 
-            if (timer.getDuration() - lastSecond >= SECOND) {
+            if (System.nanoTime() - start - lastSecond >= SECOND) {
                 if(Main.admin) window.setTitle("3D Project | FPS:" + frames + "; TPS:" + ticks);
 
                 ticks = frames = 0;

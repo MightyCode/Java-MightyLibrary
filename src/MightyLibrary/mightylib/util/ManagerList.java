@@ -9,13 +9,16 @@ public class ManagerList<E>{
         objects = new ArrayList<>();
     }
 
+
     public E get(Id id){
         return get(id.id);
     }
 
+
     public E get(int id){
         return (E)objects.get(id);
     }
+
 
     public Id getIdFromString(String key){
         for (ObjectId object : objects){
@@ -26,6 +29,7 @@ public class ManagerList<E>{
         return new Id(-1);
     }
 
+
     public Id add(ObjectId object){
         object.setId(objects.size());
         objects.add(object);
@@ -33,13 +37,17 @@ public class ManagerList<E>{
         return object.getId();
     }
 
+
     public String toString(){
         StringBuilder result = new StringBuilder("ManagerList:\n");
+
         for (ObjectId object : objects) {
             result.append(object.getName()).append(", with id ").append(object.getId().id).append("\n");
         }
+
         return result.toString();
     }
+
 
     public int size(){
         return  objects.size();

@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.render.shader;
+package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.util.FileMethods;
 import MightyLibrary.mightylib.util.ObjectId;

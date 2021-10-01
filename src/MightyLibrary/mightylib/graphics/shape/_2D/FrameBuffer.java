@@ -1,8 +1,8 @@
-package MightyLibrary.mightylib.render.shape._2D;
+package MightyLibrary.mightylib.graphics.shape._2D;
 
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
-import MightyLibrary.mightylib.render.texture.TextureParameters;
+import MightyLibrary.mightylib.graphics.texture.TextureParameters;
 import MightyLibrary.mightylib.util.Id;
 
 import static org.lwjgl.opengl.GL11.*;

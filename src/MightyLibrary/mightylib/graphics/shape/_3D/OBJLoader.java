@@ -1,6 +1,6 @@
-package MightyLibrary.mightylib.render.shape._3D;
+package MightyLibrary.mightylib.graphics.shape._3D;
 
-import MightyLibrary.mightylib.render.shape.Shape;
+import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.util.FileMethods;
 import org.joml.Vector2f;
 import org.joml.Vector3f;

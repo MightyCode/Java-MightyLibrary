@@ -22,6 +22,7 @@
 		},
 		"shaderEffects" : {
 			"dispMap1" : "displacementMap1.png"
-		}
+		},
+		"slime" : "slime.png"
 	}
 }

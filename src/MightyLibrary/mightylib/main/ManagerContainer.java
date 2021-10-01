@@ -3,11 +3,11 @@ package MightyLibrary.mightylib.main;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.render.shape.font.TextManager;
-import MightyLibrary.mightylib.render.texture.TextureManager;
+import MightyLibrary.mightylib.graphics.shape.font.TextManager;
+import MightyLibrary.mightylib.graphics.texture.TextureManager;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.SceneManager;
-import MightyLibrary.mightylib.render.shader.ShaderManager;
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 
 public class ManagerContainer {
 

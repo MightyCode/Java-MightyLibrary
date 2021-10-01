@@ -1,17 +1,17 @@
-package MightyLibrary.mightylib.render.shape._2D;
+package MightyLibrary.mightylib.graphics.shape._2D;
 
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
-import MightyLibrary.mightylib.render.shape.Renderer;
-import MightyLibrary.mightylib.render.shape.Shape;
+import MightyLibrary.mightylib.graphics.shape.Renderer;
+import MightyLibrary.mightylib.graphics.shape.Shape;
 import org.joml.Vector2f;
 
-public class HudRectangleRenderer extends Renderer {
+public class RectangleRenderer extends Renderer {
     protected Window window;
     protected float windowW, windowH, posX, posY;
     protected int positionIndex;
 
-    public HudRectangleRenderer(String shaderName) {
+    public RectangleRenderer(String shaderName) {
         super(shaderName, true, true);
         window = ManagerContainer.getInstance().window;
         posX = 0.0f;
@@ -49,7 +49,7 @@ public class HudRectangleRenderer extends Renderer {
     }
 
     // Set size with size of pixel
-    public HudRectangleRenderer setSizePix(float width, float height){
+    public RectangleRenderer setSizePix(float width, float height){
         windowW = width * 2.0f / window.size.x - 1.0f;
         windowH = height * 2.0f / window.size.y - 1.0f;
         return setSizeProp(width * 1.0f / window.size.x, height * 1.0f / window.size.y);
@@ -57,7 +57,7 @@ public class HudRectangleRenderer extends Renderer {
 
 
     // Set size with a proportion of the window
-    public HudRectangleRenderer setSizeProp(float width, float height){
+    public RectangleRenderer setSizeProp(float width, float height){
         windowW = width * 2.0f - 1.0f;
         windowH = height * 2.0f - 1.0f;
         updateShape();

@@ -21,9 +21,11 @@ public abstract class FileMethods {
         return true; // Résultat OK
     }
 
+
     public static boolean copy(String source, String dest) {
         return copy(new File(source), new File(dest));
     }
+
 
     public static String readFileAsString(String filePath){
         StringBuilder source = new StringBuilder();

@@ -1,8 +1,5 @@
 package MightyLibrary.mightylib.util.math;
 
-import MightyLibrary.mightylib.util.EDirection;
-import MightyLibrary.mightylib.util.EShapeType;
-
 import java.util.ArrayList;
 
 /**

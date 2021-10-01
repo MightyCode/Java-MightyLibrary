@@ -3,16 +3,14 @@ package MightyLibrary.mightylib.scene;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.render.shape.font.TextManager;
+import MightyLibrary.mightylib.graphics.shape.font.TextManager;
 import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
-import MightyLibrary.mightylib.render.shader.ShaderManager;
-import MightyLibrary.mightylib.render.texture.TextureManager;
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.graphics.texture.TextureManager;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.util.commands.Commands;
 import org.joml.Vector3f;
-
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F1;
 
 public class SceneManager {
     private ManagerContainer manContainer;
@@ -41,6 +39,7 @@ public class SceneManager {
 
         // Load every texture
         manContainer.setManager(new TextureManager());
+        manContainer.textureManager.init();
 
         manContainer.setManager(new TextManager());
 
