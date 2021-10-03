@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.shape._3D;
 
 import MightyLibrary.mightylib.graphics.shape.Shape;
-import MightyLibrary.mightylib.util.FileMethods;
+import MightyLibrary.mightylib.resources.FileMethods;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 

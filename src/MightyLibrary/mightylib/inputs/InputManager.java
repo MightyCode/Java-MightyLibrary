@@ -11,7 +11,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public class InputManager {
     private static final int INPUT_DATA_INDEX = 0;
     private static final int INPUT_DATA_INPUT = 1;
-    private static final int INPUTA_DATA_TYPE = 2;
+    private static final int INPUT_DATA_TYPE = 2;
 
 
     public static final int ID_KEYBOARD = 0;
@@ -19,6 +19,7 @@ public class InputManager {
 
 
     private static final int NUMBER_LIBRARY_INPUTS = 2;
+
     public static final int COMMAND = 0;
     public static final int RELOAD_TEXTURE = 1;
 
@@ -28,12 +29,13 @@ public class InputManager {
         return CURRENT_ID++;
     }
 
+    private final KeyboardManager keyManager;
+    private final MouseManager mouseManager;
 
-    private KeyboardManager keyManager;
-    private MouseManager mouseManager;
-
+    //TODO
     private int[] types;
     private int[] inputs;
+
 
     /**
      * Input manager class.
@@ -48,7 +50,6 @@ public class InputManager {
     public void init(int[][] inputData){
         inputs = new int[CURRENT_ID];
         types = new int[inputs.length];
-        System.out.println(inputs.length);
         initLibraryInputs();
 
         int index;
@@ -57,7 +58,7 @@ public class InputManager {
             index = inputData[i][INPUT_DATA_INDEX];
 
             inputs[index] = inputData[i][INPUT_DATA_INPUT];
-            types[index] = inputData[i][INPUTA_DATA_TYPE];
+            types[index] = inputData[i][INPUT_DATA_TYPE];
         }
     }
 
@@ -69,7 +70,6 @@ public class InputManager {
 
 
     public boolean inputPressed(int inputId){
-        System.out.println(inputId);
         if(types[inputId] == ID_KEYBOARD) return keyManager.keyPressed(this.inputs[inputId]);
         else return mouseManager.buttonPressed(this.inputs[inputId]);
     }
@@ -91,7 +91,7 @@ public class InputManager {
         inputs[COMMAND] = GLFW_KEY_F1;
         types[COMMAND] = ID_KEYBOARD;
 
-        inputs[RELOAD_TEXTURE] = GLFW_KEY_F1;
+        inputs[RELOAD_TEXTURE] = GLFW_KEY_F5;
         types[RELOAD_TEXTURE] = ID_KEYBOARD;
     }
 

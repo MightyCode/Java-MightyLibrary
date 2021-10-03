@@ -42,7 +42,7 @@ public class Test3DScene extends Scene {
 
         // Platform of cubes
         sBlock = new Renderer("textureComplex3D", false, false);
-        float[] cratesInfo = createCrates(100);
+        float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("water1");
@@ -63,11 +63,10 @@ public class Test3DScene extends Scene {
         hudBar.setSizePix( 30, 30);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(30, 30); //window.size.x * 0.7f, window.size.y * 0.7f);
 
-        System.out.println("a ".lastIndexOf("a"));
-
         System.out.println(cratesInfo.length);
         System.out.println(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
     }
+
 
     public void update() {
         super.update();
@@ -130,9 +129,9 @@ public class Test3DScene extends Scene {
 
         sBlock.display();
 
-        super.setAndDisplayRealScene();
         // Better to draw the hud here and be not affected by the post processing shader
         hudBar.display();
+        super.setAndDisplayRealScene();
     }
 
 

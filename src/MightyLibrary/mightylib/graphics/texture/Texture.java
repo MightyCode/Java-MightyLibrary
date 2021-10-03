@@ -92,7 +92,6 @@ public class Texture extends ObjectId {
             correctLoaded = true;
         } catch (Exception e) {
             System.err.println("Fail to load texture " + path + " :");
-            e.printStackTrace();
             glDeleteTextures(textureId);
             correctLoaded = false;
         }

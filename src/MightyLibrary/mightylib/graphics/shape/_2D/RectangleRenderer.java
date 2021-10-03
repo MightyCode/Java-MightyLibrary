@@ -13,8 +13,8 @@ public class RectangleRenderer extends Renderer {
 
     public RectangleRenderer(String shaderName) {
         super(shaderName, true, true);
-        window = ManagerContainer.getInstance().window;
-        posX = 0.0f;
+
+        posX = 0.0f;        window = ManagerContainer.getInstance().window;
         posY = 0.0f;
 
         windowW = 1.0f;
@@ -50,9 +50,9 @@ public class RectangleRenderer extends Renderer {
 
     // Set size with size of pixel
     public RectangleRenderer setSizePix(float width, float height){
-        windowW = width * 2.0f / window.size.x - 1.0f;
-        windowH = height * 2.0f / window.size.y - 1.0f;
-        return setSizeProp(width * 1.0f / window.size.x, height * 1.0f / window.size.y);
+        windowW = width * 2.0f / window.virtualSize.x - 1.0f;
+        windowH = height * 2.0f / window.virtualSize.y - 1.0f;
+        return setSizeProp(width / window.virtualSize.x, height / window.virtualSize.y);
     }
 
 

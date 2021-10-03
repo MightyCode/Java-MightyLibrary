@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.graphics.shader;
 
-import MightyLibrary.mightylib.util.FileMethods;
+import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.util.ObjectId;
 
 import java.nio.FloatBuffer;

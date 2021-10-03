@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util;
+package MightyLibrary.mightylib.resources;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

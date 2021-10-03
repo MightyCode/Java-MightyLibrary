@@ -10,7 +10,7 @@ import static org.lwjgl.opengl.GL11.*;
 public class Scene {
     protected ManagerContainer manContainer;
     protected Window window;
-    private VirtualSceneRenderer scRenderer;
+    private final VirtualSceneRenderer scRenderer;
 
     public Scene(){
         this.manContainer = ManagerContainer.getInstance();

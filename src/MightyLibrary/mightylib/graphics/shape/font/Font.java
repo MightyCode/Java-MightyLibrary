@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.graphics.shape.font;
 
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.graphics.texture.TextureManager;
-import MightyLibrary.mightylib.util.FileMethods;
+import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.ObjectId;
 import MightyLibrary.mightylib.util.math.MightyMath;

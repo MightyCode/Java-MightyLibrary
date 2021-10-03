@@ -25,17 +25,16 @@ public class ManagerContainer {
     public TextureManager textureManager;
     public TextManager textManager;
 
+
     // Singleton pattern
     private static ManagerContainer manContainer;
-    private static boolean initialized = false;
 
     public static ManagerContainer getInstance(){
-        if(!initialized) manContainer = new ManagerContainer();
+        if(manContainer == null) manContainer = new ManagerContainer();
         return manContainer;
     }
 
     private ManagerContainer() {
-        initialized = true;
     }
 
     public ManagerContainer setManager(InputManager im){

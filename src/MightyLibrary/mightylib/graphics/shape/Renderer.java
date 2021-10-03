@@ -18,7 +18,6 @@ public class Renderer{
     public static final int COLOR = 1;
     public static final int TEXTURE = 2;
 
-
     public Vector3f modelV;
     protected Matrix4f model;
     protected boolean display;

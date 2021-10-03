@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.util.FileMethods;
+import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.ManagerList;
 import org.joml.Matrix4f;
@@ -78,8 +78,10 @@ public class ShaderManager {
     }
 
     public void reloadProjection(){
+        Id current;
         for(int i = 0; i < shaders.size(); ++i){
-            if(shaders.get(new Id(i)).properties.contains(USE_PROJECTION_MATRIX)) reloadProjection(new Id(i));
+            current = new Id(i);
+            if(shaders.get(current).properties.contains(USE_PROJECTION_MATRIX)) reloadProjection(current);
         }
     }
 

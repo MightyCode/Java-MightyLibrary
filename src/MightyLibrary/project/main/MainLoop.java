@@ -10,8 +10,8 @@ import MightyLibrary.project.scenes.Test3DScene;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class MainLoop {
-    private Window window;
-    private SceneManager sceneManager;
+    private final Window window;
+    private final SceneManager sceneManager;
 
     private final float SECOND = 1000000000.0f;
     private final float TPS = 60.0f;
