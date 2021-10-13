@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.graphics.shape._2D.VirtualSceneRenderer;
 import MightyLibrary.mightylib.util.math.Color4f;
+import org.joml.Vector4f;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -16,6 +17,8 @@ public class Scene {
         this.manContainer = ManagerContainer.getInstance();
         window = manContainer.window;
         scRenderer = new VirtualSceneRenderer();
+        scRenderer.setTexturePosition(new Vector4f(0, 1, 1, 0));
+        scRenderer.updateShape();
     }
 
 

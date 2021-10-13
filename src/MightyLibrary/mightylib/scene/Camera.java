@@ -87,6 +87,7 @@ public class Camera {
 
     public Camera setViewAngle(float fov){
         projection.perspective(fov, manContainer.window.ratio, 0.01f, 10000f);
+        //projection.ortho(0, 800, 600, 0 , -1, 1);
 
         projectionBuffer = projection.get(projectionBuffer);
         return this;

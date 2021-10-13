@@ -69,7 +69,6 @@ public class InputManager {
 
 
     public boolean inputPressed(int inputId){
-        System.out.println(inputId);
         if(types[inputId] == ID_KEYBOARD) return keyManager.keyPressed(this.inputs[inputId]);
         else return mouseManager.buttonPressed(this.inputs[inputId]);
     }
