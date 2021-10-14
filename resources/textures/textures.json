@@ -18,11 +18,11 @@
 		"world" : {
 			"container" : "container.jpg",
 			"water1" : "water1.jpg",
-			"stall" : "stallTexture.png"
+			"stall" : "stallTexture.png",
+			"slime" : "slime.png"
 		},
 		"shaderEffects" : {
 			"dispMap1" : "displacementMap1.png"
-		},
-		"slime" : "slime.png"
+		}
 	}
 }

@@ -56,6 +56,7 @@ public class Texture extends ObjectId {
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
             System.out.println(PATH +  this.path + "\n");
+            e.printStackTrace();
             correctLoaded = false;
         }
     }
@@ -92,6 +93,7 @@ public class Texture extends ObjectId {
             correctLoaded = true;
         } catch (Exception e) {
             System.err.println("Fail to load texture " + path + " :");
+            e.printStackTrace();
             glDeleteTextures(textureId);
             correctLoaded = false;
         }
