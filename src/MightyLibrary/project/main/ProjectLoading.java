@@ -9,7 +9,6 @@ import MightyLibrary.project.lib.ActionId;
 class ProjectLoading {
     static void Loading(ManagerContainer manContainer){
         InputManager inputManager = manContainer.inpManager;
-
         int[][] inputData = {
                 {ActionId.ESCAPE, GLFW_KEY_ESCAPE , InputManager.ID_KEYBOARD },
                 {ActionId.MOVE_LEFT, GLFW_KEY_A , InputManager.ID_KEYBOARD },

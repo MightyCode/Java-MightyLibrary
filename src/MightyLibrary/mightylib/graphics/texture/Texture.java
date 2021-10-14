@@ -67,7 +67,8 @@ public class Texture extends ObjectId {
         try {
             int[] pixels = new int[img.getHeight() * img.getWidth()];
 
-            img.getRGB(0, 0, img.getWidth(), img.getHeight(), pixels, 0, img.getHeight());
+            img.getRGB(0, 0, img.getWidth(), img.getHeight(), pixels, 0, img.getWidth());
+
 
             byteBuffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
 
@@ -87,7 +88,7 @@ public class Texture extends ObjectId {
 
             glBindTexture(GL_TEXTURE_2D, textureId);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer);
-            TextureParameters.realisticParameters();
+            TextureParameters.pixelArtParameters();
 
             System.out.println("Texture : " + textureId + " , loaded with path : " + path);
             correctLoaded = true;

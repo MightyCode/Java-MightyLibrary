@@ -5,11 +5,13 @@ import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
 import org.joml.Vector2f;
+import org.joml.Vector4f;
 
 public class RectangleRenderer extends Renderer {
     protected Window window;
     protected float windowW, windowH, posX, posY;
-    protected int positionIndex;
+    protected int positionIndex, textureIndex;
+    protected Vector4f texturePosition;
 
     public RectangleRenderer(String shaderName) {
         super(shaderName, true, true);
@@ -20,11 +22,13 @@ public class RectangleRenderer extends Renderer {
         windowW = 1.0f;
         windowH = 1.0f;
 
+        texturePosition = new Vector4f(0, 1, 0,1 );
+
         int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.STATIC_STORE);
-        shape.addVbo(texturePos(), 2, Shape.STATIC_STORE);
+        textureIndex = shape.addVbo(texturePos(), 2, Shape.STATIC_STORE);
     }
 
 
@@ -39,12 +43,17 @@ public class RectangleRenderer extends Renderer {
     }
 
 
+    public void setTexturePosition(Vector4f newTexturePosition){
+        texturePosition = newTexturePosition;
+    }
+
+
     private float[] texturePos(){
         return new float[]{
-                0.0f, 1.0f,
-                0.0f, 0.0f,
-                1.0f, 0.0f,
-                1.0f, 1.0f
+                texturePosition.x, texturePosition.z,
+                texturePosition.x, texturePosition.w,
+                texturePosition.y, texturePosition.w,
+                texturePosition.y, texturePosition.z
         };
     }
 
@@ -79,5 +88,6 @@ public class RectangleRenderer extends Renderer {
 
     public void updateShape(){
         shape.resetVbo(calculatePosition(), positionIndex);
+        shape.resetVbo(texturePos(), textureIndex);
     }
 }

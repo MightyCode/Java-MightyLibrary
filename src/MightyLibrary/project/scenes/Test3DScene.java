@@ -1,6 +1,7 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
@@ -12,6 +13,7 @@ import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public class Test3DScene extends Scene {
 
@@ -45,7 +47,7 @@ public class Test3DScene extends Scene {
         float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setPosition(new Vector3f(0.0f));
-        sBlock.setTexture("water1");
+        sBlock.setTexture("error");
             // Displacement texture for cubes/crate
         displacementMap = manContainer.textureManager.getIdShaderFromString("dispMap1");
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
@@ -59,9 +61,9 @@ public class Test3DScene extends Scene {
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
         hudBar = new RectangleRenderer("texture2D");
-        hudBar.setTexture("water1");
-        hudBar.setSizePix( 30, 30);//window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(30, 30); //window.size.x * 0.7f, window.size.y * 0.7f);
+        hudBar.setTexture("error");
+        hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
+        hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
 
         System.out.println(cratesInfo.length);
         System.out.println(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
@@ -261,12 +263,12 @@ public class Test3DScene extends Scene {
 
     public void placeText(float[] array, int index){
         for(int i = 0; i < 6; ++i){
-            placeValueToCoords(array, new float[]{0.0f, 0.0f}, index + (i) * faceSize + 3);
-            placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * faceSize + 3 + lineSize);
-            placeValueToCoords(array, new float[]{1.0f, 1.0f}, index + (i) * faceSize + 3 + 2 * lineSize);
-            placeValueToCoords(array, new float[]{1.0f, 1.0f}, index + (i) * faceSize + 3 + 3 * lineSize);
-            placeValueToCoords(array, new float[]{0.0f, 1.0f}, index + (i) * faceSize + 3 + 4 * lineSize);
-            placeValueToCoords(array, new float[]{0.0f, 0.0f}, index + (i) * faceSize + 3 + 5 * lineSize);
+            placeValueToCoords(array, new float[]{0.0f, 1.0f}, index + (i) * faceSize + 3);
+            placeValueToCoords(array, new float[]{1.0f, 1.0f}, index + (i) * faceSize + 3 + lineSize);
+            placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * faceSize + 3 + 2 * lineSize);
+            placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * faceSize + 3 + 3 * lineSize);
+            placeValueToCoords(array, new float[]{0.0f, 0.0f}, index + (i) * faceSize + 3 + 4 * lineSize);
+            placeValueToCoords(array, new float[]{0.0f, 1.0f}, index + (i) * faceSize + 3 + 5 * lineSize);
         }
     }
 
