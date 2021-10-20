@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
+import MightyLibrary.mightylib.util.valueDebug.TableDebug;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -22,7 +23,7 @@ public class RectangleRenderer extends Renderer {
         windowW = 1.0f;
         windowH = 1.0f;
 
-        texturePosition = new Vector4f(0, 1, 0,1 );
+        texturePosition = new Vector4f(0f, 1f, 0f,1f );
 
         int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);

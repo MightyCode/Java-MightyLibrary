@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.Map;
 
-public class TextureLoader {
+public abstract class TextureLoader {
 
     public static void load(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/textures.json"));

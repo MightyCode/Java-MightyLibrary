@@ -20,7 +20,6 @@ public class Animator {
 
 
     public void clear(){
-
         animations.clear();
         currentAnimation = null;
     }

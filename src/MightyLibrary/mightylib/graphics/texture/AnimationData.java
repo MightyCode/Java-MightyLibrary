@@ -27,6 +27,8 @@ public class AnimationData extends DataType {
         textureName = parts[TEXTURE_POS].trim();
 
         int numberFrames = Integer.parseInt(parts[SIZE_FRAME_POS].trim());
+        framesData = new FrameData[numberFrames];
+
         for (int i = 0; i < numberFrames; ++i){
             framesData[i] = new FrameData();
             framesData[i].init(parts[FRAME_ENUM_START_POS + i].trim());
@@ -49,6 +51,9 @@ public class AnimationData extends DataType {
     public int frameNumber(){
         return framesData.length;
     }
+
+
+    public String getTextureName(){ return textureName; }
 
 
     @Override

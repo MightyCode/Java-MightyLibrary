@@ -20,7 +20,7 @@ public class FrameData {
     public void init(String data){
         String[] parts = data.split(",");
         if (parts.length != PART_NUMBER) {
-            System.err.println("Error when trying to inti Frame Data");
+            System.err.println("Error when trying to init Frame Data");
             System.err.println("-> : " + data);
             return;
         }
@@ -33,7 +33,7 @@ public class FrameData {
         hotPoint.x = Integer.parseInt(parts[4].trim());
         hotPoint.y = Integer.parseInt(parts[5].trim());
 
-        frameTime = Integer.parseInt(parts[6].trim());
+        frameTime = Float.parseFloat(parts[6].trim());
     }
 
 
@@ -42,6 +42,13 @@ public class FrameData {
     }
     public Vector4i getFramePositionCopy(){
         return new Vector4i(framePosition);
+    }
+
+    public Vector2i getHotPointReference() {
+        return hotPoint;
+    }
+    public Vector2i getHotPointCopy(){
+        return new Vector2i(hotPoint);
     }
 
     public float getFrameTime(){

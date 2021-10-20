@@ -1,6 +1,8 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.texture.Animation;
+import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
@@ -13,6 +15,7 @@ import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.project.lib.ActionId;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -31,6 +34,8 @@ public class Test3DScene extends Scene {
     private CubeRenderer light;
 
     private float counter = 0;
+
+    private Animator animator;
 
     public void init(String[] args){
         /// SCENE INFORMATIONS ///
@@ -62,9 +67,12 @@ public class Test3DScene extends Scene {
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
         hudBar = new RectangleRenderer("texture2D");
-        hudBar.setTexture("error");
+        hudBar.setTexture("slime");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
+
+        animator = new Animator(new Vector2f());
+        animator.addAndInitAnimation("first", manContainer.resources.getResource(AnimationData.class, "slime"), true);
 
         System.out.println(cratesInfo.length);
         System.out.println(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
@@ -119,6 +127,11 @@ public class Test3DScene extends Scene {
         if(counter > 720) counter = 0f;
 
         manContainer.cam.updateView();
+
+        animator.update();
+        hudBar.setTexture(animator.getCurrentAnimation().getData().getTextureName());
+        hudBar.setTexturePosition(animator.getCurrentAnimation().currentTexturePosition());
+        hudBar.updateShape();
     }
 
 

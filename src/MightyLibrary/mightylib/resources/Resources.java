@@ -14,6 +14,7 @@ public class Resources {
         resources.put(AnimationData.class, new HashMap<>());
 
         TextureLoader.load(resources.get(Texture.class));
+        AnimationDataLoader.creates(resources.get(AnimationData.class));
     }
 
 

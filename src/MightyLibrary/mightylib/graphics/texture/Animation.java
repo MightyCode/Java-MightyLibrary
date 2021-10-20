@@ -1,10 +1,10 @@
 package MightyLibrary.mightylib.graphics.texture;
 
 import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.ManagerContainer;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
-
-import java.util.ArrayList;
+import org.joml.Vector4i;
 
 public class Animation {
     private final Vector2f referencePoint;
@@ -29,7 +29,7 @@ public class Animation {
         restart();
     }
 
-    public void init(final AnimationData animationData, final boolean isLooping){
+    public void init(AnimationData animationData, boolean isLooping){
         this.animationData = animationData;
         this.looping = isLooping;
     }
@@ -81,5 +81,24 @@ public class Animation {
     }
     public float getAnimationScale(){
         return scale;
+    }
+
+
+    public AnimationData getData(){ return animationData; }
+
+    public Vector4f currentTexturePosition(){
+        Texture texture = ManagerContainer.getInstance().resources.getResource(Texture.class, animationData.getTextureName());
+
+        Vector4f computedPosition = new Vector4f(0, 0, 0, 0);
+
+        FrameData data = animationData.getFrame(currentFrame);
+        Vector4i texturePositions = data.getFramePositionCopy();
+
+        computedPosition.x = (texturePositions.x) / (texture.getWidth() * 1.0f);
+        computedPosition.y = (texturePositions.z + texturePositions.x) / (texture.getWidth() * 1.0f);
+        computedPosition.z = (texturePositions.y) / (texture.getHeight() * 1.0f);
+        computedPosition.w = (texturePositions.w + texturePositions.y) / (texture.getHeight() * 1.0f);
+
+        return computedPosition;
     }
 }
