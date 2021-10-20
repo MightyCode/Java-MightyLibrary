@@ -1,13 +1,14 @@
 package MightyLibrary.mightylib.scene;
 
+import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.graphics.shape.font.TextManager;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.graphics.texture.TextureManager;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.util.commands.Commands;
 import org.joml.Vector3f;
@@ -38,8 +39,8 @@ public class SceneManager {
         manContainer.setManager(new ShaderManager(manContainer.cam));
 
         // Load every texture
-        manContainer.setManager(new TextureManager());
-        manContainer.textureManager.init();
+        manContainer.resources = new Resources();
+        manContainer.resources.load();
 
         manContainer.setManager(new TextManager());
 
@@ -71,7 +72,7 @@ public class SceneManager {
     private void updateMain(){
         if (manContainer.inpManager.inputPressed(InputManager.COMMAND) || commands.isWriteCommands) commands.writeCommand();
 
-        if (manContainer.inpManager.inputPressed(InputManager.RELOAD_TEXTURE)) manContainer.textureManager.reload();
+        if (manContainer.inpManager.inputPressed(InputManager.RELOAD_TEXTURE)) manContainer.resources.reload(Texture.class);
     }
 
 
@@ -116,6 +117,6 @@ public class SceneManager {
     public void unload(){
         currentScene.unload();
         manContainer.shadManager.unload();
-        manContainer.textureManager.unload();
+        manContainer.resources.unload();
     }
 }

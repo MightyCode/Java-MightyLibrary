@@ -1,9 +1,8 @@
 package MightyLibrary.mightylib.graphics.shape.font;
 
+import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.graphics.texture.TextureManager;
 import MightyLibrary.mightylib.resources.FileMethods;
-import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.ObjectId;
 import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Vector4i;
@@ -24,14 +23,12 @@ public class Font extends ObjectId {
     private int numberChar;
     private HashMap<Integer, Vector4i> chars;
 
-    private TextureManager textureManager;
-    private Id fontTextureId;
+    private Texture fontTexture;
 
     public Font(String fontName, String textureName, String info){
         super(fontName);
 
-        textureManager = ManagerContainer.getInstance().textureManager;
-        fontTextureId = textureManager.getIdShaderFromString(textureName);
+        fontTexture =  ManagerContainer.getInstance().resources.getResource(Texture.class, textureName);
 
         sizeX = 0;
         sizeY = 0;
@@ -159,6 +156,6 @@ public class Font extends ObjectId {
     }
 
     public void bind(){
-        textureManager.bind(fontTextureId);
+        fontTexture.bind();
     }
 }

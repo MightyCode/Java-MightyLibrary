@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.graphics.texture;
 
-import MightyLibrary.mightylib.util.ObjectId;
+import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.EDataType;
 import org.lwjgl.BufferUtils;
 
 import javax.imageio.ImageIO;
@@ -11,7 +12,7 @@ import java.nio.ByteBuffer;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
 
-public class Texture extends ObjectId {
+public class Texture extends DataType {
     private final static String PATH = "resources/textures/";
 
     private int width;
@@ -21,18 +22,8 @@ public class Texture extends ObjectId {
 
     private boolean correctLoaded;
 
-    private String path;
-
-    private ByteBuffer byteBuffer;
-
     public Texture(String name, String path) {
-        super(name);
-        load(path);
-    }
-
-    public Texture(String name, BufferedImage image) {
-        super(name);
-        createImage(image);
+        super(EDataType.Texture, name, path);
     }
 
     public void bind() {
@@ -48,16 +39,20 @@ public class Texture extends ObjectId {
         } else glBindTexture(GL_TEXTURE_2D, 1);
     }
 
-    public void load(String path) {
+
+    @Override
+    public boolean load() {
         try {
-            this.path = path;
             BufferedImage image = ImageIO.read(new FileInputStream(PATH +  this.path));
             createImage(image);
+            return true;
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
             System.out.println(PATH +  this.path + "\n");
             e.printStackTrace();
             correctLoaded = false;
+
+            return false;
         }
     }
 
@@ -70,7 +65,7 @@ public class Texture extends ObjectId {
             img.getRGB(0, 0, img.getWidth(), img.getHeight(), pixels, 0, img.getWidth());
 
 
-            byteBuffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
+            ByteBuffer byteBuffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
 
             this.width = img.getWidth();
             this.height = img.getHeight();
@@ -84,6 +79,7 @@ public class Texture extends ObjectId {
                     byteBuffer.put((byte) ((pixel >> 24) & 0xFF));
                 }
             }
+
             byteBuffer.flip();
 
             glBindTexture(GL_TEXTURE_2D, textureId);
@@ -117,7 +113,9 @@ public class Texture extends ObjectId {
         if (correctLoaded)  glTexParameteri(GL_TEXTURE_2D, param, value);
     }
 
-    public void unload() {
+    @Override
+    public boolean unload() {
         if (correctLoaded) glDeleteTextures(textureId);
+        return true;
     }
 }

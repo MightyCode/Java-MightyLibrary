@@ -1,6 +1,10 @@
 package MightyLibrary.mightylib.graphics.texture;
 
-public class AnimationData {
+import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.EDataType;
+import MightyLibrary.mightylib.resources.FileMethods;
+
+public class AnimationData extends DataType {
     private static final int TEXTURE_POS = 0;
     private static final int SIZE_FRAME_POS = 1;
     private static final int FRAME_ENUM_START_POS = 2;
@@ -8,11 +12,17 @@ public class AnimationData {
     private FrameData[] framesData;
     private String textureName;
 
-    public AnimationData(){
+
+    public AnimationData(String name, String path){
+        super(EDataType.AnimationData, name, path);
+        this.path = path;
         textureName = "";
     }
 
-    public void init(String data){
+
+    @Override
+    public boolean load(){
+        String data = FileMethods.readFileAsString(path);
         String[] parts = data.split("\n");
         textureName = parts[TEXTURE_POS].trim();
 
@@ -21,7 +31,10 @@ public class AnimationData {
             framesData[i] = new FrameData();
             framesData[i].init(parts[FRAME_ENUM_START_POS + i].trim());
         }
+
+        return true;
     }
+
 
     public FrameData getFrame(int index){
         if (framesData == null)
@@ -32,7 +45,14 @@ public class AnimationData {
         return framesData[index];
     }
 
+
     public int frameNumber(){
         return framesData.length;
+    }
+
+
+    @Override
+    public boolean unload(){
+        return true;
     }
 }

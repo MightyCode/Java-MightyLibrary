@@ -4,7 +4,7 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.graphics.shape.font.TextManager;
-import MightyLibrary.mightylib.graphics.texture.TextureManager;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.SceneManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
@@ -22,7 +22,7 @@ public class ManagerContainer {
     public SceneManager sceneManager;
 
     public ShaderManager shadManager;
-    public TextureManager textureManager;
+    public Resources resources;
     public TextManager textManager;
 
 
@@ -72,10 +72,6 @@ public class ManagerContainer {
         return this;
     }
 
-    public ManagerContainer setManager(TextureManager textureManager){
-        this.textureManager = textureManager;
-        return this;
-    }
 
     public ManagerContainer setManager(TextManager textManager){
         this.textManager = textManager;

@@ -1,10 +1,9 @@
 package MightyLibrary.mightylib.graphics.shape;
 
+import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.graphics.texture.TextureManager;
 import MightyLibrary.mightylib.util.math.EShapeType;
-import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
 import org.joml.Matrix4f;
@@ -24,12 +23,11 @@ public class Renderer{
     protected FloatBuffer translateF;
     protected Shape shape;
     protected ShaderManager shadManager;
-    protected TextureManager textureManager;
 
     protected int displayMode;
 
     // Textured
-    protected Id textureId;
+    protected Texture texture;
 
     // Colored
     public Color4f color;
@@ -38,7 +36,6 @@ public class Renderer{
 
     public Renderer(String shaderName, boolean useEbo, boolean in2D){
         shadManager = ManagerContainer.getInstance().shadManager;
-        textureManager = ManagerContainer.getInstance().textureManager;
 
         shape = new Shape(shaderName, useEbo, in2D);
         model = new Matrix4f().identity();
@@ -46,7 +43,7 @@ public class Renderer{
         display = true;
 
         // Display mode
-        textureId = new Id(0);
+        texture = null;
         displayMode = NOTHING;
         color = ColorList.BLACK;
     }
@@ -71,7 +68,7 @@ public class Renderer{
                     shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA()
             );
         } else if (displayMode == TEXTURE){
-            textureManager.bind(textureId, 0);
+            texture.bind(0);
         }
     }
 
@@ -99,16 +96,9 @@ public class Renderer{
     }
 
 
-    public void setTexture(String texture){
+    public void setTexture(String name){
         displayMode = TEXTURE;
-        textureId = textureManager.getIdShaderFromString(texture);
-        shape.enableVbo(1);
-    }
-
-
-    public void setTexture(Id texture){
-        displayMode = TEXTURE;
-        textureId = texture;
+        texture = ManagerContainer.getInstance().resources.getResource(Texture.class, name);
         shape.enableVbo(1);
     }
 

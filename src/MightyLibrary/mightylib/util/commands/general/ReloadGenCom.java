@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.util.commands.general;
 
+import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.util.commands.BaseCommand;
 
@@ -17,11 +18,17 @@ public class ReloadGenCom extends BaseCommand {
 
         if (sub.length > 1) {
             if (sub[1].equals("texture")) {
-                ManagerContainer manContainer = ManagerContainer.getInstance();
-                manContainer.textureManager.reload();
+                System.out.println("Reload texture resources");
+
+                ManagerContainer.getInstance().resources.reload(Texture.class);
             } else if (sub[1].equals("shader")) {
-                ManagerContainer manContainer = ManagerContainer.getInstance();
-                manContainer.shadManager.reload();
+                System.out.println("Reload shader resources");
+
+                ManagerContainer.getInstance().shadManager.reload();
+            } else if (sub[1].equals("all")) {
+                System.out.println("Reload all resources");
+
+                ManagerContainer.getInstance().resources.reload();
             } else {
                 unknownArgumentError(sub[1]);
             }

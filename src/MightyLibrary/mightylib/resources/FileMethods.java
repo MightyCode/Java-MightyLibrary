@@ -18,6 +18,7 @@ public abstract class FileMethods {
             e.printStackTrace();
             return false; // Erreur
         }
+
         return true; // Résultat OK
     }
 

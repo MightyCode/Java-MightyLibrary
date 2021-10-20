@@ -2,6 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.texture.Animator;
+import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
@@ -21,7 +22,7 @@ public class Test3DScene extends Scene {
     private ModelRenderer stand;
     private RectangleRenderer hudBar;
     // Textures
-    private Id displacementMap;
+    private Texture displacementMap;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
@@ -47,9 +48,9 @@ public class Test3DScene extends Scene {
         float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setPosition(new Vector3f(0.0f));
-        sBlock.setTexture("error");
+        sBlock.setTexture("container");
             // Displacement texture for cubes/crate
-        displacementMap = manContainer.textureManager.getIdShaderFromString("dispMap1");
+        displacementMap = manContainer.resources.getResource(Texture.class,"dispMap1");
         manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
         // 3D Model
@@ -126,7 +127,7 @@ public class Test3DScene extends Scene {
         clear();
         // Better to draw the world here
         //light.display();
-        manContainer.textureManager.bind(displacementMap, 1);
+        displacementMap.bind(1);
         stand.display();
 
         sBlock.display();
