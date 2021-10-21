@@ -81,7 +81,7 @@ public class RectangleRenderer extends Renderer {
 
     public void setPosition(float posX, float posY){
         this.posX = posX * 2.0f / window.size.x;
-        this.posY = posY * 2.0f / window.size.y;;
+        this.posY = posY * 2.0f / window.size.y;
         updateShape();
     }
 

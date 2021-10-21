@@ -29,9 +29,12 @@ public class Window{
     public boolean windowCreated;
 
     public long windowId;
+
     public Vector2i size;
     public float ratio;
+
     public Vector2i virtualSize;
+    public float virtualRatio;
 
     private String windowName;
 
@@ -41,8 +44,12 @@ public class Window{
     public Window(){
         windowCreated = false;
         windowId = 0;
+
         size = new Vector2i(1, 1);
+        ratio = 1;
         virtualSize = new Vector2i(1,1);
+        virtualRatio = 1;
+
         windowName = "";
         fullscreen = false;
     }
@@ -177,6 +184,8 @@ public class Window{
     public Window setVirtualSize(int virtualWidth, int virtualHeight){
         virtualSize.x = virtualWidth;
         virtualSize.y = virtualHeight;
+        this.virtualRatio = (float) this.virtualSize.x / (float) this.virtualSize.y;
+
         return this;
     }
 
@@ -187,7 +196,21 @@ public class Window{
 
 
     public Window setRealViewport(){
-        setViewPort(size.x, size.y);
+        int x = 0, y = 0, width = size.x, height = size.y;
+
+        if (!virtualSize.equals(size)){
+            if (virtualRatio > ratio){
+                float toMultiply = (float)size.x / (float)virtualSize.x;
+                height = (int)(virtualSize.y * toMultiply);
+                y = (this.size.y - height) / 2;
+            } else {
+                float toMultiply = (float)size.y / (float)virtualSize.y;
+                width = (int)(virtualSize.x * toMultiply);
+                x = (this.size.x - width) / 2;
+            }
+        }
+
+        setViewPort(x, y, width, height);
         return this;
     }
 
@@ -225,6 +248,10 @@ public class Window{
     }
 
     private void setViewPort(int width, int height){
-        glViewport(0, 0, width, height);
+        setViewPort(0, 0, width, height);
+    }
+
+    private void setViewPort(int x, int y, int w, int h){
+        glViewport(x, y, w, h);
     }
 }

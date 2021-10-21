@@ -17,6 +17,7 @@ public class Scene {
         this.manContainer = ManagerContainer.getInstance();
         window = manContainer.window;
         scRenderer = new VirtualSceneRenderer();
+
         scRenderer.setTexturePosition(new Vector4f(0, 1, 1, 0));
         scRenderer.updateShape();
     }

@@ -24,6 +24,8 @@ public class Test3DScene extends Scene {
     private Renderer sBlock;
     private ModelRenderer stand;
     private RectangleRenderer hudBar;
+    private float move = 150f;
+
     // Textures
     private Texture displacementMap;
 
@@ -69,7 +71,7 @@ public class Test3DScene extends Scene {
         hudBar = new RectangleRenderer("texture2D");
         hudBar.setTexture("slime");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
+        hudBar.setPosition(move, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
 
         animator = new Animator(new Vector2f());
         animator.addAndInitAnimation("first", manContainer.resources.getResource(AnimationData.class, "slime"), true);
@@ -116,6 +118,7 @@ public class Test3DScene extends Scene {
         if(inputManager.inputPressed(ActionId.ESCAPE)) {
             manContainer.cam.invertLockViewCursor();
             manContainer.mouseManager.invertCursorState();
+
         }
 
 

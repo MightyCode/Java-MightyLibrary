@@ -34,7 +34,7 @@ public class MainLoop {
 
         // Load or create config
         window.setSize(1280, 720);
-        window.setVirtualSize(1280, 720);
+        window.setVirtualSize(900, 720);
 
         window.setTitle("3D project test");
         window.setFullscreen(false);

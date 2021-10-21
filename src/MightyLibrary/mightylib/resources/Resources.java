@@ -6,7 +6,7 @@ import MightyLibrary.mightylib.graphics.texture.Texture;
 import java.util.HashMap;
 
 public class Resources {
-    private HashMap<Class<?>, HashMap<String, DataType>> resources;
+    private final HashMap<Class<?>, HashMap<String, DataType>> resources;
 
     public Resources(){
         resources = new HashMap<>();

@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.shape._2D;
 
 public class VirtualSceneRenderer extends RectangleRenderer {
-    private FrameBuffer frameBuffer;
+    private final FrameBuffer frameBuffer;
 
     public VirtualSceneRenderer(){
         super("postProcessing");
