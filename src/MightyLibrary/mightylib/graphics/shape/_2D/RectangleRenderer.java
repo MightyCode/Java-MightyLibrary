@@ -4,7 +4,6 @@ import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
-import MightyLibrary.mightylib.util.valueDebug.TableDebug;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -88,7 +87,7 @@ public class RectangleRenderer extends Renderer {
 
 
     public void updateShape(){
-        shape.resetVbo(calculatePosition(), positionIndex);
-        shape.resetVbo(texturePos(), textureIndex);
+        shape.updateVbo(calculatePosition(), positionIndex);
+        shape.updateVbo(texturePos(), textureIndex);
     }
 }

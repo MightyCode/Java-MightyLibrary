@@ -81,7 +81,7 @@ public class Shape{
     }
 
 
-    public void resetVbo(float[] vertices, int vboPosition){
+    public void updateVbo(float[] vertices, int vboPosition){
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
