@@ -5,6 +5,7 @@ import MightyLibrary.mightylib.main.ListError;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.scene.SceneManager;
+import MightyLibrary.project.scenes.Test2DScene;
 import MightyLibrary.project.scenes.Test3DScene;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -45,14 +46,14 @@ public class MainLoop {
         }
 
         sceneManager = new SceneManager(this);
-        sceneManager.setNewScene(new Test3DScene(), new String[]{""});
+        sceneManager.setNewScene(new Test2DScene(), new String[]{""});
 
         ProjectLoading.Loading(manContainer);
 
         sceneManager.init();
     }
 
-    public void run(){
+    void run(){
         // Set loop parameters
         int ticks = 0;
         int frames = 0;
@@ -102,7 +103,7 @@ public class MainLoop {
 
         if (status != ListError.NO_ERROR){
             System.err.println("Exit with error "  + status);
-            System.exit(-1);
+            System.exit(status);
         } else {
             System.out.println("Exit without error");
             System.exit(0);
