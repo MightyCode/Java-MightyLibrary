@@ -1,18 +1,15 @@
 package MightyLibrary.mightylib.graphics.texture;
 
-import org.joml.Vector2f;
-
 import java.util.HashMap;
 
 public class Animator {
-    private Vector2f referencePosition;
-
     private HashMap<String, Animation> animations;
     private Animation currentAnimation;
     private String currentAnimationName;
 
-    public Animator(Vector2f position){
-        this.referencePosition = position;
+    private boolean animationChanged;
+
+    public Animator(){
         animations = new HashMap<>();
 
         clear();
@@ -29,14 +26,16 @@ public class Animator {
         if (currentAnimation == null) return;
 
         currentAnimation.update();
+        animationChanged = false;
     }
 
 
     public void addAndInitAnimation(String name, AnimationData animationData, boolean isLooping){
-        Animation animation = new Animation(referencePosition);
+        Animation animation = new Animation();
         animation.init(animationData, isLooping);
 
         addAnimation(name, animation);
+        animationChanged = true;
     }
 
 
@@ -64,6 +63,7 @@ public class Animator {
         currentAnimation.restart();
         currentAnimation = anim;
         currentAnimationName = animation;
+        animationChanged = true;
     }
 
 
@@ -100,19 +100,7 @@ public class Animator {
     }
 
 
-    public void setCurrentAnimationScale(float newScale){
-        if (currentAnimation == null) return;
-
-        currentAnimation.setAnimationScale(newScale);
-    }
-    public float getCurrentAnimationScale(){
-        if (currentAnimation == null) return 0.0f;
-
-        return currentAnimation.getAnimationScale();
-    }
-    public void setAllAnimationScale(float scale){
-        for (Animation animation : animations.values()){
-            animation.setAnimationScale(scale);
-        }
+    public boolean animationChanged(){
+        return animationChanged;
     }
 }

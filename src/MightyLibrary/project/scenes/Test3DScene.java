@@ -1,5 +1,6 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.shape._2D.Animation2DRenderer;
 import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.texture.Animation;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
@@ -8,6 +9,7 @@ import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.graphics.shape._3D.CubeRenderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
@@ -24,7 +26,6 @@ public class Test3DScene extends Scene {
     private Renderer sBlock;
     private ModelRenderer stand;
     private RectangleRenderer hudBar;
-    private float move = 150f;
 
     // Textures
     private Texture displacementMap;
@@ -37,7 +38,9 @@ public class Test3DScene extends Scene {
 
     private float counter = 0;
 
-    private Animator animator;
+
+    private Animation2DRenderer slimeRenderer;
+    private Vector2f rendererPosition;
 
     public void init(String[] args){
         /// SCENE INFORMATIONS ///
@@ -69,12 +72,23 @@ public class Test3DScene extends Scene {
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
         hudBar = new RectangleRenderer("texture2D");
-        hudBar.setTexture("slime");
+        hudBar.setTexture("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(move, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
+        hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
 
-        animator = new Animator(new Vector2f());
+        slimeRenderer = new Animation2DRenderer("texture2D");
+        slimeRenderer.setTexture("slime");
+
+        Animator animator = new Animator();
         animator.addAndInitAnimation("first", manContainer.resources.getResource(AnimationData.class, "slime"), true);
+
+        rendererPosition = new Vector2f();
+        slimeRenderer.init(animator, rendererPosition);
+
+        float scale = 720.f / 30.f;
+        slimeRenderer.setScale(scale);
+        rendererPosition.x = (14 * scale);
+        rendererPosition.y = (22 * scale);
 
         System.out.println(cratesInfo.length);
         System.out.println(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
@@ -109,6 +123,8 @@ public class Test3DScene extends Scene {
 
         if(inputManager.input(ActionId.MOVE_UP)) {
             manContainer.cam.setY(manContainer.cam.camPos.y += Camera.speed.y);
+
+            rendererPosition.x += 150 * GameTime.DeltaTime();
         }
 
         if(inputManager.input(ActionId.MOVE_DOWN)) {
@@ -131,16 +147,14 @@ public class Test3DScene extends Scene {
 
         manContainer.cam.updateView();
 
-        animator.update();
-        hudBar.setTexture(animator.getCurrentAnimation().getData().getTextureName());
-        hudBar.setTexturePosition(animator.getCurrentAnimation().currentTexturePosition());
-        hudBar.updateShape();
+        slimeRenderer.update();
     }
 
 
     public void display() {
         super.setVirtualScene();
         clear();
+
         // Better to draw the world here
         //light.display();
         displacementMap.bind(1);
@@ -150,6 +164,8 @@ public class Test3DScene extends Scene {
 
         // Better to draw the hud here and be not affected by the post processing shader
         hudBar.display();
+
+        slimeRenderer.display();
         super.setAndDisplayRealScene();
     }
 

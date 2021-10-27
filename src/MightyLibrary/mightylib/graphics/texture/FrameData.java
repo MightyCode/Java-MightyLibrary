@@ -37,6 +37,11 @@ public class FrameData {
     }
 
 
+    public Vector2i getSize(){
+        return new Vector2i(framePosition.z, framePosition.w);
+    }
+
+
     public Vector4i getFramePositionReference() {
         return framePosition;
     }

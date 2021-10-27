@@ -3,28 +3,26 @@ package MightyLibrary.mightylib.graphics.texture;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.main.ManagerContainer;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
 
 public class Animation {
-    private final Vector2f referencePoint;
-
-    AnimationData animationData;
+    private AnimationData animationData;
 
     private float elapsedTime;
     private float speed;
-    private float scale;
 
+    private int lastFrame;
     private int currentFrame;
     private boolean looping;
     private boolean animationFinished;
 
-    public Animation(Vector2f referencePoint){
-        this.referencePoint = referencePoint;
+    private Texture texture;
 
+    public Animation(){
         this.looping = false;
         this.speed = 1f;
-        this.scale = 1f;
 
         restart();
     }
@@ -32,6 +30,8 @@ public class Animation {
     public void init(AnimationData animationData, boolean isLooping){
         this.animationData = animationData;
         this.looping = isLooping;
+
+        this.texture = ManagerContainer.getInstance().resources.getResource(Texture.class, animationData.getTextureName());
     }
 
 
@@ -60,7 +60,11 @@ public class Animation {
         elapsedTime = 0;
         animationFinished = false;
         currentFrame = 0;
+        lastFrame = -1;
     }
+
+
+    public boolean isCurrentFrameChanged(){ return lastFrame != currentFrame; }
 
 
     public boolean isAnimationFinished(){
@@ -76,19 +80,10 @@ public class Animation {
     }
 
 
-    public void setAnimationScale(float newScale){
-        scale = newScale;
-    }
-    public float getAnimationScale(){
-        return scale;
-    }
-
-
     public AnimationData getData(){ return animationData; }
 
-    public Vector4f currentTexturePosition(){
-        Texture texture = ManagerContainer.getInstance().resources.getResource(Texture.class, animationData.getTextureName());
 
+    public Vector4f currentTexturePosition(){
         Vector4f computedPosition = new Vector4f(0, 0, 0, 0);
 
         FrameData data = animationData.getFrame(currentFrame);
@@ -99,6 +94,19 @@ public class Animation {
         computedPosition.z = (texturePositions.y) / (texture.getHeight() * 1.0f);
         computedPosition.w = (texturePositions.w + texturePositions.y) / (texture.getHeight() * 1.0f);
 
+        //System.out.println(computedPosition.x +  " " + computedPosition.y + " " + computedPosition.z + " ");
+
         return computedPosition;
+    }
+
+
+    public Vector2i currentHotPoint(){
+        FrameData data = animationData.getFrame(currentFrame);
+        return data.getHotPointReference();
+    }
+
+
+    public Vector2i getFrameSize(){
+        return animationData.getFrame(currentFrame).getSize();
     }
 }

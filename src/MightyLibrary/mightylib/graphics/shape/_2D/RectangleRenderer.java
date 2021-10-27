@@ -13,10 +13,12 @@ public class RectangleRenderer extends Renderer {
     protected int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
+
     public RectangleRenderer(String shaderName) {
         super(shaderName, true, true);
 
-        posX = 0.0f;        window = ManagerContainer.getInstance().window;
+        window = ManagerContainer.getInstance().window;
+        posX = 0.0f;
         posY = 0.0f;
 
         windowW = 1.0f;
@@ -59,8 +61,6 @@ public class RectangleRenderer extends Renderer {
 
     // Set size with size of pixel
     public RectangleRenderer setSizePix(float width, float height){
-        windowW = width * 2.0f / window.virtualSize.x - 1.0f;
-        windowH = height * 2.0f / window.virtualSize.y - 1.0f;
         return setSizeProp(width / window.virtualSize.x, height / window.virtualSize.y);
     }
 
@@ -80,8 +80,8 @@ public class RectangleRenderer extends Renderer {
 
 
     public void setPosition(float posX, float posY){
-        this.posX = posX * 2.0f / window.size.x;
-        this.posY = posY * 2.0f / window.size.y;
+        this.posX = posX * 2.0f / window.virtualSize.x;
+        this.posY = posY * 2.0f / window.virtualSize.y;
         updateShape();
     }
 
