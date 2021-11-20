@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.graphics.shape.font;
 
 import MightyLibrary.mightylib.graphics.texture.Texture;
-import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.resources.FileMethods;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.ObjectId;
 import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Vector4i;
@@ -28,7 +28,7 @@ public class Font extends ObjectId {
     public Font(String fontName, String textureName, String info){
         super(fontName);
 
-        fontTexture =  ManagerContainer.getInstance().resources.getResource(Texture.class, textureName);
+        fontTexture =  Resources.getInstance().getResource(Texture.class, textureName);
 
         sizeX = 0;
         sizeY = 0;

@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.shader;
 
-import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.resources.FileMethods;
+import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.ManagerList;
 import org.joml.Matrix4f;
@@ -14,19 +14,23 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ShaderManager {
+    private static ShaderManager singletonInstance = null;
+    public static ShaderManager getInstance(){
+        if (singletonInstance == null) singletonInstance = new ShaderManager();
+
+        return singletonInstance;
+    }
+
     private static final String SHADER_INFO_PATH = "resources/shaders/shaders.json";
     public static final int USE_PROJECTION_MATRIX = 0;
 
-    private ManagerList<Shader> shaders;
-    private ArrayList<Id> camReload;
+    private final ManagerList<Shader> shaders;
+    private final ArrayList<Id> camReload;
 
-    private Camera cam;
-
-    public ShaderManager(Camera cam) {
+    private ShaderManager() {
         shaders = new ManagerList<>();
 
         camReload = new ArrayList<>();
-        this.cam = cam;
         this.init();
     }
 
@@ -72,26 +76,23 @@ public class ShaderManager {
                 shad.properties.add(USE_PROJECTION_MATRIX);
             }
         } while(arrayShader.hasNext());
-
-        reloadProjection();
-        dispose();
     }
 
-    public void reloadProjection(){
+    public void reloadProjection(Camera camera){
         Id current;
         for(int i = 0; i < shaders.size(); ++i){
             current = new Id(i);
-            if(shaders.get(current).properties.contains(USE_PROJECTION_MATRIX)) reloadProjection(current);
+            if(shaders.get(current).properties.contains(USE_PROJECTION_MATRIX)) reloadProjection(camera, current);
         }
     }
 
-    public void reloadProjection(Id id){
-        shaders.get(id).glUniform("projection", cam.getProjection());
+    public void reloadProjection(Camera camera, Id id){
+        shaders.get(id).glUniform("projection", camera.getProjection());
     }
 
-    public void dispose(){
+    public void dispose(Camera camera){
         for (Id current : camReload){
-            shaders.get(current).use().glUniform("view", cam.getView());
+            shaders.get(current).use().glUniform("view", camera.getView());
         }
     }
 

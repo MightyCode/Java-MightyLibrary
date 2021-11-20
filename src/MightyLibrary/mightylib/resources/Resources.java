@@ -1,14 +1,22 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 
 import java.util.HashMap;
 
 public class Resources {
+    private static Resources singletonInstance = null;
+    public static Resources getInstance(){
+        if (singletonInstance == null) singletonInstance = new Resources();
+
+        return singletonInstance;
+    }
+
     private final HashMap<Class<?>, HashMap<String, DataType>> resources;
 
-    public Resources(){
+    private Resources(){
         resources = new HashMap<>();
         resources.put(Texture.class, new HashMap<>());
         resources.put(AnimationData.class, new HashMap<>());

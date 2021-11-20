@@ -1,8 +1,7 @@
 package MightyLibrary.mightylib.graphics.texture;
 
 import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.main.ManagerContainer;
-import org.joml.Vector2f;
+import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
@@ -31,7 +30,7 @@ public class Animation {
         this.animationData = animationData;
         this.looping = isLooping;
 
-        this.texture = ManagerContainer.getInstance().resources.getResource(Texture.class, animationData.getTextureName());
+        this.texture = Resources.getInstance().getResource(Texture.class, animationData.getTextureName());
     }
 
 

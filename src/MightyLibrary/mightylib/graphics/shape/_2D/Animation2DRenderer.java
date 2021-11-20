@@ -3,36 +3,37 @@ package MightyLibrary.mightylib.graphics.shape._2D;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.graphics.texture.Animator;
-import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.main.Window;
-import MightyLibrary.mightylib.util.valueDebug.TableDebug;
+import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
 
 public class Animation2DRenderer extends Renderer {
 
+    private final WindowInfo windowInfo;
+
     private float computedW, computedH;
-    private Window window;
 
     private Vector2f referencePoint;
     private Vector2f lastRefPoint;
 
     private Animator animator;
-    private int positionIndex, textureIndex;
-    private Vector4f texturePosition;
+    private final int positionIndex;
+    private final int textureIndex;
+    private final Vector4f texturePosition;
 
     private float scale;
 
-    public Animation2DRenderer(String shaderName){
+    public Animation2DRenderer(WindowInfo windowInfo, String shaderName){
         super(shaderName, true, true);
+        this.windowInfo = windowInfo;
 
         scale = 1.0f;
 
         computedW = 1.0f;
         computedH = 1.0f;
 
-        window = ManagerContainer.getInstance().window;
         texturePosition = new Vector4f(0f, 1f, 0f,1f);
         referencePoint = new Vector2f(0.0f, 0.0f);
         lastRefPoint = new Vector2f(referencePoint);
@@ -84,7 +85,7 @@ public class Animation2DRenderer extends Renderer {
 
 
     private void setSizePix(float width, float height){
-        setSizeProp(width / window.virtualSize.x, height / window.virtualSize.y);
+        setSizeProp(width / windowInfo.getVirtualSizeRef().x, height / windowInfo.getVirtualSizeRef().y);
     }
 
 
@@ -97,8 +98,8 @@ public class Animation2DRenderer extends Renderer {
 
 
     private float[] calculatePosition(){
-        float posX = referencePoint.x * 2.0f / window.virtualSize.x;
-        float posY = referencePoint.y * 2.0f / window.virtualSize.y;
+        float posX = referencePoint.x * 2.0f / windowInfo.getVirtualSizeRef().x;
+        float posY = referencePoint.y * 2.0f / windowInfo.getVirtualSizeRef().y;
 
         // Take into account hot point of each frame of animation
         if (animator != null) {
@@ -106,8 +107,8 @@ public class Animation2DRenderer extends Renderer {
 
             //System.out.println(referencePoint.x + " " + posX + " " + (vector2i.x * 2.0f * scale / window.virtualSize.x));
 
-            posX -= vector2i.x * 2.0f * scale / window.virtualSize.x;
-            posY -= vector2i.y * 2.0f * scale / window.virtualSize.y;
+            posX -= vector2i.x * 2.0f * scale / windowInfo.getVirtualSizeRef().x;
+            posY -= vector2i.y * 2.0f * scale / windowInfo.getVirtualSizeRef().y;
         }
 
         return new float[]{

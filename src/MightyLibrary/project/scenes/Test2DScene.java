@@ -28,17 +28,17 @@ public class Test2DScene extends Scene {
     public void init(String[] args) {
         /// SCENE INFORMATIONS ///
 
-        manContainer.mouseManager.setCursor(false);
-        manContainer.cam.setPos(new Vector3f(0, 0, 0));
+        mainContext.getMouseManager().setCursor(false);
+        mainCamera.setPos(new Vector3f(0, 0, 0));
         setClearColor(52, 189, 235, 1f);
 
         /// RENDERERS ///
 
-        slimeRenderer = new Animation2DRenderer("texture2D");
+        slimeRenderer = new Animation2DRenderer(mainContext.getWindow().getInfo(), "texture2D");
         slimeRenderer.setTexture("slime");
 
         Animator animator = new Animator();
-        animator.addAndInitAnimation("first", manContainer.resources.getResource(AnimationData.class, "slime"), true);
+        animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
 
         rendererPosition = new Vector2f();
         slimeRenderer.init(animator, rendererPosition);
@@ -53,7 +53,7 @@ public class Test2DScene extends Scene {
     public void update() {
         super.update();
 
-        InputManager inputManager = manContainer.inpManager;
+        InputManager inputManager = mainContext.getInputManager();
 
         int speed = 1;
         if (inputManager.inputPressed(ActionId.SHIFT)) {
@@ -61,37 +61,37 @@ public class Test2DScene extends Scene {
         }
 
         if (inputManager.input(ActionId.MOVE_LEFT)) {
-            manContainer.cam.speedAngX(Camera.speed.x * speed);
+            mainCamera.speedAngX(Camera.speed.x * speed);
         }
 
         if (inputManager.input(ActionId.MOVE_RIGHT)) {
-            manContainer.cam.speedAngX(-Camera.speed.x * speed);
+            mainCamera.speedAngX(-Camera.speed.x * speed);
         }
 
         if (inputManager.input(ActionId.MOVE_FORWARD)) {
-            manContainer.cam.speedAngZ(-Camera.speed.z * speed);
+            mainCamera.speedAngZ(-Camera.speed.z * speed);
         }
 
         if (inputManager.input(ActionId.MOVE_BACKWARD)) {
-            manContainer.cam.speedAngZ(Camera.speed.z * speed);
+            mainCamera.speedAngZ(Camera.speed.z * speed);
         }
 
         if (inputManager.input(ActionId.MOVE_UP)) {
-            manContainer.cam.setY(manContainer.cam.camPos.y += Camera.speed.y);
+            mainCamera.setY(mainCamera.getCamPosRef().y += Camera.speed.y);
 
             rendererPosition.x += 150 * GameTime.DeltaTime();
         }
 
         if (inputManager.input(ActionId.MOVE_DOWN)) {
-            manContainer.cam.setY(manContainer.cam.camPos.y -= Camera.speed.y);
+            mainCamera.setY(mainCamera.getCamPosRef().y -= Camera.speed.y);
         }
 
         if (inputManager.inputPressed(ActionId.ESCAPE)) {
-            manContainer.cam.invertLockViewCursor();
-            manContainer.mouseManager.invertCursorState();
+            mainCamera.invertLockViewCursor();
+            mainContext.getMouseManager().invertCursorState();
         }
 
-        manContainer.cam.updateView();
+        mainCamera.updateView();
 
         slimeRenderer.update();
     }

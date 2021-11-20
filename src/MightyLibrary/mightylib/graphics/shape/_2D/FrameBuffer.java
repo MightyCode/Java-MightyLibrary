@@ -1,8 +1,7 @@
 package MightyLibrary.mightylib.graphics.shape._2D;
 
-import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.graphics.texture.TextureParameters;
+import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.util.Id;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -15,15 +14,15 @@ public class FrameBuffer {
     private int fbo;
     private int rbo;
 
-    private Id renderTexture;
+    private final Id renderTextureId;
 
-    private Window window;
+    private final WindowInfo windowInfo;
 
-    public FrameBuffer(){
+    public FrameBuffer(WindowInfo window){
         fbo = 0;
         rbo = 0;
-        renderTexture = new Id(0);
-        window = ManagerContainer.getInstance().window;
+        renderTextureId = new Id(0);
+        this.windowInfo = window;
 
         fbo = glGenFramebuffers();
         bindFrameBuffer();
@@ -32,16 +31,16 @@ public class FrameBuffer {
     }
 
     public void update(){
-        renderTexture.id = glGenTextures();
-        glBindTexture(GL_TEXTURE_2D, renderTexture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.virtualSize.x, window.virtualSize.y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        renderTextureId.id = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, renderTextureId.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
         TextureParameters.realisticParameters();
         glBindTexture(GL_TEXTURE_2D, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTexture.id, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTextureId.id, 0);
 
         rbo = glGenRenderbuffers();
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, window.virtualSize.x, window.virtualSize.y);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y);
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -64,7 +63,7 @@ public class FrameBuffer {
 
     public void bindRenderTexture(int position){
         glActiveTexture(GL_TEXTURE0 + position);
-        glBindTexture(GL_TEXTURE_2D, renderTexture.id);
+        glBindTexture(GL_TEXTURE_2D, renderTextureId.id);
     }
 
     public void unbindRenderTexture(){
@@ -73,13 +72,13 @@ public class FrameBuffer {
 
 
     public Id getTexture(){
-        return renderTexture;
+        return renderTextureId;
     }
 
 
     public void unload(){
         glDeleteFramebuffers(fbo);
-        glDeleteTextures(renderTexture.id);
+        glDeleteTextures(renderTextureId.id);
         glDeleteRenderbuffers(rbo);
     }
 }

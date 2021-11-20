@@ -1,23 +1,23 @@
 package MightyLibrary.mightylib.util.commands;
 
-import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.main.ManagerContainer;
+import MightyLibrary.mightylib.main.Context;
+import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.util.commands.general.ListGeneralCommand;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Commands {
-    private ArrayList<BaseCommand> commands;
-    private int endGeneralCommand;
-    private Scanner scan;
-    private MouseManager mouseManager;
+    private final ArrayList<BaseCommand> commands;
+    private final int endGeneralCommand;
+    private final Scanner scan;
+
+    private final ArrayList<Boolean> previousMouseStates;
 
     public boolean isWriteCommands;
 
     public Commands() {
         isWriteCommands = false;
-        mouseManager = ManagerContainer.getInstance().mouseManager;
 
         scan = new Scanner(System.in);
 
@@ -26,12 +26,16 @@ public class Commands {
         ListGeneralCommand.addCommands(this);
         // Size
         endGeneralCommand = commands.size();
+
+        previousMouseStates = new ArrayList<>();
     }
 
 
     public void writeCommand(){
-        boolean previousMouseState = mouseManager.getCursorState();
-        mouseManager.setCursor(true);
+        for (Context context : ContextManager.getInstance().getAllContext()){
+            previousMouseStates.add(context.getMouseManager().getCursorState());
+            context.getMouseManager().setCursor(true);
+        }
 
         isWriteCommands = true;
         System.out.println("Write a command:");
@@ -41,7 +45,12 @@ public class Commands {
         System.out.print("\n");
         checkCommand(command);
 
-        mouseManager.setCursor(previousMouseState);
+        int i = 0;
+        for (Context context : ContextManager.getInstance().getAllContext()){
+            context.getMouseManager().setCursor(previousMouseStates.get(i));
+            ++i;
+        }
+        previousMouseStates.clear();
     }
 
 

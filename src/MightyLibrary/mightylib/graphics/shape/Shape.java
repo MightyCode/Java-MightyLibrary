@@ -2,7 +2,6 @@ package MightyLibrary.mightylib.graphics.shape;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.Id;
-import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.util.math.MightyMath;
 import org.lwjgl.opengl.GL15;
 
@@ -15,7 +14,7 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
 public class Shape{
-    public static final int STATIC_STORE = GL15.GL_STATIC_DRAW;
+    public static final int STATIC_STORE = GL_STATIC_DRAW;
     public static final int DYNAMIC_STORE = GL_DYNAMIC_DRAW;
     public static final int STREAM_STORE = GL_STREAM_DRAW;
 
@@ -44,7 +43,7 @@ public class Shape{
 
     public Shape(String shaderName, boolean useEbo, boolean in2D) {
         setDimensionTo2D(in2D);
-        this.shadManager = ManagerContainer.getInstance().shadManager;
+        this.shadManager = ShaderManager.getInstance();
         this.shaderId = this.shadManager.getIdShaderFromString(shaderName);
 
         verticesDraw = 0;

@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.graphics.shape;
 
 import MightyLibrary.mightylib.graphics.texture.Texture;
-import MightyLibrary.mightylib.main.ManagerContainer;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.EShapeType;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
@@ -35,7 +35,7 @@ public class Renderer{
     private EShapeType type;
 
     public Renderer(String shaderName, boolean useEbo, boolean in2D){
-        shadManager = ManagerContainer.getInstance().shadManager;
+        shadManager = ShaderManager.getInstance();
 
         shape = new Shape(shaderName, useEbo, in2D);
         model = new Matrix4f().identity();
@@ -98,7 +98,7 @@ public class Renderer{
 
     public void setTexture(String name){
         displayMode = TEXTURE;
-        texture = ManagerContainer.getInstance().resources.getResource(Texture.class, name);
+        texture = Resources.getInstance().getResource(Texture.class, name);
         shape.enableVbo(1);
     }
 

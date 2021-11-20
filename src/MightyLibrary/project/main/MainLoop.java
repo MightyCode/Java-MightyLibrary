@@ -1,17 +1,15 @@
 package MightyLibrary.project.main;
 
-import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.main.ListError;
-import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.main.Window;
+import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.scene.SceneManager;
 import MightyLibrary.project.scenes.Test2DScene;
 import MightyLibrary.project.scenes.Test3DScene;
+import org.joml.Vector2i;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 public class MainLoop {
-    private final Window window;
+    ContextManager contextManager;
     private final SceneManager sceneManager;
 
     private final float SECOND = 1000000000.0f;
@@ -27,28 +25,27 @@ public class MainLoop {
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
-        window = new Window();
+        contextManager = ContextManager.getInstance();
 
-        // First instancing of manager container
-        ManagerContainer manContainer = ManagerContainer.getInstance();
-        manContainer.setManager(window);
+        WindowCreationInfo wci = new WindowCreationInfo();
+        wci.size = new Vector2i(1280, 720);
+        wci.virtualSize = new Vector2i(1280, 720);
+        wci.windowName = "3D project test";
+        wci.fullscreen = false;
 
-        // Load or create config
-        window.setSize(1280, 720);
-        window.setVirtualSize(1280, 720);
+        contextManager.createDefaultContext(wci);
 
-        window.setTitle("3D project test");
-        window.setFullscreen(false);
-        window.createNewWindow();
+        Context context = contextManager.getContext("Main");
+        Window window = context.getWindow();
 
-        if (!window.windowCreated){
+
+        if (!window.getInfo().isWindowCreated()){
             exit(ListError.WINDOW_CREATION_FAIL);
         }
 
-        sceneManager = new SceneManager(this);
-        sceneManager.setNewScene(new Test2DScene(), new String[]{""});
+        sceneManager = new SceneManager(this, new Test3DScene(), new String[]{""});
 
-        ProjectLoading.Loading(manContainer);
+        ProjectLoading.ContextLoading(context);
 
         sceneManager.init();
     }
@@ -63,6 +60,9 @@ public class MainLoop {
         double lastSecond = 0.0;
 
         long start = System.nanoTime();
+
+        Context mainContext = contextManager.getMainContext();
+        Window window = mainContext.getWindow();
 
         while (!window.wantExit()){
             if (System.nanoTime() - start - lastTick >= TICK_TIME) {
@@ -86,7 +86,6 @@ public class MainLoop {
             }
         }
 
-        sceneManager.unload();
         exit(ListError.NO_ERROR);
     }
 
@@ -97,14 +96,15 @@ public class MainLoop {
             unloadLibraries();
         }
 
-        if (status != ListError.WINDOW_CREATION_FAIL) {
-            window.destroyWindow();
-        }
+        sceneManager.unload();
+        contextManager.unload();
 
         if (status != ListError.NO_ERROR){
             System.err.println("Exit with error "  + status);
             System.exit(status);
         } else {
+            sceneManager.unload();
+
             System.out.println("Exit without error");
             System.exit(0);
         }

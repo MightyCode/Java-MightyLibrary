@@ -1,5 +1,6 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shape._2D.Animation2DRenderer;
 import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.texture.Animation;
@@ -10,9 +11,11 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
 import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.graphics.shape._3D.CubeRenderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
+import MightyLibrary.mightylib.scene.CameraCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.Color4f;
@@ -22,6 +25,8 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class Test3DScene extends Scene {
+
+    private final static CameraCreationInfo SCENE_CCI = new CameraCreationInfo(120f, new Vector3f(0, 4, 0));
 
     private Renderer sBlock;
     private ModelRenderer stand;
@@ -38,10 +43,14 @@ public class Test3DScene extends Scene {
 
     private float counter = 0;
 
+    public Test3DScene(){
+        super(SCENE_CCI);
+    }
+
     public void init(String[] args){
         /// SCENE INFORMATIONS ///
 
-        manContainer.mouseManager.setCursor(false);
+        mainContext.getMouseManager().setCursor(false);
         setClearColor(52, 189, 235, 1f);
 
         /// RENDERERS ///
@@ -56,8 +65,8 @@ public class Test3DScene extends Scene {
         sBlock.setPosition(new Vector3f(0.0f));
         sBlock.setTexture("container");
             // Displacement texture for cubes/crate
-        displacementMap = manContainer.resources.getResource(Texture.class,"dispMap1");
-        manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
+        displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
+        ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
         // 3D Model
         stand = new ModelRenderer("texture3D", "stand/stall", "stall");
@@ -67,20 +76,17 @@ public class Test3DScene extends Scene {
         /*hudBar = new RectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
-        hudBar = new RectangleRenderer("texture2D");
+        hudBar = new RectangleRenderer(mainContext.getWindow().getInfo(), "texture2D");
         hudBar.setTexture("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
-
-        System.out.println(cratesInfo.length);
-        System.out.println(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
     }
 
 
     public void update() {
         super.update();
 
-        InputManager inputManager = manContainer.inpManager;
+        InputManager inputManager = mainContext.getInputManager();
 
         int speed = 1;
         if (inputManager.inputPressed(ActionId.SHIFT)) {
@@ -88,44 +94,44 @@ public class Test3DScene extends Scene {
         }
 
         if(inputManager.input(ActionId.MOVE_LEFT)){
-            manContainer.cam.speedAngX(Camera.speed.x * speed);
+            mainCamera.speedAngX(Camera.speed.x * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_RIGHT)){
-            manContainer.cam.speedAngX(-Camera.speed.x * speed);
+            mainCamera.speedAngX(-Camera.speed.x * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_FORWARD)){
-            manContainer.cam.speedAngZ(-Camera.speed.z * speed);
+            mainCamera.speedAngZ(-Camera.speed.z * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_BACKWARD)) {
-            manContainer.cam.speedAngZ(Camera.speed.z * speed);
+            mainCamera.speedAngZ(Camera.speed.z * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_UP)) {
-            manContainer.cam.setY(manContainer.cam.camPos.y += Camera.speed.y);
+            mainCamera.setY(mainCamera.getCamPosRef().y += Camera.speed.y);
         }
 
         if(inputManager.input(ActionId.MOVE_DOWN)) {
-            manContainer.cam.setY(manContainer.cam.camPos.y -= Camera.speed.y);
+            mainCamera.setY(mainCamera.getCamPosRef().y -= Camera.speed.y);
         }
 
         if(inputManager.inputPressed(ActionId.ESCAPE)) {
-            manContainer.cam.invertLockViewCursor();
-            manContainer.mouseManager.invertCursorState();
+            mainCamera.invertLockViewCursor();
+            mainContext.getMouseManager().invertCursorState();
 
         }
 
 
         light.setColor(new Color4f(counter / 360.0f));
-        manContainer.shadManager.getShader(sBlock.getShape().getShaderId()).glUniform("time", counter / 720);
+        ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("time", counter / 720);
 
         counter += 1f;
 
         if(counter > 720) counter = 0f;
 
-        manContainer.cam.updateView();
+        mainCamera.updateView();
     }
 
 

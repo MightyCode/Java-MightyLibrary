@@ -1,23 +1,22 @@
 package MightyLibrary.mightylib.graphics.shape._2D;
 
-import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
+import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 public class RectangleRenderer extends Renderer {
-    protected Window window;
+    protected WindowInfo windowInfo;
     protected float windowW, windowH, posX, posY;
     protected int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
 
-    public RectangleRenderer(String shaderName) {
+    public RectangleRenderer(WindowInfo info, String shaderName) {
         super(shaderName, true, true);
 
-        window = ManagerContainer.getInstance().window;
+        windowInfo = info;
         posX = 0.0f;
         posY = 0.0f;
 
@@ -61,7 +60,7 @@ public class RectangleRenderer extends Renderer {
 
     // Set size with size of pixel
     public RectangleRenderer setSizePix(float width, float height){
-        return setSizeProp(width / window.virtualSize.x, height / window.virtualSize.y);
+        return setSizeProp(width / windowInfo.getVirtualSizeRef().x, height / windowInfo.getVirtualSizeRef().y);
     }
 
 
@@ -80,8 +79,8 @@ public class RectangleRenderer extends Renderer {
 
 
     public void setPosition(float posX, float posY){
-        this.posX = posX * 2.0f / window.virtualSize.x;
-        this.posY = posY * 2.0f / window.virtualSize.y;
+        this.posX = posX * 2.0f / windowInfo.getVirtualSizeRef().x;
+        this.posY = posY * 2.0f / windowInfo.getVirtualSizeRef().y;
         updateShape();
     }
 
