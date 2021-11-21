@@ -8,7 +8,7 @@ import java.util.Iterator;
 public class TextManager {
     private static final String FONTS_INFO_PATH = "resources/textures/fonts/fonts.json";
 
-    private ManagerList<Font> fonts;
+    private final ManagerList<Font> fonts;
 
     public TextManager(){
         fonts = new ManagerList<>();

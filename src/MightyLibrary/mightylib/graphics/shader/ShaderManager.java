@@ -29,12 +29,12 @@ public class ShaderManager {
 
     private ShaderManager() {
         shaders = new ManagerList<>();
-
         camReload = new ArrayList<>();
-        this.init();
     }
 
-    public void init(){
+
+    public void load(){
+        System.out.println("--Load ShaderManager");
         shaders.clear();
         camReload.clear();
         JSONObject file = new JSONObject(FileMethods.readFileAsString(SHADER_INFO_PATH));
@@ -79,6 +79,7 @@ public class ShaderManager {
     }
 
     public void reloadProjection(Camera camera){
+        System.out.println("--Reload projection for camera");
         Id current;
         for(int i = 0; i < shaders.size(); ++i){
             current = new Id(i);
@@ -91,8 +92,11 @@ public class ShaderManager {
     }
 
     public void dispose(Camera camera){
+        Shader currentShader;
         for (Id current : camReload){
-            shaders.get(current).use().glUniform("view", camera.getView());
+            currentShader = shaders.get(current);
+            currentShader.use();
+            currentShader.glUniform("view", camera.getView());
         }
     }
 
@@ -107,10 +111,11 @@ public class ShaderManager {
     public void reload(){
         unload();
         System.out.println("Reload shaders");
-        init();
+        load();
     }
 
     public void unload(){
+        System.out.println("--Unload ShaderManager");
         for(int i = 0; i < shaders.size(); ++i){
             shaders.get(i).unload();
         }

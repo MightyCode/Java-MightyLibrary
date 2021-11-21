@@ -15,7 +15,6 @@ public class AnimationData extends DataType {
 
     public AnimationData(String name, String path){
         super(EDataType.AnimationData, name, path);
-        this.path = path;
         textureName = "";
     }
 

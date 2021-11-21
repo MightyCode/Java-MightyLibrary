@@ -8,7 +8,7 @@ public class GameTime {
 
     private float elapsedTime;
 
-    private static float NANO_TO_SEC = 1000000000.0f;
+    private static final float NANO_TO_SEC = 1000000000.0f;
 
     public GameTime(){
         elapsedTime = 0;

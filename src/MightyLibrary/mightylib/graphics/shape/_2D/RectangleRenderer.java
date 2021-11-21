@@ -7,9 +7,9 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 public class RectangleRenderer extends Renderer {
-    protected WindowInfo windowInfo;
+    protected final WindowInfo windowInfo;
     protected float windowW, windowH, posX, posY;
-    protected int positionIndex, textureIndex;
+    protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
 
@@ -59,17 +59,16 @@ public class RectangleRenderer extends Renderer {
     }
 
     // Set size with size of pixel
-    public RectangleRenderer setSizePix(float width, float height){
-        return setSizeProp(width / windowInfo.getVirtualSizeRef().x, height / windowInfo.getVirtualSizeRef().y);
+    public void setSizePix(float width, float height){
+        setSizeProp(width / windowInfo.getVirtualSizeRef().x, height / windowInfo.getVirtualSizeRef().y);
     }
 
 
     // Set size with a proportion of the window
-    public RectangleRenderer setSizeProp(float width, float height){
+    public void setSizeProp(float width, float height){
         windowW = width * 2.0f - 1.0f;
         windowH = height * 2.0f - 1.0f;
         updateShape();
-        return this;
     }
 
 

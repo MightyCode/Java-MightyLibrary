@@ -1,32 +1,23 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.Animation2DRenderer;
-import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
-import MightyLibrary.mightylib.graphics.texture.Animation;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
-import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.graphics.shape.Renderer;
-import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.graphics.shape._3D.CubeRenderer;
-import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.scene.Scene;
-import MightyLibrary.mightylib.util.Id;
-import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
     private Vector2f rendererPosition;
 
     public void init(String[] args) {
-        /// SCENE INFORMATIONS ///
+        super.init(args);
+        /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);
         mainCamera.setPos(new Vector3f(0, 0, 0));

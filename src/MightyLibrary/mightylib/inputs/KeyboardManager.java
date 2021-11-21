@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.inputs;
 
-import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.main.WindowInfo;
 
 import java.util.Arrays;
@@ -15,10 +14,10 @@ import static org.lwjgl.glfw.GLFW.glfwGetKey;
  */
 public class KeyboardManager {
 
-    public WindowInfo windowInfo;
-
     private static final int KEYS = 348;
     private static final int BEGIN_KEYS = 32;
+
+    public final WindowInfo windowInfo;
     private final boolean[] state = new boolean[KEYS];
     private final boolean[] oldState = new boolean[KEYS];
 

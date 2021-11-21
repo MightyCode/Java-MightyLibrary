@@ -1,30 +1,34 @@
 package MightyLibrary.project.main;
 
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.*;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.SceneManager;
-import MightyLibrary.project.scenes.Test2DScene;
 import MightyLibrary.project.scenes.Test3DScene;
 import org.joml.Vector2i;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 public class MainLoop {
-    ContextManager contextManager;
+    private final ContextManager contextManager;
     private final SceneManager sceneManager;
 
-    private final float SECOND = 1000000000.0f;
-    private final float TPS = 60.0f;
+    private final static float NANO_IN_SECOND = 1000000000.0f;
+    private final static float TPS = 60.0f;
 
-    private final float FPS = 100000.0f;
+    private final static float FPS = 100000.0f;
 
-    private final double TICK_TIME = SECOND / TPS;
-    private final double FRAME_TIME = SECOND / FPS;
+    private final static double TICK_TIME = NANO_IN_SECOND / TPS;
+    private final static double FRAME_TIME = NANO_IN_SECOND / FPS;
 
     MainLoop(){
+        System.out.println("--Start program. ");
+        System.out.println("--Load libraries.");
         if (loadLibraries() == -1){
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
+        System.out.println("--Create main context.");
         contextManager = ContextManager.getInstance();
 
         WindowCreationInfo wci = new WindowCreationInfo();
@@ -38,16 +42,20 @@ public class MainLoop {
         Context context = contextManager.getContext("Main");
         Window window = context.getWindow();
 
-
         if (!window.getInfo().isWindowCreated()){
             exit(ListError.WINDOW_CREATION_FAIL);
         }
 
-        sceneManager = new SceneManager(this, new Test3DScene(), new String[]{""});
+        System.out.println("--Create ShaderManager");
+        ShaderManager shaderManager = ShaderManager.getInstance();
+        System.out.println("--Create Resources");
+        Resources resources = Resources.getInstance();
+        System.out.println("--Create SceneManager");
+        sceneManager = new SceneManager(this);
 
         ProjectLoading.ContextLoading(context);
 
-        sceneManager.init();
+        sceneManager.init(new Test3DScene(), new String[]{""});
     }
 
     void run(){
@@ -78,11 +86,11 @@ public class MainLoop {
                 lastFrame += FRAME_TIME;
             }
 
-            if (System.nanoTime() - start - lastSecond >= SECOND) {
+            if (System.nanoTime() - start - lastSecond >= NANO_IN_SECOND) {
                 if (Main.admin) window.setTitle("3D Project | FPS:" + frames + "; TPS:" + ticks);
 
                 ticks = frames = 0;
-                lastSecond += SECOND;
+                lastSecond += NANO_IN_SECOND;
             }
         }
 

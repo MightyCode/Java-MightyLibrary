@@ -3,7 +3,7 @@ package MightyLibrary.mightylib.graphics.texture;
 import java.util.HashMap;
 
 public class Animator {
-    private HashMap<String, Animation> animations;
+    private final HashMap<String, Animation> animations;
     private Animation currentAnimation;
     private String currentAnimationName;
 

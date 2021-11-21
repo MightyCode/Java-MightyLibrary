@@ -17,10 +17,10 @@ public abstract class OBJLoader {
         boolean end = false;
 
         String line;
-        List<Vector3f> vertices = new ArrayList<Vector3f>();
-        List<Vector2f> textures = new ArrayList<Vector2f>();
-        List<Vector3f> normals = new ArrayList<Vector3f>();
-        List<Integer> indices = new ArrayList<Integer>();
+        List<Vector3f> vertices = new ArrayList<>();
+        List<Vector2f> textures = new ArrayList<>();
+        List<Vector3f> normals = new ArrayList<>();
+        List<Integer> indices = new ArrayList<>();
 
         float[] verticesArray;
         float[] texturesArray = null;
@@ -67,6 +67,8 @@ public abstract class OBJLoader {
                 String[] vertex2 = currentLine[2].split("/");
                 String[] vertex3 = currentLine[3].split("/");
 
+                assert texturesArray != null;
+                assert normalsArray != null;
                 processVertexWithTexture(vertex1, indices, textures, normals, texturesArray, normalsArray);
                 processVertexWithTexture(vertex2, indices, textures, normals, texturesArray, normalsArray);
                 processVertexWithTexture(vertex3, indices, textures, normals, texturesArray, normalsArray);
@@ -103,13 +105,13 @@ public abstract class OBJLoader {
     public static Shape loadObjColoredModel(String path) {
         String file = FileMethods.readFileAsString("resources/3dmodels/" + path + ".obj");
         int indexFrom = 0;
-        int indexTo = 0;
+        int indexTo;
         boolean end = false;
 
         String line;
-        List<Vector3f> vertices = new ArrayList<Vector3f>();
-        List<Vector3f> normals = new ArrayList<Vector3f>();
-        List<Integer> indices = new ArrayList<Integer>();
+        List<Vector3f> vertices = new ArrayList<>();
+        List<Vector3f> normals = new ArrayList<>();
+        List<Integer> indices = new ArrayList<>();
 
         float[] verticesArray;
         float[] normalsArray = null;
@@ -216,7 +218,7 @@ public abstract class OBJLoader {
         int i = currentIndex + 1;
         while (!found && i < file.length()){
             if (file.charAt(i) == '\n')  found = true;
-            else                         ++i;;
+            else                         ++i;
         }
         return i;
     }

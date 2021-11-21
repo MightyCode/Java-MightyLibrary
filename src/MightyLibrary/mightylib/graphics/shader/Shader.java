@@ -10,12 +10,13 @@ import java.util.HashMap;
 import static org.lwjgl.opengl.GL20.*;
 
 public class Shader extends ObjectId{
-    private String fragmentSource, vertexSource;
+    private static final String PATH = "resources/shaders/";
+
+    private final String fragmentSource, vertexSource;
     private int shaderProgram;
 
-    private HashMap<String, Integer> valuesLink;
-    private final String PATH = "resources/shaders/";
-    public ArrayList<Integer> properties;
+    private final HashMap<String, Integer> valuesLink;
+    public final ArrayList<Integer> properties;
 
     public Shader(String vertexSource, String fragmentSource){
         // Base value
@@ -27,7 +28,7 @@ public class Shader extends ObjectId{
         properties = new ArrayList<>();
     }
 
-    public Shader load(){
+    public void load(){
         // Creation du shader programme
         int vShader = glCreateShader(GL_VERTEX_SHADER);
         String bf = "error";
@@ -68,19 +69,15 @@ public class Shader extends ObjectId{
 
         glDeleteShader(vShader);
         glDeleteShader(fShader);
-
-        return this;
     }
 
-    public Shader use(){
+    public void use(){
         glUseProgram(shaderProgram);
-        return this;
     }
 
-    public Shader addLink(String valueName){
+    public void addLink(String valueName){
         use();
         valuesLink.put(valueName, glGetUniformLocation(shaderProgram, valueName));
-        return this;
     }
 
     public int getLink(String valueName){
@@ -95,45 +92,38 @@ public class Shader extends ObjectId{
         glDeleteShader(shaderProgram);
     }
 
-    public Shader glUniform(String valueName, float value1){
+    public void glUniform(String valueName, float value1){
         this.use();
         glUniform1f(this.getLink(valueName), value1);
-        return this;
     }
 
-    public Shader glUniform(String valueName, float value1, float value2){
+    public void glUniform(String valueName, float value1, float value2){
         this.use();
         glUniform2f(getLink(valueName), value1, value2);
-        return this;
     }
 
-    public Shader glUniform(String valueName, float value1, float value2, float value3){
+    public void glUniform(String valueName, float value1, float value2, float value3){
         this.use();
         glUniform3f(getLink(valueName), value1, value2, value3);
-        return this;
     }
 
-    public Shader glUniform(String valueName, float value1, float value2, float value3, float value4){
+    public void glUniform(String valueName, float value1, float value2, float value3, float value4){
         this.use();
         glUniform4f(getLink(valueName), value1, value2, value3, value4);
-        return this;
     }
 
-    public Shader glUniform(String valueName, float[] value1){
+    public void glUniform(String valueName, float[] value1){
         this.use();
         glUniformMatrix4fv(getLink(valueName), false, value1);
-        return this;
     }
 
-    public Shader glUniform(String valueName, FloatBuffer value1){
+    public void glUniform(String valueName, FloatBuffer value1){
         this.use();
         glUniformMatrix4fv(getLink(valueName), false, value1);
-        return this;
     }
 
-    public Shader glUniform(String valueName, int value1){
+    public void glUniform(String valueName, int value1){
         this.use();
         glUniform1i(getLink(valueName), value1);
-        return this;
     }
 }

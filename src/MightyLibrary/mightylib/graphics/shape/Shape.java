@@ -3,14 +3,10 @@ package MightyLibrary.mightylib.graphics.shape;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.MightyMath;
-import org.lwjgl.opengl.GL15;
 
 import java.util.ArrayList;
 
 import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 
 public class Shape{
@@ -126,30 +122,27 @@ public class Shape{
     }
 
 
-    public Shape setUseEbo(boolean state){
+    public void setUseEbo(boolean state){
         if (this.useEbo && ebo != 0) glDeleteBuffers(this.ebo);
 
         this.useEbo = state;
 
         if (this.useEbo) ebo =  glGenBuffers();
-        return this;
     }
 
 
-    public Shape setEboStorage(int eboStorage){
+    public void setEboStorage(int eboStorage){
         this.eboStorage = eboStorage;
-        return this;
     }
 
 
-    public Shape setEbo(int[] indices){
+    public void setEbo(int[] indices){
         bind();
         this.indicesSize = indices.length;
         if (!useEbo) System.err.print(">(Shape.java) Providing EBO without using EBO !");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, eboStorage);
-        return this;
     }
 
 
@@ -167,9 +160,8 @@ public class Shape{
     }
 
 
-    public Shape unbind(){
+    public void unbind(){
         glBindVertexArray(0);
-        return this;
     }
 
 
@@ -179,9 +171,8 @@ public class Shape{
     }
 
 
-    public Shape setDimensionTo2D(boolean state){
+    public void setDimensionTo2D(boolean state){
         this.in2D = state;
-        return this;
     }
 
 

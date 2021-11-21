@@ -85,13 +85,13 @@ public class Window {
             glfwGetWindowSize(info.windowId, pWidth, pHeight);
 
             // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            GLFWVidMode videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
             // Center the window
             glfwSetWindowPos(
                     info.windowId,
-                    (Objects.requireNonNull(vidmode).width() - pWidth.get(0)) / 2,
-                    (vidmode.height() - pHeight.get(0)) / 2
+                    (Objects.requireNonNull(videoMode).width() - pWidth.get(0)) / 2,
+                    (videoMode.height() - pHeight.get(0)) / 2
             );
             // the stack frame is popped automatically
         } catch (Error e){
@@ -161,45 +161,42 @@ public class Window {
     }
 
 
-    public Window setSize(Vector2f size){
-        return setSize(size.x, size.y);
+    public void setSize(Vector2f size){
+        setSize(size.x, size.y);
     }
-    public Window setSize(float width, float height){
-        return setSize((int)width, (int)height);
+    public void setSize(float width, float height){
+        setSize((int)width, (int)height);
     }
-    public Window setWidth(int width){
-        return setSize(width, info.size.y);
+    public void setWidth(int width){
+        setSize(width, info.size.y);
     }
-    public Window setHeight(int height){
-        return setSize(info.size.x, height);
+    public void setHeight(int height){
+        setSize(info.size.x, height);
     }
 
 
-    public Window setSize(int width, int height){
+    public void setSize(int width, int height){
         info.size.x = width;
         info.size.y = height;
         info.ratio = (float) info.size.x / (float) info.size.y;
         if (info.isWindowCreated())
             glfwSetWindowSize(info.windowId, info.size.x, info.size.y);
-        return this;
+
     }
 
 
-    public Window setVirtualSize(int virtualWidth, int virtualHeight){
+    public void setVirtualSize(int virtualWidth, int virtualHeight){
         info.virtualSize.x = virtualWidth;
         info.virtualSize.y = virtualHeight;
         info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
-
-        return this;
     }
 
-    public Window setVirtualViewport(){
+    public void setVirtualViewport(){
         setViewPort(info.virtualSize.x, info.virtualSize.y);
-        return this;
     }
 
 
-    public Window setRealViewport(){
+    public void setRealViewport(){
         int x = 0, y = 0, width = info.size.x, height = info.size.y;
 
         if (!info.virtualSize.equals(info.size)){
@@ -215,13 +212,6 @@ public class Window {
         }
 
         setViewPort(x, y, width, height);
-        return this;
-    }
-
-
-    public Window forceRatio(float ratio){
-        info.ratio = ratio;
-        return this;
     }
 
     /**
@@ -241,6 +231,7 @@ public class Window {
         glPushMatrix();
         glLoadIdentity();
     }
+
     /**
      * Set the 3D view.
      */

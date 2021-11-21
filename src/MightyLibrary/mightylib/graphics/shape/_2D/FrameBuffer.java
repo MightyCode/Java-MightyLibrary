@@ -4,10 +4,7 @@ import MightyLibrary.mightylib.graphics.texture.TextureParameters;
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.util.Id;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_COMPLETE;
 
 public class FrameBuffer {
 
@@ -44,7 +41,7 @@ public class FrameBuffer {
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            System.err.println("ARCHTUNG DIE FRAMEBUFFER IST KAPUTT");
+            System.err.println("Make attention, the framebuffer doesn't work properly");
     }
 
     public void bindFrameBuffer(){

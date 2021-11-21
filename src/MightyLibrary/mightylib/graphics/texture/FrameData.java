@@ -6,7 +6,7 @@ import org.joml.Vector4i;
 public class FrameData {
     private static final int PART_NUMBER = 7;
 
-    // 4 coords
+    // 4 coordinates
     private final Vector4i framePosition;
     private final Vector2i hotPoint;
     private float frameTime;

@@ -18,20 +18,25 @@ public class ReloadGenCom extends BaseCommand {
         if(checkArgumentHelp(sub)) return;
 
         if (sub.length > 1) {
-            if (sub[1].equals("texture")) {
-                System.out.println("Reload texture resources");
+            switch (sub[1]) {
+                case "texture":
+                    System.out.println("Reload texture resources");
 
-                Resources.getInstance().reload(Texture.class);
-            } else if (sub[1].equals("shader")) {
-                System.out.println("Reload shader resources");
+                    Resources.getInstance().reload(Texture.class);
+                    break;
+                case "shader":
+                    System.out.println("Reload shader resources");
 
-                ShaderManager.getInstance().reload();
-            } else if (sub[1].equals("all")) {
-                System.out.println("Reload all resources");
+                    ShaderManager.getInstance().reload();
+                    break;
+                case "all":
+                    System.out.println("Reload all resources");
 
-                Resources.getInstance().reload();
-            } else {
-                unknownArgumentError(sub[1]);
+                    Resources.getInstance().reload();
+                    break;
+                default:
+                    unknownArgumentError(sub[1]);
+                    break;
             }
         } else {
             noEnoughArgumentError();

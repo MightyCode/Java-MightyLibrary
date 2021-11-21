@@ -61,7 +61,6 @@ public class Commands {
         else System.err.println("Error on the message : \n invalids chars or nothing in the char");
     }
 
-
     private void submitCommand(String command, String firstWord) {
         boolean found = false;
         int i = 0;
@@ -69,8 +68,7 @@ public class Commands {
             // If write command and command in the array match
             if (commands.get(i).isCommand(firstWord)) {
                 // Send and remove the unused first word
-                if(command.length() > firstWord.length())  commands.get(i).sendCommand(command);
-                else                                       commands.get(i).sendCommand(command);
+                commands.get(i).sendCommand(command);
                 found = true;
             }
             ++i;

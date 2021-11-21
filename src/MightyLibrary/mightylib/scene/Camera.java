@@ -85,48 +85,41 @@ public class Camera {
         viewBuffer = view.get(viewBuffer);
     }
 
-    public Camera setLockViewCursor(boolean state){
+    public void setLockViewCursor(boolean state){
         lockViewCursor = state;
-        return this;
     }
 
 
-    public Camera invertLockViewCursor(){
-        return setLockViewCursor(!lockViewCursor);
+    public void invertLockViewCursor(){
+        setLockViewCursor(!lockViewCursor);
     }
 
 
-    public Camera setViewAngle(float fov){
+    public void setViewAngle(float fov){
         projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
         //projection.ortho(0, 800, 600, 0 , -1, 1);
 
         projectionBuffer = projection.get(projectionBuffer);
-        return this;
     }
 
     public Vector3f getCamPosRef() { return camPos; }
     public Vector3f getCamPosCopy() { return new Vector3f(camPos); }
-    public Camera setPos(Vector3f newPos){
+    public void setPos(Vector3f newPos){
         camPos.x = newPos.x;
         camPos.y = newPos.y;
         camPos.z = newPos.z;
-
-        return this;
     }
 
-    public Camera setX(float x){
+    public void setX(float x){
         camPos.x = x;
-        return this;
     }
 
-    public Camera setY(float y){
+    public void setY(float y){
         camPos.y = y;
-        return this;
     }
 
-    public Camera setZ(float z){
+    public void setZ(float z){
         camPos.z = z;
-        return this;
     }
 
     public FloatBuffer getProjection(){
@@ -138,15 +131,13 @@ public class Camera {
     }
 
 
-    public Camera speedAngX(float speed){
+    public void speedAngX(float speed){
         camPos.x += speed * yawSin;
         camPos.z += speed * -yawCos;
-        return this;
     }
 
-    public Camera speedAngZ(float speed){
+    public void speedAngZ(float speed){
         camPos.x += speed * -yawCos;
         camPos.z += speed * -yawSin;
-        return this;
     }
 }

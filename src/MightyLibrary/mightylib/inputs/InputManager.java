@@ -54,11 +54,11 @@ public class InputManager {
 
         int index;
 
-        for(int i = 0; i < inputData.length; ++i){
-            index = inputData[i][INPUT_DATA_INDEX];
+        for (int[] inputDatum : inputData) {
+            index = inputDatum[INPUT_DATA_INDEX];
 
-            inputs[index] = inputData[i][INPUT_DATA_INPUT];
-            types[index] = inputData[i][INPUT_DATA_TYPE];
+            inputs[index] = inputDatum[INPUT_DATA_INPUT];
+            types[index] = inputDatum[INPUT_DATA_TYPE];
         }
     }
 

@@ -8,7 +8,6 @@ import java.nio.DoubleBuffer;
 import java.util.Arrays;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 
 /**
  * This class is the mouse manager.

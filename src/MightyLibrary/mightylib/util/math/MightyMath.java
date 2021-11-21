@@ -31,7 +31,7 @@ public class MightyMath {
 		int sum = 0;
 		while (i < table.length){
 			sum+=table[i];
-			++i;;
+			++i;
 		}
 		return sum;
 	}
@@ -77,7 +77,7 @@ public class MightyMath {
 	}
 
 
-	public EDirection addToAnotherDirectoin(EDirection a, EDirection b) {
+	public EDirection addToAnotherDirection(EDirection a, EDirection b) {
 		if (a == EDirection.None) return b;
 		else if (b == EDirection.None) return a;
 

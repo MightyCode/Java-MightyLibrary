@@ -16,10 +16,10 @@ public abstract class FileMethods {
             }
         } catch (IOException e){
             e.printStackTrace();
-            return false; // Erreur
+            return false; // Error
         }
 
-        return true; // Résultat OK
+        return true; // Result OK
     }
 
 

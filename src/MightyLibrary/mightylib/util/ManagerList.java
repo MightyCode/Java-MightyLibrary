@@ -2,8 +2,8 @@ package MightyLibrary.mightylib.util;
 
 import java.util.ArrayList;
 
-public class ManagerList<E>{
-    private ArrayList<ObjectId> objects;
+public class ManagerList<E extends ObjectId>{
+    private final ArrayList<E> objects;
 
     public ManagerList(){
         objects = new ArrayList<>();
@@ -16,7 +16,7 @@ public class ManagerList<E>{
 
 
     public E get(int id){
-        return (E)objects.get(id);
+        return objects.get(id);
     }
 
 
@@ -26,13 +26,14 @@ public class ManagerList<E>{
                 return object.getId();
             }
         }
+
         return new Id(-1);
     }
 
 
     public Id add(ObjectId object){
         object.setId(objects.size());
-        objects.add(object);
+        objects.add(((E) object));
 
         return object.getId();
     }

@@ -2,9 +2,6 @@ package MightyLibrary.mightylib.scene;
 
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.inputs.KeyboardManager;
-import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.graphics.shape.font.TextManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.resources.Resources;
@@ -12,7 +9,6 @@ import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.commands.Commands;
-import org.joml.Vector3f;
 
 public class SceneManager {
     private final SceneManagerInterface sceneInterface;
@@ -22,19 +18,21 @@ public class SceneManager {
 
     private final Commands commands;
 
-    public SceneManager(MainLoop mLoop, Scene firstScene, String[] firstArguments){
+    public SceneManager(MainLoop mLoop){
         this.loop = mLoop;
 
         sceneInterface = new SceneManagerInterface();
-        sceneInterface.setNewScene(firstScene, firstArguments);
 
         commands  = new Commands();
     }
 
 
-    public void init(){
+    public void init(Scene firstScene, String[] firstArguments){
+        System.out.println("--Init SceneManager");
+        ShaderManager.getInstance().load();
         Resources.getInstance().load();
-        ShaderManager.getInstance().init();
+
+        sceneInterface.setNewScene(firstScene, firstArguments);
 
         changeScene();
     }
@@ -78,12 +76,16 @@ public class SceneManager {
     private void changeScene(){
         if (Main.admin) commands.removeSpecificCommand();
 
-        if(currentScene != null) currentScene.unload();
+        if(currentScene != null){
+            System.out.println("--Unload scene" + currentScene.getClass().getName());
+            currentScene.unload();
+        }
 
         // Assign the new scene
         currentScene = sceneInterface.getNewScene();
         assert currentScene != null;
         currentScene.setSceneManagerInterface(sceneInterface);
+        System.out.println("--Init scene" + currentScene.getClass().getName());
         currentScene.init(sceneInterface.getChangeArgs());
 
         sceneInterface.reset();
@@ -96,7 +98,11 @@ public class SceneManager {
 
 
     public void unload(){
-        currentScene.unload();
+        System.out.println("--Unload SceneManager");
+        if (currentScene != null){
+            System.out.println("--Unload scene" + currentScene.getClass().getName());
+            currentScene.unload();
+        }
         ShaderManager.getInstance().unload();
         Resources.getInstance().unload();
     }

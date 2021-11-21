@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 
@@ -44,6 +43,7 @@ public class Resources {
 
 
     public int load(){
+        System.out.println("--Load Resources");
         int incorrectlyLoad = 0;
 
         for (Class<?> c : resources.keySet()){
@@ -88,6 +88,7 @@ public class Resources {
 
 
     public int unload(){
+        System.out.println("--Unload Resources");
         int incorrectlyUnload = 0;
 
         for (Class<?> c : resources.keySet()){

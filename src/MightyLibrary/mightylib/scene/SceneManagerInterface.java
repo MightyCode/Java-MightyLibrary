@@ -20,7 +20,7 @@ class SceneManagerInterface {
 
     public void reset(){
         newScene = null;
-        changeArgs = new String[]{""};;
+        changeArgs = new String[]{""};
     }
 
     public String[] getChangeArgs(){

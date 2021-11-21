@@ -21,9 +21,9 @@ public class Font extends ObjectId {
     private int sizeY;
 
     private int numberChar;
-    private HashMap<Integer, Vector4i> chars;
+    private final HashMap<Integer, Vector4i> chars;
 
-    private Texture fontTexture;
+    private final Texture fontTexture;
 
     public Font(String fontName, String textureName, String info){
         super(fontName);
@@ -70,9 +70,9 @@ public class Font extends ObjectId {
     }
 
     private int searchValueOfI(String[] lines, String key){
-        for (int i = 0; i < lines.length; ++i){
-            if (lines[i].contains(key)){
-                return getValueOfI(lines[i], key);
+        for (String line : lines) {
+            if (line.contains(key)) {
+                return getValueOfI(line, key);
             }
         }
 

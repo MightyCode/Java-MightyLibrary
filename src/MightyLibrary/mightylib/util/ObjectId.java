@@ -24,14 +24,12 @@ public class ObjectId {
     }
 
 
-    public ObjectId setId(int id){
+    public void setId(int id){
         this.id.id = id;
-        return this;
     }
 
-    public ObjectId setId(Id id){
+    public void setId(Id id){
         this.id.id = id.id;
-        return this;
     }
 
 
@@ -40,19 +38,15 @@ public class ObjectId {
     }
 
 
-    public ObjectId linkId(Id id){
+    public void linkId(Id id){
         this.id = id;
-        return this;
     }
 
 
     public String getName(){
         return name;
     }
-
-
-    public ObjectId setName(String name){
+    public void setName(String name){
         this.name = name;
-        return this;
     }
 }

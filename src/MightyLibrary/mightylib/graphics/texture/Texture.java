@@ -9,7 +9,6 @@ import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.*;
 
 public class Texture extends DataType {
@@ -86,7 +85,7 @@ public class Texture extends DataType {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer);
             TextureParameters.pixelArtParameters();
 
-            System.out.println("Texture : " + textureId + " , loaded with path : " + path);
+            //System.out.println("Texture : " + textureId + " , loaded with path : " + path);
             correctLoaded = true;
         } catch (Exception e) {
             System.err.println("Fail to load texture " + path + " :");

@@ -16,7 +16,7 @@ public abstract class CommandMethods {
             if (current == ' '){
                 stop = true;
             } else if ((int)current >= 32 && (int)current <= 126){
-                ++i;;
+                ++i;
             } else {
                 stop = true;
                 i = -1;

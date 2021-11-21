@@ -3,7 +3,6 @@ package MightyLibrary.mightylib.graphics.shape._2D;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.graphics.texture.Animator;
-import MightyLibrary.mightylib.main.Window;
 import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -74,9 +73,6 @@ public class Animation2DRenderer extends Renderer {
         if (!lastRefPoint.equals(referencePoint)){
             shape.updateVbo(calculatePosition(), positionIndex);
         }
-
-        //TableDebug.printf(calculatePosition());
-        //System.out.println();
 
         lastRefPoint = new Vector2f(referencePoint);
 

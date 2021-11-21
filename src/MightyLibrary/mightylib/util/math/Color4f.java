@@ -70,6 +70,7 @@ public class Color4f{
     }
 
     public void setColor(Vector3f color){
+        setColor(new Vector4f(color, 1.0f));
         this.r = color.x;
         this.g = color.y;
         this.b = color.z;
@@ -77,10 +78,10 @@ public class Color4f{
     }
 
     public void setColor(float f){
-
+        setColor(new Vector3f(f));
     }
 
     public Color4f copy(){
-        return new Color4f(r,g,b,a);
+        return new Color4f(r, g, b, a);
     }
 }
