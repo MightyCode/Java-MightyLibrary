@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.main;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
 
@@ -10,7 +11,6 @@ import java.nio.IntBuffer;
 import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL.createCapabilities;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
@@ -99,11 +99,11 @@ public class Window {
         }
 
         // Make the OpenGL context current
-        glfwMakeContextCurrent(info.windowId);
+        bindWindow();
 
         // Make the window visible
         glfwShowWindow(info.windowId);
-        createCapabilities();
+        GL.createCapabilities();
         glfwSwapInterval(0);
 
         setViewPort(info.size.x, info.size.y);
@@ -148,6 +148,12 @@ public class Window {
         info.fullscreen = fullscreen;
         if (info.isWindowCreated()) createNewWindow();
     }
+
+
+    public void bindWindow() {
+        glfwMakeContextCurrent(info.windowId);
+    }
+
 
     /**
      * Destroy the current window.

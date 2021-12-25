@@ -1,4 +1,5 @@
 #version 330
+
 in layout(location = 0) vec3 aPos;
 in layout(location = 1) vec2 inTexCoords;
 

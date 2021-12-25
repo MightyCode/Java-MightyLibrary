@@ -13,6 +13,9 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import static org.lwjgl.opengl.GL11C.glGetString;
+import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
+
 public class ShaderManager {
     private static ShaderManager singletonInstance = null;
     public static ShaderManager getInstance(){
@@ -21,23 +24,43 @@ public class ShaderManager {
         return singletonInstance;
     }
 
-    private static final String SHADER_INFO_PATH = "resources/shaders/shaders.json";
+    private static final String SHADER_INFO_PATH = "resources/shaders/";
     public static final int USE_PROJECTION_MATRIX = 0;
 
     private final ManagerList<Shader> shaders;
     private final ArrayList<Id> camReload;
+    private int version;
 
     private ShaderManager() {
         shaders = new ManagerList<>();
         camReload = new ArrayList<>();
+
+        version = -1;
     }
 
+    public void forceShaderVersion(int version){
+        this.version = version;
+    }
 
     public void load(){
         System.out.println("--Load ShaderManager");
         shaders.clear();
         camReload.clear();
-        JSONObject file = new JSONObject(FileMethods.readFileAsString(SHADER_INFO_PATH));
+
+        String glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
+        String shaderPath = SHADER_INFO_PATH;
+
+        if (version == 140 || (glslVersion != null && glslVersion.contains("1.40"))){
+            shaderPath += "1_40/shaders.json";
+            Shader.PATH += "1_40/";
+            System.out.println("--Version of shader GLSL 140");
+        } else {
+            shaderPath += "3_30/shaders.json";
+            Shader.PATH += "3_30/";
+            System.out.println("--Version of shader GLSL 330");
+        }
+
+        JSONObject file = new JSONObject(FileMethods.readFileAsString(shaderPath));
         file = file.getJSONObject("shaders");
 
         Iterator<String> arrayShader = file.keys();

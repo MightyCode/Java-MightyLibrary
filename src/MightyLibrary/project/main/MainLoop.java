@@ -4,10 +4,15 @@ import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.SceneManager;
+import MightyLibrary.project.scenes.Test2DScene;
 import MightyLibrary.project.scenes.Test3DScene;
 import org.joml.Vector2i;
+import org.lwjgl.Version;
+import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11C.*;
+import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 
 public class MainLoop {
     private final ContextManager contextManager;
@@ -24,6 +29,7 @@ public class MainLoop {
     MainLoop(){
         System.out.println("--Start program. ");
         System.out.println("--Load libraries.");
+
         if (loadLibraries() == -1){
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
@@ -42,12 +48,14 @@ public class MainLoop {
         Context context = contextManager.getContext("Main");
         Window window = context.getWindow();
 
+
         if (!window.getInfo().isWindowCreated()){
             exit(ListError.WINDOW_CREATION_FAIL);
         }
 
         System.out.println("--Create ShaderManager");
         ShaderManager shaderManager = ShaderManager.getInstance();
+        shaderManager.forceShaderVersion(140);
         System.out.println("--Create Resources");
         Resources resources = Resources.getInstance();
         System.out.println("--Create SceneManager");
@@ -55,7 +63,14 @@ public class MainLoop {
 
         ProjectLoading.ContextLoading(context);
 
-        sceneManager.init(new Test3DScene(), new String[]{""});
+        sceneManager.init(new Test2DScene(), new String[]{""});
+
+        System.out.println("\n" + Version.getVersion());
+        System.out.println(glfwGetVersionString());
+        System.out.println("GL VENDOR   : " + glGetString(GL_VENDOR));
+        System.out.println("GL RENDERER : " + glGetString(GL_RENDERER));
+        System.out.println("GL VERSION  : " + glGetString(GL_VERSION));
+        System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
     }
 
     void run(){

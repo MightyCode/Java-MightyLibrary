@@ -10,7 +10,7 @@ import java.util.HashMap;
 import static org.lwjgl.opengl.GL20.*;
 
 public class Shader extends ObjectId{
-    private static final String PATH = "resources/shaders/";
+    public static String PATH = "resources/shaders/";
 
     private final String fragmentSource, vertexSource;
     private int shaderProgram;
