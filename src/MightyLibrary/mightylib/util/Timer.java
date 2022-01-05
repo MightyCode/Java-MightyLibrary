@@ -11,7 +11,9 @@ public class Timer {
 
     private boolean stopped;
     private boolean finished;
+    private boolean started;
 
+    private boolean elapsedTimeCapped;
 
 
     public Timer() {
@@ -20,15 +22,22 @@ public class Timer {
 
         stopped = false;
         finished = false;
+        started = false;
+
+        elapsedTimeCapped = true;
     }
 
 
     public void update(){
-        if (!stopped && !finished){
+        if (!stopped && !finished && started){
             elapsedTime += GameTime.DeltaTime();
 
             if (elapsedTime >= aimedTime){
+                if (elapsedTimeCapped)
+                    this.elapsedTime = this.aimedTime;
+
                 finished = true;
+                started = false;
             }
         }
     }
@@ -43,6 +52,7 @@ public class Timer {
     public void resetStart() {
         stopped = false;
         finished = false;
+        started = true;
         elapsedTime = 0;
     }
 
@@ -75,5 +85,25 @@ public class Timer {
 
     public float getElapsedTime(){
         return elapsedTime;
+    }
+
+
+    public float getAimedTime(){ return aimedTime; }
+
+
+    public void forceTime(float newElaspedTime){
+        if (this.elapsedTimeCapped && elapsedTime > aimedTime){
+            elapsedTime = aimedTime;
+        } else {
+            elapsedTime = newElaspedTime;
+        }
+    }
+
+    public void forceRandomTime(){
+        elapsedTime = (float)Math.random() * this.aimedTime;
+    }
+
+    public void setElapsedTimeCapped(boolean value){
+        elapsedTimeCapped = value;
     }
 }

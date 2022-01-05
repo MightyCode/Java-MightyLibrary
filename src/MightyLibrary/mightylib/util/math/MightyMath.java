@@ -11,6 +11,8 @@ import java.util.ArrayList;
  */
 public class MightyMath {
 
+	public static final float PI_FLOAT = (float)(Math.PI);
+
 	/**
 	 * Calculate the position of a number in the first interval to transpose this number in an second interval.
 	 *

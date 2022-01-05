@@ -7,6 +7,10 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
+import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
+import MightyLibrary.mightylib.util.tweenings.ETweeningType;
+import MightyLibrary.mightylib.util.tweenings.Tweening;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -14,6 +18,7 @@ import org.joml.Vector3f;
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
     private Vector2f rendererPosition;
+    private Tweening slimeTextureTweening;
 
     public void init(String[] args) {
         super.init(args);
@@ -38,6 +43,13 @@ public class Test2DScene extends Scene {
         slimeRenderer.setScale(scale);
         rendererPosition.x = (14 * scale);
         rendererPosition.y = (22 * scale);
+
+        slimeTextureTweening = new Tweening();
+
+        slimeTextureTweening.setTweeningValues(ETweeningType.Elastic, ETweeningBehaviour.InOut)
+                .initTwoValue(1, 0, 150)
+                .setTweeningOption(ETweeningOption.LoopReversed)
+                .setAdditionnalArguments(38f, 0.538f);
     }
 
 
@@ -83,6 +95,10 @@ public class Test2DScene extends Scene {
         }
 
         mainCamera.updateView();
+
+        slimeTextureTweening.update();
+        float scale = 720.f / 30.f;
+        rendererPosition.x = (14 * scale) + slimeTextureTweening.value();
 
         slimeRenderer.update();
     }
