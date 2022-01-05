@@ -55,9 +55,10 @@ public class Tweening {
                 return Elastic.Evaluate(behaviour, t, b, c, d,
                         additionalValue1, additionalValue2);
             case Back:
-                return 0.f;
+                return Back.Evaluate(behaviour, t, b, c, d,
+                        additionalValue1);
             case Bounce:
-                return 0.f;
+                return Bounce.Evaluate(behaviour, t, b, c, d);
             default:
                 return 0.f;
         }

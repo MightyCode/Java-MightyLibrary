@@ -46,10 +46,9 @@ public class Test2DScene extends Scene {
 
         slimeTextureTweening = new Tweening();
 
-        slimeTextureTweening.setTweeningValues(ETweeningType.Elastic, ETweeningBehaviour.InOut)
+        slimeTextureTweening.setTweeningValues(ETweeningType.Bounce, ETweeningBehaviour.In)
                 .initTwoValue(1, 0, 150)
-                .setTweeningOption(ETweeningOption.LoopReversed)
-                .setAdditionnalArguments(38f, 0.538f);
+                .setTweeningOption(ETweeningOption.LoopReversed);
     }
 
 
