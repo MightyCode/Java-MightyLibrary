@@ -57,7 +57,7 @@ public class Back {
     public static float InOutFull(float t, float b, float c, float d,
                                   Float s) {
         if (s == null)
-            return Elastic.InOut(t, b, c, d);
+            return Back.InOut(t, b, c, d);
 
         if ((t /= d / 2) < 1)
             return c / 2 * (t * t *
