@@ -41,13 +41,16 @@ public class Animator {
 
     public void addAnimation(String name, Animation animation){
         if (animations.containsKey(name)){
-            System.err.println("Animator contains already an animation called : " + animation);
+            System.err.println("Animator already contains an animation called : " + animation);
             return;
         }
 
         animations.put(name, animation);
 
-        if (currentAnimation != null) return;
+        if (currentAnimation != null)
+            return;
+
+
         currentAnimation = animation;
         currentAnimationName = name;
     }

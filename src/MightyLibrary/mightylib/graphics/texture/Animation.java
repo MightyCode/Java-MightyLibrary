@@ -31,6 +31,8 @@ public class Animation {
         this.looping = isLooping;
 
         this.texture = Resources.getInstance().getResource(Texture.class, animationData.getTextureName());
+        restart();
+        currentTexturePosition();
     }
 
 
@@ -101,6 +103,7 @@ public class Animation {
 
     public Vector2i currentHotPoint(){
         FrameData data = animationData.getFrame(currentFrame);
+
         return data.getHotPointReference();
     }
 
