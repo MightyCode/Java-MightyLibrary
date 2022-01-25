@@ -1,5 +1,7 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.graphics.text.FontFace;
+import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 
@@ -8,7 +10,10 @@ import java.util.HashMap;
 public class Resources {
     private static Resources singletonInstance = null;
     public static Resources getInstance(){
-        if (singletonInstance == null) singletonInstance = new Resources();
+        if (singletonInstance == null){
+            singletonInstance = new Resources();
+            singletonInstance.init();
+        }
 
         return singletonInstance;
     }
@@ -19,9 +24,14 @@ public class Resources {
         resources = new HashMap<>();
         resources.put(Texture.class, new HashMap<>());
         resources.put(AnimationData.class, new HashMap<>());
+        resources.put(FontFace.class, new HashMap<>());
+    }
+
+    private void init(){
 
         TextureLoader.load(resources.get(Texture.class));
         AnimationDataLoader.creates(resources.get(AnimationData.class));
+        FontLoader.load(resources.get(FontFace.class));
     }
 
 

@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FontFile {
+    private String path;
+
     private int paddingLeft,
             paddingRight,
             paddingTop,
@@ -29,7 +31,13 @@ public class FontFile {
     private static final int NEEDED_PADDING = 2;
 
     public FontFile(String path) {
+        this.path = path;
+    }
+
+
+    public boolean load(){
         try {
+            System.out.println(this.path);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(path)));
 
             String line;
@@ -87,12 +95,14 @@ public class FontFile {
 
             bufferedReader.close();
 
+            return true;
+
         } catch (IOException e) {
             e.printStackTrace();
-            System.exit(-1);
+
+            return false;
         }
     }
-
 
     private Map<String, String> decodeLine(String line) {
         String[] parts = line.split(" ");
