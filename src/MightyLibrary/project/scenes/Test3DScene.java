@@ -1,7 +1,7 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.graphics.shape._2D.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
@@ -22,7 +22,7 @@ public class Test3DScene extends Scene {
 
     private Renderer sBlock;
     private ModelRenderer stand;
-    private RectangleRenderer hudBar;
+    private TextureRenderer hudBar;
 
     // Textures
     private Texture displacementMap;
@@ -66,10 +66,10 @@ public class Test3DScene extends Scene {
         stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
 
         // Grey Rect in Hud
-        /*hudBar = new RectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
+        /*hudBar = new TextureRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
-        hudBar = new RectangleRenderer(mainContext.getWindow().getInfo(), "texture2D");
+        hudBar = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
         hudBar.setTexture("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);

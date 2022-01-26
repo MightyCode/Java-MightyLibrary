@@ -1,12 +1,16 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.Animation2DRenderer;
+import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
+import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
+import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.util.tweenings.ETweeningType;
@@ -19,6 +23,10 @@ public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
     private Vector2f rendererPosition;
     private Tweening slimeTextureTweening;
+
+    private TextureRenderer textRenderer;
+
+    private Text text;
 
     public void init(String[] args) {
         super.init(args);
@@ -50,6 +58,17 @@ public class Test2DScene extends Scene {
                 .initTwoValue(1, 0, 150)
                 .setTweeningOption(ETweeningOption.LoopReversed).setAdditionnalArguments(3f,  null);
 
+
+        text = new Text(mainContext.getWindow().getInfo());
+
+        text.setFont("arial")
+                .setText("Test")
+                .setPosition(new Vector2f(300, 300));
+
+        textRenderer = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
+        textRenderer.setTexture("arial");
+        textRenderer.setSizePix( 150, 150);
+        textRenderer.setPosition(0, 0);
     }
 
 
@@ -109,6 +128,10 @@ public class Test2DScene extends Scene {
         clear();
 
         slimeRenderer.display();
+
+        text.draw();
+        textRenderer.display();
+
         super.setAndDisplayRealScene();
     }
 
@@ -116,5 +139,6 @@ public class Test2DScene extends Scene {
     public void unload() {
         super.unload();
         slimeRenderer.unload();
+        textRenderer.unload();
     }
 }

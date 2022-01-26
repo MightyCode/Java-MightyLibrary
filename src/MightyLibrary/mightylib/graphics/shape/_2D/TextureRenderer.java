@@ -6,14 +6,14 @@ import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-public class RectangleRenderer extends Renderer {
+public class TextureRenderer extends Renderer {
     protected final WindowInfo windowInfo;
     protected float windowW, windowH, posX, posY;
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
 
-    public RectangleRenderer(WindowInfo info, String shaderName) {
+    public TextureRenderer(WindowInfo info, String shaderName) {
         super(shaderName, true, true);
 
         windowInfo = info;

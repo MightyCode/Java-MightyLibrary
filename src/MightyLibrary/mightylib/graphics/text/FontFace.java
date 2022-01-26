@@ -21,6 +21,13 @@ public class FontFace extends DataType {
 
     }
 
+
+
+    @Override
+    public boolean load() {
+        return fontFile.load();
+    }
+
     public String getName(){
         return name;
     }
@@ -41,11 +48,6 @@ public class FontFace extends DataType {
      */
     public FontFile getFontFile() {
         return fontFile;
-    }
-
-    @Override
-    public boolean load() {
-        return fontFile.load();
     }
 
     @Override
