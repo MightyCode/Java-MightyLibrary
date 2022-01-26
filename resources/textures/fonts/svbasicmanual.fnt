@@ -143,4 +143,3 @@ char id=241  x=288   y=222   width=16    height=37    xoffset=0     yoffset=0   
 char id=242  x=304   y=222   width=16    height=37    xoffset=0     yoffset=0     xadvance=16    page=0  chnl=15
 char id=243  x=0     y=259   width=16    height=37    xoffset=0     yoffset=0     xadvance=16    page=0  chnl=15
 char id=244  x=16    y=259   width=16    height=37    xoffset=0     yoffset=0     xadvance=16    page=0  chnl=15
-c

@@ -1,8 +1,6 @@
 package MightyLibrary.mightylib.graphics.text;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,14 +35,22 @@ public class FontFile {
 
     public boolean load(){
         try {
-            System.out.println(this.path);
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(path)));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
 
             String line;
             Map<String, String> values = new HashMap<>();
 
-            line = bufferedReader.readLine();
-            values = decodeLine(line);
+            do {
+                line = bufferedReader.readLine();
+                Map<String, String> test = decodeLine(line);
+                values.putAll(test);
+
+            } while(!values.containsKey("count"));
+
+
+            for (String str : values.keySet()){
+                System.out.println(str);
+            }
 
             size = Integer.parseInt(values.get("size"));
 
@@ -55,18 +61,10 @@ public class FontFile {
             paddingBottom = Integer.parseInt(padding[2]);
             paddingLeft = Integer.parseInt(padding[3]);
 
-            line = bufferedReader.readLine();
-            values = decodeLine(line);
-
             lineHeight = (float) (Integer.parseInt(values.get("lineHeight")) - paddingTop - paddingBottom) / size;
 
             atlasWidth = Integer.parseInt(values.get("scaleW"));
             atlasHeight = Integer.parseInt(values.get("scaleH"));
-
-            bufferedReader.readLine();
-
-            line = bufferedReader.readLine();
-            values = decodeLine(line);
 
             numChars = Integer.parseInt(values.get("count"));
 
