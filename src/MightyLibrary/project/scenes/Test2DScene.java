@@ -2,6 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.Animation2DRenderer;
 import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
+import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
@@ -17,6 +18,7 @@ import MightyLibrary.mightylib.util.tweenings.ETweeningType;
 import MightyLibrary.mightylib.util.tweenings.Tweening;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 
 public class Test2DScene extends Scene {
@@ -61,10 +63,14 @@ public class Test2DScene extends Scene {
 
         text = new Text(mainContext.getWindow().getInfo());
 
+        Vector2i size = mainContext.getWindow().getInfo().getSizeRef();
+
         text.setFont("arial")
                 .setFontSize(60)
-                .setPosition(new Vector2f(200, 400))
-                .setText("TesSdqsdt");
+                .setReference(EDirection.RightDown)
+                .setAlignment(ETextAlignment.Right)
+                .setPosition(new Vector2f(size.x, size.y))
+                .setText("Tes Sdqsdt5f\nHello\nwhat");
 
         textRenderer = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
         textRenderer.setTexture("arial");
@@ -131,7 +137,7 @@ public class Test2DScene extends Scene {
         slimeRenderer.display();
 
         text.display();
-        textRenderer.display();
+        //textRenderer.display();
 
         super.setAndDisplayRealScene();
     }
