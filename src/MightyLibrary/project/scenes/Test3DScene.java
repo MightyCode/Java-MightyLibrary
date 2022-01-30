@@ -56,7 +56,7 @@ public class Test3DScene extends Scene {
         float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setPosition(new Vector3f(0.0f));
-        sBlock.setTexture("container");
+        sBlock.switchToTextureMode("container");
             // Displacement texture for cubes/crate
         displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
         ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
@@ -70,7 +70,7 @@ public class Test3DScene extends Scene {
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
         hudBar = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
-        hudBar.setTexture("error");
+        hudBar.switchToTextureMode("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
     }
@@ -117,7 +117,7 @@ public class Test3DScene extends Scene {
         }
 
 
-        light.setColor(new Color4f(counter / 360.0f));
+        light.switchToColorMode(new Color4f(counter / 360.0f));
         ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("time", counter / 720);
 
         counter += 1f;

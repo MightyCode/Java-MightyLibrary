@@ -3,7 +3,6 @@ package MightyLibrary.mightylib.graphics.shape;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.util.math.EShapeType;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
 import org.joml.Matrix4f;
@@ -31,8 +30,6 @@ public class Renderer{
 
     // Colored
     public Color4f color;
-
-    private EShapeType type;
 
     public Renderer(String shaderName, boolean useEbo, boolean in2D){
         shadManager = ShaderManager.getInstance();
@@ -86,7 +83,7 @@ public class Renderer{
     }
 
 
-    public void setDisplayState(boolean state) {
+    public void hide(boolean state) {
         display = state;
     }
 
@@ -96,20 +93,18 @@ public class Renderer{
     }
 
 
-    public void setTexture(String name){
-
-        setTexture(Resources.getInstance().getResource(Texture.class, name));
-
+    public void switchToTextureMode(String name) {
+        switchToTextureMode(Resources.getInstance().getResource(Texture.class, name));
     }
 
-    public void setTexture(Texture texture){
+    public void switchToTextureMode(Texture texture){
         displayMode = TEXTURE;
         this.texture = texture;
         shape.enableVbo(1);
     }
 
 
-    public void setColor(Color4f color){
+    public void switchToColorMode(Color4f color){
         displayMode = COLOR;
         this.color = color.copy();
         shape.disableVbo(1);
@@ -124,7 +119,6 @@ public class Renderer{
     public void setShape(Shape shape){
         this.shape = shape;
     }
-
 
     public void unload(){
         shape.unload();

@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -26,13 +27,15 @@ public class Text extends Renderer {
     private ETextAlignment alignment;
 
     public Text(WindowInfo windowInfo) {
-        super("texture2D", true, true);
+        super("coloredText", true, true);
         this.windowInfo = windowInfo;
 
         fontSize = 10.0f;
 
         this.font = null;
         this.text = "";
+
+        color = new Color4f(0, 0, 0, 1);
 
         // Null let renderer's ancien setting for text
         this.reference = EDirection.None;
@@ -43,40 +46,27 @@ public class Text extends Renderer {
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(new int[0]);
 
-        positionIndex = shape.addVbo(new float[0], 2, Shape.DYNAMIC_STORE);
-        textureIndex = shape.addVbo(new float[0], 2, Shape.DYNAMIC_STORE);
+        positionIndex = shape.addVbo(new float[0], 2, Shape.STATIC_STORE);
+        textureIndex = shape.addVbo(new float[0], 2, Shape.STATIC_STORE);
     }
 
-    private boolean shouldDrawText(){
-        return font != null && text != null && !text.trim().equals("");
+    private boolean shouldNotDrawText(){
+        return font == null || text == null || text.trim().equals("");
     }
 
     public void display(){
-        if (!shouldDrawText())
+        if (shouldNotDrawText())
             return;
 
         font.getTexture().bind();
+        shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
         super.draw();
-
-        /*if (this.strokeColor == -1){
-            renderer.noStroke();
-        } else {
-            renderer.stroke(this.strokeColor);
-        }
-
-        if (this.textColor != -1){
-            renderer.fill(this.textColor);
-        }
-
-        if (this.fontSize != -1){
-            renderer.textSize(this.fontSize);
-        }*/
     }
 
 
     public Text setFont(String fontName){
         this.font = Resources.getInstance().getResource(FontFace.class, fontName);
-        setTexture(font.getTexture());
+        switchToTextureMode(font.getTexture());
 
         computeRightUpPosition();
 
@@ -149,8 +139,18 @@ public class Text extends Renderer {
         return this.fontSize;
     }
 
+    public Text setColor(Color4f color){
+        this.color = color;
+        return this;
+    }
+
+    public Color4f getColor(){
+        return color;
+    }
+
+
     private void computeRightUpPosition(){
-        if (!shouldDrawText())
+        if (shouldNotDrawText())
             return;
 
         rectangleSize.x = 0;
@@ -300,6 +300,7 @@ public class Text extends Renderer {
     public Text createCopy(){
         Text text = new Text(windowInfo);
         text.setFont(this.font.getName())
+                .setColor(color.copy())
                 .setFontSize(fontSize)
                 .setPosition(new Vector2f(this.textPosition.x, this.textPosition.y))
                 .setReference(this.reference)

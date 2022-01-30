@@ -7,7 +7,6 @@ import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Scene;
@@ -26,8 +25,6 @@ public class Test2DScene extends Scene {
     private Vector2f rendererPosition;
     private Tweening slimeTextureTweening;
 
-    private TextureRenderer textRenderer;
-
     private Text text;
 
     public void init(String[] args) {
@@ -41,7 +38,7 @@ public class Test2DScene extends Scene {
         /// RENDERERS ///
 
         slimeRenderer = new Animation2DRenderer(mainContext.getWindow().getInfo(), "texture2D");
-        slimeRenderer.setTexture("slime");
+        slimeRenderer.switchToTextureMode("slime");
 
         Animator animator = new Animator();
         animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
@@ -70,12 +67,7 @@ public class Test2DScene extends Scene {
                 .setReference(EDirection.RightDown)
                 .setAlignment(ETextAlignment.Right)
                 .setPosition(new Vector2f(size.x, size.y))
-                .setText("Tes Sdqsdt5f\nHello\nwhat");
-
-        textRenderer = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
-        textRenderer.setTexture("arial");
-        textRenderer.setSizePix(500, 500);
-        textRenderer.setPosition(0, 0);
+                .setText("Test d'écrire du text c'est super cool");
     }
 
 
@@ -137,7 +129,6 @@ public class Test2DScene extends Scene {
         slimeRenderer.display();
 
         text.display();
-        //textRenderer.display();
 
         super.setAndDisplayRealScene();
     }
@@ -146,6 +137,7 @@ public class Test2DScene extends Scene {
     public void unload() {
         super.unload();
         slimeRenderer.unload();
-        textRenderer.unload();
+
+        text.unload();
     }
 }

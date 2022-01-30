@@ -42,6 +42,7 @@ public class Shape{
         this.shadManager = ShaderManager.getInstance();
         this.shaderId = this.shadManager.getIdShaderFromString(shaderName);
 
+
         verticesDraw = 0;
         info = new int[0];
         indicesSize = 0;

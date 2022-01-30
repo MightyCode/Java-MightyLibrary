@@ -55,7 +55,7 @@ public class Animation2DRenderer extends Renderer {
         animator.update();
 
         if (animator.animationChanged())
-            setTexture(animator.getCurrentAnimation().getData().getTextureName());
+            switchToTextureMode(animator.getCurrentAnimation().getData().getTextureName());
 
         if (animator.getCurrentAnimation().isCurrentFrameChanged()){
             this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());

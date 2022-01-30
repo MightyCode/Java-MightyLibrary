@@ -55,7 +55,7 @@ public class MainLoop {
 
         System.out.println("--Create ShaderManager");
         ShaderManager shaderManager = ShaderManager.getInstance();
-        shaderManager.forceShaderVersion(140);
+        //shaderManager.forceShaderVersion(140);
         System.out.println("--Create Resources");
         Resources resources = Resources.getInstance();
         System.out.println("--Create SceneManager");

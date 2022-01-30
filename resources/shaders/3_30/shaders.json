@@ -83,6 +83,14 @@
 			],
 			"mode" : ["none"],
 			"links": []
+		},
+		"coloredText" : {
+			"files" : [
+				"font/coloredTextV.glsl",
+				"font/coloredTextF.glsl"
+			],
+			"mode" : ["none"],
+			"links": ["color"]
 		}
 	}
 }
