@@ -6,32 +6,35 @@ import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
+import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Text extends Renderer {
+    private static final int NUMBER_INDICES = 4;
+    private static final int SIZE_INDICES = 6;
+    private static final int SIZE_COORDONATES = 8;
+
+
     private WindowInfo windowInfo;
-    private float scale;
+    private float fontSize;
     private float computedW, computedH;
+    private final int positionIndex;
+    private final int textureIndex;
 
     private FontFace font;
     private String text;
     private float size;
 
-    private Vector2f position, leftUpPosition;
+    private Vector2f textPosition, leftUpPosition;
     private EDirection align;
-
-
-    private List<Vector2f> mesh;
-    private List<Vector2f> textures;
-    private int[] indices;
 
     public Text(WindowInfo windowInfo) {
         super("texture2D", true, true);
         this.windowInfo = windowInfo;
 
-        scale = 1.0f;
+        fontSize = 10.0f;
 
         this.font = null;
         this.text = "";
@@ -39,24 +42,24 @@ public class Text extends Renderer {
         // Null let renderer's ancien setting for text
         this.align = EDirection.None;
 
-        this.position = new Vector2f(0, 0);
+        this.textPosition = new Vector2f(0, 0);
         this.leftUpPosition = new Vector2f(0, 0);
         this.size = 0;
 
-        mesh = new ArrayList<>();
-        textures = new ArrayList<>();
-
-        indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);
-        shape.setEbo(indices);
-        positionIndex = shape.addVbo(calculatePosition(), 2, Shape.STATIC_STORE);
-        textureIndex = shape.addVbo(texturePos(), 2, Shape.STATIC_STORE);
+        shape.setEbo(new int[0]);
+
+        positionIndex = shape.addVbo(new float[0], 2, Shape.DYNAMIC_STORE);
+        textureIndex = shape.addVbo(new float[0], 2, Shape.DYNAMIC_STORE);
     }
 
 
-    public void draw(){
-        if (font == null)
+    public void display(){
+        if (font == null || text == null || text.trim().equals(""))
             return;
+
+        font.getTexture().bind();
+        super.draw();
 
         /*if (this.strokeColor == -1){
             renderer.noStroke();
@@ -106,8 +109,9 @@ public class Text extends Renderer {
 
     public Text setFont(String fontName){
         this.font = Resources.getInstance().getResource(FontFace.class, fontName);
+        setTexture(font.getTexture());
 
-        computeRghtUpPosition();
+        computeRightUpPosition();
 
         return this;
     }
@@ -115,7 +119,7 @@ public class Text extends Renderer {
     public Text setText(String text){
         this.text = text;
 
-        this.computeRghtUpPosition();
+        this.computeRightUpPosition();
 
         return this;
     }
@@ -130,7 +134,7 @@ public class Text extends Renderer {
             return this;
 
         this.align = align;
-        this.computeRghtUpPosition();
+        this.computeRightUpPosition();
 
         return this;
     }
@@ -144,20 +148,31 @@ public class Text extends Renderer {
         if (position == null)
             return this;
 
-        this.position = position;
-        this.computeRghtUpPosition();
+        this.textPosition = position;
+        this.computeRightUpPosition();
 
         return this;
     }
 
 
     public Vector2f position() {
-        return this.position;
+        return this.textPosition;
     }
 
 
     public float size(){
         return this.size;
+    }
+
+    public Text setFontSize(float size){
+        this.fontSize = size;
+
+        computeRightUpPosition();
+        return this;
+    }
+
+    public float getFontSize(){
+        return this.fontSize;
     }
 
 
@@ -166,73 +181,98 @@ public class Text extends Renderer {
         return this.leftUpPosition;
     }
 
-    private void computeRghtUpPosition(){
+    private void computeRightUpPosition(){
         if (this.font == null)
             return;
 
-        mesh.clear();
-        textures.clear();
+        int charNumber = text.replace("\n", "").length();
+
+        int[] indices = new int[charNumber * 6];
+        float[] texturePosition = new float[charNumber * 8];
+        float[] position = new float[charNumber * 8];
 
         String[] lines = text.split("\n");
 
         float lineY = 0;
         float currentX = 0;
+        int charCount = 0;
+
+        Vector2f sizeTemp = new Vector2f();
+        Vector2f posTemp = new Vector2f();
+        Vector4f temp = new Vector4f();
 
         for (String line : lines) {
             for (int i = 0; i < line.length(); i++) {
                 char c = line.charAt(i);
+                indices[charCount * SIZE_INDICES] =     i * NUMBER_INDICES;
+                indices[charCount * SIZE_INDICES + 1] = i * NUMBER_INDICES + 1;
+                indices[charCount * SIZE_INDICES + 2] = i * NUMBER_INDICES + 2;
+                indices[charCount * SIZE_INDICES + 3] = i * NUMBER_INDICES + 2;
+                indices[charCount * SIZE_INDICES + 4] = i * NUMBER_INDICES ;
+                indices[charCount * SIZE_INDICES + 5] = i * NUMBER_INDICES + 3;
 
-                FontChar fontChar = font.getFontFile().getCharacter((int) c);
+                FontChar fontChar = font.getFontFile().getCharacter(c);
 
-                mesh.add(new Vector2f(
-                        currentX + fontChar.getxOffset(),
-                        lineY + fontChar.getyOffset()
-                ));
-                mesh.add(new Vector2f(
-                        currentX + fontChar.getxOffset() + fontChar.getWidth(),
-                        lineY + fontChar.getyOffset()
-                ));
-                mesh.add(new Vector2f(
-                        currentX + fontChar.getxOffset() + fontChar.getWidth(),
-                        lineY + fontChar.getyOffset() + fontChar.getHeight()
-                ));
-                mesh.add(new Vector2f(
-                        currentX + fontChar.getxOffset(),
-                        lineY + fontChar.getyOffset() + fontChar.getHeight()
-                ));
+                sizeTemp.x = fontChar.getWidth() * fontSize / windowInfo.getVirtualSizeRef().x * 2.0f - 1.0f;
 
-                textures.add(new Vector2f(
-                        fontChar.getxAtlas(),
-                        fontChar.getyAtlas()
-                ));
-                textures.add(new Vector2f(
-                        fontChar.getxAtlas() + fontChar.getWidthAtlas(),
-                        fontChar.getyAtlas()
-                ));
-                textures.add(new Vector2f(
-                        fontChar.getxAtlas() + fontChar.getWidthAtlas(),
-                        fontChar.getyAtlas() + fontChar.getHeightAtlas()
-                ));
-                textures.add(new Vector2f(
-                        fontChar.getxAtlas(),
-                        fontChar.getyAtlas() + fontChar.getHeightAtlas()
-                ));
+                sizeTemp.y = fontChar.getHeight() * fontSize / windowInfo.getVirtualSizeRef().y * 2.0f - 1.0f;
 
-                currentX += fontChar.getxAdvance();
+                posTemp.x = (currentX + fontChar.getxOffset() + textPosition.x) * 2.0f / windowInfo.getVirtualSizeRef().x;
+                posTemp.y = (lineY + fontChar.getyOffset() + textPosition.y) * 2.0f / windowInfo.getVirtualSizeRef().y;
+
+                System.out.println(sizeTemp.y + " " + posTemp.y);
+
+                temp.x = -1.0f + posTemp.x;
+                temp.y = sizeTemp.x + posTemp.x;
+                temp.z = 1.0f - posTemp.y;
+                temp.w = -sizeTemp.y - posTemp.y;
+
+                position[charCount * SIZE_COORDONATES] = temp.x;
+                position[charCount * SIZE_COORDONATES + 1] = temp.z;
+
+                position[charCount * SIZE_COORDONATES + 2] = temp.x;
+                position[charCount * SIZE_COORDONATES + 3] = temp.w;
+
+                position[charCount * SIZE_COORDONATES + 4] = temp.y;
+                position[charCount * SIZE_COORDONATES + 5] = temp.w;
+
+                position[charCount * SIZE_COORDONATES + 6] = temp.y;
+                position[charCount * SIZE_COORDONATES + 7] = temp.z;
+
+                temp.x = fontChar.getxAtlas();
+                temp.y = temp.x + fontChar.getWidthAtlas();
+                temp.z = fontChar.getyAtlas();
+                temp.w = temp.z + fontChar.getHeightAtlas();
+
+                texturePosition[charCount * SIZE_COORDONATES] = temp.x;
+                texturePosition[charCount * SIZE_COORDONATES + 1] = temp.z;
+
+                texturePosition[charCount * SIZE_COORDONATES + 2] = temp.x;
+                texturePosition[charCount * SIZE_COORDONATES + 3] = temp.w;
+
+                texturePosition[charCount * SIZE_COORDONATES + 4] = temp.y;
+                texturePosition[charCount * SIZE_COORDONATES + 5] = temp.w;
+
+                texturePosition[charCount * SIZE_COORDONATES + 6] = temp.y;
+                texturePosition[charCount * SIZE_COORDONATES + 7] = temp.z;
+
+                currentX += fontChar.getxAdvance() * fontSize;
+
+                ++charCount;
             }
 
             size = Math.max(0, currentX);
 
             currentX = 0;
-            lineY += font.getFontFile().getLineHeight();
+            lineY += font.getFontFile().getLineHeight() * fontSize;
         }
 
+        shape.setEbo(indices);
+        shape.updateVbo(texturePosition, textureIndex);
+        shape.updateVbo(position, positionIndex);
 
-        //this.sizeX = textWidth(this.text);
-
-
-        this.leftUpPosition.x = this.position.x;
-        this.leftUpPosition.y = this.position.y;
+        this.leftUpPosition.x = this.textPosition.x;
+        this.leftUpPosition.y = this.textPosition.y;
 
         switch(this.align){
             case None:
@@ -264,12 +304,12 @@ public class Text extends Renderer {
 
     public Text createCopy(){
         Text text = new Text(windowInfo);
-        text.setFont("arial")
-                .setText(this.text)
-                .setPosition(new Vector2f(this.position.x, this.position.y))
-                .setAlign(this.align);
+        text.setFont(this.font.getName())
+                .setFontSize(fontSize)
+                .setPosition(new Vector2f(this.textPosition.x, this.textPosition.y))
+                .setAlign(this.align)
+                .setText(this.text);
 
         return text;
     }
-
 }

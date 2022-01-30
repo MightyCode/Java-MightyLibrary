@@ -57,7 +57,6 @@ public class FontFile {
                                     Integer.parseInt(tempPadding[2]),
                                     Integer.parseInt(tempPadding[3]));
 
-
             lineHeight = (float) (Integer.parseInt(values.get("lineHeight")) - padding.x - padding.z) / size;
 
             atlasWidth = Integer.parseInt(values.get("scaleW"));

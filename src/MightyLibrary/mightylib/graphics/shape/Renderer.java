@@ -97,8 +97,14 @@ public class Renderer{
 
 
     public void setTexture(String name){
+
+        setTexture(Resources.getInstance().getResource(Texture.class, name));
+
+    }
+
+    public void setTexture(Texture texture){
         displayMode = TEXTURE;
-        texture = Resources.getInstance().getResource(Texture.class, name);
+        this.texture = texture;
         shape.enableVbo(1);
     }
 

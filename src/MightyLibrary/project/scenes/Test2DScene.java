@@ -62,12 +62,13 @@ public class Test2DScene extends Scene {
         text = new Text(mainContext.getWindow().getInfo());
 
         text.setFont("arial")
-                .setText("Test")
-                .setPosition(new Vector2f(300, 300));
+                .setFontSize(60)
+                .setPosition(new Vector2f(200, 400))
+                .setText("TesSdqsdt");
 
         textRenderer = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
         textRenderer.setTexture("arial");
-        textRenderer.setSizePix( 150, 150);
+        textRenderer.setSizePix(500, 500);
         textRenderer.setPosition(0, 0);
     }
 
@@ -129,7 +130,7 @@ public class Test2DScene extends Scene {
 
         slimeRenderer.display();
 
-        text.draw();
+        text.display();
         textRenderer.display();
 
         super.setAndDisplayRealScene();
