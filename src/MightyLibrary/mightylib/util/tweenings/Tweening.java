@@ -1,9 +1,9 @@
 package MightyLibrary.mightylib.util.tweenings;
 
 import MightyLibrary.mightylib.util.Timer;
-import MightyLibrary.mightylib.util.tweenings.types.*;
+import MightyLibrary.mightylib.util.tweenings.tweeningmath.*;
 
-public class Tweening {
+public abstract class Tweening<T> {
     /**
      *
      * @param type Type of extrapolation
@@ -68,13 +68,7 @@ public class Tweening {
     private ETweeningBehaviour behaviour;
     private ETweeningOption option;
 
-    private Timer timer;
-
-    private float beginningValue = 0;
-    private float endingValue = 0;
-    private float valuesRange = 0;
-
-    private float extrapolateValue = 0;
+    private final Timer timer;
 
     private boolean reversed = false;
     private boolean mirrored = false;
@@ -82,6 +76,8 @@ public class Tweening {
     private Float additionalValue1;
     private Float additionalValue2;
 
+    protected float timeValueForFrame;
+    protected boolean inverseThisFrame;
 
     public Tweening(){
         type = ETweeningType.Linear;
@@ -90,19 +86,12 @@ public class Tweening {
 
         timer = new Timer();
 
-        beginningValue = 0.f;
-        endingValue = 0.f;
-        valuesRange = 0.f;
-
-
         additionalValue1 = null;
         additionalValue2 = null;
-
-        extrapolateValue = 0.f;
     }
 
 
-    public void update(){
+    protected void updateBase(){
         this.timer.update();
 
         if (this.timer.isFinished()){
@@ -133,27 +122,36 @@ public class Tweening {
             }
         }
 
-        float tmpTimeValue = this.timer.getElapsedTime();
-        float beginValue = this.beginningValue;
-        float rangeValue = this.valuesRange;
+        timeValueForFrame = this.timer.getElapsedTime();
 
         if (this.reversed){
-            tmpTimeValue = this.timer.getAimedTime() - tmpTimeValue;
+            timeValueForFrame = this.timer.getAimedTime() - timeValueForFrame;
         }
 
-        if (this.mirrored){
-            beginValue = this.endingValue;
-            rangeValue = -this.valuesRange;
-        }
+        inverseThisFrame = this.mirrored;
+    }
 
+    protected float aimedTime(){
+        return timer.getAimedTime();
+    }
 
+    public abstract void update();
+    public abstract Tweening<T> initTwoValue(float time, T beginningValue, T endValue);
 
-        extrapolateValue = Tweening.Evaluate(this.type, this.behaviour, tmpTimeValue, beginValue, rangeValue, this.timer.getAimedTime(),
+    public abstract Tweening<T> initRangeValue(float time, T beginningValue, T range);
+    public abstract T value();
+
+    protected void startTimerAfterInit(float time){
+        this.timer.start(time);
+    }
+
+    protected float evaluate(float beginningValue, float valuesRange){
+        return Tweening.Evaluate(this.type, this.behaviour, timeValueForFrame, beginningValue, valuesRange, this.timer.getAimedTime(),
                 additionalValue1, additionalValue2);
     }
 
 
-    public Tweening setTweeningOption(ETweeningOption tweeningOption){
+    public Tweening<T> setTweeningOption(ETweeningOption tweeningOption){
         this.option = tweeningOption;
 
         this.timer.setElapsedTimeCapped((
@@ -165,33 +163,14 @@ public class Tweening {
     }
 
 
-    public Tweening setTweeningValues(ETweeningType type, ETweeningBehaviour behaviour){
+    public Tweening<T> setTweeningValues(ETweeningType type, ETweeningBehaviour behaviour){
         this.type = type;
         this.behaviour = behaviour;
 
         return this;
     }
 
-
-    public Tweening initTwoValue(float time, float beginningValue, float endValue){
-        return this.initRangeValue(time, beginningValue, endValue - beginningValue);
-    }
-
-
-    public Tweening initRangeValue(float time, float beginningValue, float range){
-        this.timer.start(time);
-        this.beginningValue = beginningValue;
-        this.valuesRange = range;
-
-        this.endingValue = range + beginningValue;
-
-        this.extrapolateValue = this.beginningValue;
-
-        return this;
-    }
-
-
-    public Tweening setAdditionnalArguments(Float arg1, Float arg2){
+    public Tweening<T> setAdditionnalArguments(Float arg1, Float arg2){
         this.additionalValue1 = arg1;
         this.additionalValue2 = arg2;
 
@@ -199,7 +178,7 @@ public class Tweening {
     }
 
 
-    public Tweening initRandomTweening(){
+    public Tweening<T> initRandomTweening(){
         this.timer.forceRandomTime();
 
         if (this.option == ETweeningOption.DirectMirrored
@@ -217,11 +196,6 @@ public class Tweening {
         return this;
     }
 
-
-    public float value (){
-        return this.extrapolateValue;
-    }
-
     // Not is in infinityLoop
     public boolean finished(){
         if (this.option == ETweeningOption.Direct){
@@ -233,7 +207,6 @@ public class Tweening {
         }
         return false;
     }
-
 
     public float addArg1(){
         return this.additionalValue1;

@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util.tweenings.types;
+package MightyLibrary.mightylib.util.tweenings.tweeningmath;
 
 import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
 

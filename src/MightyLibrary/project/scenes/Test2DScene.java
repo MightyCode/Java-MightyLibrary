@@ -15,6 +15,8 @@ import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.util.tweenings.ETweeningType;
 import MightyLibrary.mightylib.util.tweenings.Tweening;
+import MightyLibrary.mightylib.util.tweenings.type.FloatTweening;
+import MightyLibrary.mightylib.util.tweenings.type.Vector2fTweening;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -23,7 +25,7 @@ import org.joml.Vector3f;
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
     private Vector2f rendererPosition;
-    private Tweening slimeTextureTweening;
+    private Vector2fTweening slimeTextureTweening;
 
     private Text text;
 
@@ -51,10 +53,10 @@ public class Test2DScene extends Scene {
         rendererPosition.x = (14 * scale);
         rendererPosition.y = (22 * scale);
 
-        slimeTextureTweening = new Tweening();
+        slimeTextureTweening = new Vector2fTweening();
 
         slimeTextureTweening.setTweeningValues(ETweeningType.Quintic, ETweeningBehaviour.InOut)
-                .initTwoValue(1, 0, 150)
+                .initTwoValue(1, new Vector2f(0, 0), new Vector2f(150, -150))
                 .setTweeningOption(ETweeningOption.LoopReversed).setAdditionnalArguments(3f,  null);
 
 
@@ -116,7 +118,8 @@ public class Test2DScene extends Scene {
 
         slimeTextureTweening.update();
         float scale = 720.f / 30.f;
-        rendererPosition.x = (14 * scale) + slimeTextureTweening.value();
+        rendererPosition.x = (14 * scale) + slimeTextureTweening.value().x;
+        rendererPosition.y = (22 * scale) + slimeTextureTweening.value().y;
 
         slimeRenderer.update();
     }
