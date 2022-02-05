@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.util.math;
 
 public enum EShapeType {
+    Undefined,
     Square,
     Rectangle,
     Triangle,
@@ -11,5 +12,6 @@ public enum EShapeType {
     RectangularBasedPyramid,
     CircularBasedPyramid,
     Sphere,
-    Polygon3D
+    Polygon3D,
+    Bounded
 }
