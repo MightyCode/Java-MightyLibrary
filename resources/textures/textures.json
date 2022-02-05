@@ -3,9 +3,7 @@
 		"enemies" : {
 		},
 		"fonts" : {
-			"test-bitmap" : "test.png",
-			"04b-bitmap" : "04b.png",
-			"pixel1-bitmap" : "pixelfont1.png"
+			"arial" : "arial.png"
 		},
 		 "gui": {
 			 "button-unhover" : "GUIButton.png",
@@ -20,7 +18,8 @@
 		"world" : {
 			"container" : "container.jpg",
 			"water1" : "water1.jpg",
-			"stall" : "stallTexture.png"
+			"stall" : "stallTexture.png",
+			"slime" : "slime.png"
 		},
 		"shaderEffects" : {
 			"dispMap1" : "displacementMap1.png"

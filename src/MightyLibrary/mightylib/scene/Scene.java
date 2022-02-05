@@ -1,41 +1,75 @@
 package MightyLibrary.mightylib.scene;
 
-import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.main.Window;
-import MightyLibrary.mightylib.render.shape._2D.VirtualSceneRenderer;
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.main.Context;
+import MightyLibrary.mightylib.main.ContextManager;
+import MightyLibrary.mightylib.graphics.shape._2D.VirtualSceneRenderer;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import static org.lwjgl.opengl.GL11.*;
 
 public class Scene {
-    protected ManagerContainer manContainer;
-    protected Window window;
-    protected VirtualSceneRenderer scRenderer;
+    protected final Resources resources;
+    protected final ShaderManager shaderManager;
+    protected final Context mainContext;
+    protected Camera mainCamera;
 
-    public Scene(){
-        this.manContainer = ManagerContainer.getInstance();
-        window = manContainer.window;
-        scRenderer = new VirtualSceneRenderer();
+    protected SceneManagerInterface sceneManagerInterface;
+    private VirtualSceneRenderer scRenderer;
+
+    public Scene(CameraCreationInfo info){
+        resources = Resources.getInstance();
+        shaderManager = ShaderManager.getInstance();
+        mainContext = ContextManager.getInstance().getMainContext();
+
+        if (info == null){
+            CameraCreationInfo cci = new CameraCreationInfo();
+            cci.fov = 120f;
+            cci.initialPosition = new Vector3f(0, 0, 0);
+        }
+
+        mainCamera = mainContext.createCamera(info);
+        sceneManagerInterface = null;
     }
 
+    public Scene(){
+        this(null);
+    }
 
-    public void init(String[] args){}
+    public void init(String[] args){
+        shaderManager.reloadProjection(mainCamera);
+        dispose();
 
+        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo());
+        scRenderer.setTexturePosition(new Vector4f(0, 1, 1, 0));
+        scRenderer.updateShape();
+    }
+
+    public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface){
+        this.sceneManagerInterface = sceneManagerInterface;
+    }
 
     public void update(){}
+
+    public void dispose(){
+        shaderManager.dispose(mainCamera);
+    }
 
 
     public void display(){}
 
 
-    public void setVirtualScene(){
+    protected void setVirtualScene(){
         scRenderer.bindFrameBuff();
-        manContainer.window.setVirtualViewport();
+        mainContext.getWindow().setVirtualViewport();
     }
 
-    public void setAndDisplayRealScene(){
+    protected void setAndDisplayRealScene(){
         scRenderer.unbindFrameBuff();
-        manContainer.window.setRealViewport();
+        mainContext.getWindow().setRealViewport();
 
         scRenderer.display();
     }
@@ -48,8 +82,6 @@ public class Scene {
     protected void setClearColor(float color1, float color2, float color3){                 glClearColor(color1, color2, color3, 1f);}
     protected void setClearColor(float color, float alpha){                                 glClearColor(color, color, color, alpha);}
     protected void setClearColor(float color){                                              glClearColor(color, color, color, 1f);}
-
-    public void setScreen(String newScreen, String args){}
 
     public void unload() {
         scRenderer.unload();

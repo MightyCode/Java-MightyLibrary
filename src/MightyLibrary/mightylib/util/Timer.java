@@ -1,40 +1,109 @@
 package MightyLibrary.mightylib.util;
 
+import MightyLibrary.mightylib.main.GameTime;
+
 public class Timer {
     /**
      * Time of activation.
      */
-    private long startTime;
+    private float aimedTime;
+    private float elapsedTime;
 
-    /**
-     * Class constructor.
-     */
+    private boolean stopped;
+    private boolean finished;
+    private boolean started;
+
+    private boolean elapsedTimeCapped;
+
+
     public Timer() {
-        startTime = System.nanoTime();
+        aimedTime = 0;
+        elapsedTime = 0;
+
+        stopped = false;
+        finished = false;
+        started = false;
+
+        elapsedTimeCapped = true;
     }
 
-    /**
-     * Reset Timer.
-     */
-    public void reset() {
-        startTime = System.nanoTime();
+
+    public void update(){
+        if (!stopped && !finished && started){
+            elapsedTime += GameTime.DeltaTime();
+
+            if (elapsedTime >= aimedTime){
+                if (elapsedTimeCapped)
+                    this.elapsedTime = this.aimedTime;
+
+                finished = true;
+                started = false;
+            }
+        }
     }
 
-    /**
-     * Get the time between startTime and now.
-     *
-     * @return startTime - now
-     */
-    public long getDuration() {
-        return System.nanoTime() - startTime;
+
+    public void start(float aimedTime){
+        this.aimedTime = aimedTime;
+        resetStart();
     }
 
-    /**
-     * Get time of activation.
-     *
-     * @return startTime
-     */
-    public long getStartTime() {
-        return startTime;
+
+    public void resetStart() {
+        stopped = false;
+        finished = false;
+        started = true;
+        elapsedTime = 0;
+    }
+
+
+    public void resetStop() {
+        resetStart();
+        stop();
+    }
+
+
+    public void stop() {
+        stopped = true;
+    }
+
+
+    public void restart() {
+        stopped = false;
+    }
+
+
+    public boolean isStopped(){
+        return stopped;
+    }
+
+
+    public boolean isFinished(){
+        return finished;
+    }
+
+
+    public float getElapsedTime(){
+        return elapsedTime;
+    }
+
+
+    public float getAimedTime(){ return aimedTime; }
+
+
+    public void forceTime(float newElaspedTime){
+        if (this.elapsedTimeCapped && elapsedTime > aimedTime){
+            elapsedTime = aimedTime;
+        } else {
+            elapsedTime = newElaspedTime;
+        }
+    }
+
+    public void forceRandomTime(){
+        elapsedTime = (float)Math.random() * this.aimedTime;
+    }
+
+    public void setElapsedTimeCapped(boolean value){
+        elapsedTimeCapped = value;
     }
 }

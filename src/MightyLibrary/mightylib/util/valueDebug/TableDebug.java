@@ -8,7 +8,7 @@ public class TableDebug {
 
     public static void printPartd(double[] table, int start, int size){
         if (!Main.admin) return;
-        for(int i = start; i < size; i++){
+        for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");
         }
@@ -16,7 +16,7 @@ public class TableDebug {
 
     public static void printPartf(float[] table, int start, int size){
         if (!Main.admin) return;
-        for(int i = start; i < size; i++){
+        for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");
         }
@@ -24,7 +24,7 @@ public class TableDebug {
 
     public static void printParti(int[] table, int start, int size){
         if (!Main.admin) return;
-        for(int i = start; i < size; i++){
+        for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");
         }
@@ -32,7 +32,7 @@ public class TableDebug {
 
     public static void printPartb(boolean[] table, int start, int size){
         if (!Main.admin) return;
-        for(int i = start; i < size; i++){
+        for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");
         }

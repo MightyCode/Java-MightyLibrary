@@ -1,7 +1,8 @@
 package MightyLibrary.mightylib.scene;
 
-import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.util.math.Math;
+import MightyLibrary.mightylib.inputs.MouseManager;
+import MightyLibrary.mightylib.main.WindowInfo;
+import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.lwjgl.BufferUtils;
@@ -10,10 +11,13 @@ import java.nio.FloatBuffer;
 
 
 public class Camera {
-    private ManagerContainer manContainer;
-    private Matrix4f projection, view;
-    public Vector3f camPos;
-    private Vector3f camFront, camUp;
+    private final WindowInfo windowInfo;
+    private final MouseManager mouseManager;
+
+    private final Matrix4f projection, view;
+    private final Vector3f camPos;
+
+    private final Vector3f camFront, camUp;
     private FloatBuffer projectionBuffer, viewBuffer;
     private boolean lockViewCursor = false;
 
@@ -24,8 +28,11 @@ public class Camera {
     private float yaw = 180.0f, pitch = 0.0f;
     private float yawCos, yawSin;
 
-    public Camera(float fov, Vector3f pos){
-        this.manContainer = ManagerContainer.getInstance();
+    public Camera(WindowInfo windowInfo,  MouseManager mouseManager, float fov, Vector3f pos){
+        this.windowInfo = windowInfo;
+        this.mouseManager = mouseManager;
+
+        camPos = new Vector3f();
 
         projection = new Matrix4f();
         view = new Matrix4f();
@@ -42,9 +49,10 @@ public class Camera {
         updateView();
     }
 
+
     public void setToCursor(){
-        float offsetX = (manContainer.mouseManager.posX() - manContainer.mouseManager.oldPosX()) * sensitivity;
-        float offsetY = (-manContainer.mouseManager.posY() + manContainer.mouseManager.oldPosY()) * sensitivity;
+        float offsetX = (mouseManager.posX() - mouseManager.oldPosX()) * sensitivity;
+        float offsetY = (-mouseManager.posY() + mouseManager.oldPosY()) * sensitivity;
 
         yaw += offsetX;
         pitch += offsetY;
@@ -57,14 +65,15 @@ public class Camera {
         if(pitch < -89.0f)
             pitch = -89.0f;
 
-        yawCos = (float)java.lang.Math.cos(Math.rads(yaw));
-        yawSin = (float)java.lang.Math.sin(Math.rads(yaw));
+        yawCos = (float)java.lang.Math.cos(MightyMath.rads(yaw));
+        yawSin = (float)java.lang.Math.sin(MightyMath.rads(yaw));
 
-        camFront.x = (float)(java.lang.Math.cos(Math.rads(pitch)) * yawCos);
-        camFront.y = (float)(java.lang.Math.sin(Math.rads(pitch)));
-        camFront.z = (float)(java.lang.Math.cos(Math.rads(pitch)) * java.lang.Math.sin(Math.rads(yaw)));
+        camFront.x = (float)(java.lang.Math.cos(MightyMath.rads(pitch)) * yawCos);
+        camFront.y = (float)(java.lang.Math.sin(MightyMath.rads(pitch)));
+        camFront.z = (float)(java.lang.Math.cos(MightyMath.rads(pitch)) * java.lang.Math.sin(MightyMath.rads(yaw)));
         camFront.normalize();
     }
+
 
     public void updateView(){
         if (!lockViewCursor) {
@@ -76,39 +85,41 @@ public class Camera {
         viewBuffer = view.get(viewBuffer);
     }
 
-    public Camera setLockViewCursor(boolean state){
+    public void setLockViewCursor(boolean state){
         lockViewCursor = state;
-        return this;
     }
 
-    public Camera invertLockViewCursor(){
-        return setLockViewCursor(!lockViewCursor);
+
+    public void invertLockViewCursor(){
+        setLockViewCursor(!lockViewCursor);
     }
 
-    public Camera setViewAngle(float fov){
-        projection.perspective(fov, manContainer.window.ratio, 0.01f, 1000f);
+
+    public void setViewAngle(float fov){
+        projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
+        //projection.ortho(0, 800, 600, 0 , -1, 1);
+
         projectionBuffer = projection.get(projectionBuffer);
-        return this;
     }
 
-    public Camera setPos(Vector3f newPos){
-        camPos = newPos;
-        return this;
+    public Vector3f getCamPosRef() { return camPos; }
+    public Vector3f getCamPosCopy() { return new Vector3f(camPos); }
+    public void setPos(Vector3f newPos){
+        camPos.x = newPos.x;
+        camPos.y = newPos.y;
+        camPos.z = newPos.z;
     }
 
-    public Camera setX(float x){
+    public void setX(float x){
         camPos.x = x;
-        return this;
     }
 
-    public Camera setY(float y){
+    public void setY(float y){
         camPos.y = y;
-        return this;
     }
 
-    public Camera setZ(float z){
+    public void setZ(float z){
         camPos.z = z;
-        return this;
     }
 
     public FloatBuffer getProjection(){
@@ -120,15 +131,13 @@ public class Camera {
     }
 
 
-    public Camera speedAngX(float speed){
+    public void speedAngX(float speed){
         camPos.x += speed * yawSin;
         camPos.z += speed * -yawCos;
-        return this;
     }
 
-    public Camera speedAngZ(float speed){
+    public void speedAngZ(float speed){
         camPos.x += speed * -yawCos;
         camPos.z += speed * -yawSin;
-        return this;
     }
 }

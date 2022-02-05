@@ -10,15 +10,13 @@ public class Main {
 
     public static boolean admin;
 
-    public static MainLoop mainLoop;
-
     /**
      * Run the game.
      */
     public static void main(String[] args) {
         admin = true;
 
-        mainLoop = new MainLoop();
+        MainLoop mainLoop = new MainLoop();
         mainLoop.run();
     }
 }

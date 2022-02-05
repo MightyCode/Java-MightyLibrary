@@ -1,61 +1,63 @@
 package MightyLibrary.mightylib.scene;
 
+import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.inputs.KeyboardManager;
-import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.main.Context;
+import MightyLibrary.mightylib.main.ContextManager;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
-import MightyLibrary.mightylib.render.shader.ShaderManager;
-import MightyLibrary.mightylib.render.texture.TextureManager;
-import MightyLibrary.mightylib.main.ManagerContainer;
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.commands.Commands;
-import org.joml.Vector3f;
-
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F1;
 
 public class SceneManager {
-    private ManagerContainer manContainer;
-
+    private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
-    private boolean wantChange;
-    private String[] changeArgs;
-    private Scene newScene;
 
-    private MainLoop loop;
+    private final MainLoop loop;
 
-    private Commands commands;
+    private final Commands commands;
 
     public SceneManager(MainLoop mLoop){
         this.loop = mLoop;
-        manContainer = ManagerContainer.getInstance();
 
-        manContainer.setManager(this);
-        manContainer.setManager(new MouseManager()).setManager( new KeyboardManager());
-        manContainer.setManager(new InputManager(this.manContainer.keyManager, this. manContainer.mouseManager, new int[][]{{78, 89},{0, 0}}));
-
-        manContainer.setManager(new Camera(120f, new Vector3f(0.0f, 0.0f, 10.0f)));
-
-        manContainer.setManager(new ShaderManager(manContainer.cam));
-
-        manContainer.setManager(new TextureManager());
-        // Load every texture
-
-        setNewScene(new Scene(), new String[]{""});
+        sceneInterface = new SceneManagerInterface();
 
         commands  = new Commands();
+    }
+
+
+    public void init(Scene firstScene, String[] firstArguments){
+        System.out.println("--Init SceneManager");
+        ShaderManager.getInstance().load();
+        Resources.getInstance().load();
+
+        sceneInterface.setNewScene(firstScene, firstArguments);
+
         changeScene();
     }
 
 
     public void update(){
         // Command
-        if (Main.admin) if(manContainer.keyManager.keyPressed(GLFW_KEY_F1) || commands.isWriteCommands) commands.writeCommand();
+        if (Main.admin){
+            updateMain();
 
-        if(wantChange)  changeScene();
+        }
+
+        if(sceneInterface.isWantingChange())  changeScene();
 
         currentScene.update();
+    }
+
+
+    private void updateMain(){
+        Context mainContext = ContextManager.getInstance().getMainContext();
+        InputManager mainInputManager = mainContext.getInputManager();
+
+        if (mainInputManager.inputPressed(InputManager.COMMAND) || commands.isWriteCommands) commands.writeCommand();
+
+        if (mainInputManager.inputPressed(InputManager.RELOAD_TEXTURE)) Resources.getInstance().reload(Texture.class);
     }
 
 
@@ -65,30 +67,28 @@ public class SceneManager {
 
 
     public void dispose(){
-        manContainer.shadManager.dispose();
-        manContainer.inpManager.dispose();
+        ContextManager.getInstance().dispose();
+        currentScene.dispose();
     }
 
-
-    public void setNewScene(Scene scene, String[] args){
-        this.newScene = scene;
-        this.changeArgs = args;
-        this.wantChange = true;
-    }
 
 
     private void changeScene(){
         if (Main.admin) commands.removeSpecificCommand();
 
-        if(currentScene != null) currentScene.unload();
+        if(currentScene != null){
+            System.out.println("--Unload scene" + currentScene.getClass().getName());
+            currentScene.unload();
+        }
 
         // Assign the new scene
-        currentScene = newScene;
+        currentScene = sceneInterface.getNewScene();
         assert currentScene != null;
-        currentScene.init(changeArgs);
+        currentScene.setSceneManagerInterface(sceneInterface);
+        System.out.println("--Init scene" + currentScene.getClass().getName());
+        currentScene.init(sceneInterface.getChangeArgs());
 
-        wantChange = false;
-        newScene = null;
+        sceneInterface.reset();
     }
 
 
@@ -98,8 +98,12 @@ public class SceneManager {
 
 
     public void unload(){
-        currentScene.unload();
-        manContainer.shadManager.unload();
-        manContainer.texManager.unload();
+        System.out.println("--Unload SceneManager");
+        if (currentScene != null){
+            System.out.println("--Unload scene" + currentScene.getClass().getName());
+            currentScene.unload();
+        }
+        ShaderManager.getInstance().unload();
+        Resources.getInstance().unload();
     }
 }

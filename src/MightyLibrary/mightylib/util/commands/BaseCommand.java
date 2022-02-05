@@ -4,7 +4,7 @@ public abstract class BaseCommand {
     public static final int GENERAL_COMMAND = 0;
     public static final int SPECIFIC_COMMAND = 1;
 
-    private String commandName;
+    private final String commandName;
     private String range;
 
     public BaseCommand (String commandName, int range){

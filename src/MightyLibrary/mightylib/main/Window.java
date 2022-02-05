@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.main;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.*;
+import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
 
 
@@ -10,7 +11,6 @@ import java.nio.IntBuffer;
 import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.opengl.GL.createCapabilities;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
@@ -24,30 +24,40 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author MightyCode
  * @version of game : 2.2
  */
-public class Window{
+public class Window {
+    private final WindowInfo info;
 
-    public boolean windowCreated;
+    public WindowInfo getInfo() { return info; }
 
-    public long windowId;
-    public Vector2i size;
-    public float ratio;
-    public Vector2i virtualSize;
+    Window(){
+        info = new WindowInfo();
+        info.windowId = 0;
 
-    public String windowName;
+        info.size = new Vector2i(1, 1);
+        info.ratio = 1;
+        info.virtualSize = new Vector2i(1,1);
+        info.virtualRatio = 1;
 
-    public boolean fullscreen;
+        info.windowName = "";
+        info.fullscreen = false;
+    }
 
+    Window(WindowCreationInfo wci){
+        info = new WindowInfo();
+        info.windowId = 0;
 
-    public Window(){
-        windowCreated = false;
-        windowId = 0;
-        size = new Vector2i(1, 1);
-        virtualSize = new Vector2i(1,1);
-        windowName = "";
-        fullscreen = false;
+        info.size = new Vector2i(wci.size);
+        info.ratio = (float) info.size.x / (float) info.size.y;
+        info.virtualSize = new Vector2i(wci.virtualSize);
+        info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
+
+        info.windowName = wci.windowName;
+        info.fullscreen = wci.fullscreen;
     }
 
     public void createNewWindow(){
+        if (info.windowId != 0) destroyWindow();
+
         // Configure GLFW for this window
         glfwDefaultWindowHints(); // optional, the current window hints are already the default
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
@@ -56,13 +66,13 @@ public class Window{
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        if (fullscreen) windowId = glfwCreateWindow(size.x, size.y, windowName, glfwGetPrimaryMonitor(), NULL);
-        else            windowId = glfwCreateWindow(size.x, size.y, windowName, NULL, NULL);
+        if (info.fullscreen) info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, glfwGetPrimaryMonitor(), NULL);
+        else                 info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
 
 
-        System.out.println("\nWindow with id : "+ windowId +" created");
+        System.out.println("\nWindow with id : "+ info.windowId +" created");
 
-        if (windowId == NULL) {
+        if (info.windowId == NULL) {
             System.out.println("Window won't created");
         }
 
@@ -72,28 +82,31 @@ public class Window{
             IntBuffer pHeight = stack.mallocInt(1); // int*
 
             // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(windowId, pWidth, pHeight);
+            glfwGetWindowSize(info.windowId, pWidth, pHeight);
 
             // Get the resolution of the primary monitor
-            GLFWVidMode vidmode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            GLFWVidMode videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
             // Center the window
             glfwSetWindowPos(
-                    windowId,
-                    (Objects.requireNonNull(vidmode).width() - pWidth.get(0)) / 2,
-                    (vidmode.height() - pHeight.get(0)) / 2
+                    info.windowId,
+                    (Objects.requireNonNull(videoMode).width() - pWidth.get(0)) / 2,
+                    (videoMode.height() - pHeight.get(0)) / 2
             );
-        } // the stack frame is popped automatically
+            // the stack frame is popped automatically
+        } catch (Error e){
+            info.windowId = 0;
+        }
 
         // Make the OpenGL context current
-        glfwMakeContextCurrent(windowId);
+        bindWindow();
 
         // Make the window visible
-        glfwShowWindow(windowId);
-        createCapabilities();
+        glfwShowWindow(info.windowId);
+        GL.createCapabilities();
         glfwSwapInterval(0);
 
-        setViewPort(size.x, size.y);
+        setViewPort(info.size.x, info.size.y);
 
         glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
@@ -103,98 +116,108 @@ public class Window{
 
         // Enable antiAliasing
         glEnable(GL_MULTISAMPLE);
-        windowCreated = true;
     }
 
 
     public boolean wantExit(){
-        return glfwWindowShouldClose(windowId) && windowCreated;
+        return glfwWindowShouldClose(info.windowId) && info.isWindowCreated();
     }
 
 
     public void dispose(){
-        glfwSwapBuffers(windowId);
+        glfwSwapBuffers(info.windowId);
         glfwPollEvents();
     }
 
 
     public void setTitle(String title){
-        if (windowCreated){
-            windowName = title;
-            glfwSetWindowTitle(windowId, windowName);
+        if (info.isWindowCreated()){
+            info.windowName = title;
+            glfwSetWindowTitle(info.windowId, info.windowName);
         }
 
     }
 
     public void setFullscreen(boolean fullscreen){
-        if (windowCreated) {
-            if (this.fullscreen != fullscreen){
+        if (info.isWindowCreated()) {
+            if (info.fullscreen != fullscreen){
                 destroyWindow();
-
             }
         }
 
-        this.fullscreen = fullscreen;
-        if (windowCreated) createNewWindow();
+        info.fullscreen = fullscreen;
+        if (info.isWindowCreated()) createNewWindow();
     }
+
+
+    public void bindWindow() {
+        glfwMakeContextCurrent(info.windowId);
+    }
+
 
     /**
      * Destroy the current window.
      */
     public void destroyWindow(){
-        if (windowCreated) {
-            glfwDestroyWindow(windowId);
-            System.out.println("Window with id : " + windowId + " deleted");
-            windowId = 0;
+        if (info.isWindowCreated()) {
+            glfwDestroyWindow(info.windowId);
+            System.out.println("Window with id : " + info.windowId + " deleted");
+            info.windowId = 0;
         }
     }
 
 
-    public Window setSize(Vector2f size){
-        return setSize(size.x, size.y);
+    public void setSize(Vector2f size){
+        setSize(size.x, size.y);
     }
-    public Window setSize(float width, float height){
-        return setSize((int)width, (int)height);
+    public void setSize(float width, float height){
+        setSize((int)width, (int)height);
     }
-    public Window setWidth(int width){
-        return setSize(width, size.y);
+    public void setWidth(int width){
+        setSize(width, info.size.y);
     }
-    public Window setHeight(int height){
-        return setSize(size.x, height);
-    }
-
-
-    public Window setSize(int width, int height){
-        size.x = width;
-        size.y = height;
-        this.ratio = (float) this.size.x / (float) this.size.y;
-        if (windowCreated)
-            glfwSetWindowSize(windowId, size.x, size.y);
-        return this;
+    public void setHeight(int height){
+        setSize(info.size.x, height);
     }
 
 
-    public Window setVirtualSize(int virtualWidth, int virtualHeight){
-        virtualSize.x = virtualWidth;
-        virtualSize.y = virtualHeight;
-        return this;
-    }
+    public void setSize(int width, int height){
+        info.size.x = width;
+        info.size.y = height;
+        info.ratio = (float) info.size.x / (float) info.size.y;
+        if (info.isWindowCreated())
+            glfwSetWindowSize(info.windowId, info.size.x, info.size.y);
 
-    public Window setVirtualViewport(){
-        setViewPort(virtualSize.x, virtualSize.y);
-        return this;
-    }
-
-
-    public Window setRealViewport(){
-        setViewPort(size.x, size.y);
-        return this;
     }
 
 
-    public Window forceRatio(float ratio){
-        this.ratio = ratio;
-        return this;
+    public void setVirtualSize(int virtualWidth, int virtualHeight){
+        info.virtualSize.x = virtualWidth;
+        info.virtualSize.y = virtualHeight;
+        info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
+    }
+
+    public void setVirtualViewport(){
+        setViewPort(info.virtualSize.x, info.virtualSize.y);
+    }
+
+
+    public void setRealViewport(){
+        int x = 0, y = 0, width = info.size.x, height = info.size.y;
+
+        if (!info.virtualSize.equals(info.size)){
+            if (info.virtualRatio > info.ratio){
+                float toMultiply = (float)info.size.x / (float)info.virtualSize.x;
+                height = (int)(info.virtualSize.y * toMultiply);
+                y = (info.size.y - height) / 2;
+            } else {
+                float toMultiply = (float)info.size.y / (float)info.virtualSize.y;
+                width = (int)(info.virtualSize.x * toMultiply);
+                x = (info.size.x - width) / 2;
+            }
+        }
+
+        setViewPort(x, y, width, height);
     }
 
     /**
@@ -214,6 +237,7 @@ public class Window{
         glPushMatrix();
         glLoadIdentity();
     }
+
     /**
      * Set the 3D view.
      */
@@ -225,6 +249,10 @@ public class Window{
     }
 
     private void setViewPort(int width, int height){
-        glViewport(0, 0, width, height);
+        setViewPort(0, 0, width, height);
+    }
+
+    private void setViewPort(int x, int y, int w, int h){
+        glViewport(x, y, w, h);
     }
 }

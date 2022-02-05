@@ -1,87 +1,114 @@
 package MightyLibrary.project.main;
 
-import MightyLibrary.mightylib.main.ListError;
-import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.main.Window;
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.main.*;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.SceneManager;
-import MightyLibrary.mightylib.util.Timer;
-import MightyLibrary.project.scenes.TestScene;
+import MightyLibrary.project.scenes.Test2DScene;
+import MightyLibrary.project.scenes.Test3DScene;
+import org.joml.Vector2i;
+import org.lwjgl.Version;
+import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11C.*;
+import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 
 public class MainLoop {
-    private Window window;
-    private SceneManager sceneManager;
+    private final ContextManager contextManager;
+    private final SceneManager sceneManager;
 
-    private final float SECOND = 1000000000.0f;
-    public final float TPS = 60.0f;
+    private final static float NANO_IN_SECOND = 1000000000.0f;
+    private final static float TPS = 60.0f;
 
-    public final float FPS = 100000.0f;
+    private final static float FPS = 100000.0f;
 
-    private final double TICK_TIME = SECOND / TPS;
-    private final double FRAME_TIME = SECOND / FPS;
+    private final static double TICK_TIME = NANO_IN_SECOND / TPS;
+    private final static double FRAME_TIME = NANO_IN_SECOND / FPS;
 
-    public MainLoop(){
+    MainLoop(){
+        System.out.println("--Start program. ");
+        System.out.println("--Load libraries.");
+
         if (loadLibraries() == -1){
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
-        window = new Window();
+        System.out.println("--Create main context.");
+        contextManager = ContextManager.getInstance();
 
-        // First instancing of manager container
-        ManagerContainer manContainer = ManagerContainer.getInstance();
-        manContainer.setManager(window);
+        WindowCreationInfo wci = new WindowCreationInfo();
+        wci.size = new Vector2i(1280, 720);
+        wci.virtualSize = new Vector2i(1280, 720);
+        wci.windowName = "3D project test";
+        wci.fullscreen = false;
 
-        // Load or create config
-        window.setSize(1280, 720);
-        window.setVirtualSize(1280, 720);
+        contextManager.createDefaultContext(wci);
 
-        window.setTitle("3D project test");
-        window.setFullscreen(false);
-        window.createNewWindow();
+        Context context = contextManager.getContext("Main");
+        Window window = context.getWindow();
 
-        if (!window.windowCreated){
+
+        if (!window.getInfo().isWindowCreated()){
             exit(ListError.WINDOW_CREATION_FAIL);
         }
 
+        System.out.println("--Create ShaderManager");
+        ShaderManager shaderManager = ShaderManager.getInstance();
+        //shaderManager.forceShaderVersion(140);
+        System.out.println("--Create Resources");
+        Resources resources = Resources.getInstance();
+        System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(this);
-        sceneManager.setNewScene(new TestScene(), new String[]{""});
+
+        ProjectLoading.ContextLoading(context);
+
+        sceneManager.init(new Test2DScene(), new String[]{""});
+
+        System.out.println("\n" + Version.getVersion());
+        System.out.println(glfwGetVersionString());
+        System.out.println("GL VENDOR   : " + glGetString(GL_VENDOR));
+        System.out.println("GL RENDERER : " + glGetString(GL_RENDERER));
+        System.out.println("GL VERSION  : " + glGetString(GL_VERSION));
+        System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
     }
 
-    public void run(){
+    void run(){
         // Set loop parameters
         int ticks = 0;
         int frames = 0;
-
-        Timer timer = new Timer();
 
         double lastTick = 0.0;
         double lastFrame = 0.0;
         double lastSecond = 0.0;
 
+        long start = System.nanoTime();
 
-        while(!window.wantExit()){
-            if (timer.getDuration() - lastTick >= TICK_TIME) {
+        Context mainContext = contextManager.getMainContext();
+        Window window = mainContext.getWindow();
+
+        while (!window.wantExit()){
+            if (System.nanoTime() - start - lastTick >= TICK_TIME) {
+                GameTime.update();
                 sceneManager.update();
                 sceneManager.dispose();
-                ticks++;
+                ++ticks;
                 lastTick += TICK_TIME;
-            } else if (timer.getDuration() - lastFrame >= FRAME_TIME) {
+            } else if (System.nanoTime() - start - lastFrame >= FRAME_TIME) {
                 sceneManager.display();
                 window.dispose();
-                frames++;
+                ++frames;
                 lastFrame += FRAME_TIME;
             }
 
-            if (timer.getDuration() - lastSecond >= SECOND) {
-                if(Main.admin) window.setTitle("3D Project | FPS:" + frames + "; TPS:" + ticks);
+            if (System.nanoTime() - start - lastSecond >= NANO_IN_SECOND) {
+                if (Main.admin) window.setTitle("3D Project | FPS:" + frames + "; TPS:" + ticks);
 
                 ticks = frames = 0;
-                lastSecond += SECOND;
+                lastSecond += NANO_IN_SECOND;
             }
         }
 
-        sceneManager.unload();
         exit(ListError.NO_ERROR);
     }
 
@@ -92,14 +119,15 @@ public class MainLoop {
             unloadLibraries();
         }
 
-        if (status != ListError.WINDOW_CREATION_FAIL) {
-            window.destroyWindow();
-        }
+        sceneManager.unload();
+        contextManager.unload();
 
         if (status != ListError.NO_ERROR){
             System.err.println("Exit with error "  + status);
-            System.exit(-1);
+            System.exit(status);
         } else {
+            sceneManager.unload();
+
             System.out.println("Exit without error");
             System.exit(0);
         }

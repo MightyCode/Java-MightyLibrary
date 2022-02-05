@@ -13,40 +13,40 @@ public class ObjectId {
         this.name = name;
     }
 
+
     public ObjectId(int id){
         this(id, "null");
     }
+
 
     public ObjectId(String name){
         this(0, name);
     }
 
-    public ObjectId setId(int id){
+
+    public void setId(int id){
         this.id.id = id;
-        return this;
     }
 
-    public ObjectId setId(Id id){
+    public void setId(Id id){
         this.id.id = id.id;
-        return this;
     }
+
 
     public Id getId(){
         return id;
     }
 
-    public ObjectId linkId(Id id){
+
+    public void linkId(Id id){
         this.id = id;
-        return this;
     }
 
 
     public String getName(){
         return name;
     }
-
-    public ObjectId setName(String name){
+    public void setName(String name){
         this.name = name;
-        return this;
     }
 }

@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.inputs;
 
-import MightyLibrary.mightylib.main.ManagerContainer;
-import MightyLibrary.mightylib.main.Window;
+import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
 import org.lwjgl.BufferUtils;
 
@@ -9,7 +8,6 @@ import java.nio.DoubleBuffer;
 import java.util.Arrays;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 
 /**
  * This class is the mouse manager.
@@ -19,16 +17,16 @@ import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
  */
 public class MouseManager {
 
-    private Window window;
+    private final WindowInfo windowInfo;
 
     private static final int MOUSE_BUTTONS = 7;
     private final boolean[] state = new boolean[MOUSE_BUTTONS];
     private final boolean[] oldState = new boolean[MOUSE_BUTTONS];
 
-    private Vector2f pos;
-    private Vector2f oldPos;
+    private final Vector2f pos;
+    private final Vector2f oldPos;
 
-    private Vector2f relativePos;
+    private final Vector2f relativePos;
     private Vector2f relativeOldPos;
 
     private boolean displayCursor;
@@ -37,13 +35,13 @@ public class MouseManager {
      * Mouse manager class.
      * Instance the class
      */
-    public MouseManager(){
+    public MouseManager(WindowInfo windowInfo){
         pos = new Vector2f(0);
         oldPos = new Vector2f(0);
         relativePos = new Vector2f(0);
         relativeOldPos = new Vector2f(0);
 
-        this.window = ManagerContainer.getInstance().window;
+        this.windowInfo = windowInfo;
 
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
@@ -59,7 +57,7 @@ public class MouseManager {
     }
 
     public boolean getState(int buttonId){
-        return glfwGetMouseButton(window.windowId, buttonId) == 1;
+        return glfwGetMouseButton(windowInfo.getWindowId(), buttonId) == 1;
     }
 
     public boolean buttonPressed(int buttonID){
@@ -74,7 +72,7 @@ public class MouseManager {
         DoubleBuffer x = BufferUtils.createDoubleBuffer(1);
         DoubleBuffer y = BufferUtils.createDoubleBuffer(1);
 
-        glfwGetCursorPos(window.windowId, x, y);
+        glfwGetCursorPos(windowInfo.getWindowId(), x, y);
         pos.set((float)x.get(0), (float)y.get(0));
     }
 
@@ -97,10 +95,10 @@ public class MouseManager {
         mouseUpdate();
 
         relativeOldPos = new Vector2f(relativePos);
-        relativePos.x = posX() / window.size.x;
-        relativePos.y = posY() / window.size.y;
+        relativePos.x = posX() / windowInfo.getSizeRef().x;
+        relativePos.y = posY() / windowInfo.getSizeRef().y;
 
-        for(int key = 0; key < state.length; key++){
+        for(int key = 0; key < state.length; ++key){
             oldState[key] = state[key];
             state[key] = getState(key);
         }
@@ -117,8 +115,8 @@ public class MouseManager {
     }
 
     private void glfwSetCursor(){
-        if(displayCursor)glfwSetInputMode(window.windowId, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        else glfwSetInputMode(window.windowId, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if(displayCursor)glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        else glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     public boolean getCursorState(){

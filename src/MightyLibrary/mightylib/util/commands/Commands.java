@@ -1,23 +1,23 @@
 package MightyLibrary.mightylib.util.commands;
 
-import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.main.ManagerContainer;
+import MightyLibrary.mightylib.main.Context;
+import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.util.commands.general.ListGeneralCommand;
 
 import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Commands {
-    private ArrayList<BaseCommand> commands;
-    private int endGeneralCommand;
-    private Scanner scan;
-    private MouseManager mouseManager;
+    private final ArrayList<BaseCommand> commands;
+    private final int endGeneralCommand;
+    private final Scanner scan;
+
+    private final ArrayList<Boolean> previousMouseStates;
 
     public boolean isWriteCommands;
 
     public Commands() {
         isWriteCommands = false;
-        mouseManager = ManagerContainer.getInstance().mouseManager;
 
         scan = new Scanner(System.in);
 
@@ -26,22 +26,31 @@ public class Commands {
         ListGeneralCommand.addCommands(this);
         // Size
         endGeneralCommand = commands.size();
+
+        previousMouseStates = new ArrayList<>();
     }
 
 
     public void writeCommand(){
-        boolean previousMouseState = mouseManager.getCursorState();
-        mouseManager.setCursor(true);
+        for (Context context : ContextManager.getInstance().getAllContext()){
+            previousMouseStates.add(context.getMouseManager().getCursorState());
+            context.getMouseManager().setCursor(true);
+        }
 
         isWriteCommands = true;
         System.out.println("Write a command:");
 
         String command = scan.nextLine();
 
-        System.out.println("");
+        System.out.print("\n");
         checkCommand(command);
 
-        mouseManager.setCursor(previousMouseState);
+        int i = 0;
+        for (Context context : ContextManager.getInstance().getAllContext()){
+            context.getMouseManager().setCursor(previousMouseStates.get(i));
+            ++i;
+        }
+        previousMouseStates.clear();
     }
 
 
@@ -52,7 +61,6 @@ public class Commands {
         else System.err.println("Error on the message : \n invalids chars or nothing in the char");
     }
 
-
     private void submitCommand(String command, String firstWord) {
         boolean found = false;
         int i = 0;
@@ -60,11 +68,10 @@ public class Commands {
             // If write command and command in the array match
             if (commands.get(i).isCommand(firstWord)) {
                 // Send and remove the unused first word
-                if(command.length() > firstWord.length())  commands.get(i).sendCommand(command);
-                else                                       commands.get(i).sendCommand(command);
+                commands.get(i).sendCommand(command);
                 found = true;
             }
-            i++;
+            ++i;
         }
 
         if (!found) {

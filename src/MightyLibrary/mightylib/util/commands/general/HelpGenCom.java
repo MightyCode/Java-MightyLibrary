@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class HelpGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "help";
-    private Commands commands;
+    private final Commands commands;
 
     public HelpGenCom(Commands commands) {
         super(COMMAND_NAME, GENERAL_COMMAND);
@@ -28,7 +28,7 @@ public class HelpGenCom extends BaseCommand {
                     listCommands.get(i).help();
                     found = true;
                 }
-                i++;
+                ++i;
             }
 
             if (!found) {

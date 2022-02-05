@@ -5,7 +5,7 @@ import MightyLibrary.mightylib.util.commands.Commands;
 
 public class ExitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "exit";
-    private Commands commands;
+    private final Commands commands;
 
     public ExitGenCom(Commands command){
         super(COMMAND_NAME, GENERAL_COMMAND);
