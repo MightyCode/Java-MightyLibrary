@@ -1,14 +1,12 @@
 package MightyLibrary.mightylib.util.collision;
 
-import MightyLibrary.mightylib.util.ObjectId;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.EShapeType;
 import MightyLibrary.mightylib.util.valueDebug.UniqId;
 import org.joml.Vector2f;
-import org.joml.Vector4f;
 
 public abstract class Collision2D extends UniqId {
-    protected final Vector2f position; // Up left
+    protected final Vector2f position;
     protected EShapeType shapeType;
 
     public Collision2D(){

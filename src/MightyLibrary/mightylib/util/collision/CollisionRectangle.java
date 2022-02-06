@@ -146,24 +146,24 @@ public class CollisionRectangle extends Collision2D {
             case Right:
             case RightDown:
             case RightUp:
-                toReplace.setOppositePosition(reference.position.x, toReplace.oppositePosition.y);
+                toReplace.setPosition(reference.oppositePosition.x, toReplace.position.y);
                 break;
             case Left:
             case LeftDown:
             case LeftUp:
-                toReplace.setPosition(reference.oppositePosition.x, toReplace.position.y);
+                toReplace.setOppositePosition(reference.position.x, toReplace.oppositePosition.y);
         }
 
         switch(direction){
             case Up:
             case LeftUp:
             case RightUp:
-                toReplace.setPosition(toReplace.position.x, reference.oppositePosition.y);
+                toReplace.setOppositePosition(reference.oppositePosition.x, reference.position.y);
                 break;
             case Down:
             case LeftDown:
             case RightDown:
-                toReplace.setOppositePosition(reference.oppositePosition.x, reference.position.y);
+                toReplace.setPosition(toReplace.position.x, reference.oppositePosition.y);
         }
     }
 }

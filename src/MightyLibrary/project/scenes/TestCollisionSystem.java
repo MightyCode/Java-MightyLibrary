@@ -8,6 +8,7 @@ import MightyLibrary.mightylib.util.collision.Collision2D;
 import MightyLibrary.mightylib.util.collision.Collision2DGrid;
 import MightyLibrary.mightylib.util.collision.CollisionRectangle;
 import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -84,11 +85,6 @@ public class TestCollisionSystem extends Scene {
 
             rectangle2.moveX(500 * GameTime.DeltaTime());
         }
-
-        if (update){
-            renderer2.setPosition(rectangle2.x(), rectangle2.y());
-        }
-
         renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
 
@@ -97,8 +93,15 @@ public class TestCollisionSystem extends Scene {
         for (Collision2D collision2D : temp){
             if (rectangle2.isColliding(collision2D)){
                 renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
+                rectangle2.replaceComparedTo(collision2D, EDirection.RightDown);
             }
         }
+
+
+        if (update){
+            renderer2.setPosition(rectangle2.x(), rectangle2.y());
+        }
+
 
         mainCamera.updateView();
     }
