@@ -3,28 +3,31 @@ package MightyLibrary.mightylib.util.collision;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
-import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Collision2DGrid {
-    private final List<Collision2D> allCollisions;
+    private final Set<Collision2D> allCollisions;
 
     private final Vector2f mapSize;
     private final Vector2f cellsSize;
 
     private final Vector2i cellsNumber;
 
-    private List<Collision2D>[][] constructedArea;
+    private Set<Collision2D>[][] constructedArea;
+
+    private Set<Collision2D> returnGrid;
 
     public Collision2DGrid(){
-        allCollisions = new ArrayList<>();
+        allCollisions = new HashSet<>();
         mapSize = new Vector2f();
         cellsSize = new Vector2f();
         cellsNumber = new Vector2i();
+        returnGrid = new HashSet<>();
     }
 
-    public void init(Vector2f mapSize, Vector2f cellsSize, List<Collision2D> collisions){
+    public void init(Vector2f mapSize, Vector2f cellsSize, Set<Collision2D> collisions){
         clear();
 
         this.allCollisions.addAll(collisions);
@@ -43,14 +46,14 @@ public class Collision2DGrid {
     }
 
     private void construct(){
-        this.constructedArea = new ArrayList[cellsNumber.y][cellsNumber.x];
+        this.constructedArea = new HashSet[cellsNumber.y][cellsNumber.x];
 
         Vector2f cellSize = new Vector2f();
         CollisionRectangle tmp = new CollisionRectangle(0, 0, 0, 0);
 
         for (int y = 0; y < cellsNumber.y; ++y){
             for (int x = 0; x < cellsNumber.x; ++x){
-                this.constructedArea[y][x] = new ArrayList<>();
+                this.constructedArea[y][x] = new HashSet<>();
 
                 setTmpAreaSize(cellSize, x, y);
 
@@ -81,17 +84,17 @@ public class Collision2DGrid {
 
     public void clear(){
         allCollisions.clear();
-        constructedArea = new ArrayList[0][0];
+        constructedArea = new HashSet[0][0];
     }
 
-    public ArrayList<Collision2D> getCollisionNear(Collision2D a){
+    public Set<Collision2D> getCollisionNear(Collision2D a){
         CollisionRectangle tmp = a.bounds();
 
         Vector2i from = new Vector2i((int)(tmp.x() / cellsSize.x), (int)(tmp.y() / cellsSize.y));
         Vector2i to = new Vector2i((int)(tmp.oppX() / cellsSize.x), (int)(tmp.oppY() / cellsSize.y));
 
         if (to.x < 0 || from.x >= cellsNumber.x || to.y < 0 || from.y >= cellsNumber.y)
-            return new ArrayList<>();
+            return new HashSet<>();
 
         if (from.x < 0)
             from.x = 0;
@@ -102,17 +105,14 @@ public class Collision2DGrid {
         if (to.y >= cellsNumber.y)
             to.y = cellsNumber.y - 1;
 
-        ArrayList<Collision2D> temp = new ArrayList<>();
+       returnGrid.clear();
 
         for (int y = from.y; y <= to.y; ++y){
             for (int x = from.x; x <= to.x; ++x){
-
-
-                System.out.println(from.x + ", " + from.y + ", " + to.x + ", " + to.y);
-                temp.addAll(constructedArea[y][x]);
+                returnGrid.addAll(constructedArea[y][x]);
             }
         }
 
-        return temp;
+        return returnGrid;
     }
 }

@@ -12,7 +12,8 @@ import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TestCollisionSystem extends Scene {
     private TextureRenderer renderer;
@@ -46,7 +47,7 @@ public class TestCollisionSystem extends Scene {
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
         renderer2.setPosition(rectangle2.x(), rectangle2.y());
 
-        ArrayList<Collision2D> temp = new ArrayList<>();
+        Set<Collision2D> temp = new HashSet<>();
         temp.add(rectangle);
 
         grid = new Collision2DGrid();
@@ -91,8 +92,8 @@ public class TestCollisionSystem extends Scene {
         renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
 
-        ArrayList<Collision2D> temp = grid.getCollisionNear(rectangle2);
-
+        Set<Collision2D> temp = grid.getCollisionNear(rectangle2);
+        System.out.println(temp.size());
         for (Collision2D collision2D : temp){
             if (rectangle2.isColliding(collision2D)){
                 renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
