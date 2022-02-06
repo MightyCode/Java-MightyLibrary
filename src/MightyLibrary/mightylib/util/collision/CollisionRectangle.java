@@ -96,8 +96,8 @@ public class CollisionRectangle extends Collision2D {
     }
 
     @Override
-    public Vector4f bounds() {
-        return null;
+    public CollisionRectangle bounds() {
+        return copy();
     }
 
     @Override
@@ -119,6 +119,14 @@ public class CollisionRectangle extends Collision2D {
 
     public float h(){
         return size.y;
+    }
+
+    public float oppX(){
+        return oppositePosition.x;
+    }
+
+    public float oppY(){
+        return oppositePosition.y;
     }
 
 

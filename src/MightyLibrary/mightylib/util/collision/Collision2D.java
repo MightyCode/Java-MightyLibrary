@@ -49,7 +49,7 @@ public abstract class Collision2D extends UniqId {
     }
 
 
-    public abstract Vector4f bounds();
+    public abstract CollisionRectangle bounds();
 
     public Collision2D toCollisionType(){
         return this;

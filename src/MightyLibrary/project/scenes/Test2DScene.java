@@ -9,6 +9,8 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.util.collision.Collision2D;
+import MightyLibrary.mightylib.util.collision.Collision2DGrid;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.util.tweenings.ETweeningOption;

@@ -4,11 +4,15 @@ import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Scene;
-import MightyLibrary.mightylib.util.Timer;
+import MightyLibrary.mightylib.util.collision.Collision2D;
+import MightyLibrary.mightylib.util.collision.Collision2DGrid;
 import MightyLibrary.mightylib.util.collision.CollisionRectangle;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.project.lib.ActionId;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
 
 public class TestCollisionSystem extends Scene {
     private TextureRenderer renderer;
@@ -16,6 +20,8 @@ public class TestCollisionSystem extends Scene {
 
     private TextureRenderer renderer2;
     private CollisionRectangle rectangle2;
+
+    private Collision2DGrid grid;
 
     public void init(String[] args) {
         super.init(args);
@@ -39,6 +45,12 @@ public class TestCollisionSystem extends Scene {
 
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
         renderer2.setPosition(rectangle2.x(), rectangle2.y());
+
+        ArrayList<Collision2D> temp = new ArrayList<>();
+        temp.add(rectangle);
+
+        grid = new Collision2DGrid();
+        grid.init(new Vector2f(2000f, 2000f), new Vector2f(200, 200), temp);
     }
 
 
@@ -76,10 +88,15 @@ public class TestCollisionSystem extends Scene {
             renderer2.setPosition(rectangle2.x(), rectangle2.y());
         }
 
-        if (rectangle2.isColliding(rectangle)){
-            renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
-        } else {
-            renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
+        renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
+
+
+        ArrayList<Collision2D> temp = grid.getCollisionNear(rectangle2);
+
+        for (Collision2D collision2D : temp){
+            if (rectangle2.isColliding(collision2D)){
+                renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
+            }
         }
 
         mainCamera.updateView();
