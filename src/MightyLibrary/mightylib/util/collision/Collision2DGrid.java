@@ -3,9 +3,7 @@ package MightyLibrary.mightylib.util.collision;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Collision2DGrid {
     private final Set<Collision2D> allCollisions;
@@ -17,7 +15,7 @@ public class Collision2DGrid {
 
     private Set<Collision2D>[][] constructedArea;
 
-    private Set<Collision2D> returnGrid;
+    private final Set<Collision2D> returnGrid;
 
     public Collision2DGrid(){
         allCollisions = new HashSet<>();
@@ -46,6 +44,7 @@ public class Collision2DGrid {
     }
 
     private void construct(){
+        this.returnGrid.clear();
         this.constructedArea = new HashSet[cellsNumber.y][cellsNumber.x];
 
         Vector2f cellSize = new Vector2f();

@@ -5,8 +5,6 @@ import MightyLibrary.mightylib.util.math.EShapeType;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-import java.awt.*;
-
 public class CollisionRectangle extends Collision2D {
     private final Vector2f oppositePosition; // Down Left
     private final Vector2f size;
@@ -42,6 +40,8 @@ public class CollisionRectangle extends Collision2D {
         switch(collision.getShapeType()){
             case Rectangle:
                 return CollisionRectangleRectangle(this, (CollisionRectangle) collision);
+            case BoundedVolume2D:
+                return CollisionRectangleRectangle(this, collision.bounds());
         }
 
         return false;
@@ -52,6 +52,8 @@ public class CollisionRectangle extends Collision2D {
         switch(b.getShapeType()){
             case Rectangle:
                 ReplaceRectangleRectangle(this, (CollisionRectangle) b, direction);
+            case BoundedVolume2D:
+                ReplaceRectangleRectangle(this, b.bounds(), direction);
         }
     }
 
@@ -61,7 +63,7 @@ public class CollisionRectangle extends Collision2D {
             return;
 
         position.x = x;
-        oppositePosition.x = x + size.x;
+        oppositePosition.x = x + w();
 
         rightUp.x = oppositePosition.x;
         leftDown.x = x;
@@ -74,7 +76,7 @@ public class CollisionRectangle extends Collision2D {
             return;
 
         position.y = y;
-        oppositePosition.y = y + size.y;
+        oppositePosition.y = y + h();
 
         rightUp.y = y;
         leftDown.y = oppositePosition.y;
@@ -91,8 +93,8 @@ public class CollisionRectangle extends Collision2D {
     }
 
     public void setOppositePosition(float rightPos, float lowerPos){
-        setX(rightPos - size.x);
-        setY(lowerPos - size.y);
+        setX(rightPos - w());
+        setY(lowerPos - h());
     }
 
     @Override
@@ -146,7 +148,7 @@ public class CollisionRectangle extends Collision2D {
             case Right:
             case RightDown:
             case RightUp:
-                toReplace.setPosition(reference.oppositePosition.x, toReplace.position.y);
+                toReplace.setX(reference.oppositePosition.x);
                 break;
             case Left:
             case LeftDown:
@@ -158,12 +160,12 @@ public class CollisionRectangle extends Collision2D {
             case Up:
             case LeftUp:
             case RightUp:
-                toReplace.setOppositePosition(reference.oppositePosition.x, reference.position.y);
+                toReplace.setOppositePosition(toReplace.oppositePosition.x, reference.position.y);
                 break;
             case Down:
             case LeftDown:
             case RightDown:
-                toReplace.setPosition(toReplace.position.x, reference.oppositePosition.y);
+                toReplace.setY(reference.oppositePosition.y);
         }
     }
 }

@@ -13,5 +13,5 @@ public enum EShapeType {
     CircularBasedPyramid,
     Sphere,
     Polygon3D,
-    Bounded
+    BoundedVolume2D
 }

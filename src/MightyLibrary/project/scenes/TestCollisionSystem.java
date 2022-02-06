@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.collision.Collision2D;
 import MightyLibrary.mightylib.util.collision.Collision2DGrid;
+import MightyLibrary.mightylib.util.collision.CollisionBoundedVolume2D;
 import MightyLibrary.mightylib.util.collision.CollisionRectangle;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
@@ -19,11 +20,10 @@ import java.util.Set;
 public class TestCollisionSystem extends Scene {
     private TextureRenderer renderer;
     private CollisionRectangle rectangle;
+    private CollisionBoundedVolume2D boundedVolume2D;
 
     private TextureRenderer renderer2;
     private CollisionRectangle rectangle2;
-
-    private Collision2DGrid grid;
 
     public void init(String[] args) {
         super.init(args);
@@ -41,6 +41,9 @@ public class TestCollisionSystem extends Scene {
 
         rectangle = new CollisionRectangle(0, 0, 500, 500);
 
+        boundedVolume2D = new CollisionBoundedVolume2D();
+        boundedVolume2D.Collisions.add(rectangle);
+
         renderer2 = new TextureRenderer(mainContext.getWindow().getInfo(), "colorShape2D");
         renderer2.switchToColorMode(new Color4f(0.7f, 0.6f, 0.6f, 1f));
         renderer2.setSizePix(200, 200);
@@ -49,10 +52,7 @@ public class TestCollisionSystem extends Scene {
         renderer2.setPosition(rectangle2.x(), rectangle2.y());
 
         Set<Collision2D> temp = new HashSet<>();
-        temp.add(rectangle);
-
-        grid = new Collision2DGrid();
-        grid.init(new Vector2f(2000f, 2000f), new Vector2f(200, 200), temp);
+        temp.add(boundedVolume2D);
     }
 
 
@@ -85,23 +85,19 @@ public class TestCollisionSystem extends Scene {
 
             rectangle2.moveX(500 * GameTime.DeltaTime());
         }
+
         renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
-
-        Set<Collision2D> temp = grid.getCollisionNear(rectangle2);
-        System.out.println(temp.size());
-        for (Collision2D collision2D : temp){
-            if (rectangle2.isColliding(collision2D)){
-                renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
-                rectangle2.replaceComparedTo(collision2D, EDirection.RightDown);
-            }
+        if (boundedVolume2D.isColliding(rectangle2)){
+            renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
+            boundedVolume2D.replaceComparedTo(rectangle2, EDirection.RightDown);
+            update = true;
         }
-
 
         if (update){
             renderer2.setPosition(rectangle2.x(), rectangle2.y());
+            renderer.setPosition(rectangle.x(), rectangle.y());
         }
-
 
         mainCamera.updateView();
     }
