@@ -2,6 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
+import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.collision.Collision2D;

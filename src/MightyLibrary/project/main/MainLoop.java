@@ -4,12 +4,9 @@ import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.SceneManager;
-import MightyLibrary.project.scenes.Test2DScene;
-import MightyLibrary.project.scenes.Test3DScene;
-import MightyLibrary.project.scenes.TestCollisionSystem;
+import MightyLibrary.project.scenes.MenuScene;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
-import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11C.*;
@@ -64,7 +61,7 @@ public class MainLoop {
 
         ProjectLoading.ContextLoading(context);
 
-        sceneManager.init(new TestCollisionSystem(), new String[]{""});
+        sceneManager.init(new MenuScene(), new String[]{""});
 
         System.out.println("\n" + Version.getVersion());
         System.out.println(glfwGetVersionString());

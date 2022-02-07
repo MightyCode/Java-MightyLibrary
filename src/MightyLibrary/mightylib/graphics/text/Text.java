@@ -22,7 +22,9 @@ public class Text extends Renderer {
     private FontFace font;
     private String text;
 
-    private Vector2f textPosition, rectangleSize;
+    private final Vector2f referencePosition;
+    private final Vector2f rightLeftPosition;
+    private final Vector2f rectangleSize;
     private EDirection reference;
     private ETextAlignment alignment;
 
@@ -39,9 +41,11 @@ public class Text extends Renderer {
 
         // Null let renderer's ancien setting for text
         this.reference = EDirection.None;
+        this.alignment = ETextAlignment.Left;
 
-        this.textPosition = new Vector2f(0, 0);
+        this.referencePosition = new Vector2f(0, 0);
         this.rectangleSize = new Vector2f(0, 0);
+        this.rightLeftPosition = new Vector2f(0, 0);
 
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(new int[0]);
@@ -105,16 +109,21 @@ public class Text extends Renderer {
         if (position == null)
             return this;
 
-        this.textPosition = position;
+        this.referencePosition.x = position.x;
+        this.referencePosition.y = position.y;
         this.computeRightUpPosition();
 
         return this;
     }
 
 
-    public Vector2f position() {
-        return this.textPosition;
+    public Vector2f referencePosition() {
+        return this.referencePosition;
     }
+
+    public Vector2f rightLeftPosition() { return this.rightLeftPosition; }
+
+    public Vector2f size() { return this.rectangleSize; }
 
     public ETextAlignment getAlignment() {
         return alignment;
@@ -152,6 +161,9 @@ public class Text extends Renderer {
     private void computeRightUpPosition(){
         if (shouldNotDrawText())
             return;
+
+        rightLeftPosition.x = referencePosition.x;
+        rightLeftPosition.y = referencePosition.y;
 
         rectangleSize.x = 0;
         rectangleSize.y = 0;
@@ -218,6 +230,9 @@ public class Text extends Renderer {
                 break;
         }
 
+        rightLeftPosition.x -= textReference.x;
+        rightLeftPosition.y -= textReference.y;
+
         for (int j = 0; j < lines.length; ++j) {
             switch(this.alignment){
                 case Center:
@@ -243,9 +258,9 @@ public class Text extends Renderer {
                 sizeTemp.x = fontChar.getWidth() * fontSize / windowInfo.getVirtualSizeRef().x * 2.0f - 1.0f;
                 sizeTemp.y = fontChar.getHeight() * fontSize / windowInfo.getVirtualSizeRef().y * 2.0f - 1.0f;
 
-                posTemp.x = (currentCharOffset.x + fontChar.getxOffset() + textPosition.x - textReference.x + lineAlignmentOffset)
+                posTemp.x = (currentCharOffset.x + fontChar.getxOffset() + referencePosition.x - textReference.x + lineAlignmentOffset)
                         * 2.0f / windowInfo.getVirtualSizeRef().x;
-                posTemp.y = (currentCharOffset.y + fontChar.getyOffset() + textPosition.y - textReference.y)
+                posTemp.y = (currentCharOffset.y + fontChar.getyOffset() + referencePosition.y - textReference.y)
                             * 2.0f / windowInfo.getVirtualSizeRef().y;
 
                 temp.x = -1.0f + posTemp.x;
@@ -302,10 +317,22 @@ public class Text extends Renderer {
         text.setFont(this.font.getName())
                 .setColor(color.copy())
                 .setFontSize(fontSize)
-                .setPosition(new Vector2f(this.textPosition.x, this.textPosition.y))
+                .setPosition(new Vector2f(this.referencePosition.x, this.referencePosition.y))
                 .setReference(this.reference)
                 .setText(this.text);
 
         return text;
+    }
+
+    public Text copyTo(Text copy){
+        copy.setText("")
+                .setFont(this.font.getName())
+                .setColor(color.copy())
+                .setFontSize(fontSize)
+                .setPosition(new Vector2f(this.referencePosition.x, this.referencePosition.y))
+                .setReference(this.reference)
+                .setText(this.text);
+
+        return this;
     }
 }
