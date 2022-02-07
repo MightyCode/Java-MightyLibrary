@@ -1,7 +1,6 @@
 package MightyLibrary.project.scenes;
 
-import MightyLibrary.mightylib.graphics.shape._2D.Animation2DRenderer;
-import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
+import MightyLibrary.mightylib.graphics.shape._2D.Animation2DRenderer;;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
@@ -10,12 +9,12 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.util.collision.Collision2D;
+import MightyLibrary.mightylib.util.collision.Collision2DGrid;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.util.tweenings.ETweeningType;
-import MightyLibrary.mightylib.util.tweenings.Tweening;
-import MightyLibrary.mightylib.util.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.util.tweenings.type.Vector2fTweening;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
