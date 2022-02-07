@@ -29,6 +29,6 @@ public class GUIList {
                 selected.userSelect(false);
         }
 
-        
+
     }
 }

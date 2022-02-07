@@ -4,7 +4,7 @@ import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.main.Context;
 import org.joml.Vector2f;
 
-public class BackgroundlessButton {
+public class BackgroundlessButton extends GUI {
     private final Context context;
     public final Text Text, OverlapsText;
 
@@ -13,6 +13,7 @@ public class BackgroundlessButton {
     }
 
     public BackgroundlessButton(Context context, Text text){
+        super();
         this.context = context;
 
         if(text == null)
@@ -47,5 +48,10 @@ public class BackgroundlessButton {
     public void unload(){
         Text.unload();
         OverlapsText.text();
+    }
+
+    @Override
+    public boolean mouseDeableIt() {
+        return true;
     }
 }
