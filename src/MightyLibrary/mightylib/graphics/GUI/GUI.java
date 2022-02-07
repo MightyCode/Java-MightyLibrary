@@ -2,17 +2,19 @@ package MightyLibrary.mightylib.graphics.GUI;
 
 public abstract class GUI {
 
-    protected boolean userSelect;
+    private boolean forceSelect;
 
-    public void userSelect(boolean state){
-        this.userSelect = state;
+    public void forceSelect(boolean state){
+        this.forceSelect = state;
     }
 
-    public abstract boolean GUISelected();
+    boolean forceSelected() { return forceSelect; }
+
+    public abstract boolean GUIMouseSelected();
 
     public abstract void display();
 
-    public abstract boolean mouseDeableIt();
+    public abstract boolean mouseDisableIt();
 
     public abstract void unload();
 }

@@ -17,7 +17,12 @@ class ProjectLoading {
                 { ActionId.MOVE_BACKWARD, GLFW_KEY_S , InputManager.ID_KEYBOARD },
                 { ActionId.MOVE_UP, GLFW_KEY_SPACE , InputManager.ID_KEYBOARD },
                 { ActionId.MOVE_DOWN, GLFW_KEY_LEFT_CONTROL , InputManager.ID_KEYBOARD },
-                { ActionId.SHIFT, GLFW_KEY_LEFT_SHIFT , InputManager.ID_KEYBOARD }
+                { ActionId.SHIFT, GLFW_KEY_LEFT_SHIFT , InputManager.ID_KEYBOARD },
+                { ActionId.ENTER, GLFW_KEY_ENTER , InputManager.ID_KEYBOARD },
+                { ActionId.SELECT_UP, GLFW_KEY_W , InputManager.ID_KEYBOARD },
+                { ActionId.SELECT_DOWN, GLFW_KEY_S , InputManager.ID_KEYBOARD },
+                { ActionId.LEFT_CLICK, GLFW_MOUSE_BUTTON_1 , InputManager.ID_MOUSE },
+                { ActionId.RIGHT_CLICK, GLFW_MOUSE_BUTTON_1 , InputManager.ID_MOUSE }
         };
 
         inputManager.init(inputData);

@@ -30,7 +30,7 @@ public class BackgroundlessButton extends GUI {
 
     @Override
     public void display() {
-        if (GUISelected()) {
+        if (GUIMouseSelected() || forceSelected()) {
             OverlapsText.display();
         } else {
             Text.display();
@@ -38,16 +38,21 @@ public class BackgroundlessButton extends GUI {
     }
 
     @Override
-    public boolean GUISelected(){
-        if (userSelect)
-            return true;
-
+    public boolean GUIMouseSelected(){
         Vector2f position = Text.rightLeftPosition();
         Vector2f size = Text.size();
         Vector2f mousePosition = context.getMouseManager().pos();
 
         return (mousePosition.x >= position.x - (size.x * 0.1f) && mousePosition.x <= position.x + (size.x * 1.1f)
                 && mousePosition.y >= position.y - (size.y * 0.1f) && mousePosition.y <= position.y + (size.y * 1.1f));
+    }
+
+    public BackgroundlessButton copy(){
+        BackgroundlessButton temp = new BackgroundlessButton(context);
+        Text.copyTo(temp.Text);
+        OverlapsText.copyTo(temp.OverlapsText);
+
+        return temp;
     }
 
     @Override
@@ -57,7 +62,7 @@ public class BackgroundlessButton extends GUI {
     }
 
     @Override
-    public boolean mouseDeableIt() {
+    public boolean mouseDisableIt() {
         return true;
     }
 }

@@ -1,5 +1,6 @@
 package MightyLibrary.project.scenes;
 
+import static org.lwjgl.glfw.GLFW.*;
 import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
@@ -25,19 +26,36 @@ public class MenuScene extends Scene {
 
         Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
 
-        BackgroundlessButton button = new BackgroundlessButton(mainContext);
-        button.Text.setFont("arial")
+        BackgroundlessButton button2DScene = new BackgroundlessButton(mainContext);
+        button2DScene.Text.setFont("arial")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
                 .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.5f))
                 .setFontSize(40)
                 .setText("->Test2DScene<-");
 
-        button.Text.copyTo(button.OverlapsText);
-        button.OverlapsText.setColor(new Color4f(0.3f));
+        button2DScene.Text.copyTo(button2DScene.OverlapsText);
+        button2DScene.OverlapsText.setColor(new Color4f(0.3f));
+
+        BackgroundlessButton button3DScene = button2DScene.copy();
+        button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.6f))
+                        .setText("->Test3DScene<-");
+
+        button3DScene.Text.copyTo(button3DScene.OverlapsText);
+        button3DScene.OverlapsText.setColor(new Color4f(0.3f));
+
+        BackgroundlessButton buttonCollisionTest = button2DScene.copy();
+        buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.7f))
+                .setText("->TestCollisionScene<-");
+
+        buttonCollisionTest.Text.copyTo(buttonCollisionTest.OverlapsText);
+        buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f));
 
         guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
-        guiList.GUIs.put(0, button);
+        guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
+        guiList.GUIs.put(0, button2DScene);
+        guiList.GUIs.put(1, button3DScene);
+        guiList.GUIs.put(2, buttonCollisionTest);
     }
 
 
@@ -46,8 +64,21 @@ public class MenuScene extends Scene {
 
         guiList.update();
 
-        if (guiList.getSelected() == 0 && mainContext.getInputManager().input(ActionId.SHIFT)){
-            sceneManagerInterface.setNewScene(new Test2DScene(),  new String[]{""});
+        if (mainContext.getInputManager().input(ActionId.ENTER) || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)){
+            Integer id = guiList.getSelected();
+            if (id != null) {
+                switch (id) {
+                    case 0:
+                        sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
+                        break;
+                    case 1:
+                        sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
+                        break;
+                    case 2:
+                        sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
+                        break;
+                }
+            }
         }
 
         mainCamera.updateView();
