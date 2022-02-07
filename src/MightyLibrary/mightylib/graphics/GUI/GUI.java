@@ -8,5 +8,11 @@ public abstract class GUI {
         this.userSelect = state;
     }
 
+    public abstract boolean GUISelected();
+
+    public abstract void display();
+
     public abstract boolean mouseDeableIt();
+
+    public abstract void unload();
 }

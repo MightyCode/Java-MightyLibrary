@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.scene;
 
-class SceneManagerInterface {
+public class SceneManagerInterface {
     private String[] changeArgs;
     private Scene newScene;
 
