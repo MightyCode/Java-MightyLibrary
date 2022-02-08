@@ -1,8 +1,8 @@
 #version 330 core
+out vec2 texCoord;
+
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec2 texPos;
-
-out vec2 texCoord;
 
 uniform mat4 model;
 uniform mat4 view;
