@@ -16,7 +16,7 @@ public class Renderer{
     public static final int COLOR = 1;
     public static final int TEXTURE = 2;
 
-    public Vector3f modelV;
+    protected Vector3f position;
     protected Matrix4f model;
     protected boolean display;
     protected FloatBuffer translateF;
@@ -43,6 +43,8 @@ public class Renderer{
         texture = null;
         displayMode = NOTHING;
         color = ColorList.BLACK;
+
+        position = new Vector3f();
 
         translateF = BufferUtils.createFloatBuffer(16);
         model.get(translateF);
@@ -79,13 +81,15 @@ public class Renderer{
 
 
     public void setPosition(Vector3f position){
-        this.modelV = position;
+        this.position = position;
         this.model.identity();
-        this.model.translate(this.modelV);
+        this.model.translate(this.position);
         this.model.get(translateF);
     }
 
     public void rotate(float angle, Vector3f coefficient){
+        this.model.identity();
+        this.model.translate((this.position));
         this.model.rotate(angle, coefficient);
         this.model.get(translateF);
     }

@@ -11,6 +11,11 @@ import MightyLibrary.mightylib.util.collision.CollisionBoundedVolume2D;
 import MightyLibrary.mightylib.util.collision.CollisionRectangle;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
+import MightyLibrary.mightylib.util.math.MightyMath;
+import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
+import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
+import MightyLibrary.mightylib.util.tweenings.ETweeningType;
+import MightyLibrary.mightylib.util.tweenings.type.FloatTweening;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -25,6 +30,8 @@ public class TestCollisionSystem extends Scene {
 
     private TextureRenderer renderer2;
     private CollisionRectangle rectangle2;
+
+    FloatTweening rotation;
 
     public void init(String[] args) {
         super.init(args);
@@ -52,8 +59,11 @@ public class TestCollisionSystem extends Scene {
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
         renderer2.setPosition(rectangle2.x(), rectangle2.y());
 
-        Set<Collision2D> temp = new HashSet<>();
-        temp.add(boundedVolume2D);
+        rotation = new FloatTweening();
+
+        rotation.setTweeningOption(ETweeningOption.LoopReversed)
+                .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
+                .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
     }
 
 
@@ -100,7 +110,9 @@ public class TestCollisionSystem extends Scene {
             renderer.setPosition(rectangle.x(), rectangle.y());
         }
 
-        //renderer.rotate(0.3f, new Vector3f(0, 0, 1));
+
+        rotation.update();
+        renderer.rotate(rotation.value(), new Vector3f(0, 0, 1));
 
         renderer2.updateShape();
 
