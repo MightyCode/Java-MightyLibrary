@@ -36,13 +36,16 @@ public class Renderer{
 
         shape = new Shape(shaderName, useEbo, in2D);
         model = new Matrix4f().identity();
-        translateF = BufferUtils.createFloatBuffer(16);
+
         display = true;
 
         // Display mode
         texture = null;
         displayMode = NOTHING;
         color = ColorList.BLACK;
+
+        translateF = BufferUtils.createFloatBuffer(16);
+        model.get(translateF);
     }
 
 
@@ -56,7 +59,7 @@ public class Renderer{
 
     public void updateShader(){
         // Apply model matrix
-        if (!shape.getIn2D()){
+        if (ShaderManager.getInstance().getShader(shape.getShaderId()).getLink("model") != -1){
             shadManager.getShader(shape.getShaderId()).glUniform("model", translateF);
         }
 
@@ -79,6 +82,11 @@ public class Renderer{
         this.modelV = position;
         this.model.identity();
         this.model.translate(this.modelV);
+        this.model.get(translateF);
+    }
+
+    public void rotate(float angle, Vector3f coefficient){
+        this.model.rotate(angle, coefficient);
         this.model.get(translateF);
     }
 

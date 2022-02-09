@@ -3,6 +3,9 @@ package MightyLibrary.mightylib.graphics.shape._2D;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.main.WindowInfo;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.util.math.MightyMath;
+import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -11,7 +14,6 @@ public class TextureRenderer extends Renderer {
     protected float windowW, windowH, posX, posY;
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
-
 
     public TextureRenderer(WindowInfo info, String shaderName) {
         super(shaderName, true, true);
@@ -30,17 +32,20 @@ public class TextureRenderer extends Renderer {
         shape.setEbo(indices);
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.STATIC_STORE);
         textureIndex = shape.addVbo(texturePos(), 2, Shape.STATIC_STORE);
+
     }
 
 
     private float[] calculatePosition(){
-        return new float[]{
+        float table[] = new float[]{
                 -1.0f + posX, 1.0f - posY,
                 -1.0f + posX, -windowH - posY,
                 windowW + posX, -windowH - posY,
                 windowW + posX, 1.0f - posY
 
         };
+
+        return table;
     }
 
 

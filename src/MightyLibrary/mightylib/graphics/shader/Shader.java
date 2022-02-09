@@ -81,7 +81,7 @@ public class Shader extends ObjectId{
     }
 
     public int getLink(String valueName){
-        return valuesLink.get(valueName);
+        return valuesLink.getOrDefault(valueName, -1);
     }
 
     public int getShaderId(){

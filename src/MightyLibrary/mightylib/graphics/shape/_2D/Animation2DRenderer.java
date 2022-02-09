@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
 import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.main.WindowInfo;
+import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
@@ -21,6 +22,8 @@ public class Animation2DRenderer extends Renderer {
     private final int positionIndex;
     private final int textureIndex;
     private final Vector4f texturePosition;
+
+    public float Rotation;
 
     private float scale;
 
@@ -42,6 +45,8 @@ public class Animation2DRenderer extends Renderer {
         shape.setEbo(indices);
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.DYNAMIC_STORE);
         textureIndex = shape.addVbo(texturePos(), 2, Shape.DYNAMIC_STORE);
+
+        Rotation = 0;
     }
 
 
@@ -107,13 +112,15 @@ public class Animation2DRenderer extends Renderer {
             posY -= vector2i.y * 2.0f * scale / windowInfo.getVirtualSizeRef().y;
         }
 
-        return new float[]{
+        float table[] = new float[]{
                 -1.0f + posX, 1.0f - posY,
                 -1.0f + posX, - computedH - posY,
                 computedW + posX, - computedH - posY,
                 computedW + posX, 1.0f - posY
 
         };
+
+        return table;
     }
 
     private float[] texturePos(){

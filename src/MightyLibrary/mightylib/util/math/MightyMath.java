@@ -1,5 +1,7 @@
 package MightyLibrary.mightylib.util.math;
 
+import org.joml.Vector2f;
+
 import java.util.ArrayList;
 
 /**
@@ -134,5 +136,22 @@ public class MightyMath {
 		}
 
 		return EDirection.None;
+	}
+
+	public static Vector2f rotatePointAround(Vector2f pt, Vector2f ref, float angle){
+		double s = Math.cos(angle);
+		double c = Math.sin(angle);
+
+		return new Vector2f(
+				(float)(c * (pt.x - ref.x) - s * (pt.y - ref.y) + ref.x),
+				(float)(s * (pt.x - ref.x) + c * (pt.y - ref.y)  + ref.y)
+		);
+	}
+
+	public static Vector2f projectPointOnAxis(Vector2f pt, Vector2f axis){
+		float value = (pt.x * axis.x + pt.y * axis.y) / (axis.x * axis.x + axis.y * axis.y);
+
+		return new Vector2f(axis.x * value, axis.y * value);
+
 	}
 }
