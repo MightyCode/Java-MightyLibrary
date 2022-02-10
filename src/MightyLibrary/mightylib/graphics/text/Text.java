@@ -25,6 +25,7 @@ public class Text extends Renderer {
     private final Vector2f referencePosition;
     private final Vector2f rightLeftPosition;
     private final Vector2f rectangleSize;
+
     private EDirection reference;
     private ETextAlignment alignment;
 

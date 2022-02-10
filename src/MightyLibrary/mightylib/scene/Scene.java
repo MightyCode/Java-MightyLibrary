@@ -49,8 +49,6 @@ public class Scene {
         dispose();
 
         scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo());
-        scRenderer.setTexturePosition(new Vector4f(0, 1, 0, 1));
-        scRenderer.updateShape();
     }
 
     public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface){

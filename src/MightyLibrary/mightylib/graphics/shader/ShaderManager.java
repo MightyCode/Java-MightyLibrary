@@ -100,12 +100,7 @@ public class ShaderManager {
             // Cam mode initialization
             String camMode = JShader.getJSONArray("mode").getString(0);
 
-            if(camMode.equals("static")){
-                Matrix4f model = new Matrix4f();
-                model._m32(-8.572f);
-                FloatBuffer temp = BufferUtils.createFloatBuffer(16);
-                shad.glUniform("view", model.get(temp));
-            } else if(camMode.equals(CAM_3D)){
+            if(camMode.equals(CAM_3D)){
                 cam3DReload.add(currentId);
                 shad.properties.add(USE_3D_PROJECTION_MATRIX);
             } else if (camMode.equals(CAM_2D)){
@@ -135,8 +130,6 @@ public class ShaderManager {
 
     public void reloadProjection2D(Camera2D camera, Id id){
         shaders.get(id).glUniform("projection", camera.getProjection());
-
-        System.out.println(shaders.get(id).getName());
     }
 
     public void dispose(Camera3D camera3D, Camera2D camera2D){

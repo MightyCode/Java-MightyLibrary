@@ -12,7 +12,6 @@ import org.joml.Vector4f;
 
 public class TextureRenderer extends Renderer {
     protected final WindowInfo windowInfo;
-    protected float windowW, windowH, posX, posY;
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
@@ -20,13 +19,8 @@ public class TextureRenderer extends Renderer {
         super(shaderName, true, true);
 
         windowInfo = info;
-        posX = 0.0f;
-        posY = 0.0f;
 
-        windowW = 1.0f;
-        windowH = 1.0f;
-
-        texturePosition = new Vector4f(0f, 1f, 0f,1f );
+        texturePosition = new Vector4f(0f, 1f, 0f,1f);
 
         int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);

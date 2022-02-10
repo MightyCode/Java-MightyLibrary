@@ -7,38 +7,24 @@ import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class Animation2DRenderer extends Renderer {
-
-    private final WindowInfo windowInfo;
-
-    private float computedW, computedH;
-
-    private Vector2f referencePoint;
-    private Vector2f lastRefPoint;
-
+    private final Vector2f referencePosition;
     private Animator animator;
     private final int positionIndex;
     private final int textureIndex;
     private final Vector4f texturePosition;
 
-    public float Rotation;
+    private final Vector2f animationScale;
 
-    private float scale;
-
-    public Animation2DRenderer(WindowInfo windowInfo, String shaderName){
+    public Animation2DRenderer(String shaderName){
         super(shaderName, true, true);
-        this.windowInfo = windowInfo;
 
-        scale = 1.0f;
-
-        computedW = 1.0f;
-        computedH = 1.0f;
+        animationScale = new Vector2f(1);
 
         texturePosition = new Vector4f(0f, 1f, 0f,1f);
-        referencePoint = new Vector2f(0.0f, 0.0f);
-        lastRefPoint = new Vector2f(referencePoint);
 
         int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);
@@ -46,13 +32,14 @@ public class Animation2DRenderer extends Renderer {
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.DYNAMIC_STORE);
         textureIndex = shape.addVbo(texturePos(), 2, Shape.DYNAMIC_STORE);
 
-        Rotation = 0;
+        referencePosition = new Vector2f();
     }
 
 
-    public void init(Animator animator, Vector2f referencePoint){
+    public void init(Animator animator){
         this.animator = animator;
-        this.referencePoint = referencePoint;
+
+        updatePosition();
     }
 
 
@@ -66,78 +53,61 @@ public class Animation2DRenderer extends Renderer {
             this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
             shape.updateVbo(texturePos(), textureIndex);
 
-            Vector2i info = animator.getCurrentAnimation().getFrameSize();
-            setSizePix(info.x * scale, info.y * scale);
+            updatePosition();
 
-            shape.updateVbo(calculatePosition(), positionIndex);
+            this.setScale(this.animationScale);
         }
     }
 
+    public void setPosition(Vector2f position){
+        referencePosition.x = position.x;
+        referencePosition.y = position.y;
 
-    public void draw(){
-        if (!lastRefPoint.equals(referencePoint)){
-            shape.updateVbo(calculatePosition(), positionIndex);
-        }
-
-        lastRefPoint = new Vector2f(referencePoint);
-
-        super.draw();
+        updatePosition();
     }
 
-
-    private void setSizePix(float width, float height){
-        setSizeProp(width / windowInfo.getVirtualSizeRef().x, height / windowInfo.getVirtualSizeRef().y);
-    }
-
-
-    // Set size with a proportion of the window
-    public void setSizeProp(float width, float height){
-        computedW = width * 2 - 1.0f;
-        computedH = height * 2 - 1.0f;
-        shape.updateVbo(calculatePosition(), positionIndex);
-    }
-
-
-    private float[] calculatePosition(){
-        float posX = referencePoint.x * 2.0f / windowInfo.getVirtualSizeRef().x;
-        float posY = referencePoint.y * 2.0f / windowInfo.getVirtualSizeRef().y;
+    private void updatePosition(){
+        Vector3f temp = new Vector3f(referencePosition.x, referencePosition.y, 0.0f);
 
         // Take into account hot point of each frame of animation
         if (animator != null) {
-            Vector2i vector2i = animator.getCurrentAnimation().currentHotPoint();
+            Vector2i hotPoint = animator.getCurrentAnimation().currentHotPoint();
 
-            //System.out.println(referencePoint.x + " " + posX + " " + (vector2i.x * 2.0f * scale / window.virtualSize.x));
-
-            posX -= vector2i.x * 2.0f * scale / windowInfo.getVirtualSizeRef().x;
-            posY -= vector2i.y * 2.0f * scale / windowInfo.getVirtualSizeRef().y;
+            temp.x -= hotPoint.x * animationScale.x;
+            temp.y -= hotPoint.y * animationScale.y;
         }
 
-        float table[] = new float[]{
-                -1.0f + posX, 1.0f - posY,
-                -1.0f + posX, - computedH - posY,
-                computedW + posX, - computedH - posY,
-                computedW + posX, 1.0f - posY
+        setPosition(temp);
+    }
 
+    private float[] calculatePosition(){
+        return new float[]{
+                0, 1,
+                0, 0,
+                1, 0,
+                1, 1
         };
-
-        return table;
     }
 
     private float[] texturePos(){
         return new float[]{
-                texturePosition.x, texturePosition.z,
                 texturePosition.x, texturePosition.w,
-                texturePosition.y, texturePosition.w,
-                texturePosition.y, texturePosition.z
+                texturePosition.x, texturePosition.z,
+                texturePosition.y, texturePosition.z,
+                texturePosition.y, texturePosition.w
         };
     }
 
 
-    public float getScale(){
-        return scale;
+    public Vector2f getScale(){
+        return animationScale;
     }
 
-    public void setScale(float scale){
-        this.scale = scale;
+    public void setScale(Vector2f scale){
+        this.animationScale.x = scale.x;
+        this.animationScale.y = scale.y;
+
+        Vector2i info = animator.getCurrentAnimation().getFrameSize();
+        super.setScale(new Vector3f(info.x * animationScale.x, info.y * animationScale.y, 1f));
     }
 }
