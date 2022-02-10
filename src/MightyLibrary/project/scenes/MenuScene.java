@@ -51,11 +51,19 @@ public class MenuScene extends Scene {
         buttonCollisionTest.Text.copyTo(buttonCollisionTest.OverlapsText);
         buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f));
 
+        BackgroundlessButton buttonQuit = button2DScene.copy();
+        buttonQuit.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.9f))
+                .setText("->Quit<-");
+
+        buttonQuit.Text.copyTo(buttonQuit.OverlapsText);
+        buttonQuit.OverlapsText.setColor(new Color4f(0.3f));
+
         guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
         guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
         guiList.GUIs.put(0, button2DScene);
         guiList.GUIs.put(1, button3DScene);
         guiList.GUIs.put(2, buttonCollisionTest);
+        guiList.GUIs.put(3, buttonQuit);
     }
 
 
@@ -76,6 +84,9 @@ public class MenuScene extends Scene {
                         break;
                     case 2:
                         sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
+                        break;
+                    case 3:
+                        sceneManagerInterface.exit(0);
                         break;
                 }
             }

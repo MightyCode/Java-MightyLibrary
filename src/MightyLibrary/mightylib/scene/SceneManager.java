@@ -45,7 +45,11 @@ public class SceneManager {
 
         }
 
-        if(sceneInterface.isWantingChange())  changeScene();
+        if(sceneInterface.isWantingChange())
+            changeScene();
+
+        if (sceneInterface.WantQuit)
+            exit(sceneInterface.ExitStatus);
 
         currentScene.update();
     }

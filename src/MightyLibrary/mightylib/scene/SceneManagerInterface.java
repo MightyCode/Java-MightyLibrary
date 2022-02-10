@@ -4,6 +4,9 @@ public class SceneManagerInterface {
     private String[] changeArgs;
     private Scene newScene;
 
+    boolean WantQuit;
+    int ExitStatus;
+
     public SceneManagerInterface(){
         reset();
     }
@@ -19,19 +22,27 @@ public class SceneManagerInterface {
     }
 
     public void reset(){
+        WantQuit = false;
+        ExitStatus = -1;
+
         newScene = null;
         changeArgs = new String[]{""};
     }
 
-    public String[] getChangeArgs(){
+    public void exit(int exitStatus){
+        WantQuit = true;
+        ExitStatus = exitStatus;
+    }
+
+    String[] getChangeArgs(){
         return changeArgs;
     }
 
-    public Scene getNewScene(){
+    Scene getNewScene(){
         return newScene;
     }
 
-    public boolean isWantingChange(){
+    boolean isWantingChange(){
         return newScene != null;
     }
 }
