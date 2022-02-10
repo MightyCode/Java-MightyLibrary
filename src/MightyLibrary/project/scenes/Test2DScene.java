@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.EDirection;
@@ -71,7 +72,7 @@ public class Test2DScene extends Scene {
         InputManager inputManager = mainContext.getInputManager();
 
         int speed = 1;
-        if (inputManager.inputPressed(ActionId.SHIFT)) {
+        if (inputManager.input(ActionId.SHIFT)) {
             speed = 3;
         }
 

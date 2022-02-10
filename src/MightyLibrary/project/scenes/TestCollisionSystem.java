@@ -91,6 +91,11 @@ public class TestCollisionSystem extends Scene {
             rectangle2.moveX(500 * GameTime.DeltaTime());
         }
 
+        if (inputManager.input(ActionId.MOVE_UP)){
+            main2DCamera.setY(main2DCamera.getCamPosRef().y - 100 * GameTime.DeltaTime());
+            System.out.println("DOwn");
+        }
+
         renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
         if (boundedVolume2D.isColliding(rectangle2)){

@@ -53,10 +53,16 @@ public class Camera2D {
 
     public void setX(float x){
         camPos.x = x;
+
+        view.translate(new Vector3f(camPos.x, camPos.y, 0));
+        view.get(viewBuffer);
     }
 
     public void setY(float y){
         camPos.y = y;
+
+        view.translate(new Vector3f(camPos.x, camPos.y, 0));
+        view.get(viewBuffer);
     }
 
     public FloatBuffer getProjection(){

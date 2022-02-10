@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.graphics.shape._3D.CubeRenderer;
@@ -83,7 +84,7 @@ public class Test3DScene extends Scene {
         InputManager inputManager = mainContext.getInputManager();
 
         int speed = 1;
-        if (inputManager.inputPressed(ActionId.SHIFT)) {
+        if (inputManager.input(ActionId.SHIFT)) {
             speed = 3;
         }
 
