@@ -95,8 +95,6 @@ public class CollisionBoundedVolume2D extends Collision2D {
     public void ReplaceBoundingVolume2DRectangle(CollisionBoundedVolume2D toReplace, CollisionRectangle reference, EDirection direction){
         CollisionRectangle temp = toReplace.bounds();
 
-
-
         switch(direction){
             case Right:
             case RightDown:
@@ -113,7 +111,6 @@ public class CollisionBoundedVolume2D extends Collision2D {
             case Up:
             case LeftUp:
             case RightUp:
-                System.out.println(reference.y() + " " + temp.h());
                 toReplace.setY(reference.y() - temp.h());
                 break;
             case Down:

@@ -101,7 +101,7 @@ public class TestCollisionSystem extends Scene {
 
         if (boundedVolume2D.isColliding(rectangle2)){
             renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
-            boundedVolume2D.replaceComparedTo(rectangle2, EDirection.RightDown);
+            boundedVolume2D.replaceComparedTo(rectangle2, EDirection.LeftUp);
             update = true;
         }
 
