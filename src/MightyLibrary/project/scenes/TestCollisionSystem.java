@@ -112,7 +112,7 @@ public class TestCollisionSystem extends Scene {
 
 
         rotation.update();
-        renderer.rotate(rotation.value(), new Vector3f(0, 0, 1));
+        renderer.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
         renderer2.updateShape();
 

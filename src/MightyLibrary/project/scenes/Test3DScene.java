@@ -55,7 +55,6 @@ public class Test3DScene extends Scene {
         sBlock = new Renderer("textureComplex3D", false, false);
         float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
-        sBlock.setPosition(new Vector3f(0.0f));
         sBlock.switchToTextureMode("container");
             // Displacement texture for cubes/crate
         displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
@@ -64,6 +63,7 @@ public class Test3DScene extends Scene {
         // 3D Model
         stand = new ModelRenderer("texture3D", "stand/stall", "stall");
         stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
+        stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
 
         // Grey Rect in Hud
         /*hudBar = new TextureRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);

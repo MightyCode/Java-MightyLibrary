@@ -16,7 +16,11 @@ public class Renderer{
     public static final int COLOR = 1;
     public static final int TEXTURE = 2;
 
-    protected Vector3f position;
+    protected final Vector3f position;
+    protected final Vector3f scale;
+    protected final Vector3f rotation;
+    protected float angle;
+
     protected Matrix4f model;
     protected boolean display;
     protected FloatBuffer translateF;
@@ -45,9 +49,12 @@ public class Renderer{
         color = ColorList.BLACK;
 
         position = new Vector3f();
+        scale = new Vector3f(1f);
+        rotation = new Vector3f();
 
         translateF = BufferUtils.createFloatBuffer(16);
-        model.get(translateF);
+
+        applyModel();
     }
 
 
@@ -81,19 +88,40 @@ public class Renderer{
 
 
     public void setPosition(Vector3f position){
-        this.position = position;
+        this.position.x = position.x;
+        this.position.y = position.y;
+        this.position.z = position.z;
+
+        applyModel();
+    }
+
+    public void setScale(Vector3f scale){
+        this.scale.x = scale.x;
+        this.scale.y = scale.y;
+        this.scale.z = scale.z;
+
+        applyModel();
+    }
+
+    public void setRotation(float angle, Vector3f rotation){
+        this.rotation.x = rotation.x;
+        this.rotation.y = rotation.y;
+        this.rotation.z = rotation.z;
+
+        this.angle = angle;
+
+        applyModel();
+    }
+
+
+    public void applyModel(){
         this.model.identity();
         this.model.translate(this.position);
+        this.model.scale(this.scale);
+        this.model.rotate(angle, this.rotation);
+
         this.model.get(translateF);
     }
-
-    public void rotate(float angle, Vector3f coefficient){
-        this.model.identity();
-        this.model.translate((this.position));
-        this.model.rotate(angle, coefficient);
-        this.model.get(translateF);
-    }
-
 
     public void hide(boolean state) {
         display = state;
