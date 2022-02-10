@@ -31,7 +31,7 @@ public class ShaderManager {
 
     private static final String SHADER_INFO_PATH = "resources/shaders/";
     public static final int USE_3D_PROJECTION_MATRIX = 0;
-    public static final int USE_2D_PROJECTION_MATRIX = 0;
+    public static final int USE_2D_PROJECTION_MATRIX = 1;
 
     private final ManagerList<Shader> shaders;
 
@@ -130,10 +130,13 @@ public class ShaderManager {
 
     public void reloadProjection3D(Camera3D camera, Id id){
         shaders.get(id).glUniform("projection", camera.getProjection());
+        //System.out.println(shaders.get(id).getName());
     }
 
     public void reloadProjection2D(Camera2D camera, Id id){
         shaders.get(id).glUniform("projection", camera.getProjection());
+
+        System.out.println(shaders.get(id).getName());
     }
 
     public void dispose(Camera3D camera3D, Camera2D camera2D){

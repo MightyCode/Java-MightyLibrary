@@ -8,10 +8,23 @@
 			"mode" : ["cam2DView"],
 			"links": [
 				"color",
+				"projection",
+				"view",
 				"model"
 			]
 		},
-
+		"texture2D": {
+			"files": [
+				"basic/texture2DV.glsl",
+				"basic/texture2DF.glsl"
+			],
+			"mode" : ["cam2DView"],
+			"links": [
+				"projection",
+				"view",
+				"model"
+			]
+		},
 		"colorShape3D": {
 			"files": [
 				"basic/colorShape3DV.glsl",
@@ -68,14 +81,6 @@
 				"ourTexture",
 				"displacementMap"
 			]
-		},
-		"texture2D": {
-			"files": [
-				"basic/texture2DV.glsl",
-				"basic/texture2DF.glsl"
-			],
-			"mode" : ["cam2DView"],
-			"links": []
 		},
 		"postProcessing": {
 			"files": [

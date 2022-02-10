@@ -111,6 +111,7 @@ public class Camera3D {
 
     public Vector3f getCamPosRef() { return camPos; }
     public Vector3f getCamPosCopy() { return new Vector3f(camPos); }
+
     public void setPos(Vector3f newPos){
         camPos.x = newPos.x;
         camPos.y = newPos.y;

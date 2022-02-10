@@ -8,6 +8,12 @@ public class VirtualSceneRenderer extends TextureRenderer {
     public VirtualSceneRenderer(WindowInfo info){
         super(info,"postProcessing");
         frameBuffer = new FrameBuffer(info);
+        this.shape.updateVbo(new float[]{
+               -1, 1,
+               -1, -1,
+               1, -1,
+               1, 1
+        }, positionIndex);
     }
 
     public FrameBuffer getFrameBuffer(){

@@ -37,7 +37,6 @@ public class Camera2D {
 
     private void SetProjection(){
         projectionOrtho.ortho(0, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0 , -1, 1);
-
         projectionOrtho.get(projectionOrthoBuffer);
     }
 
@@ -49,6 +48,7 @@ public class Camera2D {
         camPos.y = newPos.y;
 
         view.translate(new Vector3f(camPos.x, camPos.y, 0));
+        view.get(viewBuffer);
     }
 
     public void setX(float x){

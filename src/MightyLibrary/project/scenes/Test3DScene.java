@@ -14,6 +14,7 @@ import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.project.lib.ActionId;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 public class Test3DScene extends Scene {
@@ -72,7 +73,7 @@ public class Test3DScene extends Scene {
         hudBar = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
         hudBar.switchToTextureMode("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(150, 150); //window.size.x * 0.7f, window.size.y * 0.7f);
+        hudBar.setPosition(new Vector2f(150, 150)); //window.size.x * 0.7f, window.size.y * 0.7f);
     }
 
 

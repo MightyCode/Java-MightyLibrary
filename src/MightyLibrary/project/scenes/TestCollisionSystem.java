@@ -14,6 +14,7 @@ import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.util.tweenings.ETweeningType;
 import MightyLibrary.mightylib.util.tweenings.type.FloatTweening;
 import MightyLibrary.project.lib.ActionId;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 public class TestCollisionSystem extends Scene {
@@ -37,7 +38,7 @@ public class TestCollisionSystem extends Scene {
 
         renderer = new TextureRenderer(mainContext.getWindow().getInfo(), "colorShape2D");
         renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
-        renderer.setPosition(0, 0);
+        renderer.setPosition(new Vector2f(0, 0));
         renderer.setSizePix(500, 500);
 
         rectangle = new CollisionRectangle(0, 0, 500, 500);
@@ -50,7 +51,7 @@ public class TestCollisionSystem extends Scene {
         renderer2.setSizePix(200, 200);
 
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
-        renderer2.setPosition(rectangle2.x(), rectangle2.y());
+        renderer2.setPosition(new Vector2f(rectangle2.x(), rectangle2.y()));
 
         rotation = new FloatTweening();
 
@@ -99,8 +100,8 @@ public class TestCollisionSystem extends Scene {
         }
 
         if (update){
-            renderer2.setPosition(rectangle2.x(), rectangle2.y());
-            renderer.setPosition(rectangle.x(), rectangle.y());
+            renderer2.setPosition(new Vector2f(rectangle2.x(), rectangle2.y()));
+            renderer.setPosition(new Vector2f(rectangle.x(), rectangle.y()));
         }
 
 

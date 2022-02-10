@@ -21,9 +21,10 @@ public class Renderer{
     protected final Vector3f rotation;
     protected float angle;
 
+    protected boolean shouldGlUniformModel;
     protected Matrix4f model;
     protected boolean display;
-    protected FloatBuffer translateF;
+    protected FloatBuffer modelBuffer;
     protected Shape shape;
     protected ShaderManager shadManager;
 
@@ -37,7 +38,6 @@ public class Renderer{
 
     public Renderer(String shaderName, boolean useEbo, boolean in2D){
         shadManager = ShaderManager.getInstance();
-
         shape = new Shape(shaderName, useEbo, in2D);
         model = new Matrix4f().identity();
 
@@ -52,7 +52,9 @@ public class Renderer{
         scale = new Vector3f(1f);
         rotation = new Vector3f();
 
-        translateF = BufferUtils.createFloatBuffer(16);
+        modelBuffer = BufferUtils.createFloatBuffer(16);
+
+        shouldGlUniformModel = ShaderManager.getInstance().getShader(shape.getShaderId()).getLink("model") != -1;
 
         applyModel();
     }
@@ -68,8 +70,8 @@ public class Renderer{
 
     public void updateShader(){
         // Apply model matrix
-        if (ShaderManager.getInstance().getShader(shape.getShaderId()).getLink("model") != -1){
-            shadManager.getShader(shape.getShaderId()).glUniform("model", translateF);
+        if (shouldGlUniformModel){
+            shadManager.getShader(shape.getShaderId()).glUniform("model", modelBuffer);
         }
 
         if (displayMode == COLOR) {
@@ -120,7 +122,7 @@ public class Renderer{
         this.model.scale(this.scale);
         this.model.rotate(angle, this.rotation);
 
-        this.model.get(translateF);
+        this.model.get(modelBuffer);
     }
 
     public void hide(boolean state) {
@@ -162,6 +164,6 @@ public class Renderer{
 
     public void unload(){
         shape.unload();
-        translateF.clear();
+        modelBuffer.clear();
     }
 }

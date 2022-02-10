@@ -52,7 +52,7 @@ public class Test2DScene extends Scene {
 
         slimeTextureTweening = new Vector2fTweening();
 
-        slimeTextureTweening.setTweeningValues(ETweeningType.Quintic, ETweeningBehaviour.InOut)
+        slimeTextureTweening.setTweeningValues(ETweeningType.Back, ETweeningBehaviour.InOut)
                 .initTwoValue(1, new Vector2f(0, 0), new Vector2f(150, -150))
                 .setTweeningOption(ETweeningOption.LoopReversed).setAdditionnalArguments(3f,  null);
 

@@ -7,6 +7,7 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class TextureRenderer extends Renderer {
@@ -32,20 +33,16 @@ public class TextureRenderer extends Renderer {
         shape.setEbo(indices);
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.STATIC_STORE);
         textureIndex = shape.addVbo(texturePos(), 2, Shape.STATIC_STORE);
-
     }
 
 
     private float[] calculatePosition(){
-        float table[] = new float[]{
-                -1.0f + posX, 1.0f - posY,
-                -1.0f + posX, -windowH - posY,
-                windowW + posX, -windowH - posY,
-                windowW + posX, 1.0f - posY
-
+        return  new float[]{
+                0, 1,
+                0, 0,
+                1, 0,
+                1, 1
         };
-
-        return table;
     }
 
 
@@ -56,41 +53,25 @@ public class TextureRenderer extends Renderer {
 
     private float[] texturePos(){
         return new float[]{
-                texturePosition.x, texturePosition.z,
                 texturePosition.x, texturePosition.w,
-                texturePosition.y, texturePosition.w,
-                texturePosition.y, texturePosition.z
+                texturePosition.x, texturePosition.z,
+                texturePosition.y, texturePosition.z,
+                texturePosition.y, texturePosition.w
         };
     }
 
     // Set size with size of pixel
     public void setSizePix(float width, float height){
-        setSizeProp(width / windowInfo.getVirtualSizeRef().x, height / windowInfo.getVirtualSizeRef().y);
-    }
-
-
-    // Set size with a proportion of the window
-    public void setSizeProp(float width, float height){
-        windowW = width * 2.0f - 1.0f;
-        windowH = height * 2.0f - 1.0f;
-        updateShape();
+        setScale(new Vector3f(width, height, 1.0f));
     }
 
 
     public void setPosition(Vector2f position){
-        setPosition(position.x, position.y);
+        super.setPosition(new Vector3f(position.x, position.y, 0.0f));
     }
-
-
-    public void setPosition(float posX, float posY){
-        this.posX = posX * 2.0f / windowInfo.getVirtualSizeRef().x;
-        this.posY = posY * 2.0f / windowInfo.getVirtualSizeRef().y;
-        updateShape();
-    }
-
 
     public void updateShape(){
-        shape.updateVbo(calculatePosition(), positionIndex);
+        //shape.updateVbo(calculatePosition(), positionIndex);
         shape.updateVbo(texturePos(), textureIndex);
     }
 }
