@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.graphics.shape._2D.VirtualSceneRenderer;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -15,23 +16,27 @@ public class Scene {
     protected final Resources resources;
     protected final ShaderManager shaderManager;
     protected final Context mainContext;
-    protected Camera mainCamera;
+
+    protected Camera3D main3DCamera;
+    protected Camera2D main2DCamera;
 
     protected SceneManagerInterface sceneManagerInterface;
     private VirtualSceneRenderer scRenderer;
 
-    public Scene(CameraCreationInfo info){
+    public Scene(Camera3DCreationInfo info){
         resources = Resources.getInstance();
         shaderManager = ShaderManager.getInstance();
         mainContext = ContextManager.getInstance().getMainContext();
 
         if (info == null){
-            CameraCreationInfo cci = new CameraCreationInfo();
+            Camera3DCreationInfo cci = new Camera3DCreationInfo();
             cci.fov = 120f;
             cci.initialPosition = new Vector3f(0, 0, 0);
         }
 
-        mainCamera = mainContext.createCamera(info);
+        main3DCamera = mainContext.createCamera(info);
+        main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
+
         sceneManagerInterface = null;
     }
 
@@ -40,7 +45,7 @@ public class Scene {
     }
 
     public void init(String[] args){
-        shaderManager.reloadProjection(mainCamera);
+        shaderManager.reloadProjection(main3DCamera, main2DCamera);
         dispose();
 
         scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo());
@@ -55,7 +60,7 @@ public class Scene {
     public void update(){}
 
     public void dispose(){
-        shaderManager.dispose(mainCamera);
+        shaderManager.dispose(main3DCamera, main2DCamera);
     }
 
 

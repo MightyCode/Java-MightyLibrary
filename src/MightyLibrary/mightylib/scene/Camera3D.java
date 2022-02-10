@@ -10,16 +10,16 @@ import org.lwjgl.BufferUtils;
 import java.nio.FloatBuffer;
 
 
-public class Camera {
+public class Camera3D {
     private final WindowInfo windowInfo;
     private final MouseManager mouseManager;
 
-    private boolean usePerspective;
     private final Matrix4f projectionOrtho, projectionPerpec, view;
     private final Vector3f camPos;
 
     private final Vector3f camFront, camUp;
-    private FloatBuffer projectionBuffer, viewBuffer;
+    private final FloatBuffer projectionOrthoBuffer, projectionPerspecBuffer, viewBuffer;
+
     private boolean lockViewCursor = false;
 
     public static Vector3f speed;
@@ -29,7 +29,7 @@ public class Camera {
     private float yaw = 180.0f, pitch = 0.0f;
     private float yawCos, yawSin;
 
-    public Camera(WindowInfo windowInfo,  MouseManager mouseManager, float fov, Vector3f pos){
+    public Camera3D(WindowInfo windowInfo, MouseManager mouseManager, float fov, Vector3f pos){
         this.windowInfo = windowInfo;
         this.mouseManager = mouseManager;
 
@@ -37,10 +37,12 @@ public class Camera {
 
         projectionOrtho = new Matrix4f();
         projectionPerpec = new Matrix4f();
-        usePerspective = true;
+
 
         view = new Matrix4f();
-        projectionBuffer = BufferUtils.createFloatBuffer(16);
+        projectionOrthoBuffer = BufferUtils.createFloatBuffer(16);
+        projectionPerspecBuffer = BufferUtils.createFloatBuffer(16);
+
         viewBuffer = BufferUtils.createFloatBuffer(16);
 
         setViewAngle(fov);
@@ -86,7 +88,7 @@ public class Camera {
 
         view.identity();
         view.lookAt(camPos, camPos.add(camFront, new Vector3f()), camUp);
-        viewBuffer = view.get(viewBuffer);
+        view.get(viewBuffer);
     }
 
     public void setLockViewCursor(boolean state){
@@ -103,10 +105,8 @@ public class Camera {
         projectionPerpec.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
         projectionOrtho.ortho(0, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0 , -1, 1);
 
-        if (usePerspective)
-            projectionBuffer = projectionPerpec.get(projectionBuffer);
-        else
-            projectionBuffer  = projectionOrtho.get(projectionBuffer);
+        projectionPerpec.get(projectionPerspecBuffer);
+        projectionOrtho.get(projectionOrthoBuffer);
     }
 
     public Vector3f getCamPosRef() { return camPos; }
@@ -130,7 +130,7 @@ public class Camera {
     }
 
     public FloatBuffer getProjection(){
-        return projectionBuffer;
+        return projectionPerspecBuffer;
     }
 
     public FloatBuffer getView(){

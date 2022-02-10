@@ -3,8 +3,8 @@ package MightyLibrary.mightylib.main;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.scene.CameraCreationInfo;
+import MightyLibrary.mightylib.scene.Camera3D;
+import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import org.joml.Vector3f;
 
 public class Context {
@@ -27,8 +27,8 @@ public class Context {
     public MouseManager getMouseManager() { return mouseManager; }
 
 
-    public Camera createCamera(CameraCreationInfo info){
-        return new Camera(window.getInfo(), mouseManager, 120f, new Vector3f(0.0f, 0.0f, 10.0f));
+    public Camera3D createCamera(Camera3DCreationInfo info){
+        return new Camera3D(window.getInfo(), mouseManager, 120f, new Vector3f(0.0f, 0.0f, 10.0f));
     }
 
 

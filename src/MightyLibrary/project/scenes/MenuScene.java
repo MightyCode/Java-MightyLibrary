@@ -1,6 +1,5 @@
 package MightyLibrary.project.scenes;
 
-import static org.lwjgl.glfw.GLFW.*;
 import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
@@ -19,7 +18,7 @@ public class MenuScene extends Scene {
         super.init(args);
         /// SCENE INFORMATION ///
 
-        mainCamera.setPos(new Vector3f(0, 0, 0));
+        main3DCamera.setPos(new Vector3f(0, 0, 0));
         setClearColor(52, 189, 235, 1f);
 
         /// RENDERERS ///
@@ -92,7 +91,7 @@ public class MenuScene extends Scene {
             }
         }
 
-        mainCamera.updateView();
+        main3DCamera.updateView();
     }
 
 

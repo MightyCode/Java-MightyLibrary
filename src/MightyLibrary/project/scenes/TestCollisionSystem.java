@@ -2,11 +2,8 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Scene;
-import MightyLibrary.mightylib.util.collision.Collision2D;
-import MightyLibrary.mightylib.util.collision.Collision2DGrid;
 import MightyLibrary.mightylib.util.collision.CollisionBoundedVolume2D;
 import MightyLibrary.mightylib.util.collision.CollisionRectangle;
 import MightyLibrary.mightylib.util.math.Color4f;
@@ -17,11 +14,7 @@ import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.util.tweenings.ETweeningType;
 import MightyLibrary.mightylib.util.tweenings.type.FloatTweening;
 import MightyLibrary.project.lib.ActionId;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class TestCollisionSystem extends Scene {
     private TextureRenderer renderer;
@@ -37,7 +30,7 @@ public class TestCollisionSystem extends Scene {
         super.init(args);
         /// SCENE INFORMATION ///
 
-        mainCamera.setPos(new Vector3f(0, 0, 0));
+        main3DCamera.setPos(new Vector3f(0, 0, 0));
         setClearColor(52, 189, 235, 1f);
 
         /// RENDERERS ///
@@ -116,7 +109,7 @@ public class TestCollisionSystem extends Scene {
 
         renderer2.updateShape();
 
-        mainCamera.updateView();
+        main3DCamera.updateView();
     }
 
 

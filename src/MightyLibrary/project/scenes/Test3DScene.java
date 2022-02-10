@@ -7,10 +7,10 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.scene.Camera;
+import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.graphics.shape._3D.CubeRenderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
-import MightyLibrary.mightylib.scene.CameraCreationInfo;
+import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.project.lib.ActionId;
@@ -18,7 +18,7 @@ import org.joml.Vector3f;
 
 public class Test3DScene extends Scene {
 
-    private final static CameraCreationInfo SCENE_CCI = new CameraCreationInfo(120f, new Vector3f(0, 4, 0));
+    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120f, new Vector3f(0, 4, 0));
 
     private Renderer sBlock;
     private ModelRenderer stand;
@@ -87,31 +87,31 @@ public class Test3DScene extends Scene {
         }
 
         if(inputManager.input(ActionId.MOVE_LEFT)){
-            mainCamera.speedAngX(Camera.speed.x * speed);
+            main3DCamera.speedAngX(Camera3D.speed.x * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_RIGHT)){
-            mainCamera.speedAngX(-Camera.speed.x * speed);
+            main3DCamera.speedAngX(-Camera3D.speed.x * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_FORWARD)){
-            mainCamera.speedAngZ(-Camera.speed.z * speed);
+            main3DCamera.speedAngZ(-Camera3D.speed.z * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_BACKWARD)) {
-            mainCamera.speedAngZ(Camera.speed.z * speed);
+            main3DCamera.speedAngZ(Camera3D.speed.z * speed);
         }
 
         if(inputManager.input(ActionId.MOVE_UP)) {
-            mainCamera.setY(mainCamera.getCamPosRef().y += Camera.speed.y);
+            main3DCamera.setY(main3DCamera.getCamPosRef().y += Camera3D.speed.y);
         }
 
         if(inputManager.input(ActionId.MOVE_DOWN)) {
-            mainCamera.setY(mainCamera.getCamPosRef().y -= Camera.speed.y);
+            main3DCamera.setY(main3DCamera.getCamPosRef().y -= Camera3D.speed.y);
         }
 
         if(inputManager.inputPressed(ActionId.ESCAPE)) {
-            mainCamera.invertLockViewCursor();
+            main3DCamera.invertLockViewCursor();
             mainContext.getMouseManager().invertCursorState();
 
         }
@@ -124,7 +124,7 @@ public class Test3DScene extends Scene {
 
         if(counter > 720) counter = 0f;
 
-        mainCamera.updateView();
+        main3DCamera.updateView();
     }
 
 
