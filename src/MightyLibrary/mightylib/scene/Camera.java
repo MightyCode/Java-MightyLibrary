@@ -14,7 +14,8 @@ public class Camera {
     private final WindowInfo windowInfo;
     private final MouseManager mouseManager;
 
-    private final Matrix4f projection, view;
+    private boolean usePerspective;
+    private final Matrix4f projectionOrtho, projectionPerpec, view;
     private final Vector3f camPos;
 
     private final Vector3f camFront, camUp;
@@ -34,7 +35,10 @@ public class Camera {
 
         camPos = new Vector3f();
 
-        projection = new Matrix4f();
+        projectionOrtho = new Matrix4f();
+        projectionPerpec = new Matrix4f();
+        usePerspective = true;
+
         view = new Matrix4f();
         projectionBuffer = BufferUtils.createFloatBuffer(16);
         viewBuffer = BufferUtils.createFloatBuffer(16);
@@ -96,10 +100,13 @@ public class Camera {
 
 
     public void setViewAngle(float fov){
-        projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
-        //projection.ortho(0, 800, 600, 0 , -1, 1);
+        projectionPerpec.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
+        projectionOrtho.ortho(0, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0 , -1, 1);
 
-        projectionBuffer = projection.get(projectionBuffer);
+        if (usePerspective)
+            projectionBuffer = projectionPerpec.get(projectionBuffer);
+        else
+            projectionBuffer  = projectionOrtho.get(projectionBuffer);
     }
 
     public Vector3f getCamPosRef() { return camPos; }
