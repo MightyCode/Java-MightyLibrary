@@ -17,14 +17,14 @@ public class BackgroundlessButton extends GUI {
         this.context = context;
 
         if(text == null)
-            this.Text = new Text(context.getWindow().getInfo());
+            this.Text = new Text();
         else
             this.Text = text;
 
         if (text != null) {
             this.OverlapsText = text.createCopy();
         } else {
-            this.OverlapsText = new Text(context.getWindow().getInfo());
+            this.OverlapsText = new Text();
         }
     }
 

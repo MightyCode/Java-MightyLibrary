@@ -7,6 +7,7 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class Text extends Renderer {
@@ -14,7 +15,6 @@ public class Text extends Renderer {
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;
 
-    private final WindowInfo windowInfo;
     private float fontSize;
     private final int positionIndex;
     private final int textureIndex;
@@ -22,16 +22,14 @@ public class Text extends Renderer {
     private FontFace font;
     private String text;
 
-    private final Vector2f referencePosition;
     private final Vector2f rightLeftPosition;
     private final Vector2f rectangleSize;
 
     private EDirection reference;
     private ETextAlignment alignment;
 
-    public Text(WindowInfo windowInfo) {
+    public Text() {
         super("coloredText", true, true);
-        this.windowInfo = windowInfo;
 
         fontSize = 10.0f;
 
@@ -44,7 +42,6 @@ public class Text extends Renderer {
         this.reference = EDirection.None;
         this.alignment = ETextAlignment.Left;
 
-        this.referencePosition = new Vector2f(0, 0);
         this.rectangleSize = new Vector2f(0, 0);
         this.rightLeftPosition = new Vector2f(0, 0);
 
@@ -63,9 +60,8 @@ public class Text extends Renderer {
         if (shouldNotDrawText())
             return;
 
-        font.getTexture().bind();
         shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
-        super.draw();
+        super.display();
     }
 
 
@@ -110,16 +106,9 @@ public class Text extends Renderer {
         if (position == null)
             return this;
 
-        this.referencePosition.x = position.x;
-        this.referencePosition.y = position.y;
-        this.computeRightUpPosition();
+        super.setPosition(new Vector3f(position.x, position.y, 0.0f));
 
         return this;
-    }
-
-
-    public Vector2f referencePosition() {
-        return this.referencePosition;
     }
 
     public Vector2f rightLeftPosition() { return this.rightLeftPosition; }
@@ -163,8 +152,8 @@ public class Text extends Renderer {
         if (shouldNotDrawText())
             return;
 
-        rightLeftPosition.x = referencePosition.x;
-        rightLeftPosition.y = referencePosition.y;
+        rightLeftPosition.x = position.x;
+        rightLeftPosition.y = position.y;
 
         rectangleSize.x = 0;
         rectangleSize.y = 0;
@@ -256,18 +245,17 @@ public class Text extends Renderer {
 
                 fontChar = font.getFontFile().getCharacter(c);
 
-                sizeTemp.x = fontChar.getWidth() * fontSize / windowInfo.getVirtualSizeRef().x * 2.0f - 1.0f;
-                sizeTemp.y = fontChar.getHeight() * fontSize / windowInfo.getVirtualSizeRef().y * 2.0f - 1.0f;
+                sizeTemp.x = fontChar.getWidth() * fontSize;
+                sizeTemp.y = fontChar.getHeight() * fontSize;
 
-                posTemp.x = (currentCharOffset.x + fontChar.getxOffset() + referencePosition.x - textReference.x + lineAlignmentOffset)
-                        * 2.0f / windowInfo.getVirtualSizeRef().x;
-                posTemp.y = (currentCharOffset.y + fontChar.getyOffset() + referencePosition.y - textReference.y)
-                            * 2.0f / windowInfo.getVirtualSizeRef().y;
+                posTemp.x = (currentCharOffset.x + fontChar.getxOffset() * fontSize - textReference.x + lineAlignmentOffset);
+                posTemp.y = (currentCharOffset.y + fontChar.getyOffset() * fontSize - textReference.y);
 
-                temp.x = -1.0f + posTemp.x;
+                temp.x = posTemp.x;
                 temp.y = sizeTemp.x + posTemp.x;
-                temp.z = 1.0f - posTemp.y;
-                temp.w = -sizeTemp.y - posTemp.y;
+                temp.z = posTemp.y;
+                temp.w = sizeTemp.y + posTemp.y;
+
 
                 position[charCount * SIZE_COORDINATES] = temp.x;
                 position[charCount * SIZE_COORDINATES + 1] = temp.z;
@@ -314,11 +302,11 @@ public class Text extends Renderer {
     }
 
     public Text createCopy(){
-        Text text = new Text(windowInfo);
+        Text text = new Text();
         text.setFont(this.font.getName())
                 .setColor(color.copy())
                 .setFontSize(fontSize)
-                .setPosition(new Vector2f(this.referencePosition.x, this.referencePosition.y))
+                .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setReference(this.reference)
                 .setText(this.text);
 
@@ -330,7 +318,7 @@ public class Text extends Renderer {
                 .setFont(this.font.getName())
                 .setColor(color.copy())
                 .setFontSize(fontSize)
-                .setPosition(new Vector2f(this.referencePosition.x, this.referencePosition.y))
+                .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setReference(this.reference)
                 .setText(this.text);
 

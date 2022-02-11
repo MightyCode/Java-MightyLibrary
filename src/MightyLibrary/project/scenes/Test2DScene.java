@@ -53,7 +53,7 @@ public class Test2DScene extends Scene {
                 .setTweeningOption(ETweeningOption.LoopReversed).setAdditionnalArguments(3f,  null);
 
 
-        text = new Text(mainContext.getWindow().getInfo());
+        text = new Text();
 
         Vector2i size = mainContext.getWindow().getInfo().getSizeRef();
 

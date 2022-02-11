@@ -95,8 +95,13 @@
 				"font/coloredTextV.glsl",
 				"font/coloredTextF.glsl"
 			],
-			"mode" : ["none"],
-			"links": ["color"]
+			"mode" : ["cam2DView"],
+			"links": [
+				"color",
+				"projection",
+				"view",
+				"model"
+			]
 		}
 	}
 }

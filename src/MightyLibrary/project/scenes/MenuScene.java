@@ -33,6 +33,7 @@ public class MenuScene extends Scene {
                 .setFontSize(40)
                 .setText("Test2DScene");
 
+
         button2DScene.Text.copyTo(button2DScene.OverlapsText);
         button2DScene.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->Test2DScene<-");
@@ -95,8 +96,6 @@ public class MenuScene extends Scene {
                 }
             }
         }
-
-        main3DCamera.updateView();
     }
 
 
