@@ -63,6 +63,7 @@ public class MenuScene extends Scene {
         guiList.GUIs.put(1, button3DScene);
         guiList.GUIs.put(2, buttonCollisionTest);
         guiList.GUIs.put(3, buttonQuit);
+        guiList.ShouldLoop = true;
     }
 
 

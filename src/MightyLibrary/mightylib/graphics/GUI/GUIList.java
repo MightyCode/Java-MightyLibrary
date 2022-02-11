@@ -46,28 +46,27 @@ public class GUIList {
     }
 
     public void update(){
-        boolean needUpdate = false;
-
         if (!mouseManager.oldPos().equals(mouseManager.pos(), PIXEL_PER_SECOND_DISABLE)){
             if (selected != null && selected.mouseDisableIt()) {
                 selected.forceSelect(false);
             }
 
-            needUpdate = true;
+            shouldUpdateSelected();
         }
+
+        Integer id = null;
 
         if (actionUpValue != -1 && inputManager.inputPressed(actionUpValue)) {
-            needUpdate = true;
-            unselectAll();
-            selectUp();
+            id = selectUp();
         } else if (actionDownValue != -1 && inputManager.inputPressed(actionDownValue)) {
-            needUpdate = true;
-            unselectAll();
-            selectDown();
+            id = selectDown();
         }
 
-        if (needUpdate)
+        if (id != null && (!id.equals(this.mouseId)) && !id.equals(this.id)) {
+            unselectAll();
+            GUIs.get(id).forceSelect(true);
             shouldUpdateSelected();
+        }
     }
 
     private void unselectAll(){
@@ -76,10 +75,10 @@ public class GUIList {
         }
     }
 
-    private void selectUp(){
+    private Integer selectUp(){
         if (id == null) {
             selectMinimum();
-            return;
+            return null;
         }
 
         Integer maxId = null, minId = null;
@@ -96,18 +95,21 @@ public class GUIList {
         }
 
         if (maxId == null){
-            if (minId != null) {
-                GUIs.get(minId).forceSelect(true);
+            if (minId != null && ShouldLoop) {
+               return minId;
             }
         } else {
-            GUIs.get(maxId).forceSelect(true);
+            return maxId;
         }
+
+        return null;
     }
 
-    private void selectDown(){
+
+    private Integer selectDown(){
         if (id == null) {
             selectMinimum();
-            return;
+            return null;
         }
 
         Integer maxId = null, minId = null;
@@ -124,12 +126,14 @@ public class GUIList {
         }
 
         if (minId == null){
-            if (maxId != null) {
-                GUIs.get(maxId).forceSelect(true);
+            if (maxId != null && ShouldLoop) {
+                return maxId;
             }
         } else {
-            GUIs.get(minId).forceSelect(true);
+            return minId;
         }
+
+        return null;
     }
 
     private void selectMinimum(){
