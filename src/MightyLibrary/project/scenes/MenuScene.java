@@ -31,31 +31,35 @@ public class MenuScene extends Scene {
                 .setReference(EDirection.None)
                 .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.5f))
                 .setFontSize(40)
-                .setText("->Test2DScene<-");
+                .setText("Test2DScene");
 
         button2DScene.Text.copyTo(button2DScene.OverlapsText);
-        button2DScene.OverlapsText.setColor(new Color4f(0.3f));
+        button2DScene.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Test2DScene<-");
 
         BackgroundlessButton button3DScene = button2DScene.copy();
         button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.6f))
-                        .setText("->Test3DScene<-");
+                        .setText("Test3DScene");
 
         button3DScene.Text.copyTo(button3DScene.OverlapsText);
-        button3DScene.OverlapsText.setColor(new Color4f(0.3f));
+        button3DScene.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Test3DScene<-");
 
         BackgroundlessButton buttonCollisionTest = button2DScene.copy();
         buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.7f))
-                .setText("->TestCollisionScene<-");
+                .setText("TestCollisionScene");
 
         buttonCollisionTest.Text.copyTo(buttonCollisionTest.OverlapsText);
-        buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f));
+        buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->TestCollisionScene<-");
 
         BackgroundlessButton buttonQuit = button2DScene.copy();
         buttonQuit.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.9f))
-                .setText("->Quit<-");
+                .setText("Quit");
 
         buttonQuit.Text.copyTo(buttonQuit.OverlapsText);
-        buttonQuit.OverlapsText.setColor(new Color4f(0.3f));
+        buttonQuit.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Quit<-");
 
         guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
         guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
@@ -63,7 +67,7 @@ public class MenuScene extends Scene {
         guiList.GUIs.put(1, button3DScene);
         guiList.GUIs.put(2, buttonCollisionTest);
         guiList.GUIs.put(3, buttonQuit);
-        guiList.ShouldLoop = true;
+        guiList.ShouldLoop = false;
     }
 
 

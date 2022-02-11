@@ -23,6 +23,8 @@ public class GUIList {
 
     public boolean ShouldLoop = true;
 
+    private boolean mouseMoved;
+
     public GUIList(InputManager inputManager, MouseManager mouseManager) {
         this.mouseManager = mouseManager;
         this.inputManager = inputManager;
@@ -31,6 +33,8 @@ public class GUIList {
         selected = null;
         id = null;
         mouseId = null;
+
+        mouseMoved = false;
     }
 
     public Integer getSelected(){
@@ -52,6 +56,8 @@ public class GUIList {
             }
 
             shouldUpdateSelected();
+
+            mouseMoved = true;
         }
 
         Integer id = null;
@@ -62,11 +68,16 @@ public class GUIList {
             id = selectDown();
         }
 
-        if (id != null && (!id.equals(this.mouseId)) && !id.equals(this.id)) {
-            unselectAll();
-            GUIs.get(id).forceSelect(true);
-            shouldUpdateSelected();
-        }
+        if (id == null)
+            return;
+
+        if (id.equals(this.id) && !mouseMoved)
+            return;
+
+        unselectAll();
+        GUIs.get(id).forceSelect(true);
+        shouldUpdateSelected();
+        mouseMoved = false;
     }
 
     private void unselectAll(){
@@ -76,10 +87,13 @@ public class GUIList {
     }
 
     private Integer selectUp(){
-        if (id == null) {
-            selectMinimum();
-            return null;
-        }
+        if (this.id == null)
+            return selectMinimum();
+
+
+        if (mouseMoved)
+            return this.id;
+
 
         Integer maxId = null, minId = null;
 
@@ -98,19 +112,19 @@ public class GUIList {
             if (minId != null && ShouldLoop) {
                return minId;
             }
-        } else {
-            return maxId;
         }
 
-        return null;
+        return maxId;
     }
 
 
     private Integer selectDown(){
-        if (id == null) {
-            selectMinimum();
-            return null;
-        }
+        if (this.id == null)
+            return selectMinimum();
+
+        if (mouseMoved)
+            return this.id;
+
 
         Integer maxId = null, minId = null;
 
@@ -129,14 +143,12 @@ public class GUIList {
             if (maxId != null && ShouldLoop) {
                 return maxId;
             }
-        } else {
-            return minId;
         }
 
-        return null;
+        return minId;
     }
 
-    private void selectMinimum(){
+    private Integer selectMinimum(){
         Integer min = null;
         for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()) {
             if (min == null)
@@ -145,8 +157,7 @@ public class GUIList {
                 min = pair.getKey();
         }
 
-        if (min != null)
-            GUIs.get(min).forceSelect(true);
+        return min;
     }
 
     private void shouldUpdateSelected(){
