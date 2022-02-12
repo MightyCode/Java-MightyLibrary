@@ -4,7 +4,7 @@ package MightyLibrary.project.main;
  * Main class of the project.
  *
  * @author MightyCode
- * @version of the library : 0.1.2
+ * @version of the library : 0.1.3
  */
 public class Main {
 
