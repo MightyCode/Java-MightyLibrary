@@ -97,6 +97,24 @@ public class Renderer{
         applyModel();
     }
 
+    public void setX(float x){
+        this.position.x = x;
+
+        applyModel();
+    }
+
+    public void setY(float y){
+        this.position.y = y;
+
+        applyModel();
+    }
+
+    public void setZ(float z){
+        this.position.z = z;
+
+        applyModel();
+    }
+
     public void setScale(Vector3f scale){
         this.scale.x = scale.x;
         this.scale.y = scale.y;
@@ -118,6 +136,7 @@ public class Renderer{
 
     public void applyModel(){
         this.model.identity();
+
         this.model.translate(this.position);
         this.model.scale(this.scale);
         this.model.rotate(angle, this.rotation);

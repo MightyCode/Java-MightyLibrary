@@ -18,7 +18,10 @@ import org.joml.Vector3f;
 
 public class MenuScene extends Scene {
     private GUIList guiList;
+
+    BackgroundlessButton buttonCollisionTest;
     BackgroundlessButton buttonQuit;
+
 
     FloatTweening rotation;
 
@@ -54,7 +57,7 @@ public class MenuScene extends Scene {
         button3DScene.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->Test3DScene<-");
 
-        BackgroundlessButton buttonCollisionTest = button2DScene.copy();
+        buttonCollisionTest = button2DScene.copy();
         buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.7f))
                 .setText("TestCollisionScene");
 
@@ -112,6 +115,8 @@ public class MenuScene extends Scene {
 
         rotation.update();
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
+
+        buttonCollisionTest.OverlapsText.setX(rotation.value() * 50);
     }
 
 

@@ -7,9 +7,9 @@ import MightyLibrary.mightylib.resources.Resources;
 
 public class FontFace extends DataType {
     private static final String PATH = "resources/textures/fonts/";
-    private String name;
-    private Texture fontAtlas;
-    private FontFile fontFile;
+    private final String name;
+    private final Texture fontAtlas;
+    private final FontFile fontFile;
 
     FontFace(String fontFaceName, String textureName, String infoPath) {
         super(EDataType.Font, fontFaceName, PATH + infoPath);
@@ -18,7 +18,6 @@ public class FontFace extends DataType {
         fontAtlas = Resources.getInstance().getResource(Texture.class, textureName);
 
         fontFile = new FontFile(PATH + infoPath);
-
     }
 
 

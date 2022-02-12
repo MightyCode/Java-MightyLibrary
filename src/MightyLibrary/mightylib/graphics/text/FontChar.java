@@ -3,15 +3,15 @@ package MightyLibrary.mightylib.graphics.text;
 public class FontChar {
     private int id;
 
-    private float xAtlas, yAtlas;
+    private double xAtlas, yAtlas;
 
-    private float width, height;
+    private double width, height;
 
-    private float widthAtlas, heightAtlas;
+    private double widthAtlas, heightAtlas;
 
-    private float xOffset, yOffset;
+    private double xOffset, yOffset;
 
-    private float xAdvance;
+    private double xAdvance;
 
     public int getId() {
         return id;
@@ -23,91 +23,91 @@ public class FontChar {
         return this;
     }
 
-    public float getxAtlas() {
+    public double getxAtlas() {
         return xAtlas;
     }
 
-    public FontChar setxAtlas(float xAtlas) {
+    public FontChar setxAtlas(double xAtlas) {
         this.xAtlas = xAtlas;
 
         return this;
     }
 
-    public float getyAtlas() {
+    public double getyAtlas() {
         return yAtlas;
     }
 
-    public FontChar setyAtlas(float yAtlas) {
+    public FontChar setyAtlas(double yAtlas) {
         this.yAtlas = yAtlas;
 
         return this;
     }
 
-    public float getWidth() {
+    public double getWidth() {
         return width;
     }
 
-    public FontChar setWidth(float width) {
+    public FontChar setWidth(double width) {
         this.width = width;
 
         return this;
     }
 
-    public float getHeight() {
+    public double getHeight() {
         return height;
     }
 
-    public FontChar setHeight(float height) {
+    public FontChar setHeight(double height) {
         this.height = height;
 
         return this;
     }
 
-    public float getWidthAtlas() {
+    public double getWidthAtlas() {
         return widthAtlas;
     }
 
-    public FontChar setWidthAtlas(float widthAtlas) {
+    public FontChar setWidthAtlas(double widthAtlas) {
         this.widthAtlas = widthAtlas;
 
         return this;
     }
 
-    public float getHeightAtlas() {
+    public double getHeightAtlas() {
         return heightAtlas;
     }
 
-    public FontChar setHeightAtlas(float heightAtlas) {
+    public FontChar setHeightAtlas(double heightAtlas) {
         this.heightAtlas = heightAtlas;
 
         return this;
     }
 
-    public float getxOffset() {
+    public double getxOffset() {
         return xOffset;
     }
 
-    public FontChar setxOffset(float xOffset) {
+    public FontChar setxOffset(double xOffset) {
         this.xOffset = xOffset;
 
         return this;
     }
 
-    public float getyOffset() {
+    public double getyOffset() {
         return yOffset;
     }
 
-    public FontChar setyOffset(float yOffset) {
+    public FontChar setyOffset(double yOffset) {
         this.yOffset = yOffset;
 
         return this;
     }
 
-    public float getxAdvance() {
+    public double getxAdvance() {
         return xAdvance;
     }
 
-    public FontChar setxAdvance(float xAdvance) {
+    public FontChar setxAdvance(double xAdvance) {
         this.xAdvance = xAdvance;
 
         return this;

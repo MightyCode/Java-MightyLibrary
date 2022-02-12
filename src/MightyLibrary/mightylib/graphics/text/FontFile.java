@@ -7,16 +7,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class FontFile {
-    private String path;
-
+    private final String path;
     private Vector4i padding;
 
     private int size;
-
-    private float lineHeight;
-
+    private double lineHeight;
     private int atlasWidth, atlasHeight;
-
     private int numChars;
 
     private Map<Integer, FontChar> characters;
@@ -51,7 +47,7 @@ public class FontFile {
                                     Integer.parseInt(tempPadding[2]),
                                     Integer.parseInt(tempPadding[3]));
 
-            lineHeight = (float) (Integer.parseInt(values.get("lineHeight")) - padding.x - padding.z) / size;
+            lineHeight = (Integer.parseInt(values.get("lineHeight")) - padding.x - padding.z) * 1.0 / size;
 
             atlasWidth = Integer.parseInt(values.get("scaleW"));
             atlasHeight = Integer.parseInt(values.get("scaleH"));
@@ -69,15 +65,15 @@ public class FontFile {
                 int id = Integer.parseInt(values.get("id"));
 
                 fontChar.setId(id)
-                        .setxAtlas((float) (Integer.parseInt(values.get("x")) + padding.w) / atlasWidth)
-                        .setyAtlas((float) (Integer.parseInt(values.get("y")) + padding.x) / atlasHeight)
-                        .setWidth((float) (Integer.parseInt(values.get("width")) - (padding.w - padding.y)) / size)
-                        .setHeight((float) (Integer.parseInt(values.get("height")) - (padding.x - padding.z)) / size)
-                        .setWidthAtlas((float) (Integer.parseInt(values.get("width")) - (padding.w - padding.y)) / atlasWidth)
-                        .setHeightAtlas((float) (Integer.parseInt(values.get("height")) - (padding.x - padding.z)) / atlasHeight)
-                        .setxOffset((float) (Integer.parseInt(values.get("xoffset")) + padding.w) / size)
-                        .setyOffset((float) (Integer.parseInt(values.get("yoffset")) + padding.x) / size)
-                        .setxAdvance((float) (Integer.parseInt(values.get("xadvance")) - padding.w - padding.y) / size);
+                        .setxAtlas((double) (Integer.parseInt(values.get("x")) + padding.w) / atlasWidth)
+                        .setyAtlas((double) (Integer.parseInt(values.get("y")) + padding.x) / atlasHeight)
+                        .setWidth((double) (Integer.parseInt(values.get("width")) - (padding.w - padding.y)) / size)
+                        .setHeight((double) (Integer.parseInt(values.get("height")) - (padding.x - padding.z)) / size)
+                        .setWidthAtlas((double) (Integer.parseInt(values.get("width")) - (padding.w - padding.y)) / atlasWidth)
+                        .setHeightAtlas((double) (Integer.parseInt(values.get("height")) - (padding.x - padding.z)) / atlasHeight)
+                        .setxOffset((double) (Integer.parseInt(values.get("xoffset")) + padding.w) / size)
+                        .setyOffset((double) (Integer.parseInt(values.get("yoffset")) + padding.x) / size)
+                        .setxAdvance((double) (Integer.parseInt(values.get("xadvance")) - padding.w - padding.y) / size);
 
                 characters.put(id, fontChar);
             }
@@ -114,7 +110,7 @@ public class FontFile {
     }
 
 
-    public float getLineHeight() {
+    public double getLineHeight() {
         return lineHeight;
     }
 

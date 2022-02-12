@@ -2,11 +2,11 @@ package MightyLibrary.mightylib.graphics.text;
 
 import MightyLibrary.mightylib.graphics.shape.Renderer;
 import MightyLibrary.mightylib.graphics.shape.Shape;
-import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -245,16 +245,16 @@ public class Text extends Renderer {
 
                 fontChar = font.getFontFile().getCharacter(c);
 
-                sizeTemp.x = fontChar.getWidth() * fontSize;
-                sizeTemp.y = fontChar.getHeight() * fontSize;
+                sizeTemp.x = (float)(fontChar.getWidth() * fontSize);
+                sizeTemp.y = (float)(fontChar.getHeight() * fontSize);
 
-                posTemp.x = (currentCharOffset.x + fontChar.getxOffset() * fontSize - textReference.x + lineAlignmentOffset);
-                posTemp.y = (currentCharOffset.y + fontChar.getyOffset() * fontSize - textReference.y);
+                posTemp.x = (int) (currentCharOffset.x + fontChar.getxOffset() * fontSize - textReference.x + lineAlignmentOffset);
+                posTemp.y = (float)(currentCharOffset.y + fontChar.getyOffset() * fontSize - textReference.y);
 
-                temp.x = posTemp.x;
-                temp.y = sizeTemp.x + posTemp.x;
-                temp.z = posTemp.y;
-                temp.w = sizeTemp.y + posTemp.y;
+                temp.x = (posTemp.x);
+                temp.y = (sizeTemp.x + posTemp.x);
+                temp.z = (posTemp.y);
+                temp.w = (sizeTemp.y + posTemp.y);
 
 
                 position[charCount * SIZE_COORDINATES] = temp.x;
@@ -269,10 +269,10 @@ public class Text extends Renderer {
                 position[charCount * SIZE_COORDINATES + 6] = temp.y;
                 position[charCount * SIZE_COORDINATES + 7] = temp.z;
 
-                temp.x = fontChar.getxAtlas();
-                temp.y = temp.x + fontChar.getWidthAtlas();
-                temp.z = fontChar.getyAtlas();
-                temp.w = temp.z + fontChar.getHeightAtlas();
+                temp.x = (float)fontChar.getxAtlas();
+                temp.y = temp.x + (float)fontChar.getWidthAtlas();
+                temp.z = (float)fontChar.getyAtlas();
+                temp.w = temp.z + (float)fontChar.getHeightAtlas();
 
                 texturePosition[charCount * SIZE_COORDINATES] = temp.x;
                 texturePosition[charCount * SIZE_COORDINATES + 1] = temp.z;
