@@ -25,7 +25,8 @@ public abstract class DataType {
     public abstract boolean load();
 
     public boolean reload(){
-        if (!unload()) return false;
+        if (!unload())
+            return false;
 
         return load();
     }
