@@ -73,7 +73,21 @@ public class MouseManager {
         DoubleBuffer y = BufferUtils.createDoubleBuffer(1);
 
         glfwGetCursorPos(windowInfo.getWindowId(), x, y);
-        pos.set((float)x.get(0), (float)y.get(0));
+        if (windowInfo.getRatio() <= windowInfo.getVirtualRatio()){
+            float diff = windowInfo.getSizeRef().x * 1f / windowInfo.getVirtualSizeRef().x;
+
+            int size = (int)(windowInfo.getVirtualSizeRef().y * diff);
+
+            pos.set(((float)x.get(0) / diff),
+                    (((float)y.get(0) - (windowInfo.getSizeRef().y - size) * 0.5f) / diff));
+        } else {
+            float diff = windowInfo.getSizeRef().y * 1f / windowInfo.getVirtualSizeRef().y;
+
+            int size = (int)(windowInfo.getVirtualSizeRef().x * diff);
+
+            pos.set((((float)x.get(0) - (windowInfo.getSizeRef().x - size) * 0.5f) / diff),
+                    ((float)y.get(0) / diff));
+        }
     }
 
     public float posX(){

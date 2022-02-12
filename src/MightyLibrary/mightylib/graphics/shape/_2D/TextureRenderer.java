@@ -13,14 +13,12 @@ import org.joml.Vector4f;
 
 public class TextureRenderer extends Renderer {
     protected EDirection reference;
-    protected final WindowInfo windowInfo;
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
-    public TextureRenderer(WindowInfo info, String shaderName) {
+    public TextureRenderer(String shaderName) {
         super(shaderName, true, true);
 
-        windowInfo = info;
         reference = EDirection.LeftUp;
 
         texturePosition = new Vector4f(0f, 1f, 0f,1f);
@@ -96,6 +94,12 @@ public class TextureRenderer extends Renderer {
     // Set size with size of pixel
     public TextureRenderer setSizePix(float width, float height){
         setScale(new Vector3f(width, height, 1.0f));
+
+        return this;
+    }
+
+    public TextureRenderer setSizeToTexture(){
+        setScale(new Vector3f(texture.getWidth(), texture.getHeight(), 1.0f));
 
         return this;
     }

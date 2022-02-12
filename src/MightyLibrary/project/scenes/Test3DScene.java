@@ -71,7 +71,7 @@ public class Test3DScene extends Scene {
         /*hudBar = new TextureRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
-        hudBar = new TextureRenderer(mainContext.getWindow().getInfo(), "texture2D");
+        hudBar = new TextureRenderer("texture2D");
         hudBar.switchToTextureMode("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(new Vector2f(150, 150)); //window.size.x * 0.7f, window.size.y * 0.7f);

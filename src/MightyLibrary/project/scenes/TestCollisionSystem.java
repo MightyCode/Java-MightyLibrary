@@ -36,7 +36,7 @@ public class TestCollisionSystem extends Scene {
 
         /// RENDERERS ///
 
-        renderer = new TextureRenderer(mainContext.getWindow().getInfo(), "colorShape2D");
+        renderer = new TextureRenderer("colorShape2D");
         renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
         renderer.setPosition(new Vector2f(0, 0));
         renderer.setSizePix(500, 500);
@@ -46,7 +46,7 @@ public class TestCollisionSystem extends Scene {
         boundedVolume2D = new CollisionBoundedVolume2D();
         boundedVolume2D.Collisions.add(rectangle);
 
-        renderer2 = new TextureRenderer(mainContext.getWindow().getInfo(), "colorShape2D");
+        renderer2 = new TextureRenderer("colorShape2D");
         renderer2.switchToColorMode(new Color4f(0.7f, 0.6f, 0.6f, 1f));
         renderer2.setSizePix(200, 200);
 
