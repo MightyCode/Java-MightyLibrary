@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util.tweenings;
+package MightyLibrary.mightylib.physics.tweenings;
 
 public enum ETweeningType {
     Linear,

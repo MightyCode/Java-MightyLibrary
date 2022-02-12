@@ -1,38 +1,37 @@
-package MightyLibrary.mightylib.util.tweenings.tweeningmath;
+package MightyLibrary.mightylib.physics.tweenings.tweeningmath;
 
-import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 
-public class Quadratic {
-
+public class Cubic {
     public static float Evaluate(ETweeningBehaviour behaviour,
                                  float t, float b, float c, float d){
         switch(behaviour){
             case In:
-                return Quadratic.In(t, b, c, d);
+                return Cubic.In(t, b, c, d);
             case Out:
-                return Quadratic.Out(t, b, c, d);
+                return Cubic.Out(t, b, c, d);
             case InOut:
-                return Quadratic.InOut(t, b, c, d);
+                return Cubic.InOut(t, b, c, d);
             default:
                 return 0.f;
         }
     }
 
     public static float In(float t, float b, float c, float d){
-        return c * (t /= d) * t + b;
+        return c * (t /= d) * t * t + b;
     }
 
 
     public static float Out(float t, float b, float c, float d){
-        return -c * (t /= d) * (t - 2) + b;
+        return c * ((t=t/d - 1) * t * t + 1) + b;
     }
 
 
     public static float InOut(float t, float b, float c, float d){
-        if ((t /= d / 2) < 1) {
-            return c / 2 * t * t + b;
+        if ((t /= d / 2) < 1){
+            return c / 2 * t * t * t + b;
         }
 
-        return -c / 2 * ((--t) * (t - 2) - 1) + b;
+        return c / 2 * ((t -= 2) * t * t + 2) + b;
     }
 }

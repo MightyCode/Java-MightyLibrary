@@ -3,16 +3,17 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.physics.collision.CollisionVisualisation;
 import MightyLibrary.mightylib.scene.Scene;
-import MightyLibrary.mightylib.util.collision.CollisionBoundedVolume2D;
-import MightyLibrary.mightylib.util.collision.CollisionRectangle;
+import MightyLibrary.mightylib.physics.collision.CollisionBoundedVolume2D;
+import MightyLibrary.mightylib.physics.collision.CollisionRectangle;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.MightyMath;
-import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
-import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
-import MightyLibrary.mightylib.util.tweenings.ETweeningType;
-import MightyLibrary.mightylib.util.tweenings.type.FloatTweening;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
+import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -36,22 +37,16 @@ public class TestCollisionSystem extends Scene {
 
         /// RENDERERS ///
 
-        renderer = new TextureRenderer("colorShape2D");
-        renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
-        renderer.setPosition(new Vector2f(0, 0));
-        renderer.setSizePix(500, 500);
-
         rectangle = new CollisionRectangle(0, 0, 500, 500);
+
+        renderer = CollisionVisualisation.createFrom(rectangle, new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
         boundedVolume2D = new CollisionBoundedVolume2D();
         boundedVolume2D.Collisions.add(rectangle);
 
-        renderer2 = new TextureRenderer("colorShape2D");
-        renderer2.switchToColorMode(new Color4f(0.7f, 0.6f, 0.6f, 1f));
-        renderer2.setSizePix(200, 200);
-
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
-        renderer2.setPosition(new Vector2f(rectangle2.x(), rectangle2.y()));
+
+        renderer2 = CollisionVisualisation.createFrom(rectangle2, new Color4f(0.7f, 0.6f, 0.6f, 1f)); new TextureRenderer("colorShape2D");
 
         rotation = new FloatTweening();
 

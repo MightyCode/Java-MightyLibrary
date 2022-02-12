@@ -1,6 +1,6 @@
-package MightyLibrary.mightylib.util.tweenings.tweeningmath;
+package MightyLibrary.mightylib.physics.tweenings.tweeningmath;
 
-import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 
 public class Bounce {
     public static float Evaluate(ETweeningBehaviour behaviour,

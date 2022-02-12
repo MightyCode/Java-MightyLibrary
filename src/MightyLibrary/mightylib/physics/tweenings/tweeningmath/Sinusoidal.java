@@ -1,37 +1,35 @@
-package MightyLibrary.mightylib.util.tweenings.tweeningmath;
+package MightyLibrary.mightylib.physics.tweenings.tweeningmath;
 
-import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
 
-public class Cubic {
+import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
+
+public class Sinusoidal {
+
     public static float Evaluate(ETweeningBehaviour behaviour,
                                  float t, float b, float c, float d){
         switch(behaviour){
             case In:
-                return Cubic.In(t, b, c, d);
+                return Sinusoidal.In(t, b, c, d);
             case Out:
-                return Cubic.Out(t, b, c, d);
+                return Sinusoidal.Out(t, b, c, d);
             case InOut:
-                return Cubic.InOut(t, b, c, d);
+                return Sinusoidal.InOut(t, b, c, d);
             default:
                 return 0.f;
         }
     }
 
     public static float In(float t, float b, float c, float d){
-        return c * (t /= d) * t * t + b;
+        return -c * (float)Math.cos(t / d * (Math.PI / 2)) + c + b;
     }
 
 
     public static float Out(float t, float b, float c, float d){
-        return c * ((t=t/d - 1) * t * t + 1) + b;
+        return c * (float)Math.sin(t / d * (Math.PI / 2)) + b;
     }
 
 
     public static float InOut(float t, float b, float c, float d){
-        if ((t /= d / 2) < 1){
-            return c / 2 * t * t * t + b;
-        }
-
-        return c / 2 * ((t -= 2) * t * t + 2) + b;
+        return -c / 2 * (float)(Math.cos(Math.PI * t / d) - 1) + b;
     }
 }

@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util.collision;
+package MightyLibrary.mightylib.physics.collision;
 
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.EShapeType;

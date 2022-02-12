@@ -1,6 +1,6 @@
-package MightyLibrary.mightylib.util.tweenings.type;
+package MightyLibrary.mightylib.physics.tweenings.type;
 
-import MightyLibrary.mightylib.util.tweenings.Tweening;
+import MightyLibrary.mightylib.physics.tweenings.Tweening;
 
 public class FloatTweening extends Tweening<Float> {
     private float beginningValue;

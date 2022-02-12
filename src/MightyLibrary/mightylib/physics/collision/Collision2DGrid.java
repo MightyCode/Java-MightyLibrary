@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util.collision;
+package MightyLibrary.mightylib.physics.collision;
 
 import org.joml.Vector2f;
 import org.joml.Vector2i;
