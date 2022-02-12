@@ -6,6 +6,11 @@ import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
+import MightyLibrary.mightylib.util.math.MightyMath;
+import MightyLibrary.mightylib.util.tweenings.ETweeningBehaviour;
+import MightyLibrary.mightylib.util.tweenings.ETweeningOption;
+import MightyLibrary.mightylib.util.tweenings.ETweeningType;
+import MightyLibrary.mightylib.util.tweenings.type.FloatTweening;
 import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -13,6 +18,9 @@ import org.joml.Vector3f;
 
 public class MenuScene extends Scene {
     private GUIList guiList;
+    BackgroundlessButton buttonQuit;
+
+    FloatTweening rotation;
 
     public void init(String[] args) {
         super.init(args);
@@ -54,7 +62,7 @@ public class MenuScene extends Scene {
         buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->TestCollisionScene<-");
 
-        BackgroundlessButton buttonQuit = button2DScene.copy();
+        buttonQuit = button2DScene.copy();
         buttonQuit.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.9f))
                 .setText("Quit");
 
@@ -69,6 +77,11 @@ public class MenuScene extends Scene {
         guiList.GUIs.put(2, buttonCollisionTest);
         guiList.GUIs.put(3, buttonQuit);
         guiList.ShouldLoop = false;
+
+        rotation = new FloatTweening();
+        rotation.setTweeningOption(ETweeningOption.LoopReversed)
+                .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
+                .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
     }
 
 
@@ -96,6 +109,9 @@ public class MenuScene extends Scene {
                 }
             }
         }
+
+        rotation.update();
+        buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
     }
 
 

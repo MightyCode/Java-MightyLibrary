@@ -157,9 +157,12 @@ public class Renderer{
         return shape;
     }
 
-
     public void setShape(Shape shape){
         this.shape = shape;
+    }
+
+    public Vector3f position(){
+        return position;
     }
 
     public void unload(){
