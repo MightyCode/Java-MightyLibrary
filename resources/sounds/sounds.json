@@ -1,0 +1,6 @@
+{
+	"sounds" : {
+		"select" : "select.wav",
+		"music" : "mainmenu.ogg"
+	}
+}

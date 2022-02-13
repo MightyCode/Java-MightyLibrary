@@ -63,7 +63,6 @@ public class Texture extends DataType {
 
             img.getRGB(0, 0, img.getWidth(), img.getHeight(), pixels, 0, img.getWidth());
 
-
             ByteBuffer byteBuffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
 
             this.width = img.getWidth();

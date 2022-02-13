@@ -4,7 +4,7 @@ import MightyLibrary.mightylib.graphics.text.FontFace;
 import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.graphics.texture.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Texture;
-import MightyLibrary.mightylib.sounds.Sound;
+import MightyLibrary.mightylib.sounds.SoundData;
 
 import java.util.HashMap;
 
@@ -26,15 +26,14 @@ public class Resources {
         resources.put(Texture.class, new HashMap<>());
         resources.put(AnimationData.class, new HashMap<>());
         resources.put(FontFace.class, new HashMap<>());
-        resources.put(Sound.class, new HashMap<>());
+        resources.put(SoundData.class, new HashMap<>());
     }
 
     private void init(){
-
         TextureLoader.load(resources.get(Texture.class));
         AnimationDataLoader.creates(resources.get(AnimationData.class));
         FontLoader.load(resources.get(FontFace.class));
-        SoundLoader.creates(resources.get(Sound.class));
+        SoundLoader.load(resources.get(SoundData.class));
     }
 
     public static Class<?> getClassFromName(String name){
@@ -45,7 +44,7 @@ public class Resources {
         else if (name.equalsIgnoreCase("font"))
             return FontFace.class;
         else if (name.equalsIgnoreCase("sound"))
-            return Sound.class;
+            return SoundData.class;
 
         return Object.class;
     }
@@ -59,7 +58,7 @@ public class Resources {
             case Font:
                 return FontFace.class;
             case Sound:
-                return Sound.class;
+                return SoundData.class;
         }
 
         return Object.class;

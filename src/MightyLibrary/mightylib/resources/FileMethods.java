@@ -42,7 +42,6 @@ public abstract class FileMethods {
             }
 
             reader.close();
-
             in.close();
 
         } catch (FileNotFoundException e) {

@@ -1,28 +1,33 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.sounds.Sound;
+import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.sounds.SoundData;
+import org.json.JSONObject;
 
-import java.io.File;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 
 public class SoundLoader {
-    public static void creates(Map<String, DataType> data){
-        creates(data, "resources/sounds");
+    public static void load(Map<String, DataType> data){
+        JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/sounds/sounds.json"));
+        obj = obj.getJSONObject("sounds");
+
+        SoundLoader.load(data, obj, "");
     }
 
+    private static void load(Map<String, DataType> data, JSONObject node, String currentPath){
+        Iterator<String> arrayNodes = node.keys();
 
-    private static void creates(Map<String, DataType> data, String path){
-        File file = new File(path);
+        if(!arrayNodes.hasNext()) return;
 
-        if (file.isFile()){
-            String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            //System.out.println("Load animation -> " + name);
-            data.put(name, new Sound(name, path));
-        } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
-                creates(data, path + "/" + childPath);
+        do{
+            String currentNode = arrayNodes.next();
+
+            if(node.get(currentNode) instanceof JSONObject){
+                SoundLoader.load(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
+            } else {
+                data.put(currentNode, new SoundData(currentNode, currentPath + node.getString(currentNode)));
             }
-        }
+        } while(arrayNodes.hasNext());
     }
 }

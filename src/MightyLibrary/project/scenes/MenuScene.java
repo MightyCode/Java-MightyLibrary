@@ -4,6 +4,8 @@ import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.sounds.SoundData;
+import MightyLibrary.mightylib.sounds.SoundSource;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.MightyMath;
@@ -15,13 +17,14 @@ import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
+import org.lwjgl.openal.AL10;
 
 public class MenuScene extends Scene {
     private GUIList guiList;
 
     BackgroundlessButton buttonCollisionTest;
     BackgroundlessButton buttonQuit;
-
+    SoundSource sound;
 
     FloatTweening rotation;
 
@@ -85,6 +88,15 @@ public class MenuScene extends Scene {
         rotation.setTweeningOption(ETweeningOption.LoopReversed)
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
+
+
+        AL10.alListener3f(AL10.AL_POSITION, 0, 0, 0);
+        AL10.alListener3f(AL10.AL_VELOCITY, 0, 0, 0);
+
+        sound = new SoundSource(true, true);
+        sound.init();
+        sound.setSoundData("music");
+        sound.play();
     }
 
 
@@ -115,6 +127,8 @@ public class MenuScene extends Scene {
 
         rotation.update();
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
+
+        System.out.println(sound.isPlaying());
 
         buttonCollisionTest.OverlapsText.setX(rotation.value() * 50);
     }

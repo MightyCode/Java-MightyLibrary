@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.SceneManager;
+import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.project.scenes.MenuScene;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
@@ -117,15 +118,16 @@ public class MainLoop {
             unloadLibraries();
         }
 
-        sceneManager.unload();
-        contextManager.unload();
+        if (sceneManager != null)
+            sceneManager.unload();
+
+        if (contextManager != null)
+            contextManager.unload();
 
         if (status != ListError.NO_ERROR){
             System.err.println("Exit with error "  + status);
             System.exit(status);
         } else {
-            sceneManager.unload();
-
             System.out.println("Exit without error");
             System.exit(0);
         }
@@ -139,11 +141,20 @@ public class MainLoop {
             return -1;
         }
 
+        SoundManager soundManager = SoundManager.getInstance();
+        if (!soundManager.init()){
+            System.err.println("SoundManager fail to initialize");
+            return -1;
+        }
+
         return 0;
     }
 
 
     private void unloadLibraries(){
         glfwTerminate();
+
+        SoundManager.getInstance().unload();
+
     }
 }
