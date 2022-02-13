@@ -40,4 +40,18 @@ public class SoundSourceCreationInfo {
     boolean isTimerFinished(){
         return timer.isFinished();
     }
+
+    public SoundSourceCreationInfo copy(){
+        SoundSourceCreationInfo temp = new SoundSourceCreationInfo();
+
+        temp.name = name;
+        temp.position = new Vector3f(position);
+        temp.speed = new Vector3f(speed);
+        temp.speed = new Vector3f(speed);
+        temp.gain = gain;
+        temp.loop = loop;
+        temp.relative = relative;
+
+        return temp;
+    }
 }

@@ -58,7 +58,7 @@ public class SoundManager {
 
 
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
-        SoundSource source = new SoundSource(creationInfo.loop, creationInfo.relative);
+        SoundSource source = new SoundSource();
         creationInfo.startTimer();
 
         awaitedNewSounds.add(creationInfo);
@@ -71,7 +71,7 @@ public class SoundManager {
     public void remove(SoundSource source){
         source.stop();
         source.unload();
-        
+
         soundsSource.remove(source);
     }
 
@@ -87,7 +87,8 @@ public class SoundManager {
                     soundsSource.remove(info.managerId);
                     System.err.println("Fail to init sound name : " + info.name);
                 }
-                sound.setPosition(info.position).setSpeed(info.speed).setGain(info.gain);
+                sound.setPosition(info.position).setSpeed(info.speed).setGain(info.gain)
+                                .setLoop(info.loop).setRelative(info.relative);
                 sound.play();
 
                 awaitedNewSounds.remove(i);

@@ -11,19 +11,10 @@ public class SoundSource {
     private int sourceId;
     private boolean loop, relative;
 
-    SoundSource(boolean loop, boolean relative) {
-        this.loop = loop;
-        this.relative = relative;
-    }
+    SoundSource() {}
 
     public boolean init(String soundName){
         this.sourceId = alGenSources();
-        if (loop) {
-            AL10.alSourcei(sourceId, AL10.AL_LOOPING, AL10.AL_TRUE);
-        }
-        if (relative) {
-            AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
-        }
 
         return setSoundData(soundName);
     }
@@ -39,6 +30,39 @@ public class SoundSource {
         AL10.alSourcei(sourceId, AL10.AL_BUFFER, soundData.getBufferId());
 
         return true;
+    }
+
+
+    public SoundSource setLoop(boolean value){
+        this.loop = value;
+
+        if (loop){
+            AL10.alSourcei(sourceId, AL10.AL_LOOPING, AL10.AL_TRUE);
+        } else {
+            AL10.alSourcei(sourceId, AL10.AL_LOOPING, AL10.AL_FALSE);
+        }
+
+        return this;
+    }
+
+    public boolean isLooping(){
+        return this.loop;
+    }
+
+    public SoundSource setRelative(boolean value){
+        this.relative = value;
+
+        if (relative) {
+            AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
+        } else {
+            AL10.alSourcei(sourceId, AL10.AL_LOOPING, AL10.AL_FALSE);
+        }
+
+        return this;
+    }
+
+    public boolean isRelative(){
+        return this.relative;
     }
 
     public SoundSource setPosition(Vector3f position) {

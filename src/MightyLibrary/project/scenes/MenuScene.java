@@ -95,9 +95,11 @@ public class MenuScene extends Scene {
         SoundSourceCreationInfo creationInfo = new SoundSourceCreationInfo();
         creationInfo.name = "music";
         creationInfo.loop = true;
-        creationInfo.gain = 0.1f;
+        creationInfo.gain = 1f;
+        creationInfo.position = new Vector3f(100, 100, 100);
+        creationInfo.relative = false;
 
-        sound =SoundManager.getInstance().createSoundSource(creationInfo);
+        sound = SoundManager.getInstance().createSoundSource(creationInfo);
         SoundManager.getInstance().getListener().move2D(new Vector2f(100, 1));
     }
 
