@@ -25,6 +25,8 @@ public class GUIList {
 
     private boolean mouseMoved;
 
+    private boolean stateChanged;
+
     public GUIList(InputManager inputManager, MouseManager mouseManager) {
         this.mouseManager = mouseManager;
         this.inputManager = inputManager;
@@ -35,6 +37,7 @@ public class GUIList {
         mouseId = null;
 
         mouseMoved = false;
+        stateChanged = false;
     }
 
     public Integer getSelected(){
@@ -49,7 +52,13 @@ public class GUIList {
         this.actionDownValue = actionDownValue;
     }
 
+    public boolean isStateChanged(){
+        return stateChanged;
+    }
+
     public void update(){
+        stateChanged = false;
+
         if (!mouseManager.oldPos().equals(mouseManager.pos(), PIXEL_PER_SECOND_DISABLE)){
             if (selected != null && selected.mouseDisableIt()) {
                 selected.forceSelect(false);
@@ -78,6 +87,8 @@ public class GUIList {
         GUIs.get(id).forceSelect(true);
         shouldUpdateSelected();
         mouseMoved = false;
+
+        stateChanged = true;
     }
 
     private void unselectAll(){

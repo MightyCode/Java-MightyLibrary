@@ -15,6 +15,8 @@ public class SoundSource {
     private String gainNodeName;
     private float gainNode;
 
+    private boolean hadPlayed;
+
     SoundSource(String gainNode) {
         this.soundData = null;
         this.sourceId  = -1;
@@ -23,6 +25,7 @@ public class SoundSource {
         this.gainNode = 1;
         this.loop = false;
         this.relative = false;
+        this.hadPlayed = false;
     }
 
     public boolean init(String soundName){
@@ -67,7 +70,7 @@ public class SoundSource {
         if (relative) {
             AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
         } else {
-            AL10.alSourcei(sourceId, AL10.AL_LOOPING, AL10.AL_FALSE);
+            AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_FALSE);
         }
 
         return this;
@@ -117,11 +120,25 @@ public class SoundSource {
     }
 
     public void play() {
+        hadPlayed = true;
+
         AL10.alSourcePlay(sourceId);
+    }
+
+    boolean hadPlayed(){
+        return this.hadPlayed;
     }
 
     public boolean isPlaying() {
         return AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING;
+    }
+
+    public boolean inPause() {
+        return AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE) == AL10.AL_PAUSED;
+    }
+
+    public boolean isStopped() {
+        return AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE) == AL10.AL_STOPPED;
     }
 
     public void pause() {
@@ -130,6 +147,11 @@ public class SoundSource {
 
     public void stop() {
         AL10.alSourceStop(sourceId);
+    }
+
+    public void reset(){
+        stop();
+        play();
     }
 
     public void unload() {

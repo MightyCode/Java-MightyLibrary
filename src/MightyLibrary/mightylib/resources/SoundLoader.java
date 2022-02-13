@@ -59,7 +59,7 @@ public abstract class SoundLoader {
         else
             current = gainTree.addNewNode(predecessor.getKey(), name, node.getFloat("value"));
 
-        System.out.println("Add " + name + " with value " + current.getValue());
+        //System.out.println("Add " + name + " with value " + current.getValue());
 
         do{
             String currentNode = arrayNodes.next();

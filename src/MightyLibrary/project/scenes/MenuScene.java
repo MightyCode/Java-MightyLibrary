@@ -1,6 +1,7 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
+import MightyLibrary.mightylib.graphics.GUI.GUI;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.scene.Scene;
@@ -22,14 +23,21 @@ import org.joml.Vector3f;
 import org.lwjgl.openal.AL10;
 
 public class MenuScene extends Scene {
+    private static final SoundSourceCreationInfo CREATION_INFO_SELECT = new SoundSourceCreationInfo();
+    static {
+        CREATION_INFO_SELECT.name = "select";
+        CREATION_INFO_SELECT.gainNode = "noise";
+        CREATION_INFO_SELECT.gain = 1f;
+    }
+
     private GUIList guiList;
 
-    BackgroundlessButton buttonCollisionTest;
-    BackgroundlessButton buttonQuit;
+    private BackgroundlessButton buttonCollisionTest;
+    private BackgroundlessButton buttonQuit;
 
-    FloatTweening rotation;
+    private FloatTweening rotation;
 
-    SoundSource sound;
+    private SoundSource sound;
 
     public void init(String[] args) {
         super.init(args);
@@ -95,13 +103,11 @@ public class MenuScene extends Scene {
         SoundSourceCreationInfo creationInfo = new SoundSourceCreationInfo();
         creationInfo.name = "music";
         creationInfo.loop = true;
-        creationInfo.gain = 1f;
-        creationInfo.position = new Vector3f(100, 100, 100);
-        creationInfo.relative = false;
+        creationInfo.gain = 0.7f;
         creationInfo.gainNode = "music";
+        creationInfo.delay = 2f;
 
         sound = SoundManager.getInstance().createSoundSource(creationInfo);
-        SoundManager.getInstance().getListener().move2D(new Vector2f(100, 1));
     }
 
 
@@ -133,13 +139,15 @@ public class MenuScene extends Scene {
         rotation.update();
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
-
+        if (guiList.isStateChanged()){
+            SoundManager.getInstance().createSoundSource(CREATION_INFO_SELECT);
+        }
 
         buttonCollisionTest.OverlapsText.setX(rotation.value() * 50);
 
         // Test Change sound dynamically
-        if (rotation.value() * 50 > 300)
-            SoundManager.getInstance().changeGain("global", 0.3f);
+        //if (rotation.value() * 50 > 300)
+            //SoundManager.getInstance().changeGain("global", 0.3f);
     }
 
 
@@ -155,7 +163,7 @@ public class MenuScene extends Scene {
 
     public void unload() {
         super.unload();
-        SoundManager.getInstance().remove(sound);
+        sound.stop();
 
         guiList.unload();
     }

@@ -69,18 +69,27 @@ public class SoundManager {
         SoundSource source = new SoundSource(safeInfo.gainNode);
         safeInfo.startTimer();
 
-        awaitedNewSounds.add(safeInfo);
         safeInfo.managerId = soundsSource.size();
+        awaitedNewSounds.add(safeInfo);
         soundsSource.add(source);
 
         return source;
     }
 
-    public void remove(SoundSource source){
+    private void removeAt(int i){
+        SoundSource source = soundsSource.get(i);
         source.stop();
         source.unload();
 
-        soundsSource.remove(source);
+        soundsSource.remove(i);
+        updateAwaitedList(i);
+    }
+
+    public void updateAwaitedList(int id){
+        for (SoundSourceCreationInfo info : awaitedNewSounds){
+            if (info.managerId > id)
+                --info.managerId;
+        }
     }
 
     public void lateUpdate(){
@@ -101,6 +110,15 @@ public class SoundManager {
                 sound.play();
 
                 awaitedNewSounds.remove(i);
+            }
+        }
+
+        SoundSource source;
+
+        for (int i = soundsSource.size() - 1; i >= 0; --i) {
+            source = soundsSource.get(i);
+            if (source.isStopped() && source.hadPlayed()) {
+                removeAt(i);
             }
         }
     }
@@ -143,6 +161,11 @@ public class SoundManager {
 
         if (context == NULL) {
             return false;
+        }
+
+        for(SoundSource sounds : soundsSource){
+            sounds.stop();
+            sounds.unload();
         }
 
         alcDestroyContext(context);

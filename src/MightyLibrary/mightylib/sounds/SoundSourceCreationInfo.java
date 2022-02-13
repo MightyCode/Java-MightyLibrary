@@ -11,7 +11,6 @@ public class SoundSourceCreationInfo {
     public boolean loop;
     public boolean relative;
     public String gainNode;
-
     public float delay;
 
     private final Timer timer;
@@ -23,12 +22,11 @@ public class SoundSourceCreationInfo {
         speed = new Vector3f();
         gain = 1.0f;
         delay = 0.0f;
+        gainNode = "global";
 
         timer = new Timer();
 
         managerId = -1;
-
-        gainNode = "global";
     }
 
 
@@ -52,8 +50,10 @@ public class SoundSourceCreationInfo {
         temp.speed = new Vector3f(speed);
         temp.speed = new Vector3f(speed);
         temp.gain = gain;
+        temp.gainNode = gainNode;
         temp.loop = loop;
         temp.relative = relative;
+        temp.delay = delay;
 
         return temp;
     }

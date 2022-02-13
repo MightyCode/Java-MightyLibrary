@@ -1,6 +1,6 @@
 {
 	"sounds" : {
-		"select" : "select.wav",
+		"select" : "select.ogg",
 		"music" : "mainmenu.ogg"
 	},
 	"gainTree" : {

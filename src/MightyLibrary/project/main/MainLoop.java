@@ -155,6 +155,5 @@ public class MainLoop {
         glfwTerminate();
 
         SoundManager.getInstance().unload();
-
     }
 }
