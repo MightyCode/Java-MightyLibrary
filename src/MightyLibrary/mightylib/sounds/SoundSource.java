@@ -11,7 +11,17 @@ public class SoundSource {
     private int sourceId;
     private boolean loop, relative;
 
-    SoundSource() {}
+    private float gain;
+    private float gainNode;
+
+    SoundSource() {
+        soundData = null;
+        sourceId  = -1;
+        gain = 1;
+        gainNode = 1;
+        loop = false;
+        relative = false;
+    }
 
     public boolean init(String soundName){
         this.sourceId = alGenSources();
@@ -78,9 +88,20 @@ public class SoundSource {
     }
 
     public SoundSource setGain(float gain) {
-        AL10.alSourcef(sourceId, AL10.AL_GAIN, gain);
+        return setGain(gain, gainNode);
+    }
+
+    SoundSource setGain(float gain, float gainNode) {
+        this.gainNode = gainNode;
+        this.gain = gain;
+
+        AL10.alSourcef(sourceId, AL10.AL_GAIN, gain * gainNode);
 
         return this;
+    }
+
+    public float getSelfGain(){
+        return gain;
     }
 
     public SoundSource setProperty(int param, float value) {

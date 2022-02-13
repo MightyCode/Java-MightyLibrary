@@ -10,6 +10,7 @@ public class SoundSourceCreationInfo {
     public float gain;
     public boolean loop;
     public boolean relative;
+    public String gainNode;
 
     public float delay;
 
@@ -26,6 +27,8 @@ public class SoundSourceCreationInfo {
         timer = new Timer();
 
         managerId = -1;
+
+        gainNode = "global";
     }
 
 

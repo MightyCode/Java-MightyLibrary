@@ -2,5 +2,16 @@
 	"sounds" : {
 		"select" : "select.wav",
 		"music" : "mainmenu.ogg"
+	},
+	"gainTree" : {
+		"global" : {
+			"value" : 1,
+			"music" : {
+				"value" : 1
+			},
+			"noise" : {
+				"value"  : 1
+			}
+		}
 	}
 }

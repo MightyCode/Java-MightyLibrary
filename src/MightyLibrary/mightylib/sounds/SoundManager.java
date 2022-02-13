@@ -1,5 +1,8 @@
 package MightyLibrary.mightylib.sounds;
 
+import MightyLibrary.mightylib.resources.SoundLoader;
+import MightyLibrary.mightylib.util.math.KeyTree;
+import MightyLibrary.mightylib.util.math.KeyTreeNode;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALCCapabilities;
@@ -31,11 +34,16 @@ public class SoundManager {
 
     private final List<SoundSource> soundsSource;
 
+    private final KeyTree<String, Float> gainTree;
+
     private SoundManager (){
         listener = new SoundListener();
 
         awaitedNewSounds = new ArrayList<>();
         soundsSource = new ArrayList<>();
+
+        gainTree = new KeyTree<>();
+        SoundLoader.loadGainTree(gainTree);
     }
 
     public boolean init(){
@@ -55,7 +63,6 @@ public class SoundManager {
 
         return true;
     }
-
 
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
         SoundSource source = new SoundSource();
@@ -87,13 +94,28 @@ public class SoundManager {
                     soundsSource.remove(info.managerId);
                     System.err.println("Fail to init sound name : " + info.name);
                 }
-                sound.setPosition(info.position).setSpeed(info.speed).setGain(info.gain)
+
+                sound.setPosition(info.position).setSpeed(info.speed).setGain(info.gain, calculateGain(info.gainNode))
                                 .setLoop(info.loop).setRelative(info.relative);
                 sound.play();
 
                 awaitedNewSounds.remove(i);
             }
         }
+    }
+
+    private float calculateGain(String name){
+        float gain = 1.0f;
+        KeyTreeNode<String, Float> node = gainTree.getNode(name);
+
+        while(node != null){
+            if (node.value != null)
+                gain *= node.value;
+
+            node = node.parent();
+        }
+
+        return gain;
     }
 
     public boolean unload(){

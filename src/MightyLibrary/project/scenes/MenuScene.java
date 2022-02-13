@@ -98,6 +98,7 @@ public class MenuScene extends Scene {
         creationInfo.gain = 1f;
         creationInfo.position = new Vector3f(100, 100, 100);
         creationInfo.relative = false;
+        creationInfo.gainNode = "music";
 
         sound = SoundManager.getInstance().createSoundSource(creationInfo);
         SoundManager.getInstance().getListener().move2D(new Vector2f(100, 1));

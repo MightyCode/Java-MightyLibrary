@@ -1,17 +1,26 @@
-package MightyLibrary.mightylib.sounds;
+package MightyLibrary.mightylib.util.math;
 
-import java.util.ArrayList;
-import java.util.List;
+public class KeyTreeNode<K, V> {
+    private final K key;
+    public final V value;
 
-public class KeyTreeNode<T> {
-    private String name;
-    public T value;
+    private final KeyTreeNode<K, V> parent;
 
-    private final List<KeyTreeNode> Nodes;
-
-    public KeyTreeNode(){
-        Nodes = new ArrayList<>();
+    public KeyTreeNode(KeyTreeNode<K, V> parent, K key, V value){
+        this.parent = parent;
+        this.key = key;
+        this.value = value;
     }
 
-    public
+    public K getKey(){
+        return key;
+    }
+
+    public V getValue(){
+        return value;
+    }
+
+    public KeyTreeNode<K, V> parent(){
+        return parent;
+    }
 }

@@ -2,13 +2,12 @@ package MightyLibrary.mightylib.graphics.text;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.Map;
 
-public class FontLoader {
+public abstract class FontLoader {
     public static void load(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/fonts/fonts.json"));
         obj = obj.getJSONObject("fonts");
