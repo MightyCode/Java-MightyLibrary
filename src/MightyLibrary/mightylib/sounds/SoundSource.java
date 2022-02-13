@@ -11,12 +11,12 @@ public class SoundSource {
     private int sourceId;
     private boolean loop, relative;
 
-    public SoundSource(boolean loop, boolean relative) {
+    SoundSource(boolean loop, boolean relative) {
         this.loop = loop;
         this.relative = relative;
     }
 
-    public void init(){
+    public boolean init(String soundName){
         this.sourceId = alGenSources();
         if (loop) {
             AL10.alSourcei(sourceId, AL10.AL_LOOPING, AL10.AL_TRUE);
@@ -24,9 +24,11 @@ public class SoundSource {
         if (relative) {
             AL10.alSourcei(sourceId, AL10.AL_SOURCE_RELATIVE, AL10.AL_TRUE);
         }
+
+        return setSoundData(soundName);
     }
 
-    public boolean setSoundData(String soundName) {
+    private boolean setSoundData(String soundName) {
         stop();
 
         this.soundData = Resources.getInstance().getResource(SoundData.class, soundName);
@@ -35,28 +37,32 @@ public class SoundSource {
 
 
         AL10.alSourcei(sourceId, AL10.AL_BUFFER, soundData.getBufferId());
-        System.out.println();
-        System.out.println(soundData.getBufferId());
-        System.out.println(sourceId);
-
 
         return true;
     }
 
-    public void setPosition(Vector3f position) {
+    public SoundSource setPosition(Vector3f position) {
         AL10.alSource3f(sourceId, AL10.AL_POSITION, position.x, position.y, position.z);
+
+        return this;
     }
 
-    public void setSpeed(Vector3f speed) {
+    public SoundSource setSpeed(Vector3f speed) {
         AL10.alSource3f(sourceId, AL10.AL_VELOCITY, speed.x, speed.y, speed.z);
+
+        return this;
     }
 
-    public void setGain(float gain) {
+    public SoundSource setGain(float gain) {
         AL10.alSourcef(sourceId, AL10.AL_GAIN, gain);
+
+        return this;
     }
 
-    public void setProperty(int param, float value) {
+    public SoundSource setProperty(int param, float value) {
         AL10.alSourcef(sourceId, param, value);
+
+        return this;
     }
 
     public void play() {

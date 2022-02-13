@@ -5,6 +5,7 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
@@ -17,6 +18,7 @@ public class SceneManager {
     private final MainLoop loop;
 
     private final Commands commands;
+    private final SoundManager soundManager;
 
     public SceneManager(MainLoop mLoop){
         this.loop = mLoop;
@@ -24,6 +26,7 @@ public class SceneManager {
         sceneInterface = new SceneManagerInterface();
 
         commands  = new Commands();
+        soundManager = SoundManager.getInstance();
     }
 
 
@@ -52,6 +55,8 @@ public class SceneManager {
             exit(sceneInterface.ExitStatus);
 
         currentScene.update();
+
+        soundManager.lateUpdate();
     }
 
 
@@ -103,10 +108,12 @@ public class SceneManager {
 
     public void unload(){
         System.out.println("--Unload SceneManager");
+
         if (currentScene != null){
             System.out.println("--Unload scene" + currentScene.getClass().getName());
             currentScene.unload();
         }
+
         ShaderManager.getInstance().unload();
         Resources.getInstance().unload();
     }

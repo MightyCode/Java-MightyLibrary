@@ -5,7 +5,9 @@ import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.sounds.SoundData;
+import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.sounds.SoundSource;
+import MightyLibrary.mightylib.sounds.SoundSourceCreationInfo;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.MightyMath;
@@ -24,9 +26,10 @@ public class MenuScene extends Scene {
 
     BackgroundlessButton buttonCollisionTest;
     BackgroundlessButton buttonQuit;
-    SoundSource sound;
 
     FloatTweening rotation;
+
+    SoundSource sound;
 
     public void init(String[] args) {
         super.init(args);
@@ -89,14 +92,13 @@ public class MenuScene extends Scene {
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
 
+        SoundSourceCreationInfo creationInfo = new SoundSourceCreationInfo();
+        creationInfo.name = "music";
+        creationInfo.loop = true;
+        creationInfo.gain = 0.1f;
 
-        AL10.alListener3f(AL10.AL_POSITION, 0, 0, 0);
-        AL10.alListener3f(AL10.AL_VELOCITY, 0, 0, 0);
-
-        sound = new SoundSource(true, true);
-        sound.init();
-        sound.setSoundData("music");
-        sound.play();
+        sound =SoundManager.getInstance().createSoundSource(creationInfo);
+        SoundManager.getInstance().getListener().move2D(new Vector2f(100, 1));
     }
 
 
@@ -128,8 +130,6 @@ public class MenuScene extends Scene {
         rotation.update();
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
-        System.out.println(sound.isPlaying());
-
         buttonCollisionTest.OverlapsText.setX(rotation.value() * 50);
     }
 
@@ -146,6 +146,7 @@ public class MenuScene extends Scene {
 
     public void unload() {
         super.unload();
+        SoundManager.getInstance().remove(sound);
 
         guiList.unload();
     }

@@ -6,6 +6,8 @@ import org.lwjgl.openal.ALCCapabilities;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.sql.Types.NULL;
 import static org.lwjgl.openal.ALC10.*;
@@ -20,10 +22,21 @@ public class SoundManager {
         return instance;
     }
 
-    SoundManager (){}
-
     private long device;
     private long context;
+
+    private final SoundListener listener;
+
+    private final List<SoundSourceCreationInfo> awaitedNewSounds;
+
+    private final List<SoundSource> soundsSource;
+
+    private SoundManager (){
+        listener = new SoundListener();
+
+        awaitedNewSounds = new ArrayList<>();
+        soundsSource = new ArrayList<>();
+    }
 
     public boolean init(){
         this.device = alcOpenDevice((ByteBuffer) null);
@@ -43,6 +56,45 @@ public class SoundManager {
         return true;
     }
 
+
+    public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
+        SoundSource source = new SoundSource(creationInfo.loop, creationInfo.relative);
+        creationInfo.startTimer();
+
+        awaitedNewSounds.add(creationInfo);
+        creationInfo.managerId = soundsSource.size();
+        soundsSource.add(source);
+
+        return source;
+    }
+
+    public void remove(SoundSource source){
+        source.stop();
+        source.unload();
+        
+        soundsSource.remove(source);
+    }
+
+    public void lateUpdate(){
+        SoundSourceCreationInfo info;
+        for (int i = awaitedNewSounds.size() - 1; i >= 0; --i){
+            info = awaitedNewSounds.get(i);
+            info.updateTimer();
+
+            if (info.isTimerFinished()) {
+                SoundSource sound = soundsSource.get(info.managerId);
+                if (!sound.init(info.name)){
+                    soundsSource.remove(info.managerId);
+                    System.err.println("Fail to init sound name : " + info.name);
+                }
+                sound.setPosition(info.position).setSpeed(info.speed).setGain(info.gain);
+                sound.play();
+
+                awaitedNewSounds.remove(i);
+            }
+        }
+    }
+
     public boolean unload(){
         if (device == NULL) {
             return false;
@@ -56,5 +108,9 @@ public class SoundManager {
         alcCloseDevice(device);
 
         return true;
+    }
+
+    public SoundListener getListener(){
+        return listener;
     }
 }
