@@ -133,7 +133,13 @@ public class MenuScene extends Scene {
         rotation.update();
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
+
+
         buttonCollisionTest.OverlapsText.setX(rotation.value() * 50);
+
+        // Test Change sound dynamically
+        if (rotation.value() * 50 > 300)
+            SoundManager.getInstance().changeGain("global", 0.3f);
     }
 
 

@@ -65,11 +65,12 @@ public class SoundManager {
     }
 
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
-        SoundSource source = new SoundSource();
-        creationInfo.startTimer();
+        SoundSourceCreationInfo safeInfo = creationInfo.copy();
+        SoundSource source = new SoundSource(safeInfo.gainNode);
+        safeInfo.startTimer();
 
-        awaitedNewSounds.add(creationInfo);
-        creationInfo.managerId = soundsSource.size();
+        awaitedNewSounds.add(safeInfo);
+        safeInfo.managerId = soundsSource.size();
         soundsSource.add(source);
 
         return source;
@@ -116,6 +117,23 @@ public class SoundManager {
         }
 
         return gain;
+    }
+
+    public boolean changeGain(String name, float newValue){
+        KeyTreeNode<String, Float> node = gainTree.getNode(name);
+
+        float castValue = (newValue > 1) ? 1 : (newValue < 0) ? 0 : newValue;
+        if (node == null || castValue == node.getValue())
+            return false;
+
+        node.setValue(castValue);
+        for (SoundSource sound : soundsSource){
+            if (sound.getGainNodeName().equals(name)){
+                sound.setGain(sound.getSelfGain(), castValue);
+            }
+        }
+
+        return true;
     }
 
     public boolean unload(){

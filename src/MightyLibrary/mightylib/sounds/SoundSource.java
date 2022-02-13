@@ -12,15 +12,17 @@ public class SoundSource {
     private boolean loop, relative;
 
     private float gain;
+    private String gainNodeName;
     private float gainNode;
 
-    SoundSource() {
-        soundData = null;
-        sourceId  = -1;
-        gain = 1;
-        gainNode = 1;
-        loop = false;
-        relative = false;
+    SoundSource(String gainNode) {
+        this.soundData = null;
+        this.sourceId  = -1;
+        this.gain = 1;
+        this.gainNodeName = gainNode;
+        this.gainNode = 1;
+        this.loop = false;
+        this.relative = false;
     }
 
     public boolean init(String soundName){
@@ -102,6 +104,10 @@ public class SoundSource {
 
     public float getSelfGain(){
         return gain;
+    }
+
+    String getGainNodeName(){
+        return gainNodeName;
     }
 
     public SoundSource setProperty(int param, float value) {

@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.util.math;
 
 public class KeyTreeNode<K, V> {
     private final K key;
-    public final V value;
+    public V value;
 
     private final KeyTreeNode<K, V> parent;
 
@@ -18,6 +18,10 @@ public class KeyTreeNode<K, V> {
 
     public V getValue(){
         return value;
+    }
+
+    public void setValue(V value){
+        this.value = value;
     }
 
     public KeyTreeNode<K, V> parent(){
