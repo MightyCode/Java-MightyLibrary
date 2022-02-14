@@ -129,8 +129,10 @@ public class MouseManager {
     }
 
     private void glfwSetCursor(){
-        if(displayCursor)glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-        else glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        if(displayCursor)
+            glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        else
+            glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
 
     public boolean getCursorState(){

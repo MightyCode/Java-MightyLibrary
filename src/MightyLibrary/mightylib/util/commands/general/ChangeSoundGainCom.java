@@ -3,10 +3,10 @@ package MightyLibrary.mightylib.util.commands.general;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.util.commands.BaseCommand;
 
-public class ChangeSoundGain extends BaseCommand {
+public class ChangeSoundGainCom extends BaseCommand {
     public static final String COMMAND_NAME = "changegain";
 
-    public ChangeSoundGain() {
+    public ChangeSoundGainCom() {
         super(COMMAND_NAME, GENERAL_COMMAND);
     }
 
