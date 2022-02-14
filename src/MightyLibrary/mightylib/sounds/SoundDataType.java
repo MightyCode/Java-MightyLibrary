@@ -60,7 +60,7 @@ public class SoundDataType {
 
             int channels = info.channels();
 
-            int lengthSamples = stb_vorbis_stream_length_in_samples(decoder);
+            int lengthSamples = stb_vorbis_stream_length_in_samples(decoder) * 2;
 
             pcm = MemoryUtil.memAllocShort(lengthSamples);
 
