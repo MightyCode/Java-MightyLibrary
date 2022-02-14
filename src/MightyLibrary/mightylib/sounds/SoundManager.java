@@ -154,10 +154,9 @@ public class SoundManager {
             return false;
 
         node.setValue(castValue);
+
         for (SoundSource sound : soundsSource){
-            if (sound.getGainNodeName().equals(name)){
-                sound.setGain(sound.getSelfGain(), castValue);
-            }
+            sound.setGain(sound.getSelfGain(), calculateGain(sound.getGainNodeName()));
         }
 
         return true;
