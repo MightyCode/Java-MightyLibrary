@@ -163,12 +163,13 @@ public class SoundManager {
         return true;
     }
 
+    public void clearAwaitedSong(){
+        awaitedNewSounds.clear();
+    }
 
     public void printGainTree(){
         gainTree.printTree("List of gains");
     }
-
-
 
     public boolean unload(){
         if (device == NULL) {

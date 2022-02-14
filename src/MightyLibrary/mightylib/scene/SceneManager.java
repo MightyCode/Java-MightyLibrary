@@ -83,12 +83,15 @@ public class SceneManager {
 
 
     private void changeScene(){
-        if (Main.admin) commands.removeSpecificCommand();
+        if (Main.admin)
+            commands.removeSpecificCommand();
 
         if(currentScene != null){
             System.out.println("--Unload scene" + currentScene.getClass().getName());
             currentScene.unload();
         }
+
+        SoundManager.getInstance().clearAwaitedSong();
 
         // Assign the new scene
         currentScene = sceneInterface.getNewScene();
