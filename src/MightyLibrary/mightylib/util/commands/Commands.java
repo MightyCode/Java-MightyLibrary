@@ -57,8 +57,11 @@ public class Commands {
     private void checkCommand(String command) {
         // Return -1 if error on detection
         int firstWord = CommandMethods.indexFirstWord(command);
-        if (firstWord != -1) submitCommand(command, command.substring(0, firstWord));
-        else System.err.println("Error on the message : \n invalids chars or nothing in the char");
+
+        if (firstWord != -1)
+            submitCommand(command, command.substring(0, firstWord));
+        else
+            System.err.println("Error on the message : \n invalids chars or nothing in the char");
     }
 
     private void submitCommand(String command, String firstWord) {
@@ -75,7 +78,7 @@ public class Commands {
         }
 
         if (!found) {
-                System.err.println("No command with its name ->" + firstWord + "<-");
+            System.err.println("No command with its name ->" + firstWord + "<-");
         }
     }
 

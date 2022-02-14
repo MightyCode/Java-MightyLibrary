@@ -39,6 +39,8 @@ public class MenuScene extends Scene {
 
     private SoundSource sound;
 
+    private FloatTweening floatTweening;
+
     public void init(String[] args) {
         super.init(args);
         /// SCENE INFORMATION ///
@@ -103,11 +105,15 @@ public class MenuScene extends Scene {
         SoundSourceCreationInfo creationInfo = new SoundSourceCreationInfo();
         creationInfo.name = "music";
         creationInfo.loop = true;
-        creationInfo.gain = 0.7f;
+        creationInfo.gain = 0f;
         creationInfo.gainNode = "music";
         creationInfo.delay = 2f;
 
         sound = SoundManager.getInstance().createSoundSource(creationInfo);
+
+        floatTweening = new FloatTweening();
+        floatTweening.setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.In)
+                .setTweeningOption(ETweeningOption.Direct).initTwoValue(5f, 0f, 0.7f);
     }
 
 
@@ -148,6 +154,12 @@ public class MenuScene extends Scene {
         // Test Change sound dynamically
         //if (rotation.value() * 50 > 300)
             //SoundManager.getInstance().changeGain("global", 0.3f);
+
+        if (sound.isPlaying() && !floatTweening.finished()){
+            floatTweening.update();
+            sound.setGain(floatTweening.value());
+            System.out.println(floatTweening.value());
+        }
     }
 
 

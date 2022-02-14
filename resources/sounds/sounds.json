@@ -5,12 +5,12 @@
 	},
 	"gainTree" : {
 		"global" : {
-			"value" : 1,
+			"value" : 0.7,
 			"music" : {
 				"value" : 1
 			},
 			"noise" : {
-				"value"  : 1
+				"value"  : 0.7
 			}
 		}
 	}

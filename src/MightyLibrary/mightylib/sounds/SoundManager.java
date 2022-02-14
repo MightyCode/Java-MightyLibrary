@@ -123,6 +123,7 @@ public class SoundManager {
 
         for (int i = soundsSource.size() - 1; i >= 0; --i) {
             source = soundsSource.get(i);
+
             if (source.isStopped() && source.hadPlayed()) {
                 removeAt(i);
             }
