@@ -10,6 +10,7 @@ import org.lwjgl.openal.ALCCapabilities;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static java.sql.Types.NULL;
@@ -46,6 +47,7 @@ public class SoundManager {
         SoundLoader.loadGainTree(gainTree);
     }
 
+
     public boolean init(){
         this.device = alcOpenDevice((ByteBuffer) null);
         if (device == NULL) {
@@ -64,6 +66,7 @@ public class SoundManager {
         return true;
     }
 
+
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
         SoundSourceCreationInfo safeInfo = creationInfo.copy();
         SoundSource source = new SoundSource(safeInfo.gainNode);
@@ -76,6 +79,7 @@ public class SoundManager {
         return source;
     }
 
+
     private void removeAt(int i){
         SoundSource source = soundsSource.get(i);
         source.stop();
@@ -85,12 +89,14 @@ public class SoundManager {
         updateAwaitedList(i);
     }
 
+
     public void updateAwaitedList(int id){
         for (SoundSourceCreationInfo info : awaitedNewSounds){
             if (info.managerId > id)
                 --info.managerId;
         }
     }
+
 
     public void lateUpdate(){
         SoundSourceCreationInfo info;
@@ -123,6 +129,7 @@ public class SoundManager {
         }
     }
 
+
     private float calculateGain(String name){
         float gain = 1.0f;
         KeyTreeNode<String, Float> node = gainTree.getNode(name);
@@ -131,11 +138,13 @@ public class SoundManager {
             if (node.value != null)
                 gain *= node.value;
 
+            //System.out.println(node.getKey());
             node = node.parent();
         }
 
         return gain;
     }
+
 
     public boolean changeGain(String name, float newValue){
         KeyTreeNode<String, Float> node = gainTree.getNode(name);
@@ -153,6 +162,13 @@ public class SoundManager {
 
         return true;
     }
+
+
+    public void printGainTree(){
+        gainTree.printTree("List of gains");
+    }
+
+
 
     public boolean unload(){
         if (device == NULL) {

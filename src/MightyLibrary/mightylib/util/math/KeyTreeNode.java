@@ -27,4 +27,14 @@ public class KeyTreeNode<K, V> {
     public KeyTreeNode<K, V> parent(){
         return parent;
     }
+
+    public void printNode(){
+        System.out.print(key + " : " + value);
+
+        if (parent != null){
+            System.out.print(" child of " + parent.getKey());
+        }
+
+        System.out.println();
+    }
 }

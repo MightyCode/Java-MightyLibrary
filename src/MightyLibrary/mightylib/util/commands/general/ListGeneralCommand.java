@@ -12,5 +12,6 @@ public abstract class ListGeneralCommand {
         commands.addCommand(new ReloadGenCom());
         commands.addCommand(new HelpGenCom(commands));
         commands.addCommand(new ExitGenCom(commands));
+        commands.addCommand(new ChangeSoundGain());
     }
 }

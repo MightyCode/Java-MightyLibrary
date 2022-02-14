@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.sounds.SoundData;
 import MightyLibrary.mightylib.util.math.KeyTree;
 import MightyLibrary.mightylib.util.math.KeyTreeNode;
@@ -55,11 +54,10 @@ public abstract class SoundLoader {
 
         KeyTreeNode<String, Float> current;
         if (predecessor == null)
-            current = gainTree.addNewNode(gainTree.noRoot, name, node.getFloat("value"));
-        else
+            current = gainTree.addNewNode(gainTree.NoRoot, name, node.getFloat("value"));
+        else {
             current = gainTree.addNewNode(predecessor.getKey(), name, node.getFloat("value"));
-
-        //System.out.println("Add " + name + " with value " + current.getValue());
+        }
 
         do{
             String currentNode = arrayNodes.next();

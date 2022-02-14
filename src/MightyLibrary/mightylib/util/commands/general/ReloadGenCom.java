@@ -24,7 +24,7 @@ public class ReloadGenCom extends BaseCommand {
             int incorrectlyReloaded = -1;
 
             if (result == Object.class){
-                switch (sub[1]) {
+                switch (sub[1].toLowerCase()) {
                     case "shader":
                         System.out.println("Reload shader resources");
 

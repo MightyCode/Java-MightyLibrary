@@ -3,12 +3,12 @@ package MightyLibrary.mightylib.util.math;
 import java.util.ArrayList;
 
 public class KeyTree<K, V>  {
-    public final K noRoot;
+    public final K NoRoot;
     private final ArrayList<K> keys;
     private final ArrayList<KeyTreeNode<K, V>> values;
 
     public KeyTree(){
-        noRoot = null;
+        NoRoot = null;
         keys = new ArrayList<>();
         values = new ArrayList<>();
     }
@@ -27,12 +27,12 @@ public class KeyTree<K, V>  {
 
         KeyTreeNode<K, V> result = null;
 
-        if (predecessor == noRoot){
+        if (predecessor == NoRoot){
             result = new KeyTreeNode<>(null, currentKey, value);
             values.add(result);
             keys.add(currentKey);
         } else if (parent != null){
-            result = new KeyTreeNode<>(null, currentKey, value);
+            result = new KeyTreeNode<>(parent, currentKey, value);
             values.add(result);
             keys.add(currentKey);
         }
@@ -47,5 +47,14 @@ public class KeyTree<K, V>  {
         }
 
         return null;
+    }
+
+    public void printTree(String nameOfObjet){
+        System.out.println("Size of " + nameOfObjet + " : " + keys.size());
+
+        for (KeyTreeNode<K, V> node : values){
+            System.out.print("-> ");
+            node.printNode();
+        }
     }
 }
