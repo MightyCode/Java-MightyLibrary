@@ -158,7 +158,6 @@ public class MenuScene extends Scene {
         if (sound.isPlaying() && !floatTweening.finished()){
             floatTweening.update();
             sound.setGain(floatTweening.value());
-            System.out.println(floatTweening.value());
         }
     }
 

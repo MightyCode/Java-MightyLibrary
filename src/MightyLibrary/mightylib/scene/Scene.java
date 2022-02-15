@@ -3,12 +3,11 @@ package MightyLibrary.mightylib.scene;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
-import MightyLibrary.mightylib.graphics.shape._2D.VirtualSceneRenderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 import static org.lwjgl.opengl.GL11.*;
 

@@ -1,8 +1,9 @@
-package MightyLibrary.mightylib.graphics.shape._2D;
+package MightyLibrary.mightylib.graphics.renderer._2D;
 
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.main.WindowInfo;
 
-public class VirtualSceneRenderer extends TextureRenderer {
+public class VirtualSceneRenderer extends RectangleRenderer {
     private final FrameBuffer frameBuffer;
 
     public VirtualSceneRenderer(WindowInfo info){

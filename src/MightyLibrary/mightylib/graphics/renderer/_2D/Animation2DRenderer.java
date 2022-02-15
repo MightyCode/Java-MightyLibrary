@@ -1,10 +1,8 @@
-package MightyLibrary.mightylib.graphics.shape._2D;
+package MightyLibrary.mightylib.graphics.renderer._2D;
 
-import MightyLibrary.mightylib.graphics.shape.Renderer;
-import MightyLibrary.mightylib.graphics.shape.Shape;
+import MightyLibrary.mightylib.graphics.renderer.Renderer;
+import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.graphics.texture.Animator;
-import MightyLibrary.mightylib.main.WindowInfo;
-import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;

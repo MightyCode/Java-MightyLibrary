@@ -1,6 +1,6 @@
 package MightyLibrary.project.scenes;
 
-import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.collision.CollisionVisualisation;
@@ -19,11 +19,11 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 public class TestCollisionSystem extends Scene {
-    private TextureRenderer renderer;
+    private RectangleRenderer renderer;
     private CollisionRectangle rectangle;
     private CollisionBoundedVolume2D boundedVolume2D;
 
-    private TextureRenderer renderer2;
+    private RectangleRenderer renderer2;
     private CollisionRectangle rectangle2;
 
     FloatTweening rotation;
@@ -46,7 +46,7 @@ public class TestCollisionSystem extends Scene {
 
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
 
-        renderer2 = CollisionVisualisation.createFrom(rectangle2, new Color4f(0.7f, 0.6f, 0.6f, 1f)); new TextureRenderer("colorShape2D");
+        renderer2 = CollisionVisualisation.createFrom(rectangle2, new Color4f(0.7f, 0.6f, 0.6f, 1f)); new RectangleRenderer("colorShape2D");
 
         rotation = new FloatTweening();
 

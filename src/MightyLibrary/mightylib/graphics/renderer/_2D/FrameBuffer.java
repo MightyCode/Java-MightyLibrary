@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.shape._2D;
+package MightyLibrary.mightylib.graphics.renderer._2D;
 
 import MightyLibrary.mightylib.graphics.texture.TextureParameters;
 import MightyLibrary.mightylib.main.WindowInfo;

@@ -1,22 +1,19 @@
-package MightyLibrary.mightylib.graphics.shape._2D;
+package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
-import MightyLibrary.mightylib.graphics.shape.Renderer;
-import MightyLibrary.mightylib.graphics.shape.Shape;
-import MightyLibrary.mightylib.main.WindowInfo;
-import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.graphics.renderer.Renderer;
+import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
+import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.util.math.EDirection;
-import MightyLibrary.mightylib.util.math.MightyMath;
-import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class TextureRenderer extends Renderer {
+public class RectangleRenderer extends Renderer {
     protected EDirection reference;
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
-    public TextureRenderer(String shaderName) {
+    public RectangleRenderer(String shaderName) {
         super(shaderName, true, true);
 
         reference = EDirection.LeftUp;
@@ -32,43 +29,10 @@ public class TextureRenderer extends Renderer {
 
 
     private float[] calculatePosition(){
-        float [] temp = new float[]{
-                0, 1,
-                0, 0,
-                1, 0,
-                1, 1
-        };
-
-        switch(this.reference){
-            case None:
-            case Up:
-            case Down:
-                temp[0] = -0.5f; temp[2] = -0.5f; temp[4] = 0.5f; temp[6] = 0.5f;
-                break;
-            case RightDown:
-            case Right:
-            case RightUp:
-                temp[0] = -1; temp[2] = -1; temp[4] = 0f; temp[6] = 0f;
-                break;
-        }
-
-        switch(this.reference){
-            case None:
-            case Left:
-            case Right:
-                temp[1] = 0.5f; temp[3] = -0.5f; temp[5] = -0.5f; temp[7] = 0.5f;
-                break;
-            case LeftDown:
-            case Down:
-            case RightDown:
-                temp[1] = -1; temp[3] = 0; temp[5] = 0f; temp[7] = -1f;
-                break;
-        }
-
-        return temp;
+        return RendererUtils.calculatePositionForSquare(new Vector2f(1, 1), this.reference);
     }
 
-    public TextureRenderer setReference(EDirection reference){
+    public RectangleRenderer setReference(EDirection reference){
         this.reference = reference;
 
         shape.updateVbo(calculatePosition(), positionIndex);
@@ -92,20 +56,20 @@ public class TextureRenderer extends Renderer {
     }
 
     // Set size with size of pixel
-    public TextureRenderer setSizePix(float width, float height){
+    public RectangleRenderer setSizePix(float width, float height){
         setScale(new Vector3f(width, height, 1.0f));
 
         return this;
     }
 
-    public TextureRenderer setSizeToTexture(){
+    public RectangleRenderer setSizeToTexture(){
         setScale(new Vector3f(texture.getWidth(), texture.getHeight(), 1.0f));
 
         return this;
     }
 
 
-    public TextureRenderer setPosition(Vector2f position){
+    public RectangleRenderer setPosition(Vector2f position){
         super.setPosition(new Vector3f(position.x, position.y, 0.0f));
 
         return this;

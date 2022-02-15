@@ -1,12 +1,11 @@
 package MightyLibrary.mightylib.graphics.text;
 
-import MightyLibrary.mightylib.graphics.shape.Renderer;
-import MightyLibrary.mightylib.graphics.shape.Shape;
+import MightyLibrary.mightylib.graphics.renderer.Renderer;
+import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
-import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 

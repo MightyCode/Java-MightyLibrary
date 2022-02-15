@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.shape;
+package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.Id;

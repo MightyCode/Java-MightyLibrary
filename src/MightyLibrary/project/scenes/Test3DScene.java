@@ -1,16 +1,15 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.graphics.shape._2D.TextureRenderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.graphics.shape.Renderer;
-import MightyLibrary.mightylib.graphics.shape._3D.ModelRenderer;
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.graphics.renderer.Renderer;
+import MightyLibrary.mightylib.graphics.renderer._3D.ModelRenderer;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.Camera3D;
-import MightyLibrary.mightylib.graphics.shape._3D.CubeRenderer;
-import MightyLibrary.mightylib.graphics.shape.Shape;
+import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
+import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.Color4f;
@@ -24,7 +23,7 @@ public class Test3DScene extends Scene {
 
     private Renderer sBlock;
     private ModelRenderer stand;
-    private TextureRenderer hudBar;
+    private RectangleRenderer hudBar;
 
     // Textures
     private Texture displacementMap;
@@ -68,10 +67,10 @@ public class Test3DScene extends Scene {
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
 
         // Grey Rect in Hud
-        /*hudBar = new TextureRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
+        /*hudBar = new RectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
         hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
-        hudBar = new TextureRenderer("texture2D");
+        hudBar = new RectangleRenderer("texture2D");
         hudBar.switchToTextureMode("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(new Vector2f(150, 150)); //window.size.x * 0.7f, window.size.y * 0.7f);
