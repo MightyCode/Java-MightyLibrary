@@ -31,6 +31,7 @@ public class Animation {
         this.looping = isLooping;
 
         this.texture = Resources.getInstance().getResource(Texture.class, animationData.getTextureName());
+
         restart();
         currentTexturePosition();
     }
@@ -89,6 +90,9 @@ public class Animation {
 
         FrameData data = animationData.getFrame(currentFrame);
         Vector4i texturePositions = data.getFramePositionCopy();
+
+        System.out.println(texturePositions);
+        System.out.println(texture);
 
         computedPosition.x = (texturePositions.x) / (texture.getWidth() * 1.0f);
         computedPosition.y = (texturePositions.z + texturePositions.x) / (texture.getWidth() * 1.0f);

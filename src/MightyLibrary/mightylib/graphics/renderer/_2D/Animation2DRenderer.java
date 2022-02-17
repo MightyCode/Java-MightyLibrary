@@ -101,6 +101,15 @@ public class Animation2DRenderer extends Renderer {
         return animationScale;
     }
 
+    public Animator getAnimator() {
+        return  animator;
+    }
+
+    @Override
+    public Vector3f position(){
+        return new Vector3f(referencePosition.x, referencePosition.y, position.z);
+    }
+
     public void setScale(Vector2f scale){
         this.animationScale.x = scale.x;
         this.animationScale.y = scale.y;
