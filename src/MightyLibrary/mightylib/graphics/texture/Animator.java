@@ -23,7 +23,8 @@ public class Animator {
 
 
     public void update(){
-        if (currentAnimation == null) return;
+        if (currentAnimation == null)
+            return;
 
         currentAnimation.update();
         animationChanged = false;
@@ -39,7 +40,7 @@ public class Animator {
     }
 
 
-    public void addAnimation(String name, Animation animation){
+    private void addAnimation(String name, Animation animation){
         if (animations.containsKey(name)){
             System.err.println("Animator already contains an animation called : " + animation);
             return;

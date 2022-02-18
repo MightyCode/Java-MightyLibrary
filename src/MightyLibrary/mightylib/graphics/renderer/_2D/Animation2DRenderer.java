@@ -17,12 +17,14 @@ public class Animation2DRenderer extends Renderer {
 
     private final Vector2f animationScale;
 
+    private boolean horizontalFlip, verticalFlip;
+
     public Animation2DRenderer(String shaderName){
         super(shaderName, true, true);
 
         animationScale = new Vector2f(1);
 
-        texturePosition = new Vector4f(0f, 1f, 0f,1f);
+        texturePosition = new Vector4f(0f, 0f, 0f,0f);
 
         int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);
@@ -31,11 +33,15 @@ public class Animation2DRenderer extends Renderer {
         textureIndex = shape.addVbo(texturePos(), 2, Shape.DYNAMIC_STORE);
 
         referencePosition = new Vector2f();
+
+        horizontalFlip = false;
+        verticalFlip = false;
     }
 
 
     public void init(Animator animator){
         this.animator = animator;
+        this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
 
         updatePosition();
     }
@@ -57,6 +63,7 @@ public class Animation2DRenderer extends Renderer {
         }
     }
 
+
     public void setPosition(Vector2f position){
         referencePosition.x = position.x;
         referencePosition.y = position.y;
@@ -69,7 +76,7 @@ public class Animation2DRenderer extends Renderer {
 
         // Take into account hot point of each frame of animation
         if (animator != null) {
-            Vector2i hotPoint = animator.getCurrentAnimation().currentHotPoint();
+            Vector2i hotPoint = animator.getCurrentAnimation().currentHotPoint(horizontalFlip, verticalFlip);
 
             temp.x -= hotPoint.x * animationScale.x;
             temp.y -= hotPoint.y * animationScale.y;
@@ -79,6 +86,7 @@ public class Animation2DRenderer extends Renderer {
     }
 
     private float[] calculatePosition(){
+
         return new float[]{
                 0, 1,
                 0, 0,
@@ -88,12 +96,43 @@ public class Animation2DRenderer extends Renderer {
     }
 
     private float[] texturePos(){
+        Vector4f bounds = new Vector4f(texturePosition);
+
+        if (horizontalFlip){
+            float temp = bounds.x;
+            bounds.x = bounds.y;
+            bounds.y = temp;
+        }
+
+        if (verticalFlip){
+            float temp = bounds.z;
+            bounds.z = bounds.w;
+            bounds.w = temp;
+        }
+
+
         return new float[]{
-                texturePosition.x, texturePosition.w,
-                texturePosition.x, texturePosition.z,
-                texturePosition.y, texturePosition.z,
-                texturePosition.y, texturePosition.w
+                bounds.x, bounds.w,
+                bounds.x, bounds.z,
+                bounds.y, bounds.z,
+                bounds.y, bounds.w
         };
+    }
+
+    public Animation2DRenderer setHorizontalFlip(boolean state){
+        horizontalFlip = state;
+
+        shape.updateVbo(texturePos(), textureIndex);
+
+        return this;
+    }
+
+    public Animation2DRenderer setVerticalFlip(boolean state){
+        verticalFlip = state;
+
+        shape.updateVbo(texturePos(), textureIndex);
+
+        return this;
     }
 
 

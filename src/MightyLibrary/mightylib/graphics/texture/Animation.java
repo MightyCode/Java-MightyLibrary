@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.texture;
 
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.Resources;
+import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
@@ -41,16 +42,18 @@ public class Animation {
         if (!animationFinished)
             elapsedTime += GameTime.DeltaTime() * speed;
 
+        lastFrame = currentFrame;
+
         while(elapsedTime >= animationData.getFrame(currentFrame).getFrameTime() &&
                 (currentFrame <= animationData.frameNumber() || looping)){
 
             elapsedTime -= animationData.getFrame(currentFrame).getFrameTime();
 
-            if (currentFrame + 1 < animationData.frameNumber())
+            if (currentFrame + 1 < animationData.frameNumber()) {
                 ++currentFrame;
-            else {
+            } else {
                 if (looping)
-                    currentFrame = 0;
+                    restart();
                 else
                     animationFinished = true;
             }
@@ -85,30 +88,37 @@ public class Animation {
     public AnimationData getData(){ return animationData; }
 
 
-    public Vector4f currentTexturePosition(){
+    public Vector4f currentTexturePosition() {
         Vector4f computedPosition = new Vector4f(0, 0, 0, 0);
 
         FrameData data = animationData.getFrame(currentFrame);
         Vector4i texturePositions = data.getFramePositionCopy();
-
-        System.out.println(texturePositions);
-        System.out.println(texture);
 
         computedPosition.x = (texturePositions.x) / (texture.getWidth() * 1.0f);
         computedPosition.y = (texturePositions.z + texturePositions.x) / (texture.getWidth() * 1.0f);
         computedPosition.z = (texturePositions.y) / (texture.getHeight() * 1.0f);
         computedPosition.w = (texturePositions.w + texturePositions.y) / (texture.getHeight() * 1.0f);
 
-        //System.out.println(computedPosition.x +  " " + computedPosition.y + " " + computedPosition.z + " ");
-
         return computedPosition;
     }
 
 
-    public Vector2i currentHotPoint(){
+    public Vector2i currentHotPoint() {
+        return currentHotPoint(false, false);
+    }
+
+    public Vector2i currentHotPoint(boolean horizontalFlip, boolean verticalFlip){
         FrameData data = animationData.getFrame(currentFrame);
 
-        return data.getHotPointReference();
+        Vector2i result = data.getHotPointCopy();
+
+        if (horizontalFlip)
+            result.x = data.getSize().x - result.x;
+
+        if (verticalFlip)
+            result.y = data.getSize().y - result.y;
+
+        return result;
     }
 
 

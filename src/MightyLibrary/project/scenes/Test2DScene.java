@@ -28,7 +28,6 @@ public class Test2DScene extends Scene {
         super.init(args);
         /// SCENE INFORMATION ///
 
-        mainContext.getMouseManager().setCursor(false);
         main3DCamera.setPos(new Vector3f(0, 0, 0));
         setClearColor(52, 189, 235, 1f);
 
@@ -36,14 +35,17 @@ public class Test2DScene extends Scene {
 
         slimeRenderer = new Animation2DRenderer("texture2D");
         slimeRenderer.switchToTextureMode("slime");
+        //slimeRenderer.setVerticalFlip(true);
+
 
         Animator animator = new Animator();
         animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
 
         slimeRenderer.init(animator);
-        float scale = 720.f / 30.f;
+        float scale = 720.f / 30.f / 2;
         slimeRenderer.setScale(new Vector2f(scale));
-        slimeRenderer.setPosition(new Vector2f(400, 400));
+        slimeRenderer.setPosition(new Vector2f(400, mainContext.getWindow().getInfo().getSizeCopy().y));
+        slimeRenderer.setVerticalFlip(false);
 
         slimeTextureTweening = new Vector2fTweening();
 
@@ -61,7 +63,7 @@ public class Test2DScene extends Scene {
                 .setReference(EDirection.RightDown)
                 .setAlignment(ETextAlignment.Right)
                 .setPosition(new Vector2f(size.x, size.y))
-                .setText("Test d'écrire du text c'est super cool");
+                .setText("Test d'écriture de texte c'est super cool");
     }
 
 
@@ -70,46 +72,9 @@ public class Test2DScene extends Scene {
 
         InputManager inputManager = mainContext.getInputManager();
 
-        int speed = 1;
-        if (inputManager.input(ActionId.SHIFT)) {
-            speed = 3;
-        }
-
-        if (inputManager.input(ActionId.MOVE_LEFT)) {
-            main3DCamera.speedAngX(Camera3D.speed.x * speed);
-        }
-
-        if (inputManager.input(ActionId.MOVE_RIGHT)) {
-            main3DCamera.speedAngX(-Camera3D.speed.x * speed);
-        }
-
-        if (inputManager.input(ActionId.MOVE_FORWARD)) {
-            main3DCamera.speedAngZ(-Camera3D.speed.z * speed);
-        }
-
-        if (inputManager.input(ActionId.MOVE_BACKWARD)) {
-            main3DCamera.speedAngZ(Camera3D.speed.z * speed);
-        }
-
-        if (inputManager.input(ActionId.MOVE_UP)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y += Camera3D.speed.y);
-
-            //rendererPosition.x += 150 * GameTime.DeltaTime();
-        }
-
-        if (inputManager.input(ActionId.MOVE_DOWN)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y -= Camera3D.speed.y);
-        }
-
-        if (inputManager.inputPressed(ActionId.ESCAPE)) {
-            main3DCamera.invertLockViewCursor();
-            mainContext.getMouseManager().invertCursorState();
-        }
-
-        main3DCamera.updateView();
 
         slimeTextureTweening.update();
-        slimeRenderer.setPosition(slimeTextureTweening.value());
+        //slimeRenderer.setPosition(slimeTextureTweening.value());
 
         slimeRenderer.update();
     }
