@@ -41,8 +41,8 @@
 
 		"textureLight3D": {
 			"files": [
-				"textureLight3DV.glsl",
-				"textureLight3DF.glsl"
+				"3D/textureLight3DV.glsl",
+				"3D/textureLight3DF.glsl"
 			],
 			"mode" : ["cam3DView"],
 			"links": [
@@ -69,8 +69,8 @@
 		},
 		"textureComplex3D": {
 			"files": [
-				"textureComplex3DV.glsl",
-				"textureComplex3DF.glsl"
+				"3D/textureComplex3DV.glsl",
+				"3D/textureComplex3DF.glsl"
 			],
 			"mode" : ["cam3DView"],
 			"links": [
@@ -101,6 +101,22 @@
 				"projection",
 				"view",
 				"model"
+			]
+		},
+		"colorComplex3D": {
+			"files": [
+				"3D/colorComplex3DV.glsl",
+				"3D/colorComplex3DF.glsl"
+			],
+			"mode" : ["cam3DView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"color",
+				"worldColor",
+				"lightDir",
+				"lightColor"
 			]
 		}
 	}

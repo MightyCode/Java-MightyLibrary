@@ -6,6 +6,10 @@ import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer._3D.ModelRenderer;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
+import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
+import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
@@ -39,7 +43,9 @@ public class Test3DScene extends Scene {
 
     private CubeRenderer light;
 
-    private float counter = 0;
+    private FloatTweening displacementMapTweening;
+
+    private FloatTweening rotationTweening;
 
     public Test3DScene(){
         super(SCENE_CCI);
@@ -55,7 +61,15 @@ public class Test3DScene extends Scene {
         /// RENDERERS ///
 
         // Cube
-        light = new CubeRenderer("colorShape3D", new Vector3f(-1f, 1.0f, -4f), 1f);
+        light = new CubeRenderer("colorComplex3D", new Vector3f(-1f, 3.0f, -4f), 1f);
+        light.switchToColorMode(new Color4f(1f, 0f, 0f, 1f));
+        light.addNormal();
+
+        ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("worldColor", 0.2f, 0.5f, 0.2f);
+        Vector3f lightDir = new Vector3f(0.3f, 1f, 1f).normalize();
+        ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("lightDir", lightDir.x, lightDir.y, lightDir.z);
+        ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("lightColor", 0.8f, 0.8f, 0.8f);
+
 
         // Platform of cubes
         sBlock = new Renderer("textureComplex3D", false, false);
@@ -67,16 +81,10 @@ public class Test3DScene extends Scene {
         ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
 
 
-        sphere = new Renderer("colorShape3D", true, false);
-        float[] spherePositions = new float[0];
-        float[] normals = new float[0];
-        float[] textures = new float[0];
-        int [] indices = new int [0];
-
-        computeShere(indices, spherePositions, textures, normals);
-        int spherePositionInfo =sphere.getShape().addVbo(spherePositions,  3, Shape.STATIC_STORE);
-
-
+        sphere = new Renderer("colorComplex3D", true, false);
+        computeSphere(sphere);
+        sphere.setScale(new Vector3f(10, 10, 10));
+        sphere.setPosition(new Vector3f(20, 10, 10));
 
         // 3D Model
         stand = new ModelRenderer("texture3D", "stand/stall", "stall");
@@ -91,6 +99,16 @@ public class Test3DScene extends Scene {
         hudBar.switchToTextureMode("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
         hudBar.setPosition(new Vector2f(150, 150)); //window.size.x * 0.7f, window.size.y * 0.7f);
+
+        displacementMapTweening = new FloatTweening();
+        displacementMapTweening.setTweeningValues(ETweeningType.Quadratic, ETweeningBehaviour.InOut)
+                .setTweeningOption(ETweeningOption.LoopReversed)
+                .initTwoValue(5f, 0f, 1f);
+
+        rotationTweening = new FloatTweening();
+        rotationTweening.setTweeningValues(ETweeningType.Quadratic, ETweeningBehaviour.InOut)
+                .setTweeningOption(ETweeningOption.LoopMirrored)
+                .initTwoValue(5f, 0f, (float)Math.PI * 2);
     }
 
 
@@ -134,13 +152,12 @@ public class Test3DScene extends Scene {
 
         }
 
+        displacementMapTweening.update();
 
-        light.switchToColorMode(new Color4f(counter / 360.0f));
-        ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("time", counter / 720);
+        ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("time", displacementMapTweening.value());
 
-        counter += 1f;
-
-        if(counter > 720) counter = 0f;
+        rotationTweening.update();
+        light.setRotation(rotationTweening.value(), new Vector3f(0, 1f, 1f).normalize());
 
         main3DCamera.updateView();
     }
@@ -151,13 +168,15 @@ public class Test3DScene extends Scene {
         clear();
 
         // Better to draw the world here
-        //light.display();
+        light.display();
         displacementMap.bind(1);
         stand.display();
 
         sBlock.display();
 
-        // Better to draw the hud here and be not affected by the post processing shader
+        sphere.display();
+
+        // Better to draw the hud here and be not affected by the postProcessing shader
         hudBar.display();
 
         super.setAndDisplayRealScene();
@@ -170,6 +189,7 @@ public class Test3DScene extends Scene {
         light.unload();
         hudBar.unload();
         stand.unload();
+        sphere.unload();
     }
 
 
@@ -192,7 +212,7 @@ public class Test3DScene extends Scene {
         placeText(array, index);
         //placeNormal(array, index);
 
-               /* -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 0.0f, -1.0f,
+             /* -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 0.0f, -1.0f,
                 0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   0.0f, 0.0f, -1.0f,
                 0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f, 0.0f, -1.0f,
                 0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f, 0.0f, -1.0f,
@@ -207,19 +227,19 @@ public class Test3DScene extends Scene {
                 -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   0.0f, 0.0f, 1.0f,
                 -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
 
-                -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-                -0.5f,  0.5f, -0.5f,   1.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-                -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
+                 -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
+                 -0.5f,  0.5f, -0.5f,   1.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
+                 -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
+                 -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
+                 -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
+                 -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
 
-                0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-                0.5f,  0.5f, -0.5f,    1.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-                0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                0.5f, -0.5f,  0.5f,    0.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+                 0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+                 0.5f,  0.5f, -0.5f,    1.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+                 0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
+                 0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
+                 0.5f, -0.5f,  0.5f,    0.0f, 1.0f,  1.0f, 0.0f, 0.0f,
+                 0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
 
                 -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, -1.0f, 0.0f,
                 0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   0.0f, -1.0f, 0.0f,
@@ -319,18 +339,17 @@ public class Test3DScene extends Scene {
         for(int i = 0; i < 6; i ++){
             placeValueToCoords(array, new float[]{0.0f, 1.0f, 0.0f}, index + (i) * lineSize + 5 + 5 * faceSize);
         }
-
     }
 
 
     public void placeValueToCoords(float[] array, float[] value, int coordStart){
-        System.arraycopy(value, 0, array, coordStart + 0, value.length);
+        System.arraycopy(value, 0, array, coordStart , value.length);
     }
 
-    private void computeShere(int[] indices, float[] positions, float[] textures, float[] normales){
+    private void computeSphere(Renderer renderer){
         float radius = 1;
-        int sector = 20;
-        int stack  = 20;
+        int sector = 70;
+        int stack  = 70;
 
         ArrayList<Integer> tempIndices = new ArrayList<>();
         ArrayList<Float> tempPosition = new ArrayList<>();
@@ -339,16 +358,20 @@ public class Test3DScene extends Scene {
 
         float x, y, z, xy;
         float nx, ny, nz;
-        float lenghtInv = 1.0f * radius;
+        float lenghtInv = 3.0f * radius;
         float s, t;
 
         float sectorStep = 2f * (float)Math.PI / sector;
         float stackStep = (float)Math.PI / stack;
         float sectorAngle, stackAngle;
 
+        int k1, k2;
+
         for (int i = 0; i <= stack; ++i){
             stackAngle = (float)Math.PI * 0.5f - i * stackStep;
             xy = radius * (float)Math.cos(stackAngle);
+
+
             z = radius * (float)Math.sin(stackAngle);
 
             for (int j = 0; j <= sector; ++j){
@@ -376,5 +399,43 @@ public class Test3DScene extends Scene {
                 tempTextures.add(t);
             }
         }
+
+        for (int i = 0; i < stack; ++i){
+            k1 = i * (sector + 1);
+            k2 = k1 + sector + 1;
+
+            for (int j = 0; j < sector; ++j, ++k1, ++k2){
+                if (i != 0){
+                    tempIndices.add(k1);
+                    tempIndices.add(k2);
+                    tempIndices.add(k1 + 1);
+                }
+
+                if (i != (stack - 1)){
+                    tempIndices.add(k1 + 1);
+                    tempIndices.add(k2);
+                    tempIndices.add(k2 + 1);
+                }
+            }
+        }
+
+        float[] position = new float[tempPosition.size()];
+        float[] normals = new float[tempNormales.size()];
+
+        int i = 0;
+
+        for (Float f : tempPosition) {
+            position[i++] = (f != null ? f : Float.NaN); // Or whatever default you want.
+        }
+
+        i = 0;
+
+        for (Float f : tempNormales) {
+            normals[i++] = (f != null ? f : Float.NaN); // Or whatever default you want.
+        }
+
+        renderer.getShape().setEbo(tempIndices.stream().mapToInt(j -> j).toArray());
+        renderer.getShape().addVbo(position, 3, Shape.STATIC_STORE);
+        renderer.getShape().addVbo(normals, 3, Shape.STATIC_STORE);
     }
 }
