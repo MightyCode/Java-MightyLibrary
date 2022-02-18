@@ -17,11 +17,16 @@ import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+
 public class Test3DScene extends Scene {
 
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120f, new Vector3f(0, 4, 0));
 
     private Renderer sBlock;
+
+    private Renderer sphere;
+
     private ModelRenderer stand;
     private RectangleRenderer hudBar;
 
@@ -60,6 +65,18 @@ public class Test3DScene extends Scene {
             // Displacement texture for cubes/crate
         displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
         ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
+
+
+        sphere = new Renderer("colorShape3D", true, false);
+        float[] spherePositions = new float[0];
+        float[] normals = new float[0];
+        float[] textures = new float[0];
+        int [] indices = new int [0];
+
+        computeShere(indices, spherePositions, textures, normals);
+        int spherePositionInfo =sphere.getShape().addVbo(spherePositions,  3, Shape.STATIC_STORE);
+
+
 
         // 3D Model
         stand = new ModelRenderer("texture3D", "stand/stall", "stall");
@@ -308,5 +325,56 @@ public class Test3DScene extends Scene {
 
     public void placeValueToCoords(float[] array, float[] value, int coordStart){
         System.arraycopy(value, 0, array, coordStart + 0, value.length);
+    }
+
+    private void computeShere(int[] indices, float[] positions, float[] textures, float[] normales){
+        float radius = 1;
+        int sector = 20;
+        int stack  = 20;
+
+        ArrayList<Integer> tempIndices = new ArrayList<>();
+        ArrayList<Float> tempPosition = new ArrayList<>();
+        ArrayList<Float> tempTextures = new ArrayList<>();
+        ArrayList<Float> tempNormales = new ArrayList<>();
+
+        float x, y, z, xy;
+        float nx, ny, nz;
+        float lenghtInv = 1.0f * radius;
+        float s, t;
+
+        float sectorStep = 2f * (float)Math.PI / sector;
+        float stackStep = (float)Math.PI / stack;
+        float sectorAngle, stackAngle;
+
+        for (int i = 0; i <= stack; ++i){
+            stackAngle = (float)Math.PI * 0.5f - i * stackStep;
+            xy = radius * (float)Math.cos(stackAngle);
+            z = radius * (float)Math.sin(stackAngle);
+
+            for (int j = 0; j <= sector; ++j){
+                sectorAngle = j * sectorStep;
+
+                x = xy * (float)Math.cos(sectorAngle);
+                y = xy * (float)Math.sin(sectorAngle);
+
+                tempPosition.add(x);
+                tempPosition.add(y);
+                tempPosition.add(z);
+
+                nx = x * lenghtInv;
+                ny = y * lenghtInv;
+                nz = z * lenghtInv;
+
+                tempNormales.add(nx);
+                tempNormales.add(ny);
+                tempNormales.add(nz);
+
+                s = (float)j / sector;
+                t = (float)i / stack;
+
+                tempTextures.add(s);
+                tempTextures.add(t);
+            }
+        }
     }
 }
