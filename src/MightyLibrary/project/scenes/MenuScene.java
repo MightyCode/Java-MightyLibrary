@@ -4,6 +4,8 @@ import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
 import MightyLibrary.mightylib.graphics.GUI.GUI;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
+import MightyLibrary.mightylib.graphics.util.Shaking2D;
+import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.sounds.SoundData;
 import MightyLibrary.mightylib.sounds.SoundManager;

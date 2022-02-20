@@ -47,6 +47,7 @@ public class Camera2D {
         camPos.x = newPos.x;
         camPos.y = newPos.y;
 
+        view.identity();
         view.translate(new Vector3f(camPos.x, camPos.y, 0));
         view.get(viewBuffer);
     }
@@ -54,6 +55,7 @@ public class Camera2D {
     public void setX(float x){
         camPos.x = x;
 
+        view.identity();
         view.translate(new Vector3f(camPos.x, camPos.y, 0));
         view.get(viewBuffer);
     }
@@ -61,6 +63,7 @@ public class Camera2D {
     public void setY(float y){
         camPos.y = y;
 
+        view.identity();
         view.translate(new Vector3f(camPos.x, camPos.y, 0));
         view.get(viewBuffer);
     }

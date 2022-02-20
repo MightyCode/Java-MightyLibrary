@@ -16,11 +16,19 @@ public class GameTime {
     }
 
     public static float DeltaTime(){
+        if (gametime == null){
+            gametime = new GameTime();
+        }
+
         return gametime.elapsedTime;
     }
 
 
     public static float getDeltaTSinceLastUpdate(){
+        if (gametime == null){
+            gametime = new GameTime();
+        }
+
         return gametime.deltaTimeSinceLastUpdate();
     }
 
@@ -38,7 +46,6 @@ public class GameTime {
         }
 
         gametime.updateGameTime();
-
     }
 
 
