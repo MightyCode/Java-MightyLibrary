@@ -20,7 +20,7 @@ public class RectangleRenderer extends Renderer {
 
         texturePosition = new Vector4f(0f, 1f, 0f,1f);
 
-        int[] indices = { 0, 1, 2, 2, 0, 3 };
+        int[] indices = RendererUtils.indicesForSquare();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.STATIC_STORE);

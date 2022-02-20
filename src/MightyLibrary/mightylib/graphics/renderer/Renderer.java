@@ -185,6 +185,12 @@ public class Renderer{
         return position;
     }
 
+    public Vector3f scale() { return scale; }
+
+    public Vector3f rotationCoef() { return rotation; }
+    
+    public float getRotationAngle() { return angle; }
+
     public void unload(){
         shape.unload();
         modelBuffer.clear();

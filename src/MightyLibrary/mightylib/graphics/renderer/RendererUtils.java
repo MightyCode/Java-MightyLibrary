@@ -41,4 +41,8 @@ public abstract class RendererUtils {
 
         return temp;
     }
+
+    public static int[] indicesForSquare (){
+        return new int[] { 0, 1, 2, 2, 0, 3 };
+    }
 }

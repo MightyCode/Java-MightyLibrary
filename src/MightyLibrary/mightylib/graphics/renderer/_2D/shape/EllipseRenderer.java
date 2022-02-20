@@ -16,7 +16,7 @@ public class EllipseRenderer extends Renderer {
 
         reference = EDirection.None;
 
-        int[] indices = { 0, 1, 2, 2, 0, 3 };
+        int[] indices = RendererUtils.indicesForSquare();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVbo(calculatePosition(), 2, Shape.STATIC_STORE);
