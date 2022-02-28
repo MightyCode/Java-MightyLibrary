@@ -41,28 +41,32 @@ public class Animation2DRenderer extends Renderer {
 
     public void init(Animator animator){
         this.animator = animator;
-        this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
 
-        updatePosition();
+        updateInfoForFrame();
+        switchToTextureMode(animator.getCurrentAnimation().getData().getTextureName());
     }
 
 
     public void update(){
         animator.update();
 
-        if (animator.animationChanged())
+        if (animator.animationChanged()) {
             switchToTextureMode(animator.getCurrentAnimation().getData().getTextureName());
-
-        if (animator.getCurrentAnimation().isCurrentFrameChanged()){
-            this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
-            shape.updateVbo(texturePos(), textureIndex);
-
-            updatePosition();
-
-            this.setScale(this.animationScale);
+            updateInfoForFrame();
+        } else if (animator.isFrameChanged()){
+            updateInfoForFrame();
         }
+
+        animator.lateUpdate();
     }
 
+    private void updateInfoForFrame(){
+        this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
+        shape.updateVbo(texturePos(), textureIndex);
+
+        updatePosition();
+        this.setScale(this.animationScale);
+    }
 
     public void setPosition(Vector2f position){
         referencePosition.x = position.x;
@@ -154,6 +158,7 @@ public class Animation2DRenderer extends Renderer {
         this.animationScale.y = scale.y;
 
         Vector2i info = animator.getCurrentAnimation().getFrameSize();
+
         super.setScale(new Vector3f(info.x * animationScale.x, info.y * animationScale.y, 1f));
     }
 }

@@ -306,6 +306,7 @@ public class Text extends Renderer {
                 .setColor(color.copy())
                 .setFontSize(fontSize)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
+                .setAlignment(alignment)
                 .setReference(this.reference)
                 .setText(this.text);
 
@@ -318,6 +319,7 @@ public class Text extends Renderer {
                 .setColor(color.copy())
                 .setFontSize(fontSize)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
+                .setAlignment(alignment)
                 .setReference(this.reference)
                 .setText(this.text);
 

@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.texture;
 
+import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2f;
@@ -34,15 +35,12 @@ public class Animation {
         this.texture = Resources.getInstance().getResource(Texture.class, animationData.getTextureName());
 
         restart();
-        currentTexturePosition();
     }
 
 
     public void update(){
         if (!animationFinished)
             elapsedTime += GameTime.DeltaTime() * speed;
-
-        lastFrame = currentFrame;
 
         while(elapsedTime >= animationData.getFrame(currentFrame).getFrameTime() &&
                 (currentFrame <= animationData.frameNumber() || looping)){
@@ -58,6 +56,10 @@ public class Animation {
                     animationFinished = true;
             }
         }
+    }
+
+    public void lateUpdate(){
+        lastFrame = currentFrame;
     }
 
 

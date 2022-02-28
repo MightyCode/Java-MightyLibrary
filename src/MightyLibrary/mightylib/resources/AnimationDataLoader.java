@@ -17,7 +17,6 @@ public abstract class AnimationDataLoader {
 
         if (file.isFile()){
             String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            //System.out.println("Load animation -> " + name);
             data.put(name, new AnimationData(name, path));
         } else if (file.isDirectory()) {
             for (String childPath : Objects.requireNonNull(file.list())){

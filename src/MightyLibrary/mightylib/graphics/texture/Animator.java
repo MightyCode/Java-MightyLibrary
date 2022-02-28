@@ -27,9 +27,12 @@ public class Animator {
             return;
 
         currentAnimation.update();
-        animationChanged = false;
     }
 
+    public void lateUpdate(){
+
+        animationChanged = false;
+    }
 
     public void addAndInitAnimation(String name, AnimationData animationData, boolean isLooping){
         Animation animation = new Animation();
@@ -57,16 +60,18 @@ public class Animator {
     }
 
 
-    public void setCurrentAnimation(String animation){
-        Animation anim = animations.get(animation);
-        if (anim == null) {
-            System.err.println("No animation named : " + animation);
+    public void setCurrentAnimation(String name, boolean resetOldAnimation){
+        Animation animation = animations.get(name);
+        if (animation == null) {
+            System.err.println("No animation named : " + name);
             return;
         }
 
-        currentAnimation.restart();
-        currentAnimation = anim;
-        currentAnimationName = animation;
+        if (resetOldAnimation)
+            currentAnimation.restart();
+
+        currentAnimation = animation;
+        currentAnimationName = name;
         animationChanged = true;
     }
 
@@ -106,5 +111,12 @@ public class Animator {
 
     public boolean animationChanged(){
         return animationChanged;
+    }
+
+    public boolean isFrameChanged(){
+        if (currentAnimation == null)
+            return false;
+
+        return currentAnimation.isCurrentFrameChanged();
     }
 }
