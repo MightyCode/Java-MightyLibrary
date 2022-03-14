@@ -1,5 +1,8 @@
 package MightyLibrary.mightylib.inputs;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
@@ -9,14 +12,6 @@ import static org.lwjgl.glfw.GLFW.*;
  * @version 1.0
  */
 public class InputManager {
-    private static final int INPUT_DATA_INDEX = 0;
-    private static final int INPUT_DATA_INPUT = 1;
-    private static final int INPUT_DATA_TYPE = 2;
-
-
-    public static final int ID_KEYBOARD = 0;
-    public static final int ID_MOUSE = 1;
-
 
     private static final int NUMBER_LIBRARY_INPUTS = 2;
 
@@ -32,9 +27,7 @@ public class InputManager {
     private final KeyboardManager keyManager;
     private final MouseManager mouseManager;
 
-    //TODO
-    private int[] types;
-    private int[] inputs;
+    private final Map<Integer, ActionConfigurations> actionConfigurations;
 
 
     /**
@@ -44,40 +37,86 @@ public class InputManager {
     public InputManager(KeyboardManager keyManager, MouseManager mouseManager){
         this.keyManager = keyManager;
         this.mouseManager = mouseManager;
+
+        actionConfigurations = new HashMap<>();
     }
 
 
-    public void init(int[][] inputData){
-        inputs = new int[CURRENT_ID];
-        types = new int[inputs.length];
+    public void init(ActionConfigurations[] actionConfigurations){
         initLibraryInputs();
 
         int index;
 
-        for (int[] inputDatum : inputData) {
-            index = inputDatum[INPUT_DATA_INDEX];
-
-            inputs[index] = inputDatum[INPUT_DATA_INPUT];
-            types[index] = inputDatum[INPUT_DATA_TYPE];
+        for (int i = 0; i < actionConfigurations.length; ++i) {
+            this.actionConfigurations.put(actionConfigurations[i].actionId(), actionConfigurations[i]);
         }
     }
 
 
     public boolean input(int inputID){
-        if(types[inputID] == ID_KEYBOARD) return keyManager.getKeyState(this.inputs[inputID]);
-        else return mouseManager.getState(this.inputs[inputID]);
+        ActionConfigurations actionConfiguration = actionConfigurations.get(inputID);
+        if (actionConfiguration == null)
+            return false;
+
+        for (InputConfiguration inputConfiguration : actionConfiguration.configurations()){
+            switch (inputConfiguration.type()){
+                case Keyboard:
+                    if (keyManager.getKeyState(inputConfiguration.id()))
+                        return true;
+                    break;
+                case Mouse:
+                    if (mouseManager.getState(inputConfiguration.id()))
+                        return true;
+                    break;
+            }
+        }
+
+        return false;
     }
 
 
     public boolean inputPressed(int inputId){
-        if(types[inputId] == ID_KEYBOARD) return keyManager.keyPressed(this.inputs[inputId]);
-        else return mouseManager.buttonPressed(this.inputs[inputId]);
+        ActionConfigurations actionConfiguration = actionConfigurations.get(inputId);
+        if (actionConfiguration == null)
+            return false;
+
+        for (InputConfiguration inputConfiguration : actionConfiguration.configurations()){
+            switch (inputConfiguration.type()){
+                case Keyboard:
+                    if (keyManager.keyPressed(inputConfiguration.id()))
+                        return true;
+                    break;
+                case Mouse:
+                    if (mouseManager.buttonPressed(inputConfiguration.id()))
+                        return true;
+                    break;
+            }
+        }
+
+        return false;
+
     }
 
 
     public boolean inputReleased(int inputID){
-        if(types[inputID] == ID_KEYBOARD) return keyManager.keyReleased(this.inputs[inputID]);
-        else return mouseManager.buttonReleased(this.inputs[inputID]);
+        ActionConfigurations actionConfiguration = actionConfigurations.get(inputID);
+        if (actionConfiguration == null)
+            return false;
+
+        for (InputConfiguration inputConfiguration : actionConfiguration.configurations()){
+            switch (inputConfiguration.type()){
+                case Keyboard:
+                    if (keyManager.keyReleased(inputConfiguration.id()))
+                        return true;
+                    break;
+                case Mouse:
+                    if (mouseManager.buttonReleased(inputConfiguration.id()))
+                        return true;
+                    break;
+            }
+        }
+
+        return false;
     }
 
 
@@ -88,11 +127,14 @@ public class InputManager {
 
 
     private void initLibraryInputs(){
-        inputs[COMMAND] = GLFW_KEY_F1;
-        types[COMMAND] = ID_KEYBOARD;
+        actionConfigurations.put(
+                COMMAND,
+                new ActionConfigurations(COMMAND, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_F1, EInputType.Keyboard)})
+        );
 
-        inputs[RELOAD_TEXTURE] = GLFW_KEY_F5;
-        types[RELOAD_TEXTURE] = ID_KEYBOARD;
+        actionConfigurations.put(
+                RELOAD_TEXTURE,
+                new ActionConfigurations(RELOAD_TEXTURE, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_F5, EInputType.Keyboard)})
+        );
     }
-
 }
