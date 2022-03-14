@@ -14,24 +14,20 @@ class ProjectLoading {
         InputManager inputManager = context.getInputManager();
 
         ActionConfigurations[] configurations = {
-                new ActionConfigurations(ActionId.ESCAPE, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_ESCAPE, EInputType.Keyboard)})
+                new ActionConfigurations(ActionId.ESCAPE, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_ESCAPE, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.MOVE_LEFT, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_A, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.MOVE_RIGHT, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_D, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.MOVE_FORWARD, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_W, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.MOVE_BACKWARD, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_S, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.MOVE_UP, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_SPACE, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.MOVE_DOWN, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_LEFT_CONTROL, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.SHIFT, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_LEFT_SHIFT, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.ENTER, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_ENTER, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.SELECT_UP, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_W, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.SELECT_DOWN, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_S, EInputType.Keyboard)}),
+                new ActionConfigurations(ActionId.LEFT_CLICK, new InputConfiguration[]{new InputConfiguration(GLFW_MOUSE_BUTTON_1, EInputType.Mouse)}),
+                new ActionConfigurations(ActionId.RIGHT_CLICK, new InputConfiguration[]{new InputConfiguration(GLFW_MOUSE_BUTTON_2, EInputType.Mouse)}),
         };
-
-        /*int[][][] inputData = {
-                {{ ActionId.ESCAPE, GLFW_KEY_ESCAPE , InputManager.ID_KEYBOARD }},
-                {{ ActionId.MOVE_LEFT, GLFW_KEY_A , InputManager.ID_KEYBOARD }},
-                {{ ActionId.MOVE_RIGHT, GLFW_KEY_D , InputManager.ID_KEYBOARD }},
-                {{ ActionId.MOVE_FORWARD, GLFW_KEY_W , InputManager.ID_KEYBOARD }},
-                {{ ActionId.MOVE_BACKWARD, GLFW_KEY_S , InputManager.ID_KEYBOARD }},
-                {{ ActionId.MOVE_UP, GLFW_KEY_SPACE , InputManager.ID_KEYBOARD }},
-                {{ ActionId.MOVE_DOWN, GLFW_KEY_LEFT_CONTROL , InputManager.ID_KEYBOARD }},
-                {{ ActionId.SHIFT, GLFW_KEY_LEFT_SHIFT , InputManager.ID_KEYBOARD }},
-                {{ ActionId.ENTER, GLFW_KEY_ENTER , InputManager.ID_KEYBOARD }},
-                {{ ActionId.SELECT_UP, GLFW_KEY_W , InputManager.ID_KEYBOARD }},
-                {{ ActionId.SELECT_DOWN, GLFW_KEY_S , InputManager.ID_KEYBOARD }},
-                {{ ActionId.LEFT_CLICK, GLFW_MOUSE_BUTTON_1 , InputManager.ID_MOUSE }},
-                {{ ActionId.RIGHT_CLICK, GLFW_MOUSE_BUTTON_1 , InputManager.ID_MOUSE }}
-        };*/
 
         inputManager.init(configurations);
     }
