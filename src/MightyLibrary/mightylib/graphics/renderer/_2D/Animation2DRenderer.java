@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.graphics.renderer._2D;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.graphics.texture.Animator;
+import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -17,6 +18,8 @@ public class Animation2DRenderer extends Renderer {
 
     private final Vector2f animationScale;
 
+    private final Vector2f offsetRotation;
+
     private boolean horizontalFlip, verticalFlip;
 
     public Animation2DRenderer(String shaderName){
@@ -24,7 +27,9 @@ public class Animation2DRenderer extends Renderer {
 
         animationScale = new Vector2f(1);
 
-        texturePosition = new Vector4f(0f, 0f, 0f,0f);
+        offsetRotation = new Vector2f(0, 0);
+
+        texturePosition = new Vector4f(0f, 1f, 0f,1f);
 
         int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);
@@ -60,7 +65,7 @@ public class Animation2DRenderer extends Renderer {
         animator.lateUpdate();
     }
 
-    private void updateInfoForFrame(){
+    public void updateInfoForFrame(){
         this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
         shape.updateVbo(texturePos(), textureIndex);
 
@@ -84,18 +89,58 @@ public class Animation2DRenderer extends Renderer {
 
             temp.x -= hotPoint.x * animationScale.x;
             temp.y -= hotPoint.y * animationScale.y;
+
+            temp.x += animator.getCurrentAnimation().getFrameSize().x * animationScale.x * offsetRotation.x;
+            temp.y += animator.getCurrentAnimation().getFrameSize().y * animationScale.y * offsetRotation.y;
         }
 
         setPosition(temp);
     }
 
-    private float[] calculatePosition(){
+    public void setShiftRotation(EDirection direction){
+        switch (direction){
+            default:
+            case None:
+                setShiftRotation(new Vector2f(0.5f, 0.5f));
+                break;
+            case RightUp:
+                setShiftRotation(new Vector2f(0, 0));
+                break;
+            case Up:
+                setShiftRotation(new Vector2f(0.5f, 0));
+                break;
+            case LeftUp:
+                setShiftRotation(new Vector2f(1, 0));
+                break;
+            case Left:
+                setShiftRotation(new Vector2f(1, 0.5f));
+                break;
+            case LeftDown:
+                setShiftRotation(new Vector2f(1, 1));
+                break;
+            case Down:
+                setShiftRotation(new Vector2f(0.5f, 1));
+                break;
+            case RightDown:
+                setShiftRotation(new Vector2f(0, 1));
+                break;
+            case Right:
+                setShiftRotation(new Vector2f(0, 0.5f));
+                break;
+        }
+    }
 
+    public void setShiftRotation(Vector2f offsetRotation){
+        this.offsetRotation.x = offsetRotation.x;
+        this.offsetRotation.y = offsetRotation.y;
+    }
+
+    private float[] calculatePosition(){
         return new float[]{
-                0, 1,
-                0, 0,
-                1, 0,
-                1, 1
+                0 - offsetRotation.x, 1 - offsetRotation.y,
+                0 - offsetRotation.x, 0 - offsetRotation.y,
+                1 - offsetRotation.x, 0 - offsetRotation.y,
+                1 - offsetRotation.x, 1 - offsetRotation.y
         };
     }
 

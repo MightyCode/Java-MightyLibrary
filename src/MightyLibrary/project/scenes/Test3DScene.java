@@ -66,7 +66,7 @@ public class Test3DScene extends Scene {
         light.addNormal();
 
         ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("worldColor", 0.2f, 0.5f, 0.2f);
-        Vector3f lightDir = new Vector3f(0.3f, 1f, 1f).normalize();
+        Vector3f lightDir = new Vector3f(0.1f, 1f, 0.1f).normalize();
         ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("lightDir", lightDir.x, lightDir.y, lightDir.z);
         ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("lightColor", 0.8f, 0.8f, 0.8f);
 
@@ -92,9 +92,6 @@ public class Test3DScene extends Scene {
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
 
         // Grey Rect in Hud
-        /*hudBar = new RectangleRenderer("colorShape2D").setSizePix( window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(window.size.x * 0.7f, window.size.y * 0.7f);
-        hudBar.setColor(new Color4f(0.5f, 0.5f, 0.5f, 1.0f));*/
         hudBar = new RectangleRenderer("texture2D");
         hudBar.switchToTextureMode("error");
         hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);

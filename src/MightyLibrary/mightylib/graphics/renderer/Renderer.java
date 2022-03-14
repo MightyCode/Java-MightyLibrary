@@ -139,8 +139,8 @@ public class Renderer{
         this.model.identity();
 
         this.model.translate(this.position);
-        this.model.scale(this.scale);
         this.model.rotate(angle, this.rotation);
+        this.model.scale(this.scale);
 
         this.model.get(modelBuffer);
     }
