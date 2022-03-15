@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.graphics.game.Tilemap;
+import MightyLibrary.mightylib.resources.map.Tilemap;
 import MightyLibrary.mightylib.graphics.text.FontFace;
 import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.resources.animation.AnimationData;

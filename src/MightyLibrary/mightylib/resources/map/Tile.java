@@ -1,6 +1,4 @@
-package MightyLibrary.mightylib.graphics.game;
-
-import MightyLibrary.mightylib.resources.map.Tileset;
+package MightyLibrary.mightylib.resources.map;
 
 public class Tile {
     private Tileset tileset;

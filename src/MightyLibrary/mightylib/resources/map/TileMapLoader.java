@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.resources.map;
 
-import MightyLibrary.mightylib.graphics.game.Tilemap;
 import MightyLibrary.mightylib.resources.DataType;
 
 import java.io.File;

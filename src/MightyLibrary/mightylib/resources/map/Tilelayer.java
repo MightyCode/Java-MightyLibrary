@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.game;
+package MightyLibrary.mightylib.resources.map;
 
 public class Tilelayer {
     private final Tilemap tilemap;
@@ -11,7 +11,11 @@ public class Tilelayer {
     }
 
 
-    public void setTileType(int x, int y, int type){
+    void setTileType(int x, int y, int type){
         tiles[y][x] = type;
+    }
+
+    public int getTile(int x, int y) {
+        return tiles[y][x];
     }
 }

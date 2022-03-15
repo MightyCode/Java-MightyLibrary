@@ -39,7 +39,7 @@ public class BackgroundlessButton extends GUI {
 
     @Override
     public boolean GUIMouseSelected(){
-        Vector2f position = Text.rightLeftPosition();
+        Vector2f position = Text.rightUpPosition();
         Vector2f size = Text.size();
         Vector2f mousePosition = context.getMouseManager().pos();
 

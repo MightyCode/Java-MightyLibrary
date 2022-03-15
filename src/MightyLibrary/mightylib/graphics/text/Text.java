@@ -21,7 +21,7 @@ public class Text extends Renderer {
     private FontFace font;
     private String text;
 
-    private final Vector2f rightLeftPosition;
+    private final Vector2f rightUpPosition;
     private final Vector2f rectangleSize;
 
     private EDirection reference;
@@ -42,7 +42,7 @@ public class Text extends Renderer {
         this.alignment = ETextAlignment.Left;
 
         this.rectangleSize = new Vector2f(0, 0);
-        this.rightLeftPosition = new Vector2f(0, 0);
+        this.rightUpPosition = new Vector2f(0, 0);
 
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(new int[0]);
@@ -110,7 +110,7 @@ public class Text extends Renderer {
         return this;
     }
 
-    public Vector2f rightLeftPosition() { return this.rightLeftPosition; }
+    public Vector2f rightUpPosition() { return this.rightUpPosition; }
 
     public Vector2f size() { return this.rectangleSize; }
 
@@ -151,8 +151,8 @@ public class Text extends Renderer {
         if (shouldNotDrawText())
             return;
 
-        rightLeftPosition.x = position.x;
-        rightLeftPosition.y = position.y;
+        rightUpPosition.x = position.x;
+        rightUpPosition.y = position.y;
 
         rectangleSize.x = 0;
         rectangleSize.y = 0;
@@ -219,8 +219,8 @@ public class Text extends Renderer {
                 break;
         }
 
-        rightLeftPosition.x -= textReference.x;
-        rightLeftPosition.y -= textReference.y;
+        rightUpPosition.x -= textReference.x;
+        rightUpPosition.y -= textReference.y;
 
         for (int j = 0; j < lines.length; ++j) {
             switch(this.alignment){
@@ -247,7 +247,7 @@ public class Text extends Renderer {
                 sizeTemp.x = (float)(fontChar.getWidth() * fontSize);
                 sizeTemp.y = (float)(fontChar.getHeight() * fontSize);
 
-                posTemp.x = (int) (currentCharOffset.x + fontChar.getxOffset() * fontSize - textReference.x + lineAlignmentOffset);
+                posTemp.x = (float) (currentCharOffset.x + fontChar.getxOffset() * fontSize - textReference.x + lineAlignmentOffset);
                 posTemp.y = (float)(currentCharOffset.y + fontChar.getyOffset() * fontSize - textReference.y);
 
                 temp.x = (posTemp.x);
