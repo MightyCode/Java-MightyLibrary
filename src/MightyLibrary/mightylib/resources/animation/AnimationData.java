@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.texture;
+package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.EDataType;

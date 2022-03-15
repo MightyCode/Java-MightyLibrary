@@ -1,19 +1,19 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.game.Tilemap;
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
-import MightyLibrary.mightylib.graphics.texture.AnimationData;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
-import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -23,6 +23,8 @@ public class Test2DScene extends Scene {
     private Vector2fTweening slimeTextureTweening;
 
     private Text text;
+
+    private Tilemap map;
 
     public void init(String[] args) {
         super.init(args);
@@ -64,6 +66,9 @@ public class Test2DScene extends Scene {
                 .setAlignment(ETextAlignment.Right)
                 .setPosition(new Vector2f(size.x, size.y))
                 .setText("Test d'écriture de texte c'est super cool");
+
+        map = Resources.getInstance().getResource(Tilemap.class, "map");
+        System.out.println(map);
     }
 
 

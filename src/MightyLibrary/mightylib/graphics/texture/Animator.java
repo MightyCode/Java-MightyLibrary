@@ -1,5 +1,7 @@
 package MightyLibrary.mightylib.graphics.texture;
 
+import MightyLibrary.mightylib.resources.animation.AnimationData;
+
 import java.util.HashMap;
 
 public class Animator {

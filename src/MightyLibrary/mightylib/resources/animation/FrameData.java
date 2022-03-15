@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.texture;
+package MightyLibrary.mightylib.resources.animation;
 
 import org.joml.Vector2i;
 import org.joml.Vector4i;

@@ -1,6 +1,8 @@
-package MightyLibrary.mightylib.resources;
+package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.FileMethods;
 import org.json.JSONObject;
 
 import java.util.Iterator;

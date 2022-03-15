@@ -19,7 +19,8 @@
 			"container" : "container.jpg",
 			"water1" : "water1.jpg",
 			"stall" : "stallTexture.png",
-			"slime" : "slime.png"
+			"slime" : "slime.png",
+			"tileset" : "tileset.png"
 		},
 		"shaderEffects" : {
 			"dispMap1" : "displacementMap1.png"

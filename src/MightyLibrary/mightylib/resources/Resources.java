@@ -1,9 +1,15 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.graphics.game.Tilemap;
 import MightyLibrary.mightylib.graphics.text.FontFace;
 import MightyLibrary.mightylib.graphics.text.FontLoader;
-import MightyLibrary.mightylib.graphics.texture.AnimationData;
+import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
+import MightyLibrary.mightylib.resources.animation.TextureLoader;
+import MightyLibrary.mightylib.resources.map.TileMapLoader;
+import MightyLibrary.mightylib.resources.map.Tileset;
+import MightyLibrary.mightylib.resources.map.TilesetLoader;
 import MightyLibrary.mightylib.sounds.SoundData;
 
 import java.util.HashMap;
@@ -27,6 +33,9 @@ public class Resources {
         resources.put(AnimationData.class, new HashMap<>());
         resources.put(FontFace.class, new HashMap<>());
         resources.put(SoundData.class, new HashMap<>());
+
+        resources.put(Tileset.class, new HashMap<>());
+        resources.put(Tilemap.class, new HashMap<>());
     }
 
     private void init(){
@@ -34,7 +43,10 @@ public class Resources {
         AnimationDataLoader.creates(resources.get(AnimationData.class));
         FontLoader.load(resources.get(FontFace.class));
         SoundLoader.load(resources.get(SoundData.class));
+        TilesetLoader.creates(resources.get(Tileset.class));
+        TileMapLoader.creates(resources.get(Tilemap.class));
     }
+
 
     public static Class<?> getClassFromName(String name){
         if (name.equalsIgnoreCase("animation"))
