@@ -6,7 +6,7 @@ import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
-public class Tilemap extends DataType {
+public class TileMap extends DataType {
     private final Vector2i mapSize;
     private Tilelayer[] layers;
 
@@ -14,7 +14,7 @@ public class Tilemap extends DataType {
 
     private int endBackLayer;
 
-    public Tilemap(String dataName, String path) {
+    public TileMap(String dataName, String path) {
         super(EDataType.TileMap, dataName, path);
 
         this.mapSize = new Vector2i();
@@ -35,9 +35,6 @@ public class Tilemap extends DataType {
         mapSize.y = Integer.parseInt(mSize[1]);
 
         String[] layerNumber = parts[index++].trim().split(" ");
-        mapSize.x = Integer.parseInt(mSize[0]);
-        mapSize.y = Integer.parseInt(mSize[1]);
-
 
         int numberOfBack = Integer.parseInt(layerNumber[0]);
         int numberOfFor = Integer.parseInt(layerNumber[1]);
@@ -46,7 +43,7 @@ public class Tilemap extends DataType {
 
         layers = new Tilelayer[numberOfBack + numberOfFor];
 
-        for (int layer = 0; layer < numberOfBack; ++layer){
+        for (int layer = 0; layer < layers.length; ++layer){
             layers[layer] = new Tilelayer(this);
 
             for (int y = 0; y < mapSize.y; ++y){

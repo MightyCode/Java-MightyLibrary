@@ -1,10 +1,10 @@
 package MightyLibrary.mightylib.resources.map;
 
 public class Tilelayer {
-    private final Tilemap tilemap;
+    private final TileMap tilemap;
     private final int[][] tiles;
 
-    public Tilelayer(Tilemap tilemap){
+    public Tilelayer(TileMap tilemap){
         this.tilemap = tilemap;
 
         tiles = new int[tilemap.mapHeight()][tilemap.mapWidth()];

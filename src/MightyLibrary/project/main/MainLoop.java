@@ -3,6 +3,8 @@ package MightyLibrary.project.main;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.map.TileMapLoader;
+import MightyLibrary.mightylib.resources.map.TilesetLoader;
 import MightyLibrary.mightylib.scene.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.project.scenes.MenuScene;
@@ -56,12 +58,15 @@ public class MainLoop {
         ShaderManager shaderManager = ShaderManager.getInstance();
         //shaderManager.forceShaderVersion(140);
         System.out.println("--Create Resources");
-        Resources resources = Resources.getInstance();
+        Resources resource = Resources.getInstance();
+
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(this);
 
+        ProjectLoading.init();
         ProjectLoading.ContextLoading(context);
 
+        resource.init();
         sceneManager.init(new MenuScene(), new String[]{""});
 
         System.out.println("\n" + Version.getVersion());

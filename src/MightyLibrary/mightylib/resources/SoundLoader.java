@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.sounds.SoundData;
 import MightyLibrary.mightylib.util.math.KeyTree;
 import MightyLibrary.mightylib.util.math.KeyTreeNode;
@@ -8,15 +9,22 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class SoundLoader {
-    public static void load(Map<String, DataType> data){
+public class SoundLoader extends ResourceLoader {
+
+    public SoundLoader(){
+        super(SoundData.class);
+    }
+
+
+    @Override
+    public void load(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/sounds/sounds.json"));
         obj = obj.getJSONObject("sounds");
 
-        SoundLoader.load(data, obj, "");
+        load(data, obj, "");
     }
 
-    private static void load(Map<String, DataType> data, JSONObject node, String currentPath){
+    private void load(Map<String, DataType> data, JSONObject node, String currentPath){
         Iterator<String> arrayNodes = node.keys();
 
         if(!arrayNodes.hasNext()) return;
@@ -25,7 +33,7 @@ public abstract class SoundLoader {
             String currentNode = arrayNodes.next();
 
             if(node.get(currentNode) instanceof JSONObject){
-                SoundLoader.load(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
+                load(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
             } else {
                 data.put(currentNode, new SoundData(currentNode, currentPath + node.getString(currentNode)));
             }

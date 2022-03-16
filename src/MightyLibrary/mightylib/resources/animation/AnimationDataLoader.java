@@ -1,18 +1,25 @@
 package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.map.Tileset;
 
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 
-public abstract class AnimationDataLoader {
-    public static void creates(Map<String, DataType> data){
-        creates(data, "resources/animations");
+public class AnimationDataLoader extends ResourceLoader {
+
+    public AnimationDataLoader(){
+        super(AnimationData.class);
+    }
+
+    public void load(Map<String, DataType> data){
+        load(data, "resources/animations");
     }
 
 
-    private static void creates(Map<String, DataType> data, String path){
+    private void load(Map<String, DataType> data, String path){
         File file = new File(path);
 
         if (file.isFile()){
@@ -20,7 +27,7 @@ public abstract class AnimationDataLoader {
             data.put(name, new AnimationData(name, path));
         } else if (file.isDirectory()) {
             for (String childPath : Objects.requireNonNull(file.list())){
-                creates(data, path + "/" + childPath);
+                load(data, path + "/" + childPath);
             }
         }
     }

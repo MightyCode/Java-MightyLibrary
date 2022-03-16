@@ -7,9 +7,19 @@ import MightyLibrary.mightylib.inputs.EInputType;
 import MightyLibrary.mightylib.inputs.InputConfiguration;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.map.TileMapLoader;
+import MightyLibrary.mightylib.resources.map.TilesetLoader;
 import MightyLibrary.project.lib.ActionId;
 
 class ProjectLoading {
+
+    static void init(){
+        Resources resources = Resources.getInstance();
+        resources.Loaders.add(new TileMapLoader());
+        resources.Loaders.add(new TilesetLoader());
+    }
+
     static void ContextLoading(Context context){
         InputManager inputManager = context.getInputManager();
 

@@ -1,24 +1,28 @@
-package MightyLibrary.mightylib.resources.animation;
+package MightyLibrary.mightylib.resources;
 
 import MightyLibrary.mightylib.graphics.texture.Texture;
-import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.FileMethods;
+import MightyLibrary.mightylib.resources.map.Tileset;
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class TextureLoader {
+public class TextureLoader extends ResourceLoader {
 
-    public static void load(Map<String, DataType> data){
+    public TextureLoader(){
+        super(Texture.class);
+    }
+
+    @Override
+    public void load(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/textures.json"));
         obj = obj.getJSONObject("textures");
 
         data.put("error", new Texture("error", "error.png"));
-        TextureLoader.load(data, obj, "");
+        load(data, obj, "");
     }
 
-    private static void load(Map<String, DataType> data, JSONObject node, String currentPath){
+    private void load(Map<String, DataType> data, JSONObject node, String currentPath){
         Iterator<String> arrayNodes = node.keys();
 
         if(!arrayNodes.hasNext()) return;
@@ -27,7 +31,7 @@ public abstract class TextureLoader {
             String currentNode = arrayNodes.next();
 
             if(node.get(currentNode) instanceof JSONObject){
-                TextureLoader.load(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
+                load(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
             } else {
                 data.put(currentNode, new Texture(currentNode, currentPath + node.getString(currentNode)));
             }

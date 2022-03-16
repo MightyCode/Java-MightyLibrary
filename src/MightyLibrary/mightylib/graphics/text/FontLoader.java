@@ -2,20 +2,27 @@ package MightyLibrary.mightylib.graphics.text;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
+import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.map.Tileset;
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.Map;
 
-public abstract class FontLoader {
-    public static void load(Map<String, DataType> data){
+public class FontLoader extends ResourceLoader {
+    public FontLoader(){
+        super(FontFace.class);
+    }
+
+     @Override
+    public void load(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/fonts/fonts.json"));
         obj = obj.getJSONObject("fonts");
 
-        FontLoader.load(data, obj);
+        load(data, obj);
     }
 
-    private static void load(Map<String, DataType> data, JSONObject node){
+    private void load(Map<String, DataType> data, JSONObject node){
         Iterator<String> arrayNodes = node.keys();
 
         if(!arrayNodes.hasNext())

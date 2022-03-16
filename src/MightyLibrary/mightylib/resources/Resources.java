@@ -1,50 +1,57 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.resources.map.Tilemap;
 import MightyLibrary.mightylib.graphics.text.FontFace;
 import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
-import MightyLibrary.mightylib.resources.animation.TextureLoader;
-import MightyLibrary.mightylib.resources.map.TileMapLoader;
-import MightyLibrary.mightylib.resources.map.Tileset;
-import MightyLibrary.mightylib.resources.map.TilesetLoader;
 import MightyLibrary.mightylib.sounds.SoundData;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class Resources {
     private static Resources singletonInstance = null;
     public static Resources getInstance(){
         if (singletonInstance == null){
             singletonInstance = new Resources();
-            singletonInstance.init();
         }
 
         return singletonInstance;
     }
 
+    public final List<ResourceLoader> Loaders;
+
     private final HashMap<Class<?>, HashMap<String, DataType>> resources;
+
+    private boolean initialized;
+    private boolean firstLoad;
 
     private Resources(){
         resources = new HashMap<>();
-        resources.put(Texture.class, new HashMap<>());
-        resources.put(AnimationData.class, new HashMap<>());
-        resources.put(FontFace.class, new HashMap<>());
-        resources.put(SoundData.class, new HashMap<>());
+        Loaders = new ArrayList<>();
 
-        resources.put(Tileset.class, new HashMap<>());
-        resources.put(Tilemap.class, new HashMap<>());
+        Loaders.add(new TextureLoader());
+        Loaders.add(new AnimationDataLoader());
+        Loaders.add(new FontLoader());
+        Loaders.add(new SoundLoader());
+
+        initialized = false;
+        firstLoad = false;
     }
 
-    private void init(){
-        TextureLoader.load(resources.get(Texture.class));
-        AnimationDataLoader.creates(resources.get(AnimationData.class));
-        FontLoader.load(resources.get(FontFace.class));
-        SoundLoader.load(resources.get(SoundData.class));
-        TilesetLoader.creates(resources.get(Tileset.class));
-        TileMapLoader.creates(resources.get(Tilemap.class));
+    public void init(){
+        if (initialized)
+            return;
+
+        for (ResourceLoader loader : Loaders){
+            HashMap<String, DataType> map = new HashMap<>();
+            loader.load(map);
+            resources.put(loader.getType(), map);
+        }
+
+        initialized = true;
     }
 
 
@@ -83,6 +90,9 @@ public class Resources {
 
 
     public int load(){
+        if (firstLoad)
+            return -1;
+
         System.out.println("--Load Resources");
         int incorrectlyLoad = 0;
 
@@ -90,11 +100,12 @@ public class Resources {
             incorrectlyLoad += load(c);
         }
 
+        firstLoad = true;
         return incorrectlyLoad;
     }
 
 
-    public int load(Class<?> typeOfResource){
+    private int load(Class<?> typeOfResource){
         int incorrectlyLoad = 0;
 
         for (DataType dataType : resources.get(typeOfResource).values()){

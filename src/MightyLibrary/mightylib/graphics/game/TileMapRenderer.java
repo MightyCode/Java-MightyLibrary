@@ -4,10 +4,11 @@ import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.map.Tilemap;
+import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
+import org.joml.Vector4f;
 
 public class TileMapRenderer extends Renderer {
     private static final int NUMBER_INDICES = 4;
@@ -21,8 +22,9 @@ public class TileMapRenderer extends Renderer {
 
     private EDirection reference;
 
-    private Tilemap tilemap;
+    private TileMap tilemap;
     private final boolean isForLayer;
+
 
     public TileMapRenderer(String shaderName, boolean willChange, boolean isForLayer) {
         super(shaderName, true, true);
@@ -56,7 +58,7 @@ public class TileMapRenderer extends Renderer {
     }
 
 
-    public void setTilemap(Tilemap tilemap){
+    public void setTilemap(TileMap tilemap){
         this.tilemap = tilemap;
 
         switchToTextureMode(tilemap.tileset().texture());
@@ -108,12 +110,15 @@ public class TileMapRenderer extends Renderer {
 
         Texture texture = Resources.getInstance().getResource(Texture.class, tilemap.tileset().texture());
         Vector2i tilePosition = new Vector2i();
-        Vector2f sizeTemp = new Vector2f();
-        Vector2f posTemp = new Vector2f();
+        Vector4f temp = new Vector4f();
 
         for (int layer = 0; layer < ((isForLayer) ? tilemap.forlayerNumber() : tilemap.backlayerNumber()); ++layer) {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
+                    tileType = tilemap.getTileType(isForLayer, layer, x, y);
+                    if (tileType <= 0)
+                        continue;
+
                     indices[tileCount * SIZE_INDICES] = tileCount * NUMBER_INDICES;
                     indices[tileCount * SIZE_INDICES + 1] = tileCount * NUMBER_INDICES + 1;
                     indices[tileCount * SIZE_INDICES + 2] = tileCount * NUMBER_INDICES + 2;
@@ -121,44 +126,42 @@ public class TileMapRenderer extends Renderer {
                     indices[tileCount * SIZE_INDICES + 4] = tileCount * NUMBER_INDICES;
                     indices[tileCount * SIZE_INDICES + 5] = tileCount * NUMBER_INDICES + 3;
 
-                    tileType = tilemap.getTileType(isForLayer, layer, x, y);
+                    temp.x = (float) (x * tilemap.tileset().tileSize().x) / texture.getWidth();
+                    temp.y = (float) (y * tilemap.tileset().tileSize().y) / texture.getHeight();
+                    temp.z = (float) ((x + 1) * tilemap.tileset().tileSize().x) / texture.getWidth();
+                    temp.w = (float) ((y + 1) * tilemap.tileset().tileSize().y) / texture.getHeight();
+
+                    position[tileCount * SIZE_COORDINATES] = temp.x;
+                    position[tileCount * SIZE_COORDINATES + 1] = temp.z;
+
+                    position[tileCount * SIZE_COORDINATES + 2] = temp.x;
+                    position[tileCount * SIZE_COORDINATES + 3] = temp.w;
+
+                    position[tileCount * SIZE_COORDINATES + 4] = temp.y;
+                    position[tileCount * SIZE_COORDINATES + 5] = temp.w;
+
+                    position[tileCount * SIZE_COORDINATES + 6] = temp.y;
+                    position[tileCount * SIZE_COORDINATES + 7] = temp.z;
+
 
                     tilePosition.x = (tileType - 1) * tilemap.tileset().tileSize().x % texture.getWidth();
                     tilePosition.y = (int)((tileType - 1.0f) * tilemap.tileset().tileSize().y / texture.getHeight());
 
-                    posTemp.x = (float) (currentCharOffset.x * tilemap.tileset().tileSize().x);
-                    posTemp.y = (float) (currentCharOffset.y * tilemap.tileset().tileSize().y);
+                    temp.x = (float) (tilePosition.x * tilemap.tileset().tileSize().x) / texture.getWidth();
+                    temp.y = (float) (tilePosition.y * tilemap.tileset().tileSize().y) / texture.getHeight();
+                    temp.z = (float) ((tilePosition.x + 1) * tilemap.tileset().tileSize().x) / texture.getWidth();
+                    temp.w = (float) ((tilePosition.y + 1) * tilemap.tileset().tileSize().y) / texture.getHeight();
+                    texturePosition[tileCount * SIZE_COORDINATES] = temp.x;
+                    texturePosition[tileCount * SIZE_COORDINATES + 1] = temp.z;
 
-                    position[charCount * SIZE_COORDINATES] = temp.x;
-                    position[charCount * SIZE_COORDINATES + 1] = temp.z;
+                    texturePosition[tileCount * SIZE_COORDINATES + 2] = temp.x;
+                    texturePosition[tileCount * SIZE_COORDINATES + 3] = temp.w;
 
-                    position[charCount * SIZE_COORDINATES + 2] = temp.x;
-                    position[charCount * SIZE_COORDINATES + 3] = temp.w;
+                    texturePosition[tileCount * SIZE_COORDINATES + 4] = temp.y;
+                    texturePosition[tileCount * SIZE_COORDINATES + 5] = temp.w;
 
-                    position[charCount * SIZE_COORDINATES + 4] = temp.y;
-                    position[charCount * SIZE_COORDINATES + 5] = temp.w;
-
-                    position[charCount * SIZE_COORDINATES + 6] = temp.y;
-                    position[charCount * SIZE_COORDINATES + 7] = temp.z;
-
-                    temp.x = (float) fontChar.getxAtlas();
-                    temp.y = temp.x + (float) fontChar.getWidthAtlas();
-                    temp.z = (float) fontChar.getyAtlas();
-                    temp.w = temp.z + (float) fontChar.getHeightAtlas();
-
-                    texturePosition[charCount * SIZE_COORDINATES] = temp.x;
-                    texturePosition[charCount * SIZE_COORDINATES + 1] = temp.z;
-
-                    texturePosition[charCount * SIZE_COORDINATES + 2] = temp.x;
-                    texturePosition[charCount * SIZE_COORDINATES + 3] = temp.w;
-
-                    texturePosition[charCount * SIZE_COORDINATES + 4] = temp.y;
-                    texturePosition[charCount * SIZE_COORDINATES + 5] = temp.w;
-
-                    texturePosition[charCount * SIZE_COORDINATES + 6] = temp.y;
-                    texturePosition[charCount * SIZE_COORDINATES + 7] = temp.z;
-
-                    currentCharOffset.x += fontChar.getxAdvance() * fontSize;
+                    texturePosition[tileCount * SIZE_COORDINATES + 6] = temp.y;
+                    texturePosition[tileCount * SIZE_COORDINATES + 7] = temp.z;
 
                     ++tileCount;
                 }
