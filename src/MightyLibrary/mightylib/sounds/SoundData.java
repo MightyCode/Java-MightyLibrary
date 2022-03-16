@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.sounds;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.EDataType;
+
 import static org.lwjgl.openal.AL10.*;
 
 public class SoundData extends DataType {
@@ -11,19 +12,18 @@ public class SoundData extends DataType {
     private int bufferId;
 
     public SoundData(String dataName, String path) {
-        super(EDataType.Sound, dataName, path);
+        super(EDataType.Sound, dataName, PATH + path);
 
         bufferId = -1;
     }
 
-    @Override
-    public boolean load() {
+
+    public boolean createSound(SoundLoadInfo info){
+        if (bufferId != -1)
+            return false;
+
         this.bufferId = alGenBuffers();
-
-        int lastIndex = path.lastIndexOf('.');
-
-        if (path.indexOf("ogg", lastIndex) != -1)
-            return SoundDataType.loadOgg(PATH + path, bufferId);
+        alBufferData(bufferId, info.Channel == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, info.Buffer, info.SampleRate);
 
         return true;
     }
@@ -35,7 +35,11 @@ public class SoundData extends DataType {
 
     @Override
     public boolean unload() {
-        alDeleteBuffers(this.bufferId);
+        if (this.bufferId != -1)
+            alDeleteBuffers(this.bufferId);
+
+        this.bufferId = -1;
+
         return false;
     }
 }

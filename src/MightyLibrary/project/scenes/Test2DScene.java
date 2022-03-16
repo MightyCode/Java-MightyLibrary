@@ -69,9 +69,8 @@ public class Test2DScene extends Scene {
                 .setPosition(new Vector2f(size.x, size.y))
                 .setText("Test d'écriture de texte c'est super cool");
 
-        map = Resources.getInstance().getResource(TileMap.class, "map");
+        map = Resources.getInstance().getResource(TileMap.class, "map2");
         mapRenderer = new FullTileMapRenderer("texture2D", false);
-
         mapRenderer.setTileMap(map);
     }
 

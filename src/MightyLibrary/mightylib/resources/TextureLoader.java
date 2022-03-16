@@ -14,7 +14,7 @@ public class TextureLoader extends ResourceLoader {
     }
 
     @Override
-    public void load(Map<String, DataType> data){
+    public void create(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/textures.json"));
         obj = obj.getJSONObject("textures");
 

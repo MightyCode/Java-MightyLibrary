@@ -22,13 +22,15 @@ public abstract class DataType {
 
     public String getPath(){ return this.path; }
 
-    public abstract boolean load();
+    public final boolean load(ResourceLoader loader) {
+        return loader.load(this);
+    }
 
-    public boolean reload(){
+    public boolean reload(ResourceLoader loader){
         if (!unload())
             return false;
 
-        return load();
+        return load(loader);
     }
 
     public abstract boolean unload();

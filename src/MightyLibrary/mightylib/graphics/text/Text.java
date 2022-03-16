@@ -21,7 +21,7 @@ public class Text extends Renderer {
     private FontFace font;
     private String text;
 
-    private final Vector2f rightUpPosition;
+    private final Vector2f leftUpPosition;
     private final Vector2f rectangleSize;
 
     private EDirection reference;
@@ -42,7 +42,7 @@ public class Text extends Renderer {
         this.alignment = ETextAlignment.Left;
 
         this.rectangleSize = new Vector2f(0, 0);
-        this.rightUpPosition = new Vector2f(0, 0);
+        this.leftUpPosition = new Vector2f(0, 0);
 
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(new int[0]);
@@ -110,7 +110,7 @@ public class Text extends Renderer {
         return this;
     }
 
-    public Vector2f rightUpPosition() { return this.rightUpPosition; }
+    public Vector2f leftUpPosition() { return this.leftUpPosition; }
 
     public Vector2f size() { return this.rectangleSize; }
 
@@ -151,8 +151,8 @@ public class Text extends Renderer {
         if (shouldNotDrawText())
             return;
 
-        rightUpPosition.x = position.x;
-        rightUpPosition.y = position.y;
+        leftUpPosition.x = position.x;
+        leftUpPosition.y = position.y;
 
         rectangleSize.x = 0;
         rectangleSize.y = 0;
@@ -219,8 +219,8 @@ public class Text extends Renderer {
                 break;
         }
 
-        rightUpPosition.x -= textReference.x;
-        rightUpPosition.y -= textReference.y;
+        leftUpPosition.x -= textReference.x;
+        leftUpPosition.y -= textReference.y;
 
         for (int j = 0; j < lines.length; ++j) {
             switch(this.alignment){

@@ -1,13 +1,17 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.sounds.SoundData;
+import MightyLibrary.mightylib.sounds.SoundDataType;
+import MightyLibrary.mightylib.sounds.SoundLoadInfo;
 import MightyLibrary.mightylib.util.math.KeyTree;
 import MightyLibrary.mightylib.util.math.KeyTreeNode;
 import org.json.JSONObject;
+import org.lwjgl.stb.STBVorbisInfo;
 
 import java.util.Iterator;
 import java.util.Map;
+
+import static org.lwjgl.openal.AL10.alBufferData;
 
 public class SoundLoader extends ResourceLoader {
 
@@ -17,14 +21,14 @@ public class SoundLoader extends ResourceLoader {
 
 
     @Override
-    public void load(Map<String, DataType> data){
+    public void create(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/sounds/sounds.json"));
         obj = obj.getJSONObject("sounds");
 
-        load(data, obj, "");
+        create(data, obj, "");
     }
 
-    private void load(Map<String, DataType> data, JSONObject node, String currentPath){
+    private void create(Map<String, DataType> data, JSONObject node, String currentPath){
         Iterator<String> arrayNodes = node.keys();
 
         if(!arrayNodes.hasNext()) return;
@@ -33,7 +37,7 @@ public class SoundLoader extends ResourceLoader {
             String currentNode = arrayNodes.next();
 
             if(node.get(currentNode) instanceof JSONObject){
-                load(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
+                create(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
             } else {
                 data.put(currentNode, new SoundData(currentNode, currentPath + node.getString(currentNode)));
             }
@@ -74,5 +78,49 @@ public class SoundLoader extends ResourceLoader {
                 SoundLoader.loadGainNode(gainTree, node.getJSONObject(currentNode), currentNode, current);
             }
         } while(arrayNodes.hasNext());
+    }
+
+
+    @Override
+    public boolean load(DataType dataType) {
+        if (dataType.getType() != EDataType.Sound)
+            return false;
+
+        SoundData sound = (SoundData) dataType;
+
+        String path = sound.path;
+        int lastIndex = path.lastIndexOf('.');
+
+        SoundLoadInfo info = new SoundLoadInfo();
+
+        if (path.indexOf("ogg", lastIndex) != -1)
+            if(!loadOgg(path, info))
+                return false;
+
+
+        return sound.createSound(info);
+    }
+
+
+    public boolean loadOgg(String path, SoundLoadInfo sInfo){
+        try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
+            try {
+                sInfo.Buffer = SoundDataType.readVorbis(path, 32 * 1024, info);
+            } catch (Exception e) {
+                e.printStackTrace();
+
+                return false;
+            }
+
+            // Copy to buffer
+            sInfo.Channel = info.channels();
+            sInfo.SampleRate = info.sample_rate();
+        } catch (Exception e){
+            e.printStackTrace();
+
+            return false;
+        }
+
+        return true;
     }
 }

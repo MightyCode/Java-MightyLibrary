@@ -87,7 +87,7 @@ public class Texture extends DataType {
             //System.out.println("Texture : " + textureId + " , loaded with path : " + path);
             correctLoaded = true;
         } catch (Exception e) {
-            System.err.println("Fail to load texture " + path + " :");
+            System.err.println("Fail to create texture " + path + " :");
             e.printStackTrace();
             glDeleteTextures(textureId);
             correctLoaded = false;

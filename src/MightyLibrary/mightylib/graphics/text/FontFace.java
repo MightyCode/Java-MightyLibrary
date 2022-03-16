@@ -21,12 +21,6 @@ public class FontFace extends DataType {
     }
 
 
-
-    @Override
-    public boolean load() {
-        return fontFile.load();
-    }
-
     public String getName(){
         return name;
     }

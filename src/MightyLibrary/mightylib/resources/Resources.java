@@ -10,6 +10,7 @@ import MightyLibrary.mightylib.sounds.SoundData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 public class Resources {
     private static Resources singletonInstance = null;
@@ -41,13 +42,14 @@ public class Resources {
         firstLoad = false;
     }
 
+
     public void init(){
         if (initialized)
             return;
 
         for (ResourceLoader loader : Loaders){
             HashMap<String, DataType> map = new HashMap<>();
-            loader.load(map);
+            loader.create(map);
             resources.put(loader.getType(), map);
         }
 
@@ -109,10 +111,20 @@ public class Resources {
         int incorrectlyLoad = 0;
 
         for (DataType dataType : resources.get(typeOfResource).values()){
-            if (!dataType.load()) ++incorrectlyLoad;
+            if (!dataType.load(Objects.requireNonNull(getLoader(typeOfResource))))
+                ++incorrectlyLoad;
         }
 
         return incorrectlyLoad;
+    }
+
+    private ResourceLoader getLoader (Class<?> typeOfResource){
+        for (ResourceLoader loader : Loaders){
+            if (typeOfResource.equals(loader.getType()))
+                return loader;
+        }
+
+        return null;
     }
 
 
@@ -131,7 +143,7 @@ public class Resources {
         int incorrectlyReload = 0;
 
         for (DataType dataType : resources.get(typeOfResource).values()){
-            if (!dataType.reload()) ++incorrectlyReload;
+            if (!dataType.reload(Objects.requireNonNull(getLoader(typeOfResource)))) ++incorrectlyReload;
         }
 
         return incorrectlyReload;

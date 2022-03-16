@@ -2,7 +2,6 @@ package MightyLibrary.mightylib.resources.map;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.EDataType;
-import MightyLibrary.mightylib.resources.FileMethods;
 import org.joml.Vector2i;
 
 public class Tileset extends DataType {
@@ -15,17 +14,15 @@ public class Tileset extends DataType {
         tileSize = new Vector2i();
     }
 
-    @Override
-    public boolean load() {
-        String data = FileMethods.readFileAsString(path);
-        String[] parts = data.split("\n");
-        texture = parts[0];
 
-        String[] sizePart = parts[1].trim().split(" ");
-        tileSize.x = Integer.parseInt(sizePart[0]);
-        tileSize.y = Integer.parseInt(sizePart[1]);
+    public void setTexture(String texture){
+        this.texture = texture;
+    }
 
-        return true;
+
+    public void setTileSize(Vector2i tileSize){
+        this.tileSize.x = tileSize.x;
+        this.tileSize.y = tileSize.y;
     }
 
     @Override

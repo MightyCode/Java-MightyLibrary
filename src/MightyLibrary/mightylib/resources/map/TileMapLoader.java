@@ -14,7 +14,7 @@ public class TileMapLoader extends ResourceLoader {
     }
 
     @Override
-    public void load(Map<String, DataType> data){
+    public void create(Map<String, DataType> data){
         load(data, "resources/tilemap");
     }
 

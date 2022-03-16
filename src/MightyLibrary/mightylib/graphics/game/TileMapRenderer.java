@@ -18,7 +18,7 @@ public class TileMapRenderer extends Renderer {
     private final int positionIndex;
     private final int textureIndex;
 
-    private final Vector2f rightLeftPosition;
+    private final Vector2f leftUpPosition;
 
     private EDirection reference;
 
@@ -29,10 +29,10 @@ public class TileMapRenderer extends Renderer {
     public TileMapRenderer(String shaderName, boolean willChange, boolean isForLayer) {
         super(shaderName, true, true);
 
-        // Null let renderer's ancien setting for text
-        this.reference = EDirection.RightUp;
+        // Null let renderer's old setting for text
+        this.reference = EDirection.LeftUp;
 
-        this.rightLeftPosition = new Vector2f(0, 0);
+        this.leftUpPosition = new Vector2f(0, 0);
 
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(new int[0]);
@@ -48,7 +48,7 @@ public class TileMapRenderer extends Renderer {
             return this;
 
         this.reference = reference;
-        this.computeAllMap();
+        this.computeTileInformations();
 
         return this;
     }
@@ -63,13 +63,12 @@ public class TileMapRenderer extends Renderer {
 
         switchToTextureMode(tilemap.tileset().texture());
 
-        computeAllMap();
+        computeTileInformations();
     }
 
-    public void computeAllMap(){
-
-        rightLeftPosition.x = position.x;
-        rightLeftPosition.y = position.y;
+    public void computeTileInformations(){
+        leftUpPosition.x = position.x;
+        leftUpPosition.y = position.y;
 
         Vector2i mapSize = tilemap.getMapSize().mul(tilemap.tileset().tileSize());
 
@@ -77,12 +76,12 @@ public class TileMapRenderer extends Renderer {
             case None:
             case Up:
             case Down:
-                rightLeftPosition.x = (int)(-mapSize.x * 0.5f);
+                leftUpPosition.x = (int)(-mapSize.x * 0.5f);
                 break;
             case RightDown:
             case Right:
             case RightUp:
-                rightLeftPosition.x = -mapSize.x;
+                leftUpPosition.x = -mapSize.x;
                 break;
         }
 
@@ -90,12 +89,12 @@ public class TileMapRenderer extends Renderer {
             case None:
             case Left:
             case Right:
-                rightLeftPosition.y = (int)(rightLeftPosition.y * 0.5f);
+                leftUpPosition.y = (int)(mapSize.y * 0.5f);
                 break;
             case LeftDown:
             case Down:
             case RightDown:
-                rightLeftPosition.y = -mapSize.y;
+                leftUpPosition.y = -mapSize.y;
                 break;
         }
 
@@ -112,12 +111,16 @@ public class TileMapRenderer extends Renderer {
         Vector2i tilePosition = new Vector2i();
         Vector4f temp = new Vector4f();
 
+        Vector2i tileSize = tilemap.tileset().tileSize();
+
         for (int layer = 0; layer < ((isForLayer) ? tilemap.forlayerNumber() : tilemap.backlayerNumber()); ++layer) {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
                     tileType = tilemap.getTileType(isForLayer, layer, x, y);
                     if (tileType <= 0)
                         continue;
+
+                    tileType -= 1;
 
                     indices[tileCount * SIZE_INDICES] = tileCount * NUMBER_INDICES;
                     indices[tileCount * SIZE_INDICES + 1] = tileCount * NUMBER_INDICES + 1;
@@ -126,10 +129,10 @@ public class TileMapRenderer extends Renderer {
                     indices[tileCount * SIZE_INDICES + 4] = tileCount * NUMBER_INDICES;
                     indices[tileCount * SIZE_INDICES + 5] = tileCount * NUMBER_INDICES + 3;
 
-                    temp.x = (float) (x * tilemap.tileset().tileSize().x) / texture.getWidth();
-                    temp.y = (float) (y * tilemap.tileset().tileSize().y) / texture.getHeight();
-                    temp.z = (float) ((x + 1) * tilemap.tileset().tileSize().x) / texture.getWidth();
-                    temp.w = (float) ((y + 1) * tilemap.tileset().tileSize().y) / texture.getHeight();
+                    temp.x = x * tilemap.tileset().tileSize().x;
+                    temp.y = (x + 1) * tilemap.tileset().tileSize().x - (leftUpPosition.x - position().x);
+                    temp.z = y * tilemap.tileset().tileSize().y;
+                    temp.w = (y + 1) * tilemap.tileset().tileSize().y - (leftUpPosition.y - position().y);
 
                     position[tileCount * SIZE_COORDINATES] = temp.x;
                     position[tileCount * SIZE_COORDINATES + 1] = temp.z;
@@ -144,13 +147,16 @@ public class TileMapRenderer extends Renderer {
                     position[tileCount * SIZE_COORDINATES + 7] = temp.z;
 
 
-                    tilePosition.x = (tileType - 1) * tilemap.tileset().tileSize().x % texture.getWidth();
-                    tilePosition.y = (int)((tileType - 1.0f) * tilemap.tileset().tileSize().y / texture.getHeight());
+                    tilePosition.x = (tileType * tileSize.x) % texture.getWidth() / tilemap.tileset().tileSize().x;
+                    tilePosition.y = (tileType * tileSize.y) / texture.getWidth();
 
-                    temp.x = (float) (tilePosition.x * tilemap.tileset().tileSize().x) / texture.getWidth();
-                    temp.y = (float) (tilePosition.y * tilemap.tileset().tileSize().y) / texture.getHeight();
-                    temp.z = (float) ((tilePosition.x + 1) * tilemap.tileset().tileSize().x) / texture.getWidth();
-                    temp.w = (float) ((tilePosition.y + 1) * tilemap.tileset().tileSize().y) / texture.getHeight();
+                    System.out.println(tileType + " :" + tilePosition.x + " " + tilePosition.y);
+
+                    temp.x = (tilePosition.x * 1.0f * tileSize.x) / texture.getWidth();
+                    temp.y = ((tilePosition.x + 1.0f) * tileSize.x) / texture.getWidth();
+                    temp.z = (tilePosition.y * 1.0f * tileSize.y) / texture.getHeight();
+                    temp.w = ((tilePosition.y + 1.0f) * tileSize.y) / texture.getHeight();
+
                     texturePosition[tileCount * SIZE_COORDINATES] = temp.x;
                     texturePosition[tileCount * SIZE_COORDINATES + 1] = temp.z;
 

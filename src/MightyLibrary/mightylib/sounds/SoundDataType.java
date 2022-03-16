@@ -23,29 +23,8 @@ import static org.lwjgl.openal.AL10.*;
 import static org.lwjgl.stb.STBVorbis.*;
 
 public class SoundDataType {
-    public static boolean loadOgg(String path, int bufferId){
-        try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-            ShortBuffer pcm;
-            try {
-                pcm = readVorbis(path, 32 * 1024, info);
-            } catch (Exception e) {
-                e.printStackTrace();
 
-                return false;
-            }
-
-            // Copy to buffer
-            alBufferData(bufferId, info.channels() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, pcm, info.sample_rate());
-        } catch (Exception e){
-            e.printStackTrace();
-
-            return false;
-        }
-
-        return true;
-    }
-
-    private static ShortBuffer readVorbis(String resource, int bufferSize, STBVorbisInfo info) throws Exception{
+    public static ShortBuffer readVorbis(String resource, int bufferSize, STBVorbisInfo info) throws Exception{
         ShortBuffer pcm;
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
