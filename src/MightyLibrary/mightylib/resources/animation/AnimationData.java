@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
 
 public class AnimationData extends DataType {
 
@@ -10,7 +9,8 @@ public class AnimationData extends DataType {
 
 
     public AnimationData(String name, String path){
-        super(EDataType.AnimationData, name, path);
+        super(name, path);
+
         textureName = "";
     }
 

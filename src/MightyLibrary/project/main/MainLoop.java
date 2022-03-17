@@ -3,8 +3,6 @@ package MightyLibrary.project.main;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.map.TileMapLoader;
-import MightyLibrary.mightylib.resources.map.TilesetLoader;
 import MightyLibrary.mightylib.scene.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.project.scenes.MenuScene;

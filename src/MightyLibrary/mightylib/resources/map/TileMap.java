@@ -1,66 +1,30 @@
 package MightyLibrary.mightylib.resources.map;
 
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
-import MightyLibrary.mightylib.resources.FileMethods;
-import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
 public class TileMap extends DataType {
     private final Vector2i mapSize;
-    private Tilelayer[] layers;
+    private TileLayer[] layers;
 
-    private Tileset tileset;
+    private TileSet tileset;
 
     private int endBackLayer;
 
     public TileMap(String dataName, String path) {
-        super(EDataType.TileMap, dataName, path);
+        super(dataName, path);
 
         this.mapSize = new Vector2i();
 
         endBackLayer = 0;
     }
 
-
-    @Override
-    public boolean load() {
-        String data = FileMethods.readFileAsString(path);
-        String[] parts = data.split("\n");
-        int index = 0;
-        tileset = Resources.getInstance().getResource(Tileset.class, parts[index++]);
-
-        String[] mSize = parts[index++].trim().split(" ");
-        mapSize.x = Integer.parseInt(mSize[0]);
-        mapSize.y = Integer.parseInt(mSize[1]);
-
-        String[] layerNumber = parts[index++].trim().split(" ");
-
-        int numberOfBack = Integer.parseInt(layerNumber[0]);
-        int numberOfFor = Integer.parseInt(layerNumber[1]);
-
-        endBackLayer = numberOfBack;
-
-        layers = new Tilelayer[numberOfBack + numberOfFor];
-
-        for (int layer = 0; layer < layers.length; ++layer){
-            layers[layer] = new Tilelayer(this);
-
-            for (int y = 0; y < mapSize.y; ++y){
-                String[] Xs = parts[index++].trim().split(" ");
-
-                for (int x = 0; x < mapSize.x; ++x){
-                    layers[layer].setTileType(x, y, Integer.parseInt(Xs[x]));
-                }
-            }
-        }
-
-
-
-
-        return true;
+    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer){
+        this.tileset = tileset;
+        this.mapSize.set(mapSize);
+        this.layers = layers;
+        this.endBackLayer = endBackLayer;
     }
-
 
     public Vector2i getMapSize() { return new Vector2i(mapSize); }
 
@@ -68,7 +32,7 @@ public class TileMap extends DataType {
 
     public int mapWidth() { return mapSize.x; }
 
-    public Tileset tileset() { return tileset; }
+    public TileSet tileset() { return tileset; }
 
 
     public int forlayerNumber () { return layers.length - endBackLayer;  }

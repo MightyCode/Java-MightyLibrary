@@ -1,19 +1,12 @@
 package MightyLibrary.mightylib.resources;
 
 public abstract class DataType {
-    protected final EDataType type;
     protected final String dataName;
     protected final String path;
 
-    public DataType(EDataType type, String dataName, String path){
-        this.type = type;
+    public DataType(String dataName, String path){
         this.dataName = dataName;
         this.path = path;
-    }
-
-
-    public EDataType getType(){
-        return this.type;
     }
 
     public String getDataName(){

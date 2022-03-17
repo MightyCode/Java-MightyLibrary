@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.*;
-import MightyLibrary.mightylib.resources.EDataType;
+import MightyLibrary.mightylib.sounds.SoundData;
 
 import java.io.File;
 import java.util.Map;
@@ -40,7 +40,7 @@ public class AnimationDataLoader extends ResourceLoader {
 
     @Override
     public boolean load(DataType dataType) {
-        if (dataType.getType() != EDataType.AnimationData)
+        if (!(dataType instanceof AnimationData))
             return false;
 
         AnimationData animationData = (AnimationData)dataType;

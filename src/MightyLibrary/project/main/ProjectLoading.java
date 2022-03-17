@@ -9,7 +9,7 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
-import MightyLibrary.mightylib.resources.map.TilesetLoader;
+import MightyLibrary.mightylib.resources.map.TileSetLoader;
 import MightyLibrary.project.lib.ActionId;
 
 class ProjectLoading {
@@ -17,7 +17,7 @@ class ProjectLoading {
     static void init(){
         Resources resources = Resources.getInstance();
         resources.Loaders.add(new TileMapLoader());
-        resources.Loaders.add(new TilesetLoader());
+        resources.Loaders.add(new TileSetLoader());
     }
 
     static void ContextLoading(Context context){

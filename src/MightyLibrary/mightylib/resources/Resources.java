@@ -70,21 +70,6 @@ public class Resources {
         return Object.class;
     }
 
-    public static Class<?> getClassFromType(EDataType type){
-        switch (type){
-            case AnimationData:
-                return AnimationData.class;
-            case Texture:
-                return Texture.class;
-            case Font:
-                return FontFace.class;
-            case Sound:
-                return SoundData.class;
-        }
-
-        return Object.class;
-    }
-
 
     public <T> T getResource(Class<T> type, String name){
         return type.cast(resources.get(type).get(name));

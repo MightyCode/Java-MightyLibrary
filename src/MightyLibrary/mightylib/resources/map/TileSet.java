@@ -1,15 +1,14 @@
 package MightyLibrary.mightylib.resources.map;
 
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
 import org.joml.Vector2i;
 
-public class Tileset extends DataType {
+public class TileSet extends DataType {
     private String texture;
-    private Vector2i tileSize;
+    private final Vector2i tileSize;
 
-    public Tileset(String dataName, String path) {
-        super(EDataType.TileSet, dataName, path);
+    public TileSet(String dataName, String path) {
+        super(dataName, path);
 
         tileSize = new Vector2i();
     }

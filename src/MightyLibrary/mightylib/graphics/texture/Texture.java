@@ -1,12 +1,9 @@
 package MightyLibrary.mightylib.graphics.texture;
 
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
 import org.lwjgl.BufferUtils;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
@@ -22,7 +19,9 @@ public class Texture extends DataType {
     private boolean correctLoaded;
 
     public Texture(String name, String path) {
-        super(EDataType.Texture, name, path);
+        super(name, PATH + path);
+
+        textureId = -1;
     }
 
     public void bind() {
@@ -38,24 +37,10 @@ public class Texture extends DataType {
         } else glBindTexture(GL_TEXTURE_2D, 1);
     }
 
+    public void createImage(BufferedImage img, int textureParameter) {
+        if (textureId != -1)
+            unload();
 
-    @Override
-    public boolean load() {
-        try {
-            BufferedImage image = ImageIO.read(new FileInputStream(PATH +  this.path));
-            createImage(image);
-            return true;
-        } catch (Exception e) {
-            System.err.println("Can't find the path for :");
-            System.out.println(PATH +  this.path + "\n");
-            e.printStackTrace();
-            correctLoaded = false;
-
-            return false;
-        }
-    }
-
-    private void createImage(BufferedImage img) {
         textureId = glGenTextures();
 
         try {
@@ -82,7 +67,8 @@ public class Texture extends DataType {
 
             glBindTexture(GL_TEXTURE_2D, textureId);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer);
-            TextureParameters.pixelArtParameters();
+
+            TextureParameters.applyParameters(textureParameter);
 
             //System.out.println("Texture : " + textureId + " , loaded with path : " + path);
             correctLoaded = true;
@@ -111,9 +97,15 @@ public class Texture extends DataType {
         if (correctLoaded)  glTexParameteri(GL_TEXTURE_2D, param, value);
     }
 
+    public boolean isCorrectLoaded(){
+        return correctLoaded;
+    }
+
     @Override
     public boolean unload() {
-        if (correctLoaded) glDeleteTextures(textureId);
+        if (correctLoaded)
+            glDeleteTextures(textureId);
+
         return true;
     }
 }

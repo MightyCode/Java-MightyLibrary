@@ -2,7 +2,6 @@ package MightyLibrary.mightylib.graphics.text;
 
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
 import MightyLibrary.mightylib.resources.Resources;
 
 public class FontFace extends DataType {
@@ -12,7 +11,7 @@ public class FontFace extends DataType {
     private final FontFile fontFile;
 
     FontFace(String fontFaceName, String textureName, String infoPath) {
-        super(EDataType.Font, fontFaceName, PATH + infoPath);
+        super(fontFaceName, PATH + infoPath);
 
         name = fontFaceName;
         fontAtlas = Resources.getInstance().getResource(Texture.class, textureName);

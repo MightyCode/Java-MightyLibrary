@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.sounds;
 
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
 
 import static org.lwjgl.openal.AL10.*;
 
@@ -12,7 +11,7 @@ public class SoundData extends DataType {
     private int bufferId;
 
     public SoundData(String dataName, String path) {
-        super(EDataType.Sound, dataName, PATH + path);
+        super(dataName, PATH + path);
 
         bufferId = -1;
     }

@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.graphics.text;
 
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
 import org.json.JSONObject;
@@ -41,7 +40,7 @@ public class FontLoader extends ResourceLoader {
 
     @Override
     public boolean load(DataType dataType) {
-        if (dataType.getType() != EDataType.Font)
+        if (!(dataType instanceof FontFace))
             return false;
 
         FontFace fontFace = (FontFace) dataType;

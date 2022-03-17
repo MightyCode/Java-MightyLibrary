@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.resources.map;
 
+import MightyLibrary.mightylib.graphics.text.FontFace;
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.EDataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
 import org.joml.Vector2i;
@@ -10,10 +10,10 @@ import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 
-public class TilesetLoader  extends ResourceLoader {
+public class TileSetLoader extends ResourceLoader {
 
-    public TilesetLoader(){
-        super(Tileset.class);
+    public TileSetLoader(){
+        super(TileSet.class);
     }
 
     @Override
@@ -26,7 +26,7 @@ public class TilesetLoader  extends ResourceLoader {
 
         if (file.isFile()){
             String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            data.put(name, new Tileset(name, path));
+            data.put(name, new TileSet(name, path));
         } else if (file.isDirectory()) {
             for (String childPath : Objects.requireNonNull(file.list())){
                 create(data, path + "/" + childPath);
@@ -37,10 +37,10 @@ public class TilesetLoader  extends ResourceLoader {
 
     @Override
     public boolean load(DataType dataType) {
-        if (dataType.getType() != EDataType.TileSet)
+        if (!(dataType instanceof TileSet))
             return false;
 
-        Tileset tileset = (Tileset) dataType;
+        TileSet tileset = (TileSet) dataType;
 
         String data = FileMethods.readFileAsString(tileset.getPath());
         String[] parts = data.split("\n");

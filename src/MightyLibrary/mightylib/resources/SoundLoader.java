@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.sounds.SoundData;
 import MightyLibrary.mightylib.sounds.SoundDataType;
 import MightyLibrary.mightylib.sounds.SoundLoadInfo;
@@ -83,7 +84,7 @@ public class SoundLoader extends ResourceLoader {
 
     @Override
     public boolean load(DataType dataType) {
-        if (dataType.getType() != EDataType.Sound)
+        if (!(dataType instanceof SoundData))
             return false;
 
         SoundData sound = (SoundData) dataType;

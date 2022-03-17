@@ -150,8 +150,6 @@ public class TileMapRenderer extends Renderer {
                     tilePosition.x = (tileType * tileSize.x) % texture.getWidth() / tilemap.tileset().tileSize().x;
                     tilePosition.y = (tileType * tileSize.y) / texture.getWidth();
 
-                    System.out.println(tileType + " :" + tilePosition.x + " " + tilePosition.y);
-
                     temp.x = (tilePosition.x * 1.0f * tileSize.x) / texture.getWidth();
                     temp.y = ((tilePosition.x + 1.0f) * tileSize.x) / texture.getWidth();
                     temp.z = (tilePosition.y * 1.0f * tileSize.y) / texture.getHeight();
