@@ -60,7 +60,7 @@ public class TileMapLoader extends ResourceLoader {
                 String[] Xs = parts[index++].trim().split(" ");
 
                 for (int x = 0; x < mapSize.x; ++x){
-                    layers[layer].setTileType(x, y, Integer.parseInt(Xs[x]));
+                    layers[layer].setTileType(x, y, Integer.parseInt(Xs[x]) - 1);
                 }
             }
         }

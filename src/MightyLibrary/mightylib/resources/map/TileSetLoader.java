@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.resources.map;
 
-import MightyLibrary.mightylib.graphics.text.FontFace;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
@@ -44,15 +43,25 @@ public class TileSetLoader extends ResourceLoader {
 
         String data = FileMethods.readFileAsString(tileset.getPath());
         String[] parts = data.split("\n");
-        tileset.setTexture(parts[0]);
 
-        String[] sizePart = parts[1].trim().split(" ");
+        int index = 0;
 
-        tileset.setTileSize(
+        String texture = parts[index++];
+
+        String[] sizePart = parts[index++].trim().split(" ");
+
+        tileset.setTileSize(texture,
                 new Vector2i(
                         Integer.parseInt(sizePart[0]),
                         Integer.parseInt(sizePart[1])
                 )
+        );
+
+        sizePart = parts[index++].trim().split(" ");
+
+        tileset.setTileParameters(
+                Boolean.parseBoolean(sizePart[0]),
+                Boolean.parseBoolean(sizePart[1])
         );
 
         return false;

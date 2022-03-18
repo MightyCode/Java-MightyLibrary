@@ -5,6 +5,7 @@ import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMap;
+import MightyLibrary.mightylib.resources.map.TileSet;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -48,7 +49,7 @@ public class TileMapRenderer extends Renderer {
             return this;
 
         this.reference = reference;
-        this.computeTileInformations();
+        this.computeTileInformation();
 
         return this;
     }
@@ -63,10 +64,10 @@ public class TileMapRenderer extends Renderer {
 
         switchToTextureMode(tilemap.tileset().texture());
 
-        computeTileInformations();
+        computeTileInformation();
     }
 
-    public void computeTileInformations(){
+    public void computeTileInformation(){
         leftUpPosition.x = position.x;
         leftUpPosition.y = position.y;
 
@@ -107,20 +108,20 @@ public class TileMapRenderer extends Renderer {
 
         int tileType;
 
-        Texture texture = Resources.getInstance().getResource(Texture.class, tilemap.tileset().texture());
+        TileSet tileSet = tilemap.tileset();
+
+        Texture texture = Resources.getInstance().getResource(Texture.class, tileSet.texture());
         Vector2i tilePosition = new Vector2i();
         Vector4f temp = new Vector4f();
 
-        Vector2i tileSize = tilemap.tileset().tileSize();
+        Vector2i tileSize = tileSet.tileSize();
 
         for (int layer = 0; layer < ((isForLayer) ? tilemap.forlayerNumber() : tilemap.backlayerNumber()); ++layer) {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
-                    tileType = tilemap.getTileType(isForLayer, layer, x, y);
-                    if (tileType <= 0)
+                    tileType = tileSet.getConvertedId(tilemap.getTileType(isForLayer, layer, x, y));
+                    if (tileType < 0)
                         continue;
-
-                    tileType -= 1;
 
                     indices[tileCount * SIZE_INDICES] = tileCount * NUMBER_INDICES;
                     indices[tileCount * SIZE_INDICES + 1] = tileCount * NUMBER_INDICES + 1;
@@ -129,10 +130,10 @@ public class TileMapRenderer extends Renderer {
                     indices[tileCount * SIZE_INDICES + 4] = tileCount * NUMBER_INDICES;
                     indices[tileCount * SIZE_INDICES + 5] = tileCount * NUMBER_INDICES + 3;
 
-                    temp.x = x * tilemap.tileset().tileSize().x;
-                    temp.y = (x + 1) * tilemap.tileset().tileSize().x - (leftUpPosition.x - position().x);
-                    temp.z = y * tilemap.tileset().tileSize().y;
-                    temp.w = (y + 1) * tilemap.tileset().tileSize().y - (leftUpPosition.y - position().y);
+                    temp.x = x * tileSize.x;
+                    temp.y = (x + 1) * tileSize.x - (leftUpPosition.x - position().x);
+                    temp.z = y * tileSize.y;
+                    temp.w = (y + 1) * tileSize.y - (leftUpPosition.y - position().y);
 
                     position[tileCount * SIZE_COORDINATES] = temp.x;
                     position[tileCount * SIZE_COORDINATES + 1] = temp.z;
@@ -147,7 +148,7 @@ public class TileMapRenderer extends Renderer {
                     position[tileCount * SIZE_COORDINATES + 7] = temp.z;
 
 
-                    tilePosition.x = (tileType * tileSize.x) % texture.getWidth() / tilemap.tileset().tileSize().x;
+                    tilePosition.x = (tileType * tileSize.x) % texture.getWidth() / tileSize.x;
                     tilePosition.y = (tileType * tileSize.y) / texture.getWidth();
 
                     temp.x = (tilePosition.x * 1.0f * tileSize.x) / texture.getWidth();
@@ -171,7 +172,6 @@ public class TileMapRenderer extends Renderer {
                 }
             }
         }
-
 
         shape.setEbo(indices);
         shape.updateVbo(texturePosition, textureIndex);
