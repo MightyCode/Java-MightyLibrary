@@ -1,6 +1,7 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
+import MightyLibrary.mightylib.graphics.game.TileMapRenderer;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
@@ -33,7 +34,8 @@ public class Test2DScene extends Scene {
         /// SCENE INFORMATION ///
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));
-        setClearColor(52, 189, 235, 1f);
+        //setClearColor(52, 189, 235, 1f);
+        setClearColor(0, 0, 0, 1f);
 
         /// RENDERERS ///
 
@@ -70,6 +72,7 @@ public class Test2DScene extends Scene {
                 .setText("Test d'écriture de texte c'est super cool");
 
         map = Resources.getInstance().getResource(TileMap.class, "map");
+
         mapRenderer = new FullTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
     }
@@ -83,8 +86,14 @@ public class Test2DScene extends Scene {
 
         slimeTextureTweening.update();
         //slimeRenderer.setPosition(slimeTextureTweening.value());
-
         slimeRenderer.update();
+
+
+        //map.setTileType(0, 0, 0, 560);
+
+        mapRenderer.update();
+
+        map.dispose();
     }
 
 

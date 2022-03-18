@@ -62,7 +62,7 @@ public class TileMapRenderer extends Renderer {
     public void setTilemap(TileMap tilemap){
         this.tilemap = tilemap;
 
-        switchToTextureMode(tilemap.tileset().texture());
+        switchToTextureMode(tilemap.tileSet().texture());
 
         computeTileInformation();
     }
@@ -71,7 +71,7 @@ public class TileMapRenderer extends Renderer {
         leftUpPosition.x = position.x;
         leftUpPosition.y = position.y;
 
-        Vector2i mapSize = tilemap.getMapSize().mul(tilemap.tileset().tileSize());
+        Vector2i mapSize = tilemap.getMapSize().mul(tilemap.tileSet().tileSize());
 
         switch(this.reference){
             case None:
@@ -109,7 +109,7 @@ public class TileMapRenderer extends Renderer {
         int rawTileType;
         int tileType;
 
-        TileSet tileSet = tilemap.tileset();
+        TileSet tileSet = tilemap.tileSet();
 
         Texture texture = Resources.getInstance().getResource(Texture.class, tileSet.texture());
         Vector2i tilePosition = new Vector2i();
@@ -167,6 +167,12 @@ public class TileMapRenderer extends Renderer {
         shape.setEbo(indices);
         shape.updateVbo(texturePosition, textureIndex);
         shape.updateVbo(position, positionIndex);
+    }
+
+    public void update(){
+        if (tilemap.updated()){
+            computeTileInformation();
+        }
     }
 
 

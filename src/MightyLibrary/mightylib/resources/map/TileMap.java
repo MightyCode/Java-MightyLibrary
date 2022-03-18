@@ -11,20 +11,25 @@ public class TileMap extends DataType {
 
     private int endBackLayer;
 
+    private boolean updated;
+
     public TileMap(String dataName, String path) {
         super(dataName, path);
 
         this.mapSize = new Vector2i();
 
         endBackLayer = 0;
+
+        updated = false;
     }
 
-    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer){
+    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer){ ;
         this.tileset = tileset;
         this.mapSize.set(mapSize);
         this.layers = layers;
         this.endBackLayer = endBackLayer;
     }
+
 
     public Vector2i getMapSize() { return new Vector2i(mapSize); }
 
@@ -32,12 +37,26 @@ public class TileMap extends DataType {
 
     public int mapWidth() { return mapSize.x; }
 
-    public TileSet tileset() { return tileset; }
+    public TileSet tileSet() { return tileset; }
+
+    public int forlayerNumber () { return layers.length - endBackLayer; }
+
+    public int backlayerNumber () { return endBackLayer; }
+
+    public void dispose(){
+        updated = false;
+    }
 
 
-    public int forlayerNumber () { return layers.length - endBackLayer;  }
+    public void setTileType(int layerNumber, int x, int y, int type){
+        layers[layerNumber].setTileType(x, y, type);
 
-    public int backlayerNumber () { return endBackLayer;  }
+        updated = true;
+    }
+
+    public boolean updated(){
+        return updated;
+    }
 
     public int getTileType(boolean isFor, int layerNumber, int x, int y){
         if (isFor){

@@ -16,8 +16,8 @@ class ProjectLoading {
 
     static void init(){
         Resources resources = Resources.getInstance();
-        resources.Loaders.add(new TileMapLoader());
         resources.Loaders.add(new TileSetLoader());
+        resources.Loaders.add(new TileMapLoader());
     }
 
     static void ContextLoading(Context context){
