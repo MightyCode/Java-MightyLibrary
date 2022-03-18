@@ -3,7 +3,7 @@ package MightyLibrary.mightylib.resources;
 import java.util.Map;
 
 public abstract class ResourceLoader {
-    private Class<?> type;
+    private final Class<?> type;
 
     public ResourceLoader(Class<?> type){
         this.type = type;

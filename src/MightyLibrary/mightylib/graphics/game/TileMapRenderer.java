@@ -106,6 +106,7 @@ public class TileMapRenderer extends Renderer {
         float[] texturePosition = new float[tileNumber * 8];
         float[] position = new float[tileNumber * 8];
 
+        int rawTileType;
         int tileType;
 
         TileSet tileSet = tilemap.tileset();
@@ -119,7 +120,8 @@ public class TileMapRenderer extends Renderer {
         for (int layer = 0; layer < ((isForLayer) ? tilemap.forlayerNumber() : tilemap.backlayerNumber()); ++layer) {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
-                    tileType = tileSet.getConvertedId(tilemap.getTileType(isForLayer, layer, x, y));
+                    rawTileType = tilemap.getTileType(isForLayer, layer, x, y);
+                    tileType = tileSet.getConvertedId(rawTileType);
                     if (tileType < 0)
                         continue;
 
@@ -155,18 +157,7 @@ public class TileMapRenderer extends Renderer {
                     temp.y = ((tilePosition.x + 1.0f) * tileSize.x) / texture.getWidth();
                     temp.z = (tilePosition.y * 1.0f * tileSize.y) / texture.getHeight();
                     temp.w = ((tilePosition.y + 1.0f) * tileSize.y) / texture.getHeight();
-
-                    texturePosition[tileCount * SIZE_COORDINATES] = temp.x;
-                    texturePosition[tileCount * SIZE_COORDINATES + 1] = temp.z;
-
-                    texturePosition[tileCount * SIZE_COORDINATES + 2] = temp.x;
-                    texturePosition[tileCount * SIZE_COORDINATES + 3] = temp.w;
-
-                    texturePosition[tileCount * SIZE_COORDINATES + 4] = temp.y;
-                    texturePosition[tileCount * SIZE_COORDINATES + 5] = temp.w;
-
-                    texturePosition[tileCount * SIZE_COORDINATES + 6] = temp.y;
-                    texturePosition[tileCount * SIZE_COORDINATES + 7] = temp.z;
+                    setTexturePosition(texturePosition, tileCount * SIZE_COORDINATES, temp, tileSet.getTileRotation(rawTileType), tileSet.getTileFlip(rawTileType));
 
                     ++tileCount;
                 }
@@ -176,6 +167,81 @@ public class TileMapRenderer extends Renderer {
         shape.setEbo(indices);
         shape.updateVbo(texturePosition, textureIndex);
         shape.updateVbo(position, positionIndex);
+    }
+
+
+    private void setTexturePosition(float[] texturePosition, int index, Vector4f originalPosition, int rotation, int flip){
+        float temp;
+
+        if (flip == 1 || flip == 3){
+             temp = originalPosition.x;
+             originalPosition.x = originalPosition.y;
+             originalPosition.y = temp;
+        }
+
+        if (flip == 2 || flip == 3){
+            temp = originalPosition.z;
+            originalPosition.z = originalPosition.w;
+            originalPosition.w = temp;
+        }
+
+        switch (rotation) {
+            default:
+            case 0 :
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.z;
+
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.w;
+
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.w;
+
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.z;
+            break;
+
+            case 1:
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.w;
+
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.w;
+
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.z;
+
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.z;
+            break;
+
+            case 2:
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.w;
+
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.z;
+
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.z;
+
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.w;
+            break;
+
+            case 3:
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.z;
+
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.z;
+
+                texturePosition[index++] = originalPosition.x;
+                texturePosition[index++] = originalPosition.w;
+
+                texturePosition[index++] = originalPosition.y;
+                texturePosition[index++] = originalPosition.w;
+        }
     }
 }
 

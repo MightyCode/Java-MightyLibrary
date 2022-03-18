@@ -62,7 +62,7 @@ public class TileMap extends DataType {
                 for (int x = 0; x < mapSize.x; ++x){
                     boolean isFor = layer >= endBackLayer;
 
-                    if (getTileType(isFor, (isFor) ? layer - endBackLayer: layer, x, y) != 0)
+                    if (getTileType(isFor, (isFor) ? layer - endBackLayer: layer, x, y) >= 0)
                         ++tileNumber;
                 }
             }

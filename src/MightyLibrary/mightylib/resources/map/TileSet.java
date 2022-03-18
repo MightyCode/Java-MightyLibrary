@@ -66,7 +66,7 @@ public class TileSet extends DataType {
      *
      * @param id id of the tile
      *
-     * @return 0 : no rotation, 1 : 90° to the right, 2 : 180°, 3 90° to the left
+     * @return 0 : no rotation, 1 : 90° to the left, 2 : 180°, 3 90° to the right
      */
     public int getTileRotation(int id){
         if (!useRotation || id < 0)
