@@ -1,14 +1,22 @@
-
 {
 	"textures" : {
 		"enemies" : {
 		},
 		"fonts" : {
-			"arial" : "arial.png"
+			"arial" : {
+				"file": "arial.png",
+				"type" : "pixelart"
+			}
 		},
 		 "gui": {
-			 "button-unhover" : "GUIButton.png",
-			 "button-hover" : "GUIButton-hover.png"
+			 "button-unhover" : {
+				 "file": "GUIButton.png",
+				 "type" : "realistic"
+			 },
+			 "button-hover" : {
+				 "file": "GUIButton-hover.png",
+				 "type" : "realistic"
+			 }
 		},
 		"hud" : {
 		},
@@ -17,14 +25,32 @@
 		"players" : {
 		},
 		"world" : {
-			"container" : "container.jpg",
-			"water1" : "water1.jpg",
-			"stall" : "stallTexture.png",
-			"slime" : "slime.png",
-			"tileset" : "tileset.png"
+			"container" : {
+				"file": "container.jpg",
+				"type" : "realistic"
+			},
+			"water1" : {
+				"file": "water1.jpg",
+				"type" : "realistic"
+			},
+			"stall" : {
+				"file" : "stallTexture.png",
+				"type" : "realistic"
+			},
+			"slime" : {
+				"file" : "slime.png",
+				"type" : "pixelart"
+			},
+			"tileset" : {
+				"file": "tileset.png",
+				"type" : "pixelart"
+			}
 		},
 		"shaderEffects" : {
-			"dispMap1" : "displacementMap1.png"
+			"dispMap1" :  {
+				"file": "displacementMap1.png",
+				"type" : "realistic"
+			}
 		}
 	}
 }

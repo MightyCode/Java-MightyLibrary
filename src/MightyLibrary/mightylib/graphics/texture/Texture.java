@@ -18,10 +18,17 @@ public class Texture extends DataType {
 
     private boolean correctLoaded;
 
+    private int aspectTexture;
+
     public Texture(String name, String path) {
         super(name, PATH + path);
 
         textureId = -1;
+        aspectTexture = TextureParameters.REALISTIC_PARAMETERS;
+    }
+
+    public void setAspectTexture(int aspectTexture){
+        this.aspectTexture = aspectTexture;
     }
 
     public void bind() {
@@ -37,7 +44,7 @@ public class Texture extends DataType {
         } else glBindTexture(GL_TEXTURE_2D, 1);
     }
 
-    public void createImage(BufferedImage img, int textureParameter) {
+    public void createImage(BufferedImage img) {
         if (textureId != -1)
             unload();
 
@@ -68,7 +75,7 @@ public class Texture extends DataType {
             glBindTexture(GL_TEXTURE_2D, textureId);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer);
 
-            TextureParameters.applyParameters(textureParameter);
+            TextureParameters.applyParameters(aspectTexture);
 
             //System.out.println("Texture : " + textureId + " , loaded with path : " + path);
             correctLoaded = true;

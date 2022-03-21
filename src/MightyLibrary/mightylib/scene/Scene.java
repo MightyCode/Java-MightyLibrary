@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.scene;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.graphics.texture.TextureParameters;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
@@ -43,11 +44,15 @@ public class Scene {
         this(null);
     }
 
-    public void init(String[] args){
+    public void init(String[] args, int frameBufferAspect){
         shaderManager.reloadProjection(main3DCamera, main2DCamera);
         dispose();
 
-        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo());
+        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), frameBufferAspect);
+    }
+
+    public void init(String[] args){
+        init(args, TextureParameters.REALISTIC_PARAMETERS);
     }
 
     public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface){

@@ -22,7 +22,10 @@ public class TextureLoader extends ResourceLoader {
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/textures.json"));
         obj = obj.getJSONObject("textures");
 
-        data.put("error", new Texture("error", "error.png"));
+        Texture texture = new Texture("error", "error.png");
+        texture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);
+
+        data.put("error", texture);
         create(data, obj, "");
     }
 
@@ -35,10 +38,23 @@ public class TextureLoader extends ResourceLoader {
         do{
             String currentNode = arrayNodes.next();
 
-            if(node.get(currentNode) instanceof JSONObject){
-                create(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
+            if(node.getJSONObject(currentNode).has("type")){
+                JSONObject information = node.getJSONObject(currentNode);
+                System.out.println(node);
+                String type = information.getString("type");
+
+                Texture currentTexture = new Texture(currentNode, currentPath + information.getString("file"));
+
+                if (type.equals("pixelart")){
+                    currentTexture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);
+                } else if (type.equals("realistic")){
+                    currentTexture.setAspectTexture(TextureParameters.REALISTIC_PARAMETERS);
+                }
+
+
+                data.put(currentNode, currentTexture);
             } else {
-                data.put(currentNode, new Texture(currentNode, currentPath + node.getString(currentNode)));
+                create(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
             }
         } while(arrayNodes.hasNext());
     }
@@ -53,7 +69,7 @@ public class TextureLoader extends ResourceLoader {
 
         try {
             BufferedImage image = ImageIO.read(new FileInputStream(texture.path));
-            texture.createImage(image, TextureParameters.PIXEL_ART_PARAMETERS);
+            texture.createImage(image);
 
         } catch (Exception e) {
             System.err.println("Can't find the path for :");

@@ -6,9 +6,9 @@ import MightyLibrary.mightylib.main.WindowInfo;
 public class VirtualSceneRenderer extends RectangleRenderer {
     private final FrameBuffer frameBuffer;
 
-    public VirtualSceneRenderer(WindowInfo info){
+    public VirtualSceneRenderer(WindowInfo info,  int frameBufferAspect){
         super("postProcessing");
-        frameBuffer = new FrameBuffer(info);
+        frameBuffer = new FrameBuffer(info, frameBufferAspect);
         this.shape.updateVbo(new float[]{
                -1, 1,
                -1, -1,

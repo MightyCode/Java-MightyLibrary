@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
 import MightyLibrary.mightylib.graphics.GUI.GUI;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
+import MightyLibrary.mightylib.graphics.texture.TextureParameters;
 import MightyLibrary.mightylib.graphics.util.Shaking2D;
 import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.scene.Scene;
@@ -44,7 +45,7 @@ public class MenuScene extends Scene {
     private FloatTweening floatTweening;
 
     public void init(String[] args) {
-        super.init(args);
+        super.init(args, TextureParameters.REALISTIC_PARAMETERS);
         /// SCENE INFORMATION ///
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));

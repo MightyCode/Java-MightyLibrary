@@ -15,7 +15,7 @@ public class FrameBuffer {
 
     private final WindowInfo windowInfo;
 
-    public FrameBuffer(WindowInfo window){
+    public FrameBuffer(WindowInfo window, int frameBufferAspect){
         fbo = 0;
         rbo = 0;
         renderTextureId = new Id(0);
@@ -23,15 +23,17 @@ public class FrameBuffer {
 
         fbo = glGenFramebuffers();
         bindFrameBuffer();
-        update();
+        update(frameBufferAspect);
         unbindFrameBuffer();
     }
 
-    public void update(){
+    public void update(int frameBufferAspect){
         renderTextureId.id = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, renderTextureId.id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
-        TextureParameters.realisticParameters();
+
+        TextureParameters.applyParameters(frameBufferAspect);
+
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTextureId.id, 0);
 
