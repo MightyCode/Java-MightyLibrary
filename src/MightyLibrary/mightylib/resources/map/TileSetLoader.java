@@ -11,8 +11,14 @@ import java.util.Objects;
 
 public class TileSetLoader extends ResourceLoader {
 
-    public TileSetLoader(){
-        super(TileSet.class);
+    @Override
+    public Class<?> getType() {
+        return TileSet.class;
+    }
+
+    @Override
+    public String getResourceNameType() {
+        return "TileSet";
     }
 
     @Override

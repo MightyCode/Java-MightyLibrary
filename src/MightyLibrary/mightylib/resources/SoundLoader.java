@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.sounds.SoundData;
 import MightyLibrary.mightylib.sounds.SoundDataType;
 import MightyLibrary.mightylib.sounds.SoundLoadInfo;
@@ -12,12 +11,16 @@ import org.lwjgl.stb.STBVorbisInfo;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.lwjgl.openal.AL10.alBufferData;
-
 public class SoundLoader extends ResourceLoader {
 
-    public SoundLoader(){
-        super(SoundData.class);
+    @Override
+    public Class<?> getType() {
+        return SoundData.class;
+    }
+
+    @Override
+    public String getResourceNameType() {
+        return "SoundData";
     }
 
 

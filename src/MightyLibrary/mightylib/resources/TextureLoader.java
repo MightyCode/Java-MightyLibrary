@@ -13,8 +13,14 @@ import java.util.Map;
 
 public class TextureLoader extends ResourceLoader {
 
-    public TextureLoader(){
-        super(Texture.class);
+    @Override
+    public Class<?> getType() {
+        return Texture.class;
+    }
+
+    @Override
+    public String getResourceNameType() {
+        return "Texture";
     }
 
     @Override

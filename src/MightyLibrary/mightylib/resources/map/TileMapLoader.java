@@ -9,8 +9,14 @@ import java.util.Objects;
 
 public class TileMapLoader extends ResourceLoader {
 
-    public TileMapLoader(){
-        super(TileMap.class);
+    @Override
+    public Class<?> getType() {
+        return TileMap.class;
+    }
+
+    @Override
+    public String getResourceNameType() {
+        return "TileMap";
     }
 
     @Override

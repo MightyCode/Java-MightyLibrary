@@ -9,11 +9,17 @@ import java.util.Iterator;
 import java.util.Map;
 
 public class FontLoader extends ResourceLoader {
-    public FontLoader(){
-        super(FontFace.class);
+    @Override
+    public Class<?> getType() {
+        return FontFace.class;
     }
 
-     @Override
+    @Override
+    public String getResourceNameType() {
+        return "FontFace";
+    }
+
+    @Override
     public void create(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/fonts/fonts.json"));
         obj = obj.getJSONObject("fonts");

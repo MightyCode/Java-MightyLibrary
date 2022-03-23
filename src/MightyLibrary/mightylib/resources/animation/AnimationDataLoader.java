@@ -13,9 +13,14 @@ public class AnimationDataLoader extends ResourceLoader {
     private static final int SIZE_FRAME_POS = 1;
     private static final int FRAME_ENUM_START_POS = 2;
 
+    @Override
+    public Class<?> getType() {
+        return AnimationData.class;
+    }
 
-    public AnimationDataLoader(){
-        super(AnimationData.class);
+    @Override
+    public String getResourceNameType() {
+        return "AnimationData";
     }
 
     @Override

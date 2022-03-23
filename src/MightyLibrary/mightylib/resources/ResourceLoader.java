@@ -3,13 +3,12 @@ package MightyLibrary.mightylib.resources;
 import java.util.Map;
 
 public abstract class ResourceLoader {
-    private final Class<?> type;
 
-    public ResourceLoader(Class<?> type){
-        this.type = type;
-    }
+    public ResourceLoader(){ }
 
-    public Class<?> getType() { return type; }
+    public abstract Class<?> getType();
+
+    public abstract String getResourceNameType();
 
     public abstract void create(Map<String, DataType> data);
 
