@@ -46,7 +46,6 @@ public class TextureLoader extends ResourceLoader {
 
             if(node.getJSONObject(currentNode).has("type")){
                 JSONObject information = node.getJSONObject(currentNode);
-                System.out.println(node);
                 String type = information.getString("type");
 
                 Texture currentTexture = new Texture(currentNode, currentPath + information.getString("file"));

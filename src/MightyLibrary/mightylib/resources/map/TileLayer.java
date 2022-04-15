@@ -12,7 +12,7 @@ public class TileLayer {
         tiles = new int[mapSize.y][mapSize.x];
     }
 
-    void setTileType(int x, int y, int type){
+    public void setTileType(int x, int y, int type){
         tiles[y][x] = type;
     }
 

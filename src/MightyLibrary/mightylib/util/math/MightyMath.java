@@ -80,64 +80,6 @@ public class MightyMath {
 		return (float)(rad * (180.0/java.lang.Math.PI));
 	}
 
-
-	public EDirection addToAnotherDirection(EDirection a, EDirection b) {
-		if (a == EDirection.None) return b;
-		else if (b == EDirection.None) return a;
-
-		if (a == EDirection.Down) {
-			if (b == EDirection.Up) {
-				return EDirection.None;
-			} else if (b == EDirection.Left) {
-				return EDirection.LeftDown;
-			} else if (b == EDirection.Right) {
-				return EDirection.RightDown;
-			} else if (b == EDirection.Down) {
-				return EDirection.Down;
-			} else {
-				return EDirection.None;
-			}
-		} else if (a == EDirection.Right) {
-			if (b == EDirection.Up) {
-				return EDirection.RightUp;
-			} else if (b == EDirection.Left) {
-				return EDirection.None;
-			} else if (b == EDirection.Right) {
-				return EDirection.Right;
-			} else if (b == EDirection.Down) {
-				return EDirection.RightDown;
-			} else {
-				return EDirection.None;
-			}
-		} else if (a == EDirection.Up) {
-			if (b == EDirection.Up) {
-				return EDirection.Up;
-			} else if (b == EDirection.Left) {
-				return EDirection.LeftUp;
-			} else if (b == EDirection.Right) {
-				return EDirection.RightUp;
-			} else if (b == EDirection.Down) {
-				return EDirection.None;
-			} else {
-				return EDirection.None;
-			}
-		} else if (a == EDirection.Left) {
-			if (b == EDirection.Up) {
-				return EDirection.LeftUp;
-			} else if (b == EDirection.Left) {
-				return EDirection.Left;
-			} else if (b == EDirection.Right) {
-				return EDirection.None;
-			} else if (b == EDirection.Down) {
-				return EDirection.LeftDown;
-			} else {
-				return EDirection.None;
-			}
-		}
-
-		return EDirection.None;
-	}
-
 	public static Vector2f rotatePointAround(Vector2f pt, Vector2f ref, float angle){
 		double s = Math.cos(angle);
 		double c = Math.sin(angle);

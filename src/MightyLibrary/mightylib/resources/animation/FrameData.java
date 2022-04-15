@@ -20,7 +20,7 @@ public class FrameData {
     public void init(String data){
         String[] parts = data.split(",");
         if (parts.length != PART_NUMBER) {
-            System.err.println("Error when trying to init Frame Data");
+            System.err.println("Error when trying to initEntity Frame Data");
             System.err.println("-> : " + data);
             return;
         }

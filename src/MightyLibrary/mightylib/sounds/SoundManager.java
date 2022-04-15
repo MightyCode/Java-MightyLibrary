@@ -108,7 +108,7 @@ public class SoundManager {
                 SoundSource sound = soundsSource.get(info.managerId);
                 if (!sound.init(info.name)){
                     soundsSource.remove(info.managerId);
-                    System.err.println("Fail to init sound name : " + info.name);
+                    System.err.println("Fail to initEntity sound name : " + info.name);
                 }
 
                 sound.setPosition(info.position).setSpeed(info.speed).setGain(info.gain, calculateGain(info.gainNode))

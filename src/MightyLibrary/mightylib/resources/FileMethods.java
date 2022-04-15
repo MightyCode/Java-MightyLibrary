@@ -45,7 +45,7 @@ public abstract class FileMethods {
             in.close();
 
         } catch (FileNotFoundException e) {
-            System.err.println("Can't find the file" + filePath);
+            System.err.println("Can't find the file : " + filePath);
             e.printStackTrace();
         } catch (IOException e) {
             System.err.println("reader can't read a part of the file");

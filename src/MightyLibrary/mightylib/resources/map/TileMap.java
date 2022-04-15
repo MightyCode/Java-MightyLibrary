@@ -23,10 +23,10 @@ public class TileMap extends DataType {
         updated = false;
     }
 
-    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer){ ;
+    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer){
         this.tileset = tileset;
         this.mapSize.set(mapSize);
-        this.layers = layers;
+        this.layers = layers.clone();
         this.endBackLayer = endBackLayer;
     }
 

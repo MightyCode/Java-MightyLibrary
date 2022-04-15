@@ -82,6 +82,8 @@ public class Timer {
         return finished;
     }
 
+    public boolean isStarted() { return started; }
+
 
     public float getElapsedTime(){
         return elapsedTime;

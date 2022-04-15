@@ -70,7 +70,7 @@ public class TileSetLoader extends ResourceLoader {
                 Boolean.parseBoolean(sizePart[1])
         );
 
-        return false;
+        return true;
     }
 
 }

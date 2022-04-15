@@ -1,11 +1,7 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.graphics.text.FontFace;
 import MightyLibrary.mightylib.graphics.text.FontLoader;
-import MightyLibrary.mightylib.resources.animation.AnimationData;
-import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
-import MightyLibrary.mightylib.sounds.SoundData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,14 +54,10 @@ public class Resources {
 
 
     public static Class<?> getClassFromName(String name){
-        if (name.equalsIgnoreCase("animation"))
-            return AnimationData.class;
-        else if (name.equalsIgnoreCase("texture"))
-            return Texture.class;
-        else if (name.equalsIgnoreCase("font"))
-            return FontFace.class;
-        else if (name.equalsIgnoreCase("sound"))
-            return SoundData.class;
+        for (ResourceLoader resourceLoader : singletonInstance.Loaders){
+            if (resourceLoader.getResourceNameType().equals(name))
+                return resourceLoader.getType();
+        }
 
         return Object.class;
     }
