@@ -43,6 +43,14 @@ public class Camera2D {
     public Vector2f getCamPosRef() { return camPos; }
     public Vector2f getCamPosCopy() { return new Vector2f(camPos); }
 
+    public void moveX(float value){
+        setX(camPos.x + value);
+    }
+
+    public void moveY(float value){
+        setX(camPos.y + value);
+    }
+
     public void setPos(Vector2f newPos){
         camPos.x = newPos.x;
         camPos.y = newPos.y;

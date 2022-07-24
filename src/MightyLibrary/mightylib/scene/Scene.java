@@ -62,14 +62,15 @@ public class Scene {
     public void update(){}
 
     public void dispose(){
-        shaderManager.dispose(main3DCamera, main2DCamera);
+        shaderManager.disposeCamera2D(main2DCamera);
+        shaderManager.disposeCamera3D(main3DCamera);
     }
-
 
     public void display(){}
 
 
     protected void setVirtualScene(){
+        dispose();
         scRenderer.bindFrameBuff();
         mainContext.getWindow().setVirtualViewport();
     }

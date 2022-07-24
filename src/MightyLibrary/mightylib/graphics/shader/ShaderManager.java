@@ -132,18 +132,22 @@ public class ShaderManager {
         shaders.get(id).glUniform("projection", camera.getProjection());
     }
 
-    public void dispose(Camera3D camera3D, Camera2D camera2D){
+    public void disposeCamera2D(Camera2D camera2D){
         Shader currentShader;
-        for (Id current : cam3DReload){
-            currentShader = shaders.get(current);
-            currentShader.use();
-            currentShader.glUniform("view", camera3D.getView());
-        }
 
         for (Id current : cam2DReload){
             currentShader = shaders.get(current);
             currentShader.use();
             currentShader.glUniform("view", camera2D.getView());
+        }
+    }
+
+    public void disposeCamera3D(Camera3D camera3D){
+        Shader currentShader;
+        for (Id current : cam3DReload){
+            currentShader = shaders.get(current);
+            currentShader.use();
+            currentShader.glUniform("view", camera3D.getView());
         }
     }
 

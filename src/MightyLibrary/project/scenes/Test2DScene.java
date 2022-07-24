@@ -2,6 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
 import MightyLibrary.mightylib.graphics.game.TileMapRenderer;
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
@@ -10,12 +11,15 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.graphics.texture.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
+import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
+import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -28,6 +32,8 @@ public class Test2DScene extends Scene {
 
     private TileMap map;
     private FullTileMapRenderer mapRenderer;
+
+    private Camera2D testCamera;
 
     public void init(String[] args) {
         super.init(args);
@@ -69,12 +75,15 @@ public class Test2DScene extends Scene {
                 .setReference(EDirection.RightDown)
                 .setAlignment(ETextAlignment.Right)
                 .setPosition(new Vector2f(size.x, size.y))
+                .setColor(new Color4f(0.5f, 0.4f, 0.3f, 1))
                 .setText("Test d'écriture de texte c'est super cool");
 
         map = Resources.getInstance().getResource(TileMap.class, "map");
 
         mapRenderer = new FullTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
+
+        testCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0, 0));
     }
 
 
@@ -82,12 +91,13 @@ public class Test2DScene extends Scene {
         super.update();
 
         InputManager inputManager = mainContext.getInputManager();
-
+        if (inputManager.input(ActionId.MOVE_DOWN)){
+            testCamera.moveX(mainContext.getWindow().getInfo().getSizeRef().x *0.3f * GameTime.DeltaTime());
+        }
 
         slimeTextureTweening.update();
         //slimeRenderer.setPosition(slimeTextureTweening.value());
         slimeRenderer.update();
-
 
         //map.setTileType(0, 0, 0, 560);
 
@@ -105,8 +115,9 @@ public class Test2DScene extends Scene {
         slimeRenderer.display();
         mapRenderer.drawForLayers();
 
-        text.display();
+        shaderManager.disposeCamera2D(testCamera);
 
+        text.display();
 
         super.setAndDisplayRealScene();
     }
