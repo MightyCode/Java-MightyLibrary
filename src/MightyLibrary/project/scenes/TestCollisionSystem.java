@@ -42,7 +42,7 @@ public class TestCollisionSystem extends Scene {
         renderer = CollisionVisualisation.createFrom(rectangle, new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
         boundedVolume2D = new CollisionBoundedVolume2D();
-        boundedVolume2D.Collisions.add(rectangle);
+        boundedVolume2D.Collisions.put("mainRectangle", rectangle);
 
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
 

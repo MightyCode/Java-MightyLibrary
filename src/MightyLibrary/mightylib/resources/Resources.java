@@ -75,8 +75,8 @@ public class Resources {
         System.out.println("--Load Resources");
         int incorrectlyLoad = 0;
 
-        for (Class<?> c : resources.keySet()){
-            incorrectlyLoad += load(c);
+        for (ResourceLoader loader : Loaders){
+            incorrectlyLoad += load(loader.getType());
         }
 
         firstLoad = true;
