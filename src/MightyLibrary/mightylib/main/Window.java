@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.main;
 
+import MightyLibrary.mightylib.graphics.texture.Icon;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.*;
@@ -98,6 +99,11 @@ public class Window {
             info.windowId = 0;
         }
 
+        /*new GLFWImage.Buffer();*/
+
+
+        //glfwSetWindowIcon(info.windowId, );
+
         // Make the OpenGL context current
         bindWindow();
 
@@ -116,6 +122,8 @@ public class Window {
 
         // Enable antiAliasing
         glEnable(GL_MULTISAMPLE);
+
+        setIcon(new Icon("icon", "resources/icon.png"));
     }
 
 
@@ -149,6 +157,13 @@ public class Window {
         if (info.isWindowCreated()) createNewWindow();
     }
 
+    public void setIcon(Icon icon){
+        GLFWImage.Buffer buffer = GLFWImage.create(1);
+        GLFWImage iconGI = GLFWImage.create().set(icon.width, icon.height, icon.Buffer);
+        buffer.put(0, iconGI);
+
+        glfwSetWindowIcon(info.windowId, buffer);
+    }
 
     public void bindWindow() {
         glfwMakeContextCurrent(info.windowId);
