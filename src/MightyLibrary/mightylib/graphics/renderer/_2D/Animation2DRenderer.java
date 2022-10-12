@@ -133,6 +133,8 @@ public class Animation2DRenderer extends Renderer {
     public void setShiftRotation(Vector2f offsetRotation){
         this.offsetRotation.x = offsetRotation.x;
         this.offsetRotation.y = offsetRotation.y;
+
+        shape.updateVbo(calculatePosition(), positionIndex);
     }
 
     private float[] calculatePosition(){
