@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.sounds;
 
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.sound.SoundData;
 import org.joml.Vector3f;
 import org.lwjgl.openal.AL10;
 
@@ -41,8 +42,8 @@ public class SoundSource {
         if (soundData == null)
             return false;
 
-
         AL10.alSourcei(sourceId, AL10.AL_BUFFER, soundData.getBufferId());
+        
 
         return true;
     }
@@ -154,7 +155,7 @@ public class SoundSource {
         play();
     }
 
-    public void unload() {
+    void unload() {
         stop();
         AL10.alDeleteSources(sourceId);
     }

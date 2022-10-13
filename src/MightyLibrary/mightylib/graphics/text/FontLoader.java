@@ -45,14 +45,14 @@ public class FontLoader extends ResourceLoader {
 
 
     @Override
-    public boolean load(DataType dataType) {
+    public void load(DataType dataType) {
         if (!(dataType instanceof FontFace))
-            return false;
+            return;
 
         FontFace fontFace = (FontFace) dataType;
 
         fontFace.getFontFile().load();
 
-        return true;
+        fontFace.setCorrectlyLoaded();
     }
 }

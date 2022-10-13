@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.scene;
 
-import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
@@ -64,9 +64,11 @@ public class SceneManager {
         Context mainContext = ContextManager.getInstance().getMainContext();
         InputManager mainInputManager = mainContext.getInputManager();
 
-        if (mainInputManager.inputPressed(InputManager.COMMAND) || commands.isWriteCommands) commands.writeCommand();
+        if (mainInputManager.inputPressed(InputManager.COMMAND) || commands.isWriteCommands)
+            commands.writeCommand();
 
-        if (mainInputManager.inputPressed(InputManager.RELOAD_TEXTURE)) Resources.getInstance().reload(Texture.class);
+        if (mainInputManager.inputPressed(InputManager.RELOAD_TEXTURE))
+            Resources.getInstance().reload(Texture.class);
     }
 
 

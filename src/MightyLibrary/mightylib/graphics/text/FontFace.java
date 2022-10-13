@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.graphics.text;
 
-import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 
@@ -42,8 +42,10 @@ public class FontFace extends DataType {
         return fontFile;
     }
 
+    void setCorrectlyLoaded() { correctlyLoaded = true; }
+
     @Override
-    public boolean unload() {
-        return true;
+    public void unload() {
+        correctlyLoaded = false;
     }
 }

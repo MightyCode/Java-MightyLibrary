@@ -1,7 +1,6 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
-import MightyLibrary.mightylib.graphics.game.TileMapRenderer;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
@@ -10,7 +9,7 @@ import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
-import MightyLibrary.mightylib.graphics.texture.Animator;
+import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Scene;

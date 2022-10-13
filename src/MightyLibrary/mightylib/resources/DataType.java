@@ -3,28 +3,39 @@ package MightyLibrary.mightylib.resources;
 public abstract class DataType {
     protected final String dataName;
     protected final String path;
+    protected boolean correctlyLoaded;
 
     public DataType(String dataName, String path){
         this.dataName = dataName;
         this.path = path;
+        this.correctlyLoaded = false;
     }
 
-    public String getDataName(){
+    public final String getDataName(){
         return this.dataName;
     }
 
-    public String getPath(){ return this.path; }
+    public final String getPath(){ return this.path; }
 
-    public final boolean load(ResourceLoader loader) {
-        return loader.load(this);
+    public final void load(ResourceLoader loader) {
+        loader.load(this);
     }
 
-    public boolean reload(ResourceLoader loader){
-        if (!unload())
-            return false;
+    public void reload(ResourceLoader loader){
+        if (correctlyLoaded) {
+            unload();
 
-        return load(loader);
+            if (correctlyLoaded) {
+                return;
+            }
+        }
+
+        load(loader);
     }
 
-    public abstract boolean unload();
+    public final boolean isCorrectlyLoaded() {
+        return correctlyLoaded;
+    }
+
+    public abstract void unload();
 }

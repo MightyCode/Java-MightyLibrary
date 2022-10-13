@@ -38,9 +38,9 @@ public class TileMapLoader extends ResourceLoader {
     }
 
     @Override
-    public boolean load(DataType dataType) {
+    public void load(DataType dataType) {
         if (!(dataType instanceof TileMap))
-            return false;
+            return;
 
         TileMap tileMap = (TileMap) dataType;
 
@@ -73,7 +73,7 @@ public class TileMapLoader extends ResourceLoader {
 
         tileMap.init(tileset, mapSize, layers, numberOfBack);
 
-        return true;
+        tileMap.setCorrectlyLoaded();
     }
 }
 

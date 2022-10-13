@@ -3,6 +3,7 @@ package MightyLibrary.project.main;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.Icon;
 import MightyLibrary.mightylib.scene.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.project.scenes.MenuScene;
@@ -13,7 +14,7 @@ import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11C.*;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 
-public class MainLoop {
+public final class MainLoop {
     private final ContextManager contextManager;
     private final SceneManager sceneManager;
 
@@ -37,16 +38,15 @@ public class MainLoop {
         contextManager = ContextManager.getInstance();
 
         WindowCreationInfo wci = new WindowCreationInfo();
-        wci.size = new Vector2i(1280, 720);
-        wci.virtualSize = new Vector2i(1280, 720);
-        wci.windowName = "3D project test";
-        wci.fullscreen = false;
+        wci.Size = new Vector2i(1280, 720);
+        wci.VirtualSize = new Vector2i(1280, 720);
+        wci.WindowName = "3D project test";
+        wci.Fullscreen = false;
 
         contextManager.createDefaultContext(wci);
 
         Context context = contextManager.getContext("Main");
         Window window = context.getWindow();
-
 
         if (!window.getInfo().isWindowCreated()){
             exit(ListError.WINDOW_CREATION_FAIL);
@@ -66,6 +66,9 @@ public class MainLoop {
 
         resource.init();
         sceneManager.init(new MenuScene(), new String[]{""});
+
+        if (resource.isExistingResource(Icon.class, "icon"))
+            context.getWindow().setIcon(resource.getResource(Icon.class, "icon"));
 
         System.out.println("\n" + Version.getVersion());
         System.out.println(glfwGetVersionString());

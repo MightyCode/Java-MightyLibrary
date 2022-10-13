@@ -1,11 +1,8 @@
 package MightyLibrary.mightylib.util.commands.general;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.graphics.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.commands.BaseCommand;
-
-import java.util.HashMap;
 
 public class ReloadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "reload";

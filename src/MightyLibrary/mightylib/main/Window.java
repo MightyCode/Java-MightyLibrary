@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.main;
 
-import MightyLibrary.mightylib.graphics.texture.Icon;
+import MightyLibrary.mightylib.resources.texture.Icon;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.*;
@@ -25,7 +25,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * @author MightyCode
  * @version of game : 2.2
  */
-public class Window {
+public final class Window {
     private final WindowInfo info;
 
     public WindowInfo getInfo() { return info; }
@@ -47,13 +47,13 @@ public class Window {
         info = new WindowInfo();
         info.windowId = 0;
 
-        info.size = new Vector2i(wci.size);
+        info.size = new Vector2i(wci.Size);
         info.ratio = (float) info.size.x / (float) info.size.y;
-        info.virtualSize = new Vector2i(wci.virtualSize);
+        info.virtualSize = new Vector2i(wci.VirtualSize);
         info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
 
-        info.windowName = wci.windowName;
-        info.fullscreen = wci.fullscreen;
+        info.windowName = wci.WindowName;
+        info.fullscreen = wci.Fullscreen;
     }
 
     public void createNewWindow(){
@@ -122,8 +122,6 @@ public class Window {
 
         // Enable antiAliasing
         glEnable(GL_MULTISAMPLE);
-
-        setIcon(new Icon("icon", "resources/icon.png"));
     }
 
 
@@ -158,11 +156,7 @@ public class Window {
     }
 
     public void setIcon(Icon icon){
-        GLFWImage.Buffer buffer = GLFWImage.create(1);
-        GLFWImage iconGI = GLFWImage.create().set(icon.width, icon.height, icon.Buffer);
-        buffer.put(0, iconGI);
-
-        glfwSetWindowIcon(info.windowId, buffer);
+        glfwSetWindowIcon(info.windowId, icon.getBuffer());
     }
 
     public void bindWindow() {

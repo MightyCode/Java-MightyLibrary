@@ -1,6 +1,4 @@
-package MightyLibrary.mightylib.graphics.texture;
-
-import MightyLibrary.mightylib.resources.animation.AnimationData;
+package MightyLibrary.mightylib.resources.animation;
 
 import java.util.HashMap;
 

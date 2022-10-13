@@ -1,6 +1,8 @@
-package MightyLibrary.mightylib.resources;
+package MightyLibrary.mightylib.resources.sound;
 
-import MightyLibrary.mightylib.sounds.SoundData;
+import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.FileMethods;
+import MightyLibrary.mightylib.resources.ResourceLoader;
 import MightyLibrary.mightylib.sounds.SoundDataType;
 import MightyLibrary.mightylib.sounds.SoundLoadInfo;
 import MightyLibrary.mightylib.util.math.KeyTree;
@@ -86,23 +88,23 @@ public class SoundLoader extends ResourceLoader {
 
 
     @Override
-    public boolean load(DataType dataType) {
+    public void load(DataType dataType) {
         if (!(dataType instanceof SoundData))
-            return false;
+            return;
 
         SoundData sound = (SoundData) dataType;
 
-        String path = sound.path;
+        String path = sound.getPath();
         int lastIndex = path.lastIndexOf('.');
 
         SoundLoadInfo info = new SoundLoadInfo();
 
         if (path.indexOf("ogg", lastIndex) != -1)
             if(!loadOgg(path, info))
-                return false;
+                return;
 
 
-        return sound.createSound(info);
+        sound.createSound(info);
     }
 
 

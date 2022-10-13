@@ -41,9 +41,9 @@ public class TileSetLoader extends ResourceLoader {
 
 
     @Override
-    public boolean load(DataType dataType) {
+    public void load(DataType dataType) {
         if (!(dataType instanceof TileSet))
-            return false;
+            return;
 
         TileSet tileset = (TileSet) dataType;
 
@@ -69,8 +69,5 @@ public class TileSetLoader extends ResourceLoader {
                 Boolean.parseBoolean(sizePart[0]),
                 Boolean.parseBoolean(sizePart[1])
         );
-
-        return true;
     }
-
 }

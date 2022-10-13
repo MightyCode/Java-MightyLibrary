@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.resources.map;
 
-import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2i;
@@ -102,12 +102,21 @@ public class TileSet extends DataType {
 
         tileNumber.x = 0;
         tileNumber.y = 0;
+
+        checkLoaded();
     }
 
-    @Override
-    public boolean unload() {
-        reset();
+    private void checkLoaded(){
+        correctlyLoaded = tileNumber.x != 0 && tileNumber.y != 0;
+        if (!correctlyLoaded)
+            return;
 
-        return true;
+        correctlyLoaded = !texture.equals("error");
+    }
+
+
+    @Override
+    public void unload() {
+        reset();
     }
 }

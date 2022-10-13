@@ -2,6 +2,9 @@ package MightyLibrary.mightylib.resources;
 
 import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
+import MightyLibrary.mightylib.resources.sound.SoundLoader;
+import MightyLibrary.mightylib.resources.texture.IconLoader;
+import MightyLibrary.mightylib.resources.texture.TextureLoader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +32,7 @@ public class Resources {
         resources = new HashMap<>();
         Loaders = new ArrayList<>();
 
+        Loaders.add(new IconLoader());
         Loaders.add(new TextureLoader());
         Loaders.add(new AnimationDataLoader());
         Loaders.add(new FontLoader());
@@ -67,6 +71,13 @@ public class Resources {
         return type.cast(resources.get(type).get(name));
     }
 
+    public boolean isExistingResource(Class<?> type, String name){
+        if (!resources.containsKey(type))
+            return false;
+
+        return resources.get(type).containsKey(name);
+    }
+
 
     public int load(){
         if (firstLoad)
@@ -88,7 +99,12 @@ public class Resources {
         int incorrectlyLoad = 0;
 
         for (DataType dataType : resources.get(typeOfResource).values()){
-            if (!dataType.load(Objects.requireNonNull(getLoader(typeOfResource))))
+            if (dataType.isCorrectlyLoaded())
+                continue;
+
+            dataType.load(Objects.requireNonNull(getLoader(typeOfResource)));
+
+            if (!dataType.isCorrectlyLoaded())
                 ++incorrectlyLoad;
         }
 
@@ -120,7 +136,10 @@ public class Resources {
         int incorrectlyReload = 0;
 
         for (DataType dataType : resources.get(typeOfResource).values()){
-            if (!dataType.reload(Objects.requireNonNull(getLoader(typeOfResource)))) ++incorrectlyReload;
+            dataType.reload(Objects.requireNonNull(getLoader(typeOfResource)));
+
+            if (!dataType.isCorrectlyLoaded())
+                ++incorrectlyReload;
         }
 
         return incorrectlyReload;
@@ -143,7 +162,12 @@ public class Resources {
         int incorrectlyUnload = 0;
 
         for (DataType dataType : resources.get(typeOfResource).values()){
-            if (!dataType.unload()) ++incorrectlyUnload;
+            if (!dataType.isCorrectlyLoaded())
+                continue;
+
+            dataType.unload();
+            if (!dataType.isCorrectlyLoaded())
+                ++incorrectlyUnload;
         }
 
         return incorrectlyUnload;
