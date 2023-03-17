@@ -1,6 +1,8 @@
 package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.Texture;
 
 public class AnimationData extends DataType {
 
@@ -11,13 +13,14 @@ public class AnimationData extends DataType {
     public AnimationData(String name, String path){
         super(name, path);
 
-        textureName = "";
+        textureName = "error";
     }
 
 
     public AnimationData setTexture(String texture){
         textureName = texture;
 
+        checkLoaded();
         return this;
     }
 
@@ -25,7 +28,12 @@ public class AnimationData extends DataType {
     public AnimationData setFramesData(FrameData[] framesData){
         this.framesData = framesData;
 
+        checkLoaded();
         return this;
+    }
+
+    private void checkLoaded(){
+        correctlyLoaded = framesData != null && Resources.getInstance().isExistingResource(Texture.class, textureName);
     }
 
 
@@ -48,7 +56,10 @@ public class AnimationData extends DataType {
 
 
     @Override
-    public boolean unload(){
-        return true;
+    public void unload(){
+        textureName = "error";
+        framesData = null;
+
+        correctlyLoaded = false;
     }
 }

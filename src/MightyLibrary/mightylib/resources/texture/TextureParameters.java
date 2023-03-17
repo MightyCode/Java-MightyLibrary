@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.texture;
+package MightyLibrary.mightylib.resources.texture;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;

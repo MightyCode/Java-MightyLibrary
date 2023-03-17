@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
-import MightyLibrary.mightylib.graphics.texture.TextureParameters;
+import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.util.Id;
 

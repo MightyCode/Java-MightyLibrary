@@ -2,9 +2,9 @@ package MightyLibrary.mightylib.main;
 
 import org.joml.Vector2i;
 
-public class WindowCreationInfo {
-    public Vector2i size;
-    public Vector2i virtualSize;
-    public String windowName;
-    public boolean fullscreen;
+public final class WindowCreationInfo {
+    public Vector2i Size;
+    public Vector2i VirtualSize;
+    public String WindowName;
+    public boolean Fullscreen;
 }

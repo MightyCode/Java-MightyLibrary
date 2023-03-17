@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.scene;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.graphics.texture.TextureParameters;
+import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
@@ -28,13 +28,17 @@ public class Scene {
         shaderManager = ShaderManager.getInstance();
         mainContext = ContextManager.getInstance().getMainContext();
 
+        Camera3DCreationInfo parameters;
+
         if (info == null){
-            Camera3DCreationInfo cci = new Camera3DCreationInfo();
-            cci.fov = 120f;
-            cci.initialPosition = new Vector3f(0, 0, 0);
+            parameters = new Camera3DCreationInfo();
+            parameters.fov = 120f;
+            parameters.initialPosition = new Vector3f(0, 0, 0);
+        } else {
+            parameters = info;
         }
 
-        main3DCamera = mainContext.createCamera(info);
+        main3DCamera = mainContext.createCamera(parameters);
         main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
 
         sceneManagerInterface = null;

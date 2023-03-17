@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.*;
-import MightyLibrary.mightylib.sounds.SoundData;
 
 import java.io.File;
 import java.util.Map;
@@ -44,16 +43,14 @@ public class AnimationDataLoader extends ResourceLoader {
 
 
     @Override
-    public boolean load(DataType dataType) {
+    public void load(DataType dataType) {
         if (!(dataType instanceof AnimationData))
-            return false;
+            return;
 
         AnimationData animationData = (AnimationData)dataType;
 
         String data = FileMethods.readFileAsString(animationData.getPath());
         String[] parts = data.split("\n");
-
-        animationData.setTexture(parts[TEXTURE_POS].trim());
 
         int numberFrames = Integer.parseInt(parts[SIZE_FRAME_POS].trim());
         FrameData[] framesData = new FrameData[numberFrames];
@@ -63,9 +60,6 @@ public class AnimationDataLoader extends ResourceLoader {
             framesData[i].init(parts[FRAME_ENUM_START_POS + i].trim());
         }
 
-        animationData.setFramesData(framesData);
-
-        return true;
-
+        animationData.setTexture(parts[TEXTURE_POS].trim()).setFramesData(framesData);
     }
 }

@@ -22,13 +22,14 @@ public class Context {
     }
 
     public Window getWindow() { return window; }
+
     public InputManager getInputManager() { return inputManager; }
     public KeyboardManager getKeyboardManager() { return keyboardManager; }
     public MouseManager getMouseManager() { return mouseManager; }
 
 
     public Camera3D createCamera(Camera3DCreationInfo info){
-        return new Camera3D(window.getInfo(), mouseManager, 120f, new Vector3f(0.0f, 0.0f, 10.0f));
+        return new Camera3D(window.getInfo(), mouseManager, info.fov,info.initialPosition);
     }
 
 

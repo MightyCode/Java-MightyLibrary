@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.texture;
+package MightyLibrary.mightylib.resources.texture;
 
 import MightyLibrary.mightylib.resources.DataType;
 import org.lwjgl.BufferUtils;
@@ -15,8 +15,6 @@ public class Texture extends DataType {
     private int height;
 
     private int textureId;
-
-    private boolean correctLoaded;
 
     private int aspectTexture;
 
@@ -38,7 +36,7 @@ public class Texture extends DataType {
     public void bind(int texturePos) {
         // Active the texture to right position
         glActiveTexture(GL_TEXTURE0 + texturePos);
-        if (correctLoaded){
+        if (isCorrectlyLoaded()){
             glBindTexture(GL_TEXTURE_2D, textureId);
         // If isn't correct loaded, bind error texture
         } else glBindTexture(GL_TEXTURE_2D, 1);
@@ -78,12 +76,14 @@ public class Texture extends DataType {
             TextureParameters.applyParameters(aspectTexture);
 
             //System.out.println("Texture : " + textureId + " , loaded with path : " + path);
-            correctLoaded = true;
+
+            correctlyLoaded = true;
         } catch (Exception e) {
             System.err.println("Fail to create texture " + path + " :");
             e.printStackTrace();
             glDeleteTextures(textureId);
-            correctLoaded = false;
+
+            correctlyLoaded = false;
         }
     }
 
@@ -101,18 +101,14 @@ public class Texture extends DataType {
 
     private void setTextParam(int param, int value) {
         bind();
-        if (correctLoaded)  glTexParameteri(GL_TEXTURE_2D, param, value);
-    }
-
-    public boolean isCorrectLoaded(){
-        return correctLoaded;
+        if (isCorrectlyLoaded())  glTexParameteri(GL_TEXTURE_2D, param, value);
     }
 
     @Override
-    public boolean unload() {
-        if (correctLoaded)
+    public void unload() {
+        if (isCorrectlyLoaded()) {
             glDeleteTextures(textureId);
-
-        return true;
+            correctlyLoaded = false;
+        }
     }
 }

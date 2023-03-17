@@ -1,8 +1,8 @@
-package MightyLibrary.mightylib.resources;
+package MightyLibrary.mightylib.resources.texture;
 
-import MightyLibrary.mightylib.graphics.texture.Texture;
-import MightyLibrary.mightylib.graphics.texture.TextureParameters;
-import MightyLibrary.mightylib.resources.map.TileMap;
+import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.FileMethods;
+import MightyLibrary.mightylib.resources.ResourceLoader;
 import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -66,24 +66,20 @@ public class TextureLoader extends ResourceLoader {
 
 
     @Override
-    public boolean load(DataType dataType) {
+    public void load(DataType dataType) {
         if (!(dataType instanceof Texture))
-            return false;
+            return;
 
         Texture texture = (Texture) dataType;
 
         try {
-            BufferedImage image = ImageIO.read(new FileInputStream(texture.path));
+            BufferedImage image = ImageIO.read(new FileInputStream(texture.getPath()));
             texture.createImage(image);
 
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
-            System.err.println(texture.path + "\n");
+            System.err.println(texture.getPath() + "\n");
             e.printStackTrace();
-
-            return false;
         }
-
-        return true;
     }
 }

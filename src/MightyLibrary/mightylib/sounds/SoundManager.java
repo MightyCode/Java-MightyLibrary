@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.sounds;
 
-import MightyLibrary.mightylib.resources.SoundLoader;
+import MightyLibrary.mightylib.resources.sound.SoundLoader;
 import MightyLibrary.mightylib.util.math.KeyTree;
 import MightyLibrary.mightylib.util.math.KeyTreeNode;
 import org.lwjgl.openal.AL;
@@ -10,10 +10,10 @@ import org.lwjgl.openal.ALCCapabilities;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static java.sql.Types.NULL;
+import static org.lwjgl.openal.AL10.*;
 import static org.lwjgl.openal.ALC10.*;
 
 public class SoundManager {
@@ -30,6 +30,11 @@ public class SoundManager {
     private long context;
 
     private final SoundListener listener;
+
+
+    public SoundListener getListener(){
+        return listener;
+    }
 
     private final List<SoundSourceCreationInfo> awaitedNewSounds;
 
@@ -79,10 +84,8 @@ public class SoundManager {
         return source;
     }
 
-
     private void removeAt(int i){
         SoundSource source = soundsSource.get(i);
-        source.stop();
         source.unload();
 
         soundsSource.remove(i);
@@ -181,7 +184,6 @@ public class SoundManager {
         }
 
         for(SoundSource sounds : soundsSource){
-            sounds.stop();
             sounds.unload();
         }
 
@@ -191,7 +193,27 @@ public class SoundManager {
         return true;
     }
 
-    public SoundListener getListener(){
-        return listener;
+    public static void DisplayError(String action, int error){
+        System.err.println("Error when " + action  + "\n");
+        switch (error){
+            case AL_INVALID_NAME :
+                System.err.println("A bad name (ID) was passed to an OpenAL function");
+                break;
+            case AL_INVALID_ENUM:
+                System.err.println("An invalid enum value was passed to an OpenAL function");
+                break;
+            case AL_INVALID_VALUE:
+                System.err.println("An invalid value was passed to an OpenAL function");
+                break;
+            case AL_INVALID_OPERATION:
+                System.err.println("The requested operation is not valid");
+                break;
+            case AL_OUT_OF_MEMORY:
+                System.err.println("The requested operation resulted in OpenAL running out of memory");
+                break;
+            default:
+                System.out.println("UNKNOWN ERROR");
+                break;
+        }
     }
 }

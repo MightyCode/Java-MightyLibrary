@@ -15,10 +15,9 @@ public class TileMap extends DataType {
 
     public TileMap(String dataName, String path) {
         super(dataName, path);
-
         this.mapSize = new Vector2i();
 
-        endBackLayer = 0;
+        reset();
 
         updated = false;
     }
@@ -90,9 +89,22 @@ public class TileMap extends DataType {
         return tileNumber;
     }
 
+    void setCorrectlyLoaded(){ correctlyLoaded = true; }
+
+    private void reset(){
+        layers = null;
+        tileset = null;
+
+        mapSize.x = 0;
+        mapSize.y = 0;
+
+        endBackLayer = 0;
+    }
 
     @Override
-    public boolean unload() {
-        return true;
+    public void unload() {
+        reset();
+
+        correctlyLoaded = false;
     }
 }

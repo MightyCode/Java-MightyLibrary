@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
-import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;

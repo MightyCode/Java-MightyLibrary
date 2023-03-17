@@ -4,15 +4,17 @@ import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.EShapeType;
 import org.joml.Vector4f;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class CollisionBoundedVolume2D extends Collision2D {
 
-    public final Set<Collision2D> Collisions;
+    public final Map<String, Collision2D> Collisions;
 
     public CollisionBoundedVolume2D(){
-        Collisions = new HashSet<>();
+        Collisions = new HashMap<>();
         this.shapeType = EShapeType.BoundedVolume2D;
     }
 
@@ -38,8 +40,9 @@ public class CollisionBoundedVolume2D extends Collision2D {
             return;
 
         this.position.x = x;
-        for (Collision2D collision2D : Collisions){
-            collision2D.moveX(diff);
+
+        for (Map.Entry<String, Collision2D> entry : Collisions.entrySet()){
+            entry.getValue().moveX(diff);
         }
     }
 
@@ -50,8 +53,8 @@ public class CollisionBoundedVolume2D extends Collision2D {
             return;
 
         this.position.y = y;
-        for (Collision2D collision2D : Collisions){
-            collision2D.moveY(diff);
+        for (Map.Entry<String, Collision2D> entry : Collisions.entrySet()){
+            entry.getValue().moveY(diff);
         }
     }
 
@@ -60,8 +63,8 @@ public class CollisionBoundedVolume2D extends Collision2D {
         Vector4f bound = null;
         CollisionRectangle temp;
 
-        for (Collision2D collision : Collisions){
-            temp = collision.bounds();
+        for (Map.Entry<String, Collision2D> entry : Collisions.entrySet()){
+            temp = entry.getValue().bounds();
 
             if (bound == null){
                 bound = new Vector4f(temp.x(), temp.y(), temp.oppX(), temp.oppY());
@@ -87,7 +90,7 @@ public class CollisionBoundedVolume2D extends Collision2D {
         temp.setX(position.x);
         temp.setY(position.y);
 
-        temp.Collisions.addAll(Collisions);
+        temp.Collisions.putAll(Collisions);
 
         return temp;
     }

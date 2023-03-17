@@ -12,5 +12,5 @@ public abstract class ResourceLoader {
 
     public abstract void create(Map<String, DataType> data);
 
-    public abstract boolean load(DataType dataType);
+    public abstract void load(DataType dataType);
 }

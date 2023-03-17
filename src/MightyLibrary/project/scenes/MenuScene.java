@@ -1,14 +1,10 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
-import MightyLibrary.mightylib.graphics.GUI.GUI;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
-import MightyLibrary.mightylib.graphics.texture.TextureParameters;
-import MightyLibrary.mightylib.graphics.util.Shaking2D;
-import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
+import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.scene.Scene;
-import MightyLibrary.mightylib.sounds.SoundData;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.sounds.SoundSource;
 import MightyLibrary.mightylib.sounds.SoundSourceCreationInfo;
@@ -23,7 +19,6 @@ import MightyLibrary.project.lib.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
-import org.lwjgl.openal.AL10;
 
 public class MenuScene extends Scene {
     private static final SoundSourceCreationInfo CREATION_INFO_SELECT = new SoundSourceCreationInfo();
@@ -31,6 +26,16 @@ public class MenuScene extends Scene {
         CREATION_INFO_SELECT.name = "select";
         CREATION_INFO_SELECT.gainNode = "noise";
         CREATION_INFO_SELECT.gain = 1f;
+    }
+
+
+    private static final SoundSourceCreationInfo CREATION_INFO_MUSIC = new SoundSourceCreationInfo();
+    static {
+        CREATION_INFO_MUSIC.name = "music";
+        CREATION_INFO_MUSIC.loop = true;
+        CREATION_INFO_MUSIC.gain = 0f;
+        CREATION_INFO_MUSIC.gainNode = "music";
+        CREATION_INFO_MUSIC.delay = 2f;
     }
 
     private GUIList guiList;
@@ -105,14 +110,8 @@ public class MenuScene extends Scene {
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
 
-        SoundSourceCreationInfo creationInfo = new SoundSourceCreationInfo();
-        creationInfo.name = "music";
-        creationInfo.loop = true;
-        creationInfo.gain = 0f;
-        creationInfo.gainNode = "music";
-        creationInfo.delay = 2f;
 
-        sound = SoundManager.getInstance().createSoundSource(creationInfo);
+        sound = SoundManager.getInstance().createSoundSource(CREATION_INFO_MUSIC);
 
         floatTweening = new FloatTweening();
         floatTweening.setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.In)
@@ -148,9 +147,9 @@ public class MenuScene extends Scene {
         rotation.update();
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
-        if (guiList.isStateChanged()){
+        /*if (guiList.isStateChanged()){
             SoundManager.getInstance().createSoundSource(CREATION_INFO_SELECT);
-        }
+        }*/
 
         buttonCollisionTest.OverlapsText.setX(rotation.value() * 50);
 

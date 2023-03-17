@@ -21,7 +21,6 @@ public class FontFile {
         this.path = path;
     }
 
-
     public boolean load(){
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(path));

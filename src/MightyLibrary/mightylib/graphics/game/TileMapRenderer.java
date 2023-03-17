@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.graphics.game;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
-import MightyLibrary.mightylib.graphics.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.resources.map.TileSet;
@@ -62,7 +62,6 @@ public class TileMapRenderer extends Renderer {
     public void setTilemap(TileMap tilemap){
         this.tilemap = tilemap;
 
-        System.out.println(tilemap);
         switchToTextureMode(tilemap.tileSet().texture());
 
         computeTileInformation();
