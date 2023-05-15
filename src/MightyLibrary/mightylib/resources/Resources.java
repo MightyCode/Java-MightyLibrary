@@ -56,6 +56,14 @@ public class Resources {
         initialized = true;
     }
 
+    public void createAndInit(Class<?> resourceType, String resourceName, String resourcePath){
+        for (ResourceLoader resourceLoader : singletonInstance.Loaders) {
+            if (resourceType == resourceLoader.getType()) {
+                resourceLoader.createAndLoad(resources.get(resourceType), resourceName, resourcePath);
+                break;
+            }
+        }
+    }
 
     public static Class<?> getClassFromName(String name){
         for (ResourceLoader resourceLoader : singletonInstance.Loaders){
@@ -70,6 +78,24 @@ public class Resources {
     public <T> T getResource(Class<T> type, String name){
         return type.cast(resources.get(type).get(name));
     }
+
+   /*
+   public <T extends DataType> T getResource(Class<T> type, String resourceName) {
+        HashMap<String, DataType> typedResources = resources.get(type);
+        if (typedResources != null && typedResources.containsKey(resourceName)) {
+            System.out.println("Found resource: " + resourceName);
+            return type.cast(typedResources.get(resourceName));
+        }
+
+        System.err.println("Resource not found: " + resourceName);
+        return null;
+    }
+    */
+
+
+
+
+
 
     public boolean isExistingResource(Class<?> type, String name){
         if (!resources.containsKey(type))

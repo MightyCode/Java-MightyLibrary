@@ -58,7 +58,7 @@ public class Shape{
         setUseEbo(useEbo);
     }
 
-    public int addVbo(float[] vertices, int vertexSize, int storage){
+    public int addVboFloat(float[] vertices, int vertexSize, int storage){
         bind();
         int vbo = glGenBuffers();
 
@@ -66,13 +66,29 @@ public class Shape{
         glBufferData(GL_ARRAY_BUFFER, vertices, storage);
         glVertexAttribPointer(vboCount, vertexSize, GL_FLOAT, false, 0, 0);
 
+        return endAddVbo(vbo, vertices.length, vertexSize, storage);
+    }
+
+    public int addVboInt(int[] vertices, int vertexSize, int storage){
+        bind();
+        int vbo = glGenBuffers();
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices, storage);
+        glVertexAttribPointer(vboCount, vertexSize, GL_INT, false, 0, 0);
+
+        return endAddVbo(vbo, vertices.length, vertexSize, storage);
+    }
+
+    private int endAddVbo(int vbo, int arrayLength, int vertexSize, int storage){
         vbosEnable.add(false);
         enableVbo(vboCount);
 
-        verticesDraw = vertices.length / vertexSize;
+        verticesDraw = arrayLength / vertexSize;
         vbos.add(vbo);
         vbosStorage.add(storage);
         ++vboCount;
+
         return vbos.size() - 1;
     }
 
@@ -82,6 +98,13 @@ public class Shape{
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
     }
+
+    public void updateVbo(int[] vertices, int vboPosition){
+        bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
+        glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+    }
+
 
 
     public void disableVbo(int pos){
@@ -117,7 +140,7 @@ public class Shape{
                 }
             }
 
-            addVbo(coordinatesInfo, vertexSizes[i], storage[i]);
+            addVboFloat(coordinatesInfo, vertexSizes[i], storage[i]);
             currentSum += vertexSizes[i];
         }
     }

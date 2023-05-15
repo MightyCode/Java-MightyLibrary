@@ -11,7 +11,13 @@ import java.io.FileInputStream;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
+
 public class TextureLoader extends ResourceLoader {
+
+    private final static String BASIC_PATH = "resources/textures/";
+    private final static String LIST_TEXTURES = BASIC_PATH + "textures.json";
 
     @Override
     public Class<?> getType() {
@@ -25,10 +31,10 @@ public class TextureLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/textures.json"));
+        JSONObject obj = new JSONObject(FileMethods.readFileAsString(LIST_TEXTURES));
         obj = obj.getJSONObject("textures");
 
-        Texture texture = new Texture("error", "error.png");
+        Texture texture = new Texture("error", BASIC_PATH + "error.png");
         texture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);
 
         data.put("error", texture);
@@ -44,26 +50,30 @@ public class TextureLoader extends ResourceLoader {
         do{
             String currentNode = arrayNodes.next();
 
-            if(node.getJSONObject(currentNode).has("type")){
+            if(node.getJSONObject(currentNode).has("file")){
                 JSONObject information = node.getJSONObject(currentNode);
-                String type = information.getString("type");
+                String temp = information.getString("qualityType");
 
                 Texture currentTexture = new Texture(currentNode, currentPath + information.getString("file"));
 
-                if (type.equals("pixelart")){
+                if (temp.equals("pixelart")){
                     currentTexture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);
-                } else if (type.equals("realistic")){
+                } else if (temp.equals("realistic")){
                     currentTexture.setAspectTexture(TextureParameters.REALISTIC_PARAMETERS);
                 }
 
+                if (information.has("textureType")) {
+                    temp = information.getString("textureType");
+                    if (temp.equals("rectangle"))
+                        currentTexture.setTextureType(GL_TEXTURE_RECTANGLE);
+                }
 
                 data.put(currentNode, currentTexture);
             } else {
-                create(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
+                create(data, node.getJSONObject(currentNode), BASIC_PATH + currentPath + currentNode + "/");
             }
         } while(arrayNodes.hasNext());
     }
-
 
     @Override
     public void load(DataType dataType) {
@@ -81,5 +91,16 @@ public class TextureLoader extends ResourceLoader {
             System.err.println(texture.getPath() + "\n");
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
+        if (data.containsKey(resourceName))
+            return;
+
+        Texture currentTexture = new Texture(resourceName, resourcePath);
+        data.put(resourceName, currentTexture);
+
+        load(currentTexture);
     }
 }

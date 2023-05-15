@@ -57,4 +57,9 @@ public class IconLoader extends ResourceLoader {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
+
+    }
 }

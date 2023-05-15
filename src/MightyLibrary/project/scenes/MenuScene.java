@@ -3,6 +3,7 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
+import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.sounds.SoundManager;
@@ -50,7 +51,7 @@ public class MenuScene extends Scene {
     private FloatTweening floatTweening;
 
     public void init(String[] args) {
-        super.init(args, TextureParameters.REALISTIC_PARAMETERS);
+        super.init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
         /// SCENE INFORMATION ///
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));
@@ -61,7 +62,7 @@ public class MenuScene extends Scene {
         Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
 
         BackgroundlessButton button2DScene = new BackgroundlessButton(mainContext);
-        button2DScene.Text.setFont("arial")
+        button2DScene.Text.setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
                 .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.5f))
@@ -124,7 +125,7 @@ public class MenuScene extends Scene {
 
         guiList.update();
 
-        if (mainContext.getInputManager().input(ActionId.ENTER) || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)){
+        if (mainContext.getInputManager().getState(ActionId.ENTER) || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)){
             Integer id = guiList.getSelected();
             if (id != null) {
                 switch (id) {

@@ -107,6 +107,11 @@ public class SoundLoader extends ResourceLoader {
         sound.createSound(info);
     }
 
+    @Override
+    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
+        // Todo
+    }
+
 
     public boolean loadOgg(String path, SoundLoadInfo sInfo){
         try (STBVorbisInfo info = STBVorbisInfo.malloc()) {

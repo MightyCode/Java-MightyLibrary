@@ -62,31 +62,31 @@ public class TestCollisionSystem extends Scene {
         InputManager inputManager = mainContext.getInputManager();
         boolean update = false;
 
-        if (inputManager.input(ActionId.MOVE_BACKWARD) && !inputManager.input(ActionId.MOVE_FORWARD)){
+        if (inputManager.getState(ActionId.MOVE_BACKWARD) && !inputManager.getState(ActionId.MOVE_FORWARD)){
             update = true;
 
             rectangle2.moveY(500 * GameTime.DeltaTime());
         }
 
-        if (inputManager.input(ActionId.MOVE_FORWARD) && !inputManager.input(ActionId.MOVE_BACKWARD)){
+        if (inputManager.getState(ActionId.MOVE_FORWARD) && !inputManager.getState(ActionId.MOVE_BACKWARD)){
             update = true;
 
             rectangle2.moveY(-500 * GameTime.DeltaTime());
         }
 
-        if (inputManager.input(ActionId.MOVE_LEFT) && !inputManager.input(ActionId.MOVE_RIGHT)){
+        if (inputManager.getState(ActionId.MOVE_LEFT) && !inputManager.getState(ActionId.MOVE_RIGHT)){
             update = true;
 
             rectangle2.moveX(-500 * GameTime.DeltaTime());
         }
 
-        if (inputManager.input(ActionId.MOVE_RIGHT) && !inputManager.input(ActionId.MOVE_LEFT)){
+        if (inputManager.getState(ActionId.MOVE_RIGHT) && !inputManager.getState(ActionId.MOVE_LEFT)){
             update = true;
 
             rectangle2.moveX(500 * GameTime.DeltaTime());
         }
 
-        if (inputManager.input(ActionId.MOVE_UP)){
+        if (inputManager.getState(ActionId.MOVE_UP)){
             main2DCamera.setY(main2DCamera.getCamPosRef().y - 100 * GameTime.DeltaTime());
             System.out.println("DOwn");
         }
@@ -108,7 +108,7 @@ public class TestCollisionSystem extends Scene {
         rotation.update();
         //renderer.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
-        renderer2.updateShape();
+        renderer2.updateShapePosition();
 
         main3DCamera.updateView();
     }

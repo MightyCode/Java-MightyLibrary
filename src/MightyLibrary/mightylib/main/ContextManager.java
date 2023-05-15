@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.main;
 
-import MightyLibrary.mightylib.inputs.ActionConfigurations;
+import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
@@ -45,7 +45,7 @@ public class ContextManager {
         KeyboardManager keyboardManager = new KeyboardManager(window.getInfo());
         MouseManager mouseManager = new MouseManager(window.getInfo());
         InputManager inputManager = new InputManager(keyboardManager, mouseManager);
-        inputManager.init(new ActionConfigurations[]{});
+        inputManager.init(new ActionInput[]{});
 
         return contexts.put(context, new Context(window, inputManager, keyboardManager, mouseManager)) != null;
     }

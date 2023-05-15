@@ -96,8 +96,8 @@ public abstract class OBJLoader {
         Shape shape = new Shape("texture3D", true, false);
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indicesArray);
-        shape.addVbo(verticesArray, 3, Shape.STATIC_STORE);
-        shape.addVbo(texturesArray, 2,  Shape.STATIC_STORE);
+        shape.addVboFloat(verticesArray, 3, Shape.STATIC_STORE);
+        shape.addVboFloat(texturesArray, 2,  Shape.STATIC_STORE);
 
         return shape;
     }
@@ -180,7 +180,7 @@ public abstract class OBJLoader {
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indicesArray);
 
-        shape.addVbo(verticesArray, 3, Shape.STATIC_STORE);
+        shape.addVboFloat(verticesArray, 3, Shape.STATIC_STORE);
         return shape;
     }
 

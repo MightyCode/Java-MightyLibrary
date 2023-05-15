@@ -5,9 +5,7 @@ import MightyLibrary.mightylib.util.math.EShapeType;
 import org.joml.Vector4f;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class CollisionBoundedVolume2D extends Collision2D {
 

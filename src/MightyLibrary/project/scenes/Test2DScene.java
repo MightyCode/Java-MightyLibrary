@@ -43,8 +43,8 @@ public class Test2DScene extends Scene {
         /// SCENE INFORMATION ///
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));
-        //setClearColor(52, 189, 235, 1f);
-        setClearColor(0, 0, 0, 1f);
+        setClearColor(52, 189, 235, 1f);
+        //setClearColor(0, 0, 0, 1f);
 
         /// RENDERERS ///
 
@@ -75,7 +75,7 @@ public class Test2DScene extends Scene {
 
         Vector2i size = mainContext.getWindow().getInfo().getSizeRef();
 
-        text.setFont("arial")
+        text.setFont("bahnschrift")
                 .setFontSize(60)
                 .setReference(EDirection.RightDown)
                 .setAlignment(ETextAlignment.Right)
@@ -101,7 +101,7 @@ public class Test2DScene extends Scene {
         super.update();
 
         InputManager inputManager = mainContext.getInputManager();
-        if (inputManager.input(ActionId.MOVE_DOWN)){
+        if (inputManager.getState(ActionId.MOVE_DOWN)){
             testCamera.moveX(mainContext.getWindow().getInfo().getSizeRef().x *0.3f * GameTime.DeltaTime());
         }
 

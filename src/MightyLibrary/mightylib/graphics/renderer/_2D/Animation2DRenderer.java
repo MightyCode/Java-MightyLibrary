@@ -34,8 +34,8 @@ public class Animation2DRenderer extends Renderer {
         int[] indices = { 0, 1, 2, 2, 0, 3 };
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
-        positionIndex = shape.addVbo(calculatePosition(), 2, Shape.DYNAMIC_STORE);
-        textureIndex = shape.addVbo(texturePos(), 2, Shape.DYNAMIC_STORE);
+        positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.DYNAMIC_STORE);
+        textureIndex = shape.addVboFloat(texturePos(), 2, Shape.DYNAMIC_STORE);
 
         referencePosition = new Vector2f();
 

@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
+import MightyLibrary.mightylib.resources.texture.IGLBindable;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.util.Id;
@@ -15,7 +16,7 @@ public class FrameBuffer {
 
     private final WindowInfo windowInfo;
 
-    public FrameBuffer(WindowInfo window, int frameBufferAspect){
+    public FrameBuffer(WindowInfo window, IGLBindable bindable){
         fbo = 0;
         rbo = 0;
         renderTextureId = new Id(0);
@@ -23,16 +24,16 @@ public class FrameBuffer {
 
         fbo = glGenFramebuffers();
         bindFrameBuffer();
-        update(frameBufferAspect);
+        update(bindable);
         unbindFrameBuffer();
     }
 
-    public void update(int frameBufferAspect){
+    public void update(IGLBindable bindable){
         renderTextureId.id = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, renderTextureId.id);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
 
-        TextureParameters.applyParameters(frameBufferAspect);
+        TextureParameters.applyParameters(bindable);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTextureId.id, 0);

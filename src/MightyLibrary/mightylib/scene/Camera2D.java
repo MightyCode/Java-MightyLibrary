@@ -1,8 +1,6 @@
 package MightyLibrary.mightylib.scene;
 
-import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.WindowInfo;
-import MightyLibrary.mightylib.util.math.MightyMath;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;

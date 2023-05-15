@@ -1,6 +1,8 @@
 package MightyLibrary.mightylib.scene;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
+import MightyLibrary.mightylib.resources.texture.IGLBindable;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
@@ -48,15 +50,15 @@ public class Scene {
         this(null);
     }
 
-    public void init(String[] args, int frameBufferAspect){
+    public void init(String[] args, IGLBindable bindable){
         shaderManager.reloadProjection(main3DCamera, main2DCamera);
         dispose();
 
-        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), frameBufferAspect);
+        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), bindable);
     }
 
     public void init(String[] args){
-        init(args, TextureParameters.REALISTIC_PARAMETERS);
+        init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
     }
 
     public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface){

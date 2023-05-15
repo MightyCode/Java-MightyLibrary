@@ -13,12 +13,20 @@ public class Context {
     private final KeyboardManager keyboardManager;
     private final MouseManager mouseManager;
 
+    private final SystemInfo systemInfo;
 
-    Context(Window window, InputManager inputManager, KeyboardManager keyboardManager, MouseManager mouseManager){
+
+    Context(Window window,
+            InputManager inputManager,
+            KeyboardManager keyboardManager,
+            MouseManager mouseManager){
+
         this.window = window;
         this.inputManager = inputManager;
         this.keyboardManager = keyboardManager;
         this.mouseManager = mouseManager;
+
+        this.systemInfo = new SystemInfo(this.window.getInfo());
     }
 
     public Window getWindow() { return window; }
@@ -26,6 +34,8 @@ public class Context {
     public InputManager getInputManager() { return inputManager; }
     public KeyboardManager getKeyboardManager() { return keyboardManager; }
     public MouseManager getMouseManager() { return mouseManager; }
+
+    public SystemInfo getSystemInfo() { return systemInfo; }
 
 
     public Camera3D createCamera(Camera3DCreationInfo info){

@@ -71,12 +71,12 @@ public class Camera3D {
         if(pitch < -89.0f)
             pitch = -89.0f;
 
-        yawCos = (float)java.lang.Math.cos(MightyMath.rads(yaw));
-        yawSin = (float)java.lang.Math.sin(MightyMath.rads(yaw));
+        yawCos = (float) Math.cos(MightyMath.rads(yaw));
+        yawSin = (float) Math.sin(MightyMath.rads(yaw));
 
-        camFront.x = (float)(java.lang.Math.cos(MightyMath.rads(pitch)) * yawCos);
-        camFront.y = (float)(java.lang.Math.sin(MightyMath.rads(pitch)));
-        camFront.z = (float)(java.lang.Math.cos(MightyMath.rads(pitch)) * java.lang.Math.sin(MightyMath.rads(yaw)));
+        camFront.x = (float)(Math.cos(MightyMath.rads(pitch)) * yawCos);
+        camFront.y = (float)(Math.sin(MightyMath.rads(pitch)));
+        camFront.z = (float)(Math.cos(MightyMath.rads(pitch)) * Math.sin(MightyMath.rads(yaw)));
         camFront.normalize();
     }
 

@@ -5,17 +5,23 @@
 		"fonts" : {
 			"arial" : {
 				"file": "arial.png",
-				"type" : "pixelart"
+				"qualityType" : "pixelart",
+				"textureType" : "rectangle"
+			},
+			"bahnschrift" : {
+				"file" : "bahnschrift_0.png",
+				"qualityType" : "pixelart",
+				"textureType" : "rectangle"
 			}
 		},
 		 "gui": {
 			 "button-unhover" : {
 				 "file": "GUIButton.png",
-				 "type" : "realistic"
+				 "qualityType" : "realistic"
 			 },
 			 "button-hover" : {
 				 "file": "GUIButton-hover.png",
-				 "type" : "realistic"
+				 "qualityType" : "realistic"
 			 }
 		},
 		"hud" : {
@@ -27,29 +33,29 @@
 		"world" : {
 			"container" : {
 				"file": "container.jpg",
-				"type" : "realistic"
+				"qualityType" : "realistic"
 			},
 			"water1" : {
 				"file": "water1.jpg",
-				"type" : "realistic"
+				"qualityType" : "realistic"
 			},
 			"stall" : {
 				"file" : "stallTexture.png",
-				"type" : "realistic"
+				"qualityType" : "realistic"
 			},
 			"slime" : {
 				"file" : "slime.png",
-				"type" : "pixelart"
+				"qualityType" : "pixelart"
 			},
 			"tileset" : {
 				"file": "tileset.png",
-				"type" : "pixelart"
+				"qualityType" : "pixelart"
 			}
 		},
 		"shaderEffects" : {
 			"dispMap1" :  {
 				"file": "displacementMap1.png",
-				"type" : "realistic"
+				"qualityType" : "realistic"
 			}
 		}
 	}

@@ -131,7 +131,7 @@ public abstract class Tweening<T> {
         inverseThisFrame = this.mirrored;
     }
 
-    protected float aimedTime(){
+    protected final float aimedTime(){
         return timer.getAimedTime();
     }
 
@@ -139,19 +139,21 @@ public abstract class Tweening<T> {
     public abstract Tweening<T> initTwoValue(float time, T beginningValue, T endValue);
 
     public abstract Tweening<T> initRangeValue(float time, T beginningValue, T range);
-    public abstract T value();
 
-    protected void startTimerAfterInit(float time){
+    public abstract T value();
+    public abstract T goalValue();
+
+    protected final void startTimerAfterInit(float time){
         this.timer.start(time);
     }
 
-    protected float evaluate(float beginningValue, float valuesRange){
+    protected final float evaluate(float beginningValue, float valuesRange){
         return Tweening.Evaluate(this.type, this.behaviour, timeValueForFrame, beginningValue, valuesRange, this.timer.getAimedTime(),
                 additionalValue1, additionalValue2);
     }
 
 
-    public Tweening<T> setTweeningOption(ETweeningOption tweeningOption){
+    public final Tweening<T> setTweeningOption(ETweeningOption tweeningOption){
         this.option = tweeningOption;
 
         this.timer.setElapsedTimeCapped((
@@ -163,14 +165,14 @@ public abstract class Tweening<T> {
     }
 
 
-    public Tweening<T> setTweeningValues(ETweeningType type, ETweeningBehaviour behaviour){
+    public final Tweening<T> setTweeningValues(ETweeningType type, ETweeningBehaviour behaviour){
         this.type = type;
         this.behaviour = behaviour;
 
         return this;
     }
 
-    public Tweening<T> setAdditionnalArguments(Float arg1, Float arg2){
+    public final Tweening<T> setAdditionnalArguments(Float arg1, Float arg2){
         this.additionalValue1 = arg1;
         this.additionalValue2 = arg2;
 
@@ -178,7 +180,7 @@ public abstract class Tweening<T> {
     }
 
 
-    public Tweening<T> initRandomTweening(){
+    public final Tweening<T> initRandomTweening(){
         this.timer.forceRandomTime();
 
         if (this.option == ETweeningOption.DirectMirrored
@@ -196,8 +198,8 @@ public abstract class Tweening<T> {
         return this;
     }
 
-    // Not is in infinityLoop
-    public boolean finished(){
+    // Always false if infinite loop
+    public final boolean finished(){
         if (this.option == ETweeningOption.Direct){
             return this.timer.isFinished();
         } else if (this.option == ETweeningOption.DirectReversed){
@@ -205,14 +207,15 @@ public abstract class Tweening<T> {
         }  else if (this.option == ETweeningOption.DirectMirrored){
             return this.timer.isFinished() && this.mirrored;
         }
+
         return false;
     }
 
-    public float addArg1(){
+    public final float addArg1(){
         return this.additionalValue1;
     }
 
-    public float addArg2(){
+    public final float addArg2(){
         return this.additionalValue2;
     }
 }

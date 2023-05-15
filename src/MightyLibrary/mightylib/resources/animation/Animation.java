@@ -2,8 +2,6 @@ package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.animation.AnimationData;
-import MightyLibrary.mightylib.resources.animation.FrameData;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import org.joml.Vector2i;
 import org.joml.Vector4f;

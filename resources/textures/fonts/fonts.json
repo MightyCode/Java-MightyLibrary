@@ -1,6 +1,10 @@
 {
   "fonts" : {
-	  "arial": {
+	  "bahnschrift" : {
+		  "texture" : "bahnschrift",
+		  "info" : "bahnschrift.fnt"
+	  },
+	  "arial" : {
 		  "texture" : "arial",
 		  "info" : "arial.fnt"
 	  }

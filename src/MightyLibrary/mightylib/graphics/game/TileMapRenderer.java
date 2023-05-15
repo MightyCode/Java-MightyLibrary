@@ -38,8 +38,8 @@ public class TileMapRenderer extends Renderer {
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(new int[0]);
 
-        positionIndex = shape.addVbo(new float[0], 2, (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
-        textureIndex = shape.addVbo(new float[0], 2,  (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
+        positionIndex = shape.addVboFloat(new float[0], 2, (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
+        textureIndex = shape.addVboFloat(new float[0], 2,  (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
 
         this.isForLayer = isForLayer;
     }

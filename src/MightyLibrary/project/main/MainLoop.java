@@ -1,6 +1,7 @@
 package MightyLibrary.project.main;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.*;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Icon;
@@ -26,11 +27,13 @@ public final class MainLoop {
     private final static double TICK_TIME = NANO_IN_SECOND / TPS;
     private final static double FRAME_TIME = NANO_IN_SECOND / FPS;
 
-    MainLoop(){
+    private final static String projectName = "3D project test";
+
+    MainLoop() {
         System.out.println("--Start program. ");
         System.out.println("--Load libraries.");
 
-        if (loadLibraries() == -1){
+        if (loadLibraries() == -1) {
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
@@ -40,7 +43,7 @@ public final class MainLoop {
         WindowCreationInfo wci = new WindowCreationInfo();
         wci.Size = new Vector2i(1280, 720);
         wci.VirtualSize = new Vector2i(1280, 720);
-        wci.WindowName = "3D project test";
+        wci.WindowName = projectName;
         wci.Fullscreen = false;
 
         contextManager.createDefaultContext(wci);
@@ -48,7 +51,7 @@ public final class MainLoop {
         Context context = contextManager.getContext("Main");
         Window window = context.getWindow();
 
-        if (!window.getInfo().isWindowCreated()){
+        if (!window.getInfo().isWindowCreated()) {
             exit(ListError.WINDOW_CREATION_FAIL);
         }
 
@@ -78,7 +81,7 @@ public final class MainLoop {
         System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
     }
 
-    void run(){
+    void run() {
         // Set loop parameters
         int ticks = 0;
         int frames = 0;
@@ -90,9 +93,11 @@ public final class MainLoop {
         long start = System.nanoTime();
 
         Context mainContext = contextManager.getMainContext();
+        mainContext.getKeyboardManager().setKeyboardLanguage(AZERTYKeyboardLanguage.getInstance());
+
         Window window = mainContext.getWindow();
 
-        while (!window.wantExit()){
+        while (!window.wantExit()) {
             if (System.nanoTime() - start - lastTick >= TICK_TIME) {
                 GameTime.update();
                 sceneManager.update();
@@ -117,11 +122,10 @@ public final class MainLoop {
         exit(ListError.NO_ERROR);
     }
 
-
-    public void exit(int status){
-        if (status != ListError.LIBRARIES_LOAD_FAIL){
+    public void exit(int status) {
+        if (status != ListError.LIBRARIES_LOAD_FAIL) {
             // Terminate GLFW and free the error callback
-            unloadLibraries();
+            preUnload();
         }
 
         if (sceneManager != null)
@@ -130,8 +134,10 @@ public final class MainLoop {
         if (contextManager != null)
             contextManager.unload();
 
-        if (status != ListError.NO_ERROR){
-            System.err.println("Exit with error "  + status);
+        afterUnload();
+
+        if (status != ListError.NO_ERROR) {
+            System.err.println("Exit with error " + status);
             System.exit(status);
         } else {
             System.out.println("Exit without error");
@@ -148,7 +154,7 @@ public final class MainLoop {
         }
 
         SoundManager soundManager = SoundManager.getInstance();
-        if (!soundManager.init()){
+        if (!soundManager.init()) {
             System.err.println("SoundManager fail to initialize");
             return -1;
         }
@@ -157,9 +163,12 @@ public final class MainLoop {
     }
 
 
-    private void unloadLibraries(){
-        glfwTerminate();
+    private void preUnload() {
+        SoundManager.getInstance().unloadSoundSource();
+    }
 
+    private void afterUnload() {
+        glfwTerminate();
         SoundManager.getInstance().unload();
     }
 }

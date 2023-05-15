@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.inputs;
+package MightyLibrary.mightylib.inputs.inputType;
 
 public enum EInputType {
     Keyboard,
