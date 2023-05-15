@@ -45,7 +45,6 @@ public class SceneManager {
         // Command
         if (Main.admin){
             updateMain();
-
         }
 
         if(sceneInterface.isWantingChange())

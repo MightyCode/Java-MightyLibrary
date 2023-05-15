@@ -75,5 +75,10 @@ public class TileMapLoader extends ResourceLoader {
 
         tileMap.setCorrectlyLoaded();
     }
+
+    @Override
+    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
+        // Todo
+    }
 }
 

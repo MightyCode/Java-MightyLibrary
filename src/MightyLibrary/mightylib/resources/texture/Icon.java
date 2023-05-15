@@ -4,10 +4,7 @@ import MightyLibrary.mightylib.resources.DataType;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWImage;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 public class Icon extends DataType {

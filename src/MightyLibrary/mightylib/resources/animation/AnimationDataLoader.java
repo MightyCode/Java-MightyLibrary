@@ -62,4 +62,9 @@ public class AnimationDataLoader extends ResourceLoader {
 
         animationData.setTexture(parts[TEXTURE_POS].trim()).setFramesData(framesData);
     }
+
+    @Override
+    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
+        // Todo
+    }
 }

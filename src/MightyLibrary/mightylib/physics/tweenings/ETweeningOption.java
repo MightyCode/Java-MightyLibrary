@@ -6,5 +6,18 @@ public enum ETweeningOption {
     DirectReversed,
     Loop,
     LoopMirrored,
-    LoopReversed
+    LoopReversed;
+
+    public ETweeningOption fromString(String txt){
+        String lowerCase = txt.trim().toLowerCase();
+
+        if (lowerCase.equals("direct")) return Direct;
+        if (lowerCase.equals("directmirrored")) return DirectMirrored;
+        if (lowerCase.equals("directreversed")) return DirectReversed;
+        if (lowerCase.equals("loop")) return DirectReversed;
+        if (lowerCase.equals("loopmirrored")) return DirectReversed;
+        if (lowerCase.equals("loopreversed")) return DirectReversed;
+
+        return null;
+    }
 }

@@ -43,6 +43,8 @@ public class MouseManager {
 
         this.windowInfo = windowInfo;
 
+        displayCursor = true;
+
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
         mouseUpdate();

@@ -46,7 +46,6 @@ public class SoundData extends DataType {
         if (this.bufferId != -1) {
             alDeleteBuffers(this.bufferId);
             int error = alGetError();
-
             if (error != AL_NO_ERROR)
                 SoundManager.DisplayError("al delete buffers (" + path + ")", error);
         }

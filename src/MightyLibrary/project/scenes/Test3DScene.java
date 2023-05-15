@@ -98,8 +98,8 @@ public class Test3DScene extends Scene {
         hudBar.setPosition(new Vector2f(150, 150)); //window.size.x * 0.7f, window.size.y * 0.7f);
 
         displacementMapTweening = new FloatTweening();
-        displacementMapTweening.setTweeningValues(ETweeningType.Quadratic, ETweeningBehaviour.InOut)
-                .setTweeningOption(ETweeningOption.LoopReversed)
+        displacementMapTweening.setTweeningValues(ETweeningType.Linear, ETweeningBehaviour.InOut)
+                .setTweeningOption(ETweeningOption.LoopMirrored)
                 .initTwoValue(5f, 0f, 1f);
 
         rotationTweening = new FloatTweening();
@@ -115,31 +115,31 @@ public class Test3DScene extends Scene {
         InputManager inputManager = mainContext.getInputManager();
 
         int speed = 1;
-        if (inputManager.input(ActionId.SHIFT)) {
+        if (inputManager.getState(ActionId.SHIFT)) {
             speed = 3;
         }
 
-        if(inputManager.input(ActionId.MOVE_LEFT)){
+        if(inputManager.getState(ActionId.MOVE_LEFT)){
             main3DCamera.speedAngX(Camera3D.speed.x * speed);
         }
 
-        if(inputManager.input(ActionId.MOVE_RIGHT)){
+        if(inputManager.getState(ActionId.MOVE_RIGHT)){
             main3DCamera.speedAngX(-Camera3D.speed.x * speed);
         }
 
-        if(inputManager.input(ActionId.MOVE_FORWARD)){
+        if(inputManager.getState(ActionId.MOVE_FORWARD)){
             main3DCamera.speedAngZ(-Camera3D.speed.z * speed);
         }
 
-        if(inputManager.input(ActionId.MOVE_BACKWARD)) {
+        if(inputManager.getState(ActionId.MOVE_BACKWARD)) {
             main3DCamera.speedAngZ(Camera3D.speed.z * speed);
         }
 
-        if(inputManager.input(ActionId.MOVE_UP)) {
+        if(inputManager.getState(ActionId.MOVE_UP)) {
             main3DCamera.setY(main3DCamera.getCamPosRef().y += Camera3D.speed.y);
         }
 
-        if(inputManager.input(ActionId.MOVE_DOWN)) {
+        if(inputManager.getState(ActionId.MOVE_DOWN)) {
             main3DCamera.setY(main3DCamera.getCamPosRef().y -= Camera3D.speed.y);
         }
 
@@ -432,7 +432,7 @@ public class Test3DScene extends Scene {
         }
 
         renderer.getShape().setEbo(tempIndices.stream().mapToInt(j -> j).toArray());
-        renderer.getShape().addVbo(position, 3, Shape.STATIC_STORE);
-        renderer.getShape().addVbo(normals, 3, Shape.STATIC_STORE);
+        renderer.getShape().addVboFloat(position, 3, Shape.STATIC_STORE);
+        renderer.getShape().addVboFloat(normals, 3, Shape.STATIC_STORE);
     }
 }

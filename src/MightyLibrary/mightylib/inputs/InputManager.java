@@ -1,5 +1,9 @@
 package MightyLibrary.mightylib.inputs;
 
+import MightyLibrary.mightylib.inputs.inputType.ActionInput;
+import MightyLibrary.mightylib.inputs.inputType.EInputType;
+import MightyLibrary.mightylib.inputs.inputType.InputSimple;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,9 +29,13 @@ public class InputManager {
     }
 
     private final KeyboardManager keyManager;
+
+    public KeyboardManager getKeyboardManager() { return keyManager; }
+    public MouseManager getMouseManager() { return mouseManager; }
+
     private final MouseManager mouseManager;
 
-    private final Map<Integer, ActionConfigurations> actionConfigurations;
+    private final Map<Integer, ActionInput> actionConfigurations;
 
 
     /**
@@ -42,81 +50,38 @@ public class InputManager {
     }
 
 
-    public void init(ActionConfigurations[] actionConfigurations){
+    public void init(ActionInput[] actionInputs){
         initLibraryInputs();
 
-        int index;
-
-        for (int i = 0; i < actionConfigurations.length; ++i) {
-            this.actionConfigurations.put(actionConfigurations[i].actionId(), actionConfigurations[i]);
+        for (ActionInput actionInput : actionInputs) {
+            this.actionConfigurations.put(actionInput.actionId(), actionInput);
         }
     }
 
-
-    public boolean input(int inputID){
-        ActionConfigurations actionConfiguration = actionConfigurations.get(inputID);
-        if (actionConfiguration == null)
+    public boolean getState(int inputID){
+        ActionInput actionInput = actionConfigurations.get(inputID);
+        if (actionInput == null)
             return false;
 
-        for (InputConfiguration inputConfiguration : actionConfiguration.configurations()){
-            switch (inputConfiguration.type()){
-                case Keyboard:
-                    if (keyManager.getKeyState(inputConfiguration.id()))
-                        return true;
-                    break;
-                case Mouse:
-                    if (mouseManager.getState(inputConfiguration.id()))
-                        return true;
-                    break;
-            }
-        }
-
-        return false;
+        return actionInput.actionInput().getState(this);
     }
 
 
     public boolean inputPressed(int inputId){
-        ActionConfigurations actionConfiguration = actionConfigurations.get(inputId);
-        if (actionConfiguration == null)
+        ActionInput actionInput = actionConfigurations.get(inputId);
+        if (actionInput == null)
             return false;
 
-        for (InputConfiguration inputConfiguration : actionConfiguration.configurations()){
-            switch (inputConfiguration.type()){
-                case Keyboard:
-                    if (keyManager.keyPressed(inputConfiguration.id()))
-                        return true;
-                    break;
-                case Mouse:
-                    if (mouseManager.buttonPressed(inputConfiguration.id()))
-                        return true;
-                    break;
-            }
-        }
-
-        return false;
-
+        return actionInput.actionInput().inputPressed(this);
     }
 
 
     public boolean inputReleased(int inputID){
-        ActionConfigurations actionConfiguration = actionConfigurations.get(inputID);
-        if (actionConfiguration == null)
+        ActionInput actionInput = actionConfigurations.get(inputID);
+        if (actionInput == null)
             return false;
 
-        for (InputConfiguration inputConfiguration : actionConfiguration.configurations()){
-            switch (inputConfiguration.type()){
-                case Keyboard:
-                    if (keyManager.keyReleased(inputConfiguration.id()))
-                        return true;
-                    break;
-                case Mouse:
-                    if (mouseManager.buttonReleased(inputConfiguration.id()))
-                        return true;
-                    break;
-            }
-        }
-
-        return false;
+        return actionInput.actionInput().inputReleased(this);
     }
 
 
@@ -129,12 +94,12 @@ public class InputManager {
     private void initLibraryInputs(){
         actionConfigurations.put(
                 COMMAND,
-                new ActionConfigurations(COMMAND, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_F1, EInputType.Keyboard)})
+                new ActionInput(COMMAND, "OPEN_COMMAND" ,new InputSimple(GLFW_KEY_F1, EInputType.Keyboard))
         );
 
         actionConfigurations.put(
                 RELOAD_TEXTURE,
-                new ActionConfigurations(RELOAD_TEXTURE, new InputConfiguration[]{new InputConfiguration(GLFW_KEY_F5, EInputType.Keyboard)})
+                new ActionInput(RELOAD_TEXTURE, "RELOAD_TEXTURE", new InputSimple(GLFW_KEY_F5, EInputType.Keyboard))
         );
     }
 }

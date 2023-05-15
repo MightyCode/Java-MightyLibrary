@@ -1,0 +1,138 @@
+{
+	"shaders": {
+		"colorShape2D": {
+			"files": [
+				"basic/colorShape2DV.glsl",
+				"basic/colorShape2DF.glsl"
+			],
+			"mode" : ["cam2DView"],
+			"links": [
+				"color",
+				"projection",
+				"view",
+				"model"
+			]
+		},
+		"texture2D": {
+			"files": [
+				"basic/texture2DV.glsl",
+				"basic/texture2DF.glsl"
+			],
+			"mode" : ["cam2DView"],
+			"links": [
+				"projection",
+				"view",
+				"model"
+			]
+		},
+		"texture2DDisplacement" : {
+			"files": [
+				"basic/texture2DDisplacementV.glsl",
+				"basic/texture2DDisplacementF.glsl"
+			],
+			"mode" : ["cam2DView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"time",
+				"ourTexture",
+				"displacementMap"
+			]
+		},
+		"colorShape3D": {
+			"files": [
+				"basic/colorShape3DV.glsl",
+				"basic/colorShape3DF.glsl"
+			],
+			"mode" : ["cam3DView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"color"
+			]
+		},
+
+		"textureLight3D": {
+			"files": [
+				"3D/textureLight3DV.glsl",
+				"3D/textureLight3DF.glsl"
+			],
+			"mode" : ["cam3DView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"worldColor",
+				"lightColor",
+				"lightPos",
+				"viewPos"
+			]
+		},
+		"texture3D": {
+			"files": [
+				"basic/texture3DV.glsl",
+				"basic/texture3DF.glsl"
+			],
+			"mode" : ["cam3DView"],
+			"links": [
+				"projection",
+				"view",
+				"model"
+			]
+		},
+		"textureComplex3D": {
+			"files": [
+				"3D/textureComplex3DV.glsl",
+				"3D/textureComplex3DF.glsl"
+			],
+			"mode" : ["cam3DView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"time",
+				"ourTexture",
+				"displacementMap"
+			]
+		},
+		"postProcessing": {
+			"files": [
+				"framebuffers/postProcessingV.glsl",
+				"framebuffers/postProcessingF.glsl"
+			],
+			"mode" : ["none"],
+			"links": []
+		},
+		"coloredText" : {
+			"files" : [
+				"font/coloredTextV.glsl",
+				"font/coloredTextF.glsl"
+			],
+			"mode" : ["cam2DView"],
+			"links": [
+				"color",
+				"projection",
+				"view",
+				"model"
+			]
+		},
+		"colorComplex3D": {
+			"files": [
+				"3D/colorComplex3DV.glsl",
+				"3D/colorComplex3DF.glsl"
+			],
+			"mode" : ["cam3DView"],
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"color",
+				"worldColor",
+				"lightDir",
+				"lightColor"
+			]
+		}
+	}
+}

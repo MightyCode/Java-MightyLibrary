@@ -55,4 +55,9 @@ public class FontLoader extends ResourceLoader {
 
         fontFace.setCorrectlyLoaded();
     }
+
+    @Override
+    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
+        // Todo
+    }
 }

@@ -65,7 +65,7 @@ public class CubeRenderer extends Renderer {
                         0.0f,  size, 0.0f,
         };
 
-        positionIndex = shape.addVbo(table, 3, Shape.STATIC_STORE);
+        positionIndex = shape.addVboFloat(table, 3, Shape.STATIC_STORE);
         /*textureIndex = shape.addVbo(new float[0], 2, Shape.STATIC_STORE);
         normalIndex = shape.addVbo(new float[0], 3, Shape.STATIC_STORE);*/
 
@@ -120,6 +120,6 @@ public class CubeRenderer extends Renderer {
                 0.0f, 1.0f, 0.0f
         };
 
-        normalIndex = shape.addVbo(table, 3, Shape.STATIC_STORE);
+        normalIndex = shape.addVboFloat(table, 3, Shape.STATIC_STORE);
     }
 }

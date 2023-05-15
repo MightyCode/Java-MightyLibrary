@@ -174,7 +174,7 @@ public class SoundManager {
         gainTree.printTree("List of gains");
     }
 
-    public boolean unload(){
+    public boolean unloadSoundSource(){
         if (device == NULL) {
             return false;
         }
@@ -185,6 +185,18 @@ public class SoundManager {
 
         for(SoundSource sounds : soundsSource){
             sounds.unload();
+        }
+
+        return true;
+    }
+
+    public boolean unload(){
+        if (device == NULL) {
+            return false;
+        }
+
+        if (context == NULL) {
+            return false;
         }
 
         alcDestroyContext(context);

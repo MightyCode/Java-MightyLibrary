@@ -37,7 +37,6 @@ public class Timer {
                     this.elapsedTime = this.aimedTime;
 
                 finished = true;
-                started = false;
             }
         }
     }
@@ -60,6 +59,7 @@ public class Timer {
     public void resetStop() {
         resetStart();
         stop();
+        started = false;
     }
 
 

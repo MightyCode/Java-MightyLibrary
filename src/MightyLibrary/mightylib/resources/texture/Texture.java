@@ -8,25 +8,26 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
 
-public class Texture extends DataType {
-    private final static String PATH = "resources/textures/";
-
+public class Texture extends DataType implements IGLBindable {
     private int width;
     private int height;
 
     private int textureId;
 
-    private int aspectTexture;
+    private int qualityType;
+
+    private int textureType;
 
     public Texture(String name, String path) {
-        super(name, PATH + path);
+        super(name, path);
 
         textureId = -1;
-        aspectTexture = TextureParameters.REALISTIC_PARAMETERS;
+        qualityType = TextureParameters.REALISTIC_PARAMETERS;
+        textureType = GL_TEXTURE_2D;
     }
 
     public void setAspectTexture(int aspectTexture){
-        this.aspectTexture = aspectTexture;
+        this.qualityType = aspectTexture;
     }
 
     public void bind() {
@@ -37,9 +38,9 @@ public class Texture extends DataType {
         // Active the texture to right position
         glActiveTexture(GL_TEXTURE0 + texturePos);
         if (isCorrectlyLoaded()){
-            glBindTexture(GL_TEXTURE_2D, textureId);
+            glBindTexture(textureType, textureId);
         // If isn't correct loaded, bind error texture
-        } else glBindTexture(GL_TEXTURE_2D, 1);
+        } else glBindTexture(textureType, 1);
     }
 
     public void createImage(BufferedImage img) {
@@ -70,10 +71,10 @@ public class Texture extends DataType {
 
             byteBuffer.flip();
 
-            glBindTexture(GL_TEXTURE_2D, textureId);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer);
+            glBindTexture(this.textureType, textureId);
+            glTexImage2D(this.textureType, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer);
 
-            TextureParameters.applyParameters(aspectTexture);
+            TextureParameters.applyParameters(this);
 
             //System.out.println("Texture : " + textureId + " , loaded with path : " + path);
 
@@ -101,7 +102,20 @@ public class Texture extends DataType {
 
     private void setTextParam(int param, int value) {
         bind();
-        if (isCorrectlyLoaded())  glTexParameteri(GL_TEXTURE_2D, param, value);
+        if (isCorrectlyLoaded())
+            glTexParameteri(this.textureType, param, value);
+    }
+
+    public int getQualityType(){
+        return qualityType;
+    }
+
+    public void setTextureType(int textureType){
+        this.textureType = textureType;
+    }
+
+    public int getTextureType(){
+        return this.textureType;
     }
 
     @Override

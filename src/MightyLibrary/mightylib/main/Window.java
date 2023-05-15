@@ -141,7 +141,6 @@ public final class Window {
             info.windowName = title;
             glfwSetWindowTitle(info.windowId, info.windowName);
         }
-
     }
 
     public void setFullscreen(boolean fullscreen){

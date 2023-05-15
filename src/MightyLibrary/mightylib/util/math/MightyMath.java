@@ -30,6 +30,10 @@ public class MightyMath {
 		return (x - a) / (b - a) * (d - c) + c;
 	}
 
+	public static float mapLog(float x, float a, float b, float c, float d) {
+		return (float)Math.exp(map((float)Math.log(x), (float)Math.log(a), (float)Math.log(b), (float)Math.log(c), (float)Math.log(d)));
+	}
+
 	public static int sum(int[] table){
 		int i = 0;
 		int sum = 0;
@@ -65,19 +69,19 @@ public class MightyMath {
 	}
 
 	public static double rads(double angle){
-		return angle * (java.lang.Math.PI/180.0);
+		return angle * (Math.PI/180.0);
 	}
 
 	public static float rads(float angle){
-		return (float)(angle * (java.lang.Math.PI/180.0));
+		return (float)(angle * (Math.PI/180.0));
 	}
 
 	public static double angles(double rad){
-		return rad * (180.0/java.lang.Math.PI);
+		return rad * (180.0/ Math.PI);
 	}
 
 	public static float angles(float rad){
-		return (float)(rad * (180.0/java.lang.Math.PI));
+		return (float)(rad * (180.0/ Math.PI));
 	}
 
 	public static Vector2f rotatePointAround(Vector2f pt, Vector2f ref, float angle){

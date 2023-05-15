@@ -1,0 +1,60 @@
+# AngelCode Bitmap Font Generator configuration file
+fileVersion=1
+
+# font settings
+fontName=Bahnschrift
+fontFile=
+charSet=0
+fontSize=-32
+aa=1
+scaleH=100
+useSmoothing=1
+isBold=0
+isItalic=0
+useUnicode=1
+disableBoxChars=1
+outputInvalidCharGlyph=0
+dontIncludeKerningPairs=0
+useHinting=1
+renderFromOutline=0
+useClearType=1
+
+# character alignment
+paddingDown=3
+paddingUp=3
+paddingRight=3
+paddingLeft=3
+spacingHoriz=0
+spacingVert=0
+useFixedHeight=1
+forceZero=1
+
+# output file
+outWidth=1024
+outHeight=1024
+outBitDepth=32
+fontDescFormat=0
+fourChnlPacked=0
+textureFormat=png
+textureCompression=0
+alphaChnl=0
+redChnl=4
+greenChnl=4
+blueChnl=4
+invA=0
+invR=0
+invG=0
+invB=0
+
+# outline
+outlineThickness=0
+
+# selected chars
+chars=32-126,160-263,266-275,278-283,286-291,294-295,298-299,302-305,310-311,313-318,321-328,330-333,336
+chars=337-347,350-357,362-371,376-382,385,390,393-394,398-402,404,408-409,416-417,431-432,434-436,439
+chars=477,536-539,595-596,598-599,601,603,699-700,710-711,713,728-729,731-733,768-772,774-780,795,803
+chars=806-808,821,837,880-887,890-895,900-906,908,910-929,931-1279,1316-1317,7778-7779,7840-7841,7864
+chars=7865,7882-7885,7908-7909,8211-8213,8216-8218,8220-8222,8224-8226,8230,8240,8249-8250,8304,8308,8352
+chars=8353-8382,8470,8482,8499,8758
+
+# imported icon images

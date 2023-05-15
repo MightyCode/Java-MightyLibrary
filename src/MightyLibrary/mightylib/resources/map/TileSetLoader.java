@@ -70,4 +70,9 @@ public class TileSetLoader extends ResourceLoader {
                 Boolean.parseBoolean(sizePart[1])
         );
     }
+
+    @Override
+    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
+        // Todo
+    }
 }
