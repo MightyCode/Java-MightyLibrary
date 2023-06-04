@@ -1,7 +1,7 @@
-package MightyLibrary.mightylib.util.commands.general;
+package MightyLibrary.mightylib.util.enginecommand.general;
 
 import MightyLibrary.mightylib.sounds.SoundManager;
-import MightyLibrary.mightylib.util.commands.BaseCommand;
+import MightyLibrary.mightylib.util.enginecommand.BaseCommand;
 
 public class ChangeSoundGainCom extends BaseCommand {
     public static final String COMMAND_NAME = "changegain";

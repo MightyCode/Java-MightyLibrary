@@ -1,8 +1,8 @@
-package MightyLibrary.mightylib.util.commands;
+package MightyLibrary.mightylib.util.enginecommand;
 
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
-import MightyLibrary.mightylib.util.commands.general.ListGeneralCommand;
+import MightyLibrary.mightylib.util.enginecommand.general.ListGeneralCommand;
 
 import java.util.ArrayList;
 import java.util.Scanner;

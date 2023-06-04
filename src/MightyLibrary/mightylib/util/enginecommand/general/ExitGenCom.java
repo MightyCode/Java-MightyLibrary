@@ -1,7 +1,7 @@
-package MightyLibrary.mightylib.util.commands.general;
+package MightyLibrary.mightylib.util.enginecommand.general;
 
-import MightyLibrary.mightylib.util.commands.BaseCommand;
-import MightyLibrary.mightylib.util.commands.Commands;
+import MightyLibrary.mightylib.util.enginecommand.BaseCommand;
+import MightyLibrary.mightylib.util.enginecommand.Commands;
 
 public class ExitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "exit";

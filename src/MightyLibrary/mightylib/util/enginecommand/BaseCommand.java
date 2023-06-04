@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util.commands;
+package MightyLibrary.mightylib.util.enginecommand;
 
 public abstract class BaseCommand {
     public static final int GENERAL_COMMAND = 0;

@@ -1,6 +1,6 @@
-package MightyLibrary.mightylib.util.commands.general;
+package MightyLibrary.mightylib.util.enginecommand.general;
 
-import MightyLibrary.mightylib.util.commands.Commands;
+import MightyLibrary.mightylib.util.enginecommand.Commands;
 
 public abstract class ListGeneralCommand {
     public static void addCommands(Commands commands){

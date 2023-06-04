@@ -43,6 +43,7 @@ public class Test2DScene extends Scene {
         /// SCENE INFORMATION ///
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));
+
         setClearColor(52, 189, 235, 1f);
         //setClearColor(0, 0, 0, 1f);
 

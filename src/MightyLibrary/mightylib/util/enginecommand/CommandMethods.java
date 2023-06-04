@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.util.commands;
+package MightyLibrary.mightylib.util.enginecommand;
 
 public abstract class CommandMethods {
     public static int indexFirstWord(String command){

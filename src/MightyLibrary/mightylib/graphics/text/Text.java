@@ -83,7 +83,7 @@ public class Text extends Renderer {
         return this;
     }
 
-    public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars){
+    public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars, String breakLineFirstChar){
         String clean = (removeEscapeChars) ? text.replace("\n", "") : text;
 
         String result = "";
@@ -104,7 +104,7 @@ public class Text extends Renderer {
                 sizeTaken = font.computeSize(temp, fontSize);
 
                 if (sizeTaken.x > boxSize.x){
-                    result = result + "\n" + c;
+                    result = result + "\n" + breakLineFirstChar + c;
                 } else {
                     result = temp;
                 }
