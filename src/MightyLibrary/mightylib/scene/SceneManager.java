@@ -9,7 +9,7 @@ import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.project.main.Main;
 import MightyLibrary.project.main.MainLoop;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.util.commands.Commands;
+import MightyLibrary.mightylib.util.enginecommand.Commands;
 
 public class SceneManager {
     private final SceneManagerInterface sceneInterface;

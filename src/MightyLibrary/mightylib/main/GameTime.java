@@ -48,6 +48,17 @@ public class GameTime {
         gametime.updateGameTime();
     }
 
+    public static float currentTime(){
+        if (gametime == null){
+            gametime = new GameTime();
+        }
+
+        return gametime.getCurrentTIme();
+    }
+
+    public float getCurrentTIme(){
+        return currentTime / NANO_TO_SEC;
+    }
 
     private void updateGameTime(){
         temp = System.nanoTime();
