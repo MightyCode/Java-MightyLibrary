@@ -9,7 +9,7 @@ public class CubeRenderer extends Renderer {
     private boolean includeTextures;
     private boolean includeNormal;
 
-    private int positionIndex;
+    private final int positionIndex;
     private int textureIndex;
     private int normalIndex;
 

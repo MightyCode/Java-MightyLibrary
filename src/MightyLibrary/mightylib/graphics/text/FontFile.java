@@ -67,12 +67,12 @@ public class FontFile {
                 int id = Integer.parseInt(values.get("id"));
 
                 fontChar.setId(id)
-                        .setxAtlas((double) (Integer.parseInt(values.get("x")) + padding.w) /*/ atlasWidth*/)
-                        .setyAtlas((double) (Integer.parseInt(values.get("y")) + padding.x) /*/ atlasHeight*/)
+                        .setxAtlas(Integer.parseInt(values.get("x")) + padding.w /*/ atlasWidth*/)
+                        .setyAtlas(Integer.parseInt(values.get("y")) + padding.x /*/ atlasHeight*/)
                         .setWidth((double) (Integer.parseInt(values.get("width")) - padding.w - padding.y) / size)
                         .setHeight((double) (Integer.parseInt(values.get("height")) - padding.x - padding.z) / size)
-                        .setWidthAtlas((double) (Integer.parseInt(values.get("width")) - padding.w - padding.y) /*/ atlasWidth*/)
-                        .setHeightAtlas((double) (Integer.parseInt(values.get("height")) - padding.x - padding.z) /*/ atlasHeight*/)
+                        .setWidthAtlas(Integer.parseInt(values.get("width")) - padding.w - padding.y /*/ atlasWidth*/)
+                        .setHeightAtlas(Integer.parseInt(values.get("height")) - padding.x - padding.z /*/ atlasHeight*/)
                         .setxOffset((double) (Integer.parseInt(values.get("xoffset"))) / size)
                         .setyOffset((double) (Integer.parseInt(values.get("yoffset"))) / size)
                         .setxAdvance((double) (Integer.parseInt(values.get("xadvance"))) / size);

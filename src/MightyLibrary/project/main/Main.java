@@ -1,5 +1,10 @@
 package MightyLibrary.project.main;
 
+import MightyLibrary.mightylib.main.IProjectLoading;
+import MightyLibrary.mightylib.main.StartLibraryArguments;
+import MightyLibrary.mightylib.main.MainLoop;
+import org.joml.Vector2i;
+
 /**
  * Main class of the project.
  *
@@ -8,15 +13,18 @@ package MightyLibrary.project.main;
  */
 public class Main {
 
-    public static boolean admin;
-
     /**
      * Run the game.
      */
     public static void main(String[] args) {
-        admin = true;
+        IProjectLoading projectLoading = new ProjectLoading();
+        StartLibraryArguments startArguments = new StartLibraryArguments(
+                projectLoading,
+                new Vector2i(1280, 720),
+                new Vector2i(1280, 720));
 
-        MainLoop mainLoop = new MainLoop();
-        mainLoop.run();
+        startArguments.admin = true;
+
+        MainLoop.run(startArguments);
     }
 }

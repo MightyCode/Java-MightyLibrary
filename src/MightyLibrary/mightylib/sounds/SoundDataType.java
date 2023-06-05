@@ -19,7 +19,6 @@ import java.nio.file.Paths;
 
 import static java.sql.Types.NULL;
 import static org.lwjgl.BufferUtils.createByteBuffer;
-import static org.lwjgl.openal.AL10.*;
 import static org.lwjgl.stb.STBVorbis.*;
 
 public class SoundDataType {

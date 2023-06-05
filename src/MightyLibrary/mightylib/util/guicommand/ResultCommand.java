@@ -3,7 +3,7 @@ package MightyLibrary.mightylib.util.guicommand;
 import java.util.ArrayList;
 
 public class ResultCommand {
-    public final class Action{
+    public static final class Action{
         private final String action;
         private final Object[] args;
 

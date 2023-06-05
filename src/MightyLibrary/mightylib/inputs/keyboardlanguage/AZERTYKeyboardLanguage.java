@@ -2,11 +2,9 @@ package MightyLibrary.mightylib.inputs.keyboardlanguage;
 
 import MightyLibrary.mightylib.inputs.CharInputEntry;
 import MightyLibrary.mightylib.inputs.KeyboardLanguage;
-import org.lwjgl.openal.AL;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class AZERTYKeyboardLanguage extends KeyboardLanguage {

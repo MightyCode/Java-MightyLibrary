@@ -1,13 +1,13 @@
 package MightyLibrary.mightylib.util.valueDebug;
 
-import MightyLibrary.project.main.Main;
+import MightyLibrary.mightylib.main.MainLoop;
 
 public class TableDebug {
 
     /** Print part of table part with start and size **/
 
     public static void printPartd(double[] table, int start, int size){
-        if (!Main.admin) return;
+        if (!MainLoop.isAdmin()) return;
         for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");
@@ -15,7 +15,7 @@ public class TableDebug {
     }
 
     public static void printPartf(float[] table, int start, int size){
-        if (!Main.admin) return;
+        if (!MainLoop.isAdmin()) return;
         for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");
@@ -23,7 +23,7 @@ public class TableDebug {
     }
 
     public static void printParti(int[] table, int start, int size){
-        if (!Main.admin) return;
+        if (!MainLoop.isAdmin()) return;
         for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");
@@ -31,7 +31,7 @@ public class TableDebug {
     }
 
     public static void printPartb(boolean[] table, int start, int size){
-        if (!Main.admin) return;
+        if (!MainLoop.isAdmin()) return;
         for(int i = start; i < size; ++i){
             System.out.print(table[i]);
             System.out.print(", ");

@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.inputs;
 
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL;
 
 public abstract class KeyboardLanguage {
     protected KeyboardManager manager;
