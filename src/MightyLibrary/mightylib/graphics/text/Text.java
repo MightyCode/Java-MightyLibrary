@@ -279,8 +279,8 @@ public class Text extends Renderer {
                 sizeTemp.x = (float)((fontChar.getWidth()) * fontSize);
                 sizeTemp.y = (float)((fontChar.getHeight()) * fontSize);
 
-                posTemp.x = (float)(currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset);
-                posTemp.y = (float)(currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y);
+                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset;
+                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y;
 
                 temp.x = (posTemp.x);
                 temp.y = (sizeTemp.x + posTemp.x);

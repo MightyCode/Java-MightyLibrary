@@ -4,7 +4,6 @@ import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2f;
-import org.joml.Vector4f;
 
 public class FontFace extends DataType {
     private static final String PATH = "resources/textures/fonts/";

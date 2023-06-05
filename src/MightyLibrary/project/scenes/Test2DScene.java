@@ -4,7 +4,7 @@ import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
-import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;;
+import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.resources.Resources;

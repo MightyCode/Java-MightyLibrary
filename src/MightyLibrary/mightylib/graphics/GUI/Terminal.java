@@ -24,8 +24,8 @@ public class Terminal {
     private final Vector2f referencePosition;
     private final Vector2f maxSize;
 
-    private Text resultText;
-    private Text commandText;
+    private final Text resultText;
+    private final Text commandText;
 
     private final Timer cursorTimer;
     private boolean cursorDisplayed;

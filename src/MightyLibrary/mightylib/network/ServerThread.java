@@ -1,11 +1,9 @@
 package MightyLibrary.mightylib.network;
 
-import MightyLibrary.mightylib.resources.Resources;
-
 public abstract class ServerThread extends CommunicationThread{
     private ServerTcp server;
     private volatile boolean listening = false;
-    private volatile boolean serverConnected = false;
+    private final boolean serverConnected = false;
 
     public ServerThread() {
         this.running = true;listening = true;

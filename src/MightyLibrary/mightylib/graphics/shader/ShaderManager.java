@@ -5,10 +5,8 @@ import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.ManagerList;
-import org.joml.Matrix4f;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.lwjgl.BufferUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;

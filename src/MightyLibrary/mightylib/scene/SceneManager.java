@@ -1,13 +1,12 @@
 package MightyLibrary.mightylib.scene;
 
+import MightyLibrary.mightylib.main.MainLoop;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.sounds.SoundManager;
-import MightyLibrary.project.main.Main;
-import MightyLibrary.project.main.MainLoop;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.enginecommand.Commands;
 
@@ -15,13 +14,13 @@ public class SceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
 
-    private final MainLoop loop;
+    private final MainLoop.StopLibrary stopLibrary;
 
     private final Commands commands;
     private final SoundManager soundManager;
 
-    public SceneManager(MainLoop mLoop){
-        this.loop = mLoop;
+    public SceneManager(MainLoop.StopLibrary stopLibrary){
+        this.stopLibrary = stopLibrary;
 
         sceneInterface = new SceneManagerInterface();
 
@@ -43,7 +42,7 @@ public class SceneManager {
 
     public void update(){
         // Command
-        if (Main.admin){
+        if (MainLoop.isAdmin()){
             updateMain();
         }
 
@@ -84,7 +83,7 @@ public class SceneManager {
 
 
     private void changeScene(){
-        if (Main.admin)
+        if (MainLoop.isAdmin())
             commands.removeSpecificCommand();
 
         if(currentScene != null){
@@ -106,7 +105,7 @@ public class SceneManager {
 
 
     public void exit(int status){
-        loop.exit(status);
+        stopLibrary.exit(status);
     }
 
 
