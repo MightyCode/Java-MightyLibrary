@@ -5,9 +5,21 @@
 				"basic/colorShape2DV.glsl",
 				"basic/colorShape2DF.glsl"
 			],
-			"mode" : ["cam2DView"],
+			"mode" : "2D",
 			"links": [
 				"color",
+				"projection",
+				"view",
+				"model"
+			]
+		},
+		"multiColoredShape2D": {
+			"files": [
+				"basic/multiColoredShape2DV.glsl",
+				"basic/multiColoredShape2DF.glsl"
+			],
+			"mode" : "2D",
+			"links": [
 				"projection",
 				"view",
 				"model"
@@ -18,7 +30,7 @@
 				"basic/texture2DV.glsl",
 				"basic/texture2DF.glsl"
 			],
-			"mode" : ["cam2DView"],
+			"mode" : "2D",
 			"links": [
 				"projection",
 				"view",
@@ -30,7 +42,7 @@
 				"basic/colorShape3DV.glsl",
 				"basic/colorShape3DF.glsl"
 			],
-			"mode" : ["cam3DView"],
+			"mode" : "3D",
 			"links": [
 				"projection",
 				"view",
@@ -44,7 +56,7 @@
 				"3D/textureLight3DV.glsl",
 				"3D/textureLight3DF.glsl"
 			],
-			"mode" : ["cam3DView"],
+			"mode" : "3D",
 			"links": [
 				"projection",
 				"view",
@@ -60,7 +72,7 @@
 				"basic/texture3DV.glsl",
 				"basic/texture3DF.glsl"
 			],
-			"mode" : ["cam3DView"],
+			"mode" : "3D",
 			"links": [
 				"projection",
 				"view",
@@ -72,7 +84,7 @@
 				"3D/textureComplex3DV.glsl",
 				"3D/textureComplex3DF.glsl"
 			],
-			"mode" : ["cam3DView"],
+			"mode" : "3D",
 			"links": [
 				"projection",
 				"view",
@@ -87,7 +99,7 @@
 				"framebuffers/postProcessingV.glsl",
 				"framebuffers/postProcessingF.glsl"
 			],
-			"mode" : ["none"],
+			"mode" : "none",
 			"links": []
 		},
 		"coloredText" : {
@@ -95,7 +107,7 @@
 				"font/coloredTextV.glsl",
 				"font/coloredTextF.glsl"
 			],
-			"mode" : ["cam2DView"],
+			"mode" : "2D",
 			"links": [
 				"color",
 				"projection",
@@ -108,7 +120,7 @@
 				"3D/colorComplex3DV.glsl",
 				"3D/colorComplex3DF.glsl"
 			],
-			"mode" : ["cam3DView"],
+			"mode" : "3D",
 			"links": [
 				"projection",
 				"view",

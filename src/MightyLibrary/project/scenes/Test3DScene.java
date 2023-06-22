@@ -2,6 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
@@ -47,6 +48,8 @@ public class Test3DScene extends Scene {
 
     private FloatTweening rotationTweening;
 
+    private ShaderValue timeShaderValue;
+
     public Test3DScene(){
         super(SCENE_CCI);
     }
@@ -58,6 +61,8 @@ public class Test3DScene extends Scene {
         mainContext.getMouseManager().setCursor(false);
         setClearColor(52, 189, 235, 1f);
 
+        timeShaderValue = new ShaderValue("time", Float.class, 0f);
+
         /// RENDERERS ///
 
         // Cube
@@ -65,23 +70,36 @@ public class Test3DScene extends Scene {
         light.switchToColorMode(new Color4f(1f, 0f, 0f, 1f));
         light.addNormal();
 
-        ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("worldColor", 0.2f, 0.5f, 0.2f);
-        Vector3f lightDir = new Vector3f(0.1f, 1f, 0.1f).normalize();
-        ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("lightDir", lightDir.x, lightDir.y, lightDir.z);
-        ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("lightColor", 0.8f, 0.8f, 0.8f);
+        ShaderValue worldColorShaderValue = new ShaderValue("worldColor",
+                Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f));
+
+        light.getShape().getShader().sendValueToShader(worldColorShaderValue);
+
+        ShaderValue lightDirectionShaderValue = new ShaderValue("lightDir",
+                Vector3f.class, new Vector3f(0.1f, 1f, 0.1f).normalize());
+        light.getShape().getShader().sendValueToShader(lightDirectionShaderValue);
+
+        ShaderValue lightColorShaderValue = new ShaderValue("lightColor",
+                Vector3f.class, new Vector3f(0.8f, 0.8f, 0.8f));
+        light.getShape().getShader().sendValueToShader(lightColorShaderValue);
 
 
         // Platform of cubes
-        sBlock = new Renderer("textureComplex3D", false, false);
+        sBlock = new Renderer("textureComplex3D", false);
         float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.switchToTextureMode("container");
             // Displacement texture for cubes/crate
         displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
-        ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
+
+        ShaderValue displacementMapPositionShaderValue = new ShaderValue(
+                "displacementMap", Integer.class, 1
+        );
+
+        sBlock.getShape().getShader().sendValueToShader(displacementMapPositionShaderValue);
 
 
-        sphere = new Renderer("colorComplex3D", true, false);
+        sphere = new Renderer("colorComplex3D", true);
         computeSphere(sphere);
         sphere.setScale(new Vector3f(10, 10, 10));
         sphere.setPosition(new Vector3f(20, 10, 10));
@@ -151,7 +169,8 @@ public class Test3DScene extends Scene {
 
         displacementMapTweening.update();
 
-        ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("time", displacementMapTweening.value());
+        timeShaderValue.setObject(displacementMapTweening.value());
+        sBlock.getShape().getShader().sendValueToShader(timeShaderValue);
 
         rotationTweening.update();
         light.setRotation(rotationTweening.value(), new Vector3f(0, 1f, 1f).normalize());

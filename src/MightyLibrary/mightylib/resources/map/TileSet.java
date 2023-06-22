@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.resources.map;
 
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import org.joml.Vector2i;
 
 public class TileSet extends DataType {

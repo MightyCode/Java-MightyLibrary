@@ -2,30 +2,39 @@ package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.util.ObjectId;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import static org.lwjgl.opengl.GL20.*;
 
-public class Shader extends ObjectId{
+public class Shader extends ObjectId {
     public static String PATH = "resources/shaders/";
 
     private final String fragmentSource, vertexSource;
     private int shaderProgram;
 
     private final HashMap<String, Integer> valuesLink;
-    public final ArrayList<Integer> properties;
+    private final HashMap<String, ShaderValue> lastValue;
 
-    public Shader(String vertexSource, String fragmentSource){
+    private final boolean shader2D;
+    public boolean isDimension2DShader(){
+        return shader2D;
+    }
+
+    public Shader(String vertexSource, String fragmentSource, boolean shader2D){
         // Base value
         shaderProgram = 0;
 
         this.fragmentSource = fragmentSource;
         this.vertexSource = vertexSource;
+        this.shader2D = shader2D;
+
         valuesLink = new HashMap<>();
-        properties = new ArrayList<>();
+        lastValue = new HashMap<>();
     }
 
     public void load(){
@@ -65,7 +74,8 @@ public class Shader extends ObjectId{
         glAttachShader(shaderProgram,vShader);
         glAttachShader(shaderProgram,fShader);
         glLinkProgram(shaderProgram);
-        if(!glGetShaderInfoLog(shaderProgram).equals("")) System.err.println("Error from Shader Program:\n" + glGetShaderInfoLog(shaderProgram));
+        if(!glGetShaderInfoLog(shaderProgram).equals(""))
+            System.err.println("Error from Shader Program:\n" + glGetShaderInfoLog(shaderProgram));
 
         glDeleteShader(vShader);
         glDeleteShader(fShader);
@@ -78,6 +88,7 @@ public class Shader extends ObjectId{
     public void addLink(String valueName){
         use();
         valuesLink.put(valueName, glGetUniformLocation(shaderProgram, valueName));
+        lastValue.put(valueName, null);
     }
 
     public int getLink(String valueName){
@@ -92,38 +103,39 @@ public class Shader extends ObjectId{
         glDeleteShader(shaderProgram);
     }
 
-    public void glUniform(String valueName, float value1){
-        this.use();
-        glUniform1f(this.getLink(valueName), value1);
-    }
+    public void sendValueToShader(ShaderValue value){
+        if (value.equals(lastValue.get(value.getName()))
+            && !value.shouldForceUpdate())
+            return;
 
-    public void glUniform(String valueName, float value1, float value2){
-        this.use();
-        glUniform2f(getLink(valueName), value1, value2);
-    }
+        //System.out.println(getName() + " : Effectively send : " + value.getName());
 
-    public void glUniform(String valueName, float value1, float value2, float value3){
-        this.use();
-        glUniform3f(getLink(valueName), value1, value2, value3);
-    }
+        value.resetForceUpdate();
+        lastValue.put(value.getName(), value.clone());
 
-    public void glUniform(String valueName, float value1, float value2, float value3, float value4){
         this.use();
-        glUniform4f(getLink(valueName), value1, value2, value3, value4);
-    }
+        int link = this.getLink(value.getName());
 
-    public void glUniform(String valueName, float[] value1){
-        this.use();
-        glUniformMatrix4fv(getLink(valueName), false, value1);
-    }
-
-    public void glUniform(String valueName, FloatBuffer value1){
-        this.use();
-        glUniformMatrix4fv(getLink(valueName), false, value1);
-    }
-
-    public void glUniform(String valueName, int value1){
-        this.use();
-        glUniform1i(getLink(valueName), value1);
+        if (value.getType() == Float.class) {
+            Float v = (Float) value.getObject();
+            glUniform1f(link, v);
+        } else if (value.getType() == Vector2f.class) {
+            Vector2f v = (Vector2f) value.getObject();
+            glUniform2f(link, v.x, v.y);
+        } else if (value.getType() == Vector3f.class) {
+            Vector3f v = (Vector3f) value.getObject();
+            glUniform3f(link, v.x, v.y, v.z);
+        } else if (value.getType() == Vector4f.class) {
+            Vector4f v = (Vector4f) value.getObject();
+            glUniform4f(link, v.x, v.y, v.z, v.w);
+        } else if (value.getType() == FloatBuffer.class) {
+            FloatBuffer v = (FloatBuffer) value.getObject();
+            glUniformMatrix4fv(link, false, v);
+        } else if (value.getType() == Integer.class) {
+            Integer v = (Integer) value.getObject();
+            glUniform1i(link, v);
+        } else {
+            System.err.println("Unknown shader value type : " + value.getType());
+        }
     }
 }

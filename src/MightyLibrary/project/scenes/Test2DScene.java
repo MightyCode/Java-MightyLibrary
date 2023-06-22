@@ -110,7 +110,6 @@ public class Test2DScene extends Scene {
         rotation.update();
         slimeRenderer.setRotation(rotation.value(), new Vector3f(0, 0, 1));
         slimeTextureTweening.update();
-        //slimeRenderer.setPosition(slimeTextureTweening.value());
         slimeRenderer.update();
 
         //map.setTileType(0, 0, 0, 560);
@@ -128,8 +127,6 @@ public class Test2DScene extends Scene {
         mapRenderer.drawBackLayers();
         slimeRenderer.display();
         mapRenderer.drawForLayers();
-
-        shaderManager.disposeCamera2D(testCamera);
 
         text.display();
 

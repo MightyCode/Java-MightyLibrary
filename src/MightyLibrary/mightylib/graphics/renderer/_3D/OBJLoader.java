@@ -93,7 +93,7 @@ public abstract class OBJLoader {
             indicesArray[i] = indices.get(i);
         }
 
-        Shape shape = new Shape("texture3D", true, false);
+        Shape shape = new Shape("texture3D", true);
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indicesArray);
         shape.addVboFloat(verticesArray, 3, Shape.STATIC_STORE);
@@ -176,7 +176,7 @@ public abstract class OBJLoader {
             indicesArray[i] = indices.get(i);
         }
 
-        Shape shape = new Shape("colorShape3D", true, false);
+        Shape shape = new Shape("colorShape3D", true);
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indicesArray);
 

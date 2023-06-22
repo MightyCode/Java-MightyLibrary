@@ -19,7 +19,7 @@ public class RectangleRenderer extends Renderer {
     protected ERotation textureRotation;
 
     public RectangleRenderer(String shaderName) {
-        super(shaderName, true, true);
+        super(shaderName, true);
 
         reference = EDirection.LeftUp;
         textureFlip = EFlip.None;

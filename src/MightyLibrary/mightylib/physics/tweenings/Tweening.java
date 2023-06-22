@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.physics.tweenings;
 
-import MightyLibrary.mightylib.util.Timer;
 import MightyLibrary.mightylib.physics.tweenings.tweeningmath.*;
+import MightyLibrary.mightylib.util.Timer;
 
 public abstract class Tweening<T> {
     /**

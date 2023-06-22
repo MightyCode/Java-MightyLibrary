@@ -1,13 +1,13 @@
 package MightyLibrary.mightylib.scene;
 
-import MightyLibrary.mightylib.main.MainLoop;
-import MightyLibrary.mightylib.resources.texture.Texture;
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
+import MightyLibrary.mightylib.main.MainLoop;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.sounds.SoundManager;
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.enginecommand.Commands;
 
 public class SceneManager {

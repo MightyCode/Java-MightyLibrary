@@ -1,0 +1,86 @@
+package MightyLibrary.mightylib.graphics.shader;
+
+import org.joml.Vector2f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
+
+import java.nio.FloatBuffer;
+
+public class ShaderValue implements Cloneable {
+    protected final String name;
+    protected Object object;
+
+    protected final Class<?> type;
+
+    private boolean shouldForceUpdate;
+
+    public ShaderValue(String a, Class<?> type, Object object){
+        this.name = a;
+        this.object = object;
+        this.type = type;
+    }
+
+    public boolean equals(ShaderValue value){
+        if (value == null)
+            return false;
+
+        if (value.object == null || object == null) {
+            return (value.object == null && object == null);
+        }
+
+        if (!value.name.equals(name))
+            return false;
+
+        if (type != value.type)
+            return false;
+
+        return type.cast(value.object).equals(type.cast(object));
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Object getObject() {
+        return object;
+    }
+
+    public void setObject(Object object) {
+        this.object = object;
+    }
+
+    public void forceUpdate(){
+        shouldForceUpdate = true;
+    }
+
+    public boolean shouldForceUpdate(){
+        return shouldForceUpdate;
+    }
+
+    public void resetForceUpdate(){
+        shouldForceUpdate = false;
+    }
+
+    public Class<?> getType() {
+        return type;
+    }
+
+    @Override
+    public ShaderValue clone(){
+        if (type == Float.class) {
+            return new ShaderValue(name, type, (Float) object);
+        } else if (type == Vector2f.class) {;
+            return new ShaderValue(name, type, new Vector2f((Vector2f) object));
+        } else if (type == Vector3f.class) {
+            return new ShaderValue(name, type, new Vector3f((Vector3f) object));
+        } else if (type == Vector4f.class) {
+            return new ShaderValue(name, type, new Vector4f((Vector4f) object));
+        } else if (type == FloatBuffer.class) {
+            return new ShaderValue(name, type, ((FloatBuffer)object).duplicate());
+        } else if (type == Integer.class) {
+            return new ShaderValue(name, type, (Integer) object);
+        }
+
+        return new ShaderValue(name, type, null);
+    }
+}

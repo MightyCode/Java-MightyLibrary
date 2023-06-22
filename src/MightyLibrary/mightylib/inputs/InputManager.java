@@ -7,7 +7,8 @@ import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F1;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
 
 /**
  * This class is the input manager.
@@ -51,6 +52,7 @@ public class InputManager {
 
 
     public void init(ActionInput[] actionInputs){
+        actionConfigurations.clear();
         initLibraryInputs();
 
         for (ActionInput actionInput : actionInputs) {

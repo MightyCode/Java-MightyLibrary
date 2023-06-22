@@ -3,11 +3,7 @@ package MightyLibrary.mightylib.util.math;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Color4f{
-    private float r;
-    private float g;
-    private float b;
-    private float a;
+public class Color4f extends Vector4f{
 
     public Color4f() {
         this(1.0f);
@@ -18,53 +14,47 @@ public class Color4f{
     }
 
     public Color4f(float r, float g, float b, float a) {
-        this.r = r;
-        this.g = g;
-        this.b = b;
-        this.a = a;
+        super(r, g, b, a);
     }
 
     public float getR() {
-        return r;
+        return x;
     }
 
     public void setR(float r) {
-        this.r = r;
+        this.x = r;
     }
     public void setR255(float r) { setR(r / 255); }
 
     public float getG() {
-        return g;
+        return y;
     }
 
     public void setG(float g) {
-        this.g = g;
+        this.y = g;
     }
     public void setG255(float g) { setG(g / 255); }
 
     public float getB() {
-        return b;
+        return z;
     }
 
     public void setB(float b) {
-        this.b = b;
+        this.z = b;
     }
     public void setB255(float b) { setB(b / 255); }
 
     public float getA() {
-        return a;
+        return w;
     }
 
     public void setA(float a) {
-        this.a = a;
+        this.w = a;
     }
     public void setA255(float a) { setA(a / 255); }
 
     public void setColor(Vector4f color){
-        this.r = color.x;
-        this.g = color.y;
-        this.b = color.z;
-        this.a = color.w;
+        set(color);
     }
 
     public void setColorBased256(Vector4f color){
@@ -73,10 +63,6 @@ public class Color4f{
 
     public void setColor(Vector3f color){
         setColor(new Vector4f(color, 1.0f));
-        this.r = color.x;
-        this.g = color.y;
-        this.b = color.z;
-        this.a = 1.0f;
     }
 
     public void setColorBased256(Vector3f color){
@@ -92,6 +78,6 @@ public class Color4f{
     }
 
     public Color4f copy(){
-        return new Color4f(r, g, b, a);
+        return new Color4f(x, y, z, w);
     }
 }

@@ -30,7 +30,7 @@ public class BackgroundlessButton extends GUI {
 
     @Override
     public void display() {
-        if (GUIMouseSelected() || forceSelected()) {
+        if ((GUIMouseSelected() || forceSelected()) && !forceUnselected()) {
             OverlapsText.display();
         } else {
             Text.display();

@@ -84,6 +84,7 @@ public final class MainLoop {
         System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
     }
 
+    @SuppressWarnings("BusyWait")
     public static void run(StartLibraryArguments startArguments) {
         setup(startArguments);
 
@@ -103,24 +104,38 @@ public final class MainLoop {
         Window window = mainContext.getWindow();
 
         while (!window.wantExit()) {
-            if (System.nanoTime() - start - lastTick >= tickTime) {
+            long now = System.nanoTime() - start;
+            if (now - lastTick >= tickTime) {
                 GameTime.update();
                 sceneManager.update();
                 sceneManager.dispose();
                 ++ticks;
-                lastTick += tickTime;
-            } else if (System.nanoTime() - start - lastFrame >= frameTime) {
+
+                while (now - lastTick >= tickTime)
+                    lastTick += tickTime;
+            } else if (now - lastFrame >= frameTime) {
                 sceneManager.display();
                 window.dispose();
                 ++frames;
-                lastFrame += frameTime;
+                while (now - lastFrame >= frameTime)
+                    lastFrame += frameTime;
             }
 
-            if (System.nanoTime() - start - lastSecond >= NANO_IN_SECOND) {
-                if (MainLoop.admin) window.setTitle(startArguments.projectName + " | FPS:" + frames + "; TPS:" + ticks);
+            if (now - lastSecond >= NANO_IN_SECOND) {
+                if (MainLoop.admin)
+                    window.setTitle(startArguments.projectName + " | FPS:" + frames + "; TPS:" + ticks);
 
                 ticks = frames = 0;
                 lastSecond += NANO_IN_SECOND;
+            }
+
+            double remaining = Math.min(tickTime - (now - lastTick), frameTime - (now - lastFrame)) / 1e6 * 0.7f;
+            if (remaining > 1) {
+                try {
+                    Thread.sleep((long)remaining);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
 

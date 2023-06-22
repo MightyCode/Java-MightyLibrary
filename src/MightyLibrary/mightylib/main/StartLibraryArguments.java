@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.main;
 
-import MightyLibrary.mightylib.inputs.KeyboardLanguage;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
+import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import org.joml.Vector2i;
 
 public class StartLibraryArguments {

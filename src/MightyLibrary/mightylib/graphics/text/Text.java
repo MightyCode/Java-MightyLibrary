@@ -9,7 +9,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Text extends Renderer {
+public class Text extends Renderer implements Cloneable {
     private static final int NUMBER_INDICES = 4;
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;
@@ -30,7 +30,7 @@ public class Text extends Renderer {
     private float[] charPositions;
 
     public Text() {
-        super("coloredText", true, true);
+        super("coloredText", true);
 
         fontSize = 10.0f;
 
@@ -61,7 +61,8 @@ public class Text extends Renderer {
         if (shouldNotDrawText())
             return;
 
-        shadManager.getShader(shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA());
+        colorShaderValue.setObject(color);
+        sentToShader(colorShaderValue);
         super.display();
     }
 
@@ -363,5 +364,10 @@ public class Text extends Renderer {
                 .setText(this.text);
 
         return copy;
+    }
+
+    @Override
+    public Text clone() {
+        return copyTo(new Text());
     }
 }

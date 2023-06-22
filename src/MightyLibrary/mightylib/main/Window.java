@@ -3,19 +3,16 @@ package MightyLibrary.mightylib.main;
 import MightyLibrary.mightylib.resources.texture.Icon;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
-import org.lwjgl.glfw.*;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.system.MemoryStack;
-
 
 import java.nio.IntBuffer;
 import java.util.Objects;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
-import static org.lwjgl.opengl.GL13.glActiveTexture;
+import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -71,7 +68,7 @@ public final class Window {
         else                 info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
 
 
-        System.out.println("\nWindow with id : "+ info.windowId +" created");
+        System.out.println("\nWindow with id : " + info.windowId + " created");
 
         if (info.windowId == NULL) {
             System.out.println("Window won't created");

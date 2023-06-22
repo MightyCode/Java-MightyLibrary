@@ -26,12 +26,17 @@ public class MightyMath {
 	 *
 	 * @return result
 	*/
-	public static float map(float x, float a, float b, float c, float d) {
+	public static float mapf(float x, float a, float b, float c, float d) {
 		return (x - a) / (b - a) * (d - c) + c;
 	}
 
-	public static float mapLog(float x, float a, float b, float c, float d) {
-		return (float)Math.exp(map((float)Math.log(x), (float)Math.log(a), (float)Math.log(b), (float)Math.log(c), (float)Math.log(d)));
+	public static double mapd(double x, double a, double b, double c, double d) {
+		return (x - a) / (b - a) * (d - c) + c;
+	}
+
+
+	public static float mapLogf(float x, float a, float b, float c, float d) {
+		return (float)Math.exp(mapf((float)Math.log(x), (float)Math.log(a), (float)Math.log(b), (float)Math.log(c), (float)Math.log(d)));
 	}
 
 	public static int sum(int[] table){

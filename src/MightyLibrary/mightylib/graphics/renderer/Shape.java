@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
+import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.MightyMath;
@@ -31,17 +32,13 @@ public class Shape{
     protected boolean in2D;
 
     protected ShaderManager shadManager;
-    protected Id shaderId;
+    protected Shader shader;
+    public Shader getShader() { return shader; }
 
-    public Shape(String shaderName, boolean useEbo){
-        this(shaderName, useEbo, true);
-    }
-
-    public Shape(String shaderName, boolean useEbo, boolean in2D) {
-        setDimensionTo2D(in2D);
+    public Shape(String shaderName, boolean useEbo) {
         this.shadManager = ShaderManager.getInstance();
-        this.shaderId = this.shadManager.getIdShaderFromString(shaderName);
-
+        this.shader = shadManager.getShader(shaderName);
+        setDimensionTo2D(this.shader.isDimension2DShader());
 
         verticesDraw = 0;
         info = new int[0];
@@ -204,10 +201,11 @@ public class Shape{
         return this.in2D;
     }
 
-
     public void draw(){
-        if (useEbo) glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
-        else glDrawArrays(GL_TRIANGLES, 0, verticesDraw);
+        if (useEbo)
+            glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+        else
+            glDrawArrays(GL_TRIANGLES, 0, verticesDraw);
     }
 
 
@@ -217,12 +215,12 @@ public class Shape{
 
 
     public void applyShader(){
-        shadManager.getShader(shaderId).use();
+        shader.use();
     }
 
 
     public Id getShaderId(){
-        return shaderId;
+        return new Id(shader.getShaderId());
     }
 
 
@@ -230,7 +228,10 @@ public class Shape{
         for (int vbo : vbos){
             glDeleteBuffers(vbo);
         }
+
         glDeleteVertexArrays(vao);
-        if(useEbo)glDeleteBuffers(ebo);
+
+        if(useEbo)
+            glDeleteBuffers(ebo);
     }
 }

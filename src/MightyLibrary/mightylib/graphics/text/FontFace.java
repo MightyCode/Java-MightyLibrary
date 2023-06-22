@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.graphics.text;
 
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import org.joml.Vector2f;
 
 public class FontFace extends DataType {
