@@ -7,8 +7,7 @@ import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F1;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
+import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * This class is the input manager.

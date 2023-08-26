@@ -350,6 +350,8 @@ public class Text extends Renderer implements Cloneable {
                 .setReference(this.reference)
                 .setText(this.text);
 
+        text.setReferenceCamera(referenceCamera);
+
         return text;
     }
 
@@ -362,6 +364,8 @@ public class Text extends Renderer implements Cloneable {
                 .setAlignment(alignment)
                 .setReference(this.reference)
                 .setText(this.text);
+
+        copy.setReferenceCamera(referenceCamera);
 
         return copy;
     }

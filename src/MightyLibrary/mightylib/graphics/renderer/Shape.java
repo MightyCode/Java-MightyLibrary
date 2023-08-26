@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.MightyMath;
 
@@ -158,12 +159,31 @@ public class Shape{
 
 
     public void setEbo(int[] indices){
+        setEbo(indices, indices.length);
+    }
+
+    public void setEbo(int[] indices, int indicesSize){
         bind();
-        this.indicesSize = indices.length;
+        this.indicesSize = indicesSize;
         if (!useEbo) System.err.print(">(Shape.java) Providing EBO without using EBO !");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, eboStorage);
+    }
+
+    public void setEboNumberIndex(int newIndexSize) {
+        this.indicesSize = newIndexSize;
+    }
+
+    public void updateEbo(int[] newArray, int startIndex) {
+        bind();
+        if (!useEbo) {
+            System.err.print(">(Shape.java) Trying to update array without using EBO !");
+            return;
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, startIndex, newArray);
     }
 
 

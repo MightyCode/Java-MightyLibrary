@@ -1,9 +1,10 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
+import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
-import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Texture;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
@@ -69,8 +70,9 @@ public class Renderer {
 
         shouldSendColor = shape.getShader().getLink(ShaderManager.GENERIC_COLOR_FIELD_NAME) != -1;
 
-        if (shouldSendModel)
+        if (shouldSendModel) {
             modelShaderValue = new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, FloatBuffer.class, modelBuffer);
+        }
 
         if (shouldSendColor)
             colorShaderValue = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Vector4f.class, color);
@@ -93,11 +95,13 @@ public class Renderer {
         if (referenceCamera == null) {
             ShaderManager.getInstance().sendCameraToShader(shape.getShader(), shouldSendProjection, shouldSendView);
         } else {
-            if (shouldSendProjection)
+            if (shouldSendProjection) {
                 getShape().getShader().sendValueToShader(referenceCamera.getProjection());
+            }
 
-            if (shouldSendView)
+            if (shouldSendView) {
                 getShape().getShader().sendValueToShader(referenceCamera.getView());
+            }
         }
 
         // Apply model matrix
@@ -168,6 +172,16 @@ public class Renderer {
         applyModel();
     }
 
+
+    public void setRotation(Renderer other){
+        this.rotation.x = other.rotation.x;
+        this.rotation.y = other.rotation.y;
+        this.rotation.z = other.rotation.z;
+
+        this.angle = other.angle;
+
+        applyModel();
+    }
 
     public void applyModel(){
         this.model.identity();

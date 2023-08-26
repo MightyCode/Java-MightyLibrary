@@ -1,8 +1,6 @@
 package MightyLibrary.mightylib.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.*;
 import java.util.Scanner;
 
 public class DataFolder {
@@ -61,12 +59,48 @@ public class DataFolder {
         return null;
     }
 
+    public BufferedReader getFileReader(String localPath){
+        if (!fileExists(localPath))
+            return null;
+
+        try {
+            return new BufferedReader(new FileReader(DATA_FOLDER_PATH + localPath));
+        } catch (FileNotFoundException e) {
+            System.out.println("An error occurred.");
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     public static File getFileInfo(String localPath){
         if (!fileExists(localPath))
             return null;
 
         return new File(localPath);
     }
+
+    public static boolean emptyDataFolder(){
+        File folder = new File(DATA_FOLDER_PATH);
+        File[] files = folder.listFiles();
+        if (files != null) {
+            // Iterate over the files and delete them
+            for (File file : files) {
+                if (file.isFile()) {
+                    if (file.delete()) {
+                        System.out.println("Deleted file: " + file.getName());
+                    } else {
+                        System.out.println("Failed to delete file: " + file.getName());
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
 
     public static boolean deleteFile(String localPath){
         if (!fileExists(localPath))

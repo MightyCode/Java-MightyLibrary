@@ -2,10 +2,10 @@ package MightyLibrary.mightylib.graphics.game;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.resources.map.TileSet;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;

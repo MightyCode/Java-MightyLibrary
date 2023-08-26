@@ -77,6 +77,15 @@ public class Color4f extends Vector4f{
         setColor(x / 255f);
     }
 
+
+    public Color4f blend(Color4f otherColor, float amount){
+        return new Color4f(
+                getR() * (1 - amount) + otherColor.getR() * amount,
+                getG() * (1 - amount) + otherColor.getG() * amount,
+                getB() * (1 - amount) + otherColor.getB() * amount,
+                getA() * (1 - amount) + otherColor.getA() * amount);
+    }
+
     public Color4f copy(){
         return new Color4f(x, y, z, w);
     }

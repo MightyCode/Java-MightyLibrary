@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.util.ObjectId;
+import MightyLibrary.mightylib.util.valueDebug.TableDebug;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -10,11 +11,12 @@ import java.nio.FloatBuffer;
 import java.util.HashMap;
 
 import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
 public class Shader extends ObjectId {
     public static String PATH = "resources/shaders/";
 
-    private final String fragmentSource, vertexSource;
+    private final String vertexSource, geometrySource, fragmentSource;
     private int shaderProgram;
 
     private final HashMap<String, Integer> valuesLink;
@@ -25,11 +27,25 @@ public class Shader extends ObjectId {
         return shader2D;
     }
 
+    public Shader(String vertexSource, String geometrySource, String fragmentSource, boolean shader2D){
+        // Base value
+        shaderProgram = 0;
+
+        this.fragmentSource = fragmentSource;
+        this.geometrySource = geometrySource;
+        this.vertexSource = vertexSource;
+        this.shader2D = shader2D;
+
+        valuesLink = new HashMap<>();
+        lastValue = new HashMap<>();
+    }
+
     public Shader(String vertexSource, String fragmentSource, boolean shader2D){
         // Base value
         shaderProgram = 0;
 
         this.fragmentSource = fragmentSource;
+        this.geometrySource = null;
         this.vertexSource = vertexSource;
         this.shader2D = shader2D;
 
@@ -55,6 +71,24 @@ public class Shader extends ObjectId {
             System.err.println("Error from Vertex:\n" + glGetShaderInfoLog(vShader));
         }
 
+
+        int gShader = glCreateShader(GL_GEOMETRY_SHADER);
+        if (geometrySource != null) {
+            try {
+                bf = FileMethods.readFileAsString(PATH + geometrySource);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.print("Error path :" + PATH + vertexSource + " not found");
+            }
+
+            glShaderSource(gShader, bf);
+            glCompileShader(gShader);
+            if (!glGetShaderInfoLog(gShader).equals("")) {
+                System.err.println("Shader path " + PATH + vertexSource);
+                System.err.println("Error from Vertex:\n" + glGetShaderInfoLog(gShader));
+            }
+        }
+
         int fShader = glCreateShader(GL_FRAGMENT_SHADER);
         try {
             bf = FileMethods.readFileAsString(PATH + fragmentSource);
@@ -71,13 +105,20 @@ public class Shader extends ObjectId {
         }
 
         shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram,vShader);
-        glAttachShader(shaderProgram,fShader);
+        glAttachShader(shaderProgram, vShader);
+        if (geometrySource != null)
+            glAttachShader(shaderProgram, gShader);
+        glAttachShader(shaderProgram, fShader);
+
+
         glLinkProgram(shaderProgram);
         if(!glGetShaderInfoLog(shaderProgram).equals(""))
             System.err.println("Error from Shader Program:\n" + glGetShaderInfoLog(shaderProgram));
 
+
         glDeleteShader(vShader);
+        if (geometrySource != null)
+            glDeleteShader(gShader);
         glDeleteShader(fShader);
     }
 

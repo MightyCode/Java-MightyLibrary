@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.resources;
 
 import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
+import MightyLibrary.mightylib.resources.data.JsonLoader;
 import MightyLibrary.mightylib.resources.sound.SoundLoader;
 import MightyLibrary.mightylib.resources.texture.IconLoader;
 import MightyLibrary.mightylib.resources.texture.TextureLoader;
@@ -37,6 +38,7 @@ public class Resources {
         Loaders.add(new AnimationDataLoader());
         Loaders.add(new FontLoader());
         Loaders.add(new SoundLoader());
+        Loaders.add(new JsonLoader());
 
         initialized = false;
         firstLoad = false;

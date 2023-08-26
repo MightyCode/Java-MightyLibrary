@@ -1,7 +1,8 @@
 package MightyLibrary.mightylib.util.math;
 
-import org.joml.Vector2f;
+import org.joml.*;
 
+import java.lang.Math;
 import java.util.ArrayList;
 
 /**

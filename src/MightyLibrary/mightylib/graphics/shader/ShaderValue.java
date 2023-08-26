@@ -6,12 +6,14 @@ import org.joml.Vector4f;
 
 import java.nio.FloatBuffer;
 
+import static org.lwjgl.opengl.GL20.*;
+import static org.lwjgl.opengl.GL20.glUniform1i;
+
 public class ShaderValue implements Cloneable {
     protected final String name;
     protected Object object;
 
     protected final Class<?> type;
-
     private boolean shouldForceUpdate;
 
     public ShaderValue(String a, Class<?> type, Object object){
@@ -63,6 +65,10 @@ public class ShaderValue implements Cloneable {
 
     public Class<?> getType() {
         return type;
+    }
+
+    public <T> T getObjectTyped(Class<T> objectType){
+        return objectType.cast(object);
     }
 
     @Override

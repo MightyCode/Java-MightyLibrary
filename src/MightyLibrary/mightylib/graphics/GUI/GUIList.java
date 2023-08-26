@@ -160,6 +160,9 @@ public class GUIList {
     }
 
     private void checkMoveOver(){
+        selected = null;
+        id = null;
+
         for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()){
             if (mouseMoved && pair.getValue().GUIMouseSelected()) {
                 selected = pair.getValue();

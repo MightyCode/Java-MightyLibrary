@@ -2,10 +2,14 @@ package MightyLibrary.mightylib.scene;
 
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.util.math.EDirection;
+import MightyLibrary.mightylib.util.valueDebug.TableDebug;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
+import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
 
 public class Camera2D extends Camera {
     private final Vector2f camPos;

@@ -69,7 +69,7 @@ public final class MainLoop {
         startArguments.projectLoading.contextLoading(context);
 
         resource.init();
-        sceneManager.init(new MenuScene(), new String[]{""});
+        sceneManager.init(new MenuScene(), new String[]{});
 
         if (startArguments.projectIcon != null) {
             if (resource.isExistingResource(Icon.class, startArguments.projectIcon))

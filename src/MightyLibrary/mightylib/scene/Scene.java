@@ -1,13 +1,13 @@
 package MightyLibrary.mightylib.scene;
 
-import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.main.Context;
-import MightyLibrary.mightylib.main.ContextManager;
-import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.resources.texture.IGLBindable;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
+import MightyLibrary.mightylib.main.Context;
+import MightyLibrary.mightylib.main.ContextManager;
+import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;

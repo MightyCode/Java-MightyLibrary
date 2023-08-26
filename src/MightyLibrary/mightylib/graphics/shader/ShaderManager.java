@@ -4,9 +4,11 @@ import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Camera3D;
+import MightyLibrary.mightylib.util.Id;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -78,9 +80,18 @@ public class ShaderManager {
 
             String dimensionMode = JShader.getString("mode");
             // Get id the access the shader more easily
-            Shader shader = new Shader(files.getString(0),
-                    files.getString(1),
-                    dimensionMode.equals("2D") || dimensionMode.equals("none"));
+
+            Shader shader;
+
+            if (files.length() == 2) {
+                shader = new Shader(files.getString(0),
+                        files.getString(1),
+                        dimensionMode.equals("2D") || dimensionMode.equals("none"));
+            } else {
+                shader = new Shader(files.getString(0),
+                        files.getString(1), files.getString(2),
+                        dimensionMode.equals("2D") || dimensionMode.equals("none"));
+            }
 
             shaders.put(currentShader, shader);
             shader.setName(currentShader);

@@ -55,6 +55,12 @@ public class BackgroundlessButton extends GUI {
         return temp;
     }
 
+    public BackgroundlessButton copyTextToOverlapping(){
+        this.Text.copyTo(OverlapsText);
+
+        return this;
+    }
+
     @Override
     public void unload(){
         Text.unload();

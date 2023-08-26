@@ -3,8 +3,7 @@ package MightyLibrary.mightylib.physics.collision;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class Collision2DGrid {
     private final Set<Collision2D> allCollisions;

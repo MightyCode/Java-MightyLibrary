@@ -1,9 +1,9 @@
 package MightyLibrary.mightylib.main;
 
+import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 
 import java.util.Collection;
 import java.util.HashMap;
