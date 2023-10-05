@@ -1,7 +1,9 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.renderer._2D.FrameBuffer;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
@@ -11,6 +13,7 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
@@ -25,7 +28,7 @@ import java.util.ArrayList;
 
 public class Test3DScene extends Scene {
 
-    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120f, new Vector3f(0, 4, 0));
+    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
 
     private Renderer sBlock;
 
@@ -47,6 +50,8 @@ public class Test3DScene extends Scene {
 
     private FloatTweening rotationTweening;
 
+    private FrameBuffer game2DRender;
+
     public Test3DScene(){
         super(SCENE_CCI);
     }
@@ -63,7 +68,7 @@ public class Test3DScene extends Scene {
         // Cube
         light = new CubeRenderer("colorComplex3D", new Vector3f(-1f, 3.0f, -4f), 1f);
         light.switchToColorMode(new Color4f(1f, 0f, 0f, 1f));
-        light.addNormal();
+        light.setNormal();
 
         ShaderManager.getInstance().getShader(light.getShape().getShaderId()).glUniform("worldColor", 0.2f, 0.5f, 0.2f);
         Vector3f lightDir = new Vector3f(0.1f, 1f, 0.1f).normalize();
@@ -77,9 +82,9 @@ public class Test3DScene extends Scene {
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.switchToTextureMode("container");
             // Displacement texture for cubes/crate
+
         displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
         ShaderManager.getInstance().getShader(sBlock.getShape().getShaderId()).glUniform("displacementMap", 1);
-
 
         sphere = new Renderer("colorComplex3D", true, false);
         computeSphere(sphere);
@@ -106,6 +111,9 @@ public class Test3DScene extends Scene {
         rotationTweening.setTweeningValues(ETweeningType.Quadratic, ETweeningBehaviour.InOut)
                 .setTweeningOption(ETweeningOption.LoopMirrored)
                 .initTwoValue(5f, 0f, (float)Math.PI * 2);
+
+        game2DRender = new FrameBuffer(new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS),
+                mainContext.getWindow().getInfo().getVirtualSizeRef().x,  mainContext.getWindow().getInfo().getVirtualSizeRef().y);
     }
 
 
@@ -157,6 +165,8 @@ public class Test3DScene extends Scene {
         light.setRotation(rotationTweening.value(), new Vector3f(0, 1f, 1f).normalize());
 
         main3DCamera.updateView();
+
+        //sBlock.switchToTextureMode(game2DRender);
     }
 
 
@@ -164,17 +174,27 @@ public class Test3DScene extends Scene {
         super.setVirtualScene();
         clear();
 
+        game2DRender.bindFrameBuffer();
+        clear();
+        mainContext.getWindow().setVirtualViewport();
+
+        hudBar.display();
+
+        game2DRender.unbindFrameBuffer();
+
+        super.setVirtualScene();
+
         // Better to draw the world here
         light.display();
-        displacementMap.bind(1);
-        stand.display();
-
+        displacementMap.bindRenderTexture(1);
         sBlock.display();
+
+        stand.display();
 
         sphere.display();
 
         // Better to draw the hud here and be not affected by the postProcessing shader
-        hudBar.display();
+
 
         super.setAndDisplayRealScene();
     }
@@ -208,49 +228,6 @@ public class Test3DScene extends Scene {
         placeCoord(array, realPosX, realPosZ, realPosY, index);
         placeText(array, index);
         //placeNormal(array, index);
-
-             /* -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 0.0f, -1.0f,
-                0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   0.0f, 0.0f, -1.0f,
-                0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f, 0.0f, -1.0f,
-                0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f, 0.0f, -1.0f,
-                -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   0.0f, 0.0f, -1.0f,
-                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 0.0f, -1.0f,
-
-
-                -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-                0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 0.0f, 1.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 0.0f, 1.0f,
-                -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   0.0f, 0.0f, 1.0f,
-                -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-
-                 -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f,  0.5f, -0.5f,   1.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-
-                 0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f,  0.5f, -0.5f,    1.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f, -0.5f,  0.5f,    0.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-
-                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, -1.0f, 0.0f,
-                0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   0.0f, -1.0f, 0.0f,
-                0.5f, -0.5f,  0.5f,    1.0f, 1.0f,   0.0f, -1.0f, 0.0f,
-                0.5f, -0.5f,  0.5f,    1.0f, 1.0f,   0.0f, -1.0f, 0.0f,
-                -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,   0.0f, -1.0f, 0.0f,
-                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, -1.0f, 0.0f,
-
-                -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f,
-                0.5f,  0.5f, -0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 0.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 1.0f, 0.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 1.0f, 0.0f,
-                -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   0.0f, 1.0f, 0.0f,
-                -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f*/
     }
 
 

@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.resources.texture;
 
+import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import MightyLibrary.mightylib.resources.DataType;
 import org.lwjgl.BufferUtils;
 
@@ -8,7 +9,7 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
 
-public class Texture extends DataType implements IGLBindable {
+public class Texture extends DataType implements IGLBindable, IRenderTextureBindable {
     private int width;
     private int height;
 
@@ -30,11 +31,12 @@ public class Texture extends DataType implements IGLBindable {
         this.qualityType = aspectTexture;
     }
 
-    public void bind() {
-        bind(0);
+    public void bindRenderTexture() {
+        bindRenderTexture(0);
     }
 
-    public void bind(int texturePos) {
+    @Override
+    public void bindRenderTexture(int texturePos) {
         // Active the texture to right position
         glActiveTexture(GL_TEXTURE0 + texturePos);
         if (isCorrectlyLoaded()){
@@ -88,20 +90,8 @@ public class Texture extends DataType implements IGLBindable {
         }
     }
 
-    public int getTexId() {
-        return textureId;
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
     private void setTextParam(int param, int value) {
-        bind();
+        bindRenderTexture();
         if (isCorrectlyLoaded())
             glTexParameteri(this.textureType, param, value);
     }
@@ -117,6 +107,22 @@ public class Texture extends DataType implements IGLBindable {
     public int getTextureType(){
         return this.textureType;
     }
+
+    @Override
+    public int getRenderTextureId() {
+        return textureId;
+    }
+
+    @Override
+    public int getWidth() {
+        return width;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
+    }
+
 
     @Override
     public void unload() {

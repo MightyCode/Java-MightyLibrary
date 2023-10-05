@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
+import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.resources.Resources;
@@ -11,7 +12,7 @@ import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 
-public class Renderer{
+public class Renderer {
     public static final int NOTHING = 0;
     public static final int COLOR = 1;
     public static final int TEXTURE = 2;
@@ -31,7 +32,7 @@ public class Renderer{
     protected int displayMode;
 
     // Textured
-    protected Texture texture;
+    protected IRenderTextureBindable texture;
 
     // Colored
     public Color4f color;
@@ -67,7 +68,6 @@ public class Renderer{
         }
     }
 
-
     public void updateShader(){
         // Apply model matrix
         if (shouldGlUniformModel){
@@ -79,7 +79,7 @@ public class Renderer{
                     shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA()
             );
         } else if (displayMode == TEXTURE){
-            texture.bind(0);
+            texture.bindRenderTexture(0);
         }
     }
 
@@ -158,7 +158,7 @@ public class Renderer{
         switchToTextureMode(Resources.getInstance().getResource(Texture.class, name));
     }
 
-    public void switchToTextureMode(Texture texture){
+    public void switchToTextureMode(IRenderTextureBindable texture){
         displayMode = TEXTURE;
         this.texture = texture;
         shape.enableVbo(1);

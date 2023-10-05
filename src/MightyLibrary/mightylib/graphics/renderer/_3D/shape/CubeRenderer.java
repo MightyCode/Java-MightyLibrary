@@ -66,16 +66,26 @@ public class CubeRenderer extends Renderer {
         };
 
         positionIndex = shape.addVboFloat(table, 3, Shape.STATIC_STORE);
-        /*textureIndex = shape.addVbo(new float[0], 2, Shape.STATIC_STORE);
-        normalIndex = shape.addVbo(new float[0], 3, Shape.STATIC_STORE);*/
-
-        /*shape.disableVbo(textureIndex);
-        shape.disableVbo(normalIndex);*/
 
         setPosition(position);
     }
 
-    public void addNormal(){
+    public void setTexturePosition(){
+        float[] table = new float[12 * 6];
+
+        for(int i = 0; i < 6; ++i){
+            table[12 * i + 0] = 0.0f; table[12 * i + 1] = 1.0f;
+            table[12 * i + 2] = 1.0f; table[12 * i + 3] = 1.0f;
+            table[12 * i + 4] = 1.0f; table[12 * i + 5] = 0.0f;
+            table[12 * i + 6] = 1.0f; table[12 * i + 7] = 0.0f;
+            table[12 * i + 8] = 0.0f; table[12 * i + 9] = 0.0f;
+            table[12 * i + 10] = 0.0f; table[12 * i + 11] = 1.0f;
+        }
+
+        textureIndex = shape.addVboFloat(table, 2, Shape.STATIC_STORE);
+    }
+
+    public void setNormal(){
         float[] table = {
                 0.0f, 0.0f, -1.0f,
                 0.0f, 0.0f, -1.0f,

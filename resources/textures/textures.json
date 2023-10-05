@@ -56,6 +56,10 @@
 			"dispMap1" :  {
 				"file": "displacementMap1.png",
 				"qualityType" : "realistic"
+			},
+			"whitePixel" : {
+				"file" : "whitePixel.png",
+				"qualityType" : "realistic"
 			}
 		}
 	}

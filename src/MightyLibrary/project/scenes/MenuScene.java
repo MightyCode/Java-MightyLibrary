@@ -65,7 +65,7 @@ public class MenuScene extends Scene {
         button2DScene.Text.setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
-                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.5f))
+                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.4f))
                 .setFontSize(40)
                 .setText("Test2DScene");
 
@@ -75,7 +75,7 @@ public class MenuScene extends Scene {
                 .setText("->Test2DScene<-");
 
         BackgroundlessButton button3DScene = button2DScene.copy();
-        button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.6f))
+        button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.52f))
                         .setText("Test3DScene");
 
         button3DScene.Text.copyTo(button3DScene.OverlapsText);
@@ -83,12 +83,22 @@ public class MenuScene extends Scene {
                 .setText("->Test3DScene<-");
 
         buttonCollisionTest = button2DScene.copy();
-        buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.7f))
+        buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.64f))
                 .setText("TestCollisionScene");
 
         buttonCollisionTest.Text.copyTo(buttonCollisionTest.OverlapsText);
         buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->TestCollisionScene<-");
+
+
+        BackgroundlessButton button3D2DGame = button2DScene.copy();
+        button3D2DGame.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.76f))
+                .setText("Test 3D 2D game");
+
+        button3D2DGame.Text.copyTo(button3D2DGame.OverlapsText);
+        button3D2DGame.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Test 3D 2D game<-");
+
 
         buttonQuit = button2DScene.copy();
         buttonQuit.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.9f))
@@ -103,7 +113,8 @@ public class MenuScene extends Scene {
         guiList.GUIs.put(0, button2DScene);
         guiList.GUIs.put(1, button3DScene);
         guiList.GUIs.put(2, buttonCollisionTest);
-        guiList.GUIs.put(3, buttonQuit);
+        guiList.GUIs.put(3, button3D2DGame);
+        guiList.GUIs.put(4, buttonQuit);
         guiList.ShouldLoop = false;
 
         rotation = new FloatTweening();
@@ -139,6 +150,9 @@ public class MenuScene extends Scene {
                         sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
                         break;
                     case 3:
+                        sceneManagerInterface.setNewScene(new Test3D2DGame(), new String[]{""});
+                        break;
+                    case 4:
                         sceneManagerInterface.exit(0);
                         break;
                 }
