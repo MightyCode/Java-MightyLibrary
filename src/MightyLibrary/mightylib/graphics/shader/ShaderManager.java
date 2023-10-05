@@ -1,14 +1,13 @@
 package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.resources.FileMethods;
+import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Camera3D;
-import MightyLibrary.mightylib.util.Id;
-import MightyLibrary.mightylib.util.ManagerList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import static org.lwjgl.opengl.GL11C.glGetString;
@@ -22,27 +21,24 @@ public class ShaderManager {
 
         return singletonInstance;
     }
-
-    private static final String CAM_3D = "cam3DView";
-    private static final String CAM_2D = "cam2DView";
-
     private static final String SHADER_INFO_PATH = "resources/shaders/";
-    public static final int USE_3D_PROJECTION_MATRIX = 0;
-    public static final int USE_2D_PROJECTION_MATRIX = 1;
 
-    private final ManagerList<Shader> shaders;
+    public static final String GENERIC_PROJECTION_FIELD_NAME = "projection";
+    public static final String GENERIC_VIEW_FIELD_NAME = "view";
+    public static final String GENERIC_MODEL_FIELD_NAME = "model";
+    public static final String GENERIC_COLOR_FIELD_NAME = "color";
 
-    private final ArrayList<Id> cam3DReload;
-    private final ArrayList<Id> cam2DReload;
-
+    private final HashMap<String, Shader> shaders;
     private int version;
 
-    private ShaderManager() {
-        shaders = new ManagerList<>();
-        cam3DReload = new ArrayList<>();
-        cam2DReload = new ArrayList<>();
+    private Camera mainCamera3D, mainCamera2D;
 
+    private ShaderManager() {
+        shaders = new HashMap<>();
         version = -1;
+
+        mainCamera3D = null;
+        mainCamera2D = null;
     }
 
     public void forceShaderVersion(int version){
@@ -52,8 +48,6 @@ public class ShaderManager {
     public void load(){
         System.out.println("--Load ShaderManager");
         shaders.clear();
-        cam3DReload.clear();
-        cam2DReload.clear();
 
         String glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
         String shaderPath = SHADER_INFO_PATH;
@@ -82,78 +76,57 @@ public class ShaderManager {
             // "Table" of the string path
             JSONArray files = JShader.getJSONArray("files");
 
+            String dimensionMode = JShader.getString("mode");
             // Get id the access the shader more easily
-            Id currentId = shaders.add(new Shader(files.getString(0), files.getString(1)));
-            Shader shad = shaders.get(currentId);
-            shad.setName(currentShader);
-            shad.load();
+
+            Shader shader;
+
+            if (files.length() == 2) {
+                shader = new Shader(files.getString(0),
+                        files.getString(1),
+                        dimensionMode.equals("2D") || dimensionMode.equals("none"));
+            } else {
+                shader = new Shader(files.getString(0),
+                        files.getString(1), files.getString(2),
+                        dimensionMode.equals("2D") || dimensionMode.equals("none"));
+            }
+
+            shaders.put(currentShader, shader);
+            shader.setName(currentShader);
+            shader.load();
 
             // Links-uniform creation
             JSONArray linksName = JShader.getJSONArray("links");
             for(int i = 0; i < linksName.length(); ++i){
-                shad.addLink(linksName.getString(i));
-            }
-
-            // Cam mode initialization
-            String camMode = JShader.getJSONArray("mode").getString(0);
-
-            if(camMode.equals(CAM_3D)){
-                cam3DReload.add(currentId);
-                shad.properties.add(USE_3D_PROJECTION_MATRIX);
-            } else if (camMode.equals(CAM_2D)){
-                cam2DReload.add(currentId);
-                shad.properties.add(USE_2D_PROJECTION_MATRIX);
+                shader.addLink(linksName.getString(i));
             }
 
         } while(arrayShader.hasNext());
     }
 
-    public void reloadProjection(Camera3D camera3D, Camera2D camera2D){
-        System.out.println("--Reload projection for camera");
-        Id current;
-        for(int i = 0; i < shaders.size(); ++i){
-            current = new Id(i);
-            if(shaders.get(current).properties.contains(USE_3D_PROJECTION_MATRIX))
-                reloadProjection3D(camera3D, current);
-            else if (shaders.get(current).properties.contains(USE_2D_PROJECTION_MATRIX))
-                reloadProjection2D(camera2D, current);
+    public void setCameras(Camera2D mainCamera2D, Camera3D mainCamera3D){
+        this.mainCamera2D = mainCamera2D;
+        this.mainCamera3D = mainCamera3D;
+    }
+
+    public Shader getShader(String shaderName){
+        return shaders.get(shaderName);
+    }
+
+    public void sendCameraToShader(Shader shader, boolean shouldSendProjection, boolean shouldSendView) {
+        if (shader.isDimension2DShader()) {
+            if (shouldSendProjection)
+                shader.sendValueToShader(mainCamera2D.getProjection());
+
+            if (shouldSendView)
+                shader.sendValueToShader(mainCamera2D.getView());
+        } else {
+            if (shouldSendProjection)
+                shader.sendValueToShader(mainCamera3D.getProjection());
+
+            if (shouldSendView)
+                shader.sendValueToShader(mainCamera3D.getView());
         }
-    }
-
-    public void reloadProjection3D(Camera3D camera, Id id){
-        shaders.get(id).glUniform("projection", camera.getProjection());
-        //System.out.println(shaders.get(id).getName());
-    }
-
-    public void reloadProjection2D(Camera2D camera, Id id){
-        shaders.get(id).glUniform("projection", camera.getProjection());
-    }
-
-    public void disposeCamera2D(Camera2D camera2D){
-        Shader currentShader;
-
-        for (Id current : cam2DReload){
-            currentShader = shaders.get(current);
-            currentShader.use();
-            currentShader.glUniform("view", camera2D.getView());
-        }
-    }
-
-    public void disposeCamera3D(Camera3D camera3D){
-        Shader currentShader;
-        for (Id current : cam3DReload){
-            currentShader = shaders.get(current);
-            currentShader.use();
-            currentShader.glUniform("view", camera3D.getView());
-        }
-    }
-
-    public Id getIdShaderFromString(String shaderId) {
-        return shaders.getIdFromString(shaderId);
-    }
-
-    public Shader getShader(Id shaderId){
-        return shaders.get(shaderId);
     }
 
     public void reload(){
@@ -164,8 +137,9 @@ public class ShaderManager {
 
     public void unload(){
         System.out.println("--Unload ShaderManager");
-        for(int i = 0; i < shaders.size(); ++i){
-            shaders.get(i).unload();
-        }
+        for (Shader shader : shaders.values())
+            shader.unload();
+
+        shaders.clear();
     }
 }

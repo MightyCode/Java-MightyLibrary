@@ -14,7 +14,7 @@ public class CubeRenderer extends Renderer {
     private int normalIndex;
 
     public CubeRenderer(String shaderName, Vector3f position, float size){
-        super(shaderName, false, false);
+        super(shaderName, false);
 
         float[] table = { 0.0f, 0.0f, 0.0f,
                         size, 0.0f, 0.0f,

@@ -29,7 +29,6 @@ public class MenuScene extends Scene {
         CREATION_INFO_SELECT.gain = 1f;
     }
 
-
     private static final SoundSourceCreationInfo CREATION_INFO_MUSIC = new SoundSourceCreationInfo();
     static {
         CREATION_INFO_MUSIC.name = "music";
@@ -92,13 +91,20 @@ public class MenuScene extends Scene {
 
 
         BackgroundlessButton button3D2DGame = button2DScene.copy();
-        button3D2DGame.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.76f))
+        button3D2DGame.Text.setPosition(new Vector2f(windowSize.x * 0.25f, windowSize.y * 0.8f))
                 .setText("Test 3D 2D game");
 
         button3D2DGame.Text.copyTo(button3D2DGame.OverlapsText);
         button3D2DGame.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->Test 3D 2D game<-");
 
+        BackgroundlessButton buttonTestBox2D = button2DScene.copy();
+        buttonTestBox2D.Text.setPosition(new Vector2f(windowSize.x * 0.75f, windowSize.y * 0.8f))
+                .setText("Test box 2D");
+
+        buttonTestBox2D.Text.copyTo(buttonTestBox2D.OverlapsText);
+        buttonTestBox2D.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Test box 2D<-");
 
         buttonQuit = button2DScene.copy();
         buttonQuit.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.9f))
@@ -114,7 +120,8 @@ public class MenuScene extends Scene {
         guiList.GUIs.put(1, button3DScene);
         guiList.GUIs.put(2, buttonCollisionTest);
         guiList.GUIs.put(3, button3D2DGame);
-        guiList.GUIs.put(4, buttonQuit);
+        guiList.GUIs.put(4, buttonTestBox2D);
+        guiList.GUIs.put(5, buttonQuit);
         guiList.ShouldLoop = false;
 
         rotation = new FloatTweening();
@@ -153,6 +160,9 @@ public class MenuScene extends Scene {
                         sceneManagerInterface.setNewScene(new Test3D2DGame(), new String[]{""});
                         break;
                     case 4:
+                        sceneManagerInterface.setNewScene(new TestBox2D(), new String[]{""});
+                        break;
+                    case 5:
                         sceneManagerInterface.exit(0);
                         break;
                 }

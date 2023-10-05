@@ -5,7 +5,7 @@ import MightyLibrary.mightylib.resources.Resources;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public  abstract class CommunicationThread extends Thread {
+public abstract class CommunicationThread extends Thread {
     public static final int SPECIAL_ID = -1;
     private int messageIdCounter;
     protected int processedMessageNumber;

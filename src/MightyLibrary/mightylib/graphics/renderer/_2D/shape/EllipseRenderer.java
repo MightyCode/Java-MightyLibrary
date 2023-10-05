@@ -12,7 +12,7 @@ public class EllipseRenderer extends Renderer {
     protected final int positionIndex;
 
     public EllipseRenderer(String shaderName) {
-        super(shaderName, true, true);
+        super(shaderName, true);
 
         reference = EDirection.None;
 

@@ -5,16 +5,16 @@ import MightyLibrary.mightylib.inputs.MouseManager;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class GUIList {
-    private static final int PIXEL_PER_SECOND_DISABLE = 5;
-
     private final InputManager inputManager;
     private final MouseManager mouseManager;
 
     private GUI selected;
+    private boolean selectedByMouse;
     private Integer id;
-    private Integer mouseId;
+    private Integer oldId;
 
     public final Map<Integer, GUI> GUIs;
 
@@ -25,8 +25,6 @@ public class GUIList {
 
     private boolean mouseMoved;
 
-    private boolean stateChanged;
-
     public GUIList(InputManager inputManager, MouseManager mouseManager) {
         this.mouseManager = mouseManager;
         this.inputManager = inputManager;
@@ -34,18 +32,16 @@ public class GUIList {
         GUIs = new HashMap<>();
         selected = null;
         id = null;
-        mouseId = null;
 
         mouseMoved = false;
-        stateChanged = false;
+        selectedByMouse = false;
     }
 
     public Integer getSelected(){
-        if (mouseId == null)
-            return id;
-
-        return mouseId;
+        return id;
     }
+
+    public boolean isMouseSelecting(){ return selectedByMouse; }
 
     public void setupActionInputValues(int actionUpValue, int actionDownValue){
         this.actionUpValue = actionUpValue;
@@ -53,63 +49,59 @@ public class GUIList {
     }
 
     public boolean isStateChanged(){
-        return stateChanged;
+        return !Objects.equals(oldId, id);
     }
 
     public void update(){
-        stateChanged = false;
+        oldId = id;
 
-        if (!mouseManager.oldPos().equals(mouseManager.pos(), PIXEL_PER_SECOND_DISABLE)){
-            if (selected != null && selected.mouseDisableIt()) {
-                selected.forceSelect(false);
+        // Check for mouse
+        mouseMoved = !mouseManager.oldPos().equals(mouseManager.pos());
+        if (mouseMoved){
+            checkMoveOver();
+
+            if (selected != null && selectedByMouse && selected.mouseDisableIt()) {
+                for (GUI gui : GUIs.values())
+                    gui.forceSelect(false);
             }
 
-            shouldUpdateSelected();
-
-            mouseMoved = true;
+            return;
         }
 
         Integer id = null;
-
         if (actionUpValue != -1 && inputManager.inputPressed(actionUpValue)) {
             id = selectUp();
         } else if (actionDownValue != -1 && inputManager.inputPressed(actionDownValue)) {
             id = selectDown();
         }
 
+        // If no action has been done
         if (id == null)
             return;
 
-        if (id.equals(this.id) && !mouseMoved)
+        if (id.equals(this.id))
             return;
 
-        unselectAll();
+        selected = GUIs.get(id);
+        this.id = id;
+        selectedByMouse = false;
+
+        for (GUI gui : GUIs.values())
+            gui.forceUnselect(true);
+
         GUIs.get(id).forceSelect(true);
-        shouldUpdateSelected();
-        mouseMoved = false;
 
-        stateChanged = true;
-    }
-
-    private void unselectAll(){
-        for (GUI temp : GUIs.values()) {
-            temp.forceSelect(false);
-        }
+        checkMoveOver();
     }
 
     private Integer selectUp(){
         if (this.id == null)
             return selectMinimum();
 
-
-        if (mouseMoved)
-            return this.id;
-
-
         Integer maxId = null, minId = null;
 
         for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()) {
-            if (minId == null || minId < pair.getKey())
+            if (minId == null || minId > pair.getKey())
                 minId = pair.getKey();
 
             if (pair.getKey() < id){
@@ -133,14 +125,10 @@ public class GUIList {
         if (this.id == null)
             return selectMinimum();
 
-        if (mouseMoved)
-            return this.id;
-
-
         Integer maxId = null, minId = null;
 
         for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()) {
-            if (maxId == null || maxId > pair.getKey())
+            if (maxId == null || maxId < pair.getKey())
                 maxId = pair.getKey();
 
             if (pair.getKey() > id){
@@ -171,17 +159,16 @@ public class GUIList {
         return min;
     }
 
-    private void shouldUpdateSelected(){
-        mouseId = null;
+    private void checkMoveOver(){
+        selected = null;
+        id = null;
 
         for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()){
-            if (pair.getValue().forceSelected()){
+            if (mouseMoved && pair.getValue().GUIMouseSelected()) {
                 selected = pair.getValue();
                 id = pair.getKey();
-                break;
-            } else if (pair.getValue().GUIMouseSelected()){
-                selected = pair.getValue();
-                mouseId = pair.getKey();
+
+                selectedByMouse = true;
                 break;
             }
         }

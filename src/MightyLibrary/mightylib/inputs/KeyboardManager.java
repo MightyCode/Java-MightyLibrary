@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.inputs;
 
-import MightyLibrary.mightylib.inputs.keyboardlanguage.NativeKeyboardLanguage;
+import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
+import MightyLibrary.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import MightyLibrary.mightylib.main.WindowInfo;
 
 import java.util.ArrayList;
@@ -47,7 +48,7 @@ public class KeyboardManager {
 
         wasMain = new ArrayList<>();
 
-        language = NativeKeyboardLanguage.getInstance();
+        language = QWERTKeyboardLanguage.getInstance();
         mainKey = -1;
         numberKeyPressed = 0;
         capsLockActivated = false;

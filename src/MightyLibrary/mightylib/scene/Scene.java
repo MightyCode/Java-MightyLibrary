@@ -42,6 +42,7 @@ public class Scene {
 
         main3DCamera = mainContext.createCamera(parameters);
         main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
+        shaderManager.setCameras(main2DCamera, main3DCamera);
 
         sceneManagerInterface = null;
     }
@@ -51,7 +52,6 @@ public class Scene {
     }
 
     public void init(String[] args, IGLBindable bindable){
-        shaderManager.reloadProjection(main3DCamera, main2DCamera);
         dispose();
 
         scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), bindable);
@@ -67,10 +67,7 @@ public class Scene {
 
     public void update(){}
 
-    public void dispose(){
-        shaderManager.disposeCamera2D(main2DCamera);
-        shaderManager.disposeCamera3D(main3DCamera);
-    }
+    public void dispose(){}
 
     public void display(){}
 
