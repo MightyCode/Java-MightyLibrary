@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.resources.map;
 
 public class Tile {
-    private TileSet tileset;
+    private final TileSet tileset;
 
     public Tile(TileSet tileset){
         this.tileset = tileset;

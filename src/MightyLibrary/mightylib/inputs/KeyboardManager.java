@@ -32,7 +32,7 @@ public class KeyboardManager {
 
     private int mainKey;
 
-    private ArrayList<Integer> wasMain;
+    private final ArrayList<Integer> wasMain;
 
     private KeyboardLanguage language;
 

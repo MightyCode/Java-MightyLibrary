@@ -11,7 +11,6 @@ import java.io.FileInputStream;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class TextureLoader extends ResourceLoader {

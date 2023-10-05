@@ -13,7 +13,7 @@ public class SoundSource {
     private boolean loop, relative;
 
     private float gain;
-    private String gainNodeName;
+    private final String gainNodeName;
     private float gainNode;
 
     private boolean hadPlayed;

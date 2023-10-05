@@ -4,7 +4,7 @@ import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
-import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;;
+import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.resources.Resources;
@@ -43,6 +43,7 @@ public class Test2DScene extends Scene {
         /// SCENE INFORMATION ///
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));
+
         setClearColor(52, 189, 235, 1f);
         //setClearColor(0, 0, 0, 1f);
 

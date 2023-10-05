@@ -7,21 +7,22 @@ import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.inputType.EInputType;
 import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 import MightyLibrary.mightylib.main.Context;
+import MightyLibrary.mightylib.main.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;
 import MightyLibrary.project.lib.ActionId;
-import org.lwjgl.glfw.GLFW;
 
-class ProjectLoading {
-
-    static void init(){
+class ProjectLoading implements IProjectLoading {
+    @Override
+    public void init(){
         Resources resources = Resources.getInstance();
         resources.Loaders.add(new TileSetLoader());
         resources.Loaders.add(new TileMapLoader());
     }
 
-    static void ContextLoading(Context context){
+    @Override
+    public void contextLoading(Context context){
         InputManager inputManager = context.getInputManager();
 
         ActionInput[] configurations = {

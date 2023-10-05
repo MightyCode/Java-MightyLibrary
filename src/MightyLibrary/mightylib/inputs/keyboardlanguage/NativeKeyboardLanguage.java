@@ -8,7 +8,7 @@ import java.util.HashMap;
 public class NativeKeyboardLanguage extends KeyboardLanguage {
     private static final KeyboardLanguage instance = new NativeKeyboardLanguage();
 
-    private HashMap<Character, Character> capslock;
+    private final HashMap<Character, Character> capslock;
 
     public static KeyboardLanguage getInstance() { return instance; }
     private NativeKeyboardLanguage(){

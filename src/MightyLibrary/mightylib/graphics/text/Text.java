@@ -83,7 +83,7 @@ public class Text extends Renderer {
         return this;
     }
 
-    public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars){
+    public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars, String breakLineFirstChar){
         String clean = (removeEscapeChars) ? text.replace("\n", "") : text;
 
         String result = "";
@@ -104,7 +104,7 @@ public class Text extends Renderer {
                 sizeTaken = font.computeSize(temp, fontSize);
 
                 if (sizeTaken.x > boxSize.x){
-                    result = result + "\n" + c;
+                    result = result + "\n" + breakLineFirstChar + c;
                 } else {
                     result = temp;
                 }
@@ -279,8 +279,8 @@ public class Text extends Renderer {
                 sizeTemp.x = (float)((fontChar.getWidth()) * fontSize);
                 sizeTemp.y = (float)((fontChar.getHeight()) * fontSize);
 
-                posTemp.x = (float)(currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset);
-                posTemp.y = (float)(currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y);
+                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset;
+                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y;
 
                 temp.x = (posTemp.x);
                 temp.y = (sizeTemp.x + posTemp.x);

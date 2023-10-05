@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.resources.texture;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
