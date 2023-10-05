@@ -15,9 +15,9 @@ public class Camera3D extends Camera {
 
     private boolean lockViewCursor = false;
 
-    public static Vector3f speed;
+    private Vector3f speed;
 
-    public static float sensitivity;
+    private float sensitivity;
 
     private float yaw = 180.0f, pitch = 0.0f;
     private float yawCos, yawSin;
@@ -34,7 +34,7 @@ public class Camera3D extends Camera {
         camUp = new Vector3f(0.0f, 1.0f, 0.0f);
         setPos(pos);
 
-        speed = new Vector3f(0.25f,0.25f,0.25f);
+        speed = new Vector3f(1);
         sensitivity = 0.05f;
         updateView();
     }
@@ -55,12 +55,12 @@ public class Camera3D extends Camera {
         if(pitch < -89.0f)
             pitch = -89.0f;
 
-        yawCos = (float) Math.cos(MightyMath.rads(yaw));
-        yawSin = (float) Math.sin(MightyMath.rads(yaw));
+        yawCos = (float) Math.cos(MightyMath.toRads(yaw));
+        yawSin = (float) Math.sin(MightyMath.toRads(yaw));
 
-        camFront.x = (float)(Math.cos(MightyMath.rads(pitch)) * yawCos);
-        camFront.y = (float)(Math.sin(MightyMath.rads(pitch)));
-        camFront.z = (float)(Math.cos(MightyMath.rads(pitch)) * Math.sin(MightyMath.rads(yaw)));
+        camFront.x = (float)(Math.cos(MightyMath.toRads(pitch)) * yawCos);
+        camFront.y = (float)(Math.sin(MightyMath.toRads(pitch)));
+        camFront.z = (float)(Math.cos(MightyMath.toRads(pitch)) * Math.sin(MightyMath.toRads(yaw)));
         camFront.normalize();
     }
 
@@ -101,6 +101,10 @@ public class Camera3D extends Camera {
     public Vector3f getCamPosRef() { return camPos; }
     public Vector3f getCamPosCopy() { return new Vector3f(camPos); }
 
+    public Vector3f getLookAtVector(){
+        return camFront;
+    }
+
     public void setPos(Vector3f newPos){
         camPos.x = newPos.x;
         camPos.y = newPos.y;
@@ -128,5 +132,25 @@ public class Camera3D extends Camera {
     public void speedAngZ(float speed){
         camPos.x += speed * -yawCos;
         camPos.z += speed * -yawSin;
+    }
+
+    public Camera3D setSensitivity(float value){
+        sensitivity = value;
+
+        return this;
+    }
+
+    public float getSensitivity(){
+        return sensitivity;
+    }
+
+    public Camera3D setSpeed(Vector3f value){
+        speed = value;
+
+        return this;
+    }
+
+    public Vector3f getSpeed(){
+        return speed;
     }
 }

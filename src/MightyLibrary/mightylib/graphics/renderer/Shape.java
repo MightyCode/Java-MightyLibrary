@@ -126,7 +126,7 @@ public class Shape{
 
 
     public void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
-        int oneLineSize = MightyMath.sum(vertexSizes);
+        int oneLineSize = MightyMath.Sum(vertexSizes);
         int currentSum = 0;
 
         for (int i = 0; i < vertexSizes.length; ++i){

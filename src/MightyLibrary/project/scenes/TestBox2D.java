@@ -8,7 +8,7 @@ import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.ColorList;
 import MightyLibrary.mightylib.util.math.EDirection;
-import MightyLibrary.project.lib.ActionId;
+import MightyLibrary.project.main.ActionId;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
@@ -129,6 +129,9 @@ public class TestBox2D extends Scene {
     @Override
     public void update() {
         super.update();
+
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
         world.step(GameTime.DeltaTime(), velocityIterations, positionIterations);
 

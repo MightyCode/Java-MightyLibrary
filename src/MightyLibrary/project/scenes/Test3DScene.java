@@ -2,6 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.FrameBuffer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.texture.Texture;
@@ -20,7 +21,7 @@ import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.Color4f;
-import MightyLibrary.project.lib.ActionId;
+import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
@@ -65,11 +66,13 @@ public class Test3DScene extends Scene {
         setClearColor(52, 189, 235, 1f);
 
         timeShaderValue = new ShaderValue("time", Float.class, 0f);
+        main3DCamera.setSpeed(new Vector3f(10));
 
         /// RENDERERS ///
 
         // Cube
-        light = new CubeRenderer("colorComplex3D", new Vector3f(-1f, 3.0f, -4f), 1f);
+        light = new CubeRenderer("colorComplex3D");
+        light.setPosition(new Vector3f(-1f, 3.0f, -4f));
         light.switchToColorMode(new Color4f(1f, 0f, 0f, 1f));
         light.setNormal();
 
@@ -136,41 +139,38 @@ public class Test3DScene extends Scene {
     public void update() {
         super.update();
 
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+
         InputManager inputManager = mainContext.getInputManager();
 
         int speed = 1;
-        if (inputManager.getState(ActionId.SHIFT)) {
+        if (inputManager.getState(ActionId.SHIFT))
             speed = 3;
-        }
 
-        if(inputManager.getState(ActionId.MOVE_LEFT)){
-            main3DCamera.speedAngX(Camera3D.speed.x * speed);
-        }
 
-        if(inputManager.getState(ActionId.MOVE_RIGHT)){
-            main3DCamera.speedAngX(-Camera3D.speed.x * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_LEFT))
+            main3DCamera.speedAngX(main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_FORWARD)){
-            main3DCamera.speedAngZ(-Camera3D.speed.z * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_RIGHT))
+            main3DCamera.speedAngX(-main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_BACKWARD)) {
-            main3DCamera.speedAngZ(Camera3D.speed.z * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_FORWARD))
+            main3DCamera.speedAngZ(-main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_UP)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y += Camera3D.speed.y);
-        }
+        if (inputManager.getState(ActionId.MOVE_BACKWARD))
+            main3DCamera.speedAngZ(main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_DOWN)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y -= Camera3D.speed.y);
-        }
+        if (inputManager.getState(ActionId.MOVE_UP))
+            main3DCamera.setY(main3DCamera.getCamPosRef().y + main3DCamera.getSpeed().y * GameTime.DeltaTime());
 
-        if(inputManager.inputPressed(ActionId.ESCAPE)) {
+        if (inputManager.getState(ActionId.MOVE_DOWN))
+            main3DCamera.setY(main3DCamera.getCamPosRef().y - main3DCamera.getSpeed().y * GameTime.DeltaTime());
+
+
+        if (inputManager.inputPressed(ActionId.TAB)) {
             main3DCamera.invertLockViewCursor();
             mainContext.getMouseManager().invertCursorState();
-
         }
 
         displacementMapTweening.update();

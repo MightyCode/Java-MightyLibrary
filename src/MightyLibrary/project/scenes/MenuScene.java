@@ -16,7 +16,7 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
-import MightyLibrary.project.lib.ActionId;
+import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -52,6 +52,8 @@ public class MenuScene extends Scene {
     public void init(String[] args) {
         super.init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
         /// SCENE INFORMATION ///
+
+        mainContext.getMouseManager().setCursor(true);
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));
         setClearColor(52, 189, 235, 1f);
@@ -186,6 +188,9 @@ public class MenuScene extends Scene {
             floatTweening.update();
             sound.setGain(floatTweening.value());
         }
+
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.exit(0);
     }
 
 

@@ -2,49 +2,40 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.FrameBuffer;
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import MightyLibrary.mightylib.main.Window;
+import MightyLibrary.mightylib.graphics.text.ETextAlignment;
+import MightyLibrary.mightylib.graphics.text.Text;
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.graphics.renderer.Renderer;
-import MightyLibrary.mightylib.graphics.renderer._3D.ModelRenderer;
-import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
-import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
-import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
-import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
-import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
-import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
-import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
-import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.mightylib.util.math.ColorList;
 import MightyLibrary.mightylib.util.math.EDirection;
-import MightyLibrary.project.lib.ActionId;
+import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
+import org.joml.Vector2i;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
-
 public class Test3D2DGame extends Scene {
-
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
 
     //// 2D World ////
 
-    private RectangleRenderer hudBar;
-    private RectangleRenderer renderToWholeScreen;
-    private FrameBuffer game2DRender;
+    private RectangleRenderer background;
+    private RectangleRenderer debugView;
     private Animation2DRenderer slimeRenderer;
+    private FrameBuffer game2DRender;
 
     // 3D World ////
 
     private CubeRenderer gameRenderer;
+
+    private Text lookAtText;
 
     public Test3D2DGame(){
         super(SCENE_CCI);
@@ -57,15 +48,16 @@ public class Test3D2DGame extends Scene {
         mainContext.getMouseManager().setCursor(false);
         setClearColor(52, 189, 235, 1f);
 
+        main3DCamera.setSpeed(new Vector3f(10));
+
         /// RENDERERS ///
         game2DRender = new FrameBuffer(new BasicBindableObject().setQualityTexture(TextureParameters.PIXEL_ART_PARAMETERS),
                 mainContext.getWindow().getInfo().getVirtualSizeRef().x,  mainContext.getWindow().getInfo().getVirtualSizeRef().y);
 
-        hudBar = new RectangleRenderer("texture2D");
-        hudBar.switchToTextureMode("error");
-        hudBar.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x, mainContext.getWindow().getInfo().getVirtualSizeRef().y);
-        hudBar.setPosition(new Vector2f(0, 0));
-
+        background = new RectangleRenderer("texture2D");
+        background.switchToTextureMode("error");
+        background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x, mainContext.getWindow().getInfo().getVirtualSizeRef().y);
+        background.setPosition(new Vector2f(0, 0));
 
         slimeRenderer = new Animation2DRenderer("texture2D");
         slimeRenderer.switchToTextureMode("slime");
@@ -80,56 +72,93 @@ public class Test3D2DGame extends Scene {
         slimeRenderer.setVerticalFlip(false);
         slimeRenderer.update();
 
-        renderToWholeScreen = new RectangleRenderer("texture2D");
-        renderToWholeScreen.switchToTextureMode(game2DRender);
-        renderToWholeScreen.setPosition(new Vector2f(0, 0));
-        renderToWholeScreen.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x * 0.2f,
+        debugView = new RectangleRenderer("texture2D");
+        debugView.switchToTextureMode(game2DRender);
+        debugView.setPosition(new Vector2f(0, 0));
+        debugView.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x * 0.2f,
                 mainContext.getWindow().getInfo().getVirtualSizeRef().y * 0.2f);
 
-        gameRenderer = new CubeRenderer("texture3D", new Vector3f(-1f, 3.0f, -4f), 10f);
+        gameRenderer = new CubeRenderer("texture3D");
         gameRenderer.switchToTextureMode(
                 game2DRender
                 /*Resources.getInstance().getResource(Texture.class, "error")*/);
 
+        gameRenderer.setPosition(new Vector3f(-1f, 3.0f, -4f));
+        gameRenderer.setScale(new Vector3f(10));
+
         gameRenderer.setTexturePosition();
+
+        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeRef();
+
+        lookAtText = new Text();
+        lookAtText.setFont("bahnschrift")
+                .setAlignment(ETextAlignment.Center)
+                .setReference(EDirection.Up)
+                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.01f))
+                .setFontSize(40)
+                .setColor(ColorList.Coral())
+                .setText("(0, 0, 0)");
     }
 
 
     public void update() {
         super.update();
 
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+
         InputManager inputManager = mainContext.getInputManager();
 
-        int speed = 1;
-        if (inputManager.getState(ActionId.SHIFT)) {
-            speed = 3;
+        int accelFactor = 1;
+        if (inputManager.getState(ActionId.SHIFT))
+            accelFactor = 3;
+
+        if (inputManager.getState(ActionId.MOVE_LEFT))
+            main3DCamera.speedAngX(main3DCamera.getSpeed().x * accelFactor * GameTime.DeltaTime());
+
+        if (inputManager.getState(ActionId.MOVE_RIGHT))
+            main3DCamera.speedAngX(-main3DCamera.getSpeed().x * accelFactor * GameTime.DeltaTime());
+
+        if (inputManager.getState(ActionId.MOVE_FORWARD))
+            main3DCamera.speedAngZ(-main3DCamera.getSpeed().z * accelFactor * GameTime.DeltaTime());
+
+        if (inputManager.getState(ActionId.MOVE_BACKWARD))
+            main3DCamera.speedAngZ(main3DCamera.getSpeed().z * accelFactor * GameTime.DeltaTime());
+
+        if (inputManager.getState(ActionId.MOVE_UP))
+            main3DCamera.setY(main3DCamera.getCamPosRef().y + main3DCamera.getSpeed().y * GameTime.DeltaTime());
+
+        if (inputManager.getState(ActionId.MOVE_DOWN))
+            main3DCamera.setY(main3DCamera.getCamPosRef().y - main3DCamera.getSpeed().y * GameTime.DeltaTime());
+
+        float speed2D = 200;
+
+        if (inputManager.getState(ActionId.MOVE_UP_2D)) {
+            System.out.println(slimeRenderer.position().y);
+            System.out.println(slimeRenderer.position().y - speed2D * GameTime.DeltaTime());
+            slimeRenderer.setPosition(new Vector2f(
+                    slimeRenderer.position().x,
+                    slimeRenderer.position().y - speed2D * GameTime.DeltaTime()));
+            System.out.println(slimeRenderer.position().y);
         }
 
-        if(inputManager.getState(ActionId.MOVE_LEFT)){
-            main3DCamera.speedAngX(Camera3D.speed.x * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_DOWN_2D))
+            slimeRenderer.setPosition(new Vector2f(
+                    slimeRenderer.position().x,
+                    slimeRenderer.position().y + speed2D * GameTime.DeltaTime()));
 
-        if(inputManager.getState(ActionId.MOVE_RIGHT)){
-            main3DCamera.speedAngX(-Camera3D.speed.x * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_LEFT_2D))
+            slimeRenderer.setPosition(new Vector2f(
+                    slimeRenderer.position().x - speed2D * GameTime.DeltaTime(),
+                    slimeRenderer.position().y));
 
-        if(inputManager.getState(ActionId.MOVE_FORWARD)){
-            main3DCamera.speedAngZ(-Camera3D.speed.z * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_RIGHT_2D))
+            slimeRenderer.setPosition(new Vector2f(
+                    slimeRenderer.position().x + speed2D * GameTime.DeltaTime(),
+                    slimeRenderer.position().y));
 
-        if(inputManager.getState(ActionId.MOVE_BACKWARD)) {
-            main3DCamera.speedAngZ(Camera3D.speed.z * speed);
-        }
 
-        if(inputManager.getState(ActionId.MOVE_UP)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y += Camera3D.speed.y);
-        }
-
-        if(inputManager.getState(ActionId.MOVE_DOWN)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y -= Camera3D.speed.y);
-        }
-
-        if(inputManager.inputPressed(ActionId.ESCAPE)) {
+        if(inputManager.inputPressed(ActionId.TAB)) {
             main3DCamera.invertLockViewCursor();
             mainContext.getMouseManager().invertCursorState();
         }
@@ -137,6 +166,10 @@ public class Test3D2DGame extends Scene {
         slimeRenderer.update();
 
         main3DCamera.updateView();
+
+        lookAtText.setText("( " + String.format("%.2f", main3DCamera.getLookAtVector().x) + ", " +
+                String.format("%.2f", main3DCamera.getLookAtVector().y) + ", " +
+                String.format("%.2f", main3DCamera.getLookAtVector().z) + " )");
     }
 
 
@@ -146,7 +179,7 @@ public class Test3D2DGame extends Scene {
 
         mainContext.getWindow().setVirtualViewport();
 
-        hudBar.display();
+        background.display();
         slimeRenderer.display();
 
         game2DRender.unbindFrameBuffer();
@@ -158,7 +191,10 @@ public class Test3D2DGame extends Scene {
 
         // Better to draw the hud here and be not affected by the postProcessing shader
 
-        renderToWholeScreen.display();
+        lookAtText.display();
+
+        debugView.display();
+
 
         super.setAndDisplayRealScene();
     }
@@ -168,8 +204,10 @@ public class Test3D2DGame extends Scene {
         super.unload();
         gameRenderer.unload();
         game2DRender.unload();
-        hudBar.unload();
+        background.unload();
         slimeRenderer.unload();
-        renderToWholeScreen.unload();
+        debugView.unload();
+
+        lookAtText.unload();
     }
 }
