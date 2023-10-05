@@ -1,21 +1,15 @@
 package MightyLibrary.mightylib.inputs.keyboardlanguage;
 
 import MightyLibrary.mightylib.inputs.CharInputEntry;
-import MightyLibrary.mightylib.inputs.KeyboardLanguage;
 
 import static org.lwjgl.glfw.GLFW.*;
-
-import java.util.HashSet;
 
 public class AZERTYKeyboardLanguage extends KeyboardLanguage {
     private static final KeyboardLanguage instance = new AZERTYKeyboardLanguage();
 
     public static KeyboardLanguage getInstance() { return instance; }
-
-    private final HashSet<CharInputEntry> inputEntries;
     private AZERTYKeyboardLanguage(){
-        inputEntries = new HashSet<>();
-
+        super();
         inputEntries.add(new CharInputEntry(GLFW_KEY_SPACE, ' '));
 
         inputEntries.add(new CharInputEntry(GLFW_KEY_A, 'q').addModifier(CharInputEntry.CAPSLOCK, 'Q'));
@@ -46,24 +40,51 @@ public class AZERTYKeyboardLanguage extends KeyboardLanguage {
         inputEntries.add(new CharInputEntry(GLFW_KEY_Y, 'y').addModifier(CharInputEntry.CAPSLOCK, 'Y'));
         inputEntries.add(new CharInputEntry(GLFW_KEY_Z, 'w').addModifier(CharInputEntry.CAPSLOCK, 'W'));
 
-        inputEntries.add(new CharInputEntry(GLFW_KEY_LEFT_BRACKET, '^').addModifier(CharInputEntry.CAPSLOCK, '¨'));
+        inputEntries.add(new CharInputEntry(GLFW_KEY_WORLD_1, '<')
+                .addModifier(CharInputEntry.CAPSLOCK, '>'));
+
+        inputEntries.add(new CharInputEntry(GLFW_KEY_LEFT_BRACKET, '^')
+                .addModifier(CharInputEntry.CAPSLOCK, '¨'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_RIGHT_BRACKET, '$')
-                .addModifier(CharInputEntry.CAPSLOCK, '£').addModifier(CharInputEntry.ALT, '£'));
+                .addModifier(CharInputEntry.CAPSLOCK, '£')
+
+                .addModifier(CharInputEntry.ALT, '£'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_GRAVE_ACCENT, '²'));
-        inputEntries.add(new CharInputEntry(GLFW_KEY_SEMICOLON, 'm').addModifier(CharInputEntry.CAPSLOCK, 'M'));
-        inputEntries.add(new CharInputEntry(GLFW_KEY_APOSTROPHE, 'ù').addModifier(CharInputEntry.CAPSLOCK, '%'));
-        inputEntries.add(new CharInputEntry(GLFW_KEY_BACKSLASH, '*').addModifier(CharInputEntry.CAPSLOCK, 'µ'));
-        inputEntries.add(new CharInputEntry(GLFW_KEY_COMMA, ';').addModifier(CharInputEntry.CAPSLOCK, '.'));
-        inputEntries.add(new CharInputEntry(GLFW_KEY_PERIOD, ':').addModifier(CharInputEntry.CAPSLOCK, '/'));
-        inputEntries.add(new CharInputEntry(GLFW_KEY_SLASH, '!').addModifier(CharInputEntry.CAPSLOCK, '§'));
+
+        inputEntries.add(new CharInputEntry(GLFW_KEY_SEMICOLON, 'm')
+                .addModifier(CharInputEntry.CAPSLOCK, 'M'));
+
+        inputEntries.add(new CharInputEntry(GLFW_KEY_APOSTROPHE, 'ù')
+                .addModifier(CharInputEntry.CAPSLOCK, '%'));
+
+        inputEntries.add(new CharInputEntry(GLFW_KEY_BACKSLASH, '*')
+                .addModifier(CharInputEntry.CAPSLOCK, 'µ'));
+
+        inputEntries.add(new CharInputEntry(GLFW_KEY_COMMA, ';')
+                .addModifier(CharInputEntry.CAPSLOCK, '.'));
+
+        inputEntries.add(new CharInputEntry(GLFW_KEY_PERIOD, ':')
+                .addModifier(CharInputEntry.CAPSLOCK, '/'));
+
+        inputEntries.add(new CharInputEntry(GLFW_KEY_SLASH, '!')
+                .addModifier(CharInputEntry.CAPSLOCK, '§'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_MINUS, ')')
                 .addModifier(CharInputEntry.CAPSLOCK, '°').addModifier(CharInputEntry.ALT, ']'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_EQUAL, '=')
                 .addModifier(CharInputEntry.CAPSLOCK, '+').addModifier(CharInputEntry.ALT, '+'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_KP_DIVIDE, '/'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_KP_MULTIPLY, '*'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_KP_SUBTRACT, '-'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_KP_ADD, '+'));
+
         inputEntries.add(new CharInputEntry(GLFW_KEY_KP_DECIMAL, '.'));
 
         for (int i = 0; i <= 9; ++i){
@@ -89,25 +110,6 @@ public class AZERTYKeyboardLanguage extends KeyboardLanguage {
                 .addModifier(CharInputEntry.ALT, '^'));
         inputEntries.add(new CharInputEntry(GLFW_KEY_0, 'à').addModifier(CharInputEntry.CAPSLOCK, '0')
                 .addModifier(CharInputEntry.ALT, '@'));
-    }
-
-    @Override
-    public char translateKeyTo(int keyId) {
-        for (CharInputEntry charInputEntry : inputEntries){
-            if (!charInputEntry.isKeyId(keyId))
-                continue;
-
-            if (shouldCapsLock())
-                return charInputEntry.getModification(CharInputEntry.CAPSLOCK);
-            else if (shouldAltGr())
-                return charInputEntry.getModification(CharInputEntry.ALT);
-
-            return charInputEntry.getChar();
-        }
-
-
-
-        return (char)-1;
     }
 
     @Override

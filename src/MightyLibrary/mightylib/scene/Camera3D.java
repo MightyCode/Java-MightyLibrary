@@ -3,22 +3,15 @@ package MightyLibrary.mightylib.scene;
 import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.util.math.MightyMath;
-import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
 
 
-public class Camera3D {
-    private final WindowInfo windowInfo;
+public class Camera3D extends Camera {
     private final MouseManager mouseManager;
 
-    private final Matrix4f projectionOrtho, projectionPerpec, view;
     private final Vector3f camPos;
 
     private final Vector3f camFront, camUp;
-    private final FloatBuffer projectionOrthoBuffer, projectionPerspecBuffer, viewBuffer;
 
     private boolean lockViewCursor = false;
 
@@ -29,21 +22,12 @@ public class Camera3D {
     private float yaw = 180.0f, pitch = 0.0f;
     private float yawCos, yawSin;
 
+    private float fov;
     public Camera3D(WindowInfo windowInfo, MouseManager mouseManager, float fov, Vector3f pos){
-        this.windowInfo = windowInfo;
+        super(windowInfo);
         this.mouseManager = mouseManager;
 
         camPos = new Vector3f();
-
-        projectionOrtho = new Matrix4f();
-        projectionPerpec = new Matrix4f();
-
-
-        view = new Matrix4f();
-        projectionOrthoBuffer = BufferUtils.createFloatBuffer(16);
-        projectionPerspecBuffer = BufferUtils.createFloatBuffer(16);
-
-        viewBuffer = BufferUtils.createFloatBuffer(16);
 
         setViewAngle(fov);
         camFront = new Vector3f(0.0f, 0.0f, -1.0f);
@@ -80,7 +64,7 @@ public class Camera3D {
         camFront.normalize();
     }
 
-
+    @Override
     public void updateView(){
         if (!lockViewCursor) {
             setToCursor();
@@ -102,11 +86,16 @@ public class Camera3D {
 
 
     public void setViewAngle(float fov){
-        projectionPerpec.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
-        projectionOrtho.ortho(0, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0 , -1, 1);
+        this.fov = fov;
+        updateProjection();
+    }
 
-        projectionPerpec.get(projectionPerspecBuffer);
-        projectionOrtho.get(projectionOrthoBuffer);
+    public void updateProjection(){
+        projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
+        //projectionOrtho.ortho(0, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0 , -1, 1);
+
+        projection.get(projectionBuffer);
+        //projectionOrtho.get(projectionOrthoBuffer);
     }
 
     public Vector3f getCamPosRef() { return camPos; }
@@ -128,14 +117,6 @@ public class Camera3D {
 
     public void setZ(float z){
         camPos.z = z;
-    }
-
-    public FloatBuffer getProjection(){
-        return projectionPerspecBuffer;
-    }
-
-    public FloatBuffer getView(){
-        return viewBuffer;
     }
 
 

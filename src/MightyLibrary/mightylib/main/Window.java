@@ -71,7 +71,7 @@ public final class Window {
         else                 info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
 
 
-        System.out.println("\nWindow with id : "+ info.windowId +" created");
+        System.out.println("\nWindow with id : " + info.windowId + " created");
 
         if (info.windowId == NULL) {
             System.out.println("Window won't created");

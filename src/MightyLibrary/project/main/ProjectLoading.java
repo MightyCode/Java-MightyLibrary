@@ -7,7 +7,7 @@ import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.inputType.EInputType;
 import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 import MightyLibrary.mightylib.main.Context;
-import MightyLibrary.mightylib.main.IProjectLoading;
+import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;

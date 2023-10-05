@@ -29,7 +29,6 @@ public class MenuScene extends Scene {
         CREATION_INFO_SELECT.gain = 1f;
     }
 
-
     private static final SoundSourceCreationInfo CREATION_INFO_MUSIC = new SoundSourceCreationInfo();
     static {
         CREATION_INFO_MUSIC.name = "music";
@@ -90,6 +89,14 @@ public class MenuScene extends Scene {
         buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->TestCollisionScene<-");
 
+        BackgroundlessButton buttonTestBox2D = button2DScene.copy();
+        buttonTestBox2D.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.8f))
+                .setText("Test box 2D");
+
+        buttonTestBox2D.Text.copyTo(buttonTestBox2D.OverlapsText);
+        buttonTestBox2D.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Test box 2D<-");
+
         buttonQuit = button2DScene.copy();
         buttonQuit.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.9f))
                 .setText("Quit");
@@ -103,7 +110,8 @@ public class MenuScene extends Scene {
         guiList.GUIs.put(0, button2DScene);
         guiList.GUIs.put(1, button3DScene);
         guiList.GUIs.put(2, buttonCollisionTest);
-        guiList.GUIs.put(3, buttonQuit);
+        guiList.GUIs.put(3, buttonTestBox2D);
+        guiList.GUIs.put(4, buttonQuit);
         guiList.ShouldLoop = false;
 
         rotation = new FloatTweening();
@@ -139,6 +147,9 @@ public class MenuScene extends Scene {
                         sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
                         break;
                     case 3:
+                        sceneManagerInterface.setNewScene(new TestBox2D(), new String[]{""});
+                        break;
+                    case 4:
                         sceneManagerInterface.exit(0);
                         break;
                 }

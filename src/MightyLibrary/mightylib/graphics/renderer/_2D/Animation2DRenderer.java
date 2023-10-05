@@ -23,7 +23,7 @@ public class Animation2DRenderer extends Renderer {
     private boolean horizontalFlip, verticalFlip;
 
     public Animation2DRenderer(String shaderName){
-        super(shaderName, true, true);
+        super(shaderName, true);
 
         animationScale = new Vector2f(1);
 

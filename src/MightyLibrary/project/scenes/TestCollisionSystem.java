@@ -106,11 +106,7 @@ public class TestCollisionSystem extends Scene {
 
 
         rotation.update();
-        //renderer.setRotation(rotation.value(), new Vector3f(0, 0, 1));
-
         renderer2.updateShapePosition();
-
-        main3DCamera.updateView();
     }
 
 

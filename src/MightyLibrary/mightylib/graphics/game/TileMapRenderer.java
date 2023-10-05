@@ -28,7 +28,7 @@ public class TileMapRenderer extends Renderer {
 
 
     public TileMapRenderer(String shaderName, boolean willChange, boolean isForLayer) {
-        super(shaderName, true, true);
+        super(shaderName, true);
 
         // Null let renderer's old setting for text
         this.reference = EDirection.LeftUp;

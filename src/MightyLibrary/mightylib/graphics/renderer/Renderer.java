@@ -1,17 +1,20 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.graphics.shader.ShaderValue;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 
-public class Renderer{
+public class Renderer {
     public static final int NOTHING = 0;
     public static final int COLOR = 1;
     public static final int TEXTURE = 2;
@@ -21,12 +24,12 @@ public class Renderer{
     protected final Vector3f rotation;
     protected float angle;
 
-    protected boolean shouldGlUniformModel;
+    protected boolean shouldSendProjection, shouldSendView, shouldSendModel, shouldSendColor;
+
     protected Matrix4f model;
     protected boolean display;
-    protected FloatBuffer modelBuffer;
+
     protected Shape shape;
-    protected ShaderManager shadManager;
 
     protected int displayMode;
 
@@ -35,26 +38,45 @@ public class Renderer{
 
     // Colored
     public Color4f color;
+    private ShaderManager shaderManager;
+    protected ShaderValue colorShaderValue;
 
-    public Renderer(String shaderName, boolean useEbo, boolean in2D){
-        shadManager = ShaderManager.getInstance();
-        shape = new Shape(shaderName, useEbo, in2D);
+    protected FloatBuffer modelBuffer;
+    protected ShaderValue modelShaderValue;
+
+    protected Camera referenceCamera;
+
+    public Renderer(String shaderName, boolean useEbo){
+        shape = new Shape(shaderName, useEbo);
         model = new Matrix4f().identity();
+        shaderManager = ShaderManager.getInstance();
 
         display = true;
 
         // Display mode
         texture = null;
         displayMode = NOTHING;
-        color = ColorList.BLACK;
+        color = ColorList.Black();
 
         position = new Vector3f();
         scale = new Vector3f(1f);
         rotation = new Vector3f();
 
         modelBuffer = BufferUtils.createFloatBuffer(16);
+        shouldSendProjection = shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1;
+        shouldSendView = shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1;
+        shouldSendModel = shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1;
 
-        shouldGlUniformModel = ShaderManager.getInstance().getShader(shape.getShaderId()).getLink("model") != -1;
+        shouldSendColor = shape.getShader().getLink(ShaderManager.GENERIC_COLOR_FIELD_NAME) != -1;
+
+        if (shouldSendModel) {
+            modelShaderValue = new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, FloatBuffer.class, modelBuffer);
+        }
+
+        if (shouldSendColor)
+            colorShaderValue = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Vector4f.class, color);
+
+        referenceCamera = null;
 
         applyModel();
     }
@@ -69,20 +91,36 @@ public class Renderer{
 
 
     public void updateShader(){
-        // Apply model matrix
-        if (shouldGlUniformModel){
-            shadManager.getShader(shape.getShaderId()).glUniform("model", modelBuffer);
+        if (referenceCamera == null) {
+            ShaderManager.getInstance().sendCameraToShader(shape.getShader(), shouldSendProjection, shouldSendView);
+        } else {
+            if (shouldSendProjection) {
+                getShape().getShader().sendValueToShader(referenceCamera.getProjection());
+            }
+
+            if (shouldSendView) {
+                getShape().getShader().sendValueToShader(referenceCamera.getView());
+            }
         }
 
-        if (displayMode == COLOR) {
-            shadManager.getShader(
-                    shape.getShaderId()).glUniform("color", color.getR(), color.getG(), color.getB(), color.getA()
-            );
+        // Apply model matrix
+        if (shouldSendModel){
+            modelShaderValue.setObject(modelBuffer);
+            sentToShader(modelShaderValue);
+        }
+
+        if (displayMode == COLOR && shouldSendColor) {
+            colorShaderValue.setObject(color);
+            sentToShader(colorShaderValue);
         } else if (displayMode == TEXTURE){
             texture.bind(0);
         }
     }
 
+
+    protected void sentToShader(ShaderValue value){
+        shape.getShader().sendValueToShader(value);
+    }
 
     public void draw(){
         shape.display();
@@ -134,6 +172,16 @@ public class Renderer{
     }
 
 
+    public void setRotation(Renderer other){
+        this.rotation.x = other.rotation.x;
+        this.rotation.y = other.rotation.y;
+        this.rotation.z = other.rotation.z;
+
+        this.angle = other.angle;
+
+        applyModel();
+    }
+
     public void applyModel(){
         this.model.identity();
 
@@ -160,15 +208,15 @@ public class Renderer{
 
     public void switchToTextureMode(Texture texture){
         displayMode = TEXTURE;
-        this.texture = texture;
         shape.enableVbo(1);
+
+        this.texture = texture;
     }
 
 
     public void switchToColorMode(Color4f color){
         displayMode = COLOR;
         this.color = color.copy();
-        shape.disableVbo(1);
     }
 
 
@@ -190,8 +238,11 @@ public class Renderer{
 
     public float getRotationAngle() { return angle; }
 
+    public void setReferenceCamera(Camera camera){
+        referenceCamera = camera;
+    }
+
     public void unload(){
         shape.unload();
-        modelBuffer.clear();
     }
 }

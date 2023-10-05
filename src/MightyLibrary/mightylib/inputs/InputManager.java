@@ -51,6 +51,7 @@ public class InputManager {
 
 
     public void init(ActionInput[] actionInputs){
+        actionConfigurations.clear();
         initLibraryInputs();
 
         for (ActionInput actionInput : actionInputs) {

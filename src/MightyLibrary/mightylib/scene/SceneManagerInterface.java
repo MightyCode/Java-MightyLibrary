@@ -26,7 +26,7 @@ public class SceneManagerInterface {
         ExitStatus = -1;
 
         newScene = null;
-        changeArgs = new String[]{""};
+        changeArgs = new String[]{};
     }
 
     public void exit(int exitStatus){

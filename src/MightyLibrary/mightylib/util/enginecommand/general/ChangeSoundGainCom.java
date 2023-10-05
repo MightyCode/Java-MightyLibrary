@@ -51,6 +51,6 @@ public class ChangeSoundGainCom extends BaseCommand {
         System.out.println("Change gain of a gain node");
         System.out.println("changegain node value : change the gain of a gain node by the writted value");
         System.out.println("changegain list : List all of the gain node and their value");
-        System.out.println("changegain help : display tips about the command");
+        System.out.println("changegain help : MightyLibrary.project.display tips about the command");
     }
 }

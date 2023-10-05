@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>space.univeirb.dualz</groupId>
+    <groupId>mightycode.javamightylibrary</groupId>
     <artifactId>Java-MightyLibrary</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -101,7 +101,6 @@
             </resource>
         </resources>
     </build>
-
     <dependencies>
         <dependency>
             <groupId>org.json</groupId>
@@ -166,6 +165,11 @@
             <groupId>org.joml</groupId>
             <artifactId>joml</artifactId>
             <version>${joml.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jbox2d</groupId>
+            <artifactId>jbox2d-library</artifactId>
+            <version>2.2.1.1</version>
         </dependency>
     </dependencies>
     

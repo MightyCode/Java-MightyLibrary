@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.inputs;
 import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFWScrollCallback;
 
 import java.nio.DoubleBuffer;
 import java.util.Arrays;
@@ -31,6 +32,10 @@ public class MouseManager {
 
     private boolean displayCursor;
 
+
+    private Vector2f mouseScroll;
+    private GLFWScrollCallback scrollCallback;
+
     /**
      * Mouse manager class.
      * Instance the class
@@ -47,6 +52,17 @@ public class MouseManager {
 
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
+
+        mouseScroll = new Vector2f();
+
+        glfwSetScrollCallback(windowInfo.getWindowId(), scrollCallback = new GLFWScrollCallback() {
+            @Override
+            public void invoke(final long window, final double xOffset, final double yOffset) {
+                mouseScroll.x = (float) xOffset;
+                mouseScroll.y = (float) yOffset;
+            }
+        });
+
         mouseUpdate();
         dispose();
     }
@@ -118,6 +134,9 @@ public class MouseManager {
             oldState[key] = state[key];
             state[key] = getState(key);
         }
+
+        mouseScroll.x = 0;
+        mouseScroll.y = 0;
     }
 
     public void invertCursorState(){
@@ -140,4 +159,6 @@ public class MouseManager {
     public boolean getCursorState(){
         return displayCursor;
     }
+
+    public Vector2f getMouseScroll() { return new Vector2f(mouseScroll); }
 }

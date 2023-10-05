@@ -58,6 +58,6 @@ public class ReloadGenCom extends BaseCommand {
         System.out.println("1. reload [resources type] : reload certain type of resources");
         System.out.println("2. reload all : reload all resources / shader excluded");
         System.out.println("3. reload shader : reload all shaders");
-        System.out.println("4. reload help : display help's tips about the command");
+        System.out.println("4. reload help : MightyLibrary.project.display help's tips about the command");
     }
 }
