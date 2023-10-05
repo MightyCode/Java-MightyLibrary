@@ -6,9 +6,6 @@ import org.joml.Vector4f;
 
 import java.nio.FloatBuffer;
 
-import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL20.glUniform1i;
-
 public class ShaderValue implements Cloneable {
     protected final String name;
     protected Object object;

@@ -2,7 +2,6 @@ package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.util.Id;
 import MightyLibrary.mightylib.util.math.MightyMath;
 

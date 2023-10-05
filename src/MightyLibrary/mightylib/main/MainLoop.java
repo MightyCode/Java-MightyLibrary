@@ -2,11 +2,12 @@ package MightyLibrary.mightylib.main;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
+import MightyLibrary.mightylib.main.procedures.IProjectLoading;
+import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Icon;
 import MightyLibrary.mightylib.scene.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
-import MightyLibrary.project.scenes.MenuScene;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
 
@@ -25,8 +26,8 @@ public final class MainLoop {
     private static boolean admin = false;
     public static boolean isAdmin() { return admin; }
 
-    private static void setup(StartLibraryArguments startArguments) {
-        admin = startArguments.admin;
+    private static void setup(IStartLibraryProcedure startProcedure) {
+        admin = startProcedure.returnAdminState();
 
         System.out.println("--Start program. ");
         System.out.println("--Load libraries.");
@@ -35,17 +36,23 @@ public final class MainLoop {
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
-        tickTime = NANO_IN_SECOND / startArguments.tps;
-        frameTime = NANO_IN_SECOND / startArguments.fps;
+        tickTime = NANO_IN_SECOND / startProcedure.returnTPS();
+        frameTime = NANO_IN_SECOND / startProcedure.returnFPS();
 
         System.out.println("--Create main context.");
         contextManager = ContextManager.getInstance();
 
         WindowCreationInfo wci = new WindowCreationInfo();
-        wci.Size = new Vector2i(startArguments.windowWidth, startArguments.windowHeight);
-        wci.VirtualSize = new Vector2i(startArguments.windowWidth, startArguments.windowHeight);
-        wci.WindowName = startArguments.projectName;
-        wci.Fullscreen = startArguments.fullscreen;
+        wci.Size = new Vector2i(
+                startProcedure.returnSceneSize().x,
+                startProcedure.returnSceneSize().y);
+
+        wci.VirtualSize = new Vector2i(
+                startProcedure.returnVirtualSceneSize().x,
+                startProcedure.returnVirtualSceneSize().y);
+
+        wci.WindowName = startProcedure.returnProjectName();
+        wci.Fullscreen = startProcedure.returnFullscreenState();
 
         contextManager.createDefaultContext(wci);
 
@@ -65,15 +72,16 @@ public final class MainLoop {
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(new StopLibrary());
 
-        startArguments.projectLoading.init();
-        startArguments.projectLoading.contextLoading(context);
+        IProjectLoading projectLoading = startProcedure.returnIProjectLoading();
+        projectLoading.init();
+        projectLoading.contextLoading(context);
 
         resource.init();
-        sceneManager.init(new MenuScene(), new String[]{});
+        sceneManager.init(startProcedure.returnStartScene(), new String[]{});
 
-        if (startArguments.projectIcon != null) {
-            if (resource.isExistingResource(Icon.class, startArguments.projectIcon))
-                context.getWindow().setIcon(resource.getResource(Icon.class, startArguments.projectIcon));
+        if (startProcedure.returnIconName() != null) {
+            if (resource.isExistingResource(Icon.class, startProcedure.returnIconName()))
+                context.getWindow().setIcon(resource.getResource(Icon.class, startProcedure.returnIconName()));
         }
 
         System.out.println("\n" + Version.getVersion());
@@ -85,8 +93,8 @@ public final class MainLoop {
     }
 
     @SuppressWarnings("BusyWait")
-    public static void run(StartLibraryArguments startArguments) {
-        setup(startArguments);
+    public static void run(IStartLibraryProcedure startLibraryProcedure) {
+        setup(startLibraryProcedure);
 
         // Set loop parameters
         int ticks = 0;
@@ -123,7 +131,7 @@ public final class MainLoop {
 
             if (now - lastSecond >= NANO_IN_SECOND) {
                 if (MainLoop.admin)
-                    window.setTitle(startArguments.projectName + " | FPS:" + frames + "; TPS:" + ticks);
+                    window.setTitle(startLibraryProcedure.returnProjectName() + " | FPS:" + frames + "; TPS:" + ticks);
 
                 ticks = frames = 0;
                 lastSecond += NANO_IN_SECOND;

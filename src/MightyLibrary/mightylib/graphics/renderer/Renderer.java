@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
-import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.texture.Texture;

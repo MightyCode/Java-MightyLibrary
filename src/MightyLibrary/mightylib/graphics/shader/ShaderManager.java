@@ -4,11 +4,9 @@ import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Camera3D;
-import MightyLibrary.mightylib.util.Id;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 

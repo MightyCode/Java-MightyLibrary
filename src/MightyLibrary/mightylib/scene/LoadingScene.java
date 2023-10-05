@@ -1,8 +1,5 @@
 package MightyLibrary.mightylib.scene;
 
-import MightyLibrary.mightylib.scene.Scene;
-import MightyLibrary.mightylib.scene.LoadingContent;
-
 import java.lang.reflect.ParameterizedType;
 
 public abstract class LoadingScene <T extends LoadingContent, K extends LoadingContent.Result> extends Scene {
