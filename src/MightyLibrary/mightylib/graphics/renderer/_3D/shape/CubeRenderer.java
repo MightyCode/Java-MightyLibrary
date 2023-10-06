@@ -29,9 +29,8 @@ public class CubeRenderer extends Renderer {
         super(shaderName, false);
 
         faces = new HashMap<>();
-        for (EDirection3D direction3D : EDirection3D.values()){
+        for (EDirection3D direction3D : EDirection3D.values())
             faces.put(direction3D, new Face());
-        }
 
         float[] vertices = {
                         // Negative X face
@@ -44,8 +43,8 @@ public class CubeRenderer extends Renderer {
                         0.0f,  1,  1,
 
                         // Positive X face
-                        1,  2,  1,
-                        1,  3, 0.0f,
+                        1,  1,  1,
+                        1,  1, 0.0f,
                         1, 0.0f, 0.0f,
 
                         1, 0.0f, 0.0f,

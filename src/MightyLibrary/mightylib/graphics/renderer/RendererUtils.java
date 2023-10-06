@@ -7,6 +7,8 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 public abstract class RendererUtils {
+    public static Vector4f BasicTexturePosition(){ return new Vector4f(0f, 1f, 0f,1f); }
+
     public static float [] calculatePositionForSquare(Vector2f size, EDirection reference){
         float [] temp = new float[]{
                 0, size.y,
@@ -15,23 +17,18 @@ public abstract class RendererUtils {
                 size.x, size.y,
         };
 
-
         switch(reference){
             case None:
             case Up:
             case Down:
-                temp[0] = -0.5f * size.x;
-                temp[2] = -0.5f * size.x;
-                temp[4] = 0.5f * size.x;
-                temp[6] = 0.5f * size.x;
+                for (int i = 0; i < 8; i += 2)
+                    temp[i] -= 0.5f * size.x;
                 break;
             case RightDown:
             case Right:
             case RightUp:
-                temp[0] = -1 * size.x;
-                temp[2] = -1 * size.x;
-                temp[4] = 0f * size.x;
-                temp[6] = 0f * size.x;
+                for (int i = 0; i < 8; i += 2)
+                    temp[i] -= size.x;
                 break;
         }
 
@@ -39,18 +36,14 @@ public abstract class RendererUtils {
             case None:
             case Left:
             case Right:
-                temp[1] = 0.5f * size.y;
-                temp[3] = -0.5f * size.y;
-                temp[5] = -0.5f * size.y;
-                temp[7] = 0.5f * size.y;
+                for (int i = 1; i < 8; i += 2)
+                    temp[i] -= 0.5f * size.y;
                 break;
             case LeftDown:
             case Down:
             case RightDown:
-                temp[1] = -1 * size.y;
-                temp[3] = 0f * size.y;
-                temp[5] = 0f * size.y;
-                temp[7] = -1f * size.y;
+                for (int i = 1; i < 8; i += 2)
+                    temp[i] -= size.y;
                 break;
         }
 

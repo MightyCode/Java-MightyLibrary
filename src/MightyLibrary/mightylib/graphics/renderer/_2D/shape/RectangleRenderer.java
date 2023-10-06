@@ -25,7 +25,7 @@ public class RectangleRenderer extends Renderer {
         textureFlip = EFlip.None;
         textureRotation = ERotation.None;
 
-        texturePosition = new Vector4f(0f, 1f, 0f,1f);
+        texturePosition = RendererUtils.BasicTexturePosition();
 
         int[] indices = RendererUtils.indicesForSquare();
         shape.setEboStorage(Shape.STATIC_STORE);
