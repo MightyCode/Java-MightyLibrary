@@ -11,6 +11,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class CubeRenderer extends Renderer {
+    private static final int FACE_NUMBER = 6;
+    private static final int VERTEX_TEXTURE_SIZE = 2;
+    private static final int VERTEX_POSITION_SIZE = 3;
+    private static final int VERTEX_NORMAL_SIZE = 3;
+    private static final int VERTEX_NUMBER = 6;
+
     public static class Face {
         public EFlip flip;
         public ERotation rotation;
@@ -32,77 +38,79 @@ public class CubeRenderer extends Renderer {
         for (EDirection3D direction3D : EDirection3D.values())
             faces.put(direction3D, new Face());
 
+
         float[] vertices = {
-                        // Negative X face
-                        0.0f,  1,  1,
-                        0.0f,  1, 0.0f,
-                        0.0f, 0.0f, 0.0f,
+            // Positive X face
+            1, 1, 1,
+            1, 1, 0,
+            1, 0, 0,
 
-                        0.0f, 0.0f, 0.0f,
-                        0.0f, 0.0f,  1,
-                        0.0f,  1,  1,
+            1, 1, 1,
+            1, 0, 0,
+            1, 0, 1,
 
-                        // Positive X face
-                        1,  1,  1,
-                        1,  1, 0.0f,
-                        1, 0.0f, 0.0f,
+            // Negative X face
+            0, 1, 0,
+            0, 1, 1,
+            0, 0, 1,
 
-                        1, 0.0f, 0.0f,
-                        1, 0.0f,  1,
-                        1,  1,  1,
+            0, 1, 0,
+            0, 0, 1,
+            0, 0, 0,
 
-                        // Negative Y face
-                        0.0f, 0.0f, 0.0f,
-                        1, 0.0f, 0.0f,
-                        1, 0.0f,  1,
+            // Positive z face
+            0, 1, 1,
+            1, 1, 1,
+            1, 0, 1,
 
-                        1, 0.0f,  1,
-                        0.0f, 0.0f,  1,
-                        0.0f, 0.0f, 0.0f,
+            0, 1, 1,
+            1, 0, 1,
+            0, 0, 1,
 
-                        // Positive Y face
-                        0.0f,  1, 0.0f,
-                        1,  1, 0.0f,
-                        1,  1,  1,
+            // Negative z face
+            1, 1, 0,
+            0, 1, 0,
+            0, 0, 0,
 
-                        1,  1,  1,
-                        0.0f,  1,  1,
-                        0.0f,  1, 0.0f,
+            1, 1, 0,
+            0, 0, 0,
+            1, 0, 0,
 
-                        // Negative z face
-                        0.0f, 0.0f, 0.0f,
-                        1, 0.0f, 0.0f,
-                        1,  1, 0.0f,
+            // Positive Y face
+            0, 1, 1,
+            0, 1, 0,
+            1, 1, 0,
 
-                        1,  1, 0.0f,
-                        0.0f,  1, 0.0f,
-                        0.0f, 0.0f, 0.0f,
+            0, 1, 1,
+            1, 1, 0,
+            1, 1, 1,
 
-                        // Positive z face
-                        0.0f, 0.0f,  1,
-                        1, 0.0f,  1,
-                        1,  1,  1,
+            // Negative Y face
+            0, 0, 0,
+            0, 0, 1,
+            1, 0, 1,
 
-                        1,  1,  1,
-                        0.0f,  1,  1,
-                        0.0f, 0.0f,  1,
+            0, 0, 0,
+            1, 0, 1,
+            1, 0, 0,
         };
 
-        positionIndex = shape.addVboFloat(vertices, 3, Shape.STATIC_STORE);
+        positionIndex = shape.addVboFloat(vertices, VERTEX_POSITION_SIZE, Shape.STATIC_STORE);
 
         setPosition(new Vector3f(0));
     }
 
     public void setTexturePosition(){
-        float[] table = new float[12 * 6];
+        float[] table = new float[VERTEX_NUMBER * VERTEX_TEXTURE_SIZE * FACE_NUMBER];
 
-        for(int i = 0; i < 6; ++i){
-            table[12 * i + 0] = 0.0f; table[12 * i + 1] = 1.0f;
-            table[12 * i + 2] = 1.0f; table[12 * i + 3] = 1.0f;
-            table[12 * i + 4] = 1.0f; table[12 * i + 5] = 0.0f;
-            table[12 * i + 6] = 1.0f; table[12 * i + 7] = 0.0f;
-            table[12 * i + 8] = 0.0f; table[12 * i + 9] = 0.0f;
-            table[12 * i + 10] = 0.0f; table[12 * i + 11] = 1.0f;
+        for(int i = 0; i < FACE_NUMBER; ++i){
+            table[12 * i + 0]  = 0; table[12 * i + 1] = 0;
+            table[12 * i + 2]  = 1; table[12 * i + 3] = 0;
+            table[12 * i + 4]  = 1; table[12 * i + 5] = 1;
+
+            table[12 * i + 6]  = 0; table[12 * i + 7]  = 0;
+            table[12 * i + 8]  = 1; table[12 * i + 9]  = 1;
+            table[12 * i + 10] = 0; table[12 * i + 11] = 1;
         }
 
         textureIndex = shape.addVboFloat(table, 2, Shape.STATIC_STORE);
@@ -110,49 +118,49 @@ public class CubeRenderer extends Renderer {
 
     public void setNormal(){
         float[] table = {
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
-                -1.0f, 0.0f, 0.0f,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
 
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
-                1.0f, 0.0f, 0.0f,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
 
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
-                0.0f, -1.0f, 0.0f,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
 
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
-                0.0f, 1.0f, 0.0f,
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
 
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
-                0.0f, 0.0f, -1.0f,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
 
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f,
-                0.0f, 0.0f, 1.0f
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
         };
 
-        normalIndex = shape.addVboFloat(table, 3, Shape.STATIC_STORE);
+        normalIndex = shape.addVboFloat(table, VERTEX_NORMAL_SIZE, Shape.STATIC_STORE);
     }
 }

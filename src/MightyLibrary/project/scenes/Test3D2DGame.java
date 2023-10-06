@@ -12,6 +12,7 @@ import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
+import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.ColorList;
@@ -25,16 +26,15 @@ public class Test3D2DGame extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
 
     //// 2D World ////
-
+    private Camera2D insideCamera;
     private RectangleRenderer background;
-    private RectangleRenderer debugView;
     private Animation2DRenderer slimeRenderer;
     private FrameBuffer game2DRender;
 
     // 3D World ////
 
+    private RectangleRenderer debugView;
     private CubeRenderer gameRenderer;
-
     private Text lookAtText;
 
     public Test3D2DGame(){
@@ -50,16 +50,23 @@ public class Test3D2DGame extends Scene {
 
         main3DCamera.setSpeed(new Vector3f(10));
 
+        insideCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0, 0), true);
+
         /// RENDERERS ///
-        game2DRender = new FrameBuffer(new BasicBindableObject().setQualityTexture(TextureParameters.PIXEL_ART_PARAMETERS),
-                mainContext.getWindow().getInfo().getVirtualSizeRef().x,  mainContext.getWindow().getInfo().getVirtualSizeRef().y);
+        game2DRender = new FrameBuffer(
+                new BasicBindableObject().setQualityTexture(TextureParameters.PIXEL_ART_PARAMETERS),
+                mainContext.getWindow().getInfo().getVirtualSizeRef().x,
+                mainContext.getWindow().getInfo().getVirtualSizeRef().y);
 
         background = new RectangleRenderer("texture2D");
+        background.setReferenceCamera(insideCamera);
         background.switchToTextureMode("error");
-        background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x, mainContext.getWindow().getInfo().getVirtualSizeRef().y);
+        background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x,
+                mainContext.getWindow().getInfo().getVirtualSizeRef().y);
         background.setPosition(new Vector2f(0, 0));
 
         slimeRenderer = new Animation2DRenderer("texture2D");
+        slimeRenderer.setReferenceCamera(insideCamera);
         slimeRenderer.switchToTextureMode("slime");
         Animator animator = new Animator();
         animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
@@ -176,7 +183,6 @@ public class Test3D2DGame extends Scene {
     public void display() {
         game2DRender.bindFrameBuffer();
         clear();
-
         mainContext.getWindow().setVirtualViewport();
 
         background.display();
