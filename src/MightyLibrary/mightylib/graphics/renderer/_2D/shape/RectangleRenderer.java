@@ -53,7 +53,7 @@ public class RectangleRenderer extends Renderer {
 
 
     private float[] texturePos(){
-        return RendererUtils.texturePosition(texturePosition, textureFlip, textureRotation);
+        return RendererUtils.TexturePosition(texturePosition, textureFlip, textureRotation);
     }
 
     // Set size with size of pixel

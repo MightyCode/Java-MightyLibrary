@@ -51,18 +51,14 @@ public abstract class RendererUtils {
     }
 
     public static int[] indicesForSquare (){
-        return new int[] { 0, 1, 2, 2, 0, 3 };
+        return new int[] { 0, 3, 2, 0, 2, 1 };
     }
 
-    public static float [] texturePosition(Vector4f texturePosition, EFlip flip, ERotation rotation){
-        float[] result = new float[]{
-                texturePosition.x, texturePosition.w,
-                texturePosition.x, texturePosition.z,
-                texturePosition.y, texturePosition.z,
-                texturePosition.y, texturePosition.w,
-        };
-
+    public static float [] ApplyRotationFlip(float[] cornersPosition, EFlip flip, ERotation rotation) {
         // Apply flip transformation
+        float[] result = new float[cornersPosition.length];
+        System.arraycopy(cornersPosition, 0, result, 0, cornersPosition.length);
+
         switch (flip) {
             case Horizontal:
             case HorizontalVertical:
@@ -101,5 +97,15 @@ public abstract class RendererUtils {
         }
 
         return result;
+    }
+
+    public static float [] TexturePosition(Vector4f texturePosition, EFlip flip, ERotation rotation){
+        return ApplyRotationFlip(new float[]{
+                texturePosition.x, texturePosition.w,
+                texturePosition.x, texturePosition.z,
+                texturePosition.y, texturePosition.z,
+                texturePosition.y, texturePosition.w,
+        }, flip, rotation);
+
     }
 }
