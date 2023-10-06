@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.util.math.EDirection3D;
 import MightyLibrary.mightylib.util.math.EFlip;
 import MightyLibrary.mightylib.util.math.ERotation;
+import MightyLibrary.mightylib.util.math.MightyMath;
 import MightyLibrary.mightylib.util.valueDebug.TableDebug;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -29,6 +30,12 @@ public class CubeRenderer extends Renderer {
             1, 0
     };
 
+    private static final EDirection3D[] FACES_ORDER = {
+            EDirection3D.Forward, EDirection3D.Backward,
+            EDirection3D.Right, EDirection3D.Left,
+            EDirection3D.Up, EDirection3D.Down
+    };
+
     public static class Face {
         public EFlip Flip;
         public ERotation Rotation;
@@ -46,12 +53,6 @@ public class CubeRenderer extends Renderer {
     private final int positionIndex;
     private int textureIndex;
     private int normalIndex;
-
-    private static final EDirection3D[] FACES_ORDER = {
-            EDirection3D.Forward, EDirection3D.Backward,
-            EDirection3D.Right, EDirection3D.Left,
-            EDirection3D.Up, EDirection3D.Down
-    };
 
     public CubeRenderer(String shaderName){
         super(shaderName, true);
@@ -133,37 +134,22 @@ public class CubeRenderer extends Renderer {
     }
 
     public void setNormal(){
-        float[] table = {
-                1, 0, 0,
-                1, 0, 0,
-                1, 0, 0,
-                1, 0, 0,
+        float[] table = new float[FACE_NUMBER * VERTEX_NUMBER * VERTEX_NORMAL_SIZE];
+        for (int i = 0; i < FACE_NUMBER; ++i) {
+            Vector3f direction = MightyMath.ToVector(FACES_ORDER[i]);
+            for (int j = 0; j < VERTEX_NUMBER; ++j) {
+                System.out.println(i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE  + j * VERTEX_NORMAL_SIZE);
+                table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE  + j * VERTEX_NORMAL_SIZE] = direction.x;
+                table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE + j * VERTEX_NORMAL_SIZE + 1] = direction.y;
+                table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE + j * VERTEX_NORMAL_SIZE + 2] = direction.z;
+            }
 
-                -1, 0, 0,
-                -1, 0, 0,
-                -1, 0, 0,
-                -1, 0, 0,
 
-                0, 0, 1,
-                0, 0, 1,
-                0, 0, 1,
-                0, 0, 1,
+            System.out.println();
+            TableDebug.printf(table);
+            System.out.println();
 
-                0, 0, -1,
-                0, 0, -1,
-                0, 0, -1,
-                0, 0, -1,
-
-                0, 1, 0,
-                0, 1, 0,
-                0, 1, 0,
-                0, 1, 0,
-
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0,
-                0, -1, 0,
-        };
+        }
 
         normalIndex = shape.addVboFloat(table, VERTEX_NORMAL_SIZE, Shape.STATIC_STORE);
     }

@@ -14,14 +14,14 @@ import java.util.ArrayList;
  */
 public class MightyMath {
 
-	public static final Vector3f LEFT_VECTOR = new Vector3f(-1, 0, 0);
-	public static final Vector3f RIGHT_VECTOR = new Vector3f(1, 0, 0);
+	public static final Vector3f LEFT_VECTOR = new Vector3f(0, 0, -1);
+	public static final Vector3f RIGHT_VECTOR = new Vector3f(0, 0, 1);
 
 	public static final Vector3f UP_VECTOR = new Vector3f(0, 1, 0);
 	public static final Vector3f DOWN_VECTOR = new Vector3f(0, -1, 0);
 
-	public static final Vector3f FORWARD_VECTOR = new Vector3f(0, 0, 1);
-	public static final Vector3f BACKWARD_VECTOR = new Vector3f(0, 0, -1);
+	public static final Vector3f FORWARD_VECTOR = new Vector3f(-1, 0, 0);
+	public static final Vector3f BACKWARD_VECTOR = new Vector3f(1, 0, 0);
 
 	public static final Vector3f ONE_VECTOR = new Vector3f(1);
 	public static final Vector3f ZERO_VECTOR = new Vector3f(0);
