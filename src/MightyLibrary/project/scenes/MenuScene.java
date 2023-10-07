@@ -29,25 +29,11 @@ public class MenuScene extends Scene {
         CREATION_INFO_SELECT.gain = 1f;
     }
 
-    private static final SoundSourceCreationInfo CREATION_INFO_MUSIC = new SoundSourceCreationInfo();
-    static {
-        CREATION_INFO_MUSIC.name = "music";
-        CREATION_INFO_MUSIC.loop = true;
-        CREATION_INFO_MUSIC.gain = 0f;
-        CREATION_INFO_MUSIC.gainNode = "music";
-        CREATION_INFO_MUSIC.delay = 2f;
-    }
-
     private GUIList guiList;
 
-    private BackgroundlessButton buttonCollisionTest;
     private BackgroundlessButton buttonQuit;
 
     private FloatTweening rotation;
-
-    private SoundSource sound;
-
-    private FloatTweening floatTweening;
 
     public void init(String[] args) {
         super.init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
@@ -83,7 +69,7 @@ public class MenuScene extends Scene {
         button3DScene.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->Test3DScene<-");
 
-        buttonCollisionTest = button2DScene.copy();
+        BackgroundlessButton buttonCollisionTest = button2DScene.copy();
         buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.64f))
                 .setText("TestCollisionScene");
 
@@ -130,13 +116,6 @@ public class MenuScene extends Scene {
         rotation.setTweeningOption(ETweeningOption.LoopReversed)
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
-
-
-        sound = SoundManager.getInstance().createSoundSource(CREATION_INFO_MUSIC);
-
-        floatTweening = new FloatTweening();
-        floatTweening.setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.In)
-                .setTweeningOption(ETweeningOption.Direct).initTwoValue(5f, 0f, 0.7f);
     }
 
 
@@ -145,8 +124,11 @@ public class MenuScene extends Scene {
 
         guiList.update();
 
-        if (mainContext.getInputManager().getState(ActionId.ENTER) || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)){
+        if (mainContext.getInputManager().inputPressed(ActionId.ENTER)
+                || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)){
             Integer id = guiList.getSelected();
+            System.out.println(guiList.getSelected());
+
             if (id != null) {
                 switch (id) {
                     case 0:
@@ -174,20 +156,11 @@ public class MenuScene extends Scene {
         rotation.update();
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
-        /*if (guiList.isStateChanged()){
+        if (guiList.isStateChanged()){
             SoundManager.getInstance().createSoundSource(CREATION_INFO_SELECT);
-        }*/
-
-        buttonCollisionTest.OverlapsText.setX(rotation.value() * 50);
-
-        // Test Change sound dynamically
-        //if (rotation.value() * 50 > 300)
-            //SoundManager.getInstance().changeGain("global", 0.3f);
-
-        if (sound.isPlaying() && !floatTweening.finished()){
-            floatTweening.update();
-            sound.setGain(floatTweening.value());
         }
+
+        main2DCamera.setX(rotation.value() * 50);
 
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.exit(0);
@@ -198,6 +171,8 @@ public class MenuScene extends Scene {
         super.setVirtualScene();
         clear();
 
+        System.out.println("\n==START OF NEW FRAME ==\n");
+
         guiList.display();
 
         super.setAndDisplayRealScene();
@@ -206,8 +181,6 @@ public class MenuScene extends Scene {
 
     public void unload() {
         super.unload();
-        sound.stop();
-
         guiList.unload();
     }
 }

@@ -3,7 +3,7 @@ package MightyLibrary.mightylib.util.math;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Color4f extends Vector4f{
+public class Color4f extends Vector4f {
 
     public Color4f() {
         this(1.0f);

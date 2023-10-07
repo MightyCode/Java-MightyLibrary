@@ -39,9 +39,7 @@ public class Renderer {
 
     // Colored
     public Color4f color;
-    private ShaderManager shaderManager;
     protected ShaderValue colorShaderValue;
-
     protected FloatBuffer modelBuffer;
     protected ShaderValue modelShaderValue;
 
@@ -50,7 +48,6 @@ public class Renderer {
     public Renderer(String shaderName, boolean useEbo){
         shape = new Shape(shaderName, useEbo);
         model = new Matrix4f().identity();
-        shaderManager = ShaderManager.getInstance();
 
         display = true;
 
@@ -70,12 +67,11 @@ public class Renderer {
 
         shouldSendColor = shape.getShader().getLink(ShaderManager.GENERIC_COLOR_FIELD_NAME) != -1;
 
-        if (shouldSendModel) {
+        if (shouldSendModel)
             modelShaderValue = new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, FloatBuffer.class, modelBuffer);
-        }
 
         if (shouldSendColor)
-            colorShaderValue = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Vector4f.class, color);
+            colorShaderValue = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
 
         referenceCamera = null;
 
@@ -94,13 +90,11 @@ public class Renderer {
         if (referenceCamera == null) {
             ShaderManager.getInstance().sendCameraToShader(shape.getShader(), shouldSendProjection, shouldSendView);
         } else {
-            if (shouldSendProjection) {
+            if (shouldSendProjection)
                 getShape().getShader().sendValueToShader(referenceCamera.getProjection());
-            }
 
-            if (shouldSendView) {
+            if (shouldSendView)
                 getShape().getShader().sendValueToShader(referenceCamera.getView());
-            }
         }
 
         // Apply model matrix

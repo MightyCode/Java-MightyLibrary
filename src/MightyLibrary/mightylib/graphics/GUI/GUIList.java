@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.GUI;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
+import MightyLibrary.mightylib.scene.Camera;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,8 +24,6 @@ public class GUIList {
 
     public boolean ShouldLoop = true;
 
-    private boolean mouseMoved;
-
     public GUIList(InputManager inputManager, MouseManager mouseManager) {
         this.mouseManager = mouseManager;
         this.inputManager = inputManager;
@@ -33,7 +32,6 @@ public class GUIList {
         selected = null;
         id = null;
 
-        mouseMoved = false;
         selectedByMouse = false;
     }
 
@@ -48,24 +46,35 @@ public class GUIList {
         this.actionDownValue = actionDownValue;
     }
 
-    public boolean isStateChanged(){
-        return !Objects.equals(oldId, id);
+    public boolean isStateChanged() {
+        // Handle the case of unselecting button (move mouse)
+        if (id == null)
+            return false;
+
+        if (oldId == null)
+            return true;
+
+        return !oldId.equals(id);
     }
 
     public void update(){
+        // Store old id
         oldId = id;
 
-        // Check for mouse
-        mouseMoved = !mouseManager.oldPos().equals(mouseManager.pos());
-        if (mouseMoved){
-            checkMoveOver();
+        // If mouse move, should unselect button
+        boolean mouseMoved = !mouseManager.oldPos().equals(mouseManager.pos());
+        if (mouseMoved) {
+            selected = null;
+            id = null;
+        }
 
+        if (id == null) {
+            // Check if mouse over a button
+            checkMoveOver();
             if (selected != null && selectedByMouse && selected.mouseDisableIt()) {
                 for (GUI gui : GUIs.values())
                     gui.forceSelect(false);
             }
-
-            return;
         }
 
         Integer id = null;
@@ -90,8 +99,6 @@ public class GUIList {
             gui.forceUnselect(true);
 
         GUIs.get(id).forceSelect(true);
-
-        checkMoveOver();
     }
 
     private Integer selectUp(){
@@ -160,11 +167,8 @@ public class GUIList {
     }
 
     private void checkMoveOver(){
-        selected = null;
-        id = null;
-
         for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()){
-            if (mouseMoved && pair.getValue().GUIMouseSelected()) {
+            if (pair.getValue().GUIMouseSelected()) {
                 selected = pair.getValue();
                 id = pair.getKey();
 

@@ -2,11 +2,11 @@ package MightyLibrary.mightylib.inputs.inputType;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 
-public class InputOr implements IInput {
-    private final IInput input1;
-    private final IInput input2;
+public class InputOr implements IAction {
+    private final IAction input1;
+    private final IAction input2;
 
-    public InputOr(IInput input1, IInput input2){
+    public InputOr(IAction input1, IAction input2){
         this.input1 = input1;
         this.input2 = input2;
     }
@@ -17,14 +17,14 @@ public class InputOr implements IInput {
     }
 
     @Override
-    public boolean inputPressed(InputManager inputManager) {
-        return (!input1.getState(inputManager) && input2.inputPressed(inputManager))
-                || (!input2.getState(inputManager) && input1.inputPressed(inputManager));
+    public boolean actionPressed(InputManager inputManager) {
+        return (!input1.getState(inputManager) && input2.actionPressed(inputManager))
+                || (!input2.getState(inputManager) && input1.actionPressed(inputManager));
     }
 
     @Override
-    public boolean inputReleased(InputManager inputManager) {
-        return (!input1.getState(inputManager) && input2.inputReleased(inputManager))
-                || (!input2.getState(inputManager) && input1.inputReleased(inputManager));
+    public boolean actionReleased(InputManager inputManager) {
+        return (!input1.getState(inputManager) && input2.actionReleased(inputManager))
+                || (!input2.getState(inputManager) && input1.actionReleased(inputManager));
     }
 }

@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.inputs.inputType;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 
-public class InputSimple implements IInput  {
+public class InputSimple implements IAction {
     private final int inputId;
     private final EInputType inputType;
 
@@ -27,7 +27,7 @@ public class InputSimple implements IInput  {
     }
 
     @Override
-    public boolean inputPressed(InputManager inputManager) {
+    public boolean actionPressed(InputManager inputManager) {
         switch (inputType){
             case Keyboard:
                 return inputManager.getKeyboardManager().keyPressed(inputId);
@@ -39,7 +39,7 @@ public class InputSimple implements IInput  {
     }
 
     @Override
-    public boolean inputReleased(InputManager inputManager) {
+    public boolean actionReleased(InputManager inputManager) {
         switch (inputType){
             case Keyboard:
                 return inputManager.getKeyboardManager().keyReleased(inputId);

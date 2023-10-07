@@ -1,8 +1,20 @@
 package MightyLibrary.mightylib.graphics.GUI;
 
-public abstract class GUI {
+import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.scene.Camera;
+import MightyLibrary.mightylib.scene.Camera2D;
 
+public abstract class GUI {
+    protected Camera2D referenceCamera;
     private boolean forceSelect;
+
+    public GUI(Camera2D referenceCamera){
+        this.referenceCamera = referenceCamera;
+    }
+
+    public GUI(){
+        this(ShaderManager.getInstance().getMainCamera2D());
+    }
 
     public void forceSelect(boolean state){
         this.forceSelect = state;

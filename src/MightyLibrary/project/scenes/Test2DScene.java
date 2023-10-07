@@ -24,6 +24,7 @@ import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
@@ -126,8 +127,18 @@ public class Test2DScene extends Scene {
         super.setVirtualScene();
         clear();
 
+        mapRenderer.getForTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
+        mapRenderer.getBackTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
+
         mapRenderer.drawBackLayers();
+        mapRenderer.drawForLayers();
+
         slimeRenderer.display();
+
+        mapRenderer.getForTileMapRenderer().setPosition(new Vector3f(200, 200, 0));
+        mapRenderer.getBackTileMapRenderer().setPosition(new Vector3f(200, 200, 0));
+
+        mapRenderer.drawBackLayers();
         mapRenderer.drawForLayers();
 
         text.display();

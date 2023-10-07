@@ -31,7 +31,8 @@ public class ShaderManager {
     private final HashMap<String, Shader> shaders;
     private int version;
 
-    private Camera mainCamera3D, mainCamera2D;
+    private Camera3D mainCamera3D;
+    private Camera2D mainCamera2D;
 
     private ShaderManager() {
         shaders = new HashMap<>();
@@ -128,6 +129,9 @@ public class ShaderManager {
                 shader.sendValueToShader(mainCamera3D.getView());
         }
     }
+
+    public Camera2D getMainCamera2D(){ return (Camera2D) mainCamera2D; }
+    public Camera3D getMainCamera3D(){ return (Camera3D) mainCamera3D; }
 
     public void reload(){
         unload();

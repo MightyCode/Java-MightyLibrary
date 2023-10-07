@@ -21,6 +21,10 @@ public class FullTileMapRenderer {
         backTileMapRenderer.update();
     }
 
+    public TileMapRenderer getForTileMapRenderer(){ return forTileMapRenderer; }
+
+    public TileMapRenderer getBackTileMapRenderer(){ return backTileMapRenderer; }
+
     public void drawForLayers(){
         forTileMapRenderer.display();
     }

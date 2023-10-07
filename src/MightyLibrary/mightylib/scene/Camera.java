@@ -42,7 +42,6 @@ public abstract class Camera {
 
     public ShaderValue getView(){
         viewShaderValue.setObject(viewBuffer);
-        viewShaderValue.forceUpdate();
         return viewShaderValue;
     }
 

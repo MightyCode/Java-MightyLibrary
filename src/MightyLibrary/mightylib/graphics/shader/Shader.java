@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.util.ObjectId;
+import MightyLibrary.mightylib.util.math.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -143,12 +144,29 @@ public class Shader extends ObjectId {
         glDeleteShader(shaderProgram);
     }
 
-    public void sendValueToShader(ShaderValue value){
+    public void sendValueToShader(ShaderValue value) {
         if (value.equals(lastValue.get(value.getName()))
-            && !value.shouldForceUpdate())
+                && !value.shouldForceUpdate())
             return;
 
-        //System.out.println(getName() + " : Effectively send : " + value.getName());
+        System.out.println(getName() + " : Effectively send : " + value.getName());
+        /*if (value.getName().equals("view")
+                && lastValue.get(value.getName()) != null) {
+            FloatBuffer b = lastValue.get(value.getName()).getObjectTyped(FloatBuffer.class).duplicate().slice();
+
+            FloatBuffer a = value.getObjectTyped(FloatBuffer.class).duplicate().slice();
+
+            while(b.hasRemaining())
+                System.out.print(b.get() + " ");
+            System.out.println();
+
+            while(a.hasRemaining())
+                System.out.print(a.get() + " ");
+            System.out.println();
+
+            System.out.println(b + " " + a);
+            System.out.println(value.equals(lastValue.get(value.getName())));
+        }*/
 
         value.resetForceUpdate();
         lastValue.put(value.getName(), value.clone());
@@ -165,7 +183,9 @@ public class Shader extends ObjectId {
         } else if (value.getType() == Vector3f.class) {
             Vector3f v = (Vector3f) value.getObject();
             glUniform3f(link, v.x, v.y, v.z);
-        } else if (value.getType() == Vector4f.class) {
+        } else if (
+                value.getType() == Vector4f.class ||
+                value.getType() == Color4f.class) {
             Vector4f v = (Vector4f) value.getObject();
             glUniform4f(link, v.x, v.y, v.z, v.w);
         } else if (value.getType() == FloatBuffer.class) {
