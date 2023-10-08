@@ -94,10 +94,10 @@ public class TestCollisionSystem extends Scene {
             System.out.println("Down");
         }
 
-        renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
+        renderer.setColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
         if (boundedVolume2D.isColliding(rectangle2)){
-            renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
+            renderer.setColorMode(new Color4f(1, 0, 0, 1));
             boundedVolume2D.replaceComparedTo(rectangle2, EDirection.LeftUp);
             update = true;
         }

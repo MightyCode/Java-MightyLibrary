@@ -169,8 +169,6 @@ public class MenuScene extends Scene {
         super.setVirtualScene();
         clear();
 
-        System.out.println("\n==START OF NEW FRAME ==\n");
-
         guiList.display();
 
         super.setAndDisplayRealScene();

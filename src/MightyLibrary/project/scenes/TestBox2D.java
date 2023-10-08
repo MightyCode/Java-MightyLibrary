@@ -25,7 +25,7 @@ public class TestBox2D extends Scene {
         public Box(World world, Vector2f position, Vector2f size){
 
             renderer = new RectangleRenderer("colorShape2D");
-            renderer.switchToColorMode(ColorList.Grey());
+            renderer.setColorMode(ColorList.Grey());
 
             BodyDef bodyDef = new BodyDef();
             bodyDef.type = BodyType.DYNAMIC;
@@ -92,7 +92,7 @@ public class TestBox2D extends Scene {
         setClearColor(52, 189, 235, 1f);
 
         ground = new RectangleRenderer("colorShape2D");
-        ground.switchToColorMode(ColorList.Black());
+        ground.setColorMode(ColorList.Black());
 
         Vec2 gravity = new Vec2(0.8f, 9.81f);
         world = new World(gravity);

@@ -4,6 +4,8 @@ import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
+import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.EFlip;
 import MightyLibrary.mightylib.util.math.ERotation;
@@ -62,8 +64,11 @@ public class RectangleRenderer extends Renderer {
         return this;
     }
 
-    public RectangleRenderer setSizeToTexture(){
-        setScale(new Vector3f(texture.getWidth(), texture.getHeight(), 1.0f));
+    public RectangleRenderer setSizeToTexture() {
+        if (textures[0] == null)
+            return this;
+
+        setScale(new Vector3f(textures[0].getWidth(), textures[0].getHeight(), 1.0f));
 
         return this;
     }

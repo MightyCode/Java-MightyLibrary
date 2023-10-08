@@ -1,9 +1,8 @@
 package MightyLibrary.project.scenes;
 
-import MightyLibrary.mightylib.graphics.renderer._2D.FrameBuffer;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.renderer.utils.Material;
+import MightyLibrary.mightylib.graphics.renderer.utils.TextureMaterial;
 import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
@@ -14,27 +13,23 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.mightylib.util.math.ColorList;
 import MightyLibrary.project.main.ActionId;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 
 public class Test3DScene extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
-
     private Renderer sBlock;
-
     private Renderer sphere;
 
     private ModelRenderer stand;
-    private RectangleRenderer hudBar;
 
     // Textures
     private Texture displacementMap;
@@ -43,13 +38,15 @@ public class Test3DScene extends Scene {
     private final int faceSize = lineSize * 6;
     private final int boxSize = faceSize * 6;
 
-    private CubeRenderer light;
+    private CubeRenderer light, cubeColorLightning, cubeColorMaterial;
+
+    private CubeRenderer cubeTexturedMaterial;
+    private TextureMaterial cubeTexture;
 
     private FloatTweening displacementMapTweening;
 
     private FloatTweening rotationTweening;
 
-    private FrameBuffer game2DRender;
     private ShaderValue timeShaderValue;
 
     public Test3DScene(){
@@ -61,7 +58,8 @@ public class Test3DScene extends Scene {
         /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);
-        setClearColor(52, 189, 235, 1f);
+        Color4f clearColor = ColorList.DarkGrey();
+        setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
 
         timeShaderValue = new ShaderValue("time", Float.class, 0f);
         main3DCamera.setSpeed(new Vector3f(10));
@@ -69,30 +67,27 @@ public class Test3DScene extends Scene {
         /// RENDERERS ///
 
         // Cube
-        light = new CubeRenderer("colorComplex3D");
-        light.setPosition(new Vector3f(-1f, 3.0f, -4f));
-        light.switchToColorMode(new Color4f(1f, 0f, 0f, 1f));
+        cubeColorLightning = new CubeRenderer("colorLightning3D");
+        cubeColorLightning.setPosition(new Vector3f(-1f, 3.0f, -4f));
+        cubeColorLightning.setColorMode(ColorList.Red());
+        cubeColorLightning.setNormal();
+
+        light = new CubeRenderer("colorShape3D");
+        light.setPosition(new Vector3f(-1f, 10.0f, -4f));
+        light.setScale(new Vector3f(0.3f));
+        light.setColorMode(ColorList.White());
         light.setNormal();
 
-        ShaderValue worldColorShaderValue = new ShaderValue("worldColor",
-                Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f));
-
-        light.getShape().getShader().sendValueToShader(worldColorShaderValue);
-
-        ShaderValue lightDirectionShaderValue = new ShaderValue("lightDir",
-                Vector3f.class, new Vector3f(0.1f, 1f, 0.1f).normalize());
-        light.getShape().getShader().sendValueToShader(lightDirectionShaderValue);
-
-        ShaderValue lightColorShaderValue = new ShaderValue("lightColor",
-                Vector3f.class, new Vector3f(0.8f, 0.8f, 0.8f));
-        light.getShape().getShader().sendValueToShader(lightColorShaderValue);
-
+        cubeColorLightning.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosCopy())
+                .addShaderValue("worldColor", Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f))
+                .addShaderValue("lightPos", Vector3f.class, light.position())
+                .addShaderValue("lightColor", Vector3f.class, new Vector3f(0.8f, 0.8f, 0.8f));
 
         // Platform of cubes
-        sBlock = new Renderer("textureComplex3D", false);
+        sBlock = new Renderer("textureDisplacement3D", false);
         float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
-        sBlock.switchToTextureMode("container");
+        sBlock.setMainTextureChannel("container");
             // Displacement texture for cubes/crate
 
         displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
@@ -103,21 +98,46 @@ public class Test3DScene extends Scene {
 
         sBlock.getShape().getShader().sendValueToShader(displacementMapPositionShaderValue);
 
-        sphere = new Renderer("colorComplex3D", true);
+        sphere = new Renderer("colorLightning3D", true);
         computeSphere(sphere);
         sphere.setScale(new Vector3f(10, 10, 10));
         sphere.setPosition(new Vector3f(20, 10, 10));
+
+        cubeColorLightning.copyShaderValuesTo(sphere);
+
+        cubeColorMaterial = new CubeRenderer("colorMaterial3D");
+        cubeColorMaterial.setPosition(new Vector3f(-1f, 3.0f, -8f));
+        cubeColorMaterial.setColorMode(ColorList.Red());
+        cubeColorMaterial.setNormal();
+
+        cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosCopy())
+                .addShaderValue("light.position", Vector3f.class, light.position())
+                .addShaderValue("light.ambient", Vector3f.class, new Vector3f(0.2f, 0.2f, 0.2f))
+                .addShaderValue("light.diffuse", Vector3f.class, new Vector3f(0.5f, 0.5f, 0.5f))
+                .addShaderValue("light.specular", Vector3f.class, new Vector3f(1,1 ,1 ));
+
+        Material.CyanRubber().addToRenderer(cubeColorMaterial, "material");
+
+        cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
+        cubeTexturedMaterial.setPosition(new Vector3f(-1f, 3.0f, -12f));
+        cubeTexturedMaterial.setTexturePosition();
+        cubeTexturedMaterial.setNormal();
+        cubeTexturedMaterial.setMainTextureChannel("container2", "material.diffuse");
+
+        cubeTexturedMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosCopy())
+                .addShaderValue("light.position", Vector3f.class, light.position())
+                .addShaderValue("light.ambient", Vector3f.class, new Vector3f(0.2f, 0.2f, 0.2f))
+                .addShaderValue("light.diffuse", Vector3f.class, new Vector3f(0.5f, 0.5f, 0.5f))
+                .addShaderValue("light.specular", Vector3f.class, new Vector3f(1,1 ,1 ));
+
+        cubeTexture = new TextureMaterial("container2_specular", 64);
+        cubeTexture.addToRenderer(cubeTexturedMaterial, "material");
+
 
         // 3D Model
         stand = new ModelRenderer("texture3D", "stand/stall", "stall");
         stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
-
-        // Grey Rect in Hud
-        hudBar = new RectangleRenderer("texture2D");
-        hudBar.switchToTextureMode("error");
-        hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(new Vector2f(150, 150)); //window.size.x * 0.7f, window.size.y * 0.7f);
 
         displacementMapTweening = new FloatTweening();
         displacementMapTweening.setTweeningValues(ETweeningType.Linear, ETweeningBehaviour.InOut)
@@ -128,9 +148,6 @@ public class Test3DScene extends Scene {
         rotationTweening.setTweeningValues(ETweeningType.Quadratic, ETweeningBehaviour.InOut)
                 .setTweeningOption(ETweeningOption.LoopMirrored)
                 .initTwoValue(5f, 0f, (float)Math.PI * 2);
-
-        game2DRender = new FrameBuffer(new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS),
-                mainContext.getWindow().getInfo().getVirtualSizeRef().x,  mainContext.getWindow().getInfo().getVirtualSizeRef().y);
     }
 
 
@@ -145,7 +162,6 @@ public class Test3DScene extends Scene {
         int speed = 1;
         if (inputManager.getState(ActionId.SHIFT))
             speed = 3;
-
 
         if (inputManager.getState(ActionId.MOVE_LEFT))
             main3DCamera.speedAngX(main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
@@ -177,11 +193,20 @@ public class Test3DScene extends Scene {
         sBlock.getShape().getShader().sendValueToShader(timeShaderValue);
 
         rotationTweening.update();
-        light.setRotation(rotationTweening.value(), new Vector3f(0, 1f, 1f).normalize());
+
+        light.setX(rotationTweening.value() * 2);
+        //light.setZ(rotationTweening.value() * 2);
+
+        cubeColorLightning.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeColorLightning.updateShaderValue("lightPos", light.position());
+
+        cubeColorMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeColorMaterial.updateShaderValue("light.position", light.position());
+
+        cubeTexturedMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeTexturedMaterial.updateShaderValue("light.position", light.position());
 
         main3DCamera.updateView();
-
-        //sBlock.switchToTextureMode(game2DRender);
     }
 
 
@@ -189,28 +214,21 @@ public class Test3DScene extends Scene {
         super.setVirtualScene();
         clear();
 
-        game2DRender.bindFrameBuffer();
-        clear();
-        mainContext.getWindow().setVirtualViewport();
-
-        hudBar.display();
-
-        game2DRender.unbindFrameBuffer();
-
-        super.setVirtualScene();
-
         // Better to draw the world here
         light.display();
+
+        cubeColorLightning.display();
+        cubeColorMaterial.display();
+
+        cubeTexture.apply();
+        cubeTexturedMaterial.display();
+
         displacementMap.bindRenderTexture(1);
         sBlock.display();
 
         stand.display();
 
         sphere.display();
-
-        // Better to draw the hud here and be not affected by the postProcessing shader
-
-
         super.setAndDisplayRealScene();
     }
 
@@ -218,8 +236,10 @@ public class Test3DScene extends Scene {
     public void unload(){
         super.unload();
         sBlock.unload();
+        cubeColorLightning.unload();
+        cubeColorMaterial.unload();
+        cubeTexturedMaterial.unload();
         light.unload();
-        hudBar.unload();
         stand.unload();
         sphere.unload();
     }

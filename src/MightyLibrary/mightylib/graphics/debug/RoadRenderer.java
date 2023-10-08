@@ -34,7 +34,7 @@ public class RoadRenderer {
     public RoadRenderer(Camera2D referenceCamera){
         // Setup the renderer
         renderer = new Renderer("colorShape2D", true);
-        renderer.switchToColorMode(ColorList.Blue());
+        renderer.setColorMode(ColorList.Blue());
         renderer.getShape().setEboStorage(Shape.DYNAMIC_STORE);
         renderer.getShape().setEbo(new int[0]);
         renderer.setReferenceCamera(referenceCamera);
@@ -46,7 +46,7 @@ public class RoadRenderer {
     }
 
     public void setColor(Color4f color){
-        renderer.switchToColorMode(color);
+        renderer.setColorMode(color);
     }
 
     /**

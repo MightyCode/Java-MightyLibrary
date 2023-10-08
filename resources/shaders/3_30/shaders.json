@@ -2,8 +2,8 @@
 	"shaders": {
 		"colorShape2D": {
 			"files": [
-				"basic/colorShape2DV.glsl",
-				"basic/colorShape2DF.glsl"
+				"2D/essential/colorShape2DV.glsl",
+				"2D/essential/colorShape2DF.glsl"
 			],
 			"mode" : "2D",
 			"links": [
@@ -15,8 +15,8 @@
 		},
 		"multiColoredShape2D": {
 			"files": [
-				"basic/multiColoredShape2DV.glsl",
-				"basic/multiColoredShape2DF.glsl"
+				"2D/complex/multiColoredShape2DV.glsl",
+				"2D/complex/multiColoredShape2DF.glsl"
 			],
 			"mode" : "2D",
 			"links": [
@@ -27,8 +27,8 @@
 		},
 		"texture2D": {
 			"files": [
-				"basic/texture2DV.glsl",
-				"basic/texture2DF.glsl"
+				"2D/essential/texture2DV.glsl",
+				"2D/essential/texture2DF.glsl"
 			],
 			"mode" : "2D",
 			"links": [
@@ -39,8 +39,8 @@
 		},
 		"colorShape3D": {
 			"files": [
-				"basic/colorShape3DV.glsl",
-				"basic/colorShape3DF.glsl"
+				"3D/essential/colorShape3DV.glsl",
+				"3D/essential/colorShape3DF.glsl"
 			],
 			"mode" : "3D",
 			"links": [
@@ -50,27 +50,10 @@
 				"color"
 			]
 		},
-
-		"textureLight3D": {
-			"files": [
-				"3D/textureLight3DV.glsl",
-				"3D/textureLight3DF.glsl"
-			],
-			"mode" : "3D",
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"worldColor",
-				"lightColor",
-				"lightPos",
-				"viewPos"
-			]
-		},
 		"texture3D": {
 			"files": [
-				"basic/texture3DV.glsl",
-				"basic/texture3DF.glsl"
+				"3D/essential/texture3DV.glsl",
+				"3D/essential/texture3DF.glsl"
 			],
 			"mode" : "3D",
 			"links": [
@@ -79,10 +62,10 @@
 				"model"
 			]
 		},
-		"textureComplex3D": {
+		"textureDisplacement3D": {
 			"files": [
-				"3D/textureComplex3DV.glsl",
-				"3D/textureComplex3DF.glsl"
+				"3D/complex/textureDisplacement3DV.glsl",
+				"3D/complex/textureDisplacement3DF.glsl"
 			],
 			"mode" : "3D",
 			"links": [
@@ -92,6 +75,64 @@
 				"time",
 				"ourTexture",
 				"displacementMap"
+			]
+		},
+		"colorLightning3D": {
+			"files": [
+				"3D/complex/colorLightning3DV.glsl",
+				"3D/complex/colorLightning3DF.glsl"
+			],
+			"mode" : "3D",
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"color",
+				"worldColor",
+				"lightPos",
+				"lightColor",
+				"viewPos"
+			]
+		},
+		"colorMaterial3D": {
+			"files": [
+				"3D/complex/colorLightning3DV.glsl",
+				"3D/complex/colorMaterial3DF.glsl"
+			],
+			"mode" : "3D",
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"viewPos",
+				"light.position",
+				"light.ambient",
+				"light.diffuse",
+				"light.specular",
+				"material.ambient",
+				"material.diffuse",
+				"material.specular",
+				"material.shininess"
+			]
+		},
+		"textureMaterial3D": {
+			"files": [
+				"3D/complex/textureMaterial3DV.glsl",
+				"3D/complex/textureMaterial3DF.glsl"
+			],
+			"mode" : "3D",
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"viewPos",
+				"light.position",
+				"light.ambient",
+				"light.diffuse",
+				"light.specular",
+				"material.diffuse",
+				"material.specular",
+				"material.shininess"
 			]
 		},
 		"postProcessing": {
@@ -115,21 +156,5 @@
 				"model"
 			]
 		},
-		"colorComplex3D": {
-			"files": [
-				"3D/colorComplex3DV.glsl",
-				"3D/colorComplex3DF.glsl"
-			],
-			"mode" : "3D",
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"color",
-				"worldColor",
-				"lightDir",
-				"lightColor"
-			]
-		}
 	}
 }

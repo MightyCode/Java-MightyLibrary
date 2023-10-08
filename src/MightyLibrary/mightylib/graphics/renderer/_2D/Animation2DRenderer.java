@@ -49,7 +49,7 @@ public class Animation2DRenderer extends Renderer {
         this.animator = animator;
 
         updateInfoForFrame();
-        switchToTextureMode(animator.getCurrentAnimation().getData().getTextureName());
+        setMainTextureChannel(animator.getCurrentAnimation().getData().getTextureName());
     }
 
 
@@ -57,7 +57,7 @@ public class Animation2DRenderer extends Renderer {
         animator.update();
 
         if (animator.animationChanged()) {
-            switchToTextureMode(animator.getCurrentAnimation().getData().getTextureName());
+            setMainTextureChannel(animator.getCurrentAnimation().getData().getTextureName());
             updateInfoForFrame();
         } else if (animator.isFrameChanged()){
             updateInfoForFrame();

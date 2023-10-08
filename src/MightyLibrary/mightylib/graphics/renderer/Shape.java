@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
 import static org.lwjgl.opengl.GL30.*;
 
-public class Shape{
+public class Shape {
     public static final int STATIC_STORE = GL_STATIC_DRAW;
     public static final int DYNAMIC_STORE = GL_DYNAMIC_DRAW;
     public static final int STREAM_STORE = GL_STREAM_DRAW;

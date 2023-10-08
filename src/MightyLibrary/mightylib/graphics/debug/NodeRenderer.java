@@ -28,7 +28,7 @@ public class NodeRenderer {
     public NodeRenderer(Camera2D referenceCamera){
         // Setup the renderer
         renderer = new Renderer("colorShape2D", true);
-        renderer.switchToColorMode(ColorList.Red());
+        renderer.setColorMode(ColorList.Red());
         renderer.getShape().setEboStorage(Shape.DYNAMIC_STORE);
         renderer.getShape().setEbo(new int[0]);
         renderer.setReferenceCamera(referenceCamera);
@@ -39,7 +39,7 @@ public class NodeRenderer {
     }
 
     public void setColor(Color4f color){
-        renderer.switchToColorMode(color);
+        renderer.setColorMode(color);
     }
 
     public void setNodeSize(float nodeSize){

@@ -38,7 +38,7 @@ public class MatrixRenderer {
 
         // Setup the renderer
         renderer = new Renderer("multiColoredShape2D", true);
-        renderer.switchToColorMode(ColorList.Red());
+        renderer.setColorMode(ColorList.Red());
         renderer.getShape().setEboStorage(Shape.STATIC_STORE);
         renderer.getShape().setEbo(new int[0]);
         renderer.setReferenceCamera(camera);

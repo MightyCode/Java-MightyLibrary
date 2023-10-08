@@ -149,20 +149,9 @@ public class Shader extends ObjectId {
     public void sendValueToShader(ShaderValue value) {
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        /*
-        if (lastValue != null && value.getName().equals("model")) {
-            FloatBuffer a = lastValue.clone().getObjectTyped(FloatBuffer.class);
-            FloatBuffer b = value.clone().getObjectTyped(FloatBuffer.class);
-
-            System.out.println(a.hasRemaining());
-
-            float[] bytes = new float[a.remaining()];
-            a.get(bytes);
-            System.out.println(Arrays.toString(bytes));
-
-            bytes = new float[b.remaining()];
-            b.get(bytes);
-            System.out.println(Arrays.toString(bytes));
+        /*if (lastValue != null && value.getName().equals("lightPos")) {
+            Vector3f a = lastValue.clone().getObjectTyped(Vector3f.class);
+            Vector3f b = value.clone().getObjectTyped(Vector3f.class);
 
             System.out.println(b + " " + a);
             System.out.println(value.equals(lastValues.get(value.getName())));
@@ -171,7 +160,7 @@ public class Shader extends ObjectId {
         if (value.equals(lastValue) && !value.shouldForceUpdate())
             return;
 
-        System.out.println(getName() + " : Effectively send : " + value.getName());
+        //System.out.println(getName() + " : Effectively send : " + value.getName());
 
         value.resetForceUpdate();
         lastValues.put(value.getName(), value.clone());

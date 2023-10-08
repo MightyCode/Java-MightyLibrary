@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.text;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
+import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
@@ -29,6 +30,8 @@ public class Text extends Renderer implements Cloneable {
 
     private float[] charPositions;
 
+    private ShaderValue color;
+
     public Text() {
         super("coloredText", true);
 
@@ -37,7 +40,7 @@ public class Text extends Renderer implements Cloneable {
         this.font = null;
         this.text = "";
 
-        color = new Color4f(0, 0, 0, 1);
+        color = setColorMode(new Color4f(0, 0, 0, 1));
 
         // Null let renderer's ancien setting for text
         this.reference = EDirection.None;
@@ -61,15 +64,13 @@ public class Text extends Renderer implements Cloneable {
         if (shouldNotDrawText())
             return;
 
-        colorShaderValue.setObject(color);
-        sentToShader(colorShaderValue);
         super.display();
     }
 
 
     public Text setFont(String fontName){
         this.font = Resources.getInstance().getResource(FontFace.class, fontName);
-        switchToTextureMode(font.getTexture());
+        setMainTextureChannel(font.getTexture());
 
         computeRightUpPosition();
 
@@ -174,12 +175,12 @@ public class Text extends Renderer implements Cloneable {
     }
 
     public Text setColor(Color4f color){
-        this.color = color;
+        this.color.setObject(color);
         return this;
     }
 
     public Color4f getColor(){
-        return color;
+        return color.getObjectTyped(Color4f.class);
     }
 
 
@@ -343,7 +344,7 @@ public class Text extends Renderer implements Cloneable {
     public Text createCopy(){
         Text text = new Text();
         text.setFont(this.font.getName())
-                .setColor(color.copy())
+                .setColor(getColor().copy())
                 .setFontSize(fontSize)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
@@ -358,7 +359,7 @@ public class Text extends Renderer implements Cloneable {
     public Text copyTo(Text copy){
         copy.setText("")
                 .setFont(this.font.getName())
-                .setColor(color.copy())
+                .setColor(getColor().copy())
                 .setFontSize(fontSize)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)

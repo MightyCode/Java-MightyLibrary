@@ -124,7 +124,6 @@ public class CubeRenderer extends Renderer {
         for (int i = 0; i < FACE_NUMBER; ++i) {
             Vector3f direction = MightyMath.ToVector(FACES_ORDER[i]);
             for (int j = 0; j < VERTEX_NUMBER; ++j) {
-                System.out.println(i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE  + j * VERTEX_NORMAL_SIZE);
                 table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE  + j * VERTEX_NORMAL_SIZE] = direction.x;
                 table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE + j * VERTEX_NORMAL_SIZE + 1] = direction.y;
                 table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE + j * VERTEX_NORMAL_SIZE + 2] = direction.z;

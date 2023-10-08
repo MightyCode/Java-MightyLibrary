@@ -60,14 +60,14 @@ public class Test3D2DGame extends Scene {
 
         background = new RectangleRenderer("texture2D");
         background.setReferenceCamera(insideCamera);
-        background.switchToTextureMode("error");
+        background.setMainTextureChannel("error");
         background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x,
                 mainContext.getWindow().getInfo().getVirtualSizeRef().y);
         background.setPosition(new Vector2f(0, 0));
 
         slimeRenderer = new Animation2DRenderer("texture2D");
         slimeRenderer.setReferenceCamera(insideCamera);
-        slimeRenderer.switchToTextureMode("slime");
+        slimeRenderer.setMainTextureChannel("slime");
         Animator animator = new Animator();
         animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
         slimeRenderer.init(animator);
@@ -80,13 +80,13 @@ public class Test3D2DGame extends Scene {
         slimeRenderer.update();
 
         debugView = new RectangleRenderer("texture2D");
-        debugView.switchToTextureMode(game2DRender);
+        debugView.setMainTextureChannel(game2DRender);
         debugView.setPosition(new Vector2f(0, 0));
         debugView.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x * 0.2f,
                 mainContext.getWindow().getInfo().getVirtualSizeRef().y * 0.2f);
 
         gameRenderer = new CubeRenderer("texture3D");
-        gameRenderer.switchToTextureMode(
+        gameRenderer.setMainTextureChannel(
                 game2DRender
                 /*Resources.getInstance().getResource(Texture.class, "error")*/);
 

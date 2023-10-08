@@ -24,7 +24,6 @@ import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
@@ -51,7 +50,7 @@ public class Test2DScene extends Scene {
         /// RENDERERS ///
 
         slimeRenderer = new Animation2DRenderer("texture2D");
-        slimeRenderer.switchToTextureMode("slime");
+        slimeRenderer.setMainTextureChannel("slime");
         //slimeRenderer.setVerticalFlip(true);
 
 

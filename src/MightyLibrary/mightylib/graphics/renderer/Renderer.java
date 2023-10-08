@@ -7,63 +7,70 @@ import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.util.math.Color4f;
-import MightyLibrary.mightylib.util.math.ColorList;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
+import java.util.HashMap;
+
 public class Renderer {
-    public static final int NOTHING = 0;
-    public static final int COLOR = 1;
-    public static final int TEXTURE = 2;
+    protected Camera referenceCamera;
+
+    protected Shape shape;
 
     protected final Vector3f position;
     protected final Vector3f scale;
     protected final Vector3f rotation;
     protected float angle;
-    protected boolean shouldSendProjection, shouldSendView, shouldSendModel, shouldSendColor;
 
     protected Matrix4f model;
     protected ShaderValue modelShaderValue;
 
     protected boolean display;
-
-    protected Shape shape;
-
-    protected int displayMode;
-
-    // Textured
-    protected IRenderTextureBindable texture;
+    // Textures channels
+    protected IRenderTextureBindable[] textures;
 
     // Colored
-    public Color4f color;
-    protected ShaderValue colorShaderValue;
-    protected Camera referenceCamera;
+    protected HashMap<String, ShaderValue> shaderValues;
 
     public Renderer(String shaderName, boolean useEbo){
         shape = new Shape(shaderName, useEbo);
         model = new Matrix4f().identity();
 
+        shaderValues = new HashMap<>();
+
         display = true;
 
         // Display mode
-        texture = null;
-        displayMode = NOTHING;
-        color = ColorList.Black();
+        textures = new IRenderTextureBindable[31];
 
         position = new Vector3f();
         scale = new Vector3f(1f);
         rotation = new Vector3f();
-        shouldSendProjection = shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1;
-        shouldSendView = shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1;
-        shouldSendModel = shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1;
 
-        shouldSendColor = shape.getShader().getLink(ShaderManager.GENERIC_COLOR_FIELD_NAME) != -1;
+        if (shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1){
+            if (shape.getIn2D())
+                shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
+                        ShaderManager.getInstance().getMainCamera2D().getProjection());
+            else
+                shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
+                        ShaderManager.getInstance().getMainCamera3D().getView());
+        }
 
-        if (shouldSendModel)
+        if (shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1){
+            if (shape.getIn2D())
+                shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
+                        ShaderManager.getInstance().getMainCamera2D().getView());
+            else
+                shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
+                        ShaderManager.getInstance().getMainCamera3D().getProjection());
+        }
+
+        if (shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1) {
             modelShaderValue = new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model);
 
-        if (shouldSendColor)
-            colorShaderValue = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
+            shaderValues.put(ShaderManager.GENERIC_MODEL_FIELD_NAME, modelShaderValue);
+        }
+
 
         referenceCamera = null;
 
@@ -72,37 +79,42 @@ public class Renderer {
 
 
     public void display(){
-        if(display){
+        if(display) {
             updateShader();
             draw();
         }
     }
 
     public void updateShader(){
-        if (referenceCamera == null) {
-            ShaderManager.getInstance().sendCameraToShader(shape.getShader(), shouldSendProjection, shouldSendView);
-        } else {
-            if (shouldSendProjection)
-                getShape().getShader().sendValueToShader(referenceCamera.getProjection());
-
-            if (shouldSendView)
-                getShape().getShader().sendValueToShader(referenceCamera.getView());
+        for (int i = 0; i < textures.length; ++i){
+            if (textures[i] != null)
+                textures[i].bindRenderTexture(i);
         }
 
-        // Apply model matrix
-        if (shouldSendModel){
-            modelShaderValue.setObject(model);
-            sentToShader(modelShaderValue);
-        }
-
-        if (displayMode == COLOR && shouldSendColor) {
-            colorShaderValue.setObject(color);
-            sentToShader(colorShaderValue);
-        } else if (displayMode == TEXTURE){
-            texture.bindRenderTexture(0);
+        for (ShaderValue value : shaderValues.values()){
+            sentToShader(value);
         }
     }
 
+    public Renderer addShaderValue(String name, Class<?> type, Object object){
+        shaderValues.put(name, new ShaderValue(name, type, object));
+
+        return this;
+    }
+
+    public Renderer updateShaderValue(String name, Object object){
+        shaderValues.get(name).setObject(object);
+
+        return this;
+    }
+
+    public Renderer copyShaderValuesTo(Renderer other){
+        for (ShaderValue value : shaderValues.values()){
+            other.shaderValues.put(value.getName(), value);
+        }
+
+        return other;
+    }
 
     protected void sentToShader(ShaderValue value){
         shape.getShader().sendValueToShader(value);
@@ -185,22 +197,46 @@ public class Renderer {
         display = !display;
     }
 
-
-    public void switchToTextureMode(String name) {
-        switchToTextureMode(Resources.getInstance().getResource(Texture.class, name));
+    public void setMainTextureChannel(String name) {
+        setMainTextureChannel(Resources.getInstance().getResource(Texture.class, name));
     }
 
-    public void switchToTextureMode(IRenderTextureBindable texture){
-        displayMode = TEXTURE;
+    public void setMainTextureChannel(String name, String nameOfUniform) {
+        shape.getShader().sendValueToShader(
+                new ShaderValue(nameOfUniform, Integer.class, 0)
+        );
+
+        setMainTextureChannel(Resources.getInstance().getResource(Texture.class, name));
+    }
+
+    public void setMainTextureChannel(IRenderTextureBindable texture){
         shape.enableVbo(1);
 
-        this.texture = texture;
+        textures[0] = texture;
+    }
+
+    public void addTextureChannel(String name, String nameOfUniform, int channelNumber) {
+        addTextureChannel(
+                Resources.getInstance().getResource(Texture.class, name),
+                nameOfUniform, channelNumber);
+    }
+
+    public void addTextureChannel(IRenderTextureBindable texture, String nameOfUniform, int channelNumber) {
+        shape.getShader().sendValueToShader(
+                new ShaderValue(nameOfUniform, Integer.class, channelNumber)
+        );
+
+        shape.enableVbo(1);
+
+        textures[channelNumber] = texture;
     }
 
 
-    public void switchToColorMode(Color4f color){
-        displayMode = COLOR;
-        this.color = color.copy();
+    public ShaderValue setColorMode(Color4f color) {
+        ShaderValue value = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
+        shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
+
+        return value;
     }
 
 

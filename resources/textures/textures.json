@@ -43,6 +43,14 @@
 				"file" : "stallTexture.png",
 				"qualityType" : "realistic"
 			},
+			"container2" : {
+				"file": "container2.png",
+				"qualityType" : "realistic"
+			},
+			"container2_specular" : {
+				"file": "container2_specular.png",
+				"qualityType" : "realistic"
+			},
 			"slime" : {
 				"file" : "slime.png",
 				"qualityType" : "pixelart"
