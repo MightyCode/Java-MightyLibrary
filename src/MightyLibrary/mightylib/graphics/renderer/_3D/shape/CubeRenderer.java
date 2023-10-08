@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer._3D.shape;
 
+import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
@@ -36,17 +37,7 @@ public class CubeRenderer extends Renderer {
             EDirection3D.Up, EDirection3D.Down
     };
 
-    public static class Face {
-        public EFlip Flip;
-        public ERotation Rotation;
-
-        public Face(){
-            Flip = EFlip.None;
-            Rotation = ERotation.None;
-        }
-    }
-
-    private final Map<EDirection3D, Face> faces;
+    private final Map<EDirection3D, RectangularFace> faces;
 
     private boolean includeTextures;
     private boolean includeNormal;
@@ -59,7 +50,7 @@ public class CubeRenderer extends Renderer {
 
         faces = new HashMap<>();
         for (EDirection3D direction3D : EDirection3D.values())
-            faces.put(direction3D, new Face());
+            faces.put(direction3D, new RectangularFace());
 
         /*faces.get(EDirection3D.Forward).Rotation = ERotation.TwoPi;
         faces.get(EDirection3D.Forward).Flip = EFlip.Horizontal;*/
@@ -104,7 +95,7 @@ public class CubeRenderer extends Renderer {
 
         positionIndex = shape.addVboFloat(vertices, VERTEX_POSITION_SIZE, Shape.STATIC_STORE);
 
-        int[] ref = RendererUtils.indicesForSquare();
+        int[] ref = RectangularFace.IndicesForSquare();
 
         int[] ebo = new int[FACE_EBO_SIZE * FACE_NUMBER];
         for (int i = 0; i < FACE_NUMBER; ++i){
@@ -122,9 +113,9 @@ public class CubeRenderer extends Renderer {
         float[] table = new float[VERTEX_NUMBER * VERTEX_TEXTURE_SIZE * FACE_NUMBER];
 
         for(int i = 0; i < FACE_NUMBER; ++i){
-            Face current = faces.get(FACES_ORDER[i]);
+            RectangularFace current = faces.get(FACES_ORDER[i]);
 
-            float [] vertexTexture = RendererUtils.ApplyRotationFlip(TEXTURE_POSITION, current.Flip, current.Rotation);
+            float [] vertexTexture = current.applyRotationFlip(TEXTURE_POSITION);
 
             System.arraycopy(vertexTexture, 0, table,
                     VERTEX_TEXTURE_SIZE * VERTEX_NUMBER * i, vertexTexture.length);
@@ -143,12 +134,6 @@ public class CubeRenderer extends Renderer {
                 table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE + j * VERTEX_NORMAL_SIZE + 1] = direction.y;
                 table[i * VERTEX_NUMBER * VERTEX_NORMAL_SIZE + j * VERTEX_NORMAL_SIZE + 2] = direction.z;
             }
-
-
-            System.out.println();
-            TableDebug.printf(table);
-            System.out.println();
-
         }
 
         normalIndex = shape.addVboFloat(table, VERTEX_NORMAL_SIZE, Shape.STATIC_STORE);

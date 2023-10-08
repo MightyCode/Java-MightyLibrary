@@ -28,7 +28,6 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 
 public class Test3DScene extends Scene {
-
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
 
     private Renderer sBlock;

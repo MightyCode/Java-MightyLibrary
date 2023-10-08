@@ -138,8 +138,8 @@ public class GUIList {
             if (maxId == null || maxId < pair.getKey())
                 maxId = pair.getKey();
 
-            if (pair.getKey() > id){
-                if (minId == null || minId > pair.getKey()){
+            if (pair.getKey() > id) {
+                if (minId == null || minId > pair.getKey()) {
                     minId = pair.getKey();
                 }
             }

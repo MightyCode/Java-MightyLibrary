@@ -7,7 +7,6 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 public abstract class RendererUtils {
-    public static Vector4f BasicTexturePosition(){ return new Vector4f(0f, 1f, 0f,1f); }
 
     public static float [] calculatePositionForSquare(Vector2f size, EDirection reference){
         float [] temp = new float[]{
@@ -48,64 +47,5 @@ public abstract class RendererUtils {
         }
 
         return temp;
-    }
-
-    public static int[] indicesForSquare (){
-        return new int[] { 0, 3, 2, 0, 2, 1 };
-    }
-
-    public static float [] ApplyRotationFlip(float[] cornersPosition, EFlip flip, ERotation rotation) {
-        // Apply flip transformation
-        float[] result = new float[cornersPosition.length];
-        System.arraycopy(cornersPosition, 0, result, 0, cornersPosition.length);
-
-        switch (flip) {
-            case Horizontal:
-            case HorizontalVertical:
-                result = new float[]{
-                        result[2], result[3],
-                        result[0], result[1],
-                        result[6], result[7],
-                        result[4], result[5]
-                };
-                break;
-            default:
-                break;
-        }
-
-        switch(flip){
-            case Vertical:
-            case HorizontalVertical:
-                result = new float[]{
-                        result[6], result[7],
-                        result[4], result[5],
-                        result[2], result[3],
-                        result[0], result[1],
-                };
-                break;
-            default:
-                break;
-        }
-
-        for (int i = rotation.ordinal(); i > 0; --i){
-            result = new float[]{
-                    result[6], result[7],
-                    result[0], result[1],
-                    result[2], result[3],
-                    result[4], result[5],
-            };
-        }
-
-        return result;
-    }
-
-    public static float [] TexturePosition(Vector4f texturePosition, EFlip flip, ERotation rotation){
-        return ApplyRotationFlip(new float[]{
-                texturePosition.x, texturePosition.w,
-                texturePosition.x, texturePosition.z,
-                texturePosition.y, texturePosition.z,
-                texturePosition.y, texturePosition.w,
-        }, flip, rotation);
-
     }
 }

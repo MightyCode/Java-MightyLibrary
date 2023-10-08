@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
+import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
@@ -30,9 +31,9 @@ public class Animation2DRenderer extends Renderer {
 
         offsetRotation = new Vector2f(0, 0);
 
-        texturePosition = RendererUtils.BasicTexturePosition();
+        texturePosition = RectangularFace.BasicTexturePosition();
 
-        int[] indices = RendererUtils.indicesForSquare();
+        int[] indices = RectangularFace.IndicesForSquare();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.DYNAMIC_STORE);

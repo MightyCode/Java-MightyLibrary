@@ -24,10 +24,11 @@ public class Renderer {
     protected final Vector3f scale;
     protected final Vector3f rotation;
     protected float angle;
-
     protected boolean shouldSendProjection, shouldSendView, shouldSendModel, shouldSendColor;
 
     protected Matrix4f model;
+    protected ShaderValue modelShaderValue;
+
     protected boolean display;
 
     protected Shape shape;
@@ -40,9 +41,6 @@ public class Renderer {
     // Colored
     public Color4f color;
     protected ShaderValue colorShaderValue;
-    protected FloatBuffer modelBuffer;
-    protected ShaderValue modelShaderValue;
-
     protected Camera referenceCamera;
 
     public Renderer(String shaderName, boolean useEbo){
@@ -59,8 +57,6 @@ public class Renderer {
         position = new Vector3f();
         scale = new Vector3f(1f);
         rotation = new Vector3f();
-
-        modelBuffer = BufferUtils.createFloatBuffer(16);
         shouldSendProjection = shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1;
         shouldSendView = shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1;
         shouldSendModel = shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1;
@@ -68,7 +64,7 @@ public class Renderer {
         shouldSendColor = shape.getShader().getLink(ShaderManager.GENERIC_COLOR_FIELD_NAME) != -1;
 
         if (shouldSendModel)
-            modelShaderValue = new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, FloatBuffer.class, modelBuffer);
+            modelShaderValue = new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model);
 
         if (shouldSendColor)
             colorShaderValue = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
@@ -99,7 +95,7 @@ public class Renderer {
 
         // Apply model matrix
         if (shouldSendModel){
-            modelShaderValue.setObject(modelBuffer);
+            modelShaderValue.setObject(model);
             sentToShader(modelShaderValue);
         }
 
@@ -182,8 +178,6 @@ public class Renderer {
         this.model.translate(this.position);
         this.model.rotate(angle, this.rotation);
         this.model.scale(this.scale);
-
-        this.model.get(modelBuffer);
     }
 
     public void hide(boolean state) {

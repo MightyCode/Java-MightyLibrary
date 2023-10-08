@@ -25,11 +25,11 @@ public class ActionInput implements IAction {
 
     @Override
     public boolean actionPressed(InputManager inputManager) {
-        return actionInput().getState(inputManager);
+        return actionInput().actionPressed(inputManager);
     }
 
     @Override
     public boolean actionReleased(InputManager inputManager) {
-        return actionInput().getState(inputManager);
+        return actionInput().actionReleased(inputManager);
     }
 }

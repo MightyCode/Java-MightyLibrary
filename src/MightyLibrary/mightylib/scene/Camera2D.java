@@ -107,7 +107,6 @@ public class Camera2D extends Camera {
         float top = (invertView) ? 0 : windowInfo.getVirtualSizeRef().y;
 
         projection.ortho(left, right, top, bottom, -10, 10);
-        projection.get(projectionBuffer);
     }
 
     @Override
@@ -116,7 +115,6 @@ public class Camera2D extends Camera {
         view.translate(-camPos.x, -camPos.y, 0f);
         view.scaleLocal(zoomLevel.x, zoomLevel.y, 1);
         view.rotate(rotation, new Vector3f(0, 0, 1));
-        viewBuffer = view.get(viewBuffer);
     }
 
     public Vector2f getCamPosRef() { return camPos; }

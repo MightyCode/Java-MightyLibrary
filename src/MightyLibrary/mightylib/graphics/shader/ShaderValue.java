@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.util.math.Color4f;
 import org.joml.*;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 public class ShaderValue implements Cloneable {
     protected final String name;
@@ -32,10 +33,10 @@ public class ShaderValue implements Cloneable {
         if (type != value.type)
             return false;
 
-        return testEquals(type, value.object, object);
+        return testEquals(type, value);
     }
 
-    private boolean testEquals(final Class<?> type, final Object a, final Object b){
+    private boolean testEquals(final Class<?> type, final ShaderValue b){
         /*if (type == Vector2f.class) {
             return new ShaderValue(name, type, new Vector2f((Vector2f) object));
         } else if (type == Vector3f.class) {
@@ -54,7 +55,7 @@ public class ShaderValue implements Cloneable {
             return new ShaderValue(name, type, (Integer) object);
         }*/
 
-        return type.cast(a).equals(type.cast(b));
+        return getObjectTyped(type).equals(b.getObjectTyped(type));
     }
 
     public String getName() {
@@ -108,27 +109,12 @@ public class ShaderValue implements Cloneable {
             return new ShaderValue(name, type, new Vector3i(getObjectTyped(Vector3i.class)));
         } else if (type == Vector4i.class) {
             return new ShaderValue(name, type, new Vector4i(getObjectTyped(Vector4i.class)));
-        } else if (type == FloatBuffer.class) {
-            return new ShaderValue(name, type, CloneFloatBuffer(getObjectTyped(FloatBuffer.class)));
+        } else if (type == Matrix4f.class) {
+            return new ShaderValue(name, type, new Matrix4f(getObjectTyped(Matrix4f.class)));
         } else if (type == Integer.class) {
             return new ShaderValue(name, type, getObjectTyped(Integer.class));
         }
 
         return new ShaderValue(name, type, null);
-    }
-
-    public static FloatBuffer CloneFloatBuffer(final FloatBuffer original) {
-        // Create clone with same capacity as original.
-        final FloatBuffer clone = FloatBuffer.allocate(original.capacity());
-
-        // Create a read-only copy of the original.
-        // This allows reading from the original without modifying it.
-        final FloatBuffer readOnlyCopy = original.asReadOnlyBuffer();
-
-        // Flip and read from the original.
-        readOnlyCopy.flip();
-        clone.put(readOnlyCopy);
-
-        return clone;
     }
 }

@@ -7,7 +7,6 @@ import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.sounds.SoundManager;
-import MightyLibrary.mightylib.sounds.SoundSource;
 import MightyLibrary.mightylib.sounds.SoundSourceCreationInfo;
 import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.EDirection;
@@ -118,14 +117,13 @@ public class MenuScene extends Scene {
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
     }
 
-
     public void update() {
         super.update();
 
         guiList.update();
 
         if (mainContext.getInputManager().inputPressed(ActionId.ENTER)
-                || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)){
+                || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)) {
             Integer id = guiList.getSelected();
             System.out.println(guiList.getSelected());
 
@@ -160,7 +158,7 @@ public class MenuScene extends Scene {
             SoundManager.getInstance().createSoundSource(CREATION_INFO_SELECT);
         }
 
-        main2DCamera.setX(rotation.value() * 50);
+        //main2DCamera.setX(rotation.value() * 50);
 
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.exit(0);
