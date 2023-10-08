@@ -10,10 +10,6 @@ import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
-import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
 
 public class Renderer {
     public static final int NOTHING = 0;

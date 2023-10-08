@@ -2,7 +2,6 @@ package MightyLibrary.mightylib.graphics.renderer._2D;
 
 import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
-import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.util.math.EDirection;

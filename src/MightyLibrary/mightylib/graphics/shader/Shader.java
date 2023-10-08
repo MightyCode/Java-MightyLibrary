@@ -10,7 +10,6 @@ import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
-import java.util.Arrays;
 import java.util.HashMap;
 
 import static org.lwjgl.opengl.GL20.*;

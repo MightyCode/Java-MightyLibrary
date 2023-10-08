@@ -15,7 +15,6 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
-import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;

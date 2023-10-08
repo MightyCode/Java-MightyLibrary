@@ -2,11 +2,9 @@ package MightyLibrary.mightylib.graphics.GUI;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scene.Camera;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public class GUIList {
     private final InputManager inputManager;

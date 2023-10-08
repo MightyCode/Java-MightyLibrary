@@ -2,15 +2,10 @@ package MightyLibrary.mightylib.graphics.renderer._3D.shape;
 
 import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
-import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.util.math.EDirection3D;
-import MightyLibrary.mightylib.util.math.EFlip;
-import MightyLibrary.mightylib.util.math.ERotation;
 import MightyLibrary.mightylib.util.math.MightyMath;
-import MightyLibrary.mightylib.util.valueDebug.TableDebug;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 import java.util.HashMap;
 import java.util.Map;

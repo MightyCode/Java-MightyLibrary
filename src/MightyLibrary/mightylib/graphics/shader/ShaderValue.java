@@ -3,9 +3,6 @@ package MightyLibrary.mightylib.graphics.shader;
 import MightyLibrary.mightylib.util.math.Color4f;
 import org.joml.*;
 
-import java.nio.FloatBuffer;
-import java.util.Arrays;
-
 public class ShaderValue implements Cloneable {
     protected final String name;
     protected Object object;

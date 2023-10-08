@@ -3,9 +3,6 @@ package MightyLibrary.mightylib.scene;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Matrix4f;
-import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
 
 public abstract class Camera {
     protected final WindowInfo windowInfo;
