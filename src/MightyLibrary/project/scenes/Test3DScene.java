@@ -1,10 +1,9 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.renderer.utils.BasicMaterial;
 import MightyLibrary.mightylib.graphics.renderer.utils.Material;
-import MightyLibrary.mightylib.graphics.renderer.utils.TextureMaterial;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer._3D.ModelRenderer;
@@ -12,7 +11,6 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
-import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
@@ -31,9 +29,6 @@ public class Test3DScene extends Scene {
 
     private ModelRenderer stand;
 
-    // Textures
-    private Texture displacementMap;
-
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
     private final int boxSize = faceSize * 6;
@@ -41,7 +36,6 @@ public class Test3DScene extends Scene {
     private CubeRenderer light, cubeColorLightning, cubeColorMaterial;
 
     private CubeRenderer cubeTexturedMaterial;
-    private TextureMaterial cubeTexture;
 
     private FloatTweening displacementMapTweening;
 
@@ -78,65 +72,60 @@ public class Test3DScene extends Scene {
         light.setColorMode(ColorList.White());
         light.setNormal();
 
-        cubeColorLightning.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosCopy())
+        BasicMaterial lightMaterial = new BasicMaterial(
+                new Vector3f(0.2f), new Vector3f(0.5f), new Vector3f(1)
+        );
+
+        cubeColorLightning.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
                 .addShaderValue("worldColor", Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f))
                 .addShaderValue("lightPos", Vector3f.class, light.position())
-                .addShaderValue("lightColor", Vector3f.class, new Vector3f(0.8f, 0.8f, 0.8f));
+                .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
 
         // Platform of cubes
         sBlock = new Renderer("textureDisplacement3D", false);
         float[] cratesInfo = createCrates(10);
         sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
         sBlock.setMainTextureChannel("container");
-            // Displacement texture for cubes/crate
+        // Displacement texture for cubes/crate
+        sBlock.addTextureChannel("dispMap1", "displacementMap", 1);
 
-        displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
-
-        ShaderValue displacementMapPositionShaderValue = new ShaderValue(
-                "displacementMap", Integer.class, 1
-        );
-
-        sBlock.getShape().getShader().sendValueToShader(displacementMapPositionShaderValue);
 
         sphere = new Renderer("colorLightning3D", true);
         computeSphere(sphere);
         sphere.setScale(new Vector3f(10, 10, 10));
         sphere.setPosition(new Vector3f(20, 10, 10));
 
-        cubeColorLightning.copyShaderValuesTo(sphere);
+        sphere.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("lightPos", Vector3f.class, light.position());
+        cubeColorLightning.copyShaderValuesTo(sphere, false);
 
         cubeColorMaterial = new CubeRenderer("colorMaterial3D");
         cubeColorMaterial.setPosition(new Vector3f(-1f, 3.0f, -8f));
         cubeColorMaterial.setColorMode(ColorList.Red());
         cubeColorMaterial.setNormal();
 
-        cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosCopy())
-                .addShaderValue("light.position", Vector3f.class, light.position())
-                .addShaderValue("light.ambient", Vector3f.class, new Vector3f(0.2f, 0.2f, 0.2f))
-                .addShaderValue("light.diffuse", Vector3f.class, new Vector3f(0.5f, 0.5f, 0.5f))
-                .addShaderValue("light.specular", Vector3f.class, new Vector3f(1,1 ,1 ));
-
+        cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("light.position", Vector3f.class, light.position());
+        lightMaterial.addToRenderer(cubeColorMaterial, "light");
         Material.CyanRubber().addToRenderer(cubeColorMaterial, "material");
 
         cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
-        cubeTexturedMaterial.setPosition(new Vector3f(-1f, 3.0f, -12f));
+        cubeTexturedMaterial.setPosition(new Vector3f(3f, 3.0f, -8f));
         cubeTexturedMaterial.setTexturePosition();
         cubeTexturedMaterial.setNormal();
         cubeTexturedMaterial.setMainTextureChannel("container2", "material.diffuse");
+        cubeTexturedMaterial.addTextureChannel("container2_specular", "material.specular", 1);
 
-        cubeTexturedMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosCopy())
+        cubeTexturedMaterial
+                .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
                 .addShaderValue("light.position", Vector3f.class, light.position())
-                .addShaderValue("light.ambient", Vector3f.class, new Vector3f(0.2f, 0.2f, 0.2f))
-                .addShaderValue("light.diffuse", Vector3f.class, new Vector3f(0.5f, 0.5f, 0.5f))
-                .addShaderValue("light.specular", Vector3f.class, new Vector3f(1,1 ,1 ));
+                .addShaderValue("material.shininess", Float.class, 64f);
 
-        cubeTexture = new TextureMaterial("container2_specular", 64);
-        cubeTexture.addToRenderer(cubeTexturedMaterial, "material");
-
+        lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
 
         // 3D Model
         stand = new ModelRenderer("texture3D", "stand/stall", "stall");
-        stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
+        stand.setPosition(new Vector3f(0.0f, 4.0f,5.0f));
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
 
         displacementMapTweening = new FloatTweening();
@@ -195,6 +184,7 @@ public class Test3DScene extends Scene {
         rotationTweening.update();
 
         light.setX(rotationTweening.value() * 2);
+
         //light.setZ(rotationTweening.value() * 2);
 
         cubeColorLightning.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
@@ -220,10 +210,8 @@ public class Test3DScene extends Scene {
         cubeColorLightning.display();
         cubeColorMaterial.display();
 
-        cubeTexture.apply();
         cubeTexturedMaterial.display();
 
-        displacementMap.bindRenderTexture(1);
         sBlock.display();
 
         stand.display();

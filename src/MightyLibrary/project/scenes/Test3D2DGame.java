@@ -201,7 +201,6 @@ public class Test3D2DGame extends Scene {
 
         debugView.display();
 
-
         super.setAndDisplayRealScene();
     }
 

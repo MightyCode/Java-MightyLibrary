@@ -149,12 +149,8 @@ public class Shader extends ObjectId {
     public void sendValueToShader(ShaderValue value) {
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        /*if (lastValue != null && value.getName().equals("lightPos")) {
-            Vector3f a = lastValue.clone().getObjectTyped(Vector3f.class);
-            Vector3f b = value.clone().getObjectTyped(Vector3f.class);
-
-            System.out.println(b + " " + a);
-            System.out.println(value.equals(lastValues.get(value.getName())));
+        /*if (value.getName().equals("material.diffuse")) {
+            System.out.println(value.object);
         }*/
 
         if (value.equals(lastValue) && !value.shouldForceUpdate())

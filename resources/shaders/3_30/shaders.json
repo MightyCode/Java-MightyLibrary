@@ -59,7 +59,8 @@
 			"links": [
 				"projection",
 				"view",
-				"model"
+				"model",
+				"ourTexture",
 			]
 		},
 		"textureDisplacement3D": {

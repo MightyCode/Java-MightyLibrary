@@ -125,7 +125,6 @@ public class MenuScene extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ENTER)
                 || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)) {
             Integer id = guiList.getSelected();
-            System.out.println(guiList.getSelected());
 
             if (id != null) {
                 switch (id) {

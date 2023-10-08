@@ -23,7 +23,6 @@ public class Renderer {
     protected float angle;
 
     protected Matrix4f model;
-    protected ShaderValue modelShaderValue;
 
     protected boolean display;
     // Textures channels
@@ -47,6 +46,8 @@ public class Renderer {
         scale = new Vector3f(1f);
         rotation = new Vector3f();
 
+        referenceCamera = null;
+
         if (shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1){
             if (shape.getIn2D())
                 shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
@@ -65,16 +66,13 @@ public class Renderer {
                         ShaderManager.getInstance().getMainCamera3D().getProjection());
         }
 
-        if (shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1) {
-            modelShaderValue = new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model);
-
-            shaderValues.put(ShaderManager.GENERIC_MODEL_FIELD_NAME, modelShaderValue);
-        }
-
-
-        referenceCamera = null;
 
         applyModel();
+
+        if (shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1) {
+            shaderValues.put(ShaderManager.GENERIC_MODEL_FIELD_NAME,
+                    new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
+        }
     }
 
 
@@ -108,8 +106,11 @@ public class Renderer {
         return this;
     }
 
-    public Renderer copyShaderValuesTo(Renderer other){
-        for (ShaderValue value : shaderValues.values()){
+    public Renderer copyShaderValuesTo(Renderer other, boolean eraseExisting){
+        for (ShaderValue value : shaderValues.values()) {
+            if (other.shaderValues.containsKey(value.getName()) && !eraseExisting)
+                continue;
+
             other.shaderValues.put(value.getName(), value);
         }
 
@@ -259,7 +260,12 @@ public class Renderer {
     public float getRotationAngle() { return angle; }
 
     public void setReferenceCamera(Camera camera){
+        if (camera == null)
+            return;
+
         referenceCamera = camera;
+        shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, camera.getProjection());
+        shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
     }
 
     public void unload(){
