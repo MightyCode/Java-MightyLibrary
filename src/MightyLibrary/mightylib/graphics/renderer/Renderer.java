@@ -26,6 +26,8 @@ public class Renderer {
 
     protected boolean display;
     // Textures channels
+
+    protected IRenderTextureBindable mainTexture;
     protected IRenderTextureBindable[] textures;
 
     // Colored
@@ -38,9 +40,6 @@ public class Renderer {
         shaderValues = new HashMap<>();
 
         display = true;
-
-        // Display mode
-        textures = new IRenderTextureBindable[31];
 
         position = new Vector3f();
         scale = new Vector3f(1f);
@@ -84,9 +83,14 @@ public class Renderer {
     }
 
     public void updateShader(){
-        for (int i = 0; i < textures.length; ++i){
-            if (textures[i] != null)
-                textures[i].bindRenderTexture(i);
+        if (mainTexture != null)
+            mainTexture.bindRenderTexture(0);
+
+        if (textures != null) {
+            for (int i = 0; i < textures.length; ++i) {
+                if (textures[i] != null)
+                    textures[i].bindRenderTexture(i + 1);
+            }
         }
 
         for (ShaderValue value : shaderValues.values()){
@@ -213,7 +217,7 @@ public class Renderer {
     public void setMainTextureChannel(IRenderTextureBindable texture){
         shape.enableVbo(1);
 
-        textures[0] = texture;
+        mainTexture = texture;
     }
 
     public void addTextureChannel(String name, String nameOfUniform, int channelNumber) {
@@ -229,7 +233,10 @@ public class Renderer {
 
         shape.enableVbo(1);
 
-        textures[channelNumber] = texture;
+        if (textures == null)
+            textures = new IRenderTextureBindable[30];
+
+        textures[channelNumber - 1] = texture;
     }
 
 
