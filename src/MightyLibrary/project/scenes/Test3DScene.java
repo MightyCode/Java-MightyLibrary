@@ -110,7 +110,7 @@ public class Test3DScene extends Scene {
         cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()));
         lightMaterial.addToRenderer(cubeColorMaterial, "light");
-        Material.CyanRubber().addToRenderer(cubeColorMaterial, "material");
+        Material.Emerald().addToRenderer(cubeColorMaterial, "material");
 
         cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
         cubeTexturedMaterial.setPosition(new Vector3f(3f, 3.0f, -8f));

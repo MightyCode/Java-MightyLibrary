@@ -3,6 +3,7 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.renderer.utils.BasicMaterial;
+import MightyLibrary.mightylib.graphics.renderer.utils.LightPoint;
 import MightyLibrary.mightylib.graphics.renderer.utils.Material;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
@@ -37,7 +38,8 @@ public class Test3DScene2 extends Scene {
 
         /// RENDERERS ///
 
-        BasicMaterial lightMaterial = Material.Chrome();
+        LightPoint lightMaterial = new LightPoint(Material.Chrome(),
+                1.0f, 0.09f, 0.032f);
 
         Vector3f lightVector = new Vector3f(-0.2f, -1.0f, -0.3f);
 
@@ -80,7 +82,7 @@ public class Test3DScene2 extends Scene {
                     .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightDirection(lightVector))
                     .addShaderValue("material.shininess", Float.class, 64f);
 
-            lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
+            ((BasicMaterial)lightMaterial).addToRenderer(cubeTexturedMaterial, "light");
         }
 
         cubeTexturedMaterialsPoint = new CubeRenderer[positions.length];
@@ -164,6 +166,7 @@ public class Test3DScene2 extends Scene {
             cubeTexturedMaterialsDirectional[i].display();
             cubeTexturedMaterialsPoint[i].display();
         }
+
         lightPoint.display();
 
         super.setAndDisplayRealScene();

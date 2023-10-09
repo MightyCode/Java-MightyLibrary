@@ -149,7 +149,7 @@ public class Shader extends ObjectId {
     public void sendValueToShader(ShaderValue value) {
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        /*if (value.getName().equals("material.diffuse")) {
+        /*if (value.getName().equals("light.useDistance")) {
             System.out.println(value.object);
         }*/
 
@@ -180,8 +180,8 @@ public class Shader extends ObjectId {
             glUniform4f(link, v.x, v.y, v.z, v.w);
         } else if (value.getType() == Matrix4f.class) {
             glUniformMatrix4fv(link, false, MatrixToFloatBuffer(value.getObjectTyped(Matrix4f.class)));
-        } else if (value.getType() == Integer.class) {
-            Integer v = (Integer) value.getObject();
+        } else if (value.getType() == Integer.class || value.getType() == Boolean.class) {
+            Integer v = value.getObjectTyped(Integer.class);
             glUniform1i(link, v);
         } else {
             System.err.println("Unknown shader value type : " + value.getType());
