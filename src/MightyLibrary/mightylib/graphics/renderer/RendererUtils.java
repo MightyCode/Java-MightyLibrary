@@ -2,6 +2,8 @@ package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.util.math.EDirection;
 import org.joml.Vector2f;
+import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 public abstract class RendererUtils {
 
@@ -44,5 +46,13 @@ public abstract class RendererUtils {
         }
 
         return temp;
+    }
+
+    public static Vector4f ToLightDirection(Vector3f lightVector) {
+        return new Vector4f(lightVector.x, lightVector.y, lightVector.z, 1.0f);
+    }
+
+    public static Vector4f ToLightPosition(Vector3f lightVector) {
+        return new Vector4f(lightVector.x, lightVector.y, lightVector.z, 0.0f);
     }
 }

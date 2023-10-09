@@ -1,5 +1,6 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.utils.BasicMaterial;
 import MightyLibrary.mightylib.graphics.renderer.utils.Material;
 import MightyLibrary.mightylib.main.GameTime;
@@ -19,8 +20,11 @@ import MightyLibrary.mightylib.util.math.Color4f;
 import MightyLibrary.mightylib.util.math.ColorList;
 import MightyLibrary.project.main.ActionId;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 import java.util.ArrayList;
+
+import static org.lwjgl.opengl.GL11C.*;
 
 public class Test3DScene extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
@@ -89,7 +93,6 @@ public class Test3DScene extends Scene {
         // Displacement texture for cubes/crate
         sBlock.addTextureChannel("dispMap1", "displacementMap", 1);
 
-
         sphere = new Renderer("colorLightning3D", true);
         computeSphere(sphere);
         sphere.setScale(new Vector3f(10, 10, 10));
@@ -105,7 +108,7 @@ public class Test3DScene extends Scene {
         cubeColorMaterial.setNormal();
 
         cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
-                .addShaderValue("light.position", Vector3f.class, light.position());
+                .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()));
         lightMaterial.addToRenderer(cubeColorMaterial, "light");
         Material.CyanRubber().addToRenderer(cubeColorMaterial, "material");
 
@@ -118,7 +121,7 @@ public class Test3DScene extends Scene {
 
         cubeTexturedMaterial
                 .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
-                .addShaderValue("light.position", Vector3f.class, light.position())
+                .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()))
                 .addShaderValue("material.shininess", Float.class, 64f);
 
         lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
@@ -165,10 +168,10 @@ public class Test3DScene extends Scene {
             main3DCamera.speedAngZ(main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
 
         if (inputManager.getState(ActionId.MOVE_UP))
-            main3DCamera.setY(main3DCamera.getCamPosRef().y + main3DCamera.getSpeed().y * GameTime.DeltaTime());
+            main3DCamera.setY(main3DCamera.getCamPosRef().y + main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
 
         if (inputManager.getState(ActionId.MOVE_DOWN))
-            main3DCamera.setY(main3DCamera.getCamPosRef().y - main3DCamera.getSpeed().y * GameTime.DeltaTime());
+            main3DCamera.setY(main3DCamera.getCamPosRef().y - main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
 
 
         if (inputManager.inputPressed(ActionId.TAB)) {
@@ -191,10 +194,10 @@ public class Test3DScene extends Scene {
         cubeColorLightning.updateShaderValue("lightPos", light.position());
 
         cubeColorMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
-        cubeColorMaterial.updateShaderValue("light.position", light.position());
+        cubeColorMaterial.updateShaderValue("light.vector", RendererUtils.ToLightPosition(light.position()));
 
         cubeTexturedMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
-        cubeTexturedMaterial.updateShaderValue("light.position", light.position());
+        cubeTexturedMaterial.updateShaderValue("light.vector", RendererUtils.ToLightPosition(light.position()));
 
         main3DCamera.updateView();
     }
@@ -217,6 +220,7 @@ public class Test3DScene extends Scene {
         stand.display();
 
         sphere.display();
+
         super.setAndDisplayRealScene();
     }
 

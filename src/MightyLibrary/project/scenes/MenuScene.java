@@ -61,12 +61,21 @@ public class MenuScene extends Scene {
                 .setText("->Test2DScene<-");
 
         BackgroundlessButton button3DScene = button2DScene.copy();
-        button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.52f))
+        button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.25f, windowSize.y * 0.52f))
                         .setText("Test3DScene");
 
         button3DScene.Text.copyTo(button3DScene.OverlapsText);
         button3DScene.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->Test3DScene<-");
+
+        BackgroundlessButton button3D_2Scene = button2DScene.copy();
+        button3D_2Scene.Text.setPosition(new Vector2f(windowSize.x * 0.75f, windowSize.y * 0.52f))
+                .setText("Test3DScene-2");
+
+        button3D_2Scene.Text.copyTo(button3D_2Scene.OverlapsText);
+        button3D_2Scene.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Test3DScene-2<-");
+
 
         BackgroundlessButton buttonCollisionTest = button2DScene.copy();
         buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.64f))
@@ -105,10 +114,11 @@ public class MenuScene extends Scene {
         guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
         guiList.GUIs.put(0, button2DScene);
         guiList.GUIs.put(1, button3DScene);
-        guiList.GUIs.put(2, buttonCollisionTest);
-        guiList.GUIs.put(3, button3D2DGame);
-        guiList.GUIs.put(4, buttonTestBox2D);
-        guiList.GUIs.put(5, buttonQuit);
+        guiList.GUIs.put(2, button3D_2Scene);
+        guiList.GUIs.put(3, buttonCollisionTest);
+        guiList.GUIs.put(4, button3D2DGame);
+        guiList.GUIs.put(5, buttonTestBox2D);
+        guiList.GUIs.put(6, buttonQuit);
         guiList.ShouldLoop = false;
 
         rotation = new FloatTweening();
@@ -135,15 +145,18 @@ public class MenuScene extends Scene {
                         sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
                         break;
                     case 2:
-                        sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
                         break;
                     case 3:
-                        sceneManagerInterface.setNewScene(new Test3D2DGame(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
                         break;
                     case 4:
-                        sceneManagerInterface.setNewScene(new TestBox2D(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new Test3D2DGame(), new String[]{""});
                         break;
                     case 5:
+                        sceneManagerInterface.setNewScene(new TestBox2D(), new String[]{""});
+                        break;
+                    case 6:
                         sceneManagerInterface.exit(0);
                         break;
                 }

@@ -13,6 +13,11 @@ public class Color4f extends Vector4f {
         this(color, color, color, 1.0f);
     }
 
+    public Color4f(Vector3f color, float alpha) {
+        this(color.x, color.y, color.z, alpha);
+    }
+
+
     public Color4f(float r, float g, float b, float a) {
         super(r, g, b, a);
     }
