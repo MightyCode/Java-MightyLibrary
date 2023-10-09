@@ -2,10 +2,10 @@ package MightyLibrary.mightylib.inputs.inputType;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 
-public interface IInput {
+public interface IAction {
     boolean getState(InputManager inputManager);
 
-    boolean inputPressed(InputManager inputManager);
+    boolean actionPressed(InputManager inputManager);
 
-    boolean inputReleased(InputManager inputManager);
+    boolean actionReleased(InputManager inputManager);
 }

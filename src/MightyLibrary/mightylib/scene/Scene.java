@@ -73,7 +73,6 @@ public class Scene {
 
 
     protected void setVirtualScene(){
-        dispose();
         scRenderer.bindFrameBuff();
         mainContext.getWindow().setVirtualViewport();
     }
@@ -83,6 +82,7 @@ public class Scene {
         mainContext.getWindow().setRealViewport();
 
         scRenderer.display();
+        dispose();
     }
 
     protected void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }

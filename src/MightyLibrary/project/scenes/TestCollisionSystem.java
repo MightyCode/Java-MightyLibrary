@@ -14,7 +14,7 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
-import MightyLibrary.project.lib.ActionId;
+import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
@@ -59,6 +59,9 @@ public class TestCollisionSystem extends Scene {
     public void update() {
         super.update();
 
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+
         InputManager inputManager = mainContext.getInputManager();
         boolean update = false;
 
@@ -88,13 +91,13 @@ public class TestCollisionSystem extends Scene {
 
         if (inputManager.getState(ActionId.MOVE_UP)){
             main2DCamera.setY(main2DCamera.getCamPosRef().y - 100 * GameTime.DeltaTime());
-            System.out.println("DOwn");
+            System.out.println("Down");
         }
 
-        renderer.switchToColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
+        renderer.setColorMode(new Color4f(0.1f, 0.2f, 0.6f, 1f));
 
         if (boundedVolume2D.isColliding(rectangle2)){
-            renderer.switchToColorMode(new Color4f(1, 0, 0, 1));
+            renderer.setColorMode(new Color4f(1, 0, 0, 1));
             boundedVolume2D.replaceComparedTo(rectangle2, EDirection.LeftUp);
             update = true;
         }

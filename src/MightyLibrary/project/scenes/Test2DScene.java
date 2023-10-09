@@ -20,12 +20,10 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.util.math.MightyMath;
-import MightyLibrary.project.lib.ActionId;
-import org.jbox2d.collision.AABB;
+import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
-import org.lwjgl.opengl.GL11;
 
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
@@ -52,7 +50,7 @@ public class Test2DScene extends Scene {
         /// RENDERERS ///
 
         slimeRenderer = new Animation2DRenderer("texture2D");
-        slimeRenderer.switchToTextureMode("slime");
+        slimeRenderer.setMainTextureChannel("slime");
         //slimeRenderer.setVerticalFlip(true);
 
 
@@ -103,9 +101,12 @@ public class Test2DScene extends Scene {
     public void update() {
         super.update();
 
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+
         InputManager inputManager = mainContext.getInputManager();
         if (inputManager.getState(ActionId.MOVE_DOWN)){
-            testCamera.moveX(mainContext.getWindow().getInfo().getSizeRef().x *0.3f * GameTime.DeltaTime());
+            testCamera.moveX(mainContext.getWindow().getInfo().getSizeRef().x * 0.3f * GameTime.DeltaTime());
         }
 
         rotation.update();
@@ -125,8 +126,18 @@ public class Test2DScene extends Scene {
         super.setVirtualScene();
         clear();
 
+        mapRenderer.getForTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
+        mapRenderer.getBackTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
+
         mapRenderer.drawBackLayers();
+        mapRenderer.drawForLayers();
+
         slimeRenderer.display();
+
+        mapRenderer.getForTileMapRenderer().setPosition(new Vector3f(200, 200, 0));
+        mapRenderer.getBackTileMapRenderer().setPosition(new Vector3f(200, 200, 0));
+
+        mapRenderer.drawBackLayers();
         mapRenderer.drawForLayers();
 
         text.display();

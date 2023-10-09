@@ -7,9 +7,9 @@ import MightyLibrary.mightylib.resources.texture.IGLBindable;
 public class VirtualSceneRenderer extends RectangleRenderer {
     private final FrameBuffer frameBuffer;
 
-    public VirtualSceneRenderer(WindowInfo info,  IGLBindable bindable){
+    public VirtualSceneRenderer(WindowInfo info, IGLBindable bindable){
         super("postProcessing");
-        frameBuffer = new FrameBuffer(info, bindable);
+        frameBuffer = new FrameBuffer(bindable, info.getVirtualSizeRef().x, info.getVirtualSizeRef().y);
         this.shape.updateVbo(new float[]{
                -1, 1,
                -1, -1,

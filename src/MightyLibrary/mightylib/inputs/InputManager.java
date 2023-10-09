@@ -64,7 +64,7 @@ public class InputManager {
         if (actionInput == null)
             return false;
 
-        return actionInput.actionInput().getState(this);
+        return actionInput.getState(this);
     }
 
 
@@ -73,7 +73,7 @@ public class InputManager {
         if (actionInput == null)
             return false;
 
-        return actionInput.actionInput().inputPressed(this);
+        return actionInput.actionPressed(this);
     }
 
 
@@ -82,7 +82,7 @@ public class InputManager {
         if (actionInput == null)
             return false;
 
-        return actionInput.actionInput().inputReleased(this);
+        return actionInput.actionReleased(this);
     }
 
 

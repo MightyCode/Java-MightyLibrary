@@ -14,6 +14,18 @@ import java.util.ArrayList;
  */
 public class MightyMath {
 
+	public static final Vector3f LEFT_VECTOR = new Vector3f(0, 0, -1);
+	public static final Vector3f RIGHT_VECTOR = new Vector3f(0, 0, 1);
+
+	public static final Vector3f UP_VECTOR = new Vector3f(0, 1, 0);
+	public static final Vector3f DOWN_VECTOR = new Vector3f(0, -1, 0);
+
+	public static final Vector3f FORWARD_VECTOR = new Vector3f(1, 0, 0);
+	public static final Vector3f BACKWARD_VECTOR = new Vector3f(-1, 0, 0);
+
+	public static final Vector3f ONE_VECTOR = new Vector3f(1);
+	public static final Vector3f ZERO_VECTOR = new Vector3f(0);
+
 	public static final float PI_FLOAT = (float)(Math.PI);
 
 	/**
@@ -27,20 +39,20 @@ public class MightyMath {
 	 *
 	 * @return result
 	*/
-	public static float mapf(float x, float a, float b, float c, float d) {
+	public static float Mapf(float x, float a, float b, float c, float d) {
 		return (x - a) / (b - a) * (d - c) + c;
 	}
 
-	public static double mapd(double x, double a, double b, double c, double d) {
+	public static double Mapd(double x, double a, double b, double c, double d) {
 		return (x - a) / (b - a) * (d - c) + c;
 	}
 
 
-	public static float mapLogf(float x, float a, float b, float c, float d) {
-		return (float)Math.exp(mapf((float)Math.log(x), (float)Math.log(a), (float)Math.log(b), (float)Math.log(c), (float)Math.log(d)));
+	public static float MapLogf(float x, float a, float b, float c, float d) {
+		return (float)Math.exp(Mapf((float)Math.log(x), (float)Math.log(a), (float)Math.log(b), (float)Math.log(c), (float)Math.log(d)));
 	}
 
-	public static int sum(int[] table){
+	public static int Sum(int[] table){
 		int i = 0;
 		int sum = 0;
 		while (i < table.length){
@@ -50,11 +62,11 @@ public class MightyMath {
 		return sum;
 	}
 
-	public static float sum(float[] sum){
-		return sum(sum, 0, sum.length);
+	public static float Sum(float[] sum){
+		return Sum(sum, 0, sum.length);
 	}
 
-	public static float sum(float[] sum, int start, int end){
+	public static float Sum(float[] sum, int start, int end){
 		float result = 0;
 		for (int  i = start; i < end; ++i){
 			result += sum[i];
@@ -65,7 +77,7 @@ public class MightyMath {
 
 
 
-	public static Float sum(ArrayList<Float> list){
+	public static Float Sum(ArrayList<Float> list){
 		float sum = 0;
 		for (Float value : list){
 			sum += value;
@@ -74,23 +86,23 @@ public class MightyMath {
 		return sum;
 	}
 
-	public static double rads(double angle){
+	public static double toRads(double angle){
 		return angle * (Math.PI/180.0);
 	}
 
-	public static float rads(float angle){
+	public static float toRads(float angle){
 		return (float)(angle * (Math.PI/180.0));
 	}
 
-	public static double angles(double rad){
+	public static double toDegrees(double rad){
 		return rad * (180.0/ Math.PI);
 	}
 
-	public static float angles(float rad){
+	public static float toDegrees(float rad){
 		return (float)(rad * (180.0/ Math.PI));
 	}
 
-	public static Vector2f rotatePointAround(Vector2f pt, Vector2f ref, float angle){
+	public static Vector2f RotatePointAround(Vector2f pt, Vector2f ref, float angle){
 		double s = Math.cos(angle);
 		double c = Math.sin(angle);
 
@@ -100,10 +112,30 @@ public class MightyMath {
 		);
 	}
 
-	public static Vector2f projectPointOnAxis(Vector2f pt, Vector2f axis){
+	public static Vector2f ProjectPointOnAxis(Vector2f pt, Vector2f axis){
 		float value = (pt.x * axis.x + pt.y * axis.y) / (axis.x * axis.x + axis.y * axis.y);
 
 		return new Vector2f(axis.x * value, axis.y * value);
 
+	}
+
+	public static Vector3f ToVector(EDirection3D direction3D){
+		switch (direction3D){
+			case Forward:
+				return FORWARD_VECTOR;
+			case Backward:
+				return BACKWARD_VECTOR;
+			case Left:
+				return LEFT_VECTOR;
+			case Right:
+				return RIGHT_VECTOR;
+			case Up:
+				return UP_VECTOR;
+			case Down:
+				return DOWN_VECTOR;
+			case NoDirection:
+			default:
+				return ZERO_VECTOR;
+		}
 	}
 }

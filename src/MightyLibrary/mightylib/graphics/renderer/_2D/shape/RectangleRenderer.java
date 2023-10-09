@@ -1,8 +1,11 @@
 package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
+import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
+import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.util.math.EDirection;
 import MightyLibrary.mightylib.util.math.EFlip;
 import MightyLibrary.mightylib.util.math.ERotation;
@@ -15,19 +18,17 @@ public class RectangleRenderer extends Renderer {
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
-    protected EFlip textureFlip;
-    protected ERotation textureRotation;
+    protected RectangularFace face;
 
     public RectangleRenderer(String shaderName) {
         super(shaderName, true);
 
         reference = EDirection.LeftUp;
-        textureFlip = EFlip.None;
-        textureRotation = ERotation.None;
+        face = new RectangularFace();
 
-        texturePosition = new Vector4f(0f, 1f, 0f,1f);
+        texturePosition = RectangularFace.BasicTexturePosition();
 
-        int[] indices = RendererUtils.indicesForSquare();
+        int[] indices = RectangularFace.IndicesForSquare();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.STATIC_STORE);
@@ -53,7 +54,7 @@ public class RectangleRenderer extends Renderer {
 
 
     private float[] texturePos(){
-        return RendererUtils.texturePosition(texturePosition, textureFlip, textureRotation);
+        return face.textureCornerPosition(texturePosition);
     }
 
     // Set size with size of pixel
@@ -63,8 +64,11 @@ public class RectangleRenderer extends Renderer {
         return this;
     }
 
-    public RectangleRenderer setSizeToTexture(){
-        setScale(new Vector3f(texture.getWidth(), texture.getHeight(), 1.0f));
+    public RectangleRenderer setSizeToTexture() {
+        if (textures[0] == null)
+            return this;
+
+        setScale(new Vector3f(textures[0].getWidth(), textures[0].getHeight(), 1.0f));
 
         return this;
     }
@@ -82,21 +86,21 @@ public class RectangleRenderer extends Renderer {
 
 
     public EFlip getTextureFlip() {
-        return textureFlip;
+        return face.getFlip();
     }
 
     public RectangleRenderer setTextureFlip(EFlip textureFlip) {
-        this.textureFlip = textureFlip;
+        this.face.setFlip(textureFlip);
 
         return updateShapeTexture();
     }
 
     public ERotation getTextureRotation() {
-        return textureRotation;
+        return face.getRotation();
     }
 
     public RectangleRenderer setTextureRotation(ERotation textureRotation) {
-        this.textureRotation = textureRotation;
+        this.face.setRotation(textureRotation);
 
         return updateShapeTexture();
     }

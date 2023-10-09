@@ -3,7 +3,7 @@ package MightyLibrary.mightylib.util.math;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Color4f extends Vector4f{
+public class Color4f extends Vector4f {
 
     public Color4f() {
         this(1.0f);
@@ -26,6 +26,10 @@ public class Color4f extends Vector4f{
     }
     public void setR255(float r) { setR(r / 255); }
 
+    public int getR255(){
+        return (int) (x * 255);
+    }
+
     public float getG() {
         return y;
     }
@@ -34,6 +38,10 @@ public class Color4f extends Vector4f{
         this.y = g;
     }
     public void setG255(float g) { setG(g / 255); }
+
+    public int getG255(){
+        return (int) (y * 255);
+    }
 
     public float getB() {
         return z;
@@ -44,6 +52,10 @@ public class Color4f extends Vector4f{
     }
     public void setB255(float b) { setB(b / 255); }
 
+    public int getB255(){
+        return (int) (z * 255);
+    }
+
     public float getA() {
         return w;
     }
@@ -52,6 +64,10 @@ public class Color4f extends Vector4f{
         this.w = a;
     }
     public void setA255(float a) { setA(a / 255); }
+
+    public int getA255(){
+        return (int) (w * 255);
+    }
 
     public void setColor(Vector4f color){
         set(color);

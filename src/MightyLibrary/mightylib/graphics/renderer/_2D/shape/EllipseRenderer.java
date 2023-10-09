@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
+import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
@@ -16,7 +17,7 @@ public class EllipseRenderer extends Renderer {
 
         reference = EDirection.None;
 
-        int[] indices = RendererUtils.indicesForSquare();
+        int[] indices = RectangularFace.IndicesForSquare();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.STATIC_STORE);

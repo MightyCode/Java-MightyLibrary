@@ -64,7 +64,7 @@ public class VerticalSlider extends Slider {
         button.setPosition(
                 new Vector2f(
                         button.position().x,
-                        (float)MightyMath.mapd(getCurrentValue(),
+                        (float)MightyMath.Mapd(getCurrentValue(),
                                 getMinValue(), getMaxValue(), buttonBoundaries.x, buttonBoundaries.y)
                 )
         );
@@ -72,6 +72,6 @@ public class VerticalSlider extends Slider {
 
     @Override
     protected double returnCurrentValue(RectangleRenderer button, Vector2f buttonBoundaries) {
-        return MightyMath.mapd(button.position().y, buttonBoundaries.x, buttonBoundaries.y, getMinValue(), getMaxValue());
+        return MightyMath.Mapd(button.position().y, buttonBoundaries.x, buttonBoundaries.y, getMinValue(), getMaxValue());
     }
 }

@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
+import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.resources.animation.Animator;
@@ -29,9 +30,9 @@ public class Animation2DRenderer extends Renderer {
 
         offsetRotation = new Vector2f(0, 0);
 
-        texturePosition = new Vector4f(0f, 1f, 0f,1f);
+        texturePosition = RectangularFace.BasicTexturePosition();
 
-        int[] indices = { 0, 1, 2, 2, 0, 3 };
+        int[] indices = RectangularFace.IndicesForSquare();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
         positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.DYNAMIC_STORE);
@@ -48,7 +49,7 @@ public class Animation2DRenderer extends Renderer {
         this.animator = animator;
 
         updateInfoForFrame();
-        switchToTextureMode(animator.getCurrentAnimation().getData().getTextureName());
+        setMainTextureChannel(animator.getCurrentAnimation().getData().getTextureName());
     }
 
 
@@ -56,7 +57,7 @@ public class Animation2DRenderer extends Renderer {
         animator.update();
 
         if (animator.animationChanged()) {
-            switchToTextureMode(animator.getCurrentAnimation().getData().getTextureName());
+            setMainTextureChannel(animator.getCurrentAnimation().getData().getTextureName());
             updateInfoForFrame();
         } else if (animator.isFrameChanged()){
             updateInfoForFrame();

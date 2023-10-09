@@ -1,7 +1,6 @@
 {
 	"sounds" : {
-		"select" : "select.ogg",
-		"music" : "mainmenu.ogg"
+		"select" : "select.ogg"
 	},
 	"gainTree" : {
 		"global" : {

@@ -11,7 +11,6 @@ import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;
-import MightyLibrary.project.lib.ActionId;
 
 class ProjectLoading implements IProjectLoading {
     @Override
@@ -26,19 +25,47 @@ class ProjectLoading implements IProjectLoading {
         InputManager inputManager = context.getInputManager();
 
         ActionInput[] configurations = {
-                new ActionInput(ActionId.ESCAPE, "ESCAPE", new InputSimple(GLFW_KEY_ESCAPE, EInputType.Keyboard)),
-                new ActionInput(ActionId.MOVE_LEFT, "ESCAPE", new InputSimple(GLFW_KEY_A, EInputType.Keyboard)),
-                new ActionInput(ActionId.MOVE_RIGHT, "ESCAPE", new InputSimple(GLFW_KEY_D, EInputType.Keyboard)),
-                new ActionInput(ActionId.MOVE_FORWARD, "ESCAPE", new InputSimple(GLFW_KEY_W, EInputType.Keyboard)),
-                new ActionInput(ActionId.MOVE_BACKWARD, "ESCAPE", new InputSimple(GLFW_KEY_S, EInputType.Keyboard)),
-                new ActionInput(ActionId.MOVE_UP, "ESCAPE", new InputSimple(GLFW_KEY_SPACE, EInputType.Keyboard)),
-                new ActionInput(ActionId.MOVE_DOWN, "ESCAPE", new InputSimple(GLFW_KEY_LEFT_CONTROL, EInputType.Keyboard)),
-                new ActionInput(ActionId.SHIFT, "ESCAPE", new InputSimple(GLFW_KEY_LEFT_SHIFT, EInputType.Keyboard)),
-                new ActionInput(ActionId.ENTER, "ESCAPE", new InputSimple(GLFW_KEY_ENTER, EInputType.Keyboard)),
-                new ActionInput(ActionId.SELECT_UP, "ESCAPE", new InputSimple(GLFW_KEY_W, EInputType.Keyboard)),
-                new ActionInput(ActionId.SELECT_DOWN, "ESCAPE", new InputSimple(GLFW_KEY_S, EInputType.Keyboard)),
-                new ActionInput(ActionId.LEFT_CLICK, "ESCAPE", new InputSimple(GLFW_MOUSE_BUTTON_1, EInputType.Mouse)),
-                new ActionInput(ActionId.RIGHT_CLICK, "ESCAPE", new InputSimple(GLFW_MOUSE_BUTTON_2, EInputType.Mouse)),
+                new ActionInput(ActionId.ESCAPE, "ESCAPE",
+                        new InputSimple(GLFW_KEY_ESCAPE, EInputType.Keyboard)),
+
+                new ActionInput(ActionId.MOVE_LEFT, "MOVE_LEFT",
+                        new InputSimple(GLFW_KEY_A, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_RIGHT, "MOVE_RIGHT",
+                        new InputSimple(GLFW_KEY_D, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_FORWARD, "MOVE_FORWARD",
+                        new InputSimple(GLFW_KEY_W, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_BACKWARD, "MOVE_BACKWARD",
+                        new InputSimple(GLFW_KEY_S, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_UP, "MOVE_UP",
+                        new InputSimple(GLFW_KEY_SPACE, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_DOWN, "MOVE_DOWN",
+                        new InputSimple(GLFW_KEY_LEFT_CONTROL, EInputType.Keyboard)),
+                new ActionInput(ActionId.SHIFT, "SHIFT",
+                        new InputSimple(GLFW_KEY_LEFT_SHIFT, EInputType.Keyboard)),
+
+                new ActionInput(ActionId.MOVE_LEFT_2D, "MOVE_LEFT_2D",
+                        new InputSimple(GLFW_KEY_LEFT, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_RIGHT_2D, "MOVE_RIGHT_2D",
+                        new InputSimple(GLFW_KEY_RIGHT, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_UP_2D, "MOVE_UP_2D",
+                        new InputSimple(GLFW_KEY_UP, EInputType.Keyboard)),
+                new ActionInput(ActionId.MOVE_DOWN_2D, "MOVE_DOWN_2D",
+                        new InputSimple(GLFW_KEY_DOWN, EInputType.Keyboard)),
+
+                new ActionInput(ActionId.TAB,
+                        "TAB", new InputSimple(GLFW_KEY_TAB, EInputType.Keyboard)),
+                new ActionInput(ActionId.ENTER,
+                        "ENTER", new InputSimple(GLFW_KEY_ENTER, EInputType.Keyboard)),
+
+                new ActionInput(ActionId.SELECT_UP,
+                        "SELECT_UP", new InputSimple(GLFW_KEY_W, EInputType.Keyboard)),
+                new ActionInput(ActionId.SELECT_DOWN,
+                        "SELECT_DOWN", new InputSimple(GLFW_KEY_S, EInputType.Keyboard)),
+
+                new ActionInput(ActionId.LEFT_CLICK,
+                        "LEFT_CLICK", new InputSimple(GLFW_MOUSE_BUTTON_1, EInputType.Mouse)),
+                new ActionInput(ActionId.RIGHT_CLICK,
+                        "RIGHT_CLICK", new InputSimple(GLFW_MOUSE_BUTTON_2, EInputType.Mouse)),
         };
 
         inputManager.init(configurations);

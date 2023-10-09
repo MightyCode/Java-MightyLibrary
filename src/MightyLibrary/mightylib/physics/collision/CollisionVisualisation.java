@@ -11,7 +11,7 @@ public abstract class CollisionVisualisation {
         renderer.setScale(new Vector3f(rectangle.w(), rectangle.h(), 1.f));
 
         renderer.setPosition(new Vector2f(rectangle.x(), rectangle.y()));
-        renderer.switchToColorMode(color);
+        renderer.setColorMode(color);
 
         return renderer;
     }

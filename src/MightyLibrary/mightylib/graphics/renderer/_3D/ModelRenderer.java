@@ -7,12 +7,12 @@ public class ModelRenderer extends Renderer {
     public ModelRenderer(String shaderName, String modelPath, String texture) {
         super(shaderName, true);
         shape = OBJLoader.loadObjTexturedModel(modelPath);
-        switchToTextureMode(texture);
+        setMainTextureChannel(texture);
     }
 
     public ModelRenderer(String shaderName, String modelPath, Color4f color) {
         super(shaderName, true);
         shape = OBJLoader.loadObjColoredModel(modelPath);
-        switchToColorMode(color);
+        setColorMode(color);
     }
 }

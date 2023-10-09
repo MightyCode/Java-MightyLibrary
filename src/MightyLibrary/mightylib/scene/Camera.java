@@ -3,16 +3,11 @@ package MightyLibrary.mightylib.scene;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.main.WindowInfo;
 import org.joml.Matrix4f;
-import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
 
 public abstract class Camera {
     protected final WindowInfo windowInfo;
 
     protected final Matrix4f projection, view;
-
-    protected FloatBuffer projectionBuffer, viewBuffer;
     protected final ShaderValue projectionShaderValue, viewShaderValue;
 
     public Camera(WindowInfo windowInfo) {
@@ -21,18 +16,15 @@ public abstract class Camera {
         projection = new Matrix4f();
         view = new Matrix4f();
 
-        projectionBuffer = BufferUtils.createFloatBuffer(16);
-        viewBuffer = BufferUtils.createFloatBuffer(16);
-
-        projectionShaderValue = new ShaderValue("projection", FloatBuffer.class, projectionBuffer);
-        viewShaderValue = new ShaderValue("view", FloatBuffer.class, viewBuffer);
+        projectionShaderValue = new ShaderValue("projection", Matrix4f.class, projection);
+        viewShaderValue = new ShaderValue("view", Matrix4f.class, view);
     }
 
     public abstract void updateProjection();
     public abstract void updateView();
 
     public ShaderValue getProjection(){
-        projectionShaderValue.setObject(projectionBuffer);
+        projectionShaderValue.setObject(projection);
         return projectionShaderValue;
     }
 
@@ -41,8 +33,7 @@ public abstract class Camera {
     }
 
     public ShaderValue getView(){
-        viewShaderValue.setObject(viewBuffer);
-        viewShaderValue.forceUpdate();
+        viewShaderValue.setObject(view);
         return viewShaderValue;
     }
 

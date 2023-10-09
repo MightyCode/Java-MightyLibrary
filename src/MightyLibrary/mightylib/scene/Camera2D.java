@@ -14,15 +14,21 @@ public class Camera2D extends Camera {
     private Vector2f zoomLevel = new Vector2f(1, 1);
     private float minZoomLevel = 0.0001f;
     private float maxZoomLevel = 1000.0f;
-
     private float rotation;
 
+    private boolean invertView; // y-axis
+
     public Camera2D(WindowInfo windowInfo, Vector2f pos){
+        this(windowInfo, pos, false);
+    }
+
+    public Camera2D(WindowInfo windowInfo, Vector2f pos, boolean invertView){
         super(windowInfo);
         camPos = new Vector2f();
         zoomReference = new Vector2f();
 
         rotation = 0;
+        this.invertView = invertView;
 
         updateProjection();
         setPos(pos);
@@ -34,6 +40,12 @@ public class Camera2D extends Camera {
 
         this.minZoomLevel = minZoomLevel;
         this.maxZoomLevel = maxZoomLevel;
+    }
+
+    public void invertView(){
+        invertView = !invertView;
+
+        updateProjection();
     }
 
     public void setZoomReference(Vector2f reference){
@@ -91,11 +103,10 @@ public class Camera2D extends Camera {
     public void updateProjection() {
         float left = 0;
         float right = windowInfo.getVirtualSizeRef().x;
-        float bottom = windowInfo.getVirtualSizeRef().y;
-        float top = 0;
+        float bottom = (invertView) ? windowInfo.getVirtualSizeRef().y : 0;
+        float top = (invertView) ? 0 : windowInfo.getVirtualSizeRef().y;
 
-        projection.ortho(left, right, bottom, top, -10, 10);
-        projection.get(projectionBuffer);
+        projection.ortho(left, right, top, bottom, -10, 10);
     }
 
     @Override
@@ -104,7 +115,6 @@ public class Camera2D extends Camera {
         view.translate(-camPos.x, -camPos.y, 0f);
         view.scaleLocal(zoomLevel.x, zoomLevel.y, 1);
         view.rotate(rotation, new Vector3f(0, 0, 1));
-        viewBuffer = view.get(viewBuffer);
     }
 
     public Vector2f getCamPosRef() { return camPos; }

@@ -4,13 +4,11 @@ import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.main.Window;
-import MightyLibrary.mightylib.scene.Camera;
 import MightyLibrary.mightylib.scene.Camera2D;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.ColorList;
 import MightyLibrary.mightylib.util.math.EDirection;
-import MightyLibrary.project.lib.ActionId;
+import MightyLibrary.project.main.ActionId;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
@@ -27,7 +25,7 @@ public class TestBox2D extends Scene {
         public Box(World world, Vector2f position, Vector2f size){
 
             renderer = new RectangleRenderer("colorShape2D");
-            renderer.switchToColorMode(ColorList.Grey());
+            renderer.setColorMode(ColorList.Grey());
 
             BodyDef bodyDef = new BodyDef();
             bodyDef.type = BodyType.DYNAMIC;
@@ -94,7 +92,7 @@ public class TestBox2D extends Scene {
         setClearColor(52, 189, 235, 1f);
 
         ground = new RectangleRenderer("colorShape2D");
-        ground.switchToColorMode(ColorList.Black());
+        ground.setColorMode(ColorList.Black());
 
         Vec2 gravity = new Vec2(0.8f, 9.81f);
         world = new World(gravity);
@@ -131,6 +129,9 @@ public class TestBox2D extends Scene {
     @Override
     public void update() {
         super.update();
+
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
         world.step(GameTime.DeltaTime(), velocityIterations, positionIterations);
 

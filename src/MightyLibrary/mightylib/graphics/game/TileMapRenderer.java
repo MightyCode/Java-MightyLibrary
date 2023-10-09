@@ -62,7 +62,7 @@ public class TileMapRenderer extends Renderer {
     public void setTilemap(TileMap tilemap){
         this.tilemap = tilemap;
 
-        switchToTextureMode(tilemap.tileSet().texture());
+        setMainTextureChannel(tilemap.tileSet().texture());
 
         computeTileInformation();
     }

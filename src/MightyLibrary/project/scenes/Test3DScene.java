@@ -1,9 +1,9 @@
 package MightyLibrary.project.scenes;
 
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.renderer.utils.BasicMaterial;
+import MightyLibrary.mightylib.graphics.renderer.utils.Material;
+import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer._3D.ModelRenderer;
@@ -11,38 +11,31 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
-import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.scene.Camera3D;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scene.Scene;
 import MightyLibrary.mightylib.util.math.Color4f;
-import MightyLibrary.project.lib.ActionId;
-import org.joml.Vector2f;
+import MightyLibrary.mightylib.util.math.ColorList;
+import MightyLibrary.project.main.ActionId;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 
 public class Test3DScene extends Scene {
-
-    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120f, new Vector3f(0, 4, 0));
-
+    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
     private Renderer sBlock;
-
     private Renderer sphere;
 
     private ModelRenderer stand;
-    private RectangleRenderer hudBar;
-
-    // Textures
-    private Texture displacementMap;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
     private final int boxSize = faceSize * 6;
 
-    private CubeRenderer light;
+    private CubeRenderer light, cubeColorLightning, cubeColorMaterial;
+
+    private CubeRenderer cubeTexturedMaterial;
 
     private FloatTweening displacementMapTweening;
 
@@ -59,61 +52,81 @@ public class Test3DScene extends Scene {
         /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);
-        setClearColor(52, 189, 235, 1f);
+        Color4f clearColor = ColorList.DarkGrey();
+        setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
 
         timeShaderValue = new ShaderValue("time", Float.class, 0f);
+        main3DCamera.setSpeed(new Vector3f(10));
 
         /// RENDERERS ///
 
         // Cube
-        light = new CubeRenderer("colorComplex3D", new Vector3f(-1f, 3.0f, -4f), 1f);
-        light.switchToColorMode(new Color4f(1f, 0f, 0f, 1f));
-        light.addNormal();
+        cubeColorLightning = new CubeRenderer("colorLightning3D");
+        cubeColorLightning.setPosition(new Vector3f(-1f, 3.0f, -4f));
+        cubeColorLightning.setColorMode(ColorList.Red());
+        cubeColorLightning.setNormal();
 
-        ShaderValue worldColorShaderValue = new ShaderValue("worldColor",
-                Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f));
+        light = new CubeRenderer("colorShape3D");
+        light.setPosition(new Vector3f(-1f, 10.0f, -4f));
+        light.setScale(new Vector3f(0.3f));
+        light.setColorMode(ColorList.White());
+        light.setNormal();
 
-        light.getShape().getShader().sendValueToShader(worldColorShaderValue);
-
-        ShaderValue lightDirectionShaderValue = new ShaderValue("lightDir",
-                Vector3f.class, new Vector3f(0.1f, 1f, 0.1f).normalize());
-        light.getShape().getShader().sendValueToShader(lightDirectionShaderValue);
-
-        ShaderValue lightColorShaderValue = new ShaderValue("lightColor",
-                Vector3f.class, new Vector3f(0.8f, 0.8f, 0.8f));
-        light.getShape().getShader().sendValueToShader(lightColorShaderValue);
-
-
-        // Platform of cubes
-        sBlock = new Renderer("textureComplex3D", false);
-        float[] cratesInfo = createCrates(10);
-        sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
-        sBlock.switchToTextureMode("container");
-            // Displacement texture for cubes/crate
-        displacementMap = Resources.getInstance().getResource(Texture.class,"dispMap1");
-
-        ShaderValue displacementMapPositionShaderValue = new ShaderValue(
-                "displacementMap", Integer.class, 1
+        BasicMaterial lightMaterial = new BasicMaterial(
+                new Vector3f(0.2f), new Vector3f(0.5f), new Vector3f(1)
         );
 
-        sBlock.getShape().getShader().sendValueToShader(displacementMapPositionShaderValue);
+        cubeColorLightning.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("worldColor", Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f))
+                .addShaderValue("lightPos", Vector3f.class, light.position())
+                .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
+
+        // Platform of cubes
+        sBlock = new Renderer("textureDisplacement3D", false);
+        float[] cratesInfo = createCrates(10);
+        sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
+        sBlock.setMainTextureChannel("container");
+        // Displacement texture for cubes/crate
+        sBlock.addTextureChannel("dispMap1", "displacementMap", 1);
 
 
-        sphere = new Renderer("colorComplex3D", true);
+        sphere = new Renderer("colorLightning3D", true);
         computeSphere(sphere);
         sphere.setScale(new Vector3f(10, 10, 10));
         sphere.setPosition(new Vector3f(20, 10, 10));
 
+        sphere.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("lightPos", Vector3f.class, light.position());
+        cubeColorLightning.copyShaderValuesTo(sphere, false);
+
+        cubeColorMaterial = new CubeRenderer("colorMaterial3D");
+        cubeColorMaterial.setPosition(new Vector3f(-1f, 3.0f, -8f));
+        cubeColorMaterial.setColorMode(ColorList.Red());
+        cubeColorMaterial.setNormal();
+
+        cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("light.position", Vector3f.class, light.position());
+        lightMaterial.addToRenderer(cubeColorMaterial, "light");
+        Material.CyanRubber().addToRenderer(cubeColorMaterial, "material");
+
+        cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
+        cubeTexturedMaterial.setPosition(new Vector3f(3f, 3.0f, -8f));
+        cubeTexturedMaterial.setTexturePosition();
+        cubeTexturedMaterial.setNormal();
+        cubeTexturedMaterial.setMainTextureChannel("container2", "material.diffuse");
+        cubeTexturedMaterial.addTextureChannel("container2_specular", "material.specular", 1);
+
+        cubeTexturedMaterial
+                .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("light.position", Vector3f.class, light.position())
+                .addShaderValue("material.shininess", Float.class, 64f);
+
+        lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
+
         // 3D Model
         stand = new ModelRenderer("texture3D", "stand/stall", "stall");
-        stand.setPosition(new Vector3f(0.0f, 4.0f,0.0f));
+        stand.setPosition(new Vector3f(0.0f, 4.0f,5.0f));
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
-
-        // Grey Rect in Hud
-        hudBar = new RectangleRenderer("texture2D");
-        hudBar.switchToTextureMode("error");
-        hudBar.setSizePix( 150, 150);//window.size.x * 0.3f, window.size.y * 0.3f);
-        hudBar.setPosition(new Vector2f(150, 150)); //window.size.x * 0.7f, window.size.y * 0.7f);
 
         displacementMapTweening = new FloatTweening();
         displacementMapTweening.setTweeningValues(ETweeningType.Linear, ETweeningBehaviour.InOut)
@@ -130,41 +143,37 @@ public class Test3DScene extends Scene {
     public void update() {
         super.update();
 
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+
         InputManager inputManager = mainContext.getInputManager();
 
         int speed = 1;
-        if (inputManager.getState(ActionId.SHIFT)) {
+        if (inputManager.getState(ActionId.SHIFT))
             speed = 3;
-        }
 
-        if(inputManager.getState(ActionId.MOVE_LEFT)){
-            main3DCamera.speedAngX(Camera3D.speed.x * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_LEFT))
+            main3DCamera.speedAngX(main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_RIGHT)){
-            main3DCamera.speedAngX(-Camera3D.speed.x * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_RIGHT))
+            main3DCamera.speedAngX(-main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_FORWARD)){
-            main3DCamera.speedAngZ(-Camera3D.speed.z * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_FORWARD))
+            main3DCamera.speedAngZ(-main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_BACKWARD)) {
-            main3DCamera.speedAngZ(Camera3D.speed.z * speed);
-        }
+        if (inputManager.getState(ActionId.MOVE_BACKWARD))
+            main3DCamera.speedAngZ(main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_UP)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y += Camera3D.speed.y);
-        }
+        if (inputManager.getState(ActionId.MOVE_UP))
+            main3DCamera.setY(main3DCamera.getCamPosRef().y + main3DCamera.getSpeed().y * GameTime.DeltaTime());
 
-        if(inputManager.getState(ActionId.MOVE_DOWN)) {
-            main3DCamera.setY(main3DCamera.getCamPosRef().y -= Camera3D.speed.y);
-        }
+        if (inputManager.getState(ActionId.MOVE_DOWN))
+            main3DCamera.setY(main3DCamera.getCamPosRef().y - main3DCamera.getSpeed().y * GameTime.DeltaTime());
 
-        if(inputManager.inputPressed(ActionId.ESCAPE)) {
+
+        if (inputManager.inputPressed(ActionId.TAB)) {
             main3DCamera.invertLockViewCursor();
             mainContext.getMouseManager().invertCursorState();
-
         }
 
         displacementMapTweening.update();
@@ -173,7 +182,19 @@ public class Test3DScene extends Scene {
         sBlock.getShape().getShader().sendValueToShader(timeShaderValue);
 
         rotationTweening.update();
-        light.setRotation(rotationTweening.value(), new Vector3f(0, 1f, 1f).normalize());
+
+        light.setX(rotationTweening.value() * 2);
+
+        //light.setZ(rotationTweening.value() * 2);
+
+        cubeColorLightning.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeColorLightning.updateShaderValue("lightPos", light.position());
+
+        cubeColorMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeColorMaterial.updateShaderValue("light.position", light.position());
+
+        cubeTexturedMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeTexturedMaterial.updateShaderValue("light.position", light.position());
 
         main3DCamera.updateView();
     }
@@ -185,16 +206,17 @@ public class Test3DScene extends Scene {
 
         // Better to draw the world here
         light.display();
-        displacementMap.bind(1);
-        stand.display();
+
+        cubeColorLightning.display();
+        cubeColorMaterial.display();
+
+        cubeTexturedMaterial.display();
 
         sBlock.display();
 
+        stand.display();
+
         sphere.display();
-
-        // Better to draw the hud here and be not affected by the postProcessing shader
-        hudBar.display();
-
         super.setAndDisplayRealScene();
     }
 
@@ -202,8 +224,10 @@ public class Test3DScene extends Scene {
     public void unload(){
         super.unload();
         sBlock.unload();
+        cubeColorLightning.unload();
+        cubeColorMaterial.unload();
+        cubeTexturedMaterial.unload();
         light.unload();
-        hudBar.unload();
         stand.unload();
         sphere.unload();
     }
@@ -227,49 +251,6 @@ public class Test3DScene extends Scene {
         placeCoord(array, realPosX, realPosZ, realPosY, index);
         placeText(array, index);
         //placeNormal(array, index);
-
-             /* -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 0.0f, -1.0f,
-                0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   0.0f, 0.0f, -1.0f,
-                0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f, 0.0f, -1.0f,
-                0.5f,  0.5f, -0.5f,    1.0f, 1.0f,   0.0f, 0.0f, -1.0f,
-                -0.5f,  0.5f, -0.5f,   0.0f, 1.0f,   0.0f, 0.0f, -1.0f,
-                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 0.0f, -1.0f,
-
-
-                -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-                0.5f, -0.5f,  0.5f,    1.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 0.0f, 1.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 0.0f, 1.0f,
-                -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   0.0f, 0.0f, 1.0f,
-                -0.5f, -0.5f,  0.5f,   0.0f, 0.0f,   0.0f, 0.0f, 1.0f,
-
-                 -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f,  0.5f, -0.5f,   1.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f, -0.5f, -0.5f,   1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-                 -0.5f,  0.5f,  0.5f,   0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-
-                 0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f,  0.5f, -0.5f,    1.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f, -0.5f, -0.5f,    1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f, -0.5f,  0.5f,    0.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-                 0.5f,  0.5f,  0.5f,    0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-
-                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, -1.0f, 0.0f,
-                0.5f, -0.5f, -0.5f,    1.0f, 0.0f,   0.0f, -1.0f, 0.0f,
-                0.5f, -0.5f,  0.5f,    1.0f, 1.0f,   0.0f, -1.0f, 0.0f,
-                0.5f, -0.5f,  0.5f,    1.0f, 1.0f,   0.0f, -1.0f, 0.0f,
-                -0.5f, -0.5f,  0.5f,   0.0f, 1.0f,   0.0f, -1.0f, 0.0f,
-                -0.5f, -0.5f, -0.5f,   0.0f, 0.0f,   0.0f, -1.0f, 0.0f,
-
-                -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f,
-                0.5f,  0.5f, -0.5f,    1.0f, 0.0f,   0.0f, 1.0f, 0.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 1.0f, 0.0f,
-                0.5f,  0.5f,  0.5f,    1.0f, 1.0f,   0.0f, 1.0f, 0.0f,
-                -0.5f,  0.5f,  0.5f,   0.0f, 1.0f,   0.0f, 1.0f, 0.0f,
-                -0.5f,  0.5f, -0.5f,   0.0f, 0.0f,   0.0f, 1.0f, 0.0f*/
     }
 
 

@@ -56,7 +56,7 @@ public class StrSelector {
         chooseRight.copyTextToOverlapping().OverlapsText.setColor(new Color4f(0.8f));
 
         background = new RectangleRenderer("colorShape2D");
-        background.switchToColorMode(ColorList.White());
+        background.setColorMode(ColorList.White());
         background.setPosition(new Vector2f(windowSize.x * 0.835f, windowSize.y * 0.0f));
         background.setSizePix(windowSize.x * 0.45f, windowSize.y * 0.08f);
 
