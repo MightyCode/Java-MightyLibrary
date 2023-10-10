@@ -105,6 +105,7 @@ public class Renderer {
     }
 
     public Renderer updateShaderValue(String name, Object object){
+        System.out.println(name);
         shaderValues.get(name).setObject(object);
 
         return this;

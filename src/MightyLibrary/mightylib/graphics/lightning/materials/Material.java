@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.renderer.utils;
+package MightyLibrary.mightylib.graphics.lightning.materials;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;

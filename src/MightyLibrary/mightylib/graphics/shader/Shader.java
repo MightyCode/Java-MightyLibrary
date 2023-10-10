@@ -20,8 +20,6 @@ public class Shader extends ObjectId {
 
     private final String vertexSource, geometrySource, fragmentSource;
     private int shaderProgram;
-
-    private final HashMap<String, Integer> valuesLink;
     private final HashMap<String, ShaderValue> lastValues;
 
     private final boolean shader2D;
@@ -38,7 +36,6 @@ public class Shader extends ObjectId {
         this.vertexSource = vertexSource;
         this.shader2D = shader2D;
 
-        valuesLink = new HashMap<>();
         lastValues = new HashMap<>();
     }
 
@@ -51,7 +48,6 @@ public class Shader extends ObjectId {
         this.vertexSource = vertexSource;
         this.shader2D = shader2D;
 
-        valuesLink = new HashMap<>();
         lastValues = new HashMap<>();
     }
 
@@ -129,13 +125,11 @@ public class Shader extends ObjectId {
     }
 
     public void addLink(String valueName) {
-        use();
-        valuesLink.put(valueName, glGetUniformLocation(shaderProgram, valueName));
         lastValues.put(valueName, null);
     }
 
     public int getLink(String valueName){
-        return valuesLink.getOrDefault(valueName, -1);
+        return 0;
     }
 
     public int getShaderId(){
@@ -147,22 +141,23 @@ public class Shader extends ObjectId {
     }
 
     public void sendValueToShader(ShaderValue value) {
+        boolean added = false;
+        if (!lastValues.containsKey(value.getName())) {
+            lastValues.put(value.getName(), value.clone());
+            added = true;
+        }
+
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        /*if (value.getName().equals("light.useDistance")) {
-            System.out.println(value.object);
-        }*/
-
-        if (value.equals(lastValue) && !value.shouldForceUpdate())
+        if (!added && value.equals(lastValue) && !value.shouldForceUpdate())
             return;
 
-        //System.out.println(getName() + " : Effectively send : " + value.getName());
-
         value.resetForceUpdate();
+
         lastValues.put(value.getName(), value.clone());
 
         this.use();
-        int link = this.getLink(value.getName());
+        int link = glGetUniformLocation(shaderProgram, value.getName());
 
         if (value.getType() == Float.class) {
             Float v = value.getObjectTyped(Float.class);

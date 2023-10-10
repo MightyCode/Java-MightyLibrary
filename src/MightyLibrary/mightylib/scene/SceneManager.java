@@ -69,7 +69,6 @@ public class SceneManager {
             Resources.getInstance().reload(Texture.class);
     }
 
-
     public void display(){
         currentScene.display();
     }

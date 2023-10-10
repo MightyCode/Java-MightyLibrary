@@ -1,8 +1,8 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
-import MightyLibrary.mightylib.graphics.renderer.utils.BasicMaterial;
-import MightyLibrary.mightylib.graphics.renderer.utils.Material;
+import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
+import MightyLibrary.mightylib.graphics.lightning.materials.Material;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.inputs.InputManager;
@@ -23,8 +23,6 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.ArrayList;
-
-import static org.lwjgl.opengl.GL11C.*;
 
 public class Test3DScene extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));

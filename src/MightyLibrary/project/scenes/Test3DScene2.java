@@ -1,10 +1,14 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.lightning.MultiLightningManager;
+import MightyLibrary.mightylib.graphics.lightning.lights.DirectionalLight;
+import MightyLibrary.mightylib.graphics.lightning.lights.LightDecrease;
+import MightyLibrary.mightylib.graphics.lightning.lights.SpotLight;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
-import MightyLibrary.mightylib.graphics.renderer.utils.BasicMaterial;
-import MightyLibrary.mightylib.graphics.renderer.utils.LightPoint;
-import MightyLibrary.mightylib.graphics.renderer.utils.Material;
+import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
+import MightyLibrary.mightylib.graphics.lightning.lights.PointLight;
+import MightyLibrary.mightylib.graphics.lightning.materials.Material;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
@@ -22,7 +26,13 @@ public class Test3DScene2 extends Scene {
 
     private CubeRenderer[] cubeTexturedMaterialsPoint;
 
+    private CubeRenderer[] cubeMultiLights;
+
     private CubeRenderer lightPoint;
+
+    private MultiLightningManager lightManager;
+
+    private CubeRenderer[] lightPoints;
 
     public Test3DScene2(){
         super(SCENE_CCI);
@@ -38,16 +48,17 @@ public class Test3DScene2 extends Scene {
 
         /// RENDERERS ///
 
-        LightPoint lightMaterial = new LightPoint(Material.Chrome(),
-                1.0f, 0.09f, 0.032f);
+        LightDecrease lightDecrease = new LightDecrease(1.0f, 0.09f, 0.032f);
+        BasicMaterial directionalReference = Material.Ruby();
 
-        Vector3f lightVector = new Vector3f(-0.2f, -1.0f, -0.3f);
+        BasicMaterial pointLightReference = new BasicMaterial(
+                new Vector3f(0.05f), new Vector3f( 0.8f), new Vector3f( 1.0f)
+        );
 
-        lightPoint = new CubeRenderer("colorShape3D");
-        lightPoint.setPosition(new Vector3f(20, 2, 0));
-        lightPoint.setScale(new Vector3f(0.3f));
-        lightPoint.setColorMode(new Color4f(lightMaterial.Diffuse, 1));
-        lightPoint.setNormal();
+        BasicMaterial spotLightReference = Material.YellowPlastic();
+
+        DirectionalLight directionalLight = new DirectionalLight(directionalReference)
+                .setDirection(new Vector3f(-0.2f, -1.0f, -0.3f));
 
         Vector3f[] positions = {
             new Vector3f( 0.0f,  0.0f,  0.0f),
@@ -79,11 +90,20 @@ public class Test3DScene2 extends Scene {
 
             cubeTexturedMaterial
                     .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
-                    .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightDirection(lightVector))
+                    .addShaderValue("light.vector", Vector4f.class,
+                            RendererUtils.ToLightDirection(directionalLight.getDirection()))
                     .addShaderValue("material.shininess", Float.class, 64f);
 
-            ((BasicMaterial)lightMaterial).addToRenderer(cubeTexturedMaterial, "light");
+            ((BasicMaterial)directionalLight).addToRenderer(cubeTexturedMaterial, "light");
         }
+
+        Vector3f shiftToPreviousChunk = new Vector3f(20, 0, 0);
+
+        lightPoint = new CubeRenderer("colorShape3D");
+        lightPoint.setPosition(new Vector3f(20, 2, 0));
+        lightPoint.setScale(new Vector3f(0.3f));
+        lightPoint.setColorMode(new Color4f(pointLightReference.Diffuse, 1));
+        lightPoint.setNormal();
 
         cubeTexturedMaterialsPoint = new CubeRenderer[positions.length];
 
@@ -95,7 +115,7 @@ public class Test3DScene2 extends Scene {
             cubeTexturedMaterial.addTextureChannel("container2_specular", "material.specular", 1);
 
             float angle = MightyMath.toRads(20.0f * i);
-            cubeTexturedMaterial.setPosition(positions[i].add(new Vector3f(20, 0, 0), new Vector3f()));
+            cubeTexturedMaterial.setPosition(positions[i].add(shiftToPreviousChunk, new Vector3f()));
             cubeTexturedMaterial.setRotation(angle, new Vector3f(1.0f, 0.3f, 0.5f).normalize());
 
             this.cubeTexturedMaterialsPoint[i] = cubeTexturedMaterial;
@@ -103,9 +123,67 @@ public class Test3DScene2 extends Scene {
             cubeTexturedMaterial
                     .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
                     .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(lightPoint.position()))
+                    .addShaderValue("material.shininess", Float.class, 64f)
+                    .addShaderValue("light.useDistance", Integer.class, 1);
+
+            lightDecrease.addToRenderer(cubeTexturedMaterial, "light");
+            pointLightReference.addToRenderer(cubeTexturedMaterial, "light");
+        }
+
+        shiftToPreviousChunk = new Vector3f(0, 0, -30);
+
+        Vector3f[] lightPositions = {
+                new Vector3f( 0.7f,  0.2f,  2.0f),
+                new Vector3f( 2.3f, -3.3f, -4.0f),
+                new Vector3f(-4.0f,  2.0f, -12.0f),
+                new Vector3f( 0.0f,  0.0f, -3.0f)
+        };
+
+        lightManager = new MultiLightningManager(
+                "dirLight", "pointLights", "spotLight"
+        );
+
+        lightManager.setDirectionalLight(directionalLight.clone());
+        lightManager.setSpotLight(
+                new SpotLight(spotLightReference, lightDecrease)
+                        .setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector())
+                        .enable()
+        );
+
+        lightPoints = new CubeRenderer[lightPositions.length];
+
+        for (int i = 0; i < lightPoints.length; ++i){
+            lightPoints[i] = new CubeRenderer("colorShape3D");
+            lightPoints[i].setPosition(lightPositions[i].add(shiftToPreviousChunk, new Vector3f()));
+            lightPoints[i].setScale(new Vector3f(0.3f));
+            lightPoints[i].setColorMode(new Color4f(pointLightReference.Diffuse, 1));
+            lightPoints[i].setNormal();
+
+            lightManager.addPointLight(
+                    new PointLight(pointLightReference, lightDecrease)
+                            .setPosition(lightPositions[i].add(shiftToPreviousChunk, new Vector3f()))
+            );
+        }
+
+        cubeMultiLights  = new CubeRenderer[positions.length];
+        for (int i = 0; i < cubeMultiLights.length; ++i){
+            CubeRenderer cubeTexturedMaterial = new CubeRenderer("textureMultipleLights3D");
+            cubeTexturedMaterial.setTexturePosition();
+            cubeTexturedMaterial.setNormal();
+            cubeTexturedMaterial.setMainTextureChannel("container2", "material.diffuse");
+            cubeTexturedMaterial.addTextureChannel("container2_specular", "material.specular", 1);
+
+            float angle = MightyMath.toRads(20.0f * i);
+            cubeTexturedMaterial.setPosition(positions[i].add(new Vector3f(0, 0, -30), new Vector3f()));
+            cubeTexturedMaterial.setRotation(angle, new Vector3f(1.0f, 0.3f, 0.5f).normalize());
+
+            this.cubeMultiLights[i] = cubeTexturedMaterial;
+
+            cubeTexturedMaterial
+                    .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
                     .addShaderValue("material.shininess", Float.class, 64f);
 
-            lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
+            lightManager.addRenderer(cubeTexturedMaterial);
         }
     }
 
@@ -151,7 +229,12 @@ public class Test3DScene2 extends Scene {
             //cubeTexturedMaterial.updateShaderValue("light.position", light.position());
 
             cubeTexturedMaterialsPoint[i].updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+
+            cubeMultiLights[i].updateShaderValue("viewPos", main3DCamera.getCamPosRef());
         }
+
+        lightManager.getSpotLight().setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector());
+        lightManager.update();
 
         main3DCamera.updateView();
     }
@@ -165,9 +248,15 @@ public class Test3DScene2 extends Scene {
         for (int i = 0; i < cubeTexturedMaterialsDirectional.length; ++i) {
             cubeTexturedMaterialsDirectional[i].display();
             cubeTexturedMaterialsPoint[i].display();
+
+            cubeMultiLights[i].display();
         }
 
         lightPoint.display();
+
+        for (CubeRenderer point : lightPoints) {
+            point.display();
+        }
 
         super.setAndDisplayRealScene();
     }
@@ -179,8 +268,14 @@ public class Test3DScene2 extends Scene {
         for (int i = 0; i < cubeTexturedMaterialsDirectional.length; ++i) {
             cubeTexturedMaterialsDirectional[i].unload();
             cubeTexturedMaterialsPoint[i].unload();
+
+            cubeMultiLights[i].unload();
         }
 
         lightPoint.unload();
+
+        for (CubeRenderer point : lightPoints) {
+            point.unload();
+        }
     }
 }

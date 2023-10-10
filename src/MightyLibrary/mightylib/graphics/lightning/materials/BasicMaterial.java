@@ -1,9 +1,10 @@
-package MightyLibrary.mightylib.graphics.renderer.utils;
+package MightyLibrary.mightylib.graphics.lightning.materials;
 
+import MightyLibrary.mightylib.graphics.lightning.IShaderUniforms;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
-public class BasicMaterial {
+public class BasicMaterial implements IShaderUniforms {
     public Vector3f Ambient;
     public Vector3f Diffuse;
     public Vector3f Specular;
