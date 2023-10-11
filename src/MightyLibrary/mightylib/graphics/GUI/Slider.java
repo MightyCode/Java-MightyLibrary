@@ -3,8 +3,8 @@ package MightyLibrary.mightylib.graphics.GUI;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scene.Camera2D;
-import MightyLibrary.mightylib.util.math.ColorList;
+import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.utils.math.ColorList;
 import org.joml.Vector2f;
 
 /**

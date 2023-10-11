@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.sounds;
 
-import MightyLibrary.mightylib.util.Timer;
+import MightyLibrary.mightylib.utils.Timer;
 import org.joml.Vector3f;
 
 public class SoundSourceCreationInfo {

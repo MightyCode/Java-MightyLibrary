@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.graphics.lightning.lights;
 
 import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
-import MightyLibrary.mightylib.util.math.MightyMath;
+import MightyLibrary.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;
 
 public class SpotLight extends BasicMaterial {

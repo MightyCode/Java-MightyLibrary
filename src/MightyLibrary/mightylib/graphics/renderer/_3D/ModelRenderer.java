@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer._3D;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
-import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.mightylib.utils.math.Color4f;
 
 public class ModelRenderer extends Renderer {
     public ModelRenderer(String shaderName, String modelPath, String texture) {

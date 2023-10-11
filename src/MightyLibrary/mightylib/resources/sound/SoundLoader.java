@@ -3,11 +3,10 @@ package MightyLibrary.mightylib.resources.sound;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
-import MightyLibrary.mightylib.resources.data.JSONFile;
 import MightyLibrary.mightylib.sounds.SoundDataType;
 import MightyLibrary.mightylib.sounds.SoundLoadInfo;
-import MightyLibrary.mightylib.util.math.KeyTree;
-import MightyLibrary.mightylib.util.math.KeyTreeNode;
+import MightyLibrary.mightylib.utils.math.KeyTree;
+import MightyLibrary.mightylib.utils.math.KeyTreeNode;
 import org.json.JSONObject;
 import org.lwjgl.stb.STBVorbisInfo;
 

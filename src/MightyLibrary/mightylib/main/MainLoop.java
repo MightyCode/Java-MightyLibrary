@@ -6,7 +6,7 @@ import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Icon;
-import MightyLibrary.mightylib.scene.SceneManager;
+import MightyLibrary.mightylib.scenes.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import org.joml.Vector2i;
 import org.lwjgl.Version;

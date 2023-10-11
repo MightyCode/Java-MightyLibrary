@@ -1,9 +1,8 @@
 package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.resources.FileMethods;
-import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.scene.Camera2D;
-import MightyLibrary.mightylib.scene.Camera3D;
+import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.scenes.Camera3D;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

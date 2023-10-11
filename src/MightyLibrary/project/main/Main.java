@@ -5,7 +5,7 @@ import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
 import MightyLibrary.mightylib.main.MainLoop;
-import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.project.scenes.MenuScene;
 import org.joml.Vector2i;
 

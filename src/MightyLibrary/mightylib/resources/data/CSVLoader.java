@@ -92,6 +92,7 @@ public class CSVLoader extends ResourceLoader {
         for (String[] a : dataList){
             csv.addDataRow(a);
         }
+        csv.setCorrectlyLoaded();
     }
 
     private String[] parseCsvLine(String line, String delimiter) {

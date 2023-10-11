@@ -5,8 +5,8 @@ import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.mightylib.scenes.Camera;
+import MightyLibrary.mightylib.utils.math.Color4f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 

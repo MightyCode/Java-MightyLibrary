@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
-import MightyLibrary.mightylib.util.math.EDirection;
+import MightyLibrary.mightylib.utils.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;

@@ -99,12 +99,12 @@ public class TileMap extends DataType {
         mapSize.y = 0;
 
         endBackLayer = 0;
+
+        correctlyLoaded = false;
     }
 
     @Override
     public void unload() {
         reset();
-
-        correctlyLoaded = false;
     }
 }

@@ -89,6 +89,10 @@ public class CSVFile extends DataType {
         return nameToIndex.get(columnName);
     }
 
+    public void setCorrectlyLoaded() {
+        correctlyLoaded = true;
+    }
+
     public boolean isContainingHeader(){
         return containsHeader;
     }
@@ -99,5 +103,7 @@ public class CSVFile extends DataType {
         names = null;
 
         nameToIndex.clear();
+
+        correctlyLoaded = false;
     }
 }

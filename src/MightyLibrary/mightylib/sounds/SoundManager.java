@@ -1,10 +1,8 @@
 package MightyLibrary.mightylib.sounds;
 
-import MightyLibrary.mightylib.resources.ResourceLoader;
-import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.sound.SoundLoader;
-import MightyLibrary.mightylib.util.math.KeyTree;
-import MightyLibrary.mightylib.util.math.KeyTreeNode;
+import MightyLibrary.mightylib.utils.math.KeyTree;
+import MightyLibrary.mightylib.utils.math.KeyTreeNode;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALCCapabilities;
