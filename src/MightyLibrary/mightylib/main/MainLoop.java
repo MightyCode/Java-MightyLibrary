@@ -32,7 +32,7 @@ public final class MainLoop {
         System.out.println("--Start program. ");
         System.out.println("--Load libraries.");
 
-        if (loadLibraries() == -1) {
+        if (loadLibraries(startProcedure) == -1) {
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
@@ -180,13 +180,14 @@ public final class MainLoop {
     }
 
 
-    private static int loadLibraries() {
+    private static int loadLibraries(IStartLibraryProcedure startProcedure) {
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit()) {
             System.err.println("GLFW fail to initialize");
             return -1;
         }
 
+        SoundManager.initSoundManager(startProcedure.returnGainTreePath());
         SoundManager soundManager = SoundManager.getInstance();
         if (!soundManager.init()) {
             System.err.println("SoundManager fail to initialize");

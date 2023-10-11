@@ -7,13 +7,12 @@ import MightyLibrary.mightylib.sounds.SoundManager;
 import static org.lwjgl.openal.AL10.*;
 
 public class SoundData extends DataType {
-
-    private final static String PATH = "resources/sounds/";
-
     private int bufferId;
 
     public SoundData(String dataName, String path) {
-        super(dataName, PATH + path);
+        super(dataName, path);
+
+        System.out.println(path);
 
         bufferId = -1;
     }

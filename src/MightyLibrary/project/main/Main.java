@@ -24,7 +24,7 @@ public class Main {
         MainLoop.run(new LibraryLoading());
     }
 
-    public static class LibraryLoading implements IStartLibraryProcedure{
+    public static class LibraryLoading implements IStartLibraryProcedure {
 
         @Override
         public Scene returnStartScene() {
@@ -69,6 +69,11 @@ public class Main {
         @Override
         public KeyboardLanguage returnDefaultKeyboardLanguage() {
             return AZERTYKeyboardLanguage.getInstance();
+        }
+
+        @Override
+        public String returnGainTreePath() {
+            return "resources/sounds/sounds.gaintree";
         }
 
         @Override

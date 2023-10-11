@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.resources.sound;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.data.JSONFile;
 import MightyLibrary.mightylib.sounds.SoundDataType;
 import MightyLibrary.mightylib.sounds.SoundLoadInfo;
 import MightyLibrary.mightylib.util.math.KeyTree;
@@ -10,8 +11,10 @@ import MightyLibrary.mightylib.util.math.KeyTreeNode;
 import org.json.JSONObject;
 import org.lwjgl.stb.STBVorbisInfo;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 public class SoundLoader extends ResourceLoader {
 
@@ -28,64 +31,26 @@ public class SoundLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/sounds/sounds.json"));
-        obj = obj.getJSONObject("sounds");
-
-        create(data, obj, "");
+        create(data, "resources");
     }
 
-    private void create(Map<String, DataType> data, JSONObject node, String currentPath){
-        Iterator<String> arrayNodes = node.keys();
+    private void create(Map<String, DataType> data, final String currentPath){
+        File file = new File(currentPath);
 
-        if(!arrayNodes.hasNext()) return;
+        if (file.isFile()){
+            String name = currentPath.substring(currentPath.lastIndexOf("/") + 1, currentPath.lastIndexOf("."));
+            String ending = currentPath.substring(currentPath.lastIndexOf("."));
 
-        do{
-            String currentNode = arrayNodes.next();
-
-            if(node.get(currentNode) instanceof JSONObject){
-                create(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
-            } else {
-                data.put(currentNode, new SoundData(currentNode, currentPath + node.getString(currentNode)));
+            if (ending.equals(".ogg")) {
+                data.put(name, new SoundData(name, currentPath));
+                System.out.println("Create sound res : " + currentPath);
             }
-        } while(arrayNodes.hasNext());
-    }
-
-
-    public static void loadGainTree(KeyTree<String, Float> gainTree){
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/sounds/sounds.json"));
-        obj = obj.getJSONObject("gainTree");
-
-        Iterator<String> arrayNodes = obj.keys();
-
-        do{
-            String currentNode = arrayNodes.next();
-
-            SoundLoader.loadGainNode(gainTree, obj.getJSONObject(currentNode), currentNode, null);
-        } while(arrayNodes.hasNext());
-
-    }
-
-    private static void loadGainNode(KeyTree<String, Float> gainTree, JSONObject node, String name, KeyTreeNode<String, Float> predecessor){
-        Iterator<String> arrayNodes = node.keys();
-
-        if(!arrayNodes.hasNext()) return;
-
-        KeyTreeNode<String, Float> current;
-        if (predecessor == null)
-            current = gainTree.addNewNode(gainTree.NoRoot, name, node.getFloat("value"));
-        else {
-            current = gainTree.addNewNode(predecessor.getKey(), name, node.getFloat("value"));
+        } else if (file.isDirectory()) {
+            for (String childPath : Objects.requireNonNull(file.list())){
+                create(data, currentPath + "/" + childPath);
+            }
         }
-
-        do{
-            String currentNode = arrayNodes.next();
-
-            if(node.get(currentNode) instanceof JSONObject){
-                SoundLoader.loadGainNode(gainTree, node.getJSONObject(currentNode), currentNode, current);
-            }
-        } while(arrayNodes.hasNext());
     }
-
 
     @Override
     public void load(DataType dataType) {
@@ -133,5 +98,41 @@ public class SoundLoader extends ResourceLoader {
         }
 
         return true;
+    }
+
+
+    public static void loadGainTree(String gainTreePath, KeyTree<String, Float> gainTree){
+        JSONObject obj = new JSONObject(FileMethods.readFileAsString(gainTreePath));
+
+        Iterator<String> arrayNodes = obj.keys();
+
+        do{
+            String currentNode = arrayNodes.next();
+
+            SoundLoader.loadGainNode(gainTree, obj.getJSONObject(currentNode), currentNode, null);
+        } while(arrayNodes.hasNext());
+
+    }
+
+    private static void loadGainNode(KeyTree<String, Float> gainTree, JSONObject node,
+                                     String name, KeyTreeNode<String, Float> predecessor){
+        Iterator<String> arrayNodes = node.keys();
+
+        if(!arrayNodes.hasNext()) return;
+
+        KeyTreeNode<String, Float> current;
+        if (predecessor == null)
+            current = gainTree.addNewNode(gainTree.NoRoot, name, node.getFloat("value"));
+        else {
+            current = gainTree.addNewNode(predecessor.getKey(), name, node.getFloat("value"));
+        }
+
+        do{
+            String currentNode = arrayNodes.next();
+
+            if(node.get(currentNode) instanceof JSONObject){
+                SoundLoader.loadGainNode(gainTree, node.getJSONObject(currentNode), currentNode, current);
+            }
+        } while(arrayNodes.hasNext());
     }
 }

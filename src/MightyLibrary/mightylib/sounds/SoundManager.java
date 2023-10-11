@@ -1,5 +1,7 @@
 package MightyLibrary.mightylib.sounds;
 
+import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.sound.SoundLoader;
 import MightyLibrary.mightylib.util.math.KeyTree;
 import MightyLibrary.mightylib.util.math.KeyTreeNode;
@@ -19,9 +21,15 @@ import static org.lwjgl.openal.ALC10.*;
 public class SoundManager {
     private static SoundManager instance;
 
+    public static void initSoundManager(String gainTree){
+        instance = new SoundManager(gainTree);
+    }
+
     public static SoundManager getInstance(){
-        if (instance == null)
-            instance = new SoundManager();
+        if (instance == null) {
+            System.err.println("Sound Manager not initialized");
+            return null;
+        }
 
         return instance;
     }
@@ -42,14 +50,14 @@ public class SoundManager {
 
     private final KeyTree<String, Float> gainTree;
 
-    private SoundManager (){
+    private SoundManager (String gainPath){
         listener = new SoundListener();
 
         awaitedNewSounds = new ArrayList<>();
         soundsSource = new ArrayList<>();
 
         gainTree = new KeyTree<>();
-        SoundLoader.loadGainTree(gainTree);
+        SoundLoader.loadGainTree(gainPath, gainTree);
     }
 
 

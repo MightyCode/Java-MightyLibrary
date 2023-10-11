@@ -11,6 +11,7 @@ import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;
+import MightyLibrary.mightylib.resources.sound.SoundLoader;
 
 class ProjectLoading implements IProjectLoading {
     @Override
@@ -18,6 +19,8 @@ class ProjectLoading implements IProjectLoading {
         Resources resources = Resources.getInstance();
         resources.Loaders.add(new TileSetLoader());
         resources.Loaders.add(new TileMapLoader());
+        resources.Loaders.add(new SoundLoader());
+
     }
 
     @Override

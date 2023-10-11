@@ -14,9 +14,8 @@ import java.util.Map;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class TextureLoader extends ResourceLoader {
-
-    private final static String BASIC_PATH = "resources/textures/";
-    private final static String LIST_TEXTURES = BASIC_PATH + "textures.json";
+    private final static String BASIC_PATH = "resources/";
+    private final static String LIST_TEXTURES = BASIC_PATH + "textures/textures.json";
 
     @Override
     public Class<?> getType() {
@@ -31,9 +30,8 @@ public class TextureLoader extends ResourceLoader {
     @Override
     public void create(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString(LIST_TEXTURES));
-        obj = obj.getJSONObject("textures");
 
-        Texture texture = new Texture("error", BASIC_PATH + "error.png");
+        Texture texture = new Texture("error", BASIC_PATH + "textures/error.png");
         texture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);
 
         data.put("error", texture);
@@ -53,7 +51,8 @@ public class TextureLoader extends ResourceLoader {
                 JSONObject information = node.getJSONObject(currentNode);
                 String temp = information.getString("qualityType");
 
-                Texture currentTexture = new Texture(currentNode, currentPath + information.getString("file"));
+                Texture currentTexture = new Texture(currentNode,
+                        BASIC_PATH + currentPath + information.getString("file"));
 
                 if (temp.equals("pixelart")){
                     currentTexture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);
@@ -69,7 +68,7 @@ public class TextureLoader extends ResourceLoader {
 
                 data.put(currentNode, currentTexture);
             } else {
-                create(data, node.getJSONObject(currentNode), BASIC_PATH + currentPath + currentNode + "/");
+                create(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
             }
         } while(arrayNodes.hasNext());
     }

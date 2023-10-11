@@ -17,6 +17,8 @@ public interface IStartLibraryProcedure {
     boolean returnFullscreenState();
     KeyboardLanguage returnDefaultKeyboardLanguage();
 
+    String returnGainTreePath();
+
     boolean returnAdminState();
 
     IProjectLoading returnIProjectLoading();
