@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.physics.collision;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.mightylib.utils.math.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 

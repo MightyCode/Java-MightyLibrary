@@ -37,7 +37,6 @@ public class Resources {
         Loaders.add(new TextureLoader());
         Loaders.add(new AnimationDataLoader());
         Loaders.add(new FontLoader());
-        Loaders.add(new SoundLoader());
         Loaders.add(new JsonLoader());
 
         initialized = false;

@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
-import MightyLibrary.mightylib.util.math.EFlip;
-import MightyLibrary.mightylib.util.math.ERotation;
+import MightyLibrary.mightylib.utils.math.EFlip;
+import MightyLibrary.mightylib.utils.math.ERotation;
 import org.joml.Vector4f;
 
 public class RectangularFace {

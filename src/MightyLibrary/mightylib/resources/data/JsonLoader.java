@@ -22,7 +22,7 @@ public class JsonLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        create(data, "resources/data");
+        create(data, "resources/");
     }
 
     private void create(Map<String, DataType> data, String path){

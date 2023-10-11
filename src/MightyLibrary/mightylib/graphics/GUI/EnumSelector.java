@@ -5,9 +5,9 @@ import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
-import MightyLibrary.mightylib.util.math.Color4f;
-import MightyLibrary.mightylib.util.math.ColorList;
-import MightyLibrary.mightylib.util.math.EDirection;
+import MightyLibrary.mightylib.utils.math.Color4f;
+import MightyLibrary.mightylib.utils.math.ColorList;
+import MightyLibrary.mightylib.utils.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 

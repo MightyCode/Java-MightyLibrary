@@ -3,8 +3,8 @@ package MightyLibrary.mightylib.main;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scene.Camera3D;
-import MightyLibrary.mightylib.scene.Camera3DCreationInfo;
+import MightyLibrary.mightylib.scenes.Camera3D;
+import MightyLibrary.mightylib.scenes.Camera3DCreationInfo;
 
 public class Context {
     private final Window window;

@@ -70,5 +70,29 @@
 				"qualityType" : "realistic"
 			}
 		}
+	},
+	"models" : {
+		"backpack" : {
+			"backpack_ao" :  {
+				"file": "ao.jpg",
+				"qualityType" : "realistic"
+			},
+			"backpack_diffuse" :  {
+				"file": "diffuse.jpg",
+				"qualityType" : "realistic"
+			},
+			"backpack_normal" :  {
+				"file": "normal.png",
+				"qualityType" : "realistic"
+			},
+			"backpack_roughness" :  {
+				"file": "roughness.jpg",
+				"qualityType" : "realistic"
+			},
+			"backpack_specular" :  {
+				"file": "specular.jpg",
+				"qualityType" : "realistic"
+			}
+		}
 	}
 }

@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.physics.collision;
 
-import MightyLibrary.mightylib.util.math.EDirection;
-import MightyLibrary.mightylib.util.math.EShapeType;
-import MightyLibrary.mightylib.util.valueDebug.UniqId;
+import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.EShapeType;
+import MightyLibrary.mightylib.utils.valueDebug.UniqId;
 import org.joml.Vector2f;
 
 public abstract class Collision2D extends UniqId {

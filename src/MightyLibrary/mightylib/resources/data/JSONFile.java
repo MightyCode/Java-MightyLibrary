@@ -11,6 +11,8 @@ public class JSONFile extends DataType {
 
     void init(JSONObject object){
         this.object = object;
+
+        correctlyLoaded = true;
     }
 
     public JSONObject getObject() {
@@ -19,6 +21,6 @@ public class JSONFile extends DataType {
 
     @Override
     public void unload() {
-
+        correctlyLoaded = false;
     }
 }

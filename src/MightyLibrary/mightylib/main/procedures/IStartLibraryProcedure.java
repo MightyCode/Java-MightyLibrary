@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.main.procedures;
 
 import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
-import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.scenes.Scene;
 import org.joml.Vector2i;
 
 public interface IStartLibraryProcedure {
@@ -16,6 +16,8 @@ public interface IStartLibraryProcedure {
     String returnIconName();
     boolean returnFullscreenState();
     KeyboardLanguage returnDefaultKeyboardLanguage();
+
+    String returnGainTreePath();
 
     boolean returnAdminState();
 

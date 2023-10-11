@@ -2,8 +2,8 @@ package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.util.Id;
-import MightyLibrary.mightylib.util.math.MightyMath;
+import MightyLibrary.mightylib.utils.Id;
+import MightyLibrary.mightylib.utils.math.MightyMath;
 
 import java.util.ArrayList;
 

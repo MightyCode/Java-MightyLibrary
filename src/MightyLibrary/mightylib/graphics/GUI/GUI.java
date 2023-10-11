@@ -1,8 +1,7 @@
 package MightyLibrary.mightylib.graphics.GUI;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.scene.Camera;
-import MightyLibrary.mightylib.scene.Camera2D;
+import MightyLibrary.mightylib.scenes.Camera2D;
 
 public abstract class GUI {
     protected Camera2D referenceCamera;

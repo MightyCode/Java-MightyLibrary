@@ -5,7 +5,7 @@ import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
 import MightyLibrary.mightylib.main.MainLoop;
-import MightyLibrary.mightylib.scene.Scene;
+import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.project.scenes.MenuScene;
 import org.joml.Vector2i;
 
@@ -24,7 +24,7 @@ public class Main {
         MainLoop.run(new LibraryLoading());
     }
 
-    public static class LibraryLoading implements IStartLibraryProcedure{
+    public static class LibraryLoading implements IStartLibraryProcedure {
 
         @Override
         public Scene returnStartScene() {
@@ -48,12 +48,12 @@ public class Main {
 
         @Override
         public int returnFPS() {
-            return 60;
+            return 240;
         }
 
         @Override
         public int returnTPS() {
-            return 60;
+            return 240;
         }
 
         @Override
@@ -69,6 +69,11 @@ public class Main {
         @Override
         public KeyboardLanguage returnDefaultKeyboardLanguage() {
             return AZERTYKeyboardLanguage.getInstance();
+        }
+
+        @Override
+        public String returnGainTreePath() {
+            return "resources/sounds/sounds.gaintree";
         }
 
         @Override

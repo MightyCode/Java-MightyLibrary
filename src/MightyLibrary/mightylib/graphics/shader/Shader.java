@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.resources.FileMethods;
-import MightyLibrary.mightylib.util.ObjectId;
-import MightyLibrary.mightylib.util.math.Color4f;
+import MightyLibrary.mightylib.utils.ObjectId;
+import MightyLibrary.mightylib.utils.math.Color4f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -20,8 +20,6 @@ public class Shader extends ObjectId {
 
     private final String vertexSource, geometrySource, fragmentSource;
     private int shaderProgram;
-
-    private final HashMap<String, Integer> valuesLink;
     private final HashMap<String, ShaderValue> lastValues;
 
     private final boolean shader2D;
@@ -38,7 +36,6 @@ public class Shader extends ObjectId {
         this.vertexSource = vertexSource;
         this.shader2D = shader2D;
 
-        valuesLink = new HashMap<>();
         lastValues = new HashMap<>();
     }
 
@@ -51,7 +48,6 @@ public class Shader extends ObjectId {
         this.vertexSource = vertexSource;
         this.shader2D = shader2D;
 
-        valuesLink = new HashMap<>();
         lastValues = new HashMap<>();
     }
 
@@ -129,13 +125,11 @@ public class Shader extends ObjectId {
     }
 
     public void addLink(String valueName) {
-        use();
-        valuesLink.put(valueName, glGetUniformLocation(shaderProgram, valueName));
         lastValues.put(valueName, null);
     }
 
     public int getLink(String valueName){
-        return valuesLink.getOrDefault(valueName, -1);
+        return 0;
     }
 
     public int getShaderId(){
@@ -147,22 +141,23 @@ public class Shader extends ObjectId {
     }
 
     public void sendValueToShader(ShaderValue value) {
+        boolean added = false;
+        if (!lastValues.containsKey(value.getName())) {
+            lastValues.put(value.getName(), value.clone());
+            added = true;
+        }
+
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        /*if (value.getName().equals("material.diffuse")) {
-            System.out.println(value.object);
-        }*/
-
-        if (value.equals(lastValue) && !value.shouldForceUpdate())
+        if (!added && value.equals(lastValue) && !value.shouldForceUpdate())
             return;
 
-        //System.out.println(getName() + " : Effectively send : " + value.getName());
-
         value.resetForceUpdate();
+
         lastValues.put(value.getName(), value.clone());
 
         this.use();
-        int link = this.getLink(value.getName());
+        int link = glGetUniformLocation(shaderProgram, value.getName());
 
         if (value.getType() == Float.class) {
             Float v = value.getObjectTyped(Float.class);
@@ -180,8 +175,8 @@ public class Shader extends ObjectId {
             glUniform4f(link, v.x, v.y, v.z, v.w);
         } else if (value.getType() == Matrix4f.class) {
             glUniformMatrix4fv(link, false, MatrixToFloatBuffer(value.getObjectTyped(Matrix4f.class)));
-        } else if (value.getType() == Integer.class) {
-            Integer v = (Integer) value.getObject();
+        } else if (value.getType() == Integer.class || value.getType() == Boolean.class) {
+            Integer v = value.getObjectTyped(Integer.class);
             glUniform1i(link, v);
         } else {
             System.err.println("Unknown shader value type : " + value.getType());

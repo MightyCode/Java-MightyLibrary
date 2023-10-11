@@ -106,10 +106,14 @@
 				"view",
 				"model",
 				"viewPos",
-				"light.position",
+				"light.vector",
 				"light.ambient",
 				"light.diffuse",
 				"light.specular",
+				"light.useDistance",
+				"light.constant",
+				"light.linear",
+				"light.quadratic",
 				"material.ambient",
 				"material.diffuse",
 				"material.specular",
@@ -127,13 +131,38 @@
 				"view",
 				"model",
 				"viewPos",
-				"light.position",
+				"light.vector",
 				"light.ambient",
 				"light.diffuse",
 				"light.specular",
+				"light.useDistance",
+				"light.constant",
+				"light.linear",
+				"light.quadratic",
 				"material.diffuse",
 				"material.specular",
 				"material.shininess"
+			]
+		},
+		"textureMultipleLights3D": {
+			"files": [
+				"3D/complex/textureMaterial3DV.glsl",
+				"3D/complex/textureMultipleLights3DF.glsl"
+			],
+			"mode" : "3D",
+			"links": [
+				"projection",
+				"view",
+				"model",
+				"viewPos",
+				"material.diffuse",
+				"material.specular",
+				"material.shininess",
+				"dirLight.direction",
+				"dirLight.ambient",
+				"dirLight.diffuse",
+				"dirLight.specular",
+				"pointLights[0].ambient"
 			]
 		},
 		"postProcessing": {
