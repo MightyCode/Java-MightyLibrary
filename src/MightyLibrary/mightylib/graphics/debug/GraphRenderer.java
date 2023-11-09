@@ -16,7 +16,7 @@ import java.util.SortedMap;
 /**
  * Display a bunch of rectangles that correspond to roads.
  */
-public class RoadRenderer {
+public class GraphRenderer {
     private static final int EBO_SHIFT = 6;
     private static final int VBO_SHIFT = 8;
 
@@ -27,11 +27,14 @@ public class RoadRenderer {
     float[] vbo;
     private final int vboPositionIndex;
 
-    private int roadNumber;
+    // Number of lines of the graph
 
-    private float roadSize;
 
-    public RoadRenderer(Camera2D referenceCamera){
+    private int edgeNumber;
+
+    private float edgeSize;
+
+    public GraphRenderer(Camera2D referenceCamera){
         // Setup the renderer
         renderer = new Renderer("colorShape2D", true);
         renderer.setColorMode(ColorList.Blue());
@@ -41,8 +44,8 @@ public class RoadRenderer {
 
         vboPositionIndex = renderer.getShape().addVboFloat(new float[0], 2, Shape.DYNAMIC_STORE);
 
-        roadNumber = 0;
-        roadSize = 2;
+        edgeNumber = 0;
+        edgeSize = 2;
     }
 
     public void setColor(Color4f color){
@@ -55,18 +58,18 @@ public class RoadRenderer {
      * @param nodes Ordered list of connected nodes
      */
     public void init(SortedMap<Vector2f, Long> nodes, HashMap<Vector2f, ArrayList<Vector2f>> connections){
-        roadNumber = 0;
+        edgeNumber = 0;
         for (Map.Entry<Vector2f, Long> entry: nodes.entrySet()){
             for (Vector2f neighbour : connections.get(entry.getKey())){
                 if (nodes.get(neighbour) < entry.getValue())
-                    ++roadNumber;
+                    ++edgeNumber;
             }
         }
 
-        int [] ebo = new int[EBO_SHIFT  * roadNumber];
+        int [] ebo = new int[EBO_SHIFT  * edgeNumber];
         int [] eboValues = new int[]{ 0, 1, 2, 0, 2, 3 };
 
-        for (int i = 0; i < roadNumber; ++i) {
+        for (int i = 0; i < edgeNumber; ++i) {
             for (int j = 0; j < EBO_SHIFT; ++j)
                 ebo[EBO_SHIFT * i + j] = eboValues[j] + 4 * i;
         }
@@ -75,13 +78,13 @@ public class RoadRenderer {
         renderer.getShape().setEbo(ebo);
 
         // Create the array containing the future vertex positions.
-        vbo = new float[VBO_SHIFT * roadNumber];
+        vbo = new float[VBO_SHIFT * edgeNumber];
 
         //System.out.println("Number of road : " + roadNumber);
     }
 
-    public void setRoadSize(float size){
-        this.roadSize = size;
+    public void setEdgeSize(float size){
+        this.edgeSize = size;
     }
 
     /**
@@ -95,7 +98,7 @@ public class RoadRenderer {
     public void updateRoads(SortedMap<Vector2f, Long> nodes,
                             HashMap<Vector2f, ArrayList<Vector2f>> connections,
                             Vector4f boundaries, Vector4f displayBoundaries, float zoomLevel){
-        float roadSize = this.roadSize / zoomLevel;
+        float roadSize = this.edgeSize / zoomLevel;
 
         int i = 0;
         Vector4f temp1 = new Vector4f(), temp2 = new Vector4f();

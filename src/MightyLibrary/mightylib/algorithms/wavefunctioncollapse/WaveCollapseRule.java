@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.utils.math;
+package MightyLibrary.mightylib.algorithms.wavefunctioncollapse;
 
 import MightyLibrary.mightylib.resources.data.JSONFile;
 import org.joml.Vector2f;

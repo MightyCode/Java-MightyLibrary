@@ -29,6 +29,8 @@ public class TileMap extends DataType {
         this.mapSize.set(mapSize);
         this.layers = layers.clone();
         this.endBackLayer = endBackLayer;
+
+        updated = true;
     }
 
 

@@ -1,43 +1,34 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
-import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.data.JSONFile;
 import MightyLibrary.mightylib.resources.map.TileLayer;
 import MightyLibrary.mightylib.resources.map.TileMap;
-import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
-import MightyLibrary.mightylib.graphics.text.ETextAlignment;
-import MightyLibrary.mightylib.graphics.text.Text;
-import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.animation.AnimationData;
-import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.resources.map.TileSet;
-import MightyLibrary.mightylib.scenes.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
-import MightyLibrary.mightylib.utils.math.Color4f;
-import MightyLibrary.mightylib.utils.math.EDirection;
-import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
-import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
-import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
-import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
-import MightyLibrary.mightylib.utils.math.MightyMath;
-import MightyLibrary.mightylib.utils.math.WaveCollapseRule;
+import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
+import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRule;
 import MightyLibrary.project.main.ActionId;
-import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
 import java.util.*;
 
-public class Test2dWaveFunctionCollapseScene extends Scene {
+public class Test2DWaveFunctionCollapseScene extends Scene {
+    public static final float MOVE_SPEED = 600;
+    public static final float SHIFT_SPEED = MOVE_SPEED * 2f;
+
     private TileMap map;
     private FullTileMapRenderer mapRenderer;
 
-    private Camera2D testCamera;
-
     private Vector2i mapSize;
+
+    private DraggingCameraComponent draggingSceneComponent;
+    private MovingCameraComponent movingSceneComponent;
+    private ZoomingCameraComponent zoomingSceneComponent;
 
     public void init(String[] args) {
         super.init(args);
@@ -60,7 +51,25 @@ public class Test2dWaveFunctionCollapseScene extends Scene {
         mapRenderer = new FullTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
 
-        testCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0, 0));
+        draggingSceneComponent = new DraggingCameraComponent();
+        draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
+
+        movingSceneComponent = new MovingCameraComponent();
+        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        movingSceneComponent.initActionIds(
+                new MovingCameraComponent.Inputs()
+                        .setMoveLeft(ActionId.MOVE_LEFT_2D)
+                        .setMoveRight(ActionId.MOVE_RIGHT_2D)
+                        .setMoveDown(ActionId.MOVE_DOWN_2D)
+                        .setMoveUp(ActionId.MOVE_UP_2D)
+                        .setQuickSpeed(ActionId.SHIFT)
+        );
+
+        zoomingSceneComponent = new ZoomingCameraComponent();
+        zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
+                main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
+        zoomingSceneComponent.initActionId(ActionId.SHIFT);
     }
 
 
@@ -71,13 +80,16 @@ public class Test2dWaveFunctionCollapseScene extends Scene {
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
         InputManager inputManager = mainContext.getInputManager();
+
         if (inputManager.inputPressed(ActionId.TAB)){
             WaveCollapseRule rule = new WaveCollapseRule(resources.getResource(JSONFile.class, "waveCollapseTest"));
             TileSet set = resources.getResource(TileSet.class, rule.getRecommendedTileset());
             waveFunctionAlgorithm(map, set, rule, mapSize);
         }
 
-        map.setTileType(0, 0, 0, -1);
+        movingSceneComponent.update();
+        draggingSceneComponent.update();
+        zoomingSceneComponent.update();
 
         mapRenderer.update();
 
@@ -170,7 +182,8 @@ public class Test2dWaveFunctionCollapseScene extends Scene {
                     // Only keep for the direction tile, the given list
 
                     Set<Integer> availableTile = ruleToApply.getAvailableTiles(direction);
-                    /*System.out.print("Chosen tile (" + ruleToApply.getId() + ") (" + direction.x + "," + direction.y + ") :");
+                    /*System.out.print("Chosen tile (" + ruleToApply.getId() + ")
+                        (" + direction.x + "," + direction.y + ") :");
                     for (Integer tile : availableTile) {
                         System.out.print(tile + ", ");
                     }

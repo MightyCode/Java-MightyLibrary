@@ -152,7 +152,7 @@ public class MenuScene extends Scene {
                         sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
                         break;
                     case 1:
-                        sceneManagerInterface.setNewScene(new Test2dWaveFunctionCollapseScene(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new Test2DWaveFunctionCollapseScene(), new String[]{""});
                         break;
                     case 2:
                         sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
