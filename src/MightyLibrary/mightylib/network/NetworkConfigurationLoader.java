@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.network;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.sound.SoundData;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -10,7 +11,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public class NetworkConfigurationLoader extends ResourceLoader {
-    private static final String CONFIG_FOLDER = "resources/configs";
+    private static final String CONFIG_FOLDER = "resources/networkConfigs";
 
     @Override
     public Class<?> getType() {
@@ -19,24 +20,22 @@ public class NetworkConfigurationLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "Configuration";
+        return "configuration";
     }
 
     @Override
     public void create(Map<String, DataType> data) {
-        File folder_configs = new File(CONFIG_FOLDER);
-        File[] configs = folder_configs.listFiles(file -> file.isFile());
-        if (configs != null) {
-            for (File config : configs) {
-                String fileName = config.getName();
-                String dataName = fileName.substring(0, fileName.lastIndexOf("."));
-                NetworkConfiguration new_config = new NetworkConfiguration(dataName, config.getPath());
-                data.put(dataName, new_config);
-                //System.out.println("Added Configuration: " + dataName);
-            }
-        } else {
-            System.err.println("ERROR CREATE");
-        }
+        exploreResourcesFile(data, CONFIG_FOLDER);
+    }
+
+    @Override
+    public String filterFile(String path) {
+        return getFileName(path);
+    }
+
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        data.put(name, new NetworkConfiguration(name, currentPath));
     }
 
 

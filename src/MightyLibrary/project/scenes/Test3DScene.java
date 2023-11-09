@@ -125,7 +125,7 @@ public class Test3DScene extends Scene {
         lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
 
         // 3D Model
-        stand = new ModelRenderer("texture3D", "stand/stall", "stall");
+        stand = new ModelRenderer("texture3D", "models/stand/stall", "stall");
         stand.setPosition(new Vector3f(0.0f, 4.0f,5.0f));
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
 

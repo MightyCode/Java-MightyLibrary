@@ -11,7 +11,7 @@ import java.util.List;
 public abstract class OBJLoader {
 
     public static Shape loadObjTexturedModel(String path) {
-        String file = FileMethods.readFileAsString("resources/3dmodels/" + path + ".obj");
+        String file = FileMethods.readFileAsString("resources/" + path + ".obj");
         int indexFrom = 0;
         int indexTo = -1;
         boolean end = false;

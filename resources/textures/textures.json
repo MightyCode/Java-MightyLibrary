@@ -58,6 +58,10 @@
 			"tileset" : {
 				"file": "tileset.png",
 				"qualityType" : "pixelart"
+			},
+			"waveCollapseTest" : {
+				"file": "waveCollapseTest.png",
+				"qualityType" : "pixelart"
 			}
 		},
 		"shaderEffects" : {

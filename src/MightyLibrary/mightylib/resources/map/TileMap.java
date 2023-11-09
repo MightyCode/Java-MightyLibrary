@@ -22,7 +22,9 @@ public class TileMap extends DataType {
         updated = false;
     }
 
-    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer){
+    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer) {
+        reset();
+
         this.tileset = tileset;
         this.mapSize.set(mapSize);
         this.layers = layers.clone();

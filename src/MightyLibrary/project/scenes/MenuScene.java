@@ -51,7 +51,7 @@ public class MenuScene extends Scene {
         button2DScene.Text.setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
-                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.4f))
+                .setPosition(new Vector2f(windowSize.x * 0.25f, windowSize.y * 0.4f))
                 .setFontSize(40)
                 .setText("Test2DScene");
 
@@ -59,6 +59,15 @@ public class MenuScene extends Scene {
         button2DScene.Text.copyTo(button2DScene.OverlapsText);
         button2DScene.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->Test2DScene<-");
+
+
+        BackgroundlessButton Test2DWaveFunctionCollapse = button2DScene.copy();
+        Test2DWaveFunctionCollapse.Text.setPosition(new Vector2f(windowSize.x * 0.75f, windowSize.y * 0.4f))
+                .setText("Test2DWaveFunctionCollapse");
+
+        Test2DWaveFunctionCollapse.Text.copyTo(Test2DWaveFunctionCollapse.OverlapsText);
+        Test2DWaveFunctionCollapse.OverlapsText.setColor(new Color4f(0.3f))
+                .setText("->Test2DWaveFunctionCollapse<-");
 
         BackgroundlessButton button3DScene = button2DScene.copy();
         button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.25f, windowSize.y * 0.52f))
@@ -113,12 +122,13 @@ public class MenuScene extends Scene {
         guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
         guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
         guiList.GUIs.put(0, button2DScene);
-        guiList.GUIs.put(1, button3DScene);
-        guiList.GUIs.put(2, button3D_2Scene);
-        guiList.GUIs.put(3, buttonCollisionTest);
-        guiList.GUIs.put(4, button3D2DGame);
-        guiList.GUIs.put(5, buttonTestBox2D);
-        guiList.GUIs.put(6, buttonQuit);
+        guiList.GUIs.put(1, Test2DWaveFunctionCollapse);
+        guiList.GUIs.put(2, button3DScene);
+        guiList.GUIs.put(3, button3D_2Scene);
+        guiList.GUIs.put(4, buttonCollisionTest);
+        guiList.GUIs.put(5, button3D2DGame);
+        guiList.GUIs.put(6, buttonTestBox2D);
+        guiList.GUIs.put(7, buttonQuit);
         guiList.ShouldLoop = false;
 
         rotation = new FloatTweening();
@@ -142,21 +152,24 @@ public class MenuScene extends Scene {
                         sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
                         break;
                     case 1:
-                        sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new Test2dWaveFunctionCollapseScene(), new String[]{""});
                         break;
                     case 2:
-                        sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
                         break;
                     case 3:
-                        sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
                         break;
                     case 4:
-                        sceneManagerInterface.setNewScene(new Test3D2DGame(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
                         break;
                     case 5:
-                        sceneManagerInterface.setNewScene(new TestBox2D(), new String[]{""});
+                        sceneManagerInterface.setNewScene(new Test3D2DGame(), new String[]{""});
                         break;
                     case 6:
+                        sceneManagerInterface.setNewScene(new TestBox2D(), new String[]{""});
+                        break;
+                    case 7:
                         sceneManagerInterface.exit(0);
                         break;
                 }

@@ -1,13 +1,13 @@
 package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.*;
+import MightyLibrary.mightylib.resources.models.Model;
 
 import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 
 public class AnimationDataLoader extends ResourceLoader {
-
     private static final int TEXTURE_POS = 0;
     private static final int SIZE_FRAME_POS = 1;
     private static final int FRAME_ENUM_START_POS = 2;
@@ -19,28 +19,28 @@ public class AnimationDataLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "AnimationData";
+        return "animationData";
     }
 
     @Override
     public void create(Map<String, DataType> data){
-        create(data, "resources/animations");
+        exploreResourcesFile(data, "resources");
     }
 
-
-    private void create(Map<String, DataType> data, String path){
-        File file = new File(path);
-
-        if (file.isFile()){
-            String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            data.put(name, new AnimationData(name, path));
-        } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
-                create(data, path + "/" + childPath);
-            }
-        }
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        data.put(name, new AnimationData(name, currentPath));
     }
 
+    @Override
+    public String filterFile(String path) {
+        String ending = getFileExtension(path);
+
+        if (ending.equals(".anim"))
+            return getFileName(path);
+
+        return null;
+    }
 
     @Override
     public void load(DataType dataType) {

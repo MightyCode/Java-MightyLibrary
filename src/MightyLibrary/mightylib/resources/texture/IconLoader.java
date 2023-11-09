@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.resources.texture;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.animation.AnimationData;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -24,20 +25,22 @@ public class IconLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        create(data, "resources/icon");
+        exploreResourcesFile(data, "resources");
     }
 
-    private void create(Map<String, DataType> data, String path){
-        File file = new File(path);
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        data.put(name, new Icon(name, currentPath));
+    }
 
-        if (file.isFile()){
-            String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            data.put(name, new Icon(name, path));
-        } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
-                create(data, path + "/" + childPath);
-            }
-        }
+    @Override
+    public String filterFile(String path) {
+        String ending = getFileExtension(path);
+
+        if (ending.equals(".ico"))
+            return getFileName(path);
+
+        return null;
     }
 
     @Override

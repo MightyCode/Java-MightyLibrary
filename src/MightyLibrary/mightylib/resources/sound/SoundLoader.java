@@ -30,25 +30,22 @@ public class SoundLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        create(data, "resources");
+        exploreResourcesFile(data, "resources");
     }
 
-    private void create(Map<String, DataType> data, final String currentPath){
-        File file = new File(currentPath);
+    @Override
+    public String filterFile(String path) {
+        String ending = getFileExtension(path);
 
-        if (file.isFile()){
-            String name = currentPath.substring(currentPath.lastIndexOf("/") + 1, currentPath.lastIndexOf("."));
-            String ending = currentPath.substring(currentPath.lastIndexOf("."));
+        if (ending.equals(".ogg"))
+            return getFileName(path);
 
-            if (ending.equals(".ogg")) {
-                data.put(name, new SoundData(name, currentPath));
-                System.out.println("Create sound res : " + currentPath);
-            }
-        } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
-                create(data, currentPath + "/" + childPath);
-            }
-        }
+        return null;
+    }
+
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        data.put(name, new SoundData(name, currentPath));
     }
 
     @Override

@@ -38,6 +38,14 @@ public class TextureLoader extends ResourceLoader {
         create(data, obj, "");
     }
 
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {}
+
+    @Override
+    public String filterFile(String path) {
+        return null;
+    }
+
 
     private void create(Map<String, DataType> data, JSONObject node, String currentPath){
         Iterator<String> arrayNodes = node.keys();
