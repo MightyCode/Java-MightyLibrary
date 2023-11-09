@@ -1,5 +1,6 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveFunctionCollapseGrid;
 import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
 import MightyLibrary.mightylib.resources.data.JSONFile;
 import MightyLibrary.mightylib.resources.map.TileLayer;
@@ -18,9 +19,6 @@ import org.joml.Vector3f;
 import java.util.*;
 
 public class Test2DWaveFunctionCollapseScene extends Scene {
-    public static final float MOVE_SPEED = 600;
-    public static final float SHIFT_SPEED = MOVE_SPEED * 2f;
-
     private TileMap map;
     private FullTileMapRenderer mapRenderer;
 
@@ -29,6 +27,8 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
     private DraggingCameraComponent draggingSceneComponent;
     private MovingCameraComponent movingSceneComponent;
     private ZoomingCameraComponent zoomingSceneComponent;
+
+    private WaveFunctionCollapseGrid waveFunctionCollapseGrid;
 
     public void init(String[] args) {
         super.init(args);
@@ -40,15 +40,16 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         //setClearColor(0, 0, 0, 1f);
 
         /// RENDERERS ///
+        map = new TileMap("waveCollapseTest", "none");
+        mapSize = new Vector2i(100, 100);
+
+        mapRenderer = new FullTileMapRenderer("texture2D", true);
 
         WaveCollapseRule rule = new WaveCollapseRule(resources.getResource(JSONFile.class, "waveCollapseTest"));
         TileSet set = resources.getResource(TileSet.class, rule.getRecommendedTileset());
+        waveFunctionCollapseGrid = new WaveFunctionCollapseGrid(rule, map, set, mapSize);
+        waveFunctionCollapseGrid.waveFunctionAlgorithm();
 
-        map = new TileMap("waveCollapseTest", "none");
-        mapSize = new Vector2i(30, 30);
-        waveFunctionAlgorithm(map, set, rule, mapSize);
-
-        mapRenderer = new FullTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
 
         draggingSceneComponent = new DraggingCameraComponent();
@@ -82,9 +83,14 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         InputManager inputManager = mainContext.getInputManager();
 
         if (inputManager.inputPressed(ActionId.TAB)){
-            WaveCollapseRule rule = new WaveCollapseRule(resources.getResource(JSONFile.class, "waveCollapseTest"));
-            TileSet set = resources.getResource(TileSet.class, rule.getRecommendedTileset());
-            waveFunctionAlgorithm(map, set, rule, mapSize);
+            waveFunctionCollapseGrid.reset();
+        }
+
+        if (!waveFunctionCollapseGrid.isFinished()){
+           // waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
+
+            waveFunctionCollapseGrid.reset();
+            waveFunctionCollapseGrid.waveFunctionAlgorithm();
         }
 
         movingSceneComponent.update();

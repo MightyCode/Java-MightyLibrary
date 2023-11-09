@@ -22,6 +22,15 @@
                  "type":"string",
                  "value":"GRASS"
                 }]
+        }, 
+        {
+         "id":6,
+         "properties":[
+                {
+                 "name":"tag",
+                 "type":"string",
+                 "value":"GRASS"
+                }]
         }],
  "tilewidth":16,
  "type":"tileset",

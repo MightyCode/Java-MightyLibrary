@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.algorithms.graph;
 
-import MobilityViewer.mightylib.util.math.MightyMath;
+import MightyLibrary.mightylib.utils.math.MightyMath;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -38,9 +38,9 @@ public class Node extends PositionListNode<Node> {
     @Override
     public Vector2f getPositionInBoundaries(Vector4f boundaries, Vector4f rendererDest){
         return new Vector2f(
-                MightyMath.mapf(position.x, boundaries.x, boundaries.z, rendererDest.x, rendererDest.z),
+                MightyMath.Mapf(position.x, boundaries.x, boundaries.z, rendererDest.x, rendererDest.z),
 
-                MightyMath.mapf(position.y, boundaries.y, boundaries.w, rendererDest.w, rendererDest.y)
+                MightyMath.Mapf(position.y, boundaries.y, boundaries.w, rendererDest.w, rendererDest.y)
         );
     }
 
