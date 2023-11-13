@@ -12,11 +12,15 @@ import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
 import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
 import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
 import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRule;
+import MightyLibrary.mightylib.utils.Timer;
 import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
 public class Test2DWaveFunctionCollapseScene extends Scene {
     private TileMap map;
@@ -29,6 +33,8 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
     private ZoomingCameraComponent zoomingSceneComponent;
 
     private WaveFunctionCollapseGrid waveFunctionCollapseGrid;
+    private boolean immediateConstruction;
+    private Timer timer;
 
     public void init(String[] args) {
         super.init(args);
@@ -46,9 +52,11 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         mapRenderer = new FullTileMapRenderer("texture2D", true);
 
         WaveCollapseRule rule = new WaveCollapseRule(resources.getResource(JSONFile.class, "waveCollapseTest"));
+        rule.printRules();
+
         TileSet set = resources.getResource(TileSet.class, rule.getRecommendedTileset());
         waveFunctionCollapseGrid = new WaveFunctionCollapseGrid(rule, map, set, mapSize);
-        waveFunctionCollapseGrid.waveFunctionAlgorithm();
+        waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
 
         mapRenderer.setTileMap(map);
 
@@ -71,6 +79,10 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
                 main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
+
+        timer = new Timer();
+        timer.start(0.33f);
+        immediateConstruction = false;
     }
 
 
@@ -86,11 +98,19 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
             waveFunctionCollapseGrid.reset();
         }
 
-        if (!waveFunctionCollapseGrid.isFinished()){
-           // waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
+        if (inputManager.inputPressed(ActionId.ENTER))
+            immediateConstruction = !immediateConstruction;
 
-            waveFunctionCollapseGrid.reset();
-            waveFunctionCollapseGrid.waveFunctionAlgorithm();
+        if (!waveFunctionCollapseGrid.isFinished()) {
+            if (immediateConstruction) {
+                waveFunctionCollapseGrid.waveFunctionAlgorithm();
+            } else {
+                timer.update();
+                if (timer.isFinished()) {
+                    waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
+                    timer.resetStart();
+                }
+            }
         }
 
         movingSceneComponent.update();
@@ -154,7 +174,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
 
         WaveCollapseRule.Rule initialRule = rule.getInitialRule();
 
-        Set<Integer> listOfTile = initialRule.getAvailableTiles(WaveCollapseRule.Rule.INITIAl_POS);
+        Set<Integer> listOfTile = initialRule.getAvailableIds(WaveCollapseRule.Rule.INITIAl_POS);
 
         List<Integer>[][] availableTiles = new ArrayList[mapSize.y][mapSize.x];
         // Add all possible tiles to each cell
@@ -187,7 +207,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
                 for (Vector2i direction : ruleToApply.getDirections()) {
                     // Only keep for the direction tile, the given list
 
-                    Set<Integer> availableTile = ruleToApply.getAvailableTiles(direction);
+                    Set<Integer> availableTile = ruleToApply.getAvailableIds(direction);
                     /*System.out.print("Chosen tile (" + ruleToApply.getId() + ")
                         (" + direction.x + "," + direction.y + ") :");
                     for (Integer tile : availableTile) {
@@ -204,9 +224,6 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
 
                     if (availableTiles[newPos.y][newPos.x] != null) {
                         availableTiles[newPos.y][newPos.x].retainAll(availableTile);
-                        /*System.out.println("new size "
-                                + availableTiles[newPos.y][newPos.x].size());*/
-
                     }
                 }
             }

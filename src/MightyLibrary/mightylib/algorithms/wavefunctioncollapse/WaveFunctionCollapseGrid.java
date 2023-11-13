@@ -5,10 +5,7 @@ import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.resources.map.TileSet;
 import org.joml.Vector2i;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 public class WaveFunctionCollapseGrid {
     private final TileMap map;
@@ -23,6 +20,7 @@ public class WaveFunctionCollapseGrid {
     private Random random;
 
     private boolean finished = false;
+    private Map<Integer, List<Vector2i>> minimumPossibleTilePositions;
 
     public WaveFunctionCollapseGrid(WaveCollapseRule rule, TileMap map, TileSet set, Vector2i mapSize) {
         this.rule = rule;
@@ -45,21 +43,29 @@ public class WaveFunctionCollapseGrid {
 
         random = new Random();
 
+        minimumPossibleTilePositions = new TreeMap<>();
+
         init();
     }
 
     private void init(){
         initialRule = rule.getInitialRule();
 
-        Set<Integer> listOfTile = initialRule.getAvailableTiles(WaveCollapseRule.Rule.INITIAl_POS);
+        Set<Integer> listOfTile = initialRule.getAvailableIds(WaveCollapseRule.Rule.INITIAl_POS);
+        minimumPossibleTilePositions.clear();
+        List<Vector2i> positions = new ArrayList<>();
+
         // Add all possible tiles to each cell
         for (int y = 0; y < mapSize.y; ++y) {
             for (int x = 0; x < mapSize.x; ++x) {
                 // Copy the list of tile
                 availableTiles[y][x].clear();
                 availableTiles[y][x].addAll(listOfTile);
+                positions.add(new Vector2i(x, y));
             }
         }
+
+        minimumPossibleTilePositions.put(listOfTile.size(), positions);
     }
 
     public void reset(){
@@ -78,6 +84,27 @@ public class WaveFunctionCollapseGrid {
         setTileAt(x, y, tileId);
     }
 
+    private void printMinimumPossibleTilePositions(){
+        System.out.println("Minimum possible tile positions : ");
+        for (Map.Entry<Integer, List<Vector2i>> entry : minimumPossibleTilePositions.entrySet()){
+            System.out.print("Key : " + entry.getKey());
+            for (Vector2i pos : entry.getValue()){
+                System.out.print("(" + pos.x + ", " + pos.y + ")");
+            }
+            System.out.println();
+        }
+    }
+
+    private void printMatricesOfAvailableSize(){
+        System.out.println("Matrices of available size : ");
+        for (int y = 0; y < mapSize.y; ++y) {
+            for (int x = 0; x < mapSize.x; ++x) {
+                System.out.print(availableTiles[y][x].size() + " ");
+            }
+            System.out.println();
+        }
+    }
+
     private void setTileAt(int x, int y, int tileId){
         map.setTileType(0, x, y, tileId);
 
@@ -87,60 +114,76 @@ public class WaveFunctionCollapseGrid {
             WaveCollapseRule.Rule ruleToApply = rule.getRule(tileId);
 
             for (Vector2i direction : ruleToApply.getDirections()) {
-                // Only keep for the direction tile, the given list
+                // Only keep for the direction tile the corresponding list
+                Set<Integer> availableTile = ruleToApply.getAvailableIds(direction);
 
-                Set<Integer> availableTile = ruleToApply.getAvailableTiles(direction);
-                /*System.out.print("Chosen tile (" + ruleToApply.getId() + ")
-                    (" + direction.x + "," + direction.y + ") :");
-                for (Integer tile : availableTile) {
-                    System.out.print(tile + ", ");
-                }
-                System.out.println();*/
-
-                // Check if direction is in the map
-
-                Vector2i newPos = new Vector2i(x, y).add(direction, new Vector2i());
+                Vector2i newPos = new Vector2i(x, y).add(direction);
 
                 if (newPos.x < 0 || newPos.x >= mapSize.x || newPos.y < 0 || newPos.y >= mapSize.y)
                     continue;
 
                 if (availableTiles[newPos.y][newPos.x].size() > 0) {
+                    int oldSize = availableTiles[newPos.y][newPos.x].size();
+
                     availableTiles[newPos.y][newPos.x].retainAll(availableTile);
-                    /*System.out.println("new size "
-                            + availableTiles[newPos.y][newPos.x].size());*/
 
-                }
-            }
+                    int newSize = availableTiles[newPos.y][newPos.x].size();
 
-        }
-    }
+                    if (oldSize != newSize) {
+                        // For all element in map with old size, remove the position if vector x and y match
+                        List<Vector2i> positions = minimumPossibleTilePositions.get(oldSize);
+                        /*System.out.println("New Position " + newPos.x + ", "
+                                + newPos.y + " : " + oldSize + " -> " + newSize);*/
 
-    public Vector2i selectMinimumIn(List<Integer>[][] availableTiles, Random random){
-        List<Vector2i> positions = new ArrayList<>();
-        int minSize = Integer.MAX_VALUE;
+                        for (int i = 0; i < positions.size(); ++i) {
+                            Vector2i pos = positions.get(i);
 
-        for (int y = 0; y < availableTiles.length; ++y) {
-            for (int x = 0; x < availableTiles[y].length; ++x) {
-                if (availableTiles[y][x].size() > 0){
-                    if (availableTiles[y][x].size() < minSize) {
-                        positions.clear();
-                        minSize = availableTiles[y][x].size();
-                        positions.add(new Vector2i(x, y));
-                    } else if (availableTiles[y][x].size() == minSize){
-                        positions.add(new Vector2i(x, y));
+                            if (pos.x == newPos.x && pos.y == newPos.y) {
+                                positions.remove(i);
+                                break;
+                            }
+                        }
+
+                        if (positions.size() == 0)
+                            minimumPossibleTilePositions.remove(oldSize);
+
+                        // Add the new position to the new size list
+                        if (!minimumPossibleTilePositions.containsKey(newSize))
+                            minimumPossibleTilePositions.put(newSize, new ArrayList<>());
+
+                        minimumPossibleTilePositions.get(newSize).add(newPos);
+
+                        //System.out.println("New size list " + minimumPossibleTilePositions.get(newSize).size());
                     }
                 }
             }
         }
+    }
 
+    private Vector2i getNextTileToCompute(){
+        // Return a tile from the minimum key of the map
+
+        if (minimumPossibleTilePositions.size() == 0)
+            return null;
+
+        int minKey = minimumPossibleTilePositions.keySet().iterator().next();
+        List<Vector2i> positions = minimumPossibleTilePositions.get(minKey);
         if (positions.size() == 0)
             return null;
 
-        return positions.get(random.nextInt(positions.size()));
+        // Take and remove
+        int index = random.nextInt(positions.size());
+        Vector2i pos = positions.get(index);
+        positions.remove(index);
+
+        if (positions.size() == 0)
+            minimumPossibleTilePositions.remove(minKey);
+
+        return pos;
     }
 
     public void waveFunctionAlgorithm() {
-        Vector2i currentPosition = selectMinimumIn(availableTiles, random);
+        Vector2i currentPosition = getNextTileToCompute();
 
         while (currentPosition != null){
             int chosenTile = -1;
@@ -152,7 +195,7 @@ public class WaveFunctionCollapseGrid {
             setTileAt(currentPosition.x, currentPosition.y, chosenTile);
 
             // Select the minimum available point by its list size, if there is no available point, return null
-            currentPosition = selectMinimumIn(availableTiles, random);
+            currentPosition = getNextTileToCompute();
         }
 
         finished = true;
@@ -160,7 +203,16 @@ public class WaveFunctionCollapseGrid {
 
     // Do n step of wave function algorithm
     public void waveFunctionAlgorithmStep(int n) {
-        Vector2i currentPosition = selectMinimumIn(availableTiles, random);
+        //printMatricesOfAvailableSize();
+        //printMinimumPossibleTilePositions();
+        Vector2i currentPosition = getNextTileToCompute();
+        if (currentPosition == null) {
+            finished = true;
+            return;
+        }
+        //printMinimumPossibleTilePositions();
+
+        System.out.println("Chosen position : (" + currentPosition.x + ", " + currentPosition.y + ")");
 
         for (int i = 0; i < n && currentPosition != null; ++i){
             int chosenTile = -1;
@@ -170,13 +222,7 @@ public class WaveFunctionCollapseGrid {
                         random.nextInt(availableTiles[currentPosition.y][currentPosition.x].size()));
 
             setTileAt(currentPosition.x, currentPosition.y, chosenTile);
-
-            // Select the minimum available point by its list size, if there is no available point, return null
-            currentPosition = selectMinimumIn(availableTiles, random);
         }
-
-        if (currentPosition == null)
-            finished = true;
     }
 
     public boolean isFinished(){

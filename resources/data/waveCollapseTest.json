@@ -388,7 +388,8 @@
     ]
   },
   "info": {
-    "tileset" : "waveCollapseTest"
+    "tileset" : "waveCollapseTest",
+    "type" : "list"
   },
   "initial" : {
     "all" : true
