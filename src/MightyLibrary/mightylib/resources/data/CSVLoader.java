@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.resources.data;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.sound.SoundData;
 
 import java.io.BufferedReader;
@@ -26,7 +27,7 @@ public class CSVLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, "resources");
+        exploreResourcesFile(data, Resources.FOLDER);
     }
 
     public String filterFile(String path) {

@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.resources.texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
 import org.json.JSONObject;
 
 import javax.imageio.ImageIO;
@@ -14,8 +15,7 @@ import java.util.Map;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class TextureLoader extends ResourceLoader {
-    private final static String BASIC_PATH = "resources/";
-    private final static String LIST_TEXTURES = BASIC_PATH + "textures/textures.json";
+    private final static String LIST_TEXTURES = Resources.FOLDER + "textures/textures.json";
 
     @Override
     public Class<?> getType() {
@@ -31,7 +31,7 @@ public class TextureLoader extends ResourceLoader {
     public void create(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString(LIST_TEXTURES));
 
-        Texture texture = new Texture("error", BASIC_PATH + "textures/error.png");
+        Texture texture = new Texture("error", Resources.FOLDER + "textures/error.png");
         texture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);
 
         data.put("error", texture);
@@ -60,7 +60,7 @@ public class TextureLoader extends ResourceLoader {
                 String temp = information.getString("qualityType");
 
                 Texture currentTexture = new Texture(currentNode,
-                        BASIC_PATH + currentPath + information.getString("file"));
+                        Resources.FOLDER + currentPath + information.getString("file"));
 
                 if (temp.equals("pixelart")){
                     currentTexture.setAspectTexture(TextureParameters.PIXEL_ART_PARAMETERS);

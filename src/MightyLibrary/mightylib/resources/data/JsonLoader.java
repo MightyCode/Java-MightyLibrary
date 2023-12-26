@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.resources.data;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import org.json.JSONObject;
 
@@ -22,7 +23,7 @@ public class JsonLoader extends ResourceLoader {
     }
 
     @Override
-    public void create(Map<String, DataType> data){ exploreResourcesFile(data, "resources"); }
+    public void create(Map<String, DataType> data){ exploreResourcesFile(data, Resources.FOLDER); }
 
     @Override
     public void fileDetected(Map<String, DataType> data, String currentPath, String name) {

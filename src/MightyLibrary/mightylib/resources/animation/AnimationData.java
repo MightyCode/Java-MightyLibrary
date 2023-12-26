@@ -9,7 +9,6 @@ public class AnimationData extends DataType {
     private FrameData[] framesData;
     private String textureName;
 
-
     public AnimationData(String name, String path){
         super(name, path);
 

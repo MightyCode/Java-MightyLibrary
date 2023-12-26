@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.Objects;
 
 public abstract class ResourceLoader {
+    protected static final String[] IGNORE_FOLDERS = {
+            "batchs"
+    };
 
     public ResourceLoader(){ }
 
@@ -25,10 +28,29 @@ public abstract class ResourceLoader {
     }
 
     public final String getFileExtension(String path){
-        return path.substring(path.lastIndexOf("."));
+        int index = path.lastIndexOf(".");
+
+        if (index == -1)
+            return null;
+
+        return path.substring(index);
     }
 
     public final void exploreResourcesFile(Map<String, DataType> data, String currentPath){
+        exploreResourcesFile(data, currentPath, IGNORE_FOLDERS);
+    }
+
+    protected final boolean isIgnoredFolder(String[] ignoreFolders, String folderName){
+        for (String ignoreFolder : ignoreFolders){
+            if (ignoreFolder.equals(folderName))
+                return true;
+        }
+
+        return false;
+    }
+
+    public final void exploreResourcesFile(Map<String, DataType> data, String currentPath,
+                                           String[] ignoreFolders){
         File file = new File(currentPath);
 
         if (file.isFile()){
@@ -37,9 +59,11 @@ public abstract class ResourceLoader {
                 fileDetected(data, currentPath, result);
             }
         } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
+            if (isIgnoredFolder(ignoreFolders, file.getName()))
+                return;
+
+            for (String childPath : Objects.requireNonNull(file.list()))
                 exploreResourcesFile(data, currentPath + "/" + childPath);
-            }
         }
     }
 

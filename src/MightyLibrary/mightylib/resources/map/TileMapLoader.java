@@ -17,12 +17,12 @@ public class TileMapLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "TileMap";
+        return "Tilemap";
     }
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, "resources/tilemap");
+        exploreResourcesFile(data, Resources.FOLDER + "tilemap");
     }
 
     @Override

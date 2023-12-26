@@ -38,6 +38,13 @@ public class Test2DScene extends Scene {
 
     private FloatTweening rotation;
 
+    @Override
+    protected String[] getInvolvedBatch() {
+        return new String[]{
+                "anim", "map-assets"
+        };
+    }
+
     public void init(String[] args) {
         super.init(args);
         /// SCENE INFORMATION ///

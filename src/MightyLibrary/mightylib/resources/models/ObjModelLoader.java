@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.resources.models;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.sound.SoundData;
 
 import java.util.Map;
@@ -19,7 +20,7 @@ public class ObjModelLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, "resources");
+        exploreResourcesFile(data, Resources.FOLDER);
     }
 
     @Override

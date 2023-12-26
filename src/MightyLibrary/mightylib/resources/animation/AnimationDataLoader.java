@@ -19,12 +19,12 @@ public class AnimationDataLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "animationData";
+        return "AnimationData";
     }
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, "resources");
+        exploreResourcesFile(data, Resources.FOLDER);
     }
 
     @Override

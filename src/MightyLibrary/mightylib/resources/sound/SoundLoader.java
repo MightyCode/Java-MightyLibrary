@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.resources.sound;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.sounds.SoundDataType;
 import MightyLibrary.mightylib.sounds.SoundLoadInfo;
 import MightyLibrary.mightylib.utils.math.KeyTree;
@@ -30,7 +31,7 @@ public class SoundLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, "resources");
+        exploreResourcesFile(data, Resources.FOLDER);
     }
 
     @Override
@@ -98,6 +99,8 @@ public class SoundLoader extends ResourceLoader {
 
 
     public static void loadGainTree(String gainTreePath, KeyTree<String, Float> gainTree){
+        gainTreePath = Resources.FOLDER + gainTreePath;
+
         JSONObject obj = new JSONObject(FileMethods.readFileAsString(gainTreePath));
 
         Iterator<String> arrayNodes = obj.keys();

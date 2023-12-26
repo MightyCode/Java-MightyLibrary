@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.resources.map;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import org.joml.Vector2i;
 
@@ -19,12 +20,12 @@ public class TileSetLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "TileSet";
+        return "Tileset";
     }
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, "resources/tileset");
+        exploreResourcesFile(data, Resources.FOLDER + "tileset");
     }
 
     @Override

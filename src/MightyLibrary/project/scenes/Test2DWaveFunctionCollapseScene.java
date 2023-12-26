@@ -36,6 +36,13 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
     private boolean immediateConstruction;
     private Timer timer;
 
+    @Override
+    protected String[] getInvolvedBatch() {
+        return new String[]{
+                "map-assets"
+        };
+    }
+
     public void init(String[] args) {
         super.init(args);
         /// SCENE INFORMATION ///

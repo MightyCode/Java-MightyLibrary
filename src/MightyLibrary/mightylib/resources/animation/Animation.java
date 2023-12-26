@@ -61,7 +61,6 @@ public class Animation {
         lastFrame = currentFrame;
     }
 
-
     public void restart(){
         elapsedTime = 0;
         animationFinished = false;
