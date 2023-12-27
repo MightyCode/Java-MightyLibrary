@@ -6,6 +6,12 @@
             "regex" : [
               ".*"
             ]
+        }, {
+            "type" : "Texture",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
         }
     ]
 }

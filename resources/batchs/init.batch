@@ -2,9 +2,15 @@
     "batchs" : [
         {
             "type" : "Texture",
-            "files" : [],
+            "files" : [
+                "arial",
+                "bahnschrift",
+                "whitePixel",
+                "slime",
+                "tileset",
+                "waveCollapseTest"
+            ],
             "regex" : [
-                ".*"
             ]
         },
         {

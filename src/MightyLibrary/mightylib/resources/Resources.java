@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
 import MightyLibrary.mightylib.resources.data.JsonLoader;
 import MightyLibrary.mightylib.resources.texture.IconLoader;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.texture.TextureLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -143,6 +144,9 @@ public class Resources {
 
                 DataType dataType = this.resources.get(type).get(resourceName);
 
+                if (dataType == null)
+                    throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
+
                 if (!dataType.isReferenced())
                     incorrectlyLoad += loadData(dataType, loader);
 
@@ -177,6 +181,11 @@ public class Resources {
     public int load(){
         if (firstLoad)
             return -1;
+
+        // Load the texture error
+        DataType dataType = resources.get(Texture.class).get("error");
+        loadData(dataType, getLoader(Texture.class));
+        dataType.addReference("mandatory");
 
         if (loadingMethod instanceof BatchResourcesMethod){
             // Load the batch resources first
