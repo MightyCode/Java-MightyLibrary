@@ -17,6 +17,7 @@ public class FrameData {
         frameTime = 0f;
     }
 
+    // String data is composed of : x, y, width, height, hotPointX, hotPointY, frameTime
     public void init(String data){
         String[] parts = data.split(",");
         if (parts.length != PART_NUMBER) {

@@ -1,7 +1,9 @@
-testrotationflip
-4 4
-1 0
+tileset testrotationflip 0
+tileset test 64
+layerSize 4 4
+layerNumber 1 0
+layer 0
 17 18 19 20
 21 22 23 24
 25 26 27 28
-29 30 31 32
+29 30 31 84

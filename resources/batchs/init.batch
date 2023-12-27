@@ -1,14 +1,18 @@
 {
-    "Texture": {
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    },
-    "FontFace" :{
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    },
+    "batchs" : [
+        {
+            "type" : "Texture",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        },
+        {
+            "type" : "FontFace",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        }
+    ]
 }

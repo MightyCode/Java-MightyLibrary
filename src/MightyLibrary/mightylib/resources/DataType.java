@@ -62,9 +62,8 @@ public abstract class DataType {
         if (correctlyLoaded) {
             unload();
 
-            if (correctlyLoaded) {
+            if (correctlyLoaded)
                 return;
-            }
         }
 
         load(loader);

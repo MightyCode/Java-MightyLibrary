@@ -20,7 +20,7 @@ public class TileSetLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "Tileset";
+        return "TileSet";
     }
 
     @Override
@@ -37,7 +37,7 @@ public class TileSetLoader extends ResourceLoader {
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
-        if (ending.equals(".tileset"))
+        if (ending != null && ending.equals(".tileset"))
             return getFileName(path);
 
         return null;
@@ -53,25 +53,55 @@ public class TileSetLoader extends ResourceLoader {
         String data = FileMethods.readFileAsString(tileset.getPath());
         String[] parts = data.split("\n");
 
-        int index = 0;
+        String texture = null;
+        Vector2i tileSize = null;
 
-        String texture = parts[index++];
+        boolean parameterFlip = false;
+        boolean parameterRotation = false;
 
-        String[] sizePart = parts[index++].trim().split(" ");
+        int lineIndex = 0;
+        while (lineIndex < parts.length) {
+            String line = parts[lineIndex].trim();
+            String[] lineParts = line.split(" ");
 
-        tileset.setTileSize(texture,
-                new Vector2i(
-                        Integer.parseInt(sizePart[0]),
-                        Integer.parseInt(sizePart[1])
-                )
-        );
+            if (lineParts[0].equals("texture")) {
+                texture = lineParts[1];
+            } else if (lineParts[0].equals("tilesize")) {
+                tileSize = new Vector2i(Integer.parseInt(lineParts[1]), Integer.parseInt(lineParts[2]));
+            } else if (lineParts[0].equals("animation")) {
+                int numberAnimation = Integer.parseInt(lineParts[1]);
 
-        sizePart = parts[index++].trim().split(" ");
+                for (int i = 0; i < numberAnimation; ++i){
+                    lineIndex += 1;
+                    lineParts = parts[lineIndex].trim().split(" ");
 
-        tileset.setTileParameters(
-                Boolean.parseBoolean(sizePart[0]),
-                Boolean.parseBoolean(sizePart[1])
-        );
+                    // Each information is tileId, duration
+                    TileSet.TileAnimation tileAnimation = new TileSet.TileAnimation(
+                            Integer.parseInt(lineParts[0]),
+                            (lineParts.length - 1) / 2
+                    );
+
+                    for (int j = 1; j < lineParts.length; j += 2){
+                        tileAnimation.ids[j / 2] = Integer.parseInt(lineParts[j]);
+                        tileAnimation.times[j / 2] = Float.parseFloat(lineParts[j + 1]);
+                    }
+
+                    tileset.addAnimation(tileAnimation.refId, tileAnimation);
+                }
+            } else if (lineParts[0].equals("parameter")){
+                parameterRotation = Boolean.parseBoolean(lineParts[1]);
+                parameterFlip = Boolean.parseBoolean(lineParts[2]);
+            }
+
+            ++lineIndex;
+        }
+
+        if (texture == null || tileSize == null)
+            return;
+
+        tileset.setTileSize(texture, tileSize);
+
+        tileset.setTileParameters(parameterRotation, parameterFlip);
     }
 
     @Override

@@ -5,27 +5,28 @@ import org.joml.Vector2i;
 
 public class TileMap extends DataType {
     private final Vector2i mapSize;
+    private final TileSetAtlas tileSetAtlas;
+
     private TileLayer[] layers;
 
-    private TileSet tileset;
-
     private int endBackLayer;
-
     private boolean updated;
 
     public TileMap(String dataName, String path) {
         super(dataName, path);
         this.mapSize = new Vector2i();
+        this.tileSetAtlas = new TileSetAtlas();
 
         reset();
 
         updated = false;
     }
 
-    public void init(TileSet tileset, Vector2i mapSize, TileLayer[] layers, int endBackLayer) {
-        reset();
+    public void addTileset(TileSet tileset, int startId){
+        tileSetAtlas.addTileSet(tileset, startId);
+    }
 
-        this.tileset = tileset;
+    public void init(Vector2i mapSize, TileLayer[] layers, int endBackLayer) {
         this.mapSize.set(mapSize);
         this.layers = layers.clone();
         this.endBackLayer = endBackLayer;
@@ -40,11 +41,11 @@ public class TileMap extends DataType {
 
     public int mapWidth() { return mapSize.x; }
 
-    public TileSet tileSet() { return tileset; }
+    public TileSetAtlas tileSetAtlas() { return tileSetAtlas; }
 
-    public int forlayerNumber () { return layers.length - endBackLayer; }
+    public int forLayerNumber() { return layers.length - endBackLayer; }
 
-    public int backlayerNumber () { return endBackLayer; }
+    public int backLayerNumber() { return endBackLayer; }
 
     public void dispose(){
         updated = false;
@@ -52,18 +53,21 @@ public class TileMap extends DataType {
 
 
     public void setTileType(int layerNumber, int x, int y, int type){
-        layers[layerNumber].setTileType(x, y, type);
+        setTile(layerNumber, x, y, type);
+    }
 
+    private void setTile(int layerNumber, int x, int y, int type){
+        layers[layerNumber].setTileType(x, y, type);
         updated = true;
     }
 
-    public boolean updated(){
+    public boolean hasBeenUpdated(){
         return updated;
     }
 
     public int getTileType(boolean isFor, int layerNumber, int x, int y){
         if (isFor){
-            if (layerNumber >= forlayerNumber())
+            if (layerNumber >= forLayerNumber())
                 return -1;
 
             return layers[layerNumber + endBackLayer].getTile(x, y);
@@ -97,8 +101,7 @@ public class TileMap extends DataType {
 
     private void reset(){
         layers = null;
-        tileset = null;
-
+        tileSetAtlas.clear();
         mapSize.x = 0;
         mapSize.y = 0;
 

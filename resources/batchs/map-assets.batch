@@ -1,20 +1,25 @@
 {
-    "Tileset": {
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    },
-    "Tilemap": {
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    },
-    "JSONFile": {
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    },
+    "batchs": [
+        {
+            "type" : "TileSet",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        },
+        {
+            "type" : "TileMap",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        },
+        {
+            "type" : "JSONFile",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        }
+    ]
 }

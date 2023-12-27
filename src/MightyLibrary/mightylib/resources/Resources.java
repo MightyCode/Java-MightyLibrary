@@ -127,14 +127,16 @@ public class Resources {
         int incorrectlyLoad = 0;
 
         BatchResources batchResources = getResource(BatchResources.class, batchName);
-        JSONObject content = batchResources.getObject();
-        for (String resourceTypeName : content.keySet()) {
+        JSONArray content = batchResources.getObject().getJSONArray("batchs");
+        for (int j = 0; j < content.length(); ++j) {
+            JSONObject resource = content.getJSONObject(j);
+
+            String resourceTypeName = resource.getString("type");
             Class<?> type = getClassFromName(resourceTypeName);
             ResourceLoader loader = getLoader(type);
-            JSONObject resourceType = content.getJSONObject(resourceTypeName);
 
-            JSONArray resourceFiles = resourceType.getJSONArray("files");
-            JSONArray regularExpressions = resourceType.getJSONArray("regex");
+            JSONArray resourceFiles = resource.getJSONArray("files");
+            JSONArray regularExpressions = resource.getJSONArray("regex");
 
             for (int i = 0; i < resourceFiles.length(); ++i) {
                 String resourceName = resourceFiles.getString(i);
@@ -164,7 +166,7 @@ public class Resources {
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("Can't compile regular expression: " + regularExpression);
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -300,14 +302,15 @@ public class Resources {
         int incorrectlyUnload = 0;
 
         BatchResources batchResources = getResource(BatchResources.class, batchName);
-        JSONObject content = batchResources.getObject();
-        for (String resourceTypeName : content.keySet()) {
-            Class<?> type = getClassFromName(resourceTypeName);
-            ResourceLoader loader = getLoader(type);
-            JSONObject resourceType = content.getJSONObject(resourceTypeName);
+        JSONArray content = batchResources.getObject().getJSONArray("batchs");
+        for (int j = 0; j < content.length(); ++j) {
+            JSONObject resource = content.getJSONObject(j);
 
-            JSONArray resourceFiles = resourceType.getJSONArray("files");
-            JSONArray regularExpressions = resourceType.getJSONArray("regex");
+            String resourceTypeName = resource.getString("type");
+            Class<?> type = getClassFromName(resourceTypeName);
+
+            JSONArray resourceFiles = resource.getJSONArray("files");
+            JSONArray regularExpressions = resource.getJSONArray("regex");
 
             for (int i = 0; i < resourceFiles.length(); ++i) {
                 String resourceName = resourceFiles.getString(i);

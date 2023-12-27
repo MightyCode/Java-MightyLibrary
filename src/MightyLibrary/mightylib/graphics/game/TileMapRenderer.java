@@ -2,10 +2,10 @@ package MightyLibrary.mightylib.graphics.game;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
-import MightyLibrary.mightylib.resources.texture.Texture;
-import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.resources.map.TileSet;
+import MightyLibrary.mightylib.resources.map.TileSetAtlas;
+import MightyLibrary.mightylib.resources.texture.TextureAtlas;
 import MightyLibrary.mightylib.utils.math.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -18,14 +18,11 @@ public class TileMapRenderer extends Renderer {
 
     private final int positionIndex;
     private final int textureIndex;
-
     private final Vector2f leftUpPosition;
-
     private EDirection reference;
-
     private TileMap tilemap;
+    private TileSetAtlas tileSetAtlas;
     private final boolean isForLayer;
-
 
     public TileMapRenderer(String shaderName, boolean willChange, boolean isForLayer) {
         super(shaderName, true);
@@ -61,8 +58,9 @@ public class TileMapRenderer extends Renderer {
 
     public void setTilemap(TileMap tilemap){
         this.tilemap = tilemap;
+        this.tileSetAtlas = tilemap.tileSetAtlas();
 
-        setMainTextureChannel(tilemap.tileSet().texture());
+        setMainTextureChannel(tileSetAtlas.getTextureAtlas());
 
         computeTileInformation();
     }
@@ -71,7 +69,8 @@ public class TileMapRenderer extends Renderer {
         leftUpPosition.x = position.x;
         leftUpPosition.y = position.y;
 
-        Vector2i mapSize = tilemap.getMapSize().mul(tilemap.tileSet().tileSize());
+        Vector2i tileSize = tileSetAtlas.getTileSize();
+        Vector2i mapSize = tilemap.getMapSize().mul(tileSize, new Vector2i());
 
         switch(this.reference){
             case None:
@@ -109,21 +108,24 @@ public class TileMapRenderer extends Renderer {
         int rawTileType;
         int tileType;
 
-        TileSet tileSet = tilemap.tileSet();
-
-        Texture texture = Resources.getInstance().getResource(Texture.class, tileSet.texture());
         Vector2i tilePosition = new Vector2i();
         Vector4f temp = new Vector4f();
+        TextureAtlas texture = tileSetAtlas.getTextureAtlas();
 
-        Vector2i tileSize = tileSet.tileSize();
-
-        for (int layer = 0; layer < ((isForLayer) ? tilemap.forlayerNumber() : tilemap.backlayerNumber()); ++layer) {
+        for (int layer = 0; layer < ((isForLayer) ? tilemap.forLayerNumber() : tilemap.backLayerNumber()); ++layer) {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
                     rawTileType = tilemap.getTileType(isForLayer, layer, x, y);
-                    tileType = tileSet.getConvertedId(rawTileType);
-                    if (tileType < 0)
+
+                    if (rawTileType < 0)
                         continue;
+
+                    int tileSetIndex = tileSetAtlas.getTileSetAssociateTo(rawTileType);
+                    tileSetIndex -= tileSetAtlas.getStartId(tileSetIndex);
+
+                    TileSet tileSet = tileSetAtlas.getTileSet(tileSetIndex);
+                    Vector2i tileSetPosition = tileSetAtlas.getTileSetPosition(tileSetIndex);
+                    tileType = tileSet.getConvertedId(rawTileType);
 
                     indices[tileCount * SIZE_INDICES] = tileCount * NUMBER_INDICES;
                     indices[tileCount * SIZE_INDICES + 1] = tileCount * NUMBER_INDICES + 1;
@@ -149,15 +151,15 @@ public class TileMapRenderer extends Renderer {
                     position[tileCount * SIZE_COORDINATES + 6] = temp.y;
                     position[tileCount * SIZE_COORDINATES + 7] = temp.z;
 
-
                     tilePosition.x = (tileType * tileSize.x) % texture.getWidth() / tileSize.x;
                     tilePosition.y = (tileType * tileSize.y) / texture.getWidth();
 
-                    temp.x = (tilePosition.x * 1.0f * tileSize.x) / texture.getWidth();
-                    temp.y = ((tilePosition.x + 1.0f) * tileSize.x) / texture.getWidth();
-                    temp.z = (tilePosition.y * 1.0f * tileSize.y) / texture.getHeight();
-                    temp.w = ((tilePosition.y + 1.0f) * tileSize.y) / texture.getHeight();
-                    setTexturePosition(texturePosition, tileCount * SIZE_COORDINATES, temp, tileSet.getTileRotation(rawTileType), tileSet.getTileFlip(rawTileType));
+                    temp.x = (tilePosition.x * 1.0f * tileSize.x + tileSetPosition.x) / texture.getWidth();
+                    temp.y = ((tilePosition.x + 1.0f) * tileSize.x + tileSetPosition.x) / texture.getWidth();
+                    temp.z = (tilePosition.y * 1.0f * tileSize.y + tileSetPosition.y) / texture.getHeight();
+                    temp.w = ((tilePosition.y + 1.0f) * tileSize.y + tileSetPosition.y) / texture.getHeight();
+                    setTexturePosition(texturePosition, tileCount * SIZE_COORDINATES,
+                            temp, tileSet.getTileRotation(rawTileType), tileSet.getTileFlip(rawTileType));
 
                     ++tileCount;
                 }
@@ -170,7 +172,7 @@ public class TileMapRenderer extends Renderer {
     }
 
     public void update(){
-        if (tilemap.updated()){
+        if (tilemap.hasBeenUpdated()){
             computeTileInformation();
         }
     }

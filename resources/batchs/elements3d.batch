@@ -1,8 +1,11 @@
 {
-    "Model" : {
-        "files" : [],
-        "regex" : [
-          ".*"
-        ]
-    }
+    "batchs" : [
+        {
+            "type" : "Model",
+            "files" : [],
+            "regex" : [
+              ".*"
+            ]
+        }
+    ]
 }

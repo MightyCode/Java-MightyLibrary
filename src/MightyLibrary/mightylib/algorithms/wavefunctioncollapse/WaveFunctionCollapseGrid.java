@@ -32,7 +32,8 @@ public class WaveFunctionCollapseGrid {
         TileLayer[] layers = new TileLayer[1];
         layers[0] = layer;
 
-        map.init(set, mapSize, layers, 1);
+        map.addTileset(set, 0);
+        map.init(mapSize, layers, 1);
 
         availableTiles = new ArrayList[mapSize.y][mapSize.x];
         for (int y = 0; y < mapSize.y; ++y) {

@@ -1,8 +1,11 @@
 {
-    "AnimationData": {
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    }
+    "batchs" : [
+         {
+            "type" : "AnimationData",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        }
+    ]
 }

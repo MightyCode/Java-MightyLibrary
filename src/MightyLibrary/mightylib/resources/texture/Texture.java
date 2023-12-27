@@ -4,14 +4,16 @@ import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import MightyLibrary.mightylib.resources.DataType;
 import org.lwjgl.BufferUtils;
 
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
 
 public class Texture extends DataType implements IGLBindable, IRenderTextureBindable {
-    private int width;
-    private int height;
+    protected int width;
+    protected int height;
 
     private int textureId;
 
@@ -90,6 +92,19 @@ public class Texture extends DataType implements IGLBindable, IRenderTextureBind
         }
     }
 
+    public BufferedImage loadBufferedImage(){
+        try {
+            return ImageIO.read(new FileInputStream(getPath()));
+
+        } catch (Exception e) {
+            System.err.println("Can't find the path for :");
+            System.err.println(getPath() + "\n");
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
     private void setTextParam(int param, int value) {
         bindRenderTexture();
         if (isCorrectlyLoaded())
@@ -122,7 +137,6 @@ public class Texture extends DataType implements IGLBindable, IRenderTextureBind
     public int getHeight() {
         return height;
     }
-
 
     @Override
     public void unload() {

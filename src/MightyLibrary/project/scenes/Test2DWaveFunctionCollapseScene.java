@@ -242,6 +242,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         TileLayer[] layers = new TileLayer[1];
         layers[0] = layer;
 
-        map.init(set, mapSize, layers, 1);
+        map.addTileset(set, 0);
+        map.init(mapSize, layers, 1);
     }
 }

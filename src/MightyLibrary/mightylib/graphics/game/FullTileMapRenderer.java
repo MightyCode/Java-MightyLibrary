@@ -5,7 +5,6 @@ public class FullTileMapRenderer {
     private final TileMapRenderer forTileMapRenderer;
     private final TileMapRenderer backTileMapRenderer;
 
-
     public FullTileMapRenderer(String shader, boolean frequentlyUpdate) {
         forTileMapRenderer = new TileMapRenderer(shader, frequentlyUpdate, true);
         backTileMapRenderer = new TileMapRenderer(shader, frequentlyUpdate, false);
