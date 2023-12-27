@@ -65,9 +65,14 @@ public final class MainLoop {
 
         System.out.println("--Create ShaderManager");
         ShaderManager shaderManager = ShaderManager.getInstance();
-        //shaderManager.forceShaderVersion(140);
+        int shaderVersion = startProcedure.returnShaderVersion();
+        if (shaderVersion != -1)
+            shaderManager.forceShaderVersion(shaderVersion);
+
         System.out.println("--Create Resources");
-        Resources resource = Resources.getInstance();
+        Resources resource = Resources.createInstance(
+                startProcedure.returnResourcesLoadingMethod()
+        );
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(new StopLibrary());
@@ -76,7 +81,11 @@ public final class MainLoop {
         projectLoading.init();
         projectLoading.contextLoading(context);
 
+        // Create all resources dependencies
         resource.init();
+
+        // Load all resources
+        resource.load();
         sceneManager.init(startProcedure.returnStartScene(), new String[]{});
 
         if (startProcedure.returnIconName() != null) {

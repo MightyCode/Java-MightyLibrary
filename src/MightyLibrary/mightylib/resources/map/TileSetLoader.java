@@ -3,6 +3,8 @@ package MightyLibrary.mightylib.resources.map;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.animation.AnimationData;
 import org.joml.Vector2i;
 
 import java.io.File;
@@ -18,27 +20,28 @@ public class TileSetLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "TileSet";
+        return "Tileset";
     }
 
     @Override
     public void create(Map<String, DataType> data){
-        create(data, "resources/tileset");
+        exploreResourcesFile(data, Resources.FOLDER + "tileset");
     }
 
-    private void create(Map<String, DataType> data, String path){
-        File file = new File(path);
-
-        if (file.isFile()){
-            String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            data.put(name, new TileSet(name, path));
-        } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
-                create(data, path + "/" + childPath);
-            }
-        }
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        data.put(name, new TileSet(name, currentPath));
     }
 
+    @Override
+    public String filterFile(String path) {
+        String ending = getFileExtension(path);
+
+        if (ending.equals(".tileset"))
+            return getFileName(path);
+
+        return null;
+    }
 
     @Override
     public void load(DataType dataType) {

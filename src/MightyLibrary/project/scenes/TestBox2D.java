@@ -6,6 +6,9 @@ import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.scenes.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
+import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
 import MightyLibrary.mightylib.utils.math.ColorList;
 import MightyLibrary.mightylib.utils.math.EDirection;
 import MightyLibrary.project.main.ActionId;
@@ -13,7 +16,6 @@ import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
 import org.joml.Vector2f;
-import org.joml.Vector2i;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -64,11 +66,6 @@ public class TestBox2D extends Scene {
         }
     }
 
-
-    public static final float MOVE_SPEED = 600;
-    public static final float SHIFT_SPEED = MOVE_SPEED * 2f;
-
-
     private RectangleRenderer ground;
     private ArrayList<Box> boxes;
 
@@ -77,7 +74,9 @@ public class TestBox2D extends Scene {
 
     private World world;
 
-    private boolean isDragging = false;
+    private DraggingCameraComponent draggingSceneComponent;
+    private MovingCameraComponent movingSceneComponent;
+    private ZoomingCameraComponent zoomingSceneComponent;
 
     @Override
     public void init(String[] args){
@@ -120,10 +119,26 @@ public class TestBox2D extends Scene {
                     new Box(world, new Vector2f(10 - 0.4f * i, 0 - 4f * i), new Vector2f(0.9f, 2))
             );
         }
-    }
 
-    public void zoom(Vector2f factor){
-        main2DCamera.setZoomLevel(new Vector2f(main2DCamera.getZoomLevel()).mul(factor));
+        draggingSceneComponent = new DraggingCameraComponent();
+        draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
+
+        movingSceneComponent = new MovingCameraComponent();
+        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        movingSceneComponent.initActionIds(
+                new MovingCameraComponent.Inputs()
+                .setMoveLeft(ActionId.MOVE_LEFT_2D)
+                .setMoveRight(ActionId.MOVE_RIGHT_2D)
+                .setMoveDown(ActionId.MOVE_DOWN_2D)
+                .setMoveUp(ActionId.MOVE_UP_2D)
+                .setQuickSpeed(ActionId.SHIFT)
+        );
+
+        zoomingSceneComponent = new ZoomingCameraComponent();
+        zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
+                main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
+        zoomingSceneComponent.initActionId(ActionId.SHIFT);
     }
 
     @Override
@@ -138,23 +153,6 @@ public class TestBox2D extends Scene {
         MouseManager mouseManager = mainContext.getMouseManager();
         InputManager inputManager = mainContext.getInputManager();
         Camera2D mapCamera = main2DCamera;
-        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeRef();
-
-        if (mouseManager.getMouseScroll().y != 0) {
-            mapCamera.setZoomReference(
-                    new Vector2f(
-                            mouseManager.posX() / windowSize.x,
-                            mouseManager.posY() / windowSize.y
-                    ));
-
-            if (inputManager.getState(ActionId.SHIFT))
-                zoom(new Vector2f(1, 1 + mainContext.getMouseManager().getMouseScroll().y * 0.1f));
-            else
-                zoom(new Vector2f(1 + mainContext.getMouseManager().getMouseScroll().y * 0.1f));
-        }
-
-        if (inputManager.inputReleased(ActionId.RIGHT_CLICK))
-            isDragging = false;
 
         if (inputManager.inputPressed(ActionId.LEFT_CLICK)){
             boxes.add(
@@ -165,49 +163,12 @@ public class TestBox2D extends Scene {
             );
         }
 
-        if (isDragging) {
-            mapCamera.moveXinZoom( -mouseManager.posX() + mouseManager.oldPosX());
-            mapCamera.moveYinZoom( -mouseManager.posY() + mouseManager.oldPosY());
-        }
-
-        if (inputManager.inputPressed(ActionId.RIGHT_CLICK)){
-            isDragging = true;
-        }
-
-        if (inputManager.inputPressed(ActionId.SHIFT)) {
-            mapCamera.setZoomReference(EDirection.None);
-            zoom(new Vector2f(1.01f));
-        }
-
-        move(mapCamera, inputManager);
-
+        movingSceneComponent.update();
+        draggingSceneComponent.update();
+        zoomingSceneComponent.update();
 
         for (Box box : boxes)
             box.update();
-    }
-
-    protected void move(Camera2D mapCamera, InputManager inputManager){
-        float speed = MOVE_SPEED;
-        if (inputManager.getState(ActionId.SHIFT))
-            speed = SHIFT_SPEED;
-
-        speed *= GameTime.DeltaTime();
-
-        if (inputManager.getState(ActionId.MOVE_LEFT)){
-            mapCamera.moveXinZoom(-speed);
-        }
-
-        if (inputManager.getState(ActionId.MOVE_RIGHT)){
-            mapCamera.moveXinZoom(speed);
-        }
-
-        if (inputManager.getState(ActionId.MOVE_UP)){
-            mapCamera.moveYinZoom(-speed);
-        }
-
-        if (inputManager.getState(ActionId.MOVE_DOWN)){
-            mapCamera.moveYinZoom(speed);
-        }
     }
 
     public void display(){

@@ -1,0 +1,20 @@
+{
+    "Tileset": {
+        "files" : [],
+        "regex" : [
+            ".*"
+        ]
+    },
+    "Tilemap": {
+        "files" : [],
+        "regex" : [
+            ".*"
+        ]
+    },
+    "JSONFile": {
+        "files" : [],
+        "regex" : [
+            ".*"
+        ]
+    },
+}

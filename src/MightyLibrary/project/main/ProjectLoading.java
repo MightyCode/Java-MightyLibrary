@@ -5,12 +5,14 @@ import static org.lwjgl.glfw.GLFW.*;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.inputType.EInputType;
+import MightyLibrary.mightylib.inputs.inputType.InputOr;
 import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;
+import MightyLibrary.mightylib.resources.models.ObjModelLoader;
 import MightyLibrary.mightylib.resources.sound.SoundLoader;
 
 class ProjectLoading implements IProjectLoading {
@@ -20,7 +22,7 @@ class ProjectLoading implements IProjectLoading {
         resources.Loaders.add(new TileSetLoader());
         resources.Loaders.add(new TileMapLoader());
         resources.Loaders.add(new SoundLoader());
-
+        resources.Loaders.add(new ObjModelLoader());
     }
 
     @Override
@@ -47,13 +49,21 @@ class ProjectLoading implements IProjectLoading {
                         new InputSimple(GLFW_KEY_LEFT_SHIFT, EInputType.Keyboard)),
 
                 new ActionInput(ActionId.MOVE_LEFT_2D, "MOVE_LEFT_2D",
-                        new InputSimple(GLFW_KEY_LEFT, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_A, EInputType.Keyboard),
+                                new InputSimple(GLFW_KEY_LEFT, EInputType.Keyboard))),
                 new ActionInput(ActionId.MOVE_RIGHT_2D, "MOVE_RIGHT_2D",
-                        new InputSimple(GLFW_KEY_RIGHT, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_D, EInputType.Keyboard),
+                                new InputSimple(GLFW_KEY_RIGHT, EInputType.Keyboard))),
                 new ActionInput(ActionId.MOVE_UP_2D, "MOVE_UP_2D",
-                        new InputSimple(GLFW_KEY_UP, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_W, EInputType.Keyboard),
+                                new InputSimple(GLFW_KEY_UP, EInputType.Keyboard))),
                 new ActionInput(ActionId.MOVE_DOWN_2D, "MOVE_DOWN_2D",
-                        new InputSimple(GLFW_KEY_DOWN, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_S, EInputType.Keyboard),
+                                new InputSimple(GLFW_KEY_DOWN, EInputType.Keyboard))),
 
                 new ActionInput(ActionId.TAB,
                         "TAB", new InputSimple(GLFW_KEY_TAB, EInputType.Keyboard)),

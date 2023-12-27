@@ -1,0 +1,14 @@
+{
+    "Texture": {
+        "files" : [],
+        "regex" : [
+            ".*"
+        ]
+    },
+    "FontFace" :{
+        "files" : [],
+        "regex" : [
+            ".*"
+        ]
+    },
+}

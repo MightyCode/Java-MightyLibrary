@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
@@ -39,6 +40,13 @@ public class Test3D2DGame extends Scene {
 
     public Test3D2DGame(){
         super(SCENE_CCI);
+    }
+
+    @Override
+    protected String[] getInvolvedBatch() {
+        return new String[]{
+                "anim"
+        };
     }
 
     public void init(String[] args){

@@ -2,6 +2,8 @@ package MightyLibrary.mightylib.resources.data;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.ResourceLoader;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.sound.SoundData;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -25,23 +27,21 @@ public class CSVLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        create(data, "resources/data");
+        exploreResourcesFile(data, Resources.FOLDER);
     }
 
-    private void create(Map<String, DataType> data, String path){
-        File file = new File(path);
+    public String filterFile(String path) {
+        String ending = getFileExtension(path);
 
-        if (file.isFile()){
-            String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            String ending = path.substring(path.lastIndexOf("."));
+        if (ending.equals(".csv"))
+            return getFileName(path);
 
-            if (ending.equals(".csv"))
-                data.put(name, new CSVFile(name, path));
-        } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
-                create(data, path + "/" + childPath);
-            }
-        }
+        return null;
+    }
+
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        data.put(name, new CSVFile(name, currentPath));
     }
 
     @Override

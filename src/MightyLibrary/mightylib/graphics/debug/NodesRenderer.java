@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * Display a bunch of rectangles that correspond to node position.
  */
-public class NodeRenderer {
+public class NodesRenderer {
     private static final int EBO_SHIFT = 6;
     private static final int VBO_SHIFT = 8;
 
@@ -25,7 +25,7 @@ public class NodeRenderer {
     private final int vboPositionIndex;
     private float nodeSize;
 
-    public NodeRenderer(Camera2D referenceCamera){
+    public NodesRenderer(Camera2D referenceCamera){
         // Setup the renderer
         renderer = new Renderer("colorShape2D", true);
         renderer.setColorMode(ColorList.Red());

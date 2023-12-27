@@ -5,6 +5,7 @@ import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
 import MightyLibrary.mightylib.main.MainLoop;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.project.scenes.MenuScene;
 import org.joml.Vector2i;
@@ -73,7 +74,7 @@ public class Main {
 
         @Override
         public String returnGainTreePath() {
-            return "resources/sounds/sounds.gaintree";
+            return "sounds/sounds.gaintree";
         }
 
         @Override
@@ -84,6 +85,19 @@ public class Main {
         @Override
         public IProjectLoading returnIProjectLoading() {
             return  new ProjectLoading();
+        }
+
+        @Override
+        public Resources.LoadingMethod returnResourcesLoadingMethod() {
+            //return new Resources.AllResourcesMethod();
+            return new Resources.BatchResourcesMethod("init");
+        }
+
+        // Not important
+        @Override
+        // Return -1 as the newest version
+        public int returnShaderVersion() {
+            return -1;
         }
     }
 }

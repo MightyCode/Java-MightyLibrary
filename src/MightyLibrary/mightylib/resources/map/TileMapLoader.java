@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.resources.map;
 
 import MightyLibrary.mightylib.resources.*;
+import MightyLibrary.mightylib.resources.animation.AnimationData;
 import org.joml.Vector2i;
 
 import java.io.File;
@@ -16,25 +17,27 @@ public class TileMapLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "TileMap";
+        return "Tilemap";
     }
 
     @Override
     public void create(Map<String, DataType> data){
-        create(data, "resources/tilemap");
+        exploreResourcesFile(data, Resources.FOLDER + "tilemap");
     }
 
-    private void create(Map<String, DataType> data, String path){
-        File file = new File(path);
+    @Override
+    public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        data.put(name, new TileMap(name, currentPath));
+    }
 
-        if (file.isFile()){
-            String name = path.substring(path.lastIndexOf("/") + 1, path.lastIndexOf("."));
-            data.put(name, new TileMap(name, path));
-        } else if (file.isDirectory()) {
-            for (String childPath : Objects.requireNonNull(file.list())){
-                create(data, path + "/" + childPath);
-            }
-        }
+    @Override
+    public String filterFile(String path) {
+        String ending = getFileExtension(path);
+
+        if (ending.equals(".tilemap"))
+            return getFileName(path);
+
+        return null;
     }
 
     @Override

@@ -18,10 +18,8 @@ public class Scene {
     protected final Resources resources;
     protected final ShaderManager shaderManager;
     protected final Context mainContext;
-
     protected Camera3D main3DCamera;
     protected Camera2D main2DCamera;
-
     protected SceneManagerInterface sceneManagerInterface;
     private VirtualSceneRenderer scRenderer;
 
@@ -93,6 +91,11 @@ public class Scene {
     protected void setClearColor(float color1, float color2, float color3){                 glClearColor(color1, color2, color3, 1f);}
     protected void setClearColor(float color, float alpha){                                 glClearColor(color, color, color, alpha);}
     protected void setClearColor(float color){                                              glClearColor(color, color, color, 1f);}
+
+    // Resources
+    protected String[] getInvolvedBatch(){
+        return new String[]{};
+    }
 
     public void unload() {
         scRenderer.unload();

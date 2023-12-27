@@ -32,7 +32,6 @@ public class SceneManager {
     public void init(Scene firstScene, String[] firstArguments){
         System.out.println("--Init SceneManager");
         ShaderManager.getInstance().load();
-        Resources.getInstance().load();
 
         sceneInterface.setNewScene(firstScene, firstArguments);
 
@@ -88,6 +87,9 @@ public class SceneManager {
         if(currentScene != null){
             System.out.println("--Unload scene" + currentScene.getClass().getName());
             currentScene.unload();
+
+            for (String batch : currentScene.getInvolvedBatch())
+                Resources.getInstance().unloadBatch(batch);
         }
 
         SoundManager.getInstance().clearAwaitedSong();
@@ -97,6 +99,8 @@ public class SceneManager {
         assert currentScene != null;
         currentScene.setSceneManagerInterface(sceneInterface);
         System.out.println("--Init scene" + currentScene.getClass().getName());
+        for (String batch : currentScene.getInvolvedBatch())
+            Resources.getInstance().loadBatch(batch);
         currentScene.init(sceneInterface.getChangeArgs());
 
         sceneInterface.reset();

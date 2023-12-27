@@ -12,8 +12,6 @@ public class SoundData extends DataType {
     public SoundData(String dataName, String path) {
         super(dataName, path);
 
-        System.out.println(path);
-
         bufferId = -1;
     }
 

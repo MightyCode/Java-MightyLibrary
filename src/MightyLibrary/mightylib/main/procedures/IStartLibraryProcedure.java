@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.main.procedures;
 
 import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scenes.Scene;
 import org.joml.Vector2i;
 
@@ -22,4 +23,9 @@ public interface IStartLibraryProcedure {
     boolean returnAdminState();
 
     IProjectLoading returnIProjectLoading();
+
+    // Return -1 as the newest version
+    int returnShaderVersion();
+
+    Resources.LoadingMethod returnResourcesLoadingMethod();
 }
