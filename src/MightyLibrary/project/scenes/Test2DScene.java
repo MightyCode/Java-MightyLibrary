@@ -1,6 +1,7 @@
 package MightyLibrary.project.scenes;
 
-import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
+import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
@@ -11,6 +12,7 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
+import MightyLibrary.mightylib.resources.texture.TextureAtlas;
 import MightyLibrary.mightylib.scenes.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.utils.math.Color4f;
@@ -28,11 +30,11 @@ import org.joml.Vector3f;
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
     private Vector2fTweening slimeTextureTweening;
-
     private Text text;
-
     private TileMap map;
-    private FullTileMapRenderer mapRenderer;
+    private LayersTileMapRenderer mapRenderer;
+    private TextureAtlas atlas;
+    private RectangleRenderer atlasRenderer;
 
     private Camera2D testCamera;
 
@@ -49,6 +51,15 @@ public class Test2DScene extends Scene {
         super.init(args);
         /// SCENE INFORMATION ///
 
+        atlas = new TextureAtlas("atlas1");
+        atlas.addTexture("tileset");
+        atlas.addTexture("painting");
+
+        atlasRenderer = new RectangleRenderer("texture2D");
+        atlasRenderer.setMainTextureChannel(atlas);
+        atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
+        atlasRenderer.setPosition(new Vector2f(500, 10));
+
         main3DCamera.setPos(new Vector3f(0, 0, 0));
 
         setClearColor(52, 189, 235, 1f);
@@ -59,7 +70,6 @@ public class Test2DScene extends Scene {
         slimeRenderer = new Animation2DRenderer("texture2D");
         slimeRenderer.setMainTextureChannel("slime");
         //slimeRenderer.setVerticalFlip(true);
-
 
         Animator animator = new Animator();
         animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
@@ -93,7 +103,7 @@ public class Test2DScene extends Scene {
 
         map = Resources.getInstance().getResource(TileMap.class, "map");
 
-        mapRenderer = new FullTileMapRenderer("texture2D", false);
+        mapRenderer = new LayersTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
 
         testCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0, 0));
@@ -116,6 +126,10 @@ public class Test2DScene extends Scene {
             testCamera.moveX(mainContext.getWindow().getInfo().getSizeRef().x * 0.3f * GameTime.DeltaTime());
         }
 
+        if (inputManager.inputPressed(ActionId.MOVE_LEFT_2D)) {
+            map.setTileType(0, 0, 0, 78);
+        }
+
         rotation.update();
         slimeRenderer.setRotation(rotation.value(), new Vector3f(0, 0, 1));
         slimeTextureTweening.update();
@@ -133,19 +147,21 @@ public class Test2DScene extends Scene {
         super.setVirtualScene();
         clear();
 
-        mapRenderer.getForTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
-        mapRenderer.getBackTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
+        if (mapRenderer.containsCategory("Foreground"))
+            mapRenderer.getTileMapRenderer("Foreground").setPosition(new Vector3f(0, 0, 0));
+        mapRenderer.getTileMapRenderer("Background").setPosition(new Vector3f(0, 0, 0));
 
-        mapRenderer.drawBackLayers();
-        mapRenderer.drawForLayers();
+        atlasRenderer.display();
+
+        mapRenderer.display();
 
         slimeRenderer.display();
 
-        mapRenderer.getForTileMapRenderer().setPosition(new Vector3f(200, 200, 0));
-        mapRenderer.getBackTileMapRenderer().setPosition(new Vector3f(200, 200, 0));
+        if (mapRenderer.containsCategory("Foreground"))
+            mapRenderer.getTileMapRenderer("Foreground").setPosition(new Vector3f(200, 200, 0));
+        mapRenderer.getTileMapRenderer("Background").setPosition(new Vector3f(200, 200, 0));
 
-        mapRenderer.drawBackLayers();
-        mapRenderer.drawForLayers();
+        mapRenderer.display();
 
         text.display();
 

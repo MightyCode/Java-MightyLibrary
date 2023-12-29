@@ -5,6 +5,7 @@ import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,18 +16,34 @@ public class TileSet extends DataType {
     private boolean useRotation, useFlip;
 
     public static class TileAnimation {
-        public int refId;
-        public int[] ids;
-        public float[] times;
+        int refId;
+        int[] ids;
+        float[] times;
 
         public TileAnimation(int tileId, int frames){
             refId = tileId;
             ids = new int[frames];
             times = new float[frames];
         }
+
+        public int getReferenceId(){
+            return refId;
+        }
+
+        public float getTime(int frame){
+            return times[frame];
+        }
+
+        public int getTileId(int frame){
+            return ids[frame];
+        }
+
+        public int getFrameCount(){
+            return ids.length;
+        }
     }
 
-    public static Map<Integer, TileAnimation> animations;
+    public Map<Integer, TileAnimation> animations;
 
     public TileSet(String dataName, String path) {
         super(dataName, path);
@@ -57,6 +74,10 @@ public class TileSet extends DataType {
         return animations.get(tileId);
     }
 
+    public Collection<TileAnimation> getAnimations(){
+        return animations.values();
+    }
+
     public void setTileSize(String texture, Vector2i tileSize){
         this.tileSize.x = tileSize.x;
         this.tileSize.y = tileSize.y;
@@ -71,8 +92,19 @@ public class TileSet extends DataType {
         checkLoaded();
     }
 
-    public Vector2i numberOfTile() {
+    public Vector2i tilesNumberAxis() {
         return new Vector2i(tileNumber);
+    }
+
+    public int getTotalNumberTile(){
+        int total = tileNumber.x * tileNumber.y;
+        if (useRotation)
+            total *= 4;
+
+        if (useFlip)
+            total *= 4;
+
+        return total;
     }
 
     public String texture(){ return texture; }

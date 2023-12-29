@@ -62,6 +62,10 @@
 			"waveCollapseTest" : {
 				"file": "waveCollapseTest.png",
 				"qualityType" : "pixelart"
+			},
+			"painting" : {
+				"file": "painting.png",
+				"qualityType" : "pixelart"
 			}
 		},
 		"shaderEffects" : {

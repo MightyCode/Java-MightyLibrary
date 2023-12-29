@@ -13,13 +13,13 @@ public class TileSetAtlas {
     private final List<TileSet> tilesets;
     private final List<Integer> startIds;
 
-    public TileSetAtlas(){
+    public TileSetAtlas() {
         textureAtlas = new TextureAtlas("atlas");
         tilesets = new ArrayList<>();
         startIds = new ArrayList<>();
     }
 
-    void addTileSet(TileSet tileset, int startId){
+    void addTileSet(TileSet tileset, int startId) {
         tilesets.add(tileset);
         startIds.add(startId);
 
@@ -27,14 +27,27 @@ public class TileSetAtlas {
                 Resources.getInstance().getResource(Texture.class, tileset.texture()));
     }
 
-    public int getTileSetAssociateTo(int tileId){
-        for (int i = 0; i < tilesets.size(); i++) {
-            if (tileId >= startIds.get(i)
-                    && tileId < startIds.get(i) + tilesets.get(i).numberOfTile().x * tilesets.get(i).numberOfTile().y)
-                return i;
+    public int getTileSetIndexRelatedTo(int tileId){
+        if (tileId == -1)
+            return -1;
+
+        int i;
+        int endId;
+
+        for (i = 0; i < tilesets.size(); i++){
+            endId = startIds.get(i) + tilesets.get(i).getTotalNumberTile();
+
+            if (tileId < endId)
+                break;
         }
 
-        return -1;
+        if (i == tilesets.size())
+            return -1;
+
+        if (startIds.get(i) > tileId || tileId > startIds.get(i) + this.tilesets.get(i).getTotalNumberTile())
+            return -1;
+
+        return i;
     }
 
     public TileSet getTileSet(int index){
@@ -51,7 +64,7 @@ public class TileSetAtlas {
         return startIds.get(index);
     }
     public Vector2i getTileSetSize(int index){
-        return tilesets.get(index).numberOfTile();
+        return tilesets.get(index).tilesNumberAxis();
     }
 
     public Vector2i getTileSize(){
@@ -66,7 +79,7 @@ public class TileSetAtlas {
         return tilesets.size();
     }
 
-    public void clear(){
+    public void clear() {
         tilesets.clear();
         startIds.clear();
 

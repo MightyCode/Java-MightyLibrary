@@ -3,35 +3,92 @@ package MightyLibrary.mightylib.resources.map;
 import MightyLibrary.mightylib.resources.DataType;
 import org.joml.Vector2i;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+
 public class TileMap extends DataType {
+    // Correctly loaded serves to detect if save tile changes
+    private final List<TileChange> tileChanges;
+
+    private static class TileChange {
+        private TilePosition position;
+
+        private int from;
+        private int to;
+
+        public TileChange setPosition(TilePosition position){
+            this.position = position;
+            return this;
+        }
+
+        public TileChange setFrom(int from){
+            this.from = from;
+            return this;
+        }
+
+        public TileChange setTo(int to){
+            this.to = to;
+            return this;
+        }
+
+        public TilePosition getPosition() { return position; }
+
+        public int getFrom() { return from; }
+        public int getTo() { return to; }
+    }
     private final Vector2i mapSize;
     private final TileSetAtlas tileSetAtlas;
 
     private TileLayer[] layers;
 
-    private int endBackLayer;
-    private boolean updated;
+    private String[] layersCategories;
+    private final HashMap<String, Integer> layersCategoriesFrom;
+    private final HashMap<String, Integer> layersCategoriesTo;
 
     public TileMap(String dataName, String path) {
         super(dataName, path);
         this.mapSize = new Vector2i();
         this.tileSetAtlas = new TileSetAtlas();
 
-        reset();
+        this.tileChanges = new ArrayList<>();
 
-        updated = false;
+        layersCategoriesFrom = new HashMap<>();
+        layersCategoriesTo = new HashMap<>();
+
+        reset();
     }
 
     public void addTileset(TileSet tileset, int startId){
         tileSetAtlas.addTileSet(tileset, startId);
     }
 
-    public void init(Vector2i mapSize, TileLayer[] layers, int endBackLayer) {
+    public void init(Vector2i mapSize, TileLayer[] layers, String[] layersCategories, int[] layersCategoriesBeginIndex) {
         this.mapSize.set(mapSize);
         this.layers = layers.clone();
-        this.endBackLayer = endBackLayer;
 
-        updated = true;
+        /*System.out.println("Layers: " + layersCategories.length);
+        System.out.println("Names :" + layersCategoriesBeginIndex.length);*/
+
+        if (layersCategories == null || layersCategories.length == 0){
+            this.layersCategories = new String[]{TileLayer.DEFAULT_CATEGORY_NAME};
+            this.layersCategoriesFrom.put(TileLayer.DEFAULT_CATEGORY_NAME, 0);
+            this.layersCategoriesTo.put(TileLayer.DEFAULT_CATEGORY_NAME, layers.length - 1);
+        } else {
+            this.layersCategories = layersCategories.clone();
+
+            assert layersCategories.length == layersCategoriesBeginIndex.length;
+
+            for (int i = 0; i < layersCategories.length; ++i)
+                if (i < layersCategories.length - 1) {
+                    layersCategoriesFrom.put(layersCategories[i], layersCategoriesBeginIndex[i]);
+                    layersCategoriesTo.put(layersCategories[i], layersCategoriesBeginIndex[i + 1] - 1);
+                } else {
+                    layersCategoriesFrom.put(layersCategories[i], layersCategoriesBeginIndex[i]);
+                    layersCategoriesTo.put(layersCategories[i], layers.length - 1);
+                }
+        }
     }
 
 
@@ -43,12 +100,14 @@ public class TileMap extends DataType {
 
     public TileSetAtlas tileSetAtlas() { return tileSetAtlas; }
 
-    public int forLayerNumber() { return layers.length - endBackLayer; }
+    public String[] getLayersCategories() { return layersCategories; }
 
-    public int backLayerNumber() { return endBackLayer; }
+    public int getLayerCategoryTo(String category) { return layersCategoriesTo.get(category); }
+    public int getLayerCategoryFrom(String category) { return layersCategoriesFrom.get(category); }
+
 
     public void dispose(){
-        updated = false;
+        tileChanges.clear();
     }
 
 
@@ -56,48 +115,62 @@ public class TileMap extends DataType {
         setTile(layerNumber, x, y, type);
     }
 
-    private void setTile(int layerNumber, int x, int y, int type){
+    private void setTile(int layerNumber, int x, int y, int type) {
+        int previousType = layers[layerNumber].getTile(x, y);
         layers[layerNumber].setTileType(x, y, type);
-        updated = true;
+
+        if (correctlyLoaded) {
+
+            if (previousType != type)
+                tileChanges.add(
+                        new TileChange()
+                                .setPosition(new TilePosition(x, y, layerNumber))
+                                .setFrom(previousType)
+                                .setTo(type));
+        }
     }
 
     public boolean hasBeenUpdated(){
-        return updated;
+        return !tileChanges.isEmpty();
     }
 
-    public int getTileType(boolean isFor, int layerNumber, int x, int y){
-        if (isFor){
-            if (layerNumber >= forLayerNumber())
-                return -1;
+    public Collection<TileChange> getTileChanges(){
+        return tileChanges;
+    }
 
-            return layers[layerNumber + endBackLayer].getTile(x, y);
-        }
+    public int getTileType(String category, int layerNumber, int x, int y) {
+        int from = layersCategoriesFrom.get(category);
+        int to = layersCategoriesTo.get(category);
 
-        if (layerNumber >= endBackLayer)
+        int range = to - from;
+
+        if (layerNumber > range)
             return -1;
 
-        return layers[layerNumber].getTile(x, y);
+        return layers[layerNumber + from].getTile(x, y);
     }
 
 
-    public int numberOfNonEmptyTile(){
+    public int numberOfNonEmptyTile(String category){
         int tileNumber = 0;
 
-        for (int layer = 0; layer < layers.length; ++layer){
+        int from = layersCategoriesFrom.get(category);
+        int to = layersCategoriesTo.get(category);
+
+        for (int layer = from; layer <= to; ++layer){
             for (int y = 0; y < mapSize.y; ++y){
                 for (int x = 0; x < mapSize.x; ++x){
-                    boolean isFor = layer >= endBackLayer;
-
-                    if (getTileType(isFor, (isFor) ? layer - endBackLayer: layer, x, y) >= 0)
+                    if (layers[layer].getTile(x, y) != -1)
                         ++tileNumber;
                 }
             }
         }
-
         return tileNumber;
     }
 
-    void setCorrectlyLoaded(){ correctlyLoaded = true; }
+    public void setCorrectlyLoaded(){
+        correctlyLoaded = true;
+    }
 
     private void reset(){
         layers = null;
@@ -105,7 +178,8 @@ public class TileMap extends DataType {
         mapSize.x = 0;
         mapSize.y = 0;
 
-        endBackLayer = 0;
+        layersCategoriesFrom.clear();
+        layersCategoriesTo.clear();
 
         correctlyLoaded = false;
     }

@@ -84,6 +84,10 @@ public class TileSetLoader extends ResourceLoader {
                     for (int j = 1; j < lineParts.length; j += 2){
                         tileAnimation.ids[j / 2] = Integer.parseInt(lineParts[j]);
                         tileAnimation.times[j / 2] = Float.parseFloat(lineParts[j + 1]);
+
+
+                        System.out.println((j / 2) + " TileId: " + tileAnimation.ids[j / 2]
+                                + " Time: " + tileAnimation.times[j / 2]);
                     }
 
                     tileset.addAnimation(tileAnimation.refId, tileAnimation);

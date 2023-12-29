@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.resources.map;
 import MightyLibrary.mightylib.resources.*;
 import org.joml.Vector2i;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 public class TileMapLoader extends ResourceLoader {
@@ -54,6 +55,9 @@ public class TileMapLoader extends ResourceLoader {
 
         TileLayer[] layers = null;
 
+        ArrayList<String> layersCategories = new ArrayList<>();
+        ArrayList<Integer> layersCategoriesBeginIndex = new ArrayList<>();
+
         while (lineIndex < parts.length) {
             String[] linePart = parts[lineIndex].trim().split(" ");
 
@@ -66,7 +70,7 @@ public class TileMapLoader extends ResourceLoader {
                 int startId = 0;
 
                 if (linePart.length >= 3)
-                    startId = Integer.parseInt(linePart[2]);
+                    startId = Integer.parseInt(linePart[2]) - 1;
 
                 tileMap.addTileset(tileset, startId);
             } else if (linePart[0].equals("layerSize")) {
@@ -76,6 +80,13 @@ public class TileMapLoader extends ResourceLoader {
                 numberOfForLayers = Integer.parseInt(linePart[2]);
 
                 layers = new TileLayer[numberOfBackLayers + numberOfForLayers];
+            } else if (linePart[0].equals("layerCategory")) {
+                layersCategories.add(linePart[1]);
+                if (linePart.length >= 3)
+                    layersCategoriesBeginIndex.add(Integer.parseInt(linePart[2]));
+                else
+                    layersCategoriesBeginIndex.add(0);
+
             } else if (linePart[0].equals("layer")) {
                 int layerNumber = Integer.parseInt(linePart[1]);
 
@@ -99,7 +110,9 @@ public class TileMapLoader extends ResourceLoader {
         }
 
         assert layers != null;
-        tileMap.init(layerSize, layers, numberOfBackLayers);
+        tileMap.init(layerSize, layers,
+                layersCategories.toArray(new String[0]),
+                layersCategoriesBeginIndex.stream().mapToInt(i -> i).toArray());
         tileMap.setCorrectlyLoaded();
     }
 

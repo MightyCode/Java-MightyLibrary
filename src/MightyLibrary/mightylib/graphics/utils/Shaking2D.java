@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.util;
+package MightyLibrary.mightylib.graphics.utils;
 
 import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import org.joml.Vector2f;

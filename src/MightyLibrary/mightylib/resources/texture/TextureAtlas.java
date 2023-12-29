@@ -55,6 +55,7 @@ public class TextureAtlas extends Texture {
         constructTexture();
 
         setAspectTexture(textures.get(0).getQualityType());
+        TextureParameters.applyParameters(this);
     }
 
     private void placeTextures() {

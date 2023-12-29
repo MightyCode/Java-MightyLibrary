@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import MightyLibrary.mightylib.main.IDisplayable;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
@@ -12,7 +13,7 @@ import org.joml.Vector3f;
 
 import java.util.HashMap;
 
-public class Renderer {
+public class Renderer implements IDisplayable {
     protected Camera referenceCamera;
 
     protected Shape shape;

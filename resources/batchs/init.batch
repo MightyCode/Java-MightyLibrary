@@ -8,7 +8,8 @@
                 "whitePixel",
                 "slime",
                 "tileset",
-                "waveCollapseTest"
+                "waveCollapseTest",
+                "painting"
             ],
             "regex" : [
             ]

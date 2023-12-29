@@ -1,6 +1,8 @@
 tileset test 0
 layerSize 28 22
 layerNumber 4 4
+layerCategory Background 0
+layerCategory Foreground 4
 
 layer 0
 0 0 0 0 113 113 113 113 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
