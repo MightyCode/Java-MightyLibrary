@@ -66,6 +66,10 @@
 			"painting" : {
 				"file": "painting.png",
 				"qualityType" : "pixelart"
+			},
+			"hexagon" : {
+				"file": "hexagon.png",
+				"qualityType" : "pixelart"
 			}
 		},
 		"shaderEffects" : {

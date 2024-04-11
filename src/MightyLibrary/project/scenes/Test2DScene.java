@@ -1,6 +1,8 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
+import MightyLibrary.mightylib.graphics.renderer.Renderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
@@ -15,7 +17,11 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.resources.texture.TextureAtlas;
 import MightyLibrary.mightylib.scenes.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
+import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
 import MightyLibrary.mightylib.utils.math.Color4f;
+import MightyLibrary.mightylib.utils.math.ColorList;
 import MightyLibrary.mightylib.utils.math.EDirection;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
@@ -39,6 +45,12 @@ public class Test2DScene extends Scene {
     private Camera2D testCamera;
 
     private FloatTweening rotation;
+
+    private DraggingCameraComponent draggingSceneComponent;
+    private MovingCameraComponent movingSceneComponent;
+    private ZoomingCameraComponent zoomingSceneComponent;
+
+    private HexagonRenderer hexagonRenderer1, hexagonRenderer2;
 
     @Override
     protected String[] getInvolvedBatch() {
@@ -112,6 +124,38 @@ public class Test2DScene extends Scene {
         rotation.setTweeningOption(ETweeningOption.LoopReversed)
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
+
+        draggingSceneComponent = new DraggingCameraComponent();
+        draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
+
+        movingSceneComponent = new MovingCameraComponent();
+        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        movingSceneComponent.initActionIds(
+                new MovingCameraComponent.Inputs()
+                        .setMoveLeft(ActionId.MOVE_LEFT_2D)
+                        .setMoveRight(ActionId.MOVE_RIGHT_2D)
+                        .setMoveDown(ActionId.MOVE_DOWN_2D)
+                        .setMoveUp(ActionId.MOVE_UP_2D)
+                        .setQuickSpeed(ActionId.SHIFT)
+        );
+
+        zoomingSceneComponent = new ZoomingCameraComponent();
+        zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
+                main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
+        zoomingSceneComponent.initActionId(ActionId.SHIFT);
+
+        main2DCamera.setZoomLevel(0.5f);
+
+        hexagonRenderer1 = new HexagonRenderer("colorShape2D");
+        hexagonRenderer1.setColorMode(ColorList.Gold());
+        hexagonRenderer1.setSizePix(100, 100);
+        hexagonRenderer1.setPosition(new Vector2f(-100, 400));
+
+        hexagonRenderer2 = new HexagonRenderer("texture2D");
+        hexagonRenderer2.setMainTextureChannel("hexagon");
+        hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
+        hexagonRenderer2.setPosition(new Vector2f(0,0));
     }
 
 
@@ -134,6 +178,10 @@ public class Test2DScene extends Scene {
         slimeRenderer.setRotation(rotation.value(), new Vector3f(0, 0, 1));
         slimeTextureTweening.update();
         slimeRenderer.update();
+
+        movingSceneComponent.update();
+        draggingSceneComponent.update();
+        zoomingSceneComponent.update();
 
         //map.setTileType(0, 0, 0, 560);
 
@@ -165,6 +213,19 @@ public class Test2DScene extends Scene {
 
         text.display();
 
+        hexagonRenderer1.display();
+
+        Vector2f hexagonOrigin = new Vector2f(-500, 500);
+
+        for (int x = 0; x < 4; ++x){
+            for (int y = 0; y < 4; ++y){
+                hexagonRenderer2.setPosition(
+                        new Vector2f(hexagonOrigin.x + x * 150 + (y % 2) * 75, hexagonOrigin.y + y * 50 * HexagonRenderer.STRETCH_RATIO)
+                );
+                hexagonRenderer2.display();
+            }
+        }
+
         super.setAndDisplayRealScene();
     }
 
@@ -174,6 +235,9 @@ public class Test2DScene extends Scene {
         slimeRenderer.unload();
 
         text.unload();
+
+        hexagonRenderer1.unload();
+        hexagonRenderer2.unload();
 
         mapRenderer.unload();
     }

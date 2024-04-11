@@ -9,7 +9,8 @@
                 "slime",
                 "tileset",
                 "waveCollapseTest",
-                "painting"
+                "painting",
+                "hexagon"
             ],
             "regex" : [
             ]
