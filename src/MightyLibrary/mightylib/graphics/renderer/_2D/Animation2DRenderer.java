@@ -95,6 +95,7 @@ public class Animation2DRenderer extends Renderer {
             temp.y += animator.getCurrentAnimation().getFrameSize().y * animationScale.y * offsetRotation.y;
         }
 
+        // super call
         setPosition(temp);
     }
 

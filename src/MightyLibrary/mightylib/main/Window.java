@@ -16,6 +16,7 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
+import static org.lwjgl.opengl.GL32C.GL_PROGRAM_POINT_SIZE;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -122,6 +123,8 @@ public final class Window {
 
         // Enable antiAliasing
         glEnable(GL_MULTISAMPLE);
+
+        glEnable(GL_PROGRAM_POINT_SIZE);
     }
 
 

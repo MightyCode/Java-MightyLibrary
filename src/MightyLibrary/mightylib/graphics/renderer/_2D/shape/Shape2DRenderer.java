@@ -7,12 +7,12 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public abstract class ShapeRenderer extends Renderer {
+public abstract class Shape2DRenderer extends Renderer {
     protected EDirection reference;
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
-    public ShapeRenderer(String shaderName, boolean useEbo) {
+    public Shape2DRenderer(String shaderName, boolean useEbo) {
         super(shaderName, useEbo);
 
         reference = EDirection.LeftUp;
@@ -33,7 +33,7 @@ public abstract class ShapeRenderer extends Renderer {
     protected abstract float[] calculatePosition();
     protected abstract float[] calculateTexturePosition();
 
-    public ShapeRenderer setReference(EDirection reference){
+    public Shape2DRenderer setReference(EDirection reference){
         this.reference = reference;
 
         shape.updateVbo(calculatePosition(), positionIndex);
@@ -41,21 +41,25 @@ public abstract class ShapeRenderer extends Renderer {
         return this;
     }
 
+    public EDirection getReference(){
+        return reference;
+    }
 
-    public ShapeRenderer setTexturePosition(Vector4f newTexturePosition){
+
+    public Shape2DRenderer setTexturePosition(Vector4f newTexturePosition){
         texturePosition = newTexturePosition;
 
         return this;
     }
 
     // Set size with size of pixel
-    public ShapeRenderer setSizePix(float width, float height){
+    public Shape2DRenderer setSizePix(float width, float height){
         setScale(new Vector3f(width, height, 1.0f));
 
         return this;
     }
 
-    public ShapeRenderer setSizeToTexture() {
+    public Shape2DRenderer setSizeToTexture() {
         if (textures[0] == null)
             return this;
 
@@ -65,7 +69,7 @@ public abstract class ShapeRenderer extends Renderer {
     }
 
 
-    public ShapeRenderer setPosition(Vector2f position){
+    public Shape2DRenderer setPosition(Vector2f position){
         super.setPosition(new Vector3f(position.x, position.y, 0.0f));
 
         return this;
@@ -75,13 +79,13 @@ public abstract class ShapeRenderer extends Renderer {
         return new Vector2f(position.x, position.y);
     }
 
-    public ShapeRenderer updateShapeTexture(){
+    public Shape2DRenderer updateShapeTexture(){
         shape.updateVbo(calculateTexturePosition(), textureIndex);
 
         return this;
     }
 
-    public ShapeRenderer updateShapePosition(){
+    public Shape2DRenderer updateShapePosition(){
         shape.updateVbo(calculatePosition(), positionIndex);
 
         return this;

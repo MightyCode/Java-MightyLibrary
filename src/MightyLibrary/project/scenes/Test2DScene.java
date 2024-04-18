@@ -1,9 +1,10 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
-import MightyLibrary.mightylib.graphics.renderer.Renderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
@@ -29,9 +30,7 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.project.main.ActionId;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
-import org.joml.Vector3f;
+import org.joml.*;
 
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
@@ -42,8 +41,6 @@ public class Test2DScene extends Scene {
     private TextureAtlas atlas;
     private RectangleRenderer atlasRenderer;
 
-    private Camera2D testCamera;
-
     private FloatTweening rotation;
 
     private DraggingCameraComponent draggingSceneComponent;
@@ -51,6 +48,8 @@ public class Test2DScene extends Scene {
     private ZoomingCameraComponent zoomingSceneComponent;
 
     private HexagonRenderer hexagonRenderer1, hexagonRenderer2;
+
+    private EllipseRenderer testEllipseRenderer;
 
     @Override
     protected String[] getInvolvedBatch() {
@@ -75,7 +74,7 @@ public class Test2DScene extends Scene {
         main3DCamera.setPos(new Vector3f(0, 0, 0));
 
         setClearColor(52, 189, 235, 1f);
-        //setClearColor(0, 0, 0, 1f);
+        //setClearColor(0, 0, 0, 0f);
 
         /// RENDERERS ///
 
@@ -118,8 +117,6 @@ public class Test2DScene extends Scene {
         mapRenderer = new LayersTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
 
-        testCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0, 0));
-
         rotation = new FloatTweening();
         rotation.setTweeningOption(ETweeningOption.LoopReversed)
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
@@ -149,13 +146,19 @@ public class Test2DScene extends Scene {
 
         hexagonRenderer1 = new HexagonRenderer("colorShape2D");
         hexagonRenderer1.setColorMode(ColorList.Gold());
-        hexagonRenderer1.setSizePix(100, 100);
+        hexagonRenderer1.setSizePix(200, 100);
         hexagonRenderer1.setPosition(new Vector2f(-100, 400));
 
         hexagonRenderer2 = new HexagonRenderer("texture2D");
         hexagonRenderer2.setMainTextureChannel("hexagon");
         hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         hexagonRenderer2.setPosition(new Vector2f(0,0));
+        //ellipseRenderer.setReference(EDirection.Right);
+
+        testEllipseRenderer = new EllipseRenderer();
+        testEllipseRenderer.setColorMode(ColorList.DarkBlue());
+        testEllipseRenderer.setSizePix(200, 300);
+        testEllipseRenderer.setPosition(new Vector2f(-200, 0));
     }
 
 
@@ -166,9 +169,6 @@ public class Test2DScene extends Scene {
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
         InputManager inputManager = mainContext.getInputManager();
-        if (inputManager.getState(ActionId.MOVE_DOWN)){
-            testCamera.moveX(mainContext.getWindow().getInfo().getSizeRef().x * 0.3f * GameTime.DeltaTime());
-        }
 
         if (inputManager.inputPressed(ActionId.MOVE_LEFT_2D)) {
             map.setTileType(0, 0, 0, 78);
@@ -185,6 +185,8 @@ public class Test2DScene extends Scene {
 
         //map.setTileType(0, 0, 0, 560);
 
+        testEllipseRenderer.setRotationZ(rotation.value());
+
         mapRenderer.update();
 
         map.dispose();
@@ -197,6 +199,7 @@ public class Test2DScene extends Scene {
 
         if (mapRenderer.containsCategory("Foreground"))
             mapRenderer.getTileMapRenderer("Foreground").setPosition(new Vector3f(0, 0, 0));
+
         mapRenderer.getTileMapRenderer("Background").setPosition(new Vector3f(0, 0, 0));
 
         atlasRenderer.display();
@@ -205,8 +208,19 @@ public class Test2DScene extends Scene {
 
         slimeRenderer.display();
 
+        if (mainContext.getInputManager().inputPressed(ActionId.ENTER)){
+            if (testEllipseRenderer.getReference() == EDirection.None){
+                testEllipseRenderer.setReference(EDirection.Up);
+            } else if (testEllipseRenderer.getReference() == EDirection.Up){
+                testEllipseRenderer.setReference(EDirection.Down);
+            } else if (testEllipseRenderer.getReference() == EDirection.Down){
+                testEllipseRenderer.setReference(EDirection.None);
+            }
+        }
+
         if (mapRenderer.containsCategory("Foreground"))
             mapRenderer.getTileMapRenderer("Foreground").setPosition(new Vector3f(200, 200, 0));
+
         mapRenderer.getTileMapRenderer("Background").setPosition(new Vector3f(200, 200, 0));
 
         mapRenderer.display();
@@ -226,6 +240,9 @@ public class Test2DScene extends Scene {
             }
         }
 
+        //ellipseRenderer.display();
+        testEllipseRenderer.display();
+
         super.setAndDisplayRealScene();
     }
 
@@ -238,6 +255,8 @@ public class Test2DScene extends Scene {
 
         hexagonRenderer1.unload();
         hexagonRenderer2.unload();
+
+        testEllipseRenderer.unload();
 
         mapRenderer.unload();
     }

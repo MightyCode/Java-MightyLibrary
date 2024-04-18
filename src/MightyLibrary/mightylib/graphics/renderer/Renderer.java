@@ -187,6 +187,22 @@ public class Renderer implements IDisplayable {
         applyModel();
     }
 
+    public void setRotationAngle(float angle){
+        this.angle = angle;
+
+        applyModel();
+    }
+
+    public void setRotationZ(float angle){
+        this.angle = angle;
+
+        this.rotation.x = 0;
+        this.rotation.y = 0;
+        this.rotation.z = 1;
+
+        applyModel();
+    }
+
     public void applyModel(){
         this.model.identity();
 
@@ -198,8 +214,6 @@ public class Renderer implements IDisplayable {
     public void hide(boolean state) {
         display = state;
     }
-
-
     public void invertDisplayState() {
         display = !display;
     }
@@ -264,9 +278,13 @@ public class Renderer implements IDisplayable {
 
     public Vector3f scale() { return scale; }
 
-    public Vector3f rotationCoef() { return rotation; }
+    public Vector3f rotationAxis() { return rotation; }
 
     public float getRotationAngle() { return angle; }
+
+    public Matrix4f getModel(){
+        return new Matrix4f(model);
+    }
 
     public void setReferenceCamera(Camera camera){
         if (camera == null)

@@ -1,17 +1,13 @@
 package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
 import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
-import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
-import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.utils.math.EDirection;
 import MightyLibrary.mightylib.utils.math.EFlip;
 import MightyLibrary.mightylib.utils.math.ERotation;
 import org.joml.Vector2f;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
 
-public class RectangleRenderer extends ShapeRenderer {
+public class RectangleRenderer extends Shape2DRenderer {
     protected RectangularFace face;
 
     public RectangleRenderer(String shaderName) {

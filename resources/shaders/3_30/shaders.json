@@ -25,6 +25,19 @@
 				"model"
 			]
 		},
+		"colorEllipse2D": {
+			"files": [
+				"2D/essential/colorEllipse2DV.glsl",
+				"2D/essential/colorEllipse2DF.glsl"
+			],
+			"mode" : "2D",
+			"links": [
+				"color",
+				"projection",
+				"view",
+				"model"
+			]
+		},
 		"texture2D": {
 			"files": [
 				"2D/essential/texture2DV.glsl",
@@ -60,7 +73,7 @@
 				"projection",
 				"view",
 				"model",
-				"ourTexture",
+				"ourTexture"
 			]
 		},
 		"textureDisplacement3D": {
@@ -185,6 +198,6 @@
 				"view",
 				"model"
 			]
-		},
+		}
 	}
 }

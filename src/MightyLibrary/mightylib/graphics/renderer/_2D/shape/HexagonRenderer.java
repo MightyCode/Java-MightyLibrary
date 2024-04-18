@@ -7,7 +7,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class HexagonRenderer extends ShapeRenderer {
+public class HexagonRenderer extends Shape2DRenderer {
     public static final float STRETCH_RATIO = (float)Math.sqrt(3.f) / 2;
 
     protected EDirection reference;
