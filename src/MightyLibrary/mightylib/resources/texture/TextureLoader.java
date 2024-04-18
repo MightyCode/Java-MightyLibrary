@@ -87,6 +87,7 @@ public class TextureLoader extends ResourceLoader {
             return;
 
         Texture texture = (Texture) dataType;
+        texture.createImage(texture.loadBufferedImage());
 
         try {
             BufferedImage image = ImageIO.read(new FileInputStream(texture.getPath()));

@@ -1,14 +1,26 @@
 {
-    "Texture": {
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    },
-    "FontFace" :{
-        "files" : [],
-        "regex" : [
-            ".*"
-        ]
-    },
+    "batchs" : [
+        {
+            "type" : "Texture",
+            "files" : [
+                "arial",
+                "bahnschrift",
+                "whitePixel",
+                "slime",
+                "tileset",
+                "waveCollapseTest",
+                "painting",
+                "hexagon"
+            ],
+            "regex" : [
+            ]
+        },
+        {
+            "type" : "FontFace",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        }
+    ]
 }

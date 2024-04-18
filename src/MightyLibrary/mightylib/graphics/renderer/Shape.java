@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
+import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
 import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.utils.Id;
@@ -8,7 +9,11 @@ import MightyLibrary.mightylib.utils.math.MightyMath;
 import java.util.ArrayList;
 
 import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
-import static org.lwjgl.opengl.GL30.*;
+import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL30.glGenVertexArrays;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL40.GL_PATCHES;
 
 public class Shape {
     public static final int STATIC_STORE = GL_STATIC_DRAW;
@@ -27,20 +32,25 @@ public class Shape {
     protected int[] info;
 
     protected boolean useEbo;
-    protected int verticesDraw;
+    protected int verticesToDraw;
 
     protected boolean in2D;
+
+    protected EDrawMode drawMode;
+    private int glDrawMode;
 
     protected ShaderManager shadManager;
     protected Shader shader;
     public Shader getShader() { return shader; }
 
     public Shape(String shaderName, boolean useEbo) {
+        setDrawMode(EDrawMode.Triangles);
+
         this.shadManager = ShaderManager.getInstance();
         this.shader = shadManager.getShader(shaderName);
         setDimensionTo2D(this.shader.isDimension2DShader());
 
-        verticesDraw = 0;
+        verticesToDraw = 0;
         info = new int[0];
         indicesSize = 0;
 
@@ -81,7 +91,7 @@ public class Shape {
         vbosEnable.add(false);
         enableVbo(vboCount);
 
-        verticesDraw = arrayLength / vertexSize;
+        verticesToDraw = arrayLength / vertexSize;
         vbos.add(vbo);
         vbosStorage.add(storage);
         ++vboCount;
@@ -103,9 +113,22 @@ public class Shape {
     }
 
 
+    public void updateSubVbo(float[] vertices, int vboPosition, int startIndex){
+        bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
+        glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
+    }
+
+    public void updateSubVbo(int[] vertices, int vboPosition, int startIndex){
+        bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
+        glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
+    }
+
 
     public void disableVbo(int pos){
-        if(vbosEnable.size() <= pos) return;
+        if(vbosEnable.size() <= pos)
+            return;
 
         if (vbosEnable.get(pos)) {
             bind();
@@ -144,18 +167,19 @@ public class Shape {
 
 
     public void setUseEbo(boolean state){
-        if (this.useEbo && ebo != 0) glDeleteBuffers(this.ebo);
+        if (this.useEbo && ebo != 0)
+            glDeleteBuffers(this.ebo);
 
         this.useEbo = state;
 
-        if (this.useEbo) ebo =  glGenBuffers();
+        if (this.useEbo)
+            ebo = glGenBuffers();
     }
 
 
     public void setEboStorage(int eboStorage){
         this.eboStorage = eboStorage;
     }
-
 
     public void setEbo(int[] indices){
         setEbo(indices, indices.length);
@@ -164,7 +188,9 @@ public class Shape {
     public void setEbo(int[] indices, int indicesSize){
         bind();
         this.indicesSize = indicesSize;
-        if (!useEbo) System.err.print(">(Shape.java) Providing EBO without using EBO !");
+
+        if (!useEbo)
+            System.err.print(">(Shape.java) Providing EBO without using EBO !");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, eboStorage);
@@ -185,13 +211,11 @@ public class Shape {
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, startIndex, newArray);
     }
 
-
-    public void display(){
+    public void display() {
         applyDimension();
         applyShader();
         bind();
         draw();
-        unbind();
     }
 
 
@@ -222,9 +246,9 @@ public class Shape {
 
     public void draw(){
         if (useEbo)
-            glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+            glDrawElements(glDrawMode, indicesSize, GL_UNSIGNED_INT, 0);
         else
-            glDrawArrays(GL_TRIANGLES, 0, verticesDraw);
+            glDrawArrays(glDrawMode, 0, verticesToDraw);
     }
 
 
@@ -242,6 +266,50 @@ public class Shape {
         return new Id(shader.getShaderId());
     }
 
+
+    public void setDrawMode(EDrawMode drawMode) {
+        this.drawMode = drawMode;
+
+        switch (drawMode){
+            case Triangles:
+                glDrawMode = GL_TRIANGLES;
+                break;
+            case Lines:
+                glDrawMode = GL_LINES;
+                break;
+            case LineStrip:
+                glDrawMode = GL_LINE_STRIP;
+                break;
+            case LineLoop:
+                glDrawMode = GL_LINE_LOOP;
+                break;
+            case LineAdjacency:
+                glDrawMode = GL_LINES_ADJACENCY;
+                break;
+            case LineStripAdjacency:
+                glDrawMode = GL_LINE_STRIP_ADJACENCY;
+                break;
+            case TriangleStrip:
+                glDrawMode = GL_TRIANGLE_STRIP;
+                break;
+            case TriangleFan:
+                glDrawMode = GL_TRIANGLE_FAN;
+                break;
+            case TrianglesAdjacency:
+                glDrawMode = GL_TRIANGLES_ADJACENCY;
+                break;
+            case TriangleStripAdjacency:
+                glDrawMode = GL_TRIANGLE_STRIP_ADJACENCY;
+                break;
+            case Patches:
+                glDrawMode = GL_PATCHES;
+                break;
+        }
+    }
+
+    public EDrawMode getDrawMode(){
+        return drawMode;
+    }
 
     public void unload(){
         for (int vbo : vbos){

@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import MightyLibrary.mightylib.main.IDisplayable;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
@@ -12,7 +13,7 @@ import org.joml.Vector3f;
 
 import java.util.HashMap;
 
-public class Renderer {
+public class Renderer implements IDisplayable {
     protected Camera referenceCamera;
 
     protected Shape shape;
@@ -186,6 +187,22 @@ public class Renderer {
         applyModel();
     }
 
+    public void setRotationAngle(float angle){
+        this.angle = angle;
+
+        applyModel();
+    }
+
+    public void setRotationZ(float angle){
+        this.angle = angle;
+
+        this.rotation.x = 0;
+        this.rotation.y = 0;
+        this.rotation.z = 1;
+
+        applyModel();
+    }
+
     public void applyModel(){
         this.model.identity();
 
@@ -197,8 +214,6 @@ public class Renderer {
     public void hide(boolean state) {
         display = state;
     }
-
-
     public void invertDisplayState() {
         display = !display;
     }
@@ -263,9 +278,13 @@ public class Renderer {
 
     public Vector3f scale() { return scale; }
 
-    public Vector3f rotationCoef() { return rotation; }
+    public Vector3f rotationAxis() { return rotation; }
 
     public float getRotationAngle() { return angle; }
+
+    public Matrix4f getModel(){
+        return new Matrix4f(model);
+    }
 
     public void setReferenceCamera(Camera camera){
         if (camera == null)

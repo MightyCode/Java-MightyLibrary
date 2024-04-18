@@ -1,51 +1,94 @@
 package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
-import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
-import MightyLibrary.mightylib.graphics.renderer.Renderer;
-import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
-import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.utils.math.EDirection;
 import org.joml.Vector2f;
-import org.joml.Vector3f;
 
-public class EllipseRenderer extends Renderer {
-    protected EDirection reference;
-    protected final int positionIndex;
+public class EllipseRenderer extends RectangleRenderer {
+    public static class ShaderEllipseProperty {
+        public String Center = "ellipse.center";
+        public String Radius = "ellipse.radius";
+        public String Rotation = "ellipse.rotation";
+    }
+
+    public ShaderEllipseProperty ShaderProperty;
+
+    public EllipseRenderer(String shaderName, ShaderEllipseProperty property) {
+        super(shaderName);
+
+        ShaderProperty = property;
+
+        addShaderValue(ShaderProperty.Center, Vector2f.class, new Vector2f());
+        addShaderValue(ShaderProperty.Radius, Vector2f.class, new Vector2f());
+        addShaderValue(ShaderProperty.Rotation, Float.class, 0f);
+
+        setReference(EDirection.None);
+    }
 
     public EllipseRenderer(String shaderName) {
-        super(shaderName, true);
-
-        reference = EDirection.None;
-
-        int[] indices = RectangularFace.IndicesForSquare();
-        shape.setEboStorage(Shape.STATIC_STORE);
-        shape.setEbo(indices);
-        positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.STATIC_STORE);
+        this(shaderName, new ShaderEllipseProperty());
     }
 
-
-    private float[] calculatePosition(){
-        return RendererUtils.calculatePositionForSquare(new Vector2f(1, 1), this.reference);
+    public EllipseRenderer(){
+        this("colorEllipse2D", new ShaderEllipseProperty());
     }
 
-    public EllipseRenderer setReference(EDirection reference){
-        this.reference = reference;
+    @Override
+    public void setRotationZ(float rotation){
+        super.setRotationZ(rotation);
+        updateShaderValue(ShaderProperty.Rotation, rotation);
+    }
 
-        shape.updateVbo(calculatePosition(), positionIndex);
+    @Override
+    public Shape2DRenderer setSizePix(float width, float height){
+        super.setSizePix(width, height);
+        updateValues();
 
         return this;
     }
 
-    // Set size with size of pixel
-    public EllipseRenderer setSizePix(float width, float height){
-        setScale(new Vector3f(width, height, 1.0f));
-
+    @Override
+    public Shape2DRenderer setPosition(Vector2f position){
+        super.setPosition(position);
+        updateValues();
         return this;
     }
 
-    public EllipseRenderer setPosition(Vector2f position){
-        super.setPosition(new Vector3f(position.x, position.y, 0.0f));
-
+    @Override
+    public Shape2DRenderer setReference(EDirection reference){
+        super.setReference(reference);
+        updateValues();
         return this;
+    }
+
+    private void updateValues(){
+        updateShaderValue(ShaderProperty.Radius, new Vector2f(scale.x / 2, scale.y / 2));
+
+        Vector2f pos = new Vector2f(this.position.x, this.position.y);
+
+        switch (reference){
+            case Left:
+            case LeftUp:
+            case LeftDown:
+                pos.x += scale.x / 2;
+                break;
+            case Right:
+            case RightUp:
+            case RightDown:
+                pos.x -= scale.x / 2;
+        }
+
+        switch (reference){
+            case Up:
+            case LeftUp:
+            case RightUp:
+                pos.y += scale.y / 2;
+                break;
+            case Down:
+            case LeftDown:
+            case RightDown:
+                pos.y -= scale.y / 2;
+        }
+
+        updateShaderValue(ShaderProperty.Center, pos);
     }
 }

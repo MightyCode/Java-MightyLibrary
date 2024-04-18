@@ -5,13 +5,45 @@ import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 public class TileSet extends DataType {
     private String texture;
-
     private final Vector2i tileSize;
     private final Vector2i tileNumber;
-
     private boolean useRotation, useFlip;
+
+    public static class TileAnimation {
+        int refId;
+        int[] ids;
+        float[] times;
+
+        public TileAnimation(int tileId, int frames){
+            refId = tileId;
+            ids = new int[frames];
+            times = new float[frames];
+        }
+
+        public int getReferenceId(){
+            return refId;
+        }
+
+        public float getTime(int frame){
+            return times[frame];
+        }
+
+        public int getTileId(int frame){
+            return ids[frame];
+        }
+
+        public int getFrameCount(){
+            return ids.length;
+        }
+    }
+
+    public Map<Integer, TileAnimation> animations;
 
     public TileSet(String dataName, String path) {
         super(dataName, path);
@@ -21,15 +53,30 @@ public class TileSet extends DataType {
 
         texture = "error";
 
+        animations = new HashMap<>();
+
         reset();
     }
-
 
     public void setTileParameters(boolean useRotation, boolean useFlip){
         this.useRotation = useRotation;
         this.useFlip = useFlip;
     }
 
+    public void addAnimation(int tileId, TileAnimation animation){
+        animations.put(tileId, animation);
+    }
+
+    public TileAnimation getAnimation(int tileId){
+        if (!animations.containsKey(tileId))
+            return null;
+
+        return animations.get(tileId);
+    }
+
+    public Collection<TileAnimation> getAnimations(){
+        return animations.values();
+    }
 
     public void setTileSize(String texture, Vector2i tileSize){
         this.tileSize.x = tileSize.x;
@@ -41,10 +88,23 @@ public class TileSet extends DataType {
 
         tileNumber.x = text.getWidth() / tileSize.x;
         tileNumber.y = text.getHeight() / tileSize.y;
+
+        checkLoaded();
     }
 
-    public Vector2i numberOfTile() {
+    public Vector2i tilesNumberAxis() {
         return new Vector2i(tileNumber);
+    }
+
+    public int getTotalNumberTile(){
+        int total = tileNumber.x * tileNumber.y;
+        if (useRotation)
+            total *= 4;
+
+        if (useFlip)
+            total *= 4;
+
+        return total;
     }
 
     public String texture(){ return texture; }

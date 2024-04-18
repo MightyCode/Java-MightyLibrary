@@ -1,3 +1,5 @@
-tileset
-32 32
-true true
+texture tileset
+tilesize 32 32
+animation 1
+17 17 0.2 18 0.2 19 0.2 20 0.2
+parameter true true

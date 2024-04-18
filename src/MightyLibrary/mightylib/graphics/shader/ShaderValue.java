@@ -89,7 +89,7 @@ public class ShaderValue implements Cloneable {
 
     @Override
     public ShaderValue clone(){
-        if (type == Float.class) {
+        if (type == Float.class || type == float.class) {
             return new ShaderValue(name, type, getObjectTyped(Float.class));
         } else if (type == Vector2f.class) {
             return new ShaderValue(name, type, new Vector2f(getObjectTyped(Vector2f.class)));
@@ -108,7 +108,7 @@ public class ShaderValue implements Cloneable {
             return new ShaderValue(name, type, new Vector4i(getObjectTyped(Vector4i.class)));
         } else if (type == Matrix4f.class) {
             return new ShaderValue(name, type, new Matrix4f(getObjectTyped(Matrix4f.class)));
-        } else if (type == Integer.class) {
+        } else if (type == Integer.class || type == int.class) {
             return new ShaderValue(name, type, getObjectTyped(Integer.class));
         }
 

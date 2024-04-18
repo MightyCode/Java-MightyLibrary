@@ -1,8 +1,17 @@
 {
-    "Model" : {
-        "files" : [],
-        "regex" : [
-          ".*"
-        ]
-    }
+    "batchs" : [
+        {
+            "type" : "Model",
+            "files" : [],
+            "regex" : [
+              ".*"
+            ]
+        }, {
+            "type" : "Texture",
+            "files" : [],
+            "regex" : [
+                ".*"
+            ]
+        }
+    ]
 }

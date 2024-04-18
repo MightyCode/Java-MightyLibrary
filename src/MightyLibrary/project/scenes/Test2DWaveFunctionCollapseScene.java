@@ -1,7 +1,7 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveFunctionCollapseGrid;
-import MightyLibrary.mightylib.graphics.game.FullTileMapRenderer;
+import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
 import MightyLibrary.mightylib.resources.data.JSONFile;
 import MightyLibrary.mightylib.resources.map.TileLayer;
 import MightyLibrary.mightylib.resources.map.TileMap;
@@ -24,10 +24,9 @@ import java.util.Set;
 
 public class Test2DWaveFunctionCollapseScene extends Scene {
     private TileMap map;
-    private FullTileMapRenderer mapRenderer;
+    private LayersTileMapRenderer mapRenderer;
 
     private Vector2i mapSize;
-
     private DraggingCameraComponent draggingSceneComponent;
     private MovingCameraComponent movingSceneComponent;
     private ZoomingCameraComponent zoomingSceneComponent;
@@ -54,9 +53,10 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
 
         /// RENDERERS ///
         map = new TileMap("waveCollapseTest", "none");
+        map.setCorrectlyLoaded();
         mapSize = new Vector2i(100, 100);
 
-        mapRenderer = new FullTileMapRenderer("texture2D", true);
+        mapRenderer = new LayersTileMapRenderer("texture2D", true);
 
         WaveCollapseRule rule = new WaveCollapseRule(resources.getResource(JSONFile.class, "waveCollapseTest"));
         rule.printRules();
@@ -126,7 +126,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
 
         mapRenderer.update();
 
-        mapRenderer.getBackTileMapRenderer().setScale(new Vector3f(4f, 4f, 1f));
+        //mapRenderer.getBackTileMapRenderer().setScale(new Vector3f(4f, 4f, 1f));
 
         map.dispose();
     }
@@ -136,11 +136,12 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         super.setVirtualScene();
         clear();
 
-        mapRenderer.drawBackLayers();
-        mapRenderer.drawForLayers();
+        mapRenderer.display();
 
-        mapRenderer.getForTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
-        mapRenderer.getBackTileMapRenderer().setPosition(new Vector3f(0, 0, 0));
+        if (mapRenderer.containsCategory("Foreground"))
+            mapRenderer.getTileMapRenderer("Foreground").setPosition(new Vector3f(0, 0, 0));
+
+        mapRenderer.getTileMapRenderer(TileLayer.DEFAULT_CATEGORY_NAME).setPosition(new Vector3f(0, 0, 0));
 
         super.setAndDisplayRealScene();
     }
@@ -242,6 +243,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         TileLayer[] layers = new TileLayer[1];
         layers[0] = layer;
 
-        map.init(set, mapSize, layers, 1);
+        map.addTileset(set, 0);
+        map.init(mapSize, layers, null, null);
     }
 }

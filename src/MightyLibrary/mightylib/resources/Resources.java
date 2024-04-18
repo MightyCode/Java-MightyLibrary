@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
 import MightyLibrary.mightylib.resources.data.JsonLoader;
 import MightyLibrary.mightylib.resources.texture.IconLoader;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.texture.TextureLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -127,19 +128,24 @@ public class Resources {
         int incorrectlyLoad = 0;
 
         BatchResources batchResources = getResource(BatchResources.class, batchName);
-        JSONObject content = batchResources.getObject();
-        for (String resourceTypeName : content.keySet()) {
+        JSONArray content = batchResources.getObject().getJSONArray("batchs");
+        for (int j = 0; j < content.length(); ++j) {
+            JSONObject resource = content.getJSONObject(j);
+
+            String resourceTypeName = resource.getString("type");
             Class<?> type = getClassFromName(resourceTypeName);
             ResourceLoader loader = getLoader(type);
-            JSONObject resourceType = content.getJSONObject(resourceTypeName);
 
-            JSONArray resourceFiles = resourceType.getJSONArray("files");
-            JSONArray regularExpressions = resourceType.getJSONArray("regex");
+            JSONArray resourceFiles = resource.getJSONArray("files");
+            JSONArray regularExpressions = resource.getJSONArray("regex");
 
             for (int i = 0; i < resourceFiles.length(); ++i) {
                 String resourceName = resourceFiles.getString(i);
 
                 DataType dataType = this.resources.get(type).get(resourceName);
+
+                if (dataType == null)
+                    throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
 
                 if (!dataType.isReferenced())
                     incorrectlyLoad += loadData(dataType, loader);
@@ -164,7 +170,7 @@ public class Resources {
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("Can't compile regular expression: " + regularExpression);
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -175,6 +181,11 @@ public class Resources {
     public int load(){
         if (firstLoad)
             return -1;
+
+        // Load the texture error
+        DataType dataType = resources.get(Texture.class).get("error");
+        loadData(dataType, getLoader(Texture.class));
+        dataType.addReference("mandatory");
 
         if (loadingMethod instanceof BatchResourcesMethod){
             // Load the batch resources first
@@ -300,14 +311,15 @@ public class Resources {
         int incorrectlyUnload = 0;
 
         BatchResources batchResources = getResource(BatchResources.class, batchName);
-        JSONObject content = batchResources.getObject();
-        for (String resourceTypeName : content.keySet()) {
-            Class<?> type = getClassFromName(resourceTypeName);
-            ResourceLoader loader = getLoader(type);
-            JSONObject resourceType = content.getJSONObject(resourceTypeName);
+        JSONArray content = batchResources.getObject().getJSONArray("batchs");
+        for (int j = 0; j < content.length(); ++j) {
+            JSONObject resource = content.getJSONObject(j);
 
-            JSONArray resourceFiles = resourceType.getJSONArray("files");
-            JSONArray regularExpressions = resourceType.getJSONArray("regex");
+            String resourceTypeName = resource.getString("type");
+            Class<?> type = getClassFromName(resourceTypeName);
+
+            JSONArray resourceFiles = resource.getJSONArray("files");
+            JSONArray regularExpressions = resource.getJSONArray("regex");
 
             for (int i = 0; i < resourceFiles.length(); ++i) {
                 String resourceName = resourceFiles.getString(i);

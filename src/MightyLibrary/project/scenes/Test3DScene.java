@@ -49,6 +49,13 @@ public class Test3DScene extends Scene {
         super(SCENE_CCI);
     }
 
+    @Override
+    protected String[] getInvolvedBatch() {
+        return new String[]{
+                "elements3d"
+        };
+    }
+
     public void init(String[] args){
         super.init(args);
         /// SCENE INFORMATION ///

@@ -99,8 +99,10 @@ public class SceneManager {
         assert currentScene != null;
         currentScene.setSceneManagerInterface(sceneInterface);
         System.out.println("--Init scene" + currentScene.getClass().getName());
+
         for (String batch : currentScene.getInvolvedBatch())
             Resources.getInstance().loadBatch(batch);
+
         currentScene.init(sceneInterface.getChangeArgs());
 
         sceneInterface.reset();
