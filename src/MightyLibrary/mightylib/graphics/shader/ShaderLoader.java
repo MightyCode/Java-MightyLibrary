@@ -53,11 +53,6 @@ public class ShaderLoader extends ResourceLoader {
                     currentShader,
                     isTagIn(tags, "2D") || isTagIn(tags, "none"), sArrayFiles);
 
-            JSONArray linksName = JShader.getJSONArray("links");
-            for(int i = 0; i < linksName.length(); ++i){
-                shader.addLink(linksName.getString(i));
-            }
-
             data.put(currentShader, shader);
 
         } while(arrayShader.hasNext());
@@ -134,8 +129,6 @@ public class ShaderLoader extends ResourceLoader {
         }
 
         shader.load();
-
-        System.out.println(shader.isCorrectlyLoaded());
     }
 
     @Override

@@ -24,7 +24,7 @@ public class SceneManager {
 
         sceneInterface = new SceneManagerInterface();
 
-        commands  = new Commands();
+        commands = new Commands();
         soundManager = SoundManager.getInstance();
     }
 
@@ -77,8 +77,6 @@ public class SceneManager {
         currentScene.dispose();
     }
 
-
-
     private void changeScene(){
         if (MainLoop.isAdmin())
             commands.removeSpecificCommand();
@@ -107,12 +105,9 @@ public class SceneManager {
         sceneInterface.reset();
     }
 
-
     public void exit(int status){
         stopLibrary.exit(status);
     }
-
-
     public void unload(){
         System.out.println("--Unload SceneManager");
 

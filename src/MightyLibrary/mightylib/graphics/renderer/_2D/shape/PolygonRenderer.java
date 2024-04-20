@@ -3,7 +3,6 @@ package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.utils.math.geometry.Polygon;
-import MightyLibrary.mightylib.utils.valueDebug.TableDebug;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -38,8 +37,6 @@ public class PolygonRenderer extends Shape2DRenderer {
             position[i * 2] = (temp.x - boundingBox.x) / size.x;
             position[i * 2 + 1] = (temp.y - boundingBox.y) / size.y;
         }
-
-        TableDebug.printPartf(position, position.length);
 
         return position;
     }

@@ -12,7 +12,6 @@ import org.lwjgl.BufferUtils;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 
-import static org.lwjgl.opengl.GL11.glGetError;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
@@ -129,8 +128,6 @@ public class Shader extends MultiSourceDataType {
             return;
         }
 
-        System.out.println(vShader + " " + fShader + " " + gShader + " " + getDataName());
-
         shaderProgram = glCreateProgram();
         Logger.CheckOpenGLError("Create program shader (id : " + shaderProgram + ")");
 
@@ -165,7 +162,6 @@ public class Shader extends MultiSourceDataType {
         gShader = -1;
 
         correctlyLoaded = true;
-        System.out.println("Loaded shader : " + shaderProgram);
     }
 
     public void use() {
@@ -173,12 +169,8 @@ public class Shader extends MultiSourceDataType {
         Logger.CheckOpenGLError("Use program shader (id : " + shaderProgram + ")");
     }
 
-    public void addLink(String valueName) {
-        lastValues.put(valueName, null);
-    }
-
     public int getLink(String valueName){
-        return 0;
+        return glGetUniformLocation(shaderProgram, valueName);
     }
 
     public int getShaderId(){
@@ -235,12 +227,13 @@ public class Shader extends MultiSourceDataType {
         Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 
         if (link == -1) {
-           /* System.err.println("Link not found : " + value.getName());
-            System.out.println("Program content :\n=======\n " + vertexContent + "\n======\n" + fragmentContent + "\n=======\n");*/
+            System.out.println("Link not found : " + value.getName() + " in shader " + getDataName()
+                    + " (id : " + shaderProgram + ")");
+            System.out.println("Program content :\n=======\n " + vertexContent
+                    + "\n======\n" + fragmentContent + "\n=======\n");
+            System.exit(-1);
             return;
         }
-
-        System.out.println("Link founded : " + value.getName() + " : " + link);
 
         if (value.getType() == Float.class) {
             Float v = value.getObjectTyped(Float.class);

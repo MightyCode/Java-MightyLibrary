@@ -184,7 +184,7 @@
 				"framebuffers/postProcessingV.glsl",
 				"framebuffers/postProcessingF.glsl"
 			],
-			"tags" : [],
+			"tags" : ["2D"],
 			"links": []
 		},
 		"coloredText" : {
