@@ -4,15 +4,18 @@ A library to create a game.
 ## Checklist 
 
 **Ressources :**
-- Chargement automatique des ressources présentes dans le dossier ressources ✅
-- Chargement et déchargement de ressources par bloc ✅
-- Support des fichiers pratiques comme json, csv ✅
-- Chargement de fichiers atlas et de fichiers map (format tiled) ✅
+- Chargement automatique des ressources présentes dans le dossier ressources. ✅
+- Chargement et déchargement de ressources par bloc. ✅
+- Support des fichiers pratiques comme json, csv. ✅
+- Chargement de fichiers atlas et de fichiers map (format tiled). ✅
+- Chargment threadé des ressources + parrallélisation. ❌
 
 **Graphiques :**
-- Support shaders ✅
-- Support geometry shaders ❌
-- Envoie des informations aux shader seulement quand nécessaire ✅
+- Support shaders. ✅
+- Support geometry shaders. ❌
+- Envoie des informations aux shader seulement quand nécessaire. ✅
+- Forme avec contours. ❌
+- Chargement de SVG. ❌
 
 **2D :**
 - Camera complexe 2D ✅
