@@ -4,14 +4,11 @@ import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.animation.AnimationData;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.util.Map;
-import java.util.Objects;
 
-public class JsonLoader extends ResourceLoader {
+public class JSONLoader extends ResourceLoader {
     @Override
     public Class<?> getType() {
         return JSONFile.class;
@@ -47,7 +44,7 @@ public class JsonLoader extends ResourceLoader {
 
         JSONFile json = (JSONFile) dataType;
 
-        json.init(new JSONObject(FileMethods.readFileAsString(dataType.getPath())));
+        json.init(new JSONObject(FileMethods.readFileAsString(json.path())));
     }
 
     @Override

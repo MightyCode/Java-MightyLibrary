@@ -3,9 +3,9 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.PolygonRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
-import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
@@ -16,21 +16,23 @@ import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.resources.texture.TextureAtlas;
-import MightyLibrary.mightylib.scenes.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
 import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
 import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
-import MightyLibrary.mightylib.utils.math.Color4f;
-import MightyLibrary.mightylib.utils.math.ColorList;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.color.Color4f;
+import MightyLibrary.mightylib.utils.math.color.ColorList;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.utils.math.MightyMath;
+import MightyLibrary.mightylib.utils.math.geometry.Polygon;
 import MightyLibrary.project.main.ActionId;
 import org.joml.*;
+
+import static org.lwjgl.opengl.GL11.glLineWidth;
 
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
@@ -51,6 +53,9 @@ public class Test2DScene extends Scene {
 
     private EllipseRenderer testEllipseRenderer;
 
+    private PolygonRenderer polygonRenderer;
+    private int indexVertexReference = 0;
+
     @Override
     protected String[] getInvolvedBatch() {
         return new String[]{
@@ -67,6 +72,7 @@ public class Test2DScene extends Scene {
         atlas.addTexture("painting");
 
         atlasRenderer = new RectangleRenderer("texture2D");
+        atlasRenderer.init();
         atlasRenderer.setMainTextureChannel(atlas);
         atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
         atlasRenderer.setPosition(new Vector2f(500, 10));
@@ -144,21 +150,39 @@ public class Test2DScene extends Scene {
 
         main2DCamera.setZoomLevel(0.5f);
 
-        hexagonRenderer1 = new HexagonRenderer("colorShape2D");
+        hexagonRenderer1 = (HexagonRenderer) new HexagonRenderer("colorShape2D").init();
         hexagonRenderer1.setColorMode(ColorList.Gold());
         hexagonRenderer1.setSizePix(200, 100);
         hexagonRenderer1.setPosition(new Vector2f(-100, 400));
 
-        hexagonRenderer2 = new HexagonRenderer("texture2D");
+        hexagonRenderer2 = (HexagonRenderer) new HexagonRenderer("texture2D").init();
         hexagonRenderer2.setMainTextureChannel("hexagon");
         hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         hexagonRenderer2.setPosition(new Vector2f(0,0));
         //ellipseRenderer.setReference(EDirection.Right);
 
-        testEllipseRenderer = new EllipseRenderer();
+        testEllipseRenderer = (EllipseRenderer) new EllipseRenderer().init();
         testEllipseRenderer.setColorMode(ColorList.DarkBlue());
         testEllipseRenderer.setSizePix(200, 300);
         testEllipseRenderer.setPosition(new Vector2f(-200, 0));
+
+        polygonRenderer = (PolygonRenderer) new PolygonRenderer(
+                "texture2D",
+                Polygon.CreateBuilder()
+                        .addVertex(new Vector2f(0, 0))
+                        .addVertex(new Vector2f(0.5f, -0.5f))
+                        .addVertex(new Vector2f(0.5f, 0.5f))
+                        .addVertex(new Vector2f(1.5f, 0.5f))
+                        .addVertex(new Vector2f(1f, 1f))
+                        .addVertex(new Vector2f(0f, 1f))
+                        .build()
+        ).init();
+        polygonRenderer.setMainTextureChannel("error");
+        polygonRenderer.setSizePix(100, 100);
+        polygonRenderer.setPosition(new Vector2f(1500, 300));
+        /*polygonRenderer.getShape().setDrawMode(EDrawMode.LineLoop);
+        glLineWidth(10f);*/
+        polygonRenderer.setReferenceVertex(indexVertexReference);
     }
 
 
@@ -187,6 +211,8 @@ public class Test2DScene extends Scene {
 
         testEllipseRenderer.setRotationZ(rotation.value());
 
+        polygonRenderer.setRotationZ(rotation.value());
+
         mapRenderer.update();
 
         map.dispose();
@@ -209,13 +235,20 @@ public class Test2DScene extends Scene {
         slimeRenderer.display();
 
         if (mainContext.getInputManager().inputPressed(ActionId.ENTER)){
-            if (testEllipseRenderer.getReference() == EDirection.None){
-                testEllipseRenderer.setReference(EDirection.Up);
-            } else if (testEllipseRenderer.getReference() == EDirection.Up){
-                testEllipseRenderer.setReference(EDirection.Down);
-            } else if (testEllipseRenderer.getReference() == EDirection.Down){
-                testEllipseRenderer.setReference(EDirection.None);
+            if (testEllipseRenderer.getReferenceDirection() == EDirection.None){
+                testEllipseRenderer.setReferenceDirection(EDirection.Up);
+            } else if (testEllipseRenderer.getReferenceDirection() == EDirection.Up){
+                testEllipseRenderer.setReferenceDirection(EDirection.Down);
+            } else if (testEllipseRenderer.getReferenceDirection() == EDirection.Down){
+                testEllipseRenderer.setReferenceDirection(EDirection.None);
             }
+
+            if (indexVertexReference + 1 >= polygonRenderer.numberVertex())
+                indexVertexReference = 0;
+            else
+                ++indexVertexReference;
+
+            polygonRenderer.setReferenceVertex(indexVertexReference);
         }
 
         if (mapRenderer.containsCategory("Foreground"))
@@ -234,14 +267,16 @@ public class Test2DScene extends Scene {
         for (int x = 0; x < 4; ++x){
             for (int y = 0; y < 4; ++y){
                 hexagonRenderer2.setPosition(
-                        new Vector2f(hexagonOrigin.x + x * 150 + (y % 2) * 75, hexagonOrigin.y + y * 50 * HexagonRenderer.STRETCH_RATIO)
+                        new Vector2f(hexagonOrigin.x + x * 150 + (y % 2) * 75,
+                                hexagonOrigin.y + y * 50 * HexagonRenderer.STRETCH_RATIO)
                 );
                 hexagonRenderer2.display();
             }
         }
 
-        //ellipseRenderer.display();
         testEllipseRenderer.display();
+
+        polygonRenderer.display();
 
         super.setAndDisplayRealScene();
     }
@@ -257,6 +292,7 @@ public class Test2DScene extends Scene {
         hexagonRenderer2.unload();
 
         testEllipseRenderer.unload();
+        polygonRenderer.unload();
 
         mapRenderer.unload();
     }

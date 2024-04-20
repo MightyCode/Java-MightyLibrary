@@ -49,7 +49,7 @@ public class AnimationDataLoader extends ResourceLoader {
 
         AnimationData animationData = (AnimationData)dataType;
 
-        String data = FileMethods.readFileAsString(animationData.getPath());
+        String data = FileMethods.readFileAsString(animationData.path());
         String[] parts = data.split("\n");
 
         int numberFrames = Integer.parseInt(parts[SIZE_FRAME_POS].trim());

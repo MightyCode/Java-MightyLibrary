@@ -90,12 +90,12 @@ public class TextureLoader extends ResourceLoader {
         texture.createImage(texture.loadBufferedImage());
 
         try {
-            BufferedImage image = ImageIO.read(new FileInputStream(texture.getPath()));
+            BufferedImage image = ImageIO.read(new FileInputStream(texture.path()));
             texture.createImage(image);
 
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
-            System.err.println(texture.getPath() + "\n");
+            System.err.println(texture.path() + "\n");
             e.printStackTrace();
         }
     }

@@ -24,14 +24,13 @@ public class SceneManager {
 
         sceneInterface = new SceneManagerInterface();
 
-        commands  = new Commands();
+        commands = new Commands();
         soundManager = SoundManager.getInstance();
     }
 
 
     public void init(Scene firstScene, String[] firstArguments){
         System.out.println("--Init SceneManager");
-        ShaderManager.getInstance().load();
 
         sceneInterface.setNewScene(firstScene, firstArguments);
 
@@ -78,8 +77,6 @@ public class SceneManager {
         currentScene.dispose();
     }
 
-
-
     private void changeScene(){
         if (MainLoop.isAdmin())
             commands.removeSpecificCommand();
@@ -108,12 +105,9 @@ public class SceneManager {
         sceneInterface.reset();
     }
 
-
     public void exit(int status){
         stopLibrary.exit(status);
     }
-
-
     public void unload(){
         System.out.println("--Unload SceneManager");
 
@@ -122,7 +116,6 @@ public class SceneManager {
             currentScene.unload();
         }
 
-        ShaderManager.getInstance().unload();
         Resources.getInstance().unload();
     }
 }

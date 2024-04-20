@@ -56,7 +56,7 @@ public class SoundLoader extends ResourceLoader {
 
         SoundData sound = (SoundData) dataType;
 
-        String path = sound.getPath();
+        String path = sound.path();
         int lastIndex = path.lastIndexOf('.');
 
         SoundLoadInfo info = new SoundLoadInfo();

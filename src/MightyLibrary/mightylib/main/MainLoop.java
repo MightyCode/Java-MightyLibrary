@@ -26,10 +26,28 @@ public final class MainLoop {
     private static boolean admin = false;
     public static boolean isAdmin() { return admin; }
 
+
+    private static int loadLibraries(IStartLibraryProcedure startProcedure) {
+        // Initialize GLFW. Most GLFW functions will not work before doing this.
+        if (!glfwInit()) {
+            System.err.println("GLFW fail to initialize");
+            return -1;
+        }
+
+        SoundManager.initSoundManager(startProcedure.returnGainTreePath());
+        SoundManager soundManager = SoundManager.getInstance();
+        if (!soundManager.init()) {
+            System.err.println("SoundManager fail to initialize");
+            return -1;
+        }
+
+        return 0;
+    }
+
     private static void setup(IStartLibraryProcedure startProcedure) {
         admin = startProcedure.returnAdminState();
 
-        System.out.println("--Start program. ");
+        System.out.println("--Start program.");
         System.out.println("--Load libraries.");
 
         if (loadLibraries(startProcedure) == -1) {
@@ -56,6 +74,13 @@ public final class MainLoop {
 
         contextManager.createDefaultContext(wci);
 
+        System.out.println("\n" + Version.getVersion());
+        System.out.println(glfwGetVersionString());
+        System.out.println("GL VENDOR   : " + glGetString(GL_VENDOR));
+        System.out.println("GL RENDERER : " + glGetString(GL_RENDERER));
+        System.out.println("GL VERSION  : " + glGetString(GL_VERSION));
+        System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
+
         Context context = contextManager.getContext("Main");
         Window window = context.getWindow();
 
@@ -65,20 +90,19 @@ public final class MainLoop {
 
         System.out.println("--Create ShaderManager");
         ShaderManager shaderManager = ShaderManager.getInstance();
-        int shaderVersion = startProcedure.returnShaderVersion();
-        if (shaderVersion != -1)
-            shaderManager.forceShaderVersion(shaderVersion);
+        shaderManager.init(startProcedure.returnShaderVersion());
 
         System.out.println("--Create Resources");
         Resources resource = Resources.createInstance(
                 startProcedure.returnResourcesLoadingMethod()
         );
 
+
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(new StopLibrary());
 
         IProjectLoading projectLoading = startProcedure.returnIProjectLoading();
-        projectLoading.init();
+        projectLoading.init(resource);
         projectLoading.contextLoading(context);
 
         // Create all resources dependencies
@@ -92,13 +116,6 @@ public final class MainLoop {
             if (resource.isExistingResource(Icon.class, startProcedure.returnIconName()))
                 context.getWindow().setIcon(resource.getResource(Icon.class, startProcedure.returnIconName()));
         }
-
-        System.out.println("\n" + Version.getVersion());
-        System.out.println(glfwGetVersionString());
-        System.out.println("GL VENDOR   : " + glGetString(GL_VENDOR));
-        System.out.println("GL RENDERER : " + glGetString(GL_RENDERER));
-        System.out.println("GL VERSION  : " + glGetString(GL_VERSION));
-        System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
     }
 
     @SuppressWarnings("BusyWait")
@@ -187,25 +204,6 @@ public final class MainLoop {
             System.exit(0);
         }
     }
-
-
-    private static int loadLibraries(IStartLibraryProcedure startProcedure) {
-        // Initialize GLFW. Most GLFW functions will not work before doing this.
-        if (!glfwInit()) {
-            System.err.println("GLFW fail to initialize");
-            return -1;
-        }
-
-        SoundManager.initSoundManager(startProcedure.returnGainTreePath());
-        SoundManager soundManager = SoundManager.getInstance();
-        if (!soundManager.init()) {
-            System.err.println("SoundManager fail to initialize");
-            return -1;
-        }
-
-        return 0;
-    }
-
 
     private static void preUnload() {
         SoundManager.getInstance().unloadSoundSource();

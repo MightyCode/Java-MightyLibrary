@@ -1,11 +1,10 @@
 package MightyLibrary.mightylib.resources.animation;
 
-import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import MightyLibrary.mightylib.resources.texture.Texture;
 
-public class AnimationData extends DataType {
-
+public class AnimationData extends SingleSourceDataType {
     private FrameData[] framesData;
     private String textureName;
 

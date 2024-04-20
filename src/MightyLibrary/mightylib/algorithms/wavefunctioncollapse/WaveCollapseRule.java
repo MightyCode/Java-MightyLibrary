@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.algorithms.wavefunctioncollapse;
 
 import MightyLibrary.mightylib.resources.data.JSONFile;
-import MightyLibrary.mightylib.utils.math.Direction;
 import org.joml.Vector2i;
 import org.json.JSONArray;
 import org.json.JSONObject;

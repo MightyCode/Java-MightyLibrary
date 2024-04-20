@@ -1,10 +1,10 @@
 #version 330
-out vec2 texCoords;
 // Will resize the virtual screen to real screen and affects some post processing effect
 
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 inTexCoords;
 
+out vec2 texCoords;
 
 void main()
 {

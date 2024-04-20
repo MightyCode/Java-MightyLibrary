@@ -1,14 +1,13 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.resources.data.JsonLoader;
-import org.json.JSONObject;
+import MightyLibrary.mightylib.resources.data.JSONLoader;
 
 import java.util.Map;
 
 public class BatchLoader extends ResourceLoader {
-    private final JsonLoader jsonLoader;
+    private final JSONLoader jsonLoader;
 
-    public BatchLoader(JsonLoader jsonLoader){
+    public BatchLoader(JSONLoader jsonLoader){
         this.jsonLoader = jsonLoader;
     }
 

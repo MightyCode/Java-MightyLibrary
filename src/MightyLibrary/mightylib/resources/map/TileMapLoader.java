@@ -45,7 +45,7 @@ public class TileMapLoader extends ResourceLoader {
 
         TileMap tileMap = (TileMap) dataType;
 
-        String data = FileMethods.readFileAsString(tileMap.getPath());
+        String data = FileMethods.readFileAsString(tileMap.path());
         String[] parts = data.split("\n");
         //new Vector2i(Integer.parseInt(mSize[0]), Integer.parseInt(mSize[1]));
         int lineIndex = 0;

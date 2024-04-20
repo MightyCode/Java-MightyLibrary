@@ -5,9 +5,9 @@ import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
-import MightyLibrary.mightylib.utils.math.Color4f;
-import MightyLibrary.mightylib.utils.math.ColorList;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.color.Color4f;
+import MightyLibrary.mightylib.utils.math.color.ColorList;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
@@ -56,6 +56,7 @@ public class StrSelector {
         chooseRight.copyTextToOverlapping().OverlapsText.setColor(new Color4f(0.8f));
 
         background = new RectangleRenderer("colorShape2D");
+        background.init();
         background.setColorMode(ColorList.White());
         background.setPosition(new Vector2f(windowSize.x * 0.835f, windowSize.y * 0.0f));
         background.setSizePix(windowSize.x * 0.45f, windowSize.y * 0.08f);

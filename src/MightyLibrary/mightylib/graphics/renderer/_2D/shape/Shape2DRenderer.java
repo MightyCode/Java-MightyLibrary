@@ -2,49 +2,90 @@ package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.Direction;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public abstract class Shape2DRenderer extends Renderer {
-    protected EDirection reference;
+    private final static Vector4f REFERENCE_RANGE_DIRECTION = new Vector4f(0, 0, 1, 1);
+
+    // Reference direction and point are related
+    private EDirection referenceDirection;
+    private Vector2f referencePoint;
+
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
+
+    private boolean initialized = false;
 
     public Shape2DRenderer(String shaderName, boolean useEbo) {
         super(shaderName, useEbo);
 
-        reference = EDirection.LeftUp;
+        referenceDirection = EDirection.LeftUp;
+        referencePoint = new Vector2f();
+
         texturePosition = new Vector4f();
 
-        prepare();
+        positionIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
+        textureIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
+    }
 
+    public Shape2DRenderer init(){
         int[] indices = getIndices();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
-        positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.STATIC_STORE);
-        textureIndex = shape.addVboFloat(calculateTexturePosition(), 2, Shape.STATIC_STORE);
+        shape.updateVbo(calculatePosition(), positionIndex);
+        shape.updateVbo(calculateTexturePosition(), textureIndex);
+
+        initialized = true;
+
+        return this;
     }
 
-    protected abstract void prepare();
+    @Override
+    public void display() {
+        if (!initialized) {
+            System.err.println("Shape not initialized : " + this);
+            return;
+        }
+
+        super.display();
+    }
 
     protected abstract int[] getIndices();
     protected abstract float[] calculatePosition();
     protected abstract float[] calculateTexturePosition();
 
-    public Shape2DRenderer setReference(EDirection reference){
-        this.reference = reference;
+    public Shape2DRenderer setReferenceDirection(EDirection reference){
+        if (reference == EDirection.Undef)
+            return this;
+
+        this.referenceDirection = reference;
+        this.referencePoint = Direction.DirectionToRangedVector(reference, REFERENCE_RANGE_DIRECTION);
 
         shape.updateVbo(calculatePosition(), positionIndex);
 
         return this;
     }
 
-    public EDirection getReference(){
-        return reference;
+    public EDirection getReferenceDirection(){
+        return referenceDirection;
     }
 
+    public Shape2DRenderer setReferencePoint(Vector2f reference){
+        referencePoint = reference;
+        referenceDirection = Direction.RangedVectorToDirection(reference, REFERENCE_RANGE_DIRECTION);
+
+        shape.updateVbo(calculatePosition(), positionIndex);
+
+        return this;
+    }
+
+    public Vector2f getReferencePoint() {
+        return referencePoint;
+    }
 
     public Shape2DRenderer setTexturePosition(Vector4f newTexturePosition){
         texturePosition = newTexturePosition;

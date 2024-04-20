@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 
 public class EllipseRenderer extends RectangleRenderer {
@@ -16,12 +17,20 @@ public class EllipseRenderer extends RectangleRenderer {
         super(shaderName);
 
         ShaderProperty = property;
-
         addShaderValue(ShaderProperty.Center, Vector2f.class, new Vector2f());
         addShaderValue(ShaderProperty.Radius, Vector2f.class, new Vector2f());
         addShaderValue(ShaderProperty.Rotation, Float.class, 0f);
 
-        setReference(EDirection.None);
+        texturePosition = RectangularFace.BasicTexturePosition();
+    }
+
+    @Override
+    public Shape2DRenderer init(){
+        super.init();
+
+        setReferenceDirection(EDirection.None);
+
+        return this;
     }
 
     public EllipseRenderer(String shaderName) {
@@ -47,25 +56,24 @@ public class EllipseRenderer extends RectangleRenderer {
     }
 
     @Override
-    public Shape2DRenderer setPosition(Vector2f position){
+    public EllipseRenderer setPosition(Vector2f position){
         super.setPosition(position);
         updateValues();
         return this;
     }
 
-    @Override
-    public Shape2DRenderer setReference(EDirection reference){
-        super.setReference(reference);
+    public EllipseRenderer setReferenceDirection(EDirection reference) {
+        super.setReferenceDirection(reference);
         updateValues();
         return this;
     }
 
-    private void updateValues(){
+    private void updateValues() {
         updateShaderValue(ShaderProperty.Radius, new Vector2f(scale.x / 2, scale.y / 2));
 
         Vector2f pos = new Vector2f(this.position.x, this.position.y);
 
-        switch (reference){
+        switch (getReferenceDirection()){
             case Left:
             case LeftUp:
             case LeftDown:
@@ -77,7 +85,7 @@ public class EllipseRenderer extends RectangleRenderer {
                 pos.x -= scale.x / 2;
         }
 
-        switch (reference){
+        switch (getReferenceDirection()){
             case Up:
             case LeftUp:
             case RightUp:

@@ -17,8 +17,7 @@ import MightyLibrary.mightylib.resources.sound.SoundLoader;
 
 class ProjectLoading implements IProjectLoading {
     @Override
-    public void init(){
-        Resources resources = Resources.getInstance();
+    public void init(Resources resources){
         resources.Loaders.add(new TileSetLoader());
         resources.Loaders.add(new TileMapLoader());
         resources.Loaders.add(new SoundLoader());

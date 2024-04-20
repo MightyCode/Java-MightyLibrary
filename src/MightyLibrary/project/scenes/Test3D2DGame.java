@@ -6,7 +6,6 @@ import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
@@ -16,8 +15,8 @@ import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.scenes.Camera2D;
 import MightyLibrary.mightylib.scenes.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scenes.Scene;
-import MightyLibrary.mightylib.utils.math.ColorList;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.color.ColorList;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -67,6 +66,7 @@ public class Test3D2DGame extends Scene {
                 mainContext.getWindow().getInfo().getVirtualSizeRef().y);
 
         background = new RectangleRenderer("texture2D");
+        background.init();
         background.setReferenceCamera(insideCamera);
         background.setMainTextureChannel("error");
         background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x,
@@ -88,6 +88,7 @@ public class Test3D2DGame extends Scene {
         slimeRenderer.update();
 
         debugView = new RectangleRenderer("texture2D");
+        debugView.init();
         debugView.setMainTextureChannel(game2DRender);
         debugView.setPosition(new Vector2f(0, 0));
         debugView.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x * 0.2f,

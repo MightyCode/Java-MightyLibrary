@@ -51,12 +51,12 @@ public class IconLoader extends ResourceLoader {
         Icon icon = (Icon) dataType;
 
         try {
-            BufferedImage image = ImageIO.read(new FileInputStream(icon.getPath()));
+            BufferedImage image = ImageIO.read(new FileInputStream(icon.path()));
             icon.createIcon(image);
 
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
-            System.err.println(icon.getPath() + "\n");
+            System.err.println(icon.path() + "\n");
             e.printStackTrace();
         }
     }

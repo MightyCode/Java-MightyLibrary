@@ -9,8 +9,8 @@ import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
 import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
 import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
-import MightyLibrary.mightylib.utils.math.ColorList;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.color.ColorList;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
@@ -27,6 +27,7 @@ public class TestBox2D extends Scene {
         public Box(World world, Vector2f position, Vector2f size){
 
             renderer = new RectangleRenderer("colorShape2D");
+            renderer.init();
             renderer.setColorMode(ColorList.Grey());
 
             BodyDef bodyDef = new BodyDef();
@@ -37,7 +38,7 @@ public class TestBox2D extends Scene {
             PolygonShape dynamicBox = new PolygonShape();
             dynamicBox.setAsBox(size.x, size.y);
             renderer.setSizePix(size.x * 2 + 0.02f, size.y * 2 + 0.02f);
-            renderer.setReference(EDirection.None);
+            renderer.setReferenceDirection(EDirection.None);
 
             FixtureDef fixtureDef = new FixtureDef();
             fixtureDef.shape = dynamicBox;
@@ -91,6 +92,7 @@ public class TestBox2D extends Scene {
         setClearColor(52, 189, 235, 1f);
 
         ground = new RectangleRenderer("colorShape2D");
+        ground.init();
         ground.setColorMode(ColorList.Black());
 
         Vec2 gravity = new Vec2(0.8f, 9.81f);
@@ -100,7 +102,7 @@ public class TestBox2D extends Scene {
         Body groundBody = world.createBody(groundBodyDef);
         PolygonShape groundBox = new PolygonShape();
         groundBox.setAsBox(10.f, 3.f);
-        ground.setReference(EDirection.None);
+        ground.setReferenceDirection(EDirection.None);
         ground.setSizePix(10 * 2, 3 * 2);
 
         ground.setPosition(new Vector2f(

@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.scenes;
 
 import MightyLibrary.mightylib.main.WindowInfo;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;

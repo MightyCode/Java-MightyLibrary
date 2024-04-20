@@ -1,11 +1,11 @@
 package MightyLibrary.mightylib.physics.collision;
 
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.utils.math.EShapeType;
-import MightyLibrary.mightylib.utils.valueDebug.UniqId;
+import MightyLibrary.mightylib.utils.math.UUID;
 import org.joml.Vector2f;
 
-public abstract class Collision2D extends UniqId {
+public abstract class Collision2D extends UUID {
     protected final Vector2f position;
     protected EShapeType shapeType;
 
