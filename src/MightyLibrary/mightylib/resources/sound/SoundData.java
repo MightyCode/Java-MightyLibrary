@@ -1,12 +1,12 @@
 package MightyLibrary.mightylib.resources.sound;
 
-import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import MightyLibrary.mightylib.sounds.SoundLoadInfo;
 import MightyLibrary.mightylib.sounds.SoundManager;
 
 import static org.lwjgl.openal.AL10.*;
 
-public class SoundData extends DataType {
+public class SoundData extends SingleSourceDataType {
     private int bufferId;
 
     public SoundData(String dataName, String path) {

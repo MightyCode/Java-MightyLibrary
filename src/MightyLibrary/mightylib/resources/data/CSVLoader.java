@@ -60,7 +60,7 @@ public class CSVLoader extends ResourceLoader {
         List<String[]> dataList = new ArrayList<>();
         String[] data;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(dataType.getPath()))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(csv.path()))) {
             while ((line = br.readLine()) != null) {
                 data = line.split(csvSplitBy);
 

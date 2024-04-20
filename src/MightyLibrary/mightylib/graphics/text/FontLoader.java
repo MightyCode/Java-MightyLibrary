@@ -8,6 +8,8 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.Map;
 
+import static org.lwjgl.opengl.GL11C.glGetError;
+
 public class FontLoader extends ResourceLoader {
     @Override
     public Class<?> getType() {

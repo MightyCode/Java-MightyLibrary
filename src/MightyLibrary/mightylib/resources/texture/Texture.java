@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.resources.texture;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
-import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import org.lwjgl.BufferUtils;
 
 import javax.imageio.ImageIO;
@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
 
-public class Texture extends DataType implements IGLBindable, IRenderTextureBindable {
+public class Texture extends SingleSourceDataType implements IGLBindable, IRenderTextureBindable {
     protected int width;
     protected int height;
 
@@ -94,11 +94,11 @@ public class Texture extends DataType implements IGLBindable, IRenderTextureBind
 
     public BufferedImage loadBufferedImage(){
         try {
-            return ImageIO.read(new FileInputStream(getPath()));
+            return ImageIO.read(new FileInputStream(path()));
 
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
-            System.err.println(getPath() + "\n");
+            System.err.println(path() + "\n");
             e.printStackTrace();
         }
 

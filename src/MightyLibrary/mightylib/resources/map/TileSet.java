@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.resources.map;
 
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import MightyLibrary.mightylib.resources.texture.Texture;
-import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TileSet extends DataType {
+public class TileSet extends SingleSourceDataType {
     private String texture;
     private final Vector2i tileSize;
     private final Vector2i tileNumber;

@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.network;
 
-import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 
-public class NetworkConfiguration extends DataType {
+public class NetworkConfiguration extends SingleSourceDataType {
     private String address;
     private String id;
     private int port;

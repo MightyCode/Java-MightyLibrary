@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.shader;
 
-import MightyLibrary.mightylib.resources.FileMethods;
-import MightyLibrary.mightylib.utils.ObjectId;
+import MightyLibrary.mightylib.resources.MultiSourceDataType;
+import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -15,129 +15,166 @@ import java.util.HashMap;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
-public class Shader extends ObjectId {
-    public static String PATH = "resources/shaders/";
+public class Shader extends MultiSourceDataType {
+    private String vertexContent, fragmentContent;
+    private String geometryContent;
+    private boolean isUsingGeometryShader;
 
-    private final String vertexSource, geometrySource, fragmentSource;
     private int shaderProgram;
     private final HashMap<String, ShaderValue> lastValues;
 
+    private int vShader, fShader, gShader;
+
     private final boolean shader2D;
+
     public boolean isDimension2DShader(){
         return shader2D;
     }
 
-    public Shader(String vertexSource, String geometrySource, String fragmentSource, boolean shader2D){
-        // Base value
-        shaderProgram = 0;
+    public Shader(String name, boolean shader2D, String ... paths){
+        super(name, paths);
+        shaderProgram = -1;
 
-        this.fragmentSource = fragmentSource;
-        this.geometrySource = geometrySource;
-        this.vertexSource = vertexSource;
         this.shader2D = shader2D;
+        isUsingGeometryShader = false;
 
         lastValues = new HashMap<>();
+        vShader = -1;
+        fShader = -1;
+        gShader = -1;
     }
 
-    public Shader(String vertexSource, String fragmentSource, boolean shader2D){
-        // Base value
-        shaderProgram = 0;
-
-        this.fragmentSource = fragmentSource;
-        this.geometrySource = null;
-        this.vertexSource = vertexSource;
-        this.shader2D = shader2D;
-
-        lastValues = new HashMap<>();
+    public void activateGeometryShader(){
+        isUsingGeometryShader = true;
     }
 
-    public void load(){
+    public void setShaderContent(int i, String shaderContent){
+        if (i == 0)
+            setVertexContent(shaderContent);
+        else if (i == 1)
+            setFragmentContent(shaderContent);
+        else if (i == 2)
+            setGeometryContent(shaderContent);
+
+        sourceLoaded[i] = true;
+    }
+
+    private void setVertexContent(String vertexContent) {
+        if (vShader != -1) {
+            glDeleteShader(vShader);
+            Logger.CheckOpenGLError("Delete vertex shader (id : " + vShader + ")");
+        }
+
+        this.vertexContent = vertexContent;
+
         // Creation du shader programme
-        int vShader = glCreateShader(GL_VERTEX_SHADER);
-        String bf = "error";
-        try {
-            bf = FileMethods.readFileAsString(PATH + vertexSource);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.print("Error path :" + PATH + vertexSource + " not found");
-        }
+        vShader = glCreateShader(GL_VERTEX_SHADER);
+        Logger.CheckOpenGLError("Create vertex shader (id : " + vShader + ")");
 
-        glShaderSource(vShader, bf);
+        glShaderSource(vShader, vertexContent);
+        Logger.CheckOpenGLError("Vertex Shader source (id : " + vShader + ")");
+
         glCompileShader(vShader);
-        if(!glGetShaderInfoLog(vShader).equals("")){
-            System.err.println("Shader path " + PATH + vertexSource);
-            System.err.println("Error from Vertex:\n" + glGetShaderInfoLog(vShader));
+        Logger.CheckOpenGLError("Vertex Shader compile (id : " + vShader + ")");
+
+        Logger.CheckShaderError(vShader, "Vertex Shader (" + getDataName() + ") compile (id : " + vShader + ")");
+    }
+
+    private void setFragmentContent(String fragmentContent) {
+        if (fShader != -1) {
+            glDeleteShader(fShader);
+            Logger.CheckOpenGLError("Delete fragment shader (id : " + fShader + ")");
         }
 
+        this.fragmentContent = fragmentContent;
 
-        int gShader = glCreateShader(GL_GEOMETRY_SHADER);
-        if (geometrySource != null) {
-            try {
-                bf = FileMethods.readFileAsString(PATH + geometrySource);
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.err.print("Error path :" + PATH + vertexSource + " not found");
-            }
+        fShader = glCreateShader(GL_FRAGMENT_SHADER);
+        Logger.CheckOpenGLError("Create fragment shader (id : " + fShader + ")");
 
-            glShaderSource(gShader, bf);
-            glCompileShader(gShader);
-            if (!glGetShaderInfoLog(gShader).equals("")) {
-                System.err.println("Shader path " + PATH + vertexSource);
-                System.err.println("Error from Vertex:\n" + glGetShaderInfoLog(gShader));
-            }
-        }
+        glShaderSource(fShader, fragmentContent);
+        Logger.CheckOpenGLError("Fragment Shader source (id : " + fShader + ")");
 
-        int fShader = glCreateShader(GL_FRAGMENT_SHADER);
-        try {
-            bf = FileMethods.readFileAsString(PATH + fragmentSource);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.print("Error path :" + PATH + fragmentSource + " not found");
-        }
-
-        glShaderSource(fShader,bf);
         glCompileShader(fShader);
-        if(!glGetShaderInfoLog(fShader).equals("")){
-            System.err.println("Shader path " + PATH + fragmentSource);
-            System.err.println("Error from Fragment:\n" + glGetShaderInfoLog(fShader));
+        Logger.CheckOpenGLError("Fragment Shader compile (id : " + fShader + ")");
+
+        Logger.CheckShaderError(fShader, "Fragment Shader (" + getDataName() + ") compile (id : " + fShader + ")");
+    }
+
+    private void setGeometryContent(String geometryContent){
+        if (gShader != -1) {
+            glDeleteShader(gShader);
+            Logger.CheckOpenGLError("Delete geometry shader (id : " + gShader + ")");
+        }
+
+        this.geometryContent = geometryContent;
+
+        if (isUsingGeometryShader) {
+            gShader = glCreateShader(GL_GEOMETRY_SHADER);
+            Logger.CheckOpenGLError("Create geometry shader (id : " + gShader + ")");
+
+            glShaderSource(gShader, geometryContent);
+            Logger.CheckOpenGLError("Geometry Shader source (id : " + gShader + ")");
+
+            glCompileShader(gShader);
+            Logger.CheckOpenGLError("Geometry Shader compile (id : " + gShader + ")");
+
+            Logger.CheckShaderError(gShader, "Geometry Shader (" + getDataName() + ") compile (id : " + gShader + ")");
+        }
+    }
+
+    public void load() {
+        if (vertexContent == null || fragmentContent == null) {
+            System.err.println("No enough information to load the shader");
+            return;
         }
 
         shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vShader);
-        if (geometrySource != null)
-            glAttachShader(shaderProgram, gShader);
-        glAttachShader(shaderProgram, fShader);
+        Logger.CheckOpenGLError("Create program shader (id : " + shaderProgram + ")");
 
+        glAttachShader(shaderProgram, vShader);
+        Logger.CheckOpenGLError("Attach vertex shader (id : " + vShader + ")");
+
+        if (isUsingGeometryShader)
+            glAttachShader(shaderProgram, gShader);
+
+        Logger.CheckOpenGLError("Attach geometry shader (id : " + vShader + ")");
+
+        glAttachShader(shaderProgram, fShader);
+        Logger.CheckOpenGLError("Attach program shader (id : " + vShader + ")");
 
         glLinkProgram(shaderProgram);
-        if(!glGetShaderInfoLog(shaderProgram).equals(""))
-            System.err.println("Error from Shader Program:\n" + glGetShaderInfoLog(shaderProgram));
+        Logger.CheckOpenGLError("Link program shader (id : " + vShader + ")");
+        Logger.CheckProgramError(shaderProgram, "Link program shader (id : " + vShader + ")");
 
-
+        Logger.CheckOpenGLError("Ma bite");
         glDeleteShader(vShader);
-        if (geometrySource != null)
-            glDeleteShader(gShader);
+        Logger.CheckOpenGLError("Delete vertex shader (id : " + vShader + ")");
         glDeleteShader(fShader);
+        Logger.CheckOpenGLError("Delete fragment shader (id : " + vShader + ")");
+
+        if (isUsingGeometryShader) {
+            glDeleteShader(gShader);
+            Logger.CheckOpenGLError("Delete geometry shader (id : " + vShader + ")");
+        }
+
+        vShader = -1;
+        fShader = -1;
+        gShader = -1;
+
+        correctlyLoaded = true;
     }
 
-    public void use(){
+    public void use() {
         glUseProgram(shaderProgram);
-    }
-
-    public void addLink(String valueName) {
-        lastValues.put(valueName, null);
+        Logger.CheckOpenGLError("Use program shader (id : " + shaderProgram + ")");
     }
 
     public int getLink(String valueName){
-        return 0;
+        return glGetUniformLocation(shaderProgram, valueName);
     }
 
     public int getShaderId(){
         return shaderProgram;
-    }
-
-    public void unload(){
-        glDeleteShader(shaderProgram);
     }
 
     public void sendValueToShader(ShaderValue value) {
@@ -158,6 +195,16 @@ public class Shader extends ObjectId {
 
         this.use();
         int link = glGetUniformLocation(shaderProgram, value.getName());
+        Logger.CheckOpenGLError("Get uniform location : " + value.getName());
+
+        if (link == -1) {
+            System.out.println("Link not found : " + value.getName() + " in shader " + getDataName()
+                    + " (id : " + shaderProgram + ")");
+            System.out.println("Program content :\n=======\n " + vertexContent
+                    + "\n======\n" + fragmentContent + "\n=======\n");
+            System.exit(-1);
+            return;
+        }
 
         if (value.getType() == Float.class) {
             Float v = value.getObjectTyped(Float.class);
@@ -189,5 +236,35 @@ public class Shader extends ObjectId {
         matrix.get(buffer);
 
         return buffer;
+    }
+
+    public void unload() {
+        System.out.println("Unloading shader : " + shaderProgram);
+        if (shaderProgram != -1) {
+            glDeleteProgram(shaderProgram);
+            Logger.CheckOpenGLError("Delete program shader (id : " + shaderProgram + ")");
+            shaderProgram = -1;
+        }
+
+        if (vShader != -1) {
+            glDeleteShader(vShader);
+            Logger.CheckOpenGLError("Delete vertex shader (id : " + vShader + ")");
+            vShader = -1;
+        }
+
+        if (fShader != -1) {
+            glDeleteShader(fShader);
+            Logger.CheckOpenGLError("Delete fragment shader (id : " + fShader + ")");
+            fShader = -1;
+        }
+
+        if (gShader != -1) {
+            glDeleteShader(gShader);
+            Logger.CheckOpenGLError("Delete geometry shader (id : " + gShader + ")");
+            gShader = -1;
+        }
+
+        lastValues.clear();
+        correctlyLoaded = false;
     }
 }

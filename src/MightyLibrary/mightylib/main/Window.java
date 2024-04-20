@@ -11,12 +11,14 @@ import org.lwjgl.system.MemoryStack;
 import java.nio.IntBuffer;
 import java.util.Objects;
 
+import static java.lang.System.exit;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL32C.GL_PROGRAM_POINT_SIZE;
+import static org.lwjgl.opengl.GL43C.GL_DEBUG_OUTPUT;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -58,19 +60,26 @@ public final class Window {
     }
 
     public void createNewWindow(){
-        if (info.windowId != 0) destroyWindow();
+        if (info.windowId != 0)
+            destroyWindow();
 
         // Configure GLFW for this window
         glfwDefaultWindowHints(); // optional, the current window hints are already the default
+
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        if (info.fullscreen) info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, glfwGetPrimaryMonitor(), NULL);
-        else                 info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
-
+        if (info.fullscreen)
+            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, glfwGetPrimaryMonitor(), NULL);
+        else
+            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
 
         System.out.println("\nWindow with id : " + info.windowId + " created");
 
@@ -102,7 +111,6 @@ public final class Window {
 
         /*new GLFWImage.Buffer();*/
 
-
         //glfwSetWindowIcon(info.windowId, );
 
         // Make the OpenGL context current
@@ -115,7 +123,6 @@ public final class Window {
 
         setViewPort(info.size.x, info.size.y);
 
-        glEnable(GL_TEXTURE_2D);
         glActiveTexture(GL_TEXTURE0);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -125,6 +132,8 @@ public final class Window {
         glEnable(GL_MULTISAMPLE);
 
         glEnable(GL_PROGRAM_POINT_SIZE);
+
+        wantExit();
     }
 
 
