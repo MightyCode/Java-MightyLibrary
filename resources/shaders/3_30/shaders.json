@@ -6,199 +6,91 @@
 				"2D/essential/colorShape2DF.glsl"
 			],
 			"path": "",
-			"tags" : ["2D"],
-			"links": [
-				"color",
-				"projection",
-				"view",
-				"model"
-			]
+			"tags" : ["2D"]
 		},
 		"multiColoredShape2D": {
 			"files": [
 				"2D/complex/multiColoredShape2DV.glsl",
 				"2D/complex/multiColoredShape2DF.glsl"
 			],
-			"tags" : ["2D"],
-			"links": [
-				"projection",
-				"view",
-				"model"
-			]
+			"tags" : ["2D"]
 		},
 		"colorEllipse2D": {
 			"files": [
 				"2D/essential/colorEllipse2DV.glsl",
 				"2D/essential/colorEllipse2DF.glsl"
 			],
-			"tags" : ["2D"],
-			"links": [
-				"color",
-				"projection",
-				"view",
-				"model"
-			]
+			"tags" : ["2D"]
 		},
 		"texture2D": {
 			"files": [
 				"2D/essential/texture2DV.glsl",
 				"2D/essential/texture2DF.glsl"
 			],
-			"tags" : ["2D"],
-			"links": [
-				"projection",
-				"view",
-				"model"
-			]
+			"tags" : ["2D"]
 		},
 		"colorShape3D": {
 			"files": [
 				"3D/essential/colorShape3DV.glsl",
 				"3D/essential/colorShape3DF.glsl"
 			],
-			"tags" : ["3D"],
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"color"
-			]
+			"tags" : ["3D"]
 		},
 		"texture3D": {
 			"files": [
 				"3D/essential/texture3DV.glsl",
 				"3D/essential/texture3DF.glsl"
 			],
-			"tags" : ["3D"],
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"ourTexture"
-			]
+			"tags" : ["3D"]
 		},
 		"textureDisplacement3D": {
 			"files": [
 				"3D/complex/textureDisplacement3DV.glsl",
 				"3D/complex/textureDisplacement3DF.glsl"
 			],
-			"tags" : ["3D"],
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"time",
-				"ourTexture",
-				"displacementMap"
-			]
+			"tags" : ["3D"]
 		},
 		"colorLightning3D": {
 			"files": [
 				"3D/complex/colorLightning3DV.glsl",
 				"3D/complex/colorLightning3DF.glsl"
 			],
-			"tags" : ["3D"],
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"color",
-				"worldColor",
-				"lightPos",
-				"lightColor",
-				"viewPos"
-			]
+			"tags" : ["3D"]
 		},
 		"colorMaterial3D": {
 			"files": [
 				"3D/complex/colorLightning3DV.glsl",
 				"3D/complex/colorMaterial3DF.glsl"
 			],
-			"tags" : ["3D"],
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"viewPos",
-				"light.vector",
-				"light.ambient",
-				"light.diffuse",
-				"light.specular",
-				"light.useDistance",
-				"light.constant",
-				"light.linear",
-				"light.quadratic",
-				"material.ambient",
-				"material.diffuse",
-				"material.specular",
-				"material.shininess"
-			]
+			"tags" : ["3D"]
 		},
 		"textureMaterial3D": {
 			"files": [
 				"3D/complex/textureMaterial3DV.glsl",
 				"3D/complex/textureMaterial3DF.glsl"
 			],
-			"tags" : ["3D"],
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"viewPos",
-				"light.vector",
-				"light.ambient",
-				"light.diffuse",
-				"light.specular",
-				"light.useDistance",
-				"light.constant",
-				"light.linear",
-				"light.quadratic",
-				"material.diffuse",
-				"material.specular",
-				"material.shininess"
-			]
+			"tags" : ["3D"]
 		},
 		"textureMultipleLights3D": {
 			"files": [
 				"3D/complex/textureMaterial3DV.glsl",
 				"3D/complex/textureMultipleLights3DF.glsl"
 			],
-			"tags" : ["3D"],
-			"links": [
-				"projection",
-				"view",
-				"model",
-				"viewPos",
-				"material.diffuse",
-				"material.specular",
-				"material.shininess",
-				"dirLight.direction",
-				"dirLight.ambient",
-				"dirLight.diffuse",
-				"dirLight.specular",
-				"pointLights[0].ambient"
-			]
+			"tags" : ["3D"]
 		},
 		"postProcessing": {
 			"files": [
 				"framebuffers/postProcessingV.glsl",
 				"framebuffers/postProcessingF.glsl"
 			],
-			"tags" : ["2D"],
-			"links": []
+			"tags" : ["2D"]
 		},
 		"coloredText" : {
 			"files" : [
 				"font/coloredTextV.glsl",
 				"font/coloredTextF.glsl"
 			],
-			"tags" : ["2D"],
-			"links": [
-				"color",
-				"projection",
-				"view",
-				"model"
-			]
+			"tags" : ["2D"]
 		}
 	}
 }

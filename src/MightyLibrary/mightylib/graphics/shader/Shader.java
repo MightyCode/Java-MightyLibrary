@@ -177,35 +177,6 @@ public class Shader extends MultiSourceDataType {
         return shaderProgram;
     }
 
-    public void unload() {
-        System.out.println("Unloading shader : " + shaderProgram);
-        if (shaderProgram != -1) {
-            glDeleteProgram(shaderProgram);
-            Logger.CheckOpenGLError("Delete program shader (id : " + shaderProgram + ")");
-            shaderProgram = -1;
-        }
-
-        if (vShader != -1) {
-            glDeleteShader(vShader);
-            Logger.CheckOpenGLError("Delete vertex shader (id : " + vShader + ")");
-            vShader = -1;
-        }
-
-        if (fShader != -1) {
-            glDeleteShader(fShader);
-            Logger.CheckOpenGLError("Delete fragment shader (id : " + fShader + ")");
-            fShader = -1;
-        }
-
-        if (gShader != -1) {
-            glDeleteShader(gShader);
-            Logger.CheckOpenGLError("Delete geometry shader (id : " + gShader + ")");
-            gShader = -1;
-        }
-
-        correctlyLoaded = false;
-    }
-
     public void sendValueToShader(ShaderValue value) {
         boolean added = false;
         if (!lastValues.containsKey(value.getName())) {
@@ -265,5 +236,35 @@ public class Shader extends MultiSourceDataType {
         matrix.get(buffer);
 
         return buffer;
+    }
+
+    public void unload() {
+        System.out.println("Unloading shader : " + shaderProgram);
+        if (shaderProgram != -1) {
+            glDeleteProgram(shaderProgram);
+            Logger.CheckOpenGLError("Delete program shader (id : " + shaderProgram + ")");
+            shaderProgram = -1;
+        }
+
+        if (vShader != -1) {
+            glDeleteShader(vShader);
+            Logger.CheckOpenGLError("Delete vertex shader (id : " + vShader + ")");
+            vShader = -1;
+        }
+
+        if (fShader != -1) {
+            glDeleteShader(fShader);
+            Logger.CheckOpenGLError("Delete fragment shader (id : " + fShader + ")");
+            fShader = -1;
+        }
+
+        if (gShader != -1) {
+            glDeleteShader(gShader);
+            Logger.CheckOpenGLError("Delete geometry shader (id : " + gShader + ")");
+            gShader = -1;
+        }
+
+        lastValues.clear();
+        correctlyLoaded = false;
     }
 }
