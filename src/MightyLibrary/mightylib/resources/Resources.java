@@ -1,13 +1,15 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.graphics.shader.ShaderLoader;
 import MightyLibrary.mightylib.graphics.text.FontLoader;
 import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
-import MightyLibrary.mightylib.resources.data.JsonLoader;
+import MightyLibrary.mightylib.resources.data.JSONLoader;
 import MightyLibrary.mightylib.resources.texture.IconLoader;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.texture.TextureLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.lwjgl.opengl.GL11C;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -16,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+
+import static org.lwjgl.opengl.GL11.glGetError;
 
 public class Resources {
     public static String FOLDER = "resources/";
@@ -60,11 +64,12 @@ public class Resources {
         Loaders = new ArrayList<>();
 
         // Mandatory loaders
+        Loaders.add(new ShaderLoader());
         Loaders.add(new IconLoader());
         Loaders.add(new TextureLoader());
         Loaders.add(new AnimationDataLoader());
         Loaders.add(new FontLoader());
-        JsonLoader jsonLoader = new JsonLoader();
+        JSONLoader jsonLoader = new JSONLoader();
         Loaders.add(jsonLoader);
 
         Loaders.add(new BatchLoader(jsonLoader));
@@ -133,6 +138,8 @@ public class Resources {
             JSONObject resource = content.getJSONObject(j);
 
             String resourceTypeName = resource.getString("type");
+
+            System.out.println("--- Load resources : " + resourceTypeName);
             Class<?> type = getClassFromName(resourceTypeName);
             ResourceLoader loader = getLoader(type);
 

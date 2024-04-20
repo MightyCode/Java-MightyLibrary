@@ -1,13 +1,14 @@
 package MightyLibrary.mightylib.resources.data;
 
 import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CSVFile extends DataType {
+public class CSVFile extends SingleSourceDataType {
     private String[][] data;
     private boolean containsHeader;
     private String[] names;

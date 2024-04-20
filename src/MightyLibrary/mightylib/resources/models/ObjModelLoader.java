@@ -44,7 +44,7 @@ public class ObjModelLoader extends ResourceLoader {
             return;
 
         Model model = (Model) dataType;
-        System.out.println(model.getPath());
+        System.out.println(model.path());
     }
 
     @Override

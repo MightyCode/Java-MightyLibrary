@@ -5,7 +5,8 @@
 				"2D/essential/colorShape2DV.glsl",
 				"2D/essential/colorShape2DF.glsl"
 			],
-			"mode" : "2D",
+			"path": "",
+			"tags" : ["2D"],
 			"links": [
 				"color",
 				"projection",
@@ -18,7 +19,7 @@
 				"2D/complex/multiColoredShape2DV.glsl",
 				"2D/complex/multiColoredShape2DF.glsl"
 			],
-			"mode" : "2D",
+			"tags" : ["2D"],
 			"links": [
 				"projection",
 				"view",
@@ -30,7 +31,7 @@
 				"2D/essential/colorEllipse2DV.glsl",
 				"2D/essential/colorEllipse2DF.glsl"
 			],
-			"mode" : "2D",
+			"tags" : ["2D"],
 			"links": [
 				"color",
 				"projection",
@@ -43,7 +44,7 @@
 				"2D/essential/texture2DV.glsl",
 				"2D/essential/texture2DF.glsl"
 			],
-			"mode" : "2D",
+			"tags" : ["2D"],
 			"links": [
 				"projection",
 				"view",
@@ -55,7 +56,7 @@
 				"3D/essential/colorShape3DV.glsl",
 				"3D/essential/colorShape3DF.glsl"
 			],
-			"mode" : "3D",
+			"tags" : ["3D"],
 			"links": [
 				"projection",
 				"view",
@@ -68,7 +69,7 @@
 				"3D/essential/texture3DV.glsl",
 				"3D/essential/texture3DF.glsl"
 			],
-			"mode" : "3D",
+			"tags" : ["3D"],
 			"links": [
 				"projection",
 				"view",
@@ -81,7 +82,7 @@
 				"3D/complex/textureDisplacement3DV.glsl",
 				"3D/complex/textureDisplacement3DF.glsl"
 			],
-			"mode" : "3D",
+			"tags" : ["3D"],
 			"links": [
 				"projection",
 				"view",
@@ -96,7 +97,7 @@
 				"3D/complex/colorLightning3DV.glsl",
 				"3D/complex/colorLightning3DF.glsl"
 			],
-			"mode" : "3D",
+			"tags" : ["3D"],
 			"links": [
 				"projection",
 				"view",
@@ -113,7 +114,7 @@
 				"3D/complex/colorLightning3DV.glsl",
 				"3D/complex/colorMaterial3DF.glsl"
 			],
-			"mode" : "3D",
+			"tags" : ["3D"],
 			"links": [
 				"projection",
 				"view",
@@ -138,7 +139,7 @@
 				"3D/complex/textureMaterial3DV.glsl",
 				"3D/complex/textureMaterial3DF.glsl"
 			],
-			"mode" : "3D",
+			"tags" : ["3D"],
 			"links": [
 				"projection",
 				"view",
@@ -162,7 +163,7 @@
 				"3D/complex/textureMaterial3DV.glsl",
 				"3D/complex/textureMultipleLights3DF.glsl"
 			],
-			"mode" : "3D",
+			"tags" : ["3D"],
 			"links": [
 				"projection",
 				"view",
@@ -183,7 +184,7 @@
 				"framebuffers/postProcessingV.glsl",
 				"framebuffers/postProcessingF.glsl"
 			],
-			"mode" : "none",
+			"tags" : [],
 			"links": []
 		},
 		"coloredText" : {
@@ -191,7 +192,7 @@
 				"font/coloredTextV.glsl",
 				"font/coloredTextF.glsl"
 			],
-			"mode" : "2D",
+			"tags" : ["2D"],
 			"links": [
 				"color",
 				"projection",

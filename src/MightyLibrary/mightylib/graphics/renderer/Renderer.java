@@ -9,7 +9,6 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scenes.Camera;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
-import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.HashMap;

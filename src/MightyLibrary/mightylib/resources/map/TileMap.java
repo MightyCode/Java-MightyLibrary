@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.resources.map;
 
-import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;
@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-public class TileMap extends DataType {
+public class TileMap extends SingleSourceDataType {
     // Correctly loaded serves to detect if save tile changes
     private final List<TileChange> tileChanges;
 

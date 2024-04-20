@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.resources.texture;
 
+import static org.lwjgl.opengl.GL11C.glGetError;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
@@ -26,8 +27,15 @@ public abstract class TextureParameters {
 
     public static final int PIXEL_ART_PARAMETERS = 28775178;
     public static void pixelArtParameters(IGLBindable bindableObject){
-        glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_WRAP_T, GL_REPEAT);
+        if (bindableObject.getTextureType() == GL_TEXTURE_RECTANGLE){
+            glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+        } else {
+            glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        }
 
         glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(bindableObject.getTextureType(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);

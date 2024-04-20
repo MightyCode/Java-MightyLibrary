@@ -1,17 +1,19 @@
 package MightyLibrary.mightylib.resources;
 
-public abstract class DataType {
+import MightyLibrary.mightylib.utils.math.UUID;
+
+public abstract class DataType extends UUID {
     protected final String dataName;
-    protected final String path;
+
     protected boolean correctlyLoaded;
 
     // Static table, max of 5 references
     public int MAX_REFERENCES = 5;
     protected String[] references;
 
-    public DataType(String dataName, String path){
+    public DataType(String dataName){
+        super();
         this.dataName = dataName;
-        this.path = path;
         this.correctlyLoaded = false;
 
         references = new String[5];
@@ -19,7 +21,7 @@ public abstract class DataType {
 
     public final void addReference(String reference) {
         if (references[MAX_REFERENCES - 1] != null){
-            System.err.println("Reference table is full for resources" + dataName + " of path " + path);
+            System.err.println("Reference table is full for resources" + dataName);
             return;
         }
         for (int i = 0; i < references.length; i++){
@@ -52,10 +54,11 @@ public abstract class DataType {
         return this.dataName;
     }
 
-    public final String getPath(){ return this.path; }
-
     public final void load(ResourceLoader loader) {
         loader.load(this);
+    }
+    public final void load(ResourceLoader loader, String[] args){
+       load(loader);
     }
 
     public void reload(ResourceLoader loader){
@@ -67,6 +70,10 @@ public abstract class DataType {
         }
 
         load(loader);
+    }
+
+    public final void reload(ResourceLoader loader, String[] args){
+        reload(loader);
     }
 
     public final boolean isCorrectlyLoaded() {

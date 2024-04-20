@@ -1,11 +1,14 @@
 package MightyLibrary.mightylib.graphics.text;
 
+import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import org.joml.Vector2f;
 
-public class FontFace extends DataType {
+import static org.lwjgl.opengl.GL11C.glGetError;
+
+public class FontFace extends SingleSourceDataType {
     private static final String PATH = "resources/textures/fonts/";
     private final String name;
     private final Texture fontAtlas;

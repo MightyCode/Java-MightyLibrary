@@ -2,8 +2,8 @@ package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
 import MightyLibrary.mightylib.graphics.shader.Shader;
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.utils.Id;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.utils.math.ID;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 
 import java.util.ArrayList;
@@ -39,15 +39,13 @@ public class Shape {
     protected EDrawMode drawMode;
     private int glDrawMode;
 
-    protected ShaderManager shadManager;
     protected Shader shader;
     public Shader getShader() { return shader; }
 
     public Shape(String shaderName, boolean useEbo) {
         setDrawMode(EDrawMode.Triangles);
 
-        this.shadManager = ShaderManager.getInstance();
-        this.shader = shadManager.getShader(shaderName);
+        shader = Resources.getInstance().getResource(Shader.class, shaderName);
         setDimensionTo2D(this.shader.isDimension2DShader());
 
         verticesToDraw = 0;
@@ -262,8 +260,8 @@ public class Shape {
     }
 
 
-    public Id getShaderId(){
-        return new Id(shader.getShaderId());
+    public ID getShaderId(){
+        return new ID(shader.getShaderId());
     }
 
 

@@ -51,7 +51,7 @@ public class NetworkConfigurationLoader extends ResourceLoader {
         String[] values = {"","","","",""};
         int i = 0;
         try {
-            reader = new BufferedReader(new FileReader(dataType.getPath()));
+            reader = new BufferedReader(new FileReader(((NetworkConfiguration) dataType).path()));
             String line = reader.readLine();
 
             while (line != null) {

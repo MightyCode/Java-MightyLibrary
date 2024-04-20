@@ -31,7 +31,6 @@ public class SceneManager {
 
     public void init(Scene firstScene, String[] firstArguments){
         System.out.println("--Init SceneManager");
-        ShaderManager.getInstance().load();
 
         sceneInterface.setNewScene(firstScene, firstArguments);
 
@@ -122,7 +121,6 @@ public class SceneManager {
             currentScene.unload();
         }
 
-        ShaderManager.getInstance().unload();
         Resources.getInstance().unload();
     }
 }

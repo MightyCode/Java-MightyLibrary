@@ -50,7 +50,7 @@ public class TileSetLoader extends ResourceLoader {
 
         TileSet tileset = (TileSet) dataType;
 
-        String data = FileMethods.readFileAsString(tileset.getPath());
+        String data = FileMethods.readFileAsString(tileset.path());
         String[] parts = data.split("\n");
 
         String texture = null;
