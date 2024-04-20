@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.utils.math;
 
+import MightyLibrary.mightylib.utils.math.geometry.EDirection3D;
 import org.joml.*;
 
 import java.lang.Math;
@@ -133,7 +134,7 @@ public class MightyMath {
 				return UP_VECTOR;
 			case Down:
 				return DOWN_VECTOR;
-			case NoDirection:
+			case None:
 			default:
 				return ZERO_VECTOR;
 		}

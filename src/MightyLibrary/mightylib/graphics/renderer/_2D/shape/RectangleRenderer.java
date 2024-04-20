@@ -2,9 +2,9 @@ package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
 import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
-import MightyLibrary.mightylib.utils.math.EDirection;
-import MightyLibrary.mightylib.utils.math.EFlip;
-import MightyLibrary.mightylib.utils.math.ERotation;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.EFlip;
+import MightyLibrary.mightylib.utils.math.geometry.ERotation;
 import org.joml.Vector2f;
 
 public class RectangleRenderer extends Shape2DRenderer {
@@ -12,13 +12,18 @@ public class RectangleRenderer extends Shape2DRenderer {
 
     public RectangleRenderer(String shaderName) {
         super(shaderName, true);
+
+        face = new RectangularFace();
+        texturePosition = RectangularFace.BasicTexturePosition();
     }
 
     @Override
-    protected void prepare(){
-        reference = EDirection.LeftUp;
-        face = new RectangularFace();
-        texturePosition = RectangularFace.BasicTexturePosition();
+    public Shape2DRenderer init() {
+        super.init();
+
+        setReferenceDirection(EDirection.LeftUp);
+
+        return this;
     }
 
     @Override
@@ -28,7 +33,7 @@ public class RectangleRenderer extends Shape2DRenderer {
 
     @Override
     protected float[] calculatePosition(){
-        return RendererUtils.calculatePositionForSquare(new Vector2f(1, 1), this.reference);
+        return RendererUtils.calculatePositionForSquare(new Vector2f(1, 1), getReferencePoint());
     }
 
     @Override

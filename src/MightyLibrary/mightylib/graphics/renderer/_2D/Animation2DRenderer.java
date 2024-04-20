@@ -4,7 +4,7 @@ import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.resources.animation.Animator;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;

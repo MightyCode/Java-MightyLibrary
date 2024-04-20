@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.graphics.shader;
 
-import MightyLibrary.mightylib.utils.math.Color4f;
+import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.*;
 
 public class ShaderValue implements Cloneable {

@@ -5,7 +5,7 @@ import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.main.GameTime;
 import MightyLibrary.mightylib.resources.map.*;
 import MightyLibrary.mightylib.resources.texture.TextureAtlas;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.*;
 
 import java.util.ArrayList;

@@ -2,15 +2,13 @@ package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
 import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class HexagonRenderer extends Shape2DRenderer {
     public static final float STRETCH_RATIO = (float)Math.sqrt(3.f) / 2;
-
-    protected EDirection reference;
     protected Vector4f texturePosition;
     public HexagonRenderer(String shaderName) {
         this(shaderName, true);
@@ -18,14 +16,18 @@ public class HexagonRenderer extends Shape2DRenderer {
     public HexagonRenderer(String shaderName, boolean useStretchRatio){
         super(shaderName, true);
 
+        texturePosition = RectangularFace.BasicTexturePosition();
         if (useStretchRatio)
             setScale(new Vector3f(1f, STRETCH_RATIO, 1f));
     }
 
     @Override
-    protected void prepare(){
-        reference = EDirection.None;
-        texturePosition = RectangularFace.BasicTexturePosition();
+    public Shape2DRenderer init(){
+        super.init();
+
+        setReferenceDirection(EDirection.None);
+
+        return this;
     }
 
     protected int[] getIndices(){
@@ -34,11 +36,11 @@ public class HexagonRenderer extends Shape2DRenderer {
 
     @Override
     protected float[] calculatePosition(){
-        return RendererUtils.calculatePositionForHexagon(new Vector2f(1, 1), this.reference);
+        return RendererUtils.calculatePositionForHexagon(new Vector2f(1, 1), getReferencePoint());
     }
 
     @Override
     protected float[] calculateTexturePosition(){
-        return RendererUtils.calculatePositionForHexagon(new Vector2f(1, 1), EDirection.LeftUp);
+        return RendererUtils.calculatePositionForHexagon(new Vector2f(1, 1), new Vector2f(0, 0));
     }
 }

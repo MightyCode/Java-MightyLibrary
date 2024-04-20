@@ -6,7 +6,6 @@ import MightyLibrary.mightylib.resources.texture.TextureParameters;
 import static org.lwjgl.opengl.GL30.*;
 
 public class FrameBuffer implements IRenderTextureBindable {
-
     private int fbo;
     private int rbo;
 

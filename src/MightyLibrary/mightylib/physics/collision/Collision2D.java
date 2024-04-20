@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.physics.collision;
 
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.utils.math.EShapeType;
 import MightyLibrary.mightylib.utils.valueDebug.UniqId;
 import org.joml.Vector2f;

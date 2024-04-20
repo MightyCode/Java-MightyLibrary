@@ -7,8 +7,9 @@ import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scenes.Camera;
-import MightyLibrary.mightylib.utils.math.Color4f;
+import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
@@ -106,7 +107,7 @@ public class Renderer implements IDisplayable {
     }
 
     public Renderer updateShaderValue(String name, Object object){
-        System.out.println(name);
+        //System.out.println(name);
         shaderValues.get(name).setObject(object);
 
         return this;

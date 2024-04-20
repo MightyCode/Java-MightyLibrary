@@ -7,8 +7,8 @@ import MightyLibrary.mightylib.physics.collision.CollisionVisualisation;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.physics.collision.CollisionBoundedVolume2D;
 import MightyLibrary.mightylib.physics.collision.CollisionRectangle;
-import MightyLibrary.mightylib.utils.math.Color4f;
-import MightyLibrary.mightylib.utils.math.EDirection;
+import MightyLibrary.mightylib.utils.math.color.Color4f;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
@@ -46,7 +46,7 @@ public class TestCollisionSystem extends Scene {
 
         rectangle2 = new CollisionRectangle(600, 600, 200, 200);
 
-        renderer2 = CollisionVisualisation.createFrom(rectangle2, new Color4f(0.7f, 0.6f, 0.6f, 1f)); new RectangleRenderer("colorShape2D");
+        renderer2 = CollisionVisualisation.createFrom(rectangle2, new Color4f(0.7f, 0.6f, 0.6f, 1f));
 
         rotation = new FloatTweening();
 

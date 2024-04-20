@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.graphics.shader;
 
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.utils.ObjectId;
-import MightyLibrary.mightylib.utils.math.Color4f;
+import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
