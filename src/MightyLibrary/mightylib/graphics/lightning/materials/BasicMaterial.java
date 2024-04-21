@@ -35,4 +35,8 @@ public class BasicMaterial implements IShaderUniforms {
     public BasicMaterial clone(){
         return new BasicMaterial(Ambient, Diffuse, Specular);
     }
+
+    public final BasicMaterial cloneBasicMaterial(){
+        return new BasicMaterial(Ambient, Diffuse, Specular);
+    }
 }

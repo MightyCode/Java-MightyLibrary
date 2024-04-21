@@ -26,15 +26,15 @@ public class Renderer implements IDisplayable {
     protected Matrix4f model;
 
     protected boolean display;
-    // Textures channels
 
+    // Textures channels
     protected IRenderTextureBindable mainTexture;
     protected IRenderTextureBindable[] textures;
 
     // Colored
     protected HashMap<String, ShaderValue> shaderValues;
 
-    public Renderer(String shaderName, boolean useEbo){
+    public Renderer(String shaderName, boolean useEbo) {
         shape = new Shape(shaderName, useEbo);
         model = new Matrix4f().identity();
 
@@ -231,7 +231,7 @@ public class Renderer implements IDisplayable {
     }
 
     public void setMainTextureChannel(IRenderTextureBindable texture){
-        shape.enableVbo(1);
+        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
 
         mainTexture = texture;
     }
@@ -247,7 +247,7 @@ public class Renderer implements IDisplayable {
                 new ShaderValue(nameOfUniform, Integer.class, channelNumber)
         );
 
-        shape.enableVbo(1);
+        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
 
         if (textures == null)
             textures = new IRenderTextureBindable[30];
@@ -260,7 +260,15 @@ public class Renderer implements IDisplayable {
         ShaderValue value = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
         shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
 
+        shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+
         return value;
+    }
+
+    public void setNoColorNoTextureMode() {
+        shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+
+        shaderValues.remove(ShaderManager.GENERIC_COLOR_FIELD_NAME);
     }
 
 

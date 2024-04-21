@@ -16,6 +16,12 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
 public class Shader extends MultiSourceDataType {
+    private static class MissingLinkRuntimeException extends RuntimeException {
+        public MissingLinkRuntimeException(String message) {
+            super(message);
+        }
+    }
+
     private String vertexContent, fragmentContent;
     private String geometryContent;
     private boolean isUsingGeometryShader;
@@ -198,12 +204,13 @@ public class Shader extends MultiSourceDataType {
         Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 
         if (link == -1) {
-            System.out.println("Link not found : " + value.getName() + " in shader " + getDataName()
-                    + " (id : " + shaderProgram + ")");
             System.out.println("Program content :\n=======\n " + vertexContent
                     + "\n======\n" + fragmentContent + "\n=======\n");
-            System.exit(-1);
-            return;
+            System.out.println("Following program link not found : " + value.getName() + " in shader " + getDataName()
+                    + " (id : " + shaderProgram + ")");
+
+            // stack trace :
+            throw new MissingLinkRuntimeException(Logger.getCurrentStackTrace());
         }
 
         if (value.getType() == Float.class) {

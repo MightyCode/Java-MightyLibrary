@@ -27,8 +27,7 @@ public class DirectionalLight extends BasicMaterial {
 
     @Override
     public DirectionalLight clone(){
-        return
-                new DirectionalLight(Ambient, Diffuse, Specular).setDirection(direction);
+        return new DirectionalLight(super.clone()).setDirection(direction);
     }
 
     @Override
