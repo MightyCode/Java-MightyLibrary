@@ -20,6 +20,11 @@ public class Shape {
     public static final int DYNAMIC_STORE = GL_DYNAMIC_DRAW;
     public static final int STREAM_STORE = GL_STREAM_DRAW;
 
+    public static final int COMMON_VERTEX_POSITION_CHANNEL = 0;
+    public static final int COMMON_TEXTURE_POSITION_CHANNEL = 1;
+
+    public static final int COMMON_NORMAL_CHANNEL = 2;
+
     protected int eboStorage;
 
     protected int vao, ebo;
@@ -154,7 +159,8 @@ public class Shape {
             float[] coordinatesInfo = new float[vertices.length / oneLineSize * vertexSizes[i]];
             for (int line = 0; line < vertices.length / oneLineSize; ++line){
                 for (int inLine = 0; inLine < vertexSizes[i]; ++inLine){
-                    coordinatesInfo[line * vertexSizes[i] + inLine] = vertices[line * oneLineSize + currentSum + inLine];
+                    coordinatesInfo[line * vertexSizes[i] + inLine]
+                            = vertices[line * oneLineSize + currentSum + inLine];
                 }
             }
 
@@ -228,8 +234,10 @@ public class Shape {
 
 
     public void applyDimension() {
-        if (in2D)   glDisable(GL_DEPTH_TEST);
-        else        glEnable(GL_DEPTH_TEST);
+        if (in2D)
+            glDisable(GL_DEPTH_TEST);
+        else
+            glEnable(GL_DEPTH_TEST);
     }
 
 

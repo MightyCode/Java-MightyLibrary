@@ -85,8 +85,8 @@ public class PointLight extends BasicMaterial {
     @Override
     public PointLight clone(){
         if (this.shouldUseDistance)
-            return new PointLight(Ambient, Diffuse, Specular, lightDecrease);
+            return new PointLight(super.clone(), lightDecrease);
 
-        return new PointLight(Ambient, Diffuse, Specular);
+        return new PointLight(super.clone());
     }
 }

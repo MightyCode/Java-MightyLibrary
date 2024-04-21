@@ -109,7 +109,7 @@ public class Test3DScene extends Scene {
 
         cubeColorMaterial = new CubeRenderer("colorMaterial3D");
         cubeColorMaterial.setPosition(new Vector3f(-1f, 3.0f, -8f));
-        cubeColorMaterial.setColorMode(ColorList.Red());
+        cubeColorMaterial.setNoColorNoTextureMode();
         cubeColorMaterial.setNormal();
 
         cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())

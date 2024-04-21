@@ -87,7 +87,8 @@ public class Test3DScene2 extends Scene {
             cubeTexturedMaterial.setTexturePosition();
             cubeTexturedMaterial.setNormal();
             cubeTexturedMaterial.setMainTextureChannel("container2", "material.diffuse");
-            cubeTexturedMaterial.addTextureChannel("container2_specular", "material.specular", 1);
+            cubeTexturedMaterial.addTextureChannel("container2_specular",
+                    "material.specular", 1);
 
             float angle = MightyMath.toRads(20.0f * i);
             cubeTexturedMaterial.setPosition(positions[i]);
@@ -101,7 +102,7 @@ public class Test3DScene2 extends Scene {
                             RendererUtils.ToLightDirection(directionalLight.getDirection()))
                     .addShaderValue("material.shininess", Float.class, 64f);
 
-            ((BasicMaterial)directionalLight).addToRenderer(cubeTexturedMaterial, "light");
+            directionalLight.cloneBasicMaterial().addToRenderer(cubeTexturedMaterial, "light");
         }
 
         Vector3f shiftToPreviousChunk = new Vector3f(20, 0, 0);
