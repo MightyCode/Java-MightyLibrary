@@ -7,13 +7,16 @@ import MightyLibrary.mightylib.resources.map.TileLayer;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.resources.map.TileSet;
+import MightyLibrary.mightylib.scenes.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
-import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
-import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
-import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameraComponents.DebugInfoCamera2D;
+import MightyLibrary.mightylib.scenes.cameraComponents.DraggingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameraComponents.MovingCameraComponent;
+import MightyLibrary.mightylib.scenes.cameraComponents.ZoomingCameraComponent;
 import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRule;
 import MightyLibrary.mightylib.utils.Timer;
 import MightyLibrary.project.main.ActionId;
+import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
@@ -25,15 +28,12 @@ import java.util.Set;
 public class Test2DWaveFunctionCollapseScene extends Scene {
     private TileMap map;
     private LayersTileMapRenderer mapRenderer;
-
     private Vector2i mapSize;
-    private DraggingCameraComponent draggingSceneComponent;
-    private MovingCameraComponent movingSceneComponent;
-    private ZoomingCameraComponent zoomingSceneComponent;
-
     private WaveFunctionCollapseGrid waveFunctionCollapseGrid;
     private boolean immediateConstruction;
     private Timer timer;
+
+    private Camera2D hudCamera;
 
     @Override
     protected String[] getInvolvedBatch() {
@@ -46,7 +46,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         super.init(args);
         /// SCENE INFORMATION ///
 
-        main3DCamera.setPos(new Vector3f(0, 0, 0));
+        hudCamera = main2DCamera.copy();
 
         setClearColor(52, 189, 235, 1f);
         //setClearColor(0, 0, 0, 1f);
@@ -67,11 +67,13 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
 
         mapRenderer.setTileMap(map);
 
-        draggingSceneComponent = new DraggingCameraComponent();
+        DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
         draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
         draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
 
-        movingSceneComponent = new MovingCameraComponent();
+        addUpdatable(draggingSceneComponent);
+
+        MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
         movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
@@ -82,10 +84,19 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
                         .setQuickSpeed(ActionId.SHIFT)
         );
 
-        zoomingSceneComponent = new ZoomingCameraComponent();
+        addUpdatable(movingSceneComponent);
+
+        ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
         zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
                 main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
+
+        addUpdatable(zoomingSceneComponent);
+
+        addUpdatableAndDisplayable(
+                new DebugInfoCamera2D(hudCamera).init(main2DCamera, new Vector2f(5, 5))
+                        .addInfo("position").addInfo("rotation").addInfo("zoom")
+        );
 
         timer = new Timer();
         timer.start(0.33f);
@@ -120,10 +131,6 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
             }
         }
 
-        movingSceneComponent.update();
-        draggingSceneComponent.update();
-        zoomingSceneComponent.update();
-
         mapRenderer.update();
 
         //mapRenderer.getBackTileMapRenderer().setScale(new Vector3f(4f, 4f, 1f));
@@ -142,6 +149,8 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
             mapRenderer.getTileMapRenderer("Foreground").setPosition(new Vector3f(0, 0, 0));
 
         mapRenderer.getTileMapRenderer(TileLayer.DEFAULT_CATEGORY_NAME).setPosition(new Vector3f(0, 0, 0));
+
+        super.display();
 
         super.setAndDisplayRealScene();
     }

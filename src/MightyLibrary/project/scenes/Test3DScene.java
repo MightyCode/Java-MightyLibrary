@@ -3,7 +3,7 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.lightning.materials.Material;
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
@@ -16,9 +16,11 @@ import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scenes.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scenes.Scene;
+import MightyLibrary.mightylib.scenes.cameraComponents.DebugInfoCamera3D;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.project.main.ActionId;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -66,6 +68,13 @@ public class Test3DScene extends Scene {
 
         timeShaderValue = new ShaderValue("time", Float.class, 0f);
         main3DCamera.setSpeed(new Vector3f(10));
+
+        addUpdatableAndDisplayable(
+                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                        .addInfo(DebugInfoCamera3D.POSITION)
+                        .addInfo(DebugInfoCamera3D.LOOK)
+                        .addInfo(DebugInfoCamera3D.SPEED)
+        );
 
         /// RENDERERS ///
 
@@ -225,6 +234,8 @@ public class Test3DScene extends Scene {
         stand.display();
 
         sphere.display();
+
+        super.display();
 
         super.setAndDisplayRealScene();
     }

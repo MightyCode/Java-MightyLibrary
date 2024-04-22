@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
+import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Icon;
 import MightyLibrary.mightylib.scenes.SceneManager;

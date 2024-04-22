@@ -193,6 +193,7 @@ public class MenuScene extends Scene {
     public void display() {
         super.setVirtualScene();
         clear();
+        super.display();
 
         guiList.display();
 

@@ -2,7 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.physics.collision.CollisionVisualisation;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.physics.collision.CollisionBoundedVolume2D;
@@ -116,6 +116,7 @@ public class TestCollisionSystem extends Scene {
     public void display() {
         super.setVirtualScene();
         clear();
+        super.display();
 
         renderer.display();
         renderer2.display();

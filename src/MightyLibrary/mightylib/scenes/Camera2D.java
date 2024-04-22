@@ -216,4 +216,12 @@ public class Camera2D extends Camera {
 
         return new Vector2f(computedPosition.x, computedPosition.y);
     }
+
+    public Camera2D copy(){
+        Camera2D copy = new Camera2D(windowInfo, camPos, invertView);
+        copy.setZoomLevel(zoomLevel);
+        copy.setRotation(rotation);
+
+        return copy;
+    }
 }

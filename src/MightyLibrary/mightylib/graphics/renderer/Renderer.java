@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
-import MightyLibrary.mightylib.main.IDisplayable;
+import MightyLibrary.mightylib.main.utils.IDisplayable;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;

@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.scenes;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.main.utils.*;
 import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
 import MightyLibrary.mightylib.resources.texture.IGLBindable;
 import MightyLibrary.mightylib.resources.texture.TextureParameters;
@@ -8,13 +9,16 @@ import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.utils.math.UUID;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+
 import static org.lwjgl.opengl.GL11.*;
 
-public class Scene {
+public class Scene extends UUID implements IUpdatableDisplayable {
     protected final Resources resources;
     protected final ShaderManager shaderManager;
     protected final Context mainContext;
@@ -22,6 +26,9 @@ public class Scene {
     protected Camera2D main2DCamera;
     protected SceneManagerInterface sceneManagerInterface;
     private VirtualSceneRenderer scRenderer;
+
+    private final ArrayList<IUpdatable> updatables = new ArrayList<>();
+    private final ArrayList<IDisplayable> displayables = new ArrayList<>();
 
     public Scene(Camera3DCreationInfo info){
         resources = Resources.getInstance();
@@ -49,6 +56,33 @@ public class Scene {
         this(null);
     }
 
+    public void addUpdatable(IUpdatable updatable){
+        updatables.add(updatable);
+    }
+
+
+    public void addDisplayable(IDisplayable displayable){
+        displayables.add(displayable);
+    }
+
+    public void addUpdatableAndDisplayable(IUpdatableDisplayable object){
+        addUpdatable(object);
+        addDisplayable(object);
+    }
+
+    public void removeUpdatable(IUpdatable updatable){
+        updatables.remove(updatable);
+    }
+
+    public void removeDisplayable(IDisplayable displayable){
+        displayables.remove(displayable);
+    }
+
+    public void removeUpdatableAndDisplayable(IUpdatableDisplayable object){
+        removeUpdatable(object);
+        removeDisplayable(object);
+    }
+
     public void init(String[] args, IGLBindable bindable){
         dispose();
 
@@ -64,11 +98,21 @@ public class Scene {
         this.sceneManagerInterface = sceneManagerInterface;
     }
 
-    public void update(){}
+    public void update(){
+        for (IUpdatable updatable : updatables)
+            updatable.update();
+    }
 
-    public void dispose(){}
+    public void dispose(){
+        for (IUpdatable updatable : updatables) {
+            updatable.dispose();
+        }
+    }
 
-    public void display(){}
+    public void display(){
+        for (IDisplayable displayable : displayables)
+            displayable.display();
+    }
 
 
     protected void setVirtualScene(){
@@ -105,5 +149,11 @@ public class Scene {
 
     public void unload() {
         scRenderer.unload();
+
+        for (IUpdatable updatable : updatables)
+            updatable.unload();
+
+        for (IDisplayable displayable : displayables)
+            displayable.unload();
     }
 }

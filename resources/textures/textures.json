@@ -5,12 +5,12 @@
 		"fonts" : {
 			"arial" : {
 				"file": "arial.png",
-				"qualityType" : "pixelart",
+				"qualityType" : "realistic",
 				"textureType" : "rectangle"
 			},
 			"bahnschrift" : {
 				"file" : "bahnschrift_0.png",
-				"qualityType" : "pixelart",
+				"qualityType" : "realistic",
 				"textureType" : "rectangle"
 			}
 		},

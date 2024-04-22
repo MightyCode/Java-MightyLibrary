@@ -1,11 +1,12 @@
-package MightyLibrary.mightylib.scenes.cameracomponents;
+package MightyLibrary.mightylib.scenes.cameraComponents;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
+import MightyLibrary.mightylib.main.utils.IUpdatable;
 import MightyLibrary.mightylib.scenes.Camera2D;
 
-public class MovingCameraComponent {
+public class MovingCameraComponent implements IUpdatable {
     public static class Inputs {
         public int MoveLeft, MoveRight, MoveUp, MoveDown, QuickSpeed;
 
@@ -102,4 +103,10 @@ public class MovingCameraComponent {
     public void setQuickSpeed(float quickSpeed) {
         this.quickSpeed = quickSpeed;
     }
+
+    @Override
+    public void dispose() {}
+
+    @Override
+    public void unload() {}
 }

@@ -9,14 +9,19 @@ import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.lightning.lights.PointLight;
 import MightyLibrary.mightylib.graphics.lightning.materials.Material;
+import MightyLibrary.mightylib.graphics.text.ETextAlignment;
+import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.scenes.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scenes.Scene;
+import MightyLibrary.mightylib.scenes.cameraComponents.DebugInfoCamera3D;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.MightyMath;
+import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -52,6 +57,13 @@ public class Test3DScene2 extends Scene {
         mainContext.getMouseManager().setCursor(false);
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
+
+        addUpdatableAndDisplayable(
+                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                        .addInfo(DebugInfoCamera3D.POSITION)
+                        .addInfo(DebugInfoCamera3D.LOOK)
+                        .addInfo(DebugInfoCamera3D.SPEED)
+        );
 
         /// RENDERERS ///
 
@@ -265,6 +277,8 @@ public class Test3DScene2 extends Scene {
         for (CubeRenderer point : lightPoints) {
             point.display();
         }
+
+        super.display();
 
         super.setAndDisplayRealScene();
     }

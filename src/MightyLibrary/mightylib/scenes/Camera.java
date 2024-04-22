@@ -2,9 +2,10 @@ package MightyLibrary.mightylib.scenes;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.main.WindowInfo;
+import MightyLibrary.mightylib.utils.math.UUID;
 import org.joml.Matrix4f;
 
-public abstract class Camera {
+public abstract class Camera extends UUID {
     protected final WindowInfo windowInfo;
 
     protected final Matrix4f projection, view;

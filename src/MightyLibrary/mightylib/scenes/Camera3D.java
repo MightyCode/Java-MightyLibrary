@@ -76,10 +76,14 @@ public class Camera3D extends Camera {
         lockViewCursor = state;
     }
 
+    public void lookAt(Vector3f target) {
+        camFront.set(target.sub(camPos, new Vector3f()).normalize());
+        updateView();
+    }
+
     public void invertLockViewCursor() {
         setLockViewCursor(!lockViewCursor);
     }
-
 
     public void setViewAngle(float fov) {
         this.fov = fov;

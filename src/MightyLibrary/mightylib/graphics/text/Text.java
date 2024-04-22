@@ -30,7 +30,7 @@ public class Text extends Renderer implements Cloneable {
 
     private float[] charPositions;
 
-    private ShaderValue color;
+    private final ShaderValue color;
 
     public Text() {
         super("coloredText", true);
