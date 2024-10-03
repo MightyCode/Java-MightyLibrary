@@ -41,14 +41,14 @@ public class KeyboardManager {
      * Keyboard manager class.
      * Instance the class.
      */
-    public KeyboardManager(WindowInfo info){
+    public KeyboardManager(WindowInfo info, KeyboardLanguage defaultLanguage){
         this.windowInfo = info;
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
 
         wasMain = new ArrayList<>();
 
-        language = QWERTKeyboardLanguage.getInstance();
+        language = defaultLanguage;
         mainKey = -1;
         numberKeyPressed = 0;
         capsLockActivated = false;

@@ -9,7 +9,6 @@ import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.texture.TextureLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.lwjgl.opengl.GL11C;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,8 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-
-import static org.lwjgl.opengl.GL11.glGetError;
 
 public class Resources {
     public static String FOLDER = "resources/";
@@ -102,13 +99,13 @@ public class Resources {
         }
     }
 
-    public static Class<?> getClassFromName(String name){
+    public static Class<? extends DataType> getClassFromName(String name){
         for (ResourceLoader resourceLoader : singletonInstance.Loaders){
             if (resourceLoader.getResourceNameType().equals(name))
                 return resourceLoader.getType();
         }
 
-        return Object.class;
+        return DataType.class;
     }
 
     public <T> T getResource(Class<T> type, String name){

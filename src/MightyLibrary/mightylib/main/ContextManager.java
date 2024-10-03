@@ -42,7 +42,7 @@ public class ContextManager {
 
         window.createNewWindow();
 
-        KeyboardManager keyboardManager = new KeyboardManager(window.getInfo());
+        KeyboardManager keyboardManager = new KeyboardManager(window.getInfo(), wci.KeyboardLanguage);
         MouseManager mouseManager = new MouseManager(window.getInfo());
         InputManager inputManager = new InputManager(keyboardManager, mouseManager);
         inputManager.init(new ActionInput[]{});

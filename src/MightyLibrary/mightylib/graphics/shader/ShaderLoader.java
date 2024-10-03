@@ -15,7 +15,7 @@ public class ShaderLoader extends ResourceLoader {
 
     private final ShaderManager shaderManager = ShaderManager.getInstance();
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return Shader.class;
     }
 

@@ -19,7 +19,7 @@ import java.util.Objects;
 public class SoundLoader extends ResourceLoader {
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return SoundData.class;
     }
 

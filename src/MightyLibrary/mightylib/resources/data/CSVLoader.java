@@ -16,7 +16,7 @@ import java.util.Objects;
 
 public class CSVLoader extends ResourceLoader {
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return CSVFile.class;
     }
 

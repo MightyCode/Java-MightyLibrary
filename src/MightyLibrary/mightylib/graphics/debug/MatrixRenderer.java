@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.graphics.debug;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
-import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;

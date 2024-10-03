@@ -9,7 +9,7 @@ import java.util.Map;
 public class TileMapLoader extends ResourceLoader {
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return TileMap.class;
     }
 

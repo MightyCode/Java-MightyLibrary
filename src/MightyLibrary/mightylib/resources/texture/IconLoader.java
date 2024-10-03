@@ -14,7 +14,7 @@ import java.util.Objects;
 public class IconLoader extends ResourceLoader {
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return Icon.class;
     }
 

@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class JSONLoader extends ResourceLoader {
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return JSONFile.class;
     }
 

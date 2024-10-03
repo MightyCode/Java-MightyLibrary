@@ -14,7 +14,7 @@ import java.util.Objects;
 public class TileSetLoader extends ResourceLoader {
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return TileSet.class;
     }
 

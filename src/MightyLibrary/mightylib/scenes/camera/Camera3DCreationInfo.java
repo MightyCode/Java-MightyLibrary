@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.scenes;
+package MightyLibrary.mightylib.scenes.camera;
 
 import org.joml.Vector3f;
 

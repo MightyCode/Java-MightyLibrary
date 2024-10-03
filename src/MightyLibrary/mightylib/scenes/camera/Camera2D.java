@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.scenes;
+package MightyLibrary.mightylib.scenes.camera;
 
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;

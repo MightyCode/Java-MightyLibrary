@@ -18,7 +18,7 @@ public class TextureLoader extends ResourceLoader {
     private final static String LIST_TEXTURES = Resources.FOLDER + "textures/textures.json";
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return Texture.class;
     }
 

@@ -1,10 +1,10 @@
-package MightyLibrary.mightylib.scenes.cameraComponents;
+package MightyLibrary.mightylib.scenes.camera.cameraComponents;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.main.utils.IUpdatable;
-import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 
 public class MovingCameraComponent implements IUpdatable {
     public static class Inputs {

@@ -13,7 +13,7 @@ public abstract class ResourceLoader {
 
     public ResourceLoader(){ }
 
-    public abstract Class<?> getType();
+    public abstract Class<? extends DataType> getType();
 
     public abstract String getResourceNameType();
 

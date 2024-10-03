@@ -14,7 +14,7 @@ public class NetworkConfigurationLoader extends ResourceLoader {
     private static final String CONFIG_FOLDER = "resources/networkConfigs";
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return NetworkConfiguration.class;
     }
 

@@ -1,9 +1,9 @@
-package MightyLibrary.mightylib.scenes.cameraComponents;
+package MightyLibrary.mightylib.scenes.camera.cameraComponents;
 
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.main.utils.IUpdatableDisplayable;
-import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;

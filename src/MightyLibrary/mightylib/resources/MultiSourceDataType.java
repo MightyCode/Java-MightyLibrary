@@ -5,6 +5,7 @@ import java.util.Arrays;
 public abstract class MultiSourceDataType extends DataType {
     private final String[] sourcesPath;
     protected final Boolean[] sourceLoaded;
+
     public MultiSourceDataType(String dataName, String ... paths) {
         super(dataName);
 

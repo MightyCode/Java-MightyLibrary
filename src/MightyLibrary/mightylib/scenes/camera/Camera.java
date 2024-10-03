@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.scenes;
+package MightyLibrary.mightylib.scenes.camera;
 
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.main.WindowInfo;

@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class ObjModelLoader extends ResourceLoader {
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return Model.class;
     }
 

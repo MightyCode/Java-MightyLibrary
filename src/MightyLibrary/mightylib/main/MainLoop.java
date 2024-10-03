@@ -72,6 +72,7 @@ public final class MainLoop {
 
         wci.WindowName = startProcedure.returnProjectName();
         wci.Fullscreen = startProcedure.returnFullscreenState();
+        wci.KeyboardLanguage = startProcedure.returnDefaultKeyboardLanguage();
 
         contextManager.createDefaultContext(wci);
 

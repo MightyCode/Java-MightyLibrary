@@ -12,7 +12,7 @@ public class BatchLoader extends ResourceLoader {
     }
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return BatchResources.class;
     }
 
