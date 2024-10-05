@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.resources.map;
 import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.TextureData;
 import org.joml.Vector2i;
 
 import java.util.Collection;
@@ -84,7 +85,7 @@ public class TileSet extends SingleSourceDataType {
 
         this.texture = texture;
 
-        Texture text = Resources.getInstance().getResource(Texture.class, texture);
+        TextureData text = Resources.getInstance().getResource(TextureData.class, texture);
 
         tileNumber.x = text.getWidth() / tileSize.x;
         tileNumber.y = text.getHeight() / tileSize.y;

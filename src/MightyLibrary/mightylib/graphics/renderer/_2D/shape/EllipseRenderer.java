@@ -25,12 +25,13 @@ public class EllipseRenderer extends RectangleRenderer {
     }
 
     @Override
-    public Shape2DRenderer init(){
-        super.init();
+    public boolean load(int m){
+        boolean state = super.load(m);
+        if (!state) return false;
 
         setReferenceDirection(EDirection.None);
 
-        return this;
+        return true;
     }
 
     public EllipseRenderer(String shaderName) {

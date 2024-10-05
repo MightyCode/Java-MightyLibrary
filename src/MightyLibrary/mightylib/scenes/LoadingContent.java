@@ -1,6 +1,8 @@
 package MightyLibrary.mightylib.scenes;
 
-public abstract class LoadingContent extends Thread {
+import MightyLibrary.mightylib.utils.ThreadOrCurrent;
+
+public abstract class LoadingContent extends ThreadOrCurrent {
     protected final Result result;
     public abstract static class Result {}
     protected float percentage;
@@ -8,12 +10,6 @@ public abstract class LoadingContent extends Thread {
 
     public LoadingContent(Result result){
         this.result = result;
-    }
-
-    protected abstract void init();
-
-    public final void run() {
-        init();
     }
 
     /** Between 0 and 1**/

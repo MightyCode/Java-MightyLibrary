@@ -32,7 +32,7 @@ public abstract class Shape2DRenderer extends Renderer {
         textureIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
     }
 
-    public Shape2DRenderer init(){
+    public boolean load(int remainingMilliseconds) {
         int[] indices = getIndices();
         shape.setEboStorage(Shape.STATIC_STORE);
         shape.setEbo(indices);
@@ -41,14 +41,13 @@ public abstract class Shape2DRenderer extends Renderer {
 
         initialized = true;
 
-        return this;
+        return true;
     }
 
     @Override
     public void display() {
         if (!initialized) {
-            System.err.println("Shape not initialized : " + this);
-            return;
+            throw new RuntimeException("Shape not initialized : " + this);
         }
 
         super.display();
@@ -101,10 +100,10 @@ public abstract class Shape2DRenderer extends Renderer {
     }
 
     public Shape2DRenderer setSizeToTexture() {
-        if (textures[0] == null)
+        if (mainTexture == null)
             return this;
 
-        setScale(new Vector3f(textures[0].getWidth(), textures[0].getHeight(), 1.0f));
+        setScale(new Vector3f(mainTexture.getWidth(), mainTexture.getHeight(), 1.0f));
 
         return this;
     }

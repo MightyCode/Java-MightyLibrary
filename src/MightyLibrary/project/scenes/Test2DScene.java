@@ -1,5 +1,6 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
@@ -14,7 +15,10 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.resources.texture.TextureAtlas;
+import MightyLibrary.mightylib.resources.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.TextureData;
+import MightyLibrary.mightylib.resources.texture.TextureDataAtlas;
+import MightyLibrary.mightylib.scenes.TemplateSceneLoading;
 import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera2D;
@@ -39,7 +43,6 @@ public class Test2DScene extends Scene {
     private Text text;
     private TileMap map;
     private LayersTileMapRenderer mapRenderer;
-    private TextureAtlas atlas;
     private RectangleRenderer atlasRenderer;
 
     private FloatTweening rotation;
@@ -64,15 +67,18 @@ public class Test2DScene extends Scene {
         super.init(args);
         /// SCENE INFORMATION ///
 
+        TemplateSceneLoading loadingScene = new LoadingSceneImplementation();
+
         hudCamera = main2DCamera.copy();
 
-        atlas = new TextureAtlas("atlas1");
+        TextureDataAtlas atlas = new TextureDataAtlas("atlas1");
+
         atlas.addTexture("tileset");
         atlas.addTexture("painting");
 
         atlasRenderer = new RectangleRenderer("texture2D");
-        atlasRenderer.init();
-        atlasRenderer.setMainTextureChannel(atlas);
+        atlasRenderer.load(0);
+        atlasRenderer.setMainTextureChannel(GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));
         atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
         atlasRenderer.setPosition(new Vector2f(500, 10));
 
@@ -159,23 +165,29 @@ public class Test2DScene extends Scene {
 
         main2DCamera.setZoomLevel(0.5f);
 
-        hexagonRenderer1 = (HexagonRenderer) new HexagonRenderer("colorShape2D").init();
+        hexagonRenderer1 = new HexagonRenderer("colorShape2D");
+        hexagonRenderer1.load(0);
         hexagonRenderer1.setColorMode(ColorList.Gold());
         hexagonRenderer1.setSizePix(200, 100);
         hexagonRenderer1.setPosition(new Vector2f(-100, 400));
 
-        hexagonRenderer2 = (HexagonRenderer) new HexagonRenderer("texture2D").init();
-        hexagonRenderer2.setMainTextureChannel("hexagon");
+        hexagonRenderer2 = new HexagonRenderer("texture2D");
+        hexagonRenderer2.load(0);
+        hexagonRenderer2.setMainTextureChannel(GLResources.getInstance().addElementOrReturnIfPresent(
+                Texture.class,
+                new Texture(Resources.getInstance().getResource(TextureData.class,
+                        "hexagon")), "hexagon"));
         hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         hexagonRenderer2.setPosition(new Vector2f(0,0));
         //ellipseRenderer.setReference(EDirection.Right);
 
-        testEllipseRenderer = (EllipseRenderer) new EllipseRenderer().init();
+        testEllipseRenderer = new EllipseRenderer();
+        testEllipseRenderer.load(0);
         testEllipseRenderer.setColorMode(ColorList.DarkBlue());
         testEllipseRenderer.setSizePix(200, 300);
         testEllipseRenderer.setPosition(new Vector2f(-200, 0));
 
-        polygonRenderer = (PolygonRenderer) new PolygonRenderer(
+        polygonRenderer = new PolygonRenderer(
                 "texture2D",
                 Polygon.CreateBuilder()
                         .addVertex(new Vector2f(0, 0))
@@ -185,7 +197,8 @@ public class Test2DScene extends Scene {
                         .addVertex(new Vector2f(1f, 1f))
                         .addVertex(new Vector2f(0f, 1f))
                         .build()
-        ).init();
+        );
+        polygonRenderer.load(0);
         polygonRenderer.setMainTextureChannel("error");
         polygonRenderer.setSizePix(100, 100);
         polygonRenderer.setPosition(new Vector2f(1500, 300));
@@ -288,7 +301,7 @@ public class Test2DScene extends Scene {
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload() {
         super.unload();
         slimeRenderer.unload();

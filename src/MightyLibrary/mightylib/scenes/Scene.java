@@ -33,14 +33,16 @@ public class Scene extends UUID implements IUpdatableDisplayable {
     private final ArrayList<IUpdatable> updatables = new ArrayList<>();
     private final ArrayList<IDisplayable> displayables = new ArrayList<>();
 
-    public Scene(Camera3DCreationInfo info){
+    private TemplateSceneLoading loadingScene = null; // can be null
+
+    public Scene(Camera3DCreationInfo info) {
         resources = Resources.getInstance();
         shaderManager = ShaderManager.getInstance();
         mainContext = ContextManager.getInstance().getMainContext();
 
         Camera3DCreationInfo parameters;
 
-        if (info == null){
+        if (info == null) {
             parameters = new Camera3DCreationInfo();
             parameters.fov = 120f;
             parameters.initialPosition = new Vector3f(0, 0, 0);
@@ -62,7 +64,6 @@ public class Scene extends UUID implements IUpdatableDisplayable {
     public void addUpdatable(IUpdatable updatable){
         updatables.add(updatable);
     }
-
 
     public void addDisplayable(IDisplayable displayable){
         displayables.add(displayable);
@@ -86,37 +87,69 @@ public class Scene extends UUID implements IUpdatableDisplayable {
         removeDisplayable(object);
     }
 
-    public void init(String[] args, IGLBindable bindable){
+    protected void setLoadingScene(TemplateSceneLoading loadingScene){
+        this.loadingScene = loadingScene;
+    }
+
+    public void init(String[] args, IGLBindable bindable) {
         dispose();
 
         scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), bindable);
-        scRenderer.init();
+        scRenderer.load(0);
     }
 
-    public void init(String[] args){
+    public void init(String[] args) {
         init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
     }
 
-    public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface){
+    public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface) {
         this.sceneManagerInterface = sceneManagerInterface;
     }
 
-    public void update(){
+    final void updateByManager(){
+        if (loadingScene != null) {
+            loadingScene.updateByManager();
+            if (loadingScene.isFinished()) {
+                loadingScene.displayByManager();
+                loadingScene = null;
+            }
+        } else {
+            update();
+        }
+    }
+
+    public void update() {
         for (IUpdatable updatable : updatables)
             updatable.update();
     }
 
-    public void dispose(){
+    public void disposeByManager(){
+        if (loadingScene != null) {
+            loadingScene.displayByManager();
+            loadingScene = null;
+        } else {
+            dispose();
+        }
+    }
+
+    public void dispose() {
         for (IUpdatable updatable : updatables) {
             updatable.dispose();
         }
     }
 
-    public void display(){
+    final void displayByManager(){
+        if (loadingScene != null) {
+            loadingScene.disposeByManager();
+        } else {
+            display();
+        }
+    }
+
+    public void display() {
         for (IDisplayable displayable : displayables)
             displayable.display();
     }
-
 
     protected void setVirtualScene(){
         scRenderer.bindFrameBuff();

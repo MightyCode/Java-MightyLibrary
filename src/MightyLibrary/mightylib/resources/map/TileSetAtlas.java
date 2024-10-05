@@ -2,19 +2,20 @@ package MightyLibrary.mightylib.resources.map;
 
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Texture;
-import MightyLibrary.mightylib.resources.texture.TextureAtlas;
+import MightyLibrary.mightylib.resources.texture.TextureData;
+import MightyLibrary.mightylib.resources.texture.TextureDataAtlas;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TileSetAtlas {
-    private final TextureAtlas textureAtlas;
+    private final TextureDataAtlas textureAtlas;
     private final List<TileSet> tilesets;
     private final List<Integer> startIds;
 
     public TileSetAtlas() {
-        textureAtlas = new TextureAtlas("atlas");
+        textureAtlas = new TextureDataAtlas("atlas");
         tilesets = new ArrayList<>();
         startIds = new ArrayList<>();
     }
@@ -24,7 +25,7 @@ public class TileSetAtlas {
         startIds.add(startId);
 
         textureAtlas.addTexture(
-                Resources.getInstance().getResource(Texture.class, tileset.texture()));
+                Resources.getInstance().getResource(TextureData.class, tileset.texture()));
     }
 
     public int getTileSetIndexRelatedTo(int tileId){
@@ -71,7 +72,7 @@ public class TileSetAtlas {
         return tilesets.get(0).tileSize();
     }
 
-    public TextureAtlas getTextureAtlas(){
+    public TextureDataAtlas getTextureAtlas(){
         return textureAtlas;
     }
 

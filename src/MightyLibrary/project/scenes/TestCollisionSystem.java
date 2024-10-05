@@ -28,6 +28,7 @@ public class TestCollisionSystem extends Scene {
 
     FloatTweening rotation;
 
+    @Override
     public void init(String[] args) {
         super.init(args);
         /// SCENE INFORMATION ///
@@ -55,7 +56,7 @@ public class TestCollisionSystem extends Scene {
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
     }
 
-
+    @Override
     public void update() {
         super.update();
 
@@ -112,7 +113,7 @@ public class TestCollisionSystem extends Scene {
         renderer2.updateShapePosition();
     }
 
-
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();
@@ -124,7 +125,7 @@ public class TestCollisionSystem extends Scene {
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload() {
         super.unload();
 

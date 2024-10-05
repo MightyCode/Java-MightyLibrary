@@ -16,11 +16,11 @@ public class PolygonRenderer extends Shape2DRenderer {
     }
 
     @Override
-    public Shape2DRenderer init() {
-        super.init();
+    public boolean load(int remainingMilliseconds) {
+        super.load(remainingMilliseconds);
         setReferenceDirection(EDirection.None);
 
-        return this;
+        return true;
     }
 
     // position of point comparing to the bounding box

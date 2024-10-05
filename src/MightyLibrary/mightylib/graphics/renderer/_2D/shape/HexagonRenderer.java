@@ -22,12 +22,12 @@ public class HexagonRenderer extends Shape2DRenderer {
     }
 
     @Override
-    public Shape2DRenderer init(){
-        super.init();
+    public boolean load(int remainingMilliseconds){
+        super.load(remainingMilliseconds);
 
         setReferenceDirection(EDirection.None);
 
-        return this;
+        return true;
     }
 
     protected int[] getIndices(){

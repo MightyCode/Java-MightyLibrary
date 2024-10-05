@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.scenes;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.main.MainLoop;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
@@ -7,7 +8,6 @@ import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.sounds.SoundManager;
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.utils.enginecommand.Commands;
 
 public class SceneManager {
@@ -38,25 +38,27 @@ public class SceneManager {
     }
 
 
-    public void update(){
+    public void update() {
         // Command
         if (MainLoop.isAdmin()){
             updateMain();
         }
 
-        if(sceneInterface.isWantingChange())
+        if (sceneInterface.isWantingChange())
             changeScene();
 
         if (sceneInterface.WantQuit)
             exit(sceneInterface.ExitStatus);
 
-        currentScene.update();
+        GLResources.getInstance().process(); // Create Gl elements, takes a bit of time
+
+        currentScene.updateByManager();
 
         soundManager.lateUpdate();
     }
 
 
-    private void updateMain(){
+    private void updateMain() {
         Context mainContext = ContextManager.getInstance().getMainContext();
         InputManager mainInputManager = mainContext.getInputManager();
 
@@ -68,20 +70,20 @@ public class SceneManager {
     }
 
     public void display(){
-        currentScene.display();
+        currentScene.displayByManager();
     }
 
 
-    public void dispose(){
+    public void dispose() {
         ContextManager.getInstance().dispose();
-        currentScene.dispose();
+        currentScene.disposeByManager();
     }
 
-    private void changeScene(){
+    private void changeScene() {
         if (MainLoop.isAdmin())
             commands.removeSpecificCommand();
 
-        if(currentScene != null){
+        if(currentScene != null) {
             System.out.println("--Unload scene" + currentScene.getClass().getName());
             currentScene.unload();
 
@@ -117,5 +119,6 @@ public class SceneManager {
         }
 
         Resources.getInstance().unload();
+        GLResources.getInstance().unload();
     }
 }

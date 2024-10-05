@@ -23,10 +23,9 @@ public class SoundManager {
         instance = new SoundManager(gainTree);
     }
 
-    public static SoundManager getInstance(){
+    public static SoundManager getInstance() {
         if (instance == null) {
-            System.err.println("Sound Manager not initialized");
-            return null;
+            throw new RuntimeException("Sound Manager not initialized");
         }
 
         return instance;

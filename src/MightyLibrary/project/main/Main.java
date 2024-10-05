@@ -1,5 +1,6 @@
 package MightyLibrary.project.main;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
@@ -98,6 +99,20 @@ public class Main {
         // Return -1 as the newest version
         public int returnShaderVersion() {
             return -1;
+        }
+
+        @Override
+        public int returnMaxNumberOfThreadsToUse(){
+            return Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
+            //return 1;
+        }
+
+        @Override
+        public GLResources.GLResourceCreation returnGLResourceCreation() {
+            GLResources.GLResourceCreation creation = new GLResources.GLResourceCreation();
+            creation.MILLISECONDS_ALLOWED_TO_PROCESS_PER_FRAME = 10;
+
+            return creation;
         }
     }
 }

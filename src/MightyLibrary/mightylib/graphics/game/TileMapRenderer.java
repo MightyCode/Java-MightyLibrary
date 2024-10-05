@@ -4,7 +4,8 @@ import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.resources.map.*;
-import MightyLibrary.mightylib.resources.texture.TextureAtlas;
+import MightyLibrary.mightylib.resources.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.TextureDataAtlas;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.*;
 
@@ -80,7 +81,7 @@ public class TileMapRenderer extends Renderer {
     private EDirection reference;
     private TileMap tilemap;
     private TileSetAtlas tileSetAtlas;
-    private TextureAtlas texture;
+    private TextureDataAtlas textureDataAtlas;
     private final String layerCategory;
     private final List<AnimatedTile> animatedTiles;
 
@@ -132,9 +133,9 @@ public class TileMapRenderer extends Renderer {
         reset();
         this.tilemap = tilemap;
         this.tileSetAtlas = tilemap.tileSetAtlas();
-        this.texture = tileSetAtlas.getTextureAtlas();
+        this.textureDataAtlas = tileSetAtlas.getTextureAtlas();
 
-        setMainTextureChannel(tileSetAtlas.getTextureAtlas());
+        setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(textureDataAtlas), textureDataAtlas.getDataName()));
 
         loadGeneralInformation();
 
@@ -319,10 +320,10 @@ public class TileMapRenderer extends Renderer {
         Vector2i tileSetPosition = tileSetAtlas.getTileSetPosition(tileSetIndex);
 
         return new Vector4f(
-                (tileTexturePosition.x * 1.0f * tileSize.x + tileSetPosition.x) / texture.getWidth(),
-                ((tileTexturePosition.x + 1.0f) * tileSize.x + tileSetPosition.x) / texture.getWidth(),
-                (tileTexturePosition.y * 1.0f * tileSize.y + tileSetPosition.y) / texture.getHeight(),
-                ((tileTexturePosition.y + 1.0f) * tileSize.y + tileSetPosition.y) / texture.getHeight()
+                (tileTexturePosition.x * 1.0f * tileSize.x + tileSetPosition.x) / textureDataAtlas.getWidth(),
+                ((tileTexturePosition.x + 1.0f) * tileSize.x + tileSetPosition.x) / textureDataAtlas.getWidth(),
+                (tileTexturePosition.y * 1.0f * tileSize.y + tileSetPosition.y) / textureDataAtlas.getHeight(),
+                ((tileTexturePosition.y + 1.0f) * tileSize.y + tileSetPosition.y) / textureDataAtlas.getHeight()
         );
     }
 
@@ -409,5 +410,10 @@ public class TileMapRenderer extends Renderer {
         shape.updateVbo(new float[0], textureIndex);
 
         animatedTiles.clear();
+    }
+
+    @Override
+    public void unload(int remainingMilliseconds) {
+        super.unload(remainingMilliseconds);
     }
 }

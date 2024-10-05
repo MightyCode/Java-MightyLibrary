@@ -1,5 +1,7 @@
 package MightyLibrary.mightylib.resources.texture;
 
+import MightyLibrary.mightylib.utils.Logger;
+
 import static org.lwjgl.opengl.GL11C.glGetError;
 import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
@@ -23,6 +25,8 @@ public abstract class TextureParameters {
 
             glGenerateMipmap(bindableObject.getTextureType());
         }
+
+        Logger.CheckOpenGLError("Texture parameters");
     }
 
     public static final int PIXEL_ART_PARAMETERS = 28775178;

@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.main.procedures;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scenes.Scene;
@@ -28,4 +29,8 @@ public interface IStartLibraryProcedure {
     int returnShaderVersion();
 
     Resources.LoadingMethod returnResourcesLoadingMethod();
+
+    int returnMaxNumberOfThreadsToUse();
+
+    GLResources.GLResourceCreation returnGLResourceCreation();
 }

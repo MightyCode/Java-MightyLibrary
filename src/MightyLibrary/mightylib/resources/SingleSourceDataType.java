@@ -9,7 +9,7 @@ public abstract class SingleSourceDataType extends DataType {
     }
 
     public final boolean validPath(){
-        return !(path == null || path.equals(""));
+        return !(path == null || path.isEmpty());
     }
     public final String path(){ return this.path; }
 }

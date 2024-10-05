@@ -1,8 +1,9 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.utils.LoadingElement;
 import MightyLibrary.mightylib.utils.math.UUID;
 
-public abstract class DataType extends UUID {
+public abstract class DataType extends UUID implements LoadingElement {
     protected final String dataName;
 
     protected boolean correctlyLoaded;
@@ -46,8 +47,8 @@ public abstract class DataType extends UUID {
         }
     }
 
-    public final boolean isReferenced(){
-        return references[0] != null;
+    public final boolean notReferenced(){
+        return references[0] == null;
     }
 
     public final String getDataName(){
@@ -76,7 +77,8 @@ public abstract class DataType extends UUID {
         reload(loader);
     }
 
-    public final boolean isCorrectlyLoaded() {
+    @Override
+    public final boolean isLoaded() {
         return correctlyLoaded;
     }
 

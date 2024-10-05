@@ -94,7 +94,6 @@ public class DebugInfoCamera2D implements IUpdatableDisplayable {
         Text.display();
     }
 
-
     @Override
     public void unload() {
         Text.unload();

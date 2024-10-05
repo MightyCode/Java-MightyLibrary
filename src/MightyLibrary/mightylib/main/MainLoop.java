@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.main;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
@@ -61,6 +62,8 @@ public final class MainLoop {
         System.out.println("--Create main context.");
         contextManager = ContextManager.getInstance();
 
+        ThreadManager.NumberMaxThreadToUse = startProcedure.returnMaxNumberOfThreadsToUse();
+
         WindowCreationInfo wci = new WindowCreationInfo();
         wci.Size = new Vector2i(
                 startProcedure.returnSceneSize().x,
@@ -98,6 +101,8 @@ public final class MainLoop {
         Resources resource = Resources.createInstance(
                 startProcedure.returnResourcesLoadingMethod()
         );
+
+        GLResources glResources = GLResources.createInstance(startProcedure.returnGLResourceCreation());
 
 
         System.out.println("--Create SceneManager");

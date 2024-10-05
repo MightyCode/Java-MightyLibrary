@@ -7,6 +7,4 @@ public interface IRenderTextureBindable {
     int getHeight();
 
     int getRenderTextureId();
-
-    void unload();
 }

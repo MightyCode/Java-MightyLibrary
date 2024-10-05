@@ -16,7 +16,7 @@ public class BackgroundlessButton extends GUI {
         super();
         this.context = context;
 
-        if(text == null)
+        if (text == null)
             this.Text = new Text();
         else
             this.Text = text;
@@ -64,7 +64,7 @@ public class BackgroundlessButton extends GUI {
     @Override
     public void unload(){
         Text.unload();
-        OverlapsText.text();
+        OverlapsText.unload();
     }
 
     @Override

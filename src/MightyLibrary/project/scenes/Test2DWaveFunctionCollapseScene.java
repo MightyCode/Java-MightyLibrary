@@ -155,7 +155,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload() {
         super.unload();
 

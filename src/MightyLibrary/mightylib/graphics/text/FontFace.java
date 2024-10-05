@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.TextureData;
 import org.joml.Vector2f;
 
 import static org.lwjgl.opengl.GL11C.glGetError;
@@ -11,14 +12,14 @@ import static org.lwjgl.opengl.GL11C.glGetError;
 public class FontFace extends SingleSourceDataType {
     private static final String PATH = "resources/textures/fonts/";
     private final String name;
-    private final Texture fontAtlas;
+    private final TextureData fontAtlas;
     private final FontFile fontFile;
 
     FontFace(String fontFaceName, String textureName, String infoPath) {
         super(fontFaceName, PATH + infoPath);
 
         name = fontFaceName;
-        fontAtlas = Resources.getInstance().getResource(Texture.class, textureName);
+        fontAtlas = Resources.getInstance().getResource(TextureData.class, textureName);
 
         fontFile = new FontFile(PATH + infoPath);
     }
@@ -65,7 +66,7 @@ public class FontFace extends SingleSourceDataType {
      *
      * @return fontAtlas.
      */
-    public Texture getTexture() {
+    public TextureData getTexture() {
         return fontAtlas;
     }
 

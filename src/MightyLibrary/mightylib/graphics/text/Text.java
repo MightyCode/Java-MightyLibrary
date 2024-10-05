@@ -1,9 +1,11 @@
 package MightyLibrary.mightylib.graphics.text;
 
+import MightyLibrary.mightylib.graphics.GLElement;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -68,16 +70,25 @@ public class Text extends Renderer implements Cloneable {
     }
 
 
-    public Text setFont(String fontName){
+    public Text setFont(String fontName) {
+        // check if the font is already loaded
+        if (this.font != null && this.font.getName().equals(fontName)) {
+            return this;
+        }
+
         this.font = Resources.getInstance().getResource(FontFace.class, fontName);
-        setMainTextureChannel(font.getTexture());
+
+        setMainTextureChannel(fontName);
 
         computeRightUpPosition();
 
         return this;
     }
 
-    public Text setText(String text){
+    public Text setText(String text) {
+        if (text == null || text.equals(this.text))
+            return this;
+
         this.text = text;
 
         this.computeRightUpPosition();
@@ -124,7 +135,7 @@ public class Text extends Renderer implements Cloneable {
 
 
     public Text setReference(EDirection reference){
-        if (reference == null)
+        if (reference == null || reference == this.reference)
             return this;
 
         this.reference = reference;
@@ -139,7 +150,7 @@ public class Text extends Renderer implements Cloneable {
 
 
     public Text setPosition(Vector2f position){
-        if (position == null)
+        if (position == null || position.x == this.position.x && position.y == this.position.y)
             return this;
 
         super.setPosition(new Vector3f(position.x, position.y, 0.0f));
@@ -156,6 +167,9 @@ public class Text extends Renderer implements Cloneable {
     }
 
     public Text setAlignment(ETextAlignment alignment) {
+        if (alignment == null || alignment == this.alignment)
+            return this;
+
         this.alignment = alignment;
         this.computeRightUpPosition();
 
@@ -163,18 +177,21 @@ public class Text extends Renderer implements Cloneable {
     }
 
 
-    public Text setFontSize(float size){
+    public Text setFontSize(float size) {
+        if (size == this.fontSize)
+            return this;
+
         this.fontSize = size;
 
         computeRightUpPosition();
         return this;
     }
 
-    public float getFontSize(){
+    public float getFontSize() {
         return this.fontSize;
     }
 
-    public Text setColor(Color4f color){
+    public Text setColor(Color4f color) {
         this.color.setObject(color);
         return this;
     }
@@ -184,7 +201,7 @@ public class Text extends Renderer implements Cloneable {
     }
 
 
-    private void computeRightUpPosition(){
+    private void computeRightUpPosition() {
         if (shouldNotDrawText())
             return;
 
@@ -374,5 +391,10 @@ public class Text extends Renderer implements Cloneable {
     @Override
     public Text clone() {
         return copyTo(new Text());
+    }
+
+    @Override
+    public void unload(int remainingMilliseconds) {
+        super.unload(remainingMilliseconds);
     }
 }

@@ -1,5 +1,7 @@
 package MightyLibrary.mightylib.scenes;
 
+import MightyLibrary.mightylib.main.ThreadManager;
+
 import java.lang.reflect.ParameterizedType;
 
 public abstract class LoadingScene <T extends LoadingContent, K extends LoadingContent.Result> extends Scene {
@@ -18,7 +20,8 @@ public abstract class LoadingScene <T extends LoadingContent, K extends LoadingC
 
     public final void init(String[] args) {
         super.init(args);
-        loadingContent.start();
+
+        ThreadManager.RunThread(loadingContent);
 
         initialize(args);
     }
@@ -96,10 +99,9 @@ public abstract class LoadingScene <T extends LoadingContent, K extends LoadingC
     public final void unload(){
         super.unload();
         if (loadingResult == null) {
-            loadingContent.interrupt();
+            ThreadManager.ReleaseThread(loadingContent);
             unloadBeforeLoading();
 
-            System.out.println(Thread.activeCount());
         } else {
             unloadAfterLoading();
         }

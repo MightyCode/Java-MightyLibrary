@@ -68,7 +68,7 @@ public class Terminal {
         cursorDisplayed = false;
 
         cursor = new RectangleRenderer("colorShape2D");
-        cursor.init();
+        cursor.load(0);
         cursor.setScale(new Vector3f(3, commandText.getFontSize(), 1.f));
         cursor.setColorMode(new Color4f(1, 1, 1, 0.8f));
         cursor.setPosition(new Vector2f(37, 705));

@@ -6,7 +6,8 @@ import MightyLibrary.mightylib.resources.animation.AnimationDataLoader;
 import MightyLibrary.mightylib.resources.data.JSONLoader;
 import MightyLibrary.mightylib.resources.texture.IconLoader;
 import MightyLibrary.mightylib.resources.texture.Texture;
-import MightyLibrary.mightylib.resources.texture.TextureLoader;
+import MightyLibrary.mightylib.resources.texture.TextureData;
+import MightyLibrary.mightylib.resources.texture.TextureDataLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -50,7 +51,7 @@ public class Resources {
 
     public final List<ResourceLoader> Loaders;
 
-    private final HashMap<Class<?>, HashMap<String, DataType>> resources;
+    private final HashMap<Class<? extends DataType>, HashMap<String, DataType>> resources;
     private final LoadingMethod loadingMethod;
     private boolean initialized;
     private boolean firstLoad;
@@ -63,7 +64,7 @@ public class Resources {
         // Mandatory loaders
         Loaders.add(new ShaderLoader());
         Loaders.add(new IconLoader());
-        Loaders.add(new TextureLoader());
+        Loaders.add(new TextureDataLoader());
         Loaders.add(new AnimationDataLoader());
         Loaders.add(new FontLoader());
         JSONLoader jsonLoader = new JSONLoader();
@@ -108,7 +109,7 @@ public class Resources {
         return DataType.class;
     }
 
-    public <T> T getResource(Class<T> type, String name){
+    public <T extends DataType> T getResource(Class<T> type, String name){
         return type.cast(resources.get(type).get(name));
     }
 
@@ -151,7 +152,7 @@ public class Resources {
                 if (dataType == null)
                     throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
 
-                if (!dataType.isReferenced())
+                if (dataType.notReferenced())
                     incorrectlyLoad += loadData(dataType, loader);
 
                 dataType.addReference(batchName);
@@ -167,7 +168,7 @@ public class Resources {
                         if (matcher.matches()) {
                             DataType dataType = this.resources.get(type).get(resourceName);
 
-                            if (!dataType.isReferenced())
+                            if (dataType.notReferenced())
                                 incorrectlyLoad += loadData(dataType, loader);
 
                             dataType.addReference(batchName);
@@ -187,11 +188,12 @@ public class Resources {
             return -1;
 
         // Load the texture error
-        DataType dataType = resources.get(Texture.class).get("error");
-        loadData(dataType, getLoader(Texture.class));
+        DataType dataType = resources.get(TextureData.class).get("error");
+        loadData(dataType, getLoader(TextureData.class));
         dataType.addReference("mandatory");
 
         if (loadingMethod instanceof BatchResourcesMethod){
+            System.out.println("--Load Resources");
             // Load the batch resources first
             for (ResourceLoader loader : Loaders){
                 if (loader.getType() == BatchResources.class){
@@ -200,7 +202,7 @@ public class Resources {
                 }
             }
 
-            firstLoad = true;
+            finishLoading();
             return loadBatch(((BatchResourcesMethod) loadingMethod).firstBatch);
         }
 
@@ -211,17 +213,22 @@ public class Resources {
             incorrectlyLoad += loadAllOfType(loader.getType());
         }
 
-        firstLoad = true;
+        finishLoading();
         return incorrectlyLoad;
     }
 
-    private int loadData(DataType dataType, ResourceLoader loader){
-        if (dataType.isCorrectlyLoaded())
+    private void finishLoading() {
+        Texture.CreateErrorTexture();
+        firstLoad = true;
+    }
+
+    private int loadData(DataType dataType, ResourceLoader loader) {
+        if (dataType.isLoaded())
             return 0;
 
         dataType.load(loader);
 
-        if (!dataType.isCorrectlyLoaded())
+        if (!dataType.isLoaded())
             return 1;
 
         return 0;
@@ -265,7 +272,7 @@ public class Resources {
         for (DataType dataType : resources.get(typeOfResource).values()){
             dataType.reload(Objects.requireNonNull(getLoader(typeOfResource)));
 
-            if (!dataType.isCorrectlyLoaded())
+            if (!dataType.isLoaded())
                 ++incorrectlyReload;
         }
 
@@ -285,11 +292,11 @@ public class Resources {
     }
 
     private int unloadData(DataType dataType){
-        if (!dataType.isCorrectlyLoaded())
+        if (!dataType.isLoaded())
             return 0;
 
         dataType.unload();
-        if (!dataType.isCorrectlyLoaded())
+        if (!dataType.isLoaded())
             return 1;
 
         return 0;
@@ -331,7 +338,7 @@ public class Resources {
                 DataType dataType = this.resources.get(type).get(resourceName);
                 dataType.removeReference(batchName);
 
-                if (!dataType.isReferenced())
+                if (dataType.notReferenced())
                     incorrectlyUnload += unloadData(dataType);
             }
 
@@ -346,7 +353,7 @@ public class Resources {
                             DataType dataType = this.resources.get(type).get(resourceName);
                             dataType.removeReference(batchName);
 
-                            if (!dataType.isReferenced())
+                            if (dataType.notReferenced())
                                 incorrectlyUnload += unloadData(dataType);
                         }
                     }
