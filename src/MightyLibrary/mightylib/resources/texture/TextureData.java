@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.resources.texture;
 
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import org.lwjgl.BufferUtils;
 
@@ -14,29 +15,36 @@ public class TextureData extends SingleSourceDataType {
     protected int width;
     protected int height;
 
+    private BufferedImage tempBufferedImage;
     ByteBuffer byteBuffer;
 
     int defaultAspectTexture;
     int defaultTextureType;
 
     public TextureData(String name, String path) {
-        super(name, path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, name, path);
 
         defaultTextureType = GL_TEXTURE_2D;
         defaultAspectTexture = TextureParameters.REALISTIC_PARAMETERS;
+        tempBufferedImage = null;
 
-        unload();
+        internUnload();
     }
 
-    public void load(BufferedImage img) {
-        int[] pixels = new int[img.getHeight() * img.getWidth()];
+    public void setBufferedImage(BufferedImage img) {
+        tempBufferedImage = img;
+    }
 
-        img.getRGB(0, 0, img.getWidth(), img.getHeight(), pixels, 0, img.getWidth());
+    @Override
+    protected boolean internLoad() {
+        int[] pixels = new int[tempBufferedImage.getHeight() * tempBufferedImage.getWidth()];
 
-        byteBuffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
+        tempBufferedImage.getRGB(0, 0, tempBufferedImage.getWidth(), tempBufferedImage.getHeight(), pixels, 0, tempBufferedImage.getWidth());
 
-        this.width = img.getWidth();
-        this.height = img.getHeight();
+        byteBuffer = BufferUtils.createByteBuffer(tempBufferedImage.getWidth() * tempBufferedImage.getHeight() * 4);
+
+        this.width = tempBufferedImage.getWidth();
+        this.height = tempBufferedImage.getHeight();
 
         for (int a = 0; a < height; ++a) {
             for (int b = 0; b < width; ++b) {
@@ -49,8 +57,9 @@ public class TextureData extends SingleSourceDataType {
         }
 
         byteBuffer.flip();
+        tempBufferedImage = null;
 
-        correctlyLoaded = true;
+        return true;
     }
 
     public BufferedImage loadBufferedImage(){
@@ -66,7 +75,7 @@ public class TextureData extends SingleSourceDataType {
         return null;
     }
 
-    public ByteBuffer getData(){
+    public ByteBuffer getData() {
         return byteBuffer;
     }
 
@@ -87,10 +96,9 @@ public class TextureData extends SingleSourceDataType {
     }
 
     @Override
-    public void unload() {
+    public void internUnload() {
         byteBuffer = null;
         width = -1;
         height = -1;
-        correctlyLoaded = false;
     }
 }

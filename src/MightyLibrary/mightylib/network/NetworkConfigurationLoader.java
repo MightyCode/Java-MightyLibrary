@@ -40,7 +40,7 @@ public class NetworkConfigurationLoader extends ResourceLoader {
 
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof NetworkConfiguration)) {
             System.err.println("ERROR LOAD");
             return;
@@ -75,10 +75,5 @@ public class NetworkConfigurationLoader extends ResourceLoader {
 
         NetworkConfiguration configuration = (NetworkConfiguration) dataType;
         configuration.init(address, id, port);
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        // Todo
     }
 }

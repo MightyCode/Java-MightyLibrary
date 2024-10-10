@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.resources.texture;
 
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
@@ -12,7 +13,6 @@ import java.io.FileInputStream;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.lwjgl.opengl.GL11.GL_TEXTURE;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class TextureDataLoader extends ResourceLoader {
@@ -25,7 +25,7 @@ public class TextureDataLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "Texture";
+        return "TextureData";
     }
 
     @Override
@@ -82,31 +82,20 @@ public class TextureDataLoader extends ResourceLoader {
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof TextureData))
             return;
 
-        TextureData texture = (TextureData) dataType;
+        TextureData textureData = (TextureData) dataType;
 
         try {
-            BufferedImage image = ImageIO.read(new FileInputStream(texture.path()));
-            texture.load(image);
+            BufferedImage image = ImageIO.read(new FileInputStream(textureData.path()));
+            textureData.setBufferedImage(image);
 
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
-            System.err.println(texture.path() + "\n");
+            System.err.println(textureData.path() + "\n");
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        if (data.containsKey(resourceName))
-            return;
-
-        TextureData currentTexture = new TextureData(resourceName, resourcePath);
-        data.put(resourceName, currentTexture);
-
-        load(currentTexture);
     }
 }

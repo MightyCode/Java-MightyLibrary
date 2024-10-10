@@ -1,7 +1,6 @@
 package MightyLibrary.mightylib.scenes.camera.cameraComponents;
 
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.main.utils.IUpdatable;
 import MightyLibrary.mightylib.scenes.camera.Camera2D;
@@ -55,7 +54,7 @@ public class MovingCameraComponent implements IUpdatable {
         this(MOVE_SPEED, QUICK_SPEED);
     }
 
-    public void init(InputManager inputManager, MouseManager mouseManager, Camera2D controlledCamera){
+    public void init(InputManager inputManager, Camera2D controlledCamera){
         this.inputManager = inputManager;
         this.controlledCamera = controlledCamera;
     }

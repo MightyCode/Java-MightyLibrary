@@ -6,8 +6,8 @@ public abstract class MultiSourceDataType extends DataType {
     private final String[] sourcesPath;
     protected final Boolean[] sourceLoaded;
 
-    public MultiSourceDataType(String dataName, String ... paths) {
-        super(dataName);
+    public MultiSourceDataType(TYPE_SET_UP typeSetUp, String dataName, String ... paths) {
+        super(typeSetUp, dataName);
 
         this.sourcesPath = paths;
         sourceLoaded = new Boolean[paths.length];
@@ -28,14 +28,13 @@ public abstract class MultiSourceDataType extends DataType {
         sourceLoaded[index] = true;
     }
 
-    public void allPartCorrectlyLoaded(){
-        for (Boolean b : sourceLoaded){
-            if (!b){
-                correctlyLoaded = false;
-                return;
+    public boolean validPaths() {
+        for (String path : sourcesPath){
+            if (path == null || path.isEmpty()){
+                return false;
             }
         }
 
-        correctlyLoaded = true;
+        return true;
     }
 }

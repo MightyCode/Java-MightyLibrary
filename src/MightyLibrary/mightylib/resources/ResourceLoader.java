@@ -1,8 +1,7 @@
 package MightyLibrary.mightylib.resources;
 
-import MightyLibrary.mightylib.resources.sound.SoundData;
-
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -11,7 +10,8 @@ public abstract class ResourceLoader {
             "batchs"
     };
 
-    public ResourceLoader(){ }
+    public ResourceLoader(){
+    }
 
     public abstract Class<? extends DataType> getType();
 
@@ -67,7 +67,46 @@ public abstract class ResourceLoader {
         }
     }
 
-    public abstract void load(DataType dataType);
+    protected abstract void initWithFile(DataType dataType);
 
-    public abstract void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath);
+    public final void preload(DataType dataType) {
+        if (dataType instanceof SingleSourceDataType) {
+            SingleSourceDataType singleSourceDataType = (SingleSourceDataType) dataType;
+            if (singleSourceDataType.validPath())
+                initWithFile(singleSourceDataType);
+
+        } else if (dataType instanceof MultiSourceDataType) {
+            MultiSourceDataType multiSourceDataType = (MultiSourceDataType) dataType;
+            if (multiSourceDataType.validPaths())
+                initWithFile(multiSourceDataType);
+        } else {
+            initWithFile(dataType);
+        }
+
+        dataType.setPreloaded();
+    }
+
+    public final void load(DataType dataType) {
+        dataType.load();
+    }
+
+    public final void reload(DataType dataType) {
+        dataType.internUnload();
+
+        if (dataType.isLoaded())
+            return;
+
+        preload(dataType);
+    }
+
+    public final void createAndSetUp(Class<? extends DataType> type, Map<String, DataType> data, String resourceName, String resourcePath) {
+        try {
+            DataType dataType = type.getConstructor(type).newInstance(resourceName, resourcePath);
+            data.put(resourceName, dataType);
+            preload(dataType);
+            load(dataType);
+        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

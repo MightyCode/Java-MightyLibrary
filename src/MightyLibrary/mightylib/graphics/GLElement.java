@@ -7,6 +7,8 @@ import java.util.ArrayList;
 
 public abstract class GLElement implements LoadingElement {
     private String name;
+    private boolean loaded;
+    private boolean preLoaded;
 
     public String getName() {
         return name;
@@ -45,8 +47,12 @@ public abstract class GLElement implements LoadingElement {
         return reference;
     }
 
-    private boolean loaded;
     public abstract boolean load(int remainingMilliseconds);
+
+    @Override
+    public boolean isPreLoaded(){
+        return preLoaded;
+    }
 
     @Override
     public boolean isLoaded(){
@@ -54,7 +60,7 @@ public abstract class GLElement implements LoadingElement {
     }
 
     void loadByResource(int remainingMilliseconds) {
-        System.out.println("Loading " + this.getClass().getSimpleName() + " = " + this.getName());
+        System.out.println("Loading gl (" + this.getClass().getSimpleName() + ") " + this.getName());
         for (DataType type : resourceDependencies) {
             if (!type.isLoaded()){
                 return;

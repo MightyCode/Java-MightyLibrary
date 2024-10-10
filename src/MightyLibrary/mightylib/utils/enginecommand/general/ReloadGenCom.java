@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.utils.enginecommand.general;
 
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.utils.enginecommand.BaseCommand;
 
@@ -17,28 +17,24 @@ public class ReloadGenCom extends BaseCommand {
         if(checkArgumentHelp(sub)) return;
 
         if (sub.length > 1) {
-            Class<?> result = Resources.getClassFromName(sub[1]);
-            int incorrectlyReloaded = -1;
+            Class<? extends DataType> result = Resources.getClassFromName(sub[1]);
 
-            if (result == Object.class){
-                switch (sub[1].toLowerCase()) {
-                    case "all":
-                        System.out.println("Reload all resources");
+            if (result == null) {
+                if (sub[1].equalsIgnoreCase("all")) {
+                    System.out.println("Reload all resources");
 
-                        incorrectlyReloaded = Resources.getInstance().reload();
-                        break;
-                    default:
-                        unknownArgumentError(sub[1]);
-                        break;
+                    Resources.getInstance().reloadAllOfType();
+                } else {
+                    unknownArgumentError(sub[1]);
                 }
             } else {
                 System.out.println("Reload " + sub[1] + " resources");
 
-                incorrectlyReloaded = Resources.getInstance().reload(result);
+                Resources.getInstance().reloadAllOfType(result);
             }
 
-            if (incorrectlyReloaded > 0)
-                System.out.println(incorrectlyReloaded + " incorrectly reloaded.");
+            /*if (incorrectlyReloaded > 0)
+                System.out.println(incorrectlyReloaded + " incorrectly reloaded.");*/
 
         } else {
             noEnoughArgumentError();

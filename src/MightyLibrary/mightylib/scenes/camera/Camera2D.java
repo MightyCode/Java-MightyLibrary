@@ -42,7 +42,7 @@ public class Camera2D extends Camera {
         this.maxZoomLevel = maxZoomLevel;
     }
 
-    public void invertView(){
+    public void invertView() {
         invertView = !invertView;
 
         updateProjection();
@@ -166,7 +166,6 @@ public class Camera2D extends Camera {
     public void setZoomLevelY(float zoomLevel) {
         setZoomLevel(new Vector2f(this.zoomLevel.x, zoomLevel));
     }
-
 
     public void setZoomLevel(Vector2f zoomLevel) {
         Vector2f previousZoom = new Vector2f(this.zoomLevel);

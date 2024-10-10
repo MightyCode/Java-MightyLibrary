@@ -9,10 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class TileMap extends SingleSourceDataType {
-    // Correctly loaded serves to detect if save tile changes
-    private final List<TileChange> tileChanges;
-
-    private static class TileChange {
+    public static class TileChange {
         private TilePosition position;
 
         private int from;
@@ -38,6 +35,10 @@ public class TileMap extends SingleSourceDataType {
         public int getFrom() { return from; }
         public int getTo() { return to; }
     }
+
+    // Correctly loaded serves to detect if save tile changes
+    private final List<TileChange> tileChanges;
+
     private final Vector2i mapSize;
     private final TileSetAtlas tileSetAtlas;
 
@@ -48,7 +49,11 @@ public class TileMap extends SingleSourceDataType {
     private final HashMap<String, Integer> layersCategoriesTo;
 
     public TileMap(String dataName, String path) {
-        super(dataName, path);
+        this(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
+    }
+
+    public TileMap(TYPE_SET_UP typeSetUp, String dataName, String path) {
+        super(typeSetUp, dataName, path);
         this.mapSize = new Vector2i();
         this.tileSetAtlas = new TileSetAtlas();
 
@@ -57,19 +62,18 @@ public class TileMap extends SingleSourceDataType {
         layersCategoriesFrom = new HashMap<>();
         layersCategoriesTo = new HashMap<>();
 
-        reset();
+        unload();
     }
 
-    public void addTileset(TileSet tileset, int startId){
+
+    public void addTileset(TileSet tileset, int startId) {
+        addDependency(tileset);
         tileSetAtlas.addTileSet(tileset, startId);
     }
 
-    public void init(Vector2i mapSize, TileLayer[] layers, String[] layersCategories, int[] layersCategoriesBeginIndex) {
+    public void setInformation(Vector2i mapSize, TileLayer[] layers, String[] layersCategories, int[] layersCategoriesBeginIndex) {
         this.mapSize.set(mapSize);
         this.layers = layers.clone();
-
-        /*System.out.println("Layers: " + layersCategories.length);
-        System.out.println("Names :" + layersCategoriesBeginIndex.length);*/
 
         if (layersCategories == null || layersCategories.length == 0){
             this.layersCategories = new String[]{TileLayer.DEFAULT_CATEGORY_NAME};
@@ -110,7 +114,6 @@ public class TileMap extends SingleSourceDataType {
         tileChanges.clear();
     }
 
-
     public void setTileType(int layerNumber, int x, int y, int type){
         setTile(layerNumber, x, y, type);
     }
@@ -119,7 +122,7 @@ public class TileMap extends SingleSourceDataType {
         int previousType = layers[layerNumber].getTile(x, y);
         layers[layerNumber].setTileType(x, y, type);
 
-        if (correctlyLoaded) {
+        if (isLoaded()) {
 
             if (previousType != type)
                 tileChanges.add(
@@ -168,11 +171,15 @@ public class TileMap extends SingleSourceDataType {
         return tileNumber;
     }
 
-    public void setCorrectlyLoaded(){
-        correctlyLoaded = true;
+    @Override
+    protected boolean internLoad() {
+        tileSetAtlas.transferTileSetTextureToAtlas();
+
+        return layers != null && mapSize.x != 0 && mapSize.y != 0;
     }
 
-    private void reset(){
+    @Override
+    public void internUnload() {
         layers = null;
         tileSetAtlas.clear();
         mapSize.x = 0;
@@ -180,12 +187,5 @@ public class TileMap extends SingleSourceDataType {
 
         layersCategoriesFrom.clear();
         layersCategoriesTo.clear();
-
-        correctlyLoaded = false;
-    }
-
-    @Override
-    public void unload() {
-        reset();
     }
 }

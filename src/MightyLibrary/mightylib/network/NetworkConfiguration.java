@@ -6,20 +6,20 @@ public class NetworkConfiguration extends SingleSourceDataType {
     private String address;
     private String id;
     private int port;
-    private boolean initialized;
 
     public NetworkConfiguration(String dataName, String path) {
-        super(dataName, path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
     }
 
-    public void init(String address, String id, int port){
-        if (!initialized){
-            this.address = address;
-            this.id = id;
-            this.port = port;
+    public void init(String address, String id, int port) {
+        this.address = address;
+        this.id = id;
+        this.port = port;
+    }
 
-            initialized = true;
-        }
+    @Override
+    protected boolean internLoad() {
+        return true;
     }
 
     public String getAddress() { return address; }
@@ -28,6 +28,6 @@ public class NetworkConfiguration extends SingleSourceDataType {
     public int getPort() { return port; }
 
     @Override
-    public void unload() {}
+    public void internUnload() {}
 
 }

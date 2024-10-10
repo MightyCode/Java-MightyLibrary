@@ -1,6 +1,5 @@
 package MightyLibrary.project.scenes;
 
-import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
@@ -18,7 +17,6 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.texture.TextureData;
 import MightyLibrary.mightylib.resources.texture.TextureDataAtlas;
-import MightyLibrary.mightylib.scenes.TemplateSceneLoading;
 import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera2D;
@@ -35,6 +33,7 @@ import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.mightylib.utils.math.geometry.Polygon;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.*;
 
 public class Test2DScene extends Scene {
@@ -56,6 +55,8 @@ public class Test2DScene extends Scene {
 
     private Camera2D hudCamera;
 
+    private TextureDataAtlas atlas;
+
     @Override
     protected String[] getInvolvedBatch() {
         return new String[]{
@@ -64,21 +65,25 @@ public class Test2DScene extends Scene {
     }
 
     public void init(String[] args) {
-        super.init(args);
-        /// SCENE INFORMATION ///
+        super.init(args, new LoadingSceneImplementation());
 
-        TemplateSceneLoading loadingScene = new LoadingSceneImplementation();
-
-        hudCamera = main2DCamera.copy();
-
-        TextureDataAtlas atlas = new TextureDataAtlas("atlas1");
+        atlas = new TextureDataAtlas("atlas1");
 
         atlas.addTexture("tileset");
         atlas.addTexture("painting");
+        atlas.setPreloaded();
+
+        Resources.getInstance().addPreLoadedResource(atlas);
+    }
+
+    public void launch(String[] args) {
+        super.launch(args);
+        /// SCENE INFORMATION ///
+        hudCamera = main2DCamera.copy();
 
         atlasRenderer = new RectangleRenderer("texture2D");
         atlasRenderer.load(0);
-        atlasRenderer.setMainTextureChannel(GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));
+        atlasRenderer.setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));
         atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
         atlasRenderer.setPosition(new Vector2f(500, 10));
 
@@ -121,7 +126,7 @@ public class Test2DScene extends Scene {
                 .setColor(new Color4f(0.5f, 0.4f, 0.3f, 1))
                 .setText("Test d'écriture de texte c'est super cool");
 
-        map = Resources.getInstance().getResource(TileMap.class, "map");
+        map = resources.getResource(TileMap.class, "map");
 
         mapRenderer = new LayersTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
@@ -137,7 +142,7 @@ public class Test2DScene extends Scene {
         addUpdatable(draggingSceneComponent);
 
         MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                         .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -173,7 +178,7 @@ public class Test2DScene extends Scene {
 
         hexagonRenderer2 = new HexagonRenderer("texture2D");
         hexagonRenderer2.load(0);
-        hexagonRenderer2.setMainTextureChannel(GLResources.getInstance().addElementOrReturnIfPresent(
+        hexagonRenderer2.setMainTextureChannel(glResources.addElementOrReturnIfPresent(
                 Texture.class,
                 new Texture(Resources.getInstance().getResource(TextureData.class,
                         "hexagon")), "hexagon"));
@@ -198,6 +203,7 @@ public class Test2DScene extends Scene {
                         .addVertex(new Vector2f(0f, 1f))
                         .build()
         );
+
         polygonRenderer.load(0);
         polygonRenderer.setMainTextureChannel("error");
         polygonRenderer.setSizePix(100, 100);
@@ -206,7 +212,6 @@ public class Test2DScene extends Scene {
         glLineWidth(10f);*/
         polygonRenderer.setReferenceVertex(indexVertexReference);
     }
-
 
     public void update() {
         super.update();
@@ -315,5 +320,7 @@ public class Test2DScene extends Scene {
         polygonRenderer.unload();
 
         mapRenderer.unload();
+
+        resources.deleteResource(TextureDataAtlas.class, "atlas1");
     }
 }

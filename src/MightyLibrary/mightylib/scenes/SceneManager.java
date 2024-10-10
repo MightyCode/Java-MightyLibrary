@@ -2,11 +2,11 @@ package MightyLibrary.mightylib.scenes;
 
 import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.main.MainLoop;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.TextureData;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.utils.enginecommand.Commands;
 
@@ -14,12 +14,18 @@ public class SceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
 
+    private final GLResources glResources;
+    private final Resources resources;
+
     private final MainLoop.StopLibrary stopLibrary;
 
     private final Commands commands;
     private final SoundManager soundManager;
 
-    public SceneManager(MainLoop.StopLibrary stopLibrary){
+    public SceneManager(MainLoop.StopLibrary stopLibrary) {
+        glResources = GLResources.getInstance();
+        resources = Resources.getInstance();
+
         this.stopLibrary = stopLibrary;
 
         sceneInterface = new SceneManagerInterface();
@@ -40,7 +46,7 @@ public class SceneManager {
 
     public void update() {
         // Command
-        if (MainLoop.isAdmin()){
+        if (MainLoop.isAdmin()) {
             updateMain();
         }
 
@@ -50,10 +56,10 @@ public class SceneManager {
         if (sceneInterface.WantQuit)
             exit(sceneInterface.ExitStatus);
 
-        GLResources.getInstance().process(); // Create Gl elements, takes a bit of time
+        glResources.process(); // Create Gl elements, takes a bit of time
+        resources.process(15);
 
         currentScene.updateByManager();
-
         soundManager.lateUpdate();
     }
 
@@ -66,10 +72,10 @@ public class SceneManager {
             commands.writeCommand();
 
         if (mainInputManager.inputPressed(InputManager.RELOAD_TEXTURE))
-            Resources.getInstance().reload(Texture.class);
+            Resources.getInstance().reloadAllOfType(TextureData.class);
     }
 
-    public void display(){
+    public void display() {
         currentScene.displayByManager();
     }
 
@@ -103,6 +109,7 @@ public class SceneManager {
             Resources.getInstance().loadBatch(batch);
 
         currentScene.init(sceneInterface.getChangeArgs());
+        currentScene.setWaitForLoading();
 
         sceneInterface.reset();
     }

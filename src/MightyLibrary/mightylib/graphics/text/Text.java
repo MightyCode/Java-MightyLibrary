@@ -1,11 +1,9 @@
 package MightyLibrary.mightylib.graphics.text;
 
-import MightyLibrary.mightylib.graphics.GLElement;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -72,7 +70,7 @@ public class Text extends Renderer implements Cloneable {
 
     public Text setFont(String fontName) {
         // check if the font is already loaded
-        if (this.font != null && this.font.getName().equals(fontName)) {
+        if (this.font != null && this.font.getFontName().equals(fontName)) {
             return this;
         }
 
@@ -360,7 +358,7 @@ public class Text extends Renderer implements Cloneable {
 
     public Text createCopy(){
         Text text = new Text();
-        text.setFont(this.font.getName())
+        text.setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
@@ -375,7 +373,7 @@ public class Text extends Renderer implements Cloneable {
 
     public Text copyTo(Text copy){
         copy.setText("")
-                .setFont(this.font.getName())
+                .setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
                 .setPosition(new Vector2f(this.position.x, this.position.y))

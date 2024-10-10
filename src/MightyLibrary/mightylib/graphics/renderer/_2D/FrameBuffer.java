@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
-import MightyLibrary.mightylib.resources.texture.IGLBindable;
-import MightyLibrary.mightylib.resources.texture.TextureParameters;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.utils.Logger;
 
 import static org.lwjgl.opengl.GL30.*;

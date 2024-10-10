@@ -2,14 +2,11 @@ package MightyLibrary.mightylib.resources.texture;
 
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.ResourceLoader;
-import MightyLibrary.mightylib.resources.animation.AnimationData;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.FileInputStream;
 import java.util.Map;
-import java.util.Objects;
 
 public class IconLoader extends ResourceLoader {
 
@@ -37,14 +34,13 @@ public class IconLoader extends ResourceLoader {
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
-        if (ending.equals(".ico"))
-            return getFileName(path);
+        if (ending != null && ending.equals(".ico")) return getFileName(path);
 
         return null;
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof Icon))
             return;
 
@@ -52,17 +48,12 @@ public class IconLoader extends ResourceLoader {
 
         try {
             BufferedImage image = ImageIO.read(new FileInputStream(icon.path()));
-            icon.createIcon(image);
+            icon.setBufferedImage(image);
 
         } catch (Exception e) {
             System.err.println("Can't find the path for :");
             System.err.println(icon.path() + "\n");
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-
     }
 }

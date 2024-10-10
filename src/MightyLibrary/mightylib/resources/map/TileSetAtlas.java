@@ -23,9 +23,17 @@ public class TileSetAtlas {
     void addTileSet(TileSet tileset, int startId) {
         tilesets.add(tileset);
         startIds.add(startId);
+    }
 
-        textureAtlas.addTexture(
-                Resources.getInstance().getResource(TextureData.class, tileset.texture()));
+    void transferTileSetTextureToAtlas() {
+        for (TileSet tileset : tilesets) {
+            TextureData data = Resources.getInstance().getResource(TextureData.class, tileset.texture());
+            textureAtlas.addDependency(data);
+            textureAtlas.addTexture(data);
+        }
+
+        textureAtlas.setPreloaded();
+        Resources.getInstance().addPreLoadedResource(textureAtlas);
     }
 
     public int getTileSetIndexRelatedTo(int tileId){
@@ -55,7 +63,7 @@ public class TileSetAtlas {
         return tilesets.get(index);
     }
 
-    public Vector2i getTileSetPosition(int index){
+    public Vector2i getTileSetPosition(int index) {
         return textureAtlas.getTexturePosition(
                 tilesets.get(index).texture()
         );

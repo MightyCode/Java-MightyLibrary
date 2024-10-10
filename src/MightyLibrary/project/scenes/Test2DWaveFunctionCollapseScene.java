@@ -2,6 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveFunctionCollapseGrid;
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
+import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.data.JSONFile;
 import MightyLibrary.mightylib.resources.map.TileLayer;
 import MightyLibrary.mightylib.resources.map.TileMap;
@@ -13,9 +14,10 @@ import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera2D;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.DraggingCameraComponent;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.MovingCameraComponent;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.ZoomingCameraComponent;
-import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRule;
+import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRules;
 import MightyLibrary.mightylib.utils.Timer;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -23,7 +25,6 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 public class Test2DWaveFunctionCollapseScene extends Scene {
     private TileMap map;
@@ -38,12 +39,16 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
     @Override
     protected String[] getInvolvedBatch() {
         return new String[]{
-                "map-assets"
+                "map-assets", "wavecollapse"
         };
     }
 
     public void init(String[] args) {
-        super.init(args);
+        super.init(args, new LoadingSceneImplementation());
+    }
+
+    public void launch(String[] args) {
+        super.launch(args);
         /// SCENE INFORMATION ///
 
         hudCamera = main2DCamera.copy();
@@ -52,20 +57,28 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         //setClearColor(0, 0, 0, 1f);
 
         /// RENDERERS ///
-        map = new TileMap("waveCollapseTest", "none");
-        map.setCorrectlyLoaded();
+
         mapSize = new Vector2i(100, 100);
 
         mapRenderer = new LayersTileMapRenderer("texture2D", true);
 
-        WaveCollapseRule rule = new WaveCollapseRule(resources.getResource(JSONFile.class, "waveCollapseTest"));
-        rule.printRules();
+        //rule.printRules();
 
-        TileSet set = resources.getResource(TileSet.class, rule.getRecommendedTileset());
-        waveFunctionCollapseGrid = new WaveFunctionCollapseGrid(rule, map, set, mapSize);
+        WaveCollapseRules rule = resources.getResource(WaveCollapseRules.class, "waveCollapseTest");
+        System.out.println(rule.isLoaded());
+
+        map = new TileMap(DataType.TYPE_SET_UP.IMMEDIATELY_BY_MAIN_CONTEXT, "waveCollapseTest", "none");
+        map.addTileset(resources.getResource(TileSet.class, rule.getRecommendedTileset()), 0);
+        map.addDependency(rule);
+        map.setPreloaded();
+
+        waveFunctionCollapseGrid = new WaveFunctionCollapseGrid(rule, map, mapSize);
+        resources.addPreLoadedResource(map);
         waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
 
+        System.out.println("123123" + map.isLoaded());
         mapRenderer.setTileMap(map);
+        System.out.println("123124" + map.isLoaded());
 
         DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
         draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
@@ -74,7 +87,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         addUpdatable(draggingSceneComponent);
 
         MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                         .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -132,6 +145,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         }
 
         mapRenderer.update();
+        System.out.println("123125" + map.isLoaded());
 
         //mapRenderer.getBackTileMapRenderer().setScale(new Vector3f(4f, 4f, 1f));
 
@@ -160,99 +174,6 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         super.unload();
 
         mapRenderer.unload();
-    }
-
-    public Vector2i selectMinimumIn(List<Integer>[][] availableTiles, Random random){
-        List<Vector2i> positions = new ArrayList<>();
-        int minSize = Integer.MAX_VALUE;
-
-        for (int y = 0; y < availableTiles.length; ++y) {
-            for (int x = 0; x < availableTiles[y].length; ++x) {
-                if (availableTiles[y][x] != null){
-                    if (availableTiles[y][x].size() < minSize) {
-                        positions.clear();
-                        minSize = availableTiles[y][x].size();
-                        positions.add(new Vector2i(x, y));
-                    } else if (availableTiles[y][x].size() == minSize){
-                        positions.add(new Vector2i(x, y));
-                    }
-                }
-            }
-        }
-
-        if (positions.size() == 0)
-            return null;
-
-        return positions.get(random.nextInt(positions.size()));
-    }
-
-    public void waveFunctionAlgorithm(TileMap map, TileSet set, WaveCollapseRule rule, Vector2i mapSize) {
-        TileLayer layer = new TileLayer(mapSize);
-
-        WaveCollapseRule.Rule initialRule = rule.getInitialRule();
-
-        Set<Integer> listOfTile = initialRule.getAvailableIds(WaveCollapseRule.Rule.INITIAl_POS);
-
-        List<Integer>[][] availableTiles = new ArrayList[mapSize.y][mapSize.x];
-        // Add all possible tiles to each cell
-        for (int y = 0; y < mapSize.y; ++y) {
-            for (int x = 0; x < mapSize.x; ++x) {
-                // Copy the list of tile
-                availableTiles[y][x] = new ArrayList<>(listOfTile);
-            }
-        }
-
-        Random random = new Random();
-
-        Vector2i currentPosition = selectMinimumIn(availableTiles, random);
-
-        while (currentPosition != null){
-            int chosenTile = -1;
-
-            if (availableTiles[currentPosition.y][currentPosition.x].size() > 0)
-                chosenTile = availableTiles[currentPosition.y][currentPosition.x].get(
-                        random.nextInt(availableTiles[currentPosition.y][currentPosition.x].size()));
-
-            layer.setTileType(currentPosition.x, currentPosition.y, chosenTile);
-
-            // Destroy the list
-            availableTiles[currentPosition.y][currentPosition.x] = null;
-
-            if (chosenTile != -1) {
-                WaveCollapseRule.Rule ruleToApply = rule.getRule(chosenTile);
-
-                for (Vector2i direction : ruleToApply.getDirections()) {
-                    // Only keep for the direction tile, the given list
-
-                    Set<Integer> availableTile = ruleToApply.getAvailableIds(direction);
-                    /*System.out.print("Chosen tile (" + ruleToApply.getId() + ")
-                        (" + direction.x + "," + direction.y + ") :");
-                    for (Integer tile : availableTile) {
-                        System.out.print(tile + ", ");
-                    }
-                    System.out.println();*/
-
-                    // Check if direction is in the map
-
-                    Vector2i newPos = currentPosition.add(direction, new Vector2i());
-
-                    if (newPos.x < 0 || newPos.x >= mapSize.x || newPos.y < 0 || newPos.y >= mapSize.y)
-                        continue;
-
-                    if (availableTiles[newPos.y][newPos.x] != null) {
-                        availableTiles[newPos.y][newPos.x].retainAll(availableTile);
-                    }
-                }
-            }
-
-            // Select the minimum available point by its list size, if there is no available point, return null
-            currentPosition = selectMinimumIn(availableTiles, random);
-        }
-
-        TileLayer[] layers = new TileLayer[1];
-        layers[0] = layer;
-
-        map.addTileset(set, 0);
-        map.init(mapSize, layers, null, null);
+        resources.deleteResource(map);
     }
 }

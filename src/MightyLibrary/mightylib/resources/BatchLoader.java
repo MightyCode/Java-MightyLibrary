@@ -42,18 +42,10 @@ public class BatchLoader extends ResourceLoader {
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof BatchResources))
             return;
 
-        jsonLoader.load(dataType);
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        BatchResources batchResources = new BatchResources(resourceName, resourcePath);
-        data.put(resourceName, batchResources);
-
-        load(batchResources);
+        jsonLoader.initWithFile(dataType);
     }
 }

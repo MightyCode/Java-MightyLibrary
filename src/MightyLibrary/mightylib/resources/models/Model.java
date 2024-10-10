@@ -4,11 +4,16 @@ import MightyLibrary.mightylib.resources.SingleSourceDataType;
 
 public class Model extends SingleSourceDataType {
     public Model(String dataName, String path) {
-        super(dataName, path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
     }
 
     @Override
-    public void unload() {
+    public boolean internLoad() {
+        return false;
+    }
+
+    @Override
+    public void internUnload() {
 
     }
 }

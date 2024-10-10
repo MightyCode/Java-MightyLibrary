@@ -57,7 +57,7 @@ public class DebugInfoCamera2D implements IUpdatableDisplayable {
     }
 
     public String prec(float value){
-        return String.format("%."+precision+"f", value);
+        return String.format("%." + precision + "f", value);
     }
 
     @Override

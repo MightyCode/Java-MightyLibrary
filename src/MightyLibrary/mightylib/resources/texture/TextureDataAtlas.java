@@ -21,15 +21,22 @@ public class TextureDataAtlas extends TextureData {
     private final Map<String, Vector2i> texturesPosition;
     private BufferedImage atlas;
 
-    public TextureDataAtlas(String name) {
-        super(name, null);
+    public TextureDataAtlas(String name, String path) {
+        super(name, path);
         textures = new ArrayList<>();
         texturesMap = new HashMap<>();
         texturesPosition = new HashMap<>();
     }
 
+    public TextureDataAtlas(String name) {
+        this(name, null);
+    }
+
     public void addTexture(String name) {
-        addTexture(Resources.getInstance().getResource(TextureData.class, name));
+        TextureData texture = Resources.getInstance().getResource(TextureData.class, name);
+
+        addDependency(texture);
+        addTexture(texture);
     }
 
     public void addTexture(TextureData texture) {
@@ -47,22 +54,21 @@ public class TextureDataAtlas extends TextureData {
             else return 0;
         });
 
-        //if (isLoaded()) // TODO
-        createAtlas();
+        if (isLoaded())
+            createAtlas();
     }
 
-    public void load() {
-        createAtlas();
-
-        correctlyLoaded = true;
+    @Override
+    protected boolean internLoad() {
+        return createAtlas();
     }
 
-    private void createAtlas() {
+    private boolean createAtlas() {
         placeTextures();
-        constructTexture();
-
         defaultAspectTexture = textures.get(0).defaultAspectTexture;
         defaultTextureType = textures.get(0).defaultTextureType;
+
+        return constructTexture();
     }
 
     private void placeTextures() {
@@ -98,7 +104,7 @@ public class TextureDataAtlas extends TextureData {
         height = currentY + maxHeightInRow;
     }
 
-    public void constructTexture(){
+    public boolean constructTexture(){
         // fill an array with black pixels
         atlas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = atlas.createGraphics();
@@ -109,7 +115,9 @@ public class TextureDataAtlas extends TextureData {
             g2d.drawImage(texture.loadBufferedImage(), position.x, position.y, null);
         }
 
-        load(atlas);
+        setBufferedImage(atlas);
+
+        return super.internLoad();
     }
 
     @Override

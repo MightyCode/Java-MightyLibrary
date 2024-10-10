@@ -54,7 +54,7 @@ public class Renderer extends UUID implements IDisplayable {
         referenceCamera = null;
 
         if (shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1){
-            if (shape.getIn2D())
+            if (shape.is2DPurpose())
                 shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
                         ShaderManager.getInstance().getMainCamera2D().getProjection());
             else
@@ -63,14 +63,14 @@ public class Renderer extends UUID implements IDisplayable {
         }
 
         if (shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1){
-            if (shape.getIn2D())
+            if (shape.is2DPurpose()) {
                 shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
                         ShaderManager.getInstance().getMainCamera2D().getView());
+            }
             else
                 shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
                         ShaderManager.getInstance().getMainCamera3D().getProjection());
         }
-
 
         applyModel();
 
@@ -109,8 +109,7 @@ public class Renderer extends UUID implements IDisplayable {
         return this;
     }
 
-    public Renderer updateShaderValue(String name, Object object){
-        //System.out.println(name);
+    public Renderer updateShaderValue(String name, Object object) {
         shaderValues.get(name).setObject(object);
 
         return this;
@@ -127,7 +126,7 @@ public class Renderer extends UUID implements IDisplayable {
         return other;
     }
 
-    protected void sentToShader(ShaderValue value){
+    protected void sentToShader(ShaderValue value) {
         shape.getShader().sendValueToShader(value);
     }
 

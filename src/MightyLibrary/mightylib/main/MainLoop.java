@@ -99,11 +99,11 @@ public final class MainLoop {
 
         System.out.println("--Create Resources");
         Resources resource = Resources.createInstance(
-                startProcedure.returnResourcesLoadingMethod()
+                startProcedure.returnResourcesLoadingMethod(),
+                Math.max(1, startProcedure.returnMaxNumberOfThreadsToUse())
         );
 
         GLResources glResources = GLResources.createInstance(startProcedure.returnGLResourceCreation());
-
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(new StopLibrary());
@@ -117,7 +117,7 @@ public final class MainLoop {
 
         // Load all resources
         resource.load();
-        sceneManager.init(startProcedure.returnStartScene(), new String[]{});
+        sceneManager.init(startProcedure.returnStartScene(), new String[]{"start"});
 
         if (startProcedure.returnIconName() != null) {
             if (resource.isExistingResource(Icon.class, startProcedure.returnIconName()))

@@ -1,13 +1,9 @@
 package MightyLibrary.mightylib.graphics.text;
 
 import MightyLibrary.mightylib.resources.SingleSourceDataType;
-import MightyLibrary.mightylib.resources.texture.Texture;
-import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.TextureData;
 import org.joml.Vector2f;
-
-import static org.lwjgl.opengl.GL11C.glGetError;
 
 public class FontFace extends SingleSourceDataType {
     private static final String PATH = "resources/textures/fonts/";
@@ -16,10 +12,11 @@ public class FontFace extends SingleSourceDataType {
     private final FontFile fontFile;
 
     FontFace(String fontFaceName, String textureName, String infoPath) {
-        super(fontFaceName, PATH + infoPath);
+        super(TYPE_SET_UP.THREAD_CONTEXT, fontFaceName, PATH + infoPath);
 
         name = fontFaceName;
         fontAtlas = Resources.getInstance().getResource(TextureData.class, textureName);
+        addDependency(fontAtlas);
 
         fontFile = new FontFile(PATH + infoPath);
     }
@@ -57,7 +54,7 @@ public class FontFace extends SingleSourceDataType {
         return result;
     }
 
-    public String getName(){
+    public String getFontName(){
         return name;
     }
 
@@ -79,10 +76,9 @@ public class FontFace extends SingleSourceDataType {
         return fontFile;
     }
 
-    void setCorrectlyLoaded() { correctlyLoaded = true; }
+    @Override
+    protected boolean internLoad() { return true; }
 
     @Override
-    public void unload() {
-        correctlyLoaded = false;
-    }
+    public void internUnload() {}
 }

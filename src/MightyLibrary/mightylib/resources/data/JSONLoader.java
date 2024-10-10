@@ -31,26 +31,17 @@ public class JSONLoader extends ResourceLoader {
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
-        if (ending.equals(".json"))
-            return getFileName(path);
+        if (ending != null && ending.equals(".json")) return getFileName(path);
 
         return null;
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof JSONFile))
             return;
 
         JSONFile json = (JSONFile) dataType;
-
-        json.init(new JSONObject(FileMethods.readFileAsString(json.path())));
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        JSONFile file = new JSONFile(resourceName, resourcePath);
-        load(file);
-        data.put(resourceName, file);
+        json.setJsonObject(new JSONObject(FileMethods.readFileAsString(json.path())));
     }
 }

@@ -1,7 +1,7 @@
 {
     "batchs" : [
         {
-            "type" : "Texture",
+            "type" : "TextureData",
             "files" : [
                 "arial",
                 "bahnschrift",

@@ -14,6 +14,7 @@ import MightyLibrary.mightylib.scenes.camera.cameraComponents.ZoomingCameraCompo
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
@@ -80,9 +81,13 @@ public class TestBox2D extends Scene {
 
     private Camera2D hudCamera;
 
+    public void init(String[] args) {
+        super.init(args, new LoadingSceneImplementation());
+    }
+
     @Override
-    public void init(String[] args){
-        super.init(args);
+    public void launch(String[] args){
+        super.launch(args);
         /// SCENE INFORMATION ///
 
         hudCamera = main2DCamera.copy();
@@ -131,7 +136,7 @@ public class TestBox2D extends Scene {
         addUpdatable(draggingSceneComponent);
 
         MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                 .setMoveLeft(ActionId.MOVE_LEFT_2D)

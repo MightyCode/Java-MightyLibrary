@@ -3,6 +3,8 @@ package MightyLibrary.mightylib.resources.texture;
 import MightyLibrary.mightylib.graphics.GLElement;
 import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.utils.Logger;
 
@@ -44,7 +46,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
     public void bindRenderTexture(int texturePos) {
         // Active the texture to right position
         glActiveTexture(GL_TEXTURE0 + texturePos);
-        if (data.isLoaded()){
+        if (isLoaded()){
             glBindTexture(textureType, textureId);
             Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
         // If isn't correct loaded, bind error texture
@@ -55,7 +57,9 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         }
     }
 
+    @Override
     public boolean load(int remainingMilliseconds) {
+        System.out.println("Load texture : " + data.getDataName());
         if (textureId != -1)
             unload(remainingMilliseconds);
 

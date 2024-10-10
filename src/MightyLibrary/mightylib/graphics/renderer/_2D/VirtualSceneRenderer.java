@@ -1,9 +1,8 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.Shape2DRenderer;
 import MightyLibrary.mightylib.main.WindowInfo;
-import MightyLibrary.mightylib.resources.texture.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
 
 public class VirtualSceneRenderer extends RectangleRenderer {
     private final FrameBuffer frameBuffer;

@@ -18,8 +18,8 @@ public abstract class LoadingScene <T extends LoadingContent, K extends LoadingC
 
     protected abstract void initialize(String [] args);
 
-    public final void init(String[] args) {
-        super.init(args);
+    public final void launch(String[] args) {
+        super.launch(args);
 
         ThreadManager.RunThread(loadingContent);
 

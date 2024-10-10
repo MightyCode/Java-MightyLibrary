@@ -1,10 +1,11 @@
 package MightyLibrary.mightylib.scenes;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.main.utils.*;
-import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
-import MightyLibrary.mightylib.resources.texture.IGLBindable;
-import MightyLibrary.mightylib.resources.texture.TextureParameters;
+import MightyLibrary.mightylib.graphics.surface.BasicBindableObject;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
@@ -21,8 +22,10 @@ import java.util.ArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 
-public class Scene extends UUID implements IUpdatableDisplayable {
+public abstract class Scene extends UUID implements IUpdatableDisplayable {
     protected final Resources resources;
+    protected final GLResources glResources;
+
     protected final ShaderManager shaderManager;
     protected final Context mainContext;
     protected Camera3D main3DCamera;
@@ -34,31 +37,57 @@ public class Scene extends UUID implements IUpdatableDisplayable {
     private final ArrayList<IDisplayable> displayables = new ArrayList<>();
 
     private TemplateSceneLoading loadingScene = null; // can be null
+    private boolean isWaitingForLoading = false;
+
+    protected String[] args;
+
+    private Camera3DCreationInfo cameraParameters;
 
     public Scene(Camera3DCreationInfo info) {
         resources = Resources.getInstance();
+        glResources = GLResources.getInstance();
+
         shaderManager = ShaderManager.getInstance();
         mainContext = ContextManager.getInstance().getMainContext();
 
-        Camera3DCreationInfo parameters;
-
         if (info == null) {
-            parameters = new Camera3DCreationInfo();
-            parameters.fov = 120f;
-            parameters.initialPosition = new Vector3f(0, 0, 0);
+            cameraParameters = new Camera3DCreationInfo();
+            cameraParameters.fov = 120f;
+            cameraParameters.initialPosition = new Vector3f(0, 0, 0);
         } else {
-            parameters = info;
+            cameraParameters = info;
         }
-
-        main3DCamera = mainContext.createCamera(parameters);
-        main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
-        shaderManager.setCameras(main2DCamera, main3DCamera);
 
         sceneManagerInterface = null;
     }
 
     public Scene(){
         this(null);
+    }
+
+    private void initGlobalParameters(){
+        main3DCamera = mainContext.createCamera(cameraParameters);
+        main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
+        shaderManager.setCameras(main2DCamera, main3DCamera);
+    }
+
+    public abstract void init(String[] args);
+
+    public void init(String[] args, TemplateSceneLoading loadingScene) {
+        this.args = args;
+        this.loadingScene = loadingScene;
+        this.loadingScene.launch(this.args);
+    }
+
+    public void launch(String[] args, IGLBindable bindable) {
+        initGlobalParameters();
+
+        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), bindable);
+        scRenderer.load(0);
+    }
+
+    public void launch(String[] args) {
+        launch(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
     }
 
     public void addUpdatable(IUpdatable updatable){
@@ -87,19 +116,9 @@ public class Scene extends UUID implements IUpdatableDisplayable {
         removeDisplayable(object);
     }
 
-    protected void setLoadingScene(TemplateSceneLoading loadingScene){
-        this.loadingScene = loadingScene;
-    }
 
-    public void init(String[] args, IGLBindable bindable) {
-        dispose();
-
-        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), bindable);
-        scRenderer.load(0);
-    }
-
-    public void init(String[] args) {
-        init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
+    public void setWaitForLoading() {
+        isWaitingForLoading = true;
     }
 
     public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface) {
@@ -107,26 +126,22 @@ public class Scene extends UUID implements IUpdatableDisplayable {
     }
 
     final void updateByManager(){
-        if (loadingScene != null) {
+        if (isWaitingForLoading) {
             loadingScene.updateByManager();
-            if (loadingScene.isFinished()) {
-                loadingScene.displayByManager();
-                loadingScene = null;
-            }
         } else {
             update();
         }
     }
 
     public void update() {
-        for (IUpdatable updatable : updatables)
+        for (IUpdatable updatable : updatables) {
             updatable.update();
+        }
     }
 
-    public void disposeByManager(){
-        if (loadingScene != null) {
-            loadingScene.displayByManager();
-            loadingScene = null;
+    void disposeByManager(){
+        if (isWaitingForLoading) {
+            loadingScene.disposeByManager();
         } else {
             dispose();
         }
@@ -138,9 +153,14 @@ public class Scene extends UUID implements IUpdatableDisplayable {
         }
     }
 
-    final void displayByManager(){
-        if (loadingScene != null) {
-            loadingScene.disposeByManager();
+    final void displayByManager() {
+        if (isWaitingForLoading) {
+            loadingScene.displayByManager();
+
+            if (loadingScene.isFinished()) {
+                isWaitingForLoading = false;
+                this.launch(args);
+            }
         } else {
             display();
         }
@@ -161,7 +181,6 @@ public class Scene extends UUID implements IUpdatableDisplayable {
         mainContext.getWindow().setRealViewport();
 
         scRenderer.display();
-        dispose();
     }
 
     protected void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
@@ -184,7 +203,8 @@ public class Scene extends UUID implements IUpdatableDisplayable {
     }
 
     public void unload() {
-        scRenderer.unload();
+        if (scRenderer != null)
+            scRenderer.unload();
 
         for (IUpdatable updatable : updatables)
             updatable.unload();
