@@ -22,7 +22,11 @@ public class TextureData extends SingleSourceDataType {
     int defaultTextureType;
 
     public TextureData(String name, String path) {
-        super(TYPE_SET_UP.THREAD_CONTEXT, name, path);
+        this(TYPE_SET_UP.THREAD_CONTEXT, name, path);
+    }
+
+    public TextureData(TYPE_SET_UP typeSetUp, String name, String path) {
+        super(typeSetUp, name, path);
 
         defaultTextureType = GL_TEXTURE_2D;
         defaultAspectTexture = TextureParameters.REALISTIC_PARAMETERS;

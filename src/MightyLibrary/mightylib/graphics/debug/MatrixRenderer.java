@@ -119,7 +119,7 @@ public class MatrixRenderer {
 
                 // List positions for the renderer
 
-                position[i * VBO_POSITION_SHIFT + 0] = fourPositions.x;
+                position[i * VBO_POSITION_SHIFT] = fourPositions.x;
                 position[i * VBO_POSITION_SHIFT + 1] = fourPositions.w;
 
                 position[i * VBO_POSITION_SHIFT + 2] = fourPositions.x;

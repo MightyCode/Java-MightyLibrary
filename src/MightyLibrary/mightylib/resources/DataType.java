@@ -27,7 +27,7 @@ public abstract class DataType extends UUID implements LoadingElement {
     private boolean manuallyCreated;
 
     public enum TYPE_SET_UP {
-        IMMEDIATELY_BY_MAIN_CONTEXT,
+        IMMEDIATELY_IN_CURRENT_CONTEXT,
         MAIN_CONTEXT,
         THREAD_CONTEXT
     }
@@ -106,7 +106,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         }
     }
 
-    public final boolean notReferenced(){
+    public final boolean notReferenced() {
         return references[0] == null;
     }
 
@@ -134,6 +134,7 @@ public abstract class DataType extends UUID implements LoadingElement {
             return;
 
         internUnload();
+        correctlyPreLoaded = false;
         correctlyLoaded = false;
     }
 

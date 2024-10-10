@@ -85,6 +85,8 @@ public class TileSet extends SingleSourceDataType {
         this.texture = texture;
 
         TextureData text = Resources.getInstance().getResource(TextureData.class, texture);
+        System.out.println("Texture " + texture + " " + text);
+        addDependency(text);
 
         tileNumber.x = text.getWidth() / tileSize.x;
         tileNumber.y = text.getHeight() / tileSize.y;

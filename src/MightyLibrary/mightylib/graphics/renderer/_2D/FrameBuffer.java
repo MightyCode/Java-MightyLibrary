@@ -10,7 +10,8 @@ public class FrameBuffer implements IRenderTextureBindable {
     private int fbo;
     private int rbo;
 
-    private int width, height;
+    private final int width;
+    private final int height;
 
     private int renderTextureId;
 

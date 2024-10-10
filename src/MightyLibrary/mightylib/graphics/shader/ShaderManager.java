@@ -21,7 +21,7 @@ public class ShaderManager {
     private Camera3D mainCamera3D;
     private Camera2D mainCamera2D;
 
-    private ShaderManager() {;
+    private ShaderManager() {
         version = "330";
 
         mainCamera3D = null;

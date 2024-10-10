@@ -41,7 +41,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
     protected String[] args;
 
-    private Camera3DCreationInfo cameraParameters;
+    private final Camera3DCreationInfo cameraParameters;
 
     public Scene(Camera3DCreationInfo info) {
         resources = Resources.getInstance();

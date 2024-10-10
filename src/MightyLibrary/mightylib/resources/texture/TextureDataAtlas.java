@@ -22,7 +22,11 @@ public class TextureDataAtlas extends TextureData {
     private BufferedImage atlas;
 
     public TextureDataAtlas(String name, String path) {
-        super(name, path);
+        this(TYPE_SET_UP.THREAD_CONTEXT, name, path);
+    }
+
+    public TextureDataAtlas(TYPE_SET_UP typeSetUp, String name, String path) {
+        super(typeSetUp, name, path);
         textures = new ArrayList<>();
         texturesMap = new HashMap<>();
         texturesPosition = new HashMap<>();

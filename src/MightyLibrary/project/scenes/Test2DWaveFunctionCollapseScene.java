@@ -3,7 +3,6 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveFunctionCollapseGrid;
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
 import MightyLibrary.mightylib.resources.DataType;
-import MightyLibrary.mightylib.resources.data.JSONFile;
 import MightyLibrary.mightylib.resources.map.TileLayer;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.inputs.InputManager;
@@ -21,10 +20,6 @@ import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
 
 public class Test2DWaveFunctionCollapseScene extends Scene {
     private TileMap map;
@@ -65,20 +60,18 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         //rule.printRules();
 
         WaveCollapseRules rule = resources.getResource(WaveCollapseRules.class, "waveCollapseTest");
-        System.out.println(rule.isLoaded());
 
-        map = new TileMap(DataType.TYPE_SET_UP.IMMEDIATELY_BY_MAIN_CONTEXT, "waveCollapseTest", "none");
+        map = new TileMap(DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT, "waveCollapseTest", "none");
         map.addTileset(resources.getResource(TileSet.class, rule.getRecommendedTileset()), 0);
         map.addDependency(rule);
         map.setPreloaded();
 
         waveFunctionCollapseGrid = new WaveFunctionCollapseGrid(rule, map, mapSize);
         resources.addPreLoadedResource(map);
-        waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
 
-        System.out.println("123123" + map.isLoaded());
+        waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
+        System.out.println(map.tileSetAtlas().getTextureAtlas().isLoaded());
         mapRenderer.setTileMap(map);
-        System.out.println("123124" + map.isLoaded());
 
         DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
         draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
@@ -145,7 +138,6 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         }
 
         mapRenderer.update();
-        System.out.println("123125" + map.isLoaded());
 
         //mapRenderer.getBackTileMapRenderer().setScale(new Vector3f(4f, 4f, 1f));
 

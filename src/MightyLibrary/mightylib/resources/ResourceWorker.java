@@ -67,6 +67,7 @@ public class ResourceWorker extends Thread {
             }
         }
 
+        System.out.println("End of thread " + threadNumber);
         isWorking = false;
     }
 
@@ -76,11 +77,8 @@ public class ResourceWorker extends Thread {
             return 1;
         }
 
-        if (dataType.getDataName().toLowerCase().contains("wavecollapse")) {
-            System.out.println("Thread " + threadNumber + " preloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName()
-                + " with loader " + loader.getClass().getSimpleName());
-        }
-       //System.out.println("Thread " + threadNumber + " preloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+
+        System.out.println("Thread " + threadNumber + " preloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
 
         loader.preload(dataType);
 
@@ -100,7 +98,7 @@ public class ResourceWorker extends Thread {
             return 1;
         }
 
-        //System.out.println("Thread " + threadNumber + " loading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+        System.out.println("Thread " + threadNumber + " loading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
 
         dataType.load();
 
@@ -116,8 +114,9 @@ public class ResourceWorker extends Thread {
         if (!dataType.isLoaded())
             return 1;
 
-        //System.out.println("Thread " + threadNumber + " unloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
-        dataType.internUnload();
+        System.out.println("Thread " + threadNumber + " unloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+
+        dataType.unload();
 
         if (!dataType.isLoaded())
             return 1;

@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.resources.map;
 
+import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.texture.TextureData;
 import MightyLibrary.mightylib.resources.texture.TextureDataAtlas;
 import org.joml.Vector2i;
@@ -15,7 +15,7 @@ public class TileSetAtlas {
     private final List<Integer> startIds;
 
     public TileSetAtlas() {
-        textureAtlas = new TextureDataAtlas("atlas");
+        textureAtlas = new TextureDataAtlas(DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT, "atlas", null);
         tilesets = new ArrayList<>();
         startIds = new ArrayList<>();
     }

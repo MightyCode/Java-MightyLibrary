@@ -98,7 +98,7 @@ public class NodesRenderer {
             temp.y = position.y - nodeSize / 2;
             temp.w = position.y + nodeSize / 2;
 
-            vbo[i * VBO_SHIFT + 0] = temp.x; vbo[i * VBO_SHIFT + 1] = temp.w;
+            vbo[i * VBO_SHIFT] = temp.x; vbo[i * VBO_SHIFT + 1] = temp.w;
             vbo[i * VBO_SHIFT + 2] = temp.x; vbo[i * VBO_SHIFT + 3] = temp.y;
             vbo[i * VBO_SHIFT + 4] = temp.z; vbo[i * VBO_SHIFT + 5] = temp.y;
             vbo[i * VBO_SHIFT + 6] = temp.z; vbo[i * VBO_SHIFT + 7] = temp.w;

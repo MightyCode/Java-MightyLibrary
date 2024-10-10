@@ -185,9 +185,8 @@ public class Resources {
             if (entry == null)
                 return;
 
-            mainContextHandleResource(entry);
-
             System.out.println("Main thread doing " + entry.Data.getDataName());
+            mainContextHandleResource(entry);
         }
     }
 
@@ -198,6 +197,13 @@ public class Resources {
                 notifyPreLoadedResources(entry.Data);
                 break;
             case LOAD:
+                while (!entry.Data.canBeLoad()){
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
                 entry.Data.load();
                 break;
             case UNLOAD:
@@ -260,10 +266,12 @@ public class Resources {
         boolean start = true;
 
         while ((start || first != current) && current != null) {
-            if (!current.Data.isPreLoaded())
+            if (current.Action == ResourceEntry.ActionEnum.PRELOAD && !current.Data.isPreLoaded())
                 return current;
-
-            if (current.Data.canBeLoad() && !current.Data.isLoaded()) {
+            else if (current.Action == ResourceEntry.ActionEnum.LOAD && current.Data.canBeLoad() && !current.Data.isLoaded()) {
+                return current;
+            } else if ((current.Action == ResourceEntry.ActionEnum.UNLOAD || current.Action == ResourceEntry.ActionEnum.RELOAD)
+                    && current.Data.isLoaded()) {
                 return current;
             }
 
@@ -276,10 +284,10 @@ public class Resources {
         return null;
     }
 
-    void printQueue(){
+    void printQueue() {
         System.out.println("----------------------------------");
         System.out.println("Queue size: " + resourcesToProcess.size());
-        for (ResourceEntry entry : resourcesToProcess){
+        for (ResourceEntry entry : resourcesToProcess) {
             System.out.println("(" + entry.Data.getClass().getSimpleName() + ") " + entry.Data.getDataName());
         }
         System.out.println("----------------------------------");
@@ -297,12 +305,14 @@ public class Resources {
             boolean start = true;
 
             while ((start || indexCurrent != 0) && current != null) {
-                if (!current.Data.isPreLoaded()) {
+                if (current.Action == ResourceEntry.ActionEnum.PRELOAD && !current.Data.isPreLoaded()) {
+                    return resourcesToProcess.remove(indexCurrent);
+                } else if (current.Action == ResourceEntry.ActionEnum.LOAD && current.Data.canBeLoad() && !current.Data.isLoaded()) {
+                    //printQueue();
                     resourcesToProcess.remove(indexCurrent);
                     return current;
-                }
-
-                if (current.Data.canBeLoad() && !current.Data.isLoaded()) {
+                } else if ((current.Action == ResourceEntry.ActionEnum.UNLOAD || current.Action == ResourceEntry.ActionEnum.RELOAD)
+                        && current.Data.isLoaded()) {
                     //printQueue();
                     resourcesToProcess.remove(indexCurrent);
                     return current;
@@ -312,8 +322,7 @@ public class Resources {
                 indexCurrent = (indexCurrent + 1) % resourcesToProcess.size();
                 current = resourcesToProcess.get(indexCurrent);
             }
-        }
-        finally {
+        } finally {
             queueLock.unlock();
         }
 
@@ -322,9 +331,9 @@ public class Resources {
 
     private void addResourceToProcess(ResourceEntry resourceEntry) {
         // Todo : not a good place to do that
-        if (resourceEntry.Data.getTypeSetUp() == DataType.TYPE_SET_UP.IMMEDIATELY_BY_MAIN_CONTEXT) {
-            System.out.println("Immediate processing in main context of (" + resourceEntry.Data.getClass().getSimpleName()  + ") :" + resourceEntry.Data.getDataName()
-                + ", action : " + resourceEntry.Action);
+        if (resourceEntry.Data.getTypeSetUp() == DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT) {
+            System.out.println("Immediate processing in main context of (" + resourceEntry.Data.getClass().getSimpleName() + ") :" + resourceEntry.Data.getDataName()
+                    + ", action : " + resourceEntry.Action);
             mainContextHandleResource(resourceEntry);
 
             return;
@@ -341,6 +350,7 @@ public class Resources {
                 System.out.println("Added to worker (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
                         ", action : " + resourceEntry.Action);
                 if (workers.size() < maxNumberOfWorkers && resourcesToProcess.size() > workers.size()) {
+                    System.out.println("Create worker n°" + (workers.size() + 1));
                     ResourceWorker worker = new ResourceWorker(this, workers.size() + 1);
                     workers.add(worker);
                     worker.start();
@@ -414,8 +424,13 @@ public class Resources {
                 if (dataType == null)
                     throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
 
-                if (dataType.notReferenced())
-                    addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
+                // If it's reference so it's already loaded or preloaded (set up)
+                if (dataType.notReferenced()) {
+                    if (dataType.isPreLoaded())
+                        addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.LOAD));
+                    else
+                        addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
+                }
 
                 dataType.addReference(batchName);
             }
@@ -430,8 +445,13 @@ public class Resources {
                         if (matcher.matches()) {
                             DataType dataType = this.resources.get(type).get(resourceName);
 
-                            if (dataType.notReferenced())
-                                addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
+                            // If it's reference so it's already loaded or preloaded (set up)
+                            if (dataType.notReferenced()) {
+                                if (dataType.isPreLoaded())
+                                    addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.LOAD));
+                                else
+                                    addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
+                            }
 
                             dataType.addReference(batchName);
                         }
@@ -492,7 +512,7 @@ public class Resources {
             System.err.println("Can't unload batch: " + batchName + " when loading method is not BatchResources");
         }
 
-        System.out.println("--Unload batch: " + batchName);;
+        System.out.println("--Unload batch: " + batchName);
         BatchResources batchResources = getResource(BatchResources.class, batchName);
         JSONArray content = batchResources.getObject().getJSONArray("batchs");
         for (int j = 0; j < content.length(); ++j) {
