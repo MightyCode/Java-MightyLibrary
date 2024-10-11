@@ -9,7 +9,7 @@ public class Model extends SingleSourceDataType {
 
     @Override
     public boolean internLoad() {
-        return false;
+        return true;
     }
 
     @Override
