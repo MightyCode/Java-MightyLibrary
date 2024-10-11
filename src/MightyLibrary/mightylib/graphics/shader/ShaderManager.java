@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.shader;
 
-import MightyLibrary.mightylib.scenes.Camera2D;
-import MightyLibrary.mightylib.scenes.Camera3D;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera3D;
 
 import static org.lwjgl.opengl.GL11.glGetString;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
@@ -21,7 +21,7 @@ public class ShaderManager {
     private Camera3D mainCamera3D;
     private Camera2D mainCamera2D;
 
-    private ShaderManager() {;
+    private ShaderManager() {
         version = "330";
 
         mainCamera3D = null;

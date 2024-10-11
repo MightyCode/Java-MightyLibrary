@@ -1,8 +1,8 @@
 package MightyLibrary.mightylib.resources.map;
 
 import MightyLibrary.mightylib.resources.SingleSourceDataType;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.TextureData;
 import org.joml.Vector2i;
 
 import java.util.Collection;
@@ -46,7 +46,7 @@ public class TileSet extends SingleSourceDataType {
     public Map<Integer, TileAnimation> animations;
 
     public TileSet(String dataName, String path) {
-        super(dataName, path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
 
         tileSize = new Vector2i();
         tileNumber = new Vector2i();
@@ -55,7 +55,7 @@ public class TileSet extends SingleSourceDataType {
 
         animations = new HashMap<>();
 
-        reset();
+        unload();
     }
 
     public void setTileParameters(boolean useRotation, boolean useFlip){
@@ -84,12 +84,12 @@ public class TileSet extends SingleSourceDataType {
 
         this.texture = texture;
 
-        Texture text = Resources.getInstance().getResource(Texture.class, texture);
+        TextureData text = Resources.getInstance().getResource(TextureData.class, texture);
+        System.out.println("Texture " + texture + " " + text);
+        addDependency(text);
 
         tileNumber.x = text.getWidth() / tileSize.x;
         tileNumber.y = text.getHeight() / tileSize.y;
-
-        checkLoaded();
     }
 
     public Vector2i tilesNumberAxis() {
@@ -155,28 +155,22 @@ public class TileSet extends SingleSourceDataType {
         return id % 4;
     }
 
-    private void reset(){
+    @Override
+    protected boolean internLoad() {
+        if (!(tileNumber.x != 0 && tileNumber.y != 0))
+            return false;
+
+        return !texture.equals("error");
+    }
+
+
+    @Override
+    protected void internUnload() {
         useRotation = false;
         useFlip = false;
         texture = "error";
 
         tileNumber.x = 0;
         tileNumber.y = 0;
-
-        checkLoaded();
-    }
-
-    private void checkLoaded(){
-        correctlyLoaded = tileNumber.x != 0 && tileNumber.y != 0;
-        if (!correctlyLoaded)
-            return;
-
-        correctlyLoaded = !texture.equals("error");
-    }
-
-
-    @Override
-    public void unload() {
-        reset();
     }
 }

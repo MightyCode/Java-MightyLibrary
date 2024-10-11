@@ -12,7 +12,7 @@ import static org.lwjgl.opengl.GL11C.glGetError;
 
 public class FontLoader extends ResourceLoader {
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return FontFace.class;
     }
 
@@ -55,19 +55,11 @@ public class FontLoader extends ResourceLoader {
 
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof FontFace))
             return;
 
         FontFace fontFace = (FontFace) dataType;
-
         fontFace.getFontFile().load();
-
-        fontFace.setCorrectlyLoaded();
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        // Todo
     }
 }

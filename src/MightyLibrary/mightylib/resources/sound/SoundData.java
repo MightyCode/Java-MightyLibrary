@@ -8,29 +8,36 @@ import static org.lwjgl.openal.AL10.*;
 
 public class SoundData extends SingleSourceDataType {
     private int bufferId;
+    private SoundLoadInfo tempInfo;
 
     public SoundData(String dataName, String path) {
-        super(dataName, path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
 
         bufferId = -1;
     }
 
+    public void setSoundLoadInfo(SoundLoadInfo info) {
+        tempInfo = info;
+    }
 
-    public void createSound(SoundLoadInfo info){
+    @Override
+    protected boolean internLoad(){
         if (bufferId != -1) {
-            return;
+            return false;
         }
 
         this.bufferId = alGenBuffers();
-        alBufferData(bufferId, info.Channel == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, info.Buffer, info.SampleRate);
+        alBufferData(bufferId, tempInfo.Channel == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, tempInfo.Buffer, tempInfo.SampleRate);
+        tempInfo = null;
 
         int error = alGetError();
 
         if (error == AL_NO_ERROR){
-            correctlyLoaded = bufferId != -1;
-        } else {
-            SoundManager.DisplayError("al buffer data (\" + path + \")\"", error);
+            return bufferId != -1;
         }
+
+        SoundManager.DisplayError("al buffer data (\" + path + \")\"", error);
+        return false;
     }
 
 
@@ -39,14 +46,12 @@ public class SoundData extends SingleSourceDataType {
     }
 
     @Override
-    public void unload() {
+    public void internUnload() {
         if (this.bufferId != -1) {
             alDeleteBuffers(this.bufferId);
             int error = alGetError();
             if (error != AL_NO_ERROR)
                 SoundManager.DisplayError("al delete buffers (" + path + ")", error);
         }
-
-        correctlyLoaded = bufferId != -1;
     }
 }

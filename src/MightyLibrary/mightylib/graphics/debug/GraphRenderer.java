@@ -2,7 +2,7 @@ package MightyLibrary.mightylib.graphics.debug;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
-import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;
@@ -128,7 +128,7 @@ public class GraphRenderer {
                 temp2.z = position2.x - result.x * roadSize / 2;
                 temp2.w = position2.y - result.y * roadSize / 2;
 
-                vbo[i * VBO_SHIFT + 0] = temp1.x; vbo[i * VBO_SHIFT + 1] = temp1.y;
+                vbo[i * VBO_SHIFT] = temp1.x; vbo[i * VBO_SHIFT + 1] = temp1.y;
                 vbo[i * VBO_SHIFT + 2] = temp1.z; vbo[i * VBO_SHIFT + 3] = temp1.w;
                 vbo[i * VBO_SHIFT + 4] = temp2.x; vbo[i * VBO_SHIFT + 5] = temp2.y;
                 vbo[i * VBO_SHIFT + 6] = temp2.z; vbo[i * VBO_SHIFT + 7] = temp2.w;

@@ -2,36 +2,40 @@ package MightyLibrary.mightylib.resources.animation;
 
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.SingleSourceDataType;
-import MightyLibrary.mightylib.resources.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.TextureData;
 
 public class AnimationData extends SingleSourceDataType {
     private FrameData[] framesData;
     private String textureName;
 
     public AnimationData(String name, String path){
-        super(name, path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, name, path);
 
         textureName = "error";
     }
 
 
-    public AnimationData setTexture(String texture){
+    public AnimationData setTexture(String texture) {
         textureName = texture;
+        if (isLoaded() && isPreLoaded())
+            load();
 
-        checkLoaded();
         return this;
     }
 
 
-    public AnimationData setFramesData(FrameData[] framesData){
+    public AnimationData setFramesData(FrameData[] framesData) {
         this.framesData = framesData;
 
-        checkLoaded();
+        if (isLoaded() && isPreLoaded())
+            load();
+
         return this;
     }
 
-    private void checkLoaded(){
-        correctlyLoaded = framesData != null && Resources.getInstance().isExistingResource(Texture.class, textureName);
+    @Override
+    protected boolean internLoad() {
+        return framesData != null && Resources.getInstance().isExistingResource(TextureData.class, textureName);
     }
 
 
@@ -54,10 +58,8 @@ public class AnimationData extends SingleSourceDataType {
 
 
     @Override
-    public void unload(){
+    public void internUnload(){
         textureName = "error";
         framesData = null;
-
-        correctlyLoaded = false;
     }
 }

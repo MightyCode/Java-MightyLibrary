@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
-import MightyLibrary.mightylib.resources.texture.IGLBindable;
-import MightyLibrary.mightylib.resources.texture.TextureParameters;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.utils.Logger;
 
 import static org.lwjgl.opengl.GL30.*;
@@ -10,7 +10,8 @@ public class FrameBuffer implements IRenderTextureBindable {
     private int fbo;
     private int rbo;
 
-    private int width, height;
+    private final int width;
+    private final int height;
 
     private int renderTextureId;
 

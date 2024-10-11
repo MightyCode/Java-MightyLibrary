@@ -1,32 +1,37 @@
 package MightyLibrary.mightylib.resources.texture;
 
+import MightyLibrary.mightylib.graphics.GLElement;
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
-import MightyLibrary.mightylib.resources.SingleSourceDataType;
-import org.lwjgl.BufferUtils;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
-import java.nio.ByteBuffer;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
+import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.utils.Logger;
 
 import static org.lwjgl.opengl.GL13.*;
 
-public class Texture extends SingleSourceDataType implements IGLBindable, IRenderTextureBindable {
-    protected int width;
-    protected int height;
-
+public class Texture extends GLElement implements IGLBindable, IRenderTextureBindable {
+    private final TextureData data;
     private int textureId;
 
     private int qualityType;
 
     private int textureType;
 
-    public Texture(String name, String path) {
-        super(name, path);
+    public static void CreateErrorTexture() {
+        GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture("error"), "error");
+    }
+
+    public Texture(String name) {
+        this(Resources.getInstance().getResource(TextureData.class, name));
+    }
+
+    public Texture(TextureData data) {
+        this.data = data;
+        if (data != null)
+            resourceDependencies.add(data);
 
         textureId = -1;
-        qualityType = TextureParameters.REALISTIC_PARAMETERS;
-        textureType = GL_TEXTURE_2D;
     }
 
     public void setAspectTexture(int aspectTexture){
@@ -41,73 +46,56 @@ public class Texture extends SingleSourceDataType implements IGLBindable, IRende
     public void bindRenderTexture(int texturePos) {
         // Active the texture to right position
         glActiveTexture(GL_TEXTURE0 + texturePos);
-        if (isCorrectlyLoaded()){
+        if (isLoaded()){
             glBindTexture(textureType, textureId);
+            Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
         // If isn't correct loaded, bind error texture
-        } else glBindTexture(textureType, 1);
+        } else {
+            throw new RuntimeException("Texture : " + data.getDataName() + " , isn't loaded!");
+            /*glBindTexture(textureType, 1);
+            Logger.CheckOpenGLError("Bind texture : error");*/
+        }
     }
 
-    public void createImage(BufferedImage img) {
+    @Override
+    public boolean load(int remainingMilliseconds) {
+        System.out.println("Load texture : " + data.getDataName());
         if (textureId != -1)
-            unload();
+            unload(remainingMilliseconds);
+
+        if (data == null) {
+            return false;
+        }
+
+        qualityType = data.defaultAspectTexture;
+        textureType = data.defaultTextureType;
 
         textureId = glGenTextures();
 
         try {
-            int[] pixels = new int[img.getHeight() * img.getWidth()];
-
-            img.getRGB(0, 0, img.getWidth(), img.getHeight(), pixels, 0, img.getWidth());
-
-            ByteBuffer byteBuffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
-
-            this.width = img.getWidth();
-            this.height = img.getHeight();
-
-            for (int a = 0; a < height; ++a) {
-                for (int b = 0; b < width; ++b) {
-                    int pixel = pixels[a * width + b];
-                    byteBuffer.put((byte) ((pixel >> 16) & 0xFF));
-                    byteBuffer.put((byte) ((pixel >> 8)  & 0xFF));
-                    byteBuffer.put((byte) ((pixel        & 0xFF)));
-                    byteBuffer.put((byte) ((pixel >> 24) & 0xFF));
-                }
-            }
-
-            byteBuffer.flip();
-
             glBindTexture(this.textureType, textureId);
-            glTexImage2D(this.textureType, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, byteBuffer);
+            Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType + " , quality type : " + qualityType + " , path : " + data.path() + " width : " + data.getWidth() + " , height : " + data.getHeight());
+            glTexImage2D(this.textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getData());
+            Logger.CheckOpenGLError("Set texture data : " + data.getDataName());
 
             TextureParameters.applyParameters(this);
+            Logger.CheckOpenGLError("Set texture data : " + data.getDataName());
 
             //System.out.println("Texture : " + textureId + " , loaded with path : " + path);
 
-            correctlyLoaded = true;
+            return true;
         } catch (Exception e) {
-            System.err.println("Fail to create texture " + path + " :");
+            System.err.println("Fail to create texture " + data.path() + " :");
             e.printStackTrace();
             glDeleteTextures(textureId);
 
-            correctlyLoaded = false;
+            return false;
         }
-    }
-
-    public BufferedImage loadBufferedImage(){
-        try {
-            return ImageIO.read(new FileInputStream(path()));
-
-        } catch (Exception e) {
-            System.err.println("Can't find the path for :");
-            System.err.println(path() + "\n");
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     private void setTextParam(int param, int value) {
         bindRenderTexture();
-        if (isCorrectlyLoaded())
+        if (data.isLoaded())
             glTexParameteri(this.textureType, param, value);
     }
 
@@ -130,19 +118,17 @@ public class Texture extends SingleSourceDataType implements IGLBindable, IRende
 
     @Override
     public int getWidth() {
-        return width;
+        return data.getWidth();
     }
 
     @Override
     public int getHeight() {
-        return height;
+        return data.getHeight();
     }
 
     @Override
-    public void unload() {
-        if (isCorrectlyLoaded()) {
+    public void unload(int remainingMilliseconds) {
+        if (!data.isLoaded())
             glDeleteTextures(textureId);
-            correctlyLoaded = false;
-        }
     }
 }

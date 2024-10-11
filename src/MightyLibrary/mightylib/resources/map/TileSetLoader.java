@@ -14,7 +14,7 @@ import java.util.Objects;
 public class TileSetLoader extends ResourceLoader {
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return TileSet.class;
     }
 
@@ -44,7 +44,7 @@ public class TileSetLoader extends ResourceLoader {
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof TileSet))
             return;
 
@@ -85,9 +85,8 @@ public class TileSetLoader extends ResourceLoader {
                         tileAnimation.ids[j / 2] = Integer.parseInt(lineParts[j]);
                         tileAnimation.times[j / 2] = Float.parseFloat(lineParts[j + 1]);
 
-
-                        System.out.println((j / 2) + " TileId: " + tileAnimation.ids[j / 2]
-                                + " Time: " + tileAnimation.times[j / 2]);
+                        /*System.out.println((j / 2) + " TileId: " + tileAnimation.ids[j / 2]
+                                + " Time: " + tileAnimation.times[j / 2]);*/
                     }
 
                     tileset.addAnimation(tileAnimation.refId, tileAnimation);
@@ -106,10 +105,5 @@ public class TileSetLoader extends ResourceLoader {
         tileset.setTileSize(texture, tileSize);
 
         tileset.setTileParameters(parameterRotation, parameterFlip);
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        // Todo
     }
 }

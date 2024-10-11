@@ -3,21 +3,20 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.FrameBuffer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import MightyLibrary.mightylib.graphics.text.ETextAlignment;
-import MightyLibrary.mightylib.graphics.text.Text;
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
-import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
+import MightyLibrary.mightylib.graphics.surface.BasicBindableObject;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.resources.texture.TextureParameters;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.graphics.renderer._3D.shape.CubeRenderer;
-import MightyLibrary.mightylib.scenes.Camera2D;
-import MightyLibrary.mightylib.scenes.Camera3DCreationInfo;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scenes.Scene;
-import MightyLibrary.mightylib.utils.math.color.ColorList;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -35,7 +34,10 @@ public class Test3D2DGame extends Scene {
 
     private RectangleRenderer debugView;
     private CubeRenderer gameRenderer;
-    private Text lookAtText;
+
+    public void init(String[] args) {
+        super.init(args, new LoadingSceneImplementation());
+    }
 
     public Test3D2DGame(){
         super(SCENE_CCI);
@@ -48,8 +50,8 @@ public class Test3D2DGame extends Scene {
         };
     }
 
-    public void init(String[] args){
-        super.init(args);
+    public void launch(String[] args){
+        super.launch(args);
         /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);
@@ -66,7 +68,7 @@ public class Test3D2DGame extends Scene {
                 mainContext.getWindow().getInfo().getVirtualSizeRef().y);
 
         background = new RectangleRenderer("texture2D");
-        background.init();
+        background.load(0);
         background.setReferenceCamera(insideCamera);
         background.setMainTextureChannel("error");
         background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x,
@@ -88,11 +90,15 @@ public class Test3D2DGame extends Scene {
         slimeRenderer.update();
 
         debugView = new RectangleRenderer("texture2D");
-        debugView.init();
+        debugView.load(0);
         debugView.setMainTextureChannel(game2DRender);
-        debugView.setPosition(new Vector2f(0, 0));
+
+        Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeRef();
+
         debugView.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x * 0.2f,
                 mainContext.getWindow().getInfo().getVirtualSizeRef().y * 0.2f);
+
+        debugView.setPosition(new Vector2f(0, windowSize.y - debugView.scale().y));
 
         gameRenderer = new CubeRenderer("texture3D");
         gameRenderer.setMainTextureChannel(
@@ -104,16 +110,12 @@ public class Test3D2DGame extends Scene {
 
         gameRenderer.setTexturePosition();
 
-        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeRef();
-
-        lookAtText = new Text();
-        lookAtText.setFont("bahnschrift")
-                .setAlignment(ETextAlignment.Center)
-                .setReference(EDirection.Up)
-                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.01f))
-                .setFontSize(40)
-                .setColor(ColorList.Coral())
-                .setText("(0, 0, 0)");
+        addUpdatableAndDisplayable(
+                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                        .addInfo(DebugInfoCamera3D.POSITION)
+                        .addInfo(DebugInfoCamera3D.LOOK)
+                        .addInfo(DebugInfoCamera3D.SPEED)
+        );
     }
 
 
@@ -182,10 +184,6 @@ public class Test3D2DGame extends Scene {
         slimeRenderer.update();
 
         main3DCamera.updateView();
-
-        lookAtText.setText("( " + String.format("%.2f", main3DCamera.getLookAtVector().x) + ", " +
-                String.format("%.2f", main3DCamera.getLookAtVector().y) + ", " +
-                String.format("%.2f", main3DCamera.getLookAtVector().z) + " )");
     }
 
 
@@ -206,14 +204,14 @@ public class Test3D2DGame extends Scene {
 
         // Better to draw the hud here and be not affected by the postProcessing shader
 
-        lookAtText.display();
-
         debugView.display();
+
+        super.display();
 
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload(){
         super.unload();
         gameRenderer.unload();
@@ -221,7 +219,5 @@ public class Test3D2DGame extends Scene {
         background.unload();
         slimeRenderer.unload();
         debugView.unload();
-
-        lookAtText.unload();
     }
 }

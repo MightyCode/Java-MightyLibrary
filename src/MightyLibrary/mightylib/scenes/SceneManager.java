@@ -1,25 +1,31 @@
 package MightyLibrary.mightylib.scenes;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.main.MainLoop;
-import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.texture.TextureData;
 import MightyLibrary.mightylib.sounds.SoundManager;
-import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.utils.enginecommand.Commands;
 
 public class SceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
 
+    private final GLResources glResources;
+    private final Resources resources;
+
     private final MainLoop.StopLibrary stopLibrary;
 
     private final Commands commands;
     private final SoundManager soundManager;
 
-    public SceneManager(MainLoop.StopLibrary stopLibrary){
+    public SceneManager(MainLoop.StopLibrary stopLibrary) {
+        glResources = GLResources.getInstance();
+        resources = Resources.getInstance();
+
         this.stopLibrary = stopLibrary;
 
         sceneInterface = new SceneManagerInterface();
@@ -38,25 +44,27 @@ public class SceneManager {
     }
 
 
-    public void update(){
+    public void update() {
         // Command
-        if (MainLoop.isAdmin()){
+        if (MainLoop.isAdmin()) {
             updateMain();
         }
 
-        if(sceneInterface.isWantingChange())
+        if (sceneInterface.isWantingChange())
             changeScene();
 
         if (sceneInterface.WantQuit)
             exit(sceneInterface.ExitStatus);
 
-        currentScene.update();
+        glResources.process(); // Create Gl elements, takes a bit of time
+        resources.process(15);
 
+        currentScene.updateByManager();
         soundManager.lateUpdate();
     }
 
 
-    private void updateMain(){
+    private void updateMain() {
         Context mainContext = ContextManager.getInstance().getMainContext();
         InputManager mainInputManager = mainContext.getInputManager();
 
@@ -64,24 +72,24 @@ public class SceneManager {
             commands.writeCommand();
 
         if (mainInputManager.inputPressed(InputManager.RELOAD_TEXTURE))
-            Resources.getInstance().reload(Texture.class);
+            Resources.getInstance().reloadAllOfType(TextureData.class);
     }
 
-    public void display(){
-        currentScene.display();
+    public void display() {
+        currentScene.displayByManager();
     }
 
 
-    public void dispose(){
+    public void dispose() {
         ContextManager.getInstance().dispose();
-        currentScene.dispose();
+        currentScene.disposeByManager();
     }
 
-    private void changeScene(){
+    private void changeScene() {
         if (MainLoop.isAdmin())
             commands.removeSpecificCommand();
 
-        if(currentScene != null){
+        if(currentScene != null) {
             System.out.println("--Unload scene" + currentScene.getClass().getName());
             currentScene.unload();
 
@@ -101,6 +109,7 @@ public class SceneManager {
             Resources.getInstance().loadBatch(batch);
 
         currentScene.init(sceneInterface.getChangeArgs());
+        currentScene.setWaitForLoading();
 
         sceneInterface.reset();
     }
@@ -117,5 +126,6 @@ public class SceneManager {
         }
 
         Resources.getInstance().unload();
+        GLResources.getInstance().unload();
     }
 }

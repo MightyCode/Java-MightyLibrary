@@ -11,15 +11,13 @@ import MightyLibrary.mightylib.utils.math.KeyTreeNode;
 import org.json.JSONObject;
 import org.lwjgl.stb.STBVorbisInfo;
 
-import java.io.File;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 
 public class SoundLoader extends ResourceLoader {
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return SoundData.class;
     }
 
@@ -38,8 +36,7 @@ public class SoundLoader extends ResourceLoader {
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
-        if (ending.equals(".ogg"))
-            return getFileName(path);
+        if (ending != null && ending.equals(".ogg")) return getFileName(path);
 
         return null;
     }
@@ -50,7 +47,7 @@ public class SoundLoader extends ResourceLoader {
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof SoundData))
             return;
 
@@ -65,13 +62,7 @@ public class SoundLoader extends ResourceLoader {
             if(!loadOgg(path, info))
                 return;
 
-
-        sound.createSound(info);
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        // Todo
+        sound.setSoundLoadInfo(info);
     }
 
 
@@ -126,7 +117,7 @@ public class SoundLoader extends ResourceLoader {
             current = gainTree.addNewNode(predecessor.getKey(), name, node.getFloat("value"));
         }
 
-        do{
+        do {
             String currentNode = arrayNodes.next();
 
             if(node.get(currentNode) instanceof JSONObject){

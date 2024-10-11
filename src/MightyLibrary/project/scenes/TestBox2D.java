@@ -3,15 +3,18 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.main.utils.GameTime;
+import MightyLibrary.mightylib.main.utils.IUpdatableDisplayable;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
-import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
-import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
-import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera2D;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.DraggingCameraComponent;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.MovingCameraComponent;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.ZoomingCameraComponent;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
@@ -21,13 +24,12 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 
 public class TestBox2D extends Scene {
-    public static class Box {
+    public static class Box implements IUpdatableDisplayable {
         RectangleRenderer renderer;
         Body box;
         public Box(World world, Vector2f position, Vector2f size){
-
             renderer = new RectangleRenderer("colorShape2D");
-            renderer.init();
+            renderer.load(0);
             renderer.setColorMode(ColorList.Grey());
 
             BodyDef bodyDef = new BodyDef();
@@ -58,6 +60,9 @@ public class TestBox2D extends Scene {
             renderer.setRotation(angle, new Vector3f(0, 0, 1));
         }
 
+        @Override
+        public void dispose() {}
+
         public void display(){
             renderer.display();
         }
@@ -70,19 +75,22 @@ public class TestBox2D extends Scene {
     private RectangleRenderer ground;
     private ArrayList<Box> boxes;
 
-    private final int velocityIterations = 6;
-    private final int positionIterations = 2;
-
+    private final static int VELOCITY_ITERATIONS = 6;
+    private final static int POSITION_ITERATIONS = 2;
     private World world;
 
-    private DraggingCameraComponent draggingSceneComponent;
-    private MovingCameraComponent movingSceneComponent;
-    private ZoomingCameraComponent zoomingSceneComponent;
+    private Camera2D hudCamera;
+
+    public void init(String[] args) {
+        super.init(args, new LoadingSceneImplementation());
+    }
 
     @Override
-    public void init(String[] args){
-        super.init(args);
+    public void launch(String[] args){
+        super.launch(args);
         /// SCENE INFORMATION ///
+
+        hudCamera = main2DCamera.copy();
 
         main3DCamera.setPos(new Vector3f());
         main2DCamera.setPos(new Vector2f());
@@ -92,7 +100,7 @@ public class TestBox2D extends Scene {
         setClearColor(52, 189, 235, 1f);
 
         ground = new RectangleRenderer("colorShape2D");
-        ground.init();
+        ground.load(0);
         ground.setColorMode(ColorList.Black());
 
         Vec2 gravity = new Vec2(0.8f, 9.81f);
@@ -122,12 +130,13 @@ public class TestBox2D extends Scene {
             );
         }
 
-        draggingSceneComponent = new DraggingCameraComponent();
+        DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
         draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
         draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
+        addUpdatable(draggingSceneComponent);
 
-        movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
+        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                 .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -137,10 +146,21 @@ public class TestBox2D extends Scene {
                 .setQuickSpeed(ActionId.SHIFT)
         );
 
-        zoomingSceneComponent = new ZoomingCameraComponent();
+        addUpdatable(movingSceneComponent);
+
+        ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
         zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
                 main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
+
+        addUpdatable(zoomingSceneComponent);
+
+        addUpdatableAndDisplayable(
+                new DebugInfoCamera2D(hudCamera).init(main2DCamera, new Vector2f(5, 5))
+                        .addInfo("position")
+                        .addInfo("rotation")
+                        .addInfo("zoom")
+        );
     }
 
     @Override
@@ -150,7 +170,7 @@ public class TestBox2D extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        world.step(GameTime.DeltaTime(), velocityIterations, positionIterations);
+        world.step(GameTime.DeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
         MouseManager mouseManager = mainContext.getMouseManager();
         InputManager inputManager = mainContext.getInputManager();
@@ -165,10 +185,6 @@ public class TestBox2D extends Scene {
             );
         }
 
-        movingSceneComponent.update();
-        draggingSceneComponent.update();
-        zoomingSceneComponent.update();
-
         for (Box box : boxes)
             box.update();
     }
@@ -176,10 +192,13 @@ public class TestBox2D extends Scene {
     public void display(){
         super.setVirtualScene();
         clear();
+
         ground.display();
 
         for (Box box : boxes)
             box.display();
+
+        super.display();
 
         super.setAndDisplayRealScene();
     }

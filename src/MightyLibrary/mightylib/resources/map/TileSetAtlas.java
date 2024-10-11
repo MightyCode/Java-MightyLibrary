@@ -1,20 +1,21 @@
 package MightyLibrary.mightylib.resources.map;
 
+import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.texture.Texture;
-import MightyLibrary.mightylib.resources.texture.TextureAtlas;
+import MightyLibrary.mightylib.resources.texture.TextureData;
+import MightyLibrary.mightylib.resources.texture.TextureDataAtlas;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class TileSetAtlas {
-    private final TextureAtlas textureAtlas;
+    private final TextureDataAtlas textureAtlas;
     private final List<TileSet> tilesets;
     private final List<Integer> startIds;
 
     public TileSetAtlas() {
-        textureAtlas = new TextureAtlas("atlas");
+        textureAtlas = new TextureDataAtlas(DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT, "atlas", null);
         tilesets = new ArrayList<>();
         startIds = new ArrayList<>();
     }
@@ -22,9 +23,17 @@ public class TileSetAtlas {
     void addTileSet(TileSet tileset, int startId) {
         tilesets.add(tileset);
         startIds.add(startId);
+    }
 
-        textureAtlas.addTexture(
-                Resources.getInstance().getResource(Texture.class, tileset.texture()));
+    void transferTileSetTextureToAtlas() {
+        for (TileSet tileset : tilesets) {
+            TextureData data = Resources.getInstance().getResource(TextureData.class, tileset.texture());
+            textureAtlas.addDependency(data);
+            textureAtlas.addTexture(data);
+        }
+
+        textureAtlas.setPreloaded();
+        Resources.getInstance().addPreLoadedResource(textureAtlas);
     }
 
     public int getTileSetIndexRelatedTo(int tileId){
@@ -54,7 +63,7 @@ public class TileSetAtlas {
         return tilesets.get(index);
     }
 
-    public Vector2i getTileSetPosition(int index){
+    public Vector2i getTileSetPosition(int index) {
         return textureAtlas.getTexturePosition(
                 tilesets.get(index).texture()
         );
@@ -71,7 +80,7 @@ public class TileSetAtlas {
         return tilesets.get(0).tileSize();
     }
 
-    public TextureAtlas getTextureAtlas(){
+    public TextureDataAtlas getTextureAtlas(){
         return textureAtlas;
     }
 

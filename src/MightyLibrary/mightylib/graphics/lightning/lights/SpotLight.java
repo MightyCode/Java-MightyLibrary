@@ -7,7 +7,7 @@ import org.joml.Vector3f;
 
 public class SpotLight extends BasicMaterial {
     private Vector3f position, direction;
-    private LightDecrease lightDecrease;
+    private final LightDecrease lightDecrease;
 
     private float cutOff;
     private float outerCutOff;

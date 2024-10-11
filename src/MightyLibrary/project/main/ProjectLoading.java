@@ -2,6 +2,7 @@ package MightyLibrary.project.main;
 
 import static org.lwjgl.glfw.GLFW.*;
 
+import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRulesLoader;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.inputType.EInputType;
@@ -10,18 +11,22 @@ import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.resources.data.JSONLoader;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;
 import MightyLibrary.mightylib.resources.models.ObjModelLoader;
 import MightyLibrary.mightylib.resources.sound.SoundLoader;
+import MightyLibrary.mightylib.resources.texture.TextureDataAtlasLoader;
 
 class ProjectLoading implements IProjectLoading {
     @Override
-    public void init(Resources resources){
+    public void init(Resources resources) {
         resources.Loaders.add(new TileSetLoader());
         resources.Loaders.add(new TileMapLoader());
         resources.Loaders.add(new SoundLoader());
         resources.Loaders.add(new ObjModelLoader());
+        resources.Loaders.add(new TextureDataAtlasLoader());
+        resources.Loaders.add(new WaveCollapseRulesLoader());
     }
 
     @Override

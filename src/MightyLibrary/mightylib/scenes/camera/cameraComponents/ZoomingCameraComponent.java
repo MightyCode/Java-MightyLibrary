@@ -1,14 +1,15 @@
-package MightyLibrary.mightylib.scenes.cameracomponents;
+package MightyLibrary.mightylib.scenes.camera.cameraComponents;
 
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.main.utils.IUpdatable;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
 // Same as MovingSceneComponent and DraggingSceneComponent
-public class ZoomingCameraComponent {
+public class ZoomingCameraComponent implements IUpdatable {
 
     protected InputManager inputManager;
     protected MouseManager mouseManager;
@@ -57,4 +58,10 @@ public class ZoomingCameraComponent {
             zoom(new Vector2f(1.01f));
         }*/
     }
+
+    @Override
+    public void dispose() {}
+
+    @Override
+    public void unload() {}
 }

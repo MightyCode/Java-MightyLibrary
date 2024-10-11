@@ -1,21 +1,31 @@
 package MightyLibrary.mightylib.scenes;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
-import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
-import MightyLibrary.mightylib.resources.texture.IGLBindable;
-import MightyLibrary.mightylib.resources.texture.TextureParameters;
+import MightyLibrary.mightylib.main.utils.*;
+import MightyLibrary.mightylib.graphics.surface.BasicBindableObject;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera3D;
+import MightyLibrary.mightylib.scenes.camera.Camera3DCreationInfo;
+import MightyLibrary.mightylib.utils.math.UUID;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+
 import static org.lwjgl.opengl.GL11.*;
 
-public class Scene {
+public abstract class Scene extends UUID implements IUpdatableDisplayable {
     protected final Resources resources;
+    protected final GLResources glResources;
+
     protected final ShaderManager shaderManager;
     protected final Context mainContext;
     protected Camera3D main3DCamera;
@@ -23,24 +33,30 @@ public class Scene {
     protected SceneManagerInterface sceneManagerInterface;
     private VirtualSceneRenderer scRenderer;
 
-    public Scene(Camera3DCreationInfo info){
+    private final ArrayList<IUpdatable> updatables = new ArrayList<>();
+    private final ArrayList<IDisplayable> displayables = new ArrayList<>();
+
+    private TemplateSceneLoading loadingScene = null; // can be null
+    private boolean isWaitingForLoading = false;
+
+    protected String[] args;
+
+    private final Camera3DCreationInfo cameraParameters;
+
+    public Scene(Camera3DCreationInfo info) {
         resources = Resources.getInstance();
+        glResources = GLResources.getInstance();
+
         shaderManager = ShaderManager.getInstance();
         mainContext = ContextManager.getInstance().getMainContext();
 
-        Camera3DCreationInfo parameters;
-
-        if (info == null){
-            parameters = new Camera3DCreationInfo();
-            parameters.fov = 120f;
-            parameters.initialPosition = new Vector3f(0, 0, 0);
+        if (info == null) {
+            cameraParameters = new Camera3DCreationInfo();
+            cameraParameters.fov = 120f;
+            cameraParameters.initialPosition = new Vector3f(0, 0, 0);
         } else {
-            parameters = info;
+            cameraParameters = info;
         }
-
-        main3DCamera = mainContext.createCamera(parameters);
-        main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
-        shaderManager.setCameras(main2DCamera, main3DCamera);
 
         sceneManagerInterface = null;
     }
@@ -49,27 +65,111 @@ public class Scene {
         this(null);
     }
 
-    public void init(String[] args, IGLBindable bindable){
-        dispose();
+    private void initGlobalParameters(){
+        main3DCamera = mainContext.createCamera(cameraParameters);
+        main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
+        shaderManager.setCameras(main2DCamera, main3DCamera);
+    }
+
+    public abstract void init(String[] args);
+
+    public void init(String[] args, TemplateSceneLoading loadingScene) {
+        this.args = args;
+        this.loadingScene = loadingScene;
+        this.loadingScene.launch(this.args);
+    }
+
+    public void launch(String[] args, IGLBindable bindable) {
+        initGlobalParameters();
 
         scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), bindable);
-        scRenderer.init();
+        scRenderer.load(0);
     }
 
-    public void init(String[] args){
-        init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
+    public void launch(String[] args) {
+        launch(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
     }
 
-    public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface){
+    public void addUpdatable(IUpdatable updatable){
+        updatables.add(updatable);
+    }
+
+    public void addDisplayable(IDisplayable displayable){
+        displayables.add(displayable);
+    }
+
+    public void addUpdatableAndDisplayable(IUpdatableDisplayable object){
+        addUpdatable(object);
+        addDisplayable(object);
+    }
+
+    public void removeUpdatable(IUpdatable updatable){
+        updatables.remove(updatable);
+    }
+
+    public void removeDisplayable(IDisplayable displayable){
+        displayables.remove(displayable);
+    }
+
+    public void removeUpdatableAndDisplayable(IUpdatableDisplayable object){
+        removeUpdatable(object);
+        removeDisplayable(object);
+    }
+
+
+    public void setWaitForLoading() {
+        isWaitingForLoading = true;
+    }
+
+    public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface) {
         this.sceneManagerInterface = sceneManagerInterface;
     }
 
-    public void update(){}
+    final void updateByManager(){
+        if (isWaitingForLoading) {
+            loadingScene.updateByManager();
+        } else {
+            update();
+        }
+    }
 
-    public void dispose(){}
+    public void update() {
+        for (IUpdatable updatable : updatables) {
+            updatable.update();
+        }
+    }
 
-    public void display(){}
+    void disposeByManager(){
+        if (isWaitingForLoading) {
+            loadingScene.disposeByManager();
+        } else {
+            dispose();
+        }
+    }
 
+    public void dispose() {
+        for (IUpdatable updatable : updatables) {
+            updatable.dispose();
+        }
+    }
+
+    final void displayByManager() {
+        if (isWaitingForLoading) {
+            loadingScene.displayByManager();
+
+            if (loadingScene.isFinished()) {
+                isWaitingForLoading = false;
+                this.launch(args);
+            }
+        } else {
+            display();
+        }
+    }
+
+    public void display() {
+        for (IDisplayable displayable : displayables)
+            displayable.display();
+    }
 
     protected void setVirtualScene(){
         scRenderer.bindFrameBuff();
@@ -81,7 +181,6 @@ public class Scene {
         mainContext.getWindow().setRealViewport();
 
         scRenderer.display();
-        dispose();
     }
 
     protected void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
@@ -104,6 +203,13 @@ public class Scene {
     }
 
     public void unload() {
-        scRenderer.unload();
+        if (scRenderer != null)
+            scRenderer.unload();
+
+        for (IUpdatable updatable : updatables)
+            updatable.unload();
+
+        for (IDisplayable displayable : displayables)
+            displayable.unload();
     }
 }

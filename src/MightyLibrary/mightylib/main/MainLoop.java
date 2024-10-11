@@ -1,9 +1,11 @@
 package MightyLibrary.mightylib.main;
 
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
+import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Icon;
 import MightyLibrary.mightylib.scenes.SceneManager;
@@ -60,6 +62,8 @@ public final class MainLoop {
         System.out.println("--Create main context.");
         contextManager = ContextManager.getInstance();
 
+        ThreadManager.NumberMaxThreadToUse = startProcedure.returnMaxNumberOfThreadsToUse();
+
         WindowCreationInfo wci = new WindowCreationInfo();
         wci.Size = new Vector2i(
                 startProcedure.returnSceneSize().x,
@@ -71,6 +75,7 @@ public final class MainLoop {
 
         wci.WindowName = startProcedure.returnProjectName();
         wci.Fullscreen = startProcedure.returnFullscreenState();
+        wci.KeyboardLanguage = startProcedure.returnDefaultKeyboardLanguage();
 
         contextManager.createDefaultContext(wci);
 
@@ -94,9 +99,11 @@ public final class MainLoop {
 
         System.out.println("--Create Resources");
         Resources resource = Resources.createInstance(
-                startProcedure.returnResourcesLoadingMethod()
+                startProcedure.returnResourcesLoadingMethod(),
+                Math.max(1, startProcedure.returnMaxNumberOfThreadsToUse())
         );
 
+        GLResources glResources = GLResources.createInstance(startProcedure.returnGLResourceCreation());
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(new StopLibrary());
@@ -110,7 +117,7 @@ public final class MainLoop {
 
         // Load all resources
         resource.load();
-        sceneManager.init(startProcedure.returnStartScene(), new String[]{});
+        sceneManager.init(startProcedure.returnStartScene(), new String[]{"start"});
 
         if (startProcedure.returnIconName() != null) {
             if (resource.isExistingResource(Icon.class, startProcedure.returnIconName()))

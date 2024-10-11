@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.scenes;
+package MightyLibrary.mightylib.scenes.camera;
 
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
@@ -42,7 +42,7 @@ public class Camera2D extends Camera {
         this.maxZoomLevel = maxZoomLevel;
     }
 
-    public void invertView(){
+    public void invertView() {
         invertView = !invertView;
 
         updateProjection();
@@ -167,7 +167,6 @@ public class Camera2D extends Camera {
         setZoomLevel(new Vector2f(this.zoomLevel.x, zoomLevel));
     }
 
-
     public void setZoomLevel(Vector2f zoomLevel) {
         Vector2f previousZoom = new Vector2f(this.zoomLevel);
 
@@ -215,5 +214,13 @@ public class Camera2D extends Camera {
                 .transform(new Vector4f(position, 0.0f, 1.0f), new Vector4f());
 
         return new Vector2f(computedPosition.x, computedPosition.y);
+    }
+
+    public Camera2D copy(){
+        Camera2D copy = new Camera2D(windowInfo, camPos, invertView);
+        copy.setZoomLevel(zoomLevel);
+        copy.setRotation(rotation);
+
+        return copy;
     }
 }

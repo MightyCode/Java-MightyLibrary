@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class ObjModelLoader extends ResourceLoader {
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return Model.class;
     }
 
@@ -32,26 +32,18 @@ public class ObjModelLoader extends ResourceLoader {
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
-        if (ending.equals(".obj"))
+        if (ending != null && ending.equals(".obj"))
             return getFileName(path);
 
         return null;
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof Model))
             return;
 
         Model model = (Model) dataType;
         System.out.println(model.path());
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        Model model = new Model(resourceName, resourcePath);
-        data.put(resourceName, model);
-
-        load(model);
     }
 }

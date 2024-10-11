@@ -184,7 +184,7 @@ public class GUIList {
 
     public void unload(){
         for (GUI gui : GUIs.values()){
-            gui.display();
+            gui.unload();
         }
     }
 }

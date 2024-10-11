@@ -1,26 +1,86 @@
 package MightyLibrary.mightylib.resources;
 
+import MightyLibrary.mightylib.utils.LoadingElement;
 import MightyLibrary.mightylib.utils.math.UUID;
 
-public abstract class DataType extends UUID {
+import java.util.ArrayList;
+
+public abstract class DataType extends UUID implements LoadingElement {
+    protected final Resources resources;
+
     protected final String dataName;
 
-    protected boolean correctlyLoaded;
+    // Step where data are read from disk and dependencies are listed
+    private boolean correctlyPreLoaded;
+
+    // When dependencies are loaded, this data can be loaded and well computed
+    private boolean correctlyLoaded;
 
     // Static table, max of 5 references
     public int MAX_REFERENCES = 5;
     protected String[] references;
 
-    public DataType(String dataName){
+    private final ArrayList<DataType> dependencies;
+
+    private final TYPE_SET_UP typeSetUp;
+
+    private boolean manuallyCreated;
+
+    public enum TYPE_SET_UP {
+        IMMEDIATELY_IN_CURRENT_CONTEXT,
+        MAIN_CONTEXT,
+        THREAD_CONTEXT
+    }
+
+    public DataType(TYPE_SET_UP typeSetUp, String dataName){
         super();
+        resources = Resources.getInstance();
+
         this.dataName = dataName;
         this.correctlyLoaded = false;
+        this.typeSetUp = typeSetUp;
 
         references = new String[5];
+        dependencies = new ArrayList<>();
+        manuallyCreated = true;
+    }
+
+    final void setNotManuallyCreated(){
+        manuallyCreated = false;
+    }
+
+    public final boolean isManuallyCreated(){
+        return manuallyCreated;
+    }
+
+    public final TYPE_SET_UP getTypeSetUp(){
+        return typeSetUp;
+    }
+
+    public final boolean hasDependencies(){
+        return !dependencies.isEmpty();
+    }
+
+    public final void addDependency(DataType dependency){
+        dependencies.add(dependency);
+    }
+
+    public final void removeDependency(DataType dependency){
+        dependencies.remove(dependency);
+    }
+
+    public final boolean canBeLoad(){
+        for (DataType dependency : dependencies){
+            if (!dependency.isLoaded()){
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public final void addReference(String reference) {
-        if (references[MAX_REFERENCES - 1] != null){
+        if (references[MAX_REFERENCES - 1] != null) {
             System.err.println("Reference table is full for resources" + dataName);
             return;
         }
@@ -46,39 +106,47 @@ public abstract class DataType extends UUID {
         }
     }
 
-    public final boolean isReferenced(){
-        return references[0] != null;
+    public final boolean notReferenced() {
+        return references[0] == null;
     }
 
     public final String getDataName(){
         return this.dataName;
     }
 
-    public final void load(ResourceLoader loader) {
-        loader.load(this);
-    }
-    public final void load(ResourceLoader loader, String[] args){
-       load(loader);
+    // When set up manually, call this function to notify the ending of the preloading
+    public final void setPreloaded() {
+        correctlyPreLoaded = true;
     }
 
-    public void reload(ResourceLoader loader){
-        if (correctlyLoaded) {
-            unload();
+    protected abstract boolean internLoad();
 
-            if (correctlyLoaded)
-                return;
-        }
+    protected final void load() {
+        if (!correctlyPreLoaded)
+            throw new RuntimeException("Data " + dataName + " is not preloaded");
 
-        load(loader);
+        if (internLoad())
+            correctlyLoaded = true;
     }
 
-    public final void reload(ResourceLoader loader, String[] args){
-        reload(loader);
+    protected final void unload() {
+        if (!correctlyLoaded)
+            return;
+
+        internUnload();
+        correctlyPreLoaded = false;
+        correctlyLoaded = false;
     }
 
-    public final boolean isCorrectlyLoaded() {
+    protected abstract void internUnload();
+
+    @Override
+    public final boolean isPreLoaded() {
+        return correctlyPreLoaded;
+    }
+
+    @Override
+    public final boolean isLoaded() {
         return correctlyLoaded;
     }
-
-    public abstract void unload();
 }

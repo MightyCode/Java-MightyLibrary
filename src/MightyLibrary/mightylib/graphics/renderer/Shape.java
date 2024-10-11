@@ -246,7 +246,7 @@ public class Shape {
     }
 
 
-    public boolean getIn2D(){
+    public boolean is2DPurpose(){
         return this.in2D;
     }
 

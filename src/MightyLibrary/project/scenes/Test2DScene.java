@@ -5,7 +5,6 @@ import MightyLibrary.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.PolygonRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
@@ -15,11 +14,15 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.animation.AnimationData;
 import MightyLibrary.mightylib.resources.animation.Animator;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.resources.texture.TextureAtlas;
+import MightyLibrary.mightylib.resources.texture.Texture;
+import MightyLibrary.mightylib.resources.texture.TextureData;
+import MightyLibrary.mightylib.resources.texture.TextureDataAtlas;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.scenes.Scene;
-import MightyLibrary.mightylib.scenes.cameracomponents.DraggingCameraComponent;
-import MightyLibrary.mightylib.scenes.cameracomponents.MovingCameraComponent;
-import MightyLibrary.mightylib.scenes.cameracomponents.ZoomingCameraComponent;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera2D;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.DraggingCameraComponent;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.MovingCameraComponent;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.ZoomingCameraComponent;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
@@ -30,9 +33,8 @@ import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.mightylib.utils.math.geometry.Polygon;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.*;
-
-import static org.lwjgl.opengl.GL11.glLineWidth;
 
 public class Test2DScene extends Scene {
     private Animation2DRenderer slimeRenderer;
@@ -40,14 +42,9 @@ public class Test2DScene extends Scene {
     private Text text;
     private TileMap map;
     private LayersTileMapRenderer mapRenderer;
-    private TextureAtlas atlas;
     private RectangleRenderer atlasRenderer;
 
     private FloatTweening rotation;
-
-    private DraggingCameraComponent draggingSceneComponent;
-    private MovingCameraComponent movingSceneComponent;
-    private ZoomingCameraComponent zoomingSceneComponent;
 
     private HexagonRenderer hexagonRenderer1, hexagonRenderer2;
 
@@ -55,6 +52,10 @@ public class Test2DScene extends Scene {
 
     private PolygonRenderer polygonRenderer;
     private int indexVertexReference = 0;
+
+    private Camera2D hudCamera;
+
+    private TextureDataAtlas atlas;
 
     @Override
     protected String[] getInvolvedBatch() {
@@ -64,20 +65,27 @@ public class Test2DScene extends Scene {
     }
 
     public void init(String[] args) {
-        super.init(args);
-        /// SCENE INFORMATION ///
+        super.init(args, new LoadingSceneImplementation());
 
-        atlas = new TextureAtlas("atlas1");
+        atlas = new TextureDataAtlas("atlas1");
+
         atlas.addTexture("tileset");
         atlas.addTexture("painting");
+        atlas.setPreloaded();
+
+        Resources.getInstance().addPreLoadedResource(atlas);
+    }
+
+    public void launch(String[] args) {
+        super.launch(args);
+        /// SCENE INFORMATION ///
+        hudCamera = main2DCamera.copy();
 
         atlasRenderer = new RectangleRenderer("texture2D");
-        atlasRenderer.init();
-        atlasRenderer.setMainTextureChannel(atlas);
+        atlasRenderer.load(0);
+        atlasRenderer.setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));
         atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
         atlasRenderer.setPosition(new Vector2f(500, 10));
-
-        main3DCamera.setPos(new Vector3f(0, 0, 0));
 
         setClearColor(52, 189, 235, 1f);
         //setClearColor(0, 0, 0, 0f);
@@ -118,7 +126,7 @@ public class Test2DScene extends Scene {
                 .setColor(new Color4f(0.5f, 0.4f, 0.3f, 1))
                 .setText("Test d'écriture de texte c'est super cool");
 
-        map = Resources.getInstance().getResource(TileMap.class, "map");
+        map = resources.getResource(TileMap.class, "map");
 
         mapRenderer = new LayersTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
@@ -128,12 +136,13 @@ public class Test2DScene extends Scene {
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
 
-        draggingSceneComponent = new DraggingCameraComponent();
+        DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
         draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
         draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
+        addUpdatable(draggingSceneComponent);
 
-        movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
+        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                         .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -143,30 +152,47 @@ public class Test2DScene extends Scene {
                         .setQuickSpeed(ActionId.SHIFT)
         );
 
-        zoomingSceneComponent = new ZoomingCameraComponent();
+        addUpdatable(movingSceneComponent);
+
+        ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
         zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
                 main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
 
+        addUpdatable(zoomingSceneComponent);
+
+        addUpdatableAndDisplayable(
+                new DebugInfoCamera2D(hudCamera).init(main2DCamera, new Vector2f(5, 5))
+                        .addInfo("position")
+                        .addInfo("rotation")
+                        .addInfo("zoom")
+        );
+
         main2DCamera.setZoomLevel(0.5f);
 
-        hexagonRenderer1 = (HexagonRenderer) new HexagonRenderer("colorShape2D").init();
+        hexagonRenderer1 = new HexagonRenderer("colorShape2D");
+        hexagonRenderer1.load(0);
         hexagonRenderer1.setColorMode(ColorList.Gold());
         hexagonRenderer1.setSizePix(200, 100);
         hexagonRenderer1.setPosition(new Vector2f(-100, 400));
 
-        hexagonRenderer2 = (HexagonRenderer) new HexagonRenderer("texture2D").init();
-        hexagonRenderer2.setMainTextureChannel("hexagon");
+        hexagonRenderer2 = new HexagonRenderer("texture2D");
+        hexagonRenderer2.load(0);
+        hexagonRenderer2.setMainTextureChannel(glResources.addElementOrReturnIfPresent(
+                Texture.class,
+                new Texture(Resources.getInstance().getResource(TextureData.class,
+                        "hexagon")), "hexagon"));
         hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         hexagonRenderer2.setPosition(new Vector2f(0,0));
         //ellipseRenderer.setReference(EDirection.Right);
 
-        testEllipseRenderer = (EllipseRenderer) new EllipseRenderer().init();
+        testEllipseRenderer = new EllipseRenderer();
+        testEllipseRenderer.load(0);
         testEllipseRenderer.setColorMode(ColorList.DarkBlue());
         testEllipseRenderer.setSizePix(200, 300);
         testEllipseRenderer.setPosition(new Vector2f(-200, 0));
 
-        polygonRenderer = (PolygonRenderer) new PolygonRenderer(
+        polygonRenderer = new PolygonRenderer(
                 "texture2D",
                 Polygon.CreateBuilder()
                         .addVertex(new Vector2f(0, 0))
@@ -176,7 +202,9 @@ public class Test2DScene extends Scene {
                         .addVertex(new Vector2f(1f, 1f))
                         .addVertex(new Vector2f(0f, 1f))
                         .build()
-        ).init();
+        );
+
+        polygonRenderer.load(0);
         polygonRenderer.setMainTextureChannel("error");
         polygonRenderer.setSizePix(100, 100);
         polygonRenderer.setPosition(new Vector2f(1500, 300));
@@ -184,7 +212,6 @@ public class Test2DScene extends Scene {
         glLineWidth(10f);*/
         polygonRenderer.setReferenceVertex(indexVertexReference);
     }
-
 
     public void update() {
         super.update();
@@ -202,10 +229,6 @@ public class Test2DScene extends Scene {
         slimeRenderer.setRotation(rotation.value(), new Vector3f(0, 0, 1));
         slimeTextureTweening.update();
         slimeRenderer.update();
-
-        movingSceneComponent.update();
-        draggingSceneComponent.update();
-        zoomingSceneComponent.update();
 
         //map.setTileType(0, 0, 0, 560);
 
@@ -278,10 +301,12 @@ public class Test2DScene extends Scene {
 
         polygonRenderer.display();
 
+        super.display();
+
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload() {
         super.unload();
         slimeRenderer.unload();
@@ -295,5 +320,7 @@ public class Test2DScene extends Scene {
         polygonRenderer.unload();
 
         mapRenderer.unload();
+
+        resources.deleteResource(TextureDataAtlas.class, "atlas1");
     }
 }

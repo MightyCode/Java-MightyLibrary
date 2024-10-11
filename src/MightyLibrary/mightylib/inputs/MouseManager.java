@@ -33,8 +33,8 @@ public class MouseManager {
     private boolean displayCursor;
 
 
-    private Vector2f mouseScroll;
-    private GLFWScrollCallback scrollCallback;
+    private final Vector2f mouseScroll;
+    private final GLFWScrollCallback scrollCallback;
 
     /**
      * Mouse manager class.

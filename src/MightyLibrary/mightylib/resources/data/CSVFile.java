@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.resources.data;
 
-import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.SingleSourceDataType;
 
 import java.util.Collections;
@@ -15,7 +14,7 @@ public class CSVFile extends SingleSourceDataType {
     private final HashMap<String, Integer> nameToIndex;
     private int counter;
     public CSVFile(String dataName, String path) {
-        super(dataName, path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
 
         nameToIndex = new HashMap<>();
     }
@@ -90,8 +89,9 @@ public class CSVFile extends SingleSourceDataType {
         return nameToIndex.get(columnName);
     }
 
-    public void setCorrectlyLoaded() {
-        correctlyLoaded = true;
+    @Override
+    protected boolean internLoad() {
+        return true;
     }
 
     public boolean isContainingHeader(){
@@ -99,12 +99,10 @@ public class CSVFile extends SingleSourceDataType {
     }
 
     @Override
-    public void unload() {
+    public void internUnload() {
         data = null;
         names = null;
 
         nameToIndex.clear();
-
-        correctlyLoaded = false;
     }
 }

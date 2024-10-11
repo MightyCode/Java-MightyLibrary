@@ -3,7 +3,7 @@ package MightyLibrary.mightylib.graphics.GUI;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
-import MightyLibrary.mightylib.scenes.Camera2D;
+import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;
 
@@ -46,7 +46,7 @@ public abstract class Slider {
         maxPrecision = -1;
 
         button = new RectangleRenderer("colorShape2D");
-        button.init();
+        button.load(0);
         button.setColorMode(ColorList.Grey());
         setButtonSize(button, referenceSize);
 
@@ -55,7 +55,7 @@ public abstract class Slider {
         button.setReferenceCamera(referenceCamera);
 
         bar = new RectangleRenderer("colorShape2D");
-        bar.init();
+        bar.load(0);
         bar.setColorMode(ColorList.DarkGrey());
         bar.setReferenceCamera(referenceCamera);
         setBarSize(bar, size);

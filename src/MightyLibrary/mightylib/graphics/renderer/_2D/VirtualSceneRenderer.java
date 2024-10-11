@@ -1,9 +1,8 @@
 package MightyLibrary.mightylib.graphics.renderer._2D;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.Shape2DRenderer;
 import MightyLibrary.mightylib.main.WindowInfo;
-import MightyLibrary.mightylib.resources.texture.IGLBindable;
+import MightyLibrary.mightylib.graphics.surface.IGLBindable;
 
 public class VirtualSceneRenderer extends RectangleRenderer {
     private final FrameBuffer frameBuffer;
@@ -14,8 +13,8 @@ public class VirtualSceneRenderer extends RectangleRenderer {
     }
 
     @Override
-    public Shape2DRenderer init() {
-        super.init();
+    public boolean load(int remainingMilliseconds) {
+        super.load(remainingMilliseconds);
 
         this.shape.updateVbo(new float[]{
                 -1, 1,
@@ -24,7 +23,7 @@ public class VirtualSceneRenderer extends RectangleRenderer {
                 1, 1
         }, positionIndex);
 
-        return this;
+        return true;
     }
 
     public FrameBuffer getFrameBuffer(){
@@ -42,9 +41,13 @@ public class VirtualSceneRenderer extends RectangleRenderer {
         frameBuffer.bindRenderTexture();
     }
 
-
     public void unload(){
-        super.unload();
+        unload(0);
+    }
+
+    @Override
+    public void unload(int remainingMilliseconds) {
+        super.unload(remainingMilliseconds);
         frameBuffer.unload();
     }
 }

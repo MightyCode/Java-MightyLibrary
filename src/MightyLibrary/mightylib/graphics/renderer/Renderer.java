@@ -1,19 +1,22 @@
 package MightyLibrary.mightylib.graphics.renderer;
 
+import MightyLibrary.mightylib.graphics.GLElement;
+import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
-import MightyLibrary.mightylib.main.IDisplayable;
+import MightyLibrary.mightylib.main.utils.IDisplayable;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
-import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.scenes.Camera;
+import MightyLibrary.mightylib.scenes.camera.Camera;
+import MightyLibrary.mightylib.utils.math.UUID;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
 
-public class Renderer implements IDisplayable {
+public class Renderer extends UUID implements IDisplayable {
+    protected GLResources glResources = GLResources.getInstance();
     protected Camera referenceCamera;
 
     protected Shape shape;
@@ -46,10 +49,12 @@ public class Renderer implements IDisplayable {
         scale = new Vector3f(1f);
         rotation = new Vector3f();
 
+        mainTexture = null;
+
         referenceCamera = null;
 
         if (shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1){
-            if (shape.getIn2D())
+            if (shape.is2DPurpose())
                 shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
                         ShaderManager.getInstance().getMainCamera2D().getProjection());
             else
@@ -58,14 +63,14 @@ public class Renderer implements IDisplayable {
         }
 
         if (shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1){
-            if (shape.getIn2D())
+            if (shape.is2DPurpose()) {
                 shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
                         ShaderManager.getInstance().getMainCamera2D().getView());
+            }
             else
                 shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
                         ShaderManager.getInstance().getMainCamera3D().getProjection());
         }
-
 
         applyModel();
 
@@ -74,7 +79,6 @@ public class Renderer implements IDisplayable {
                     new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
         }
     }
-
 
     public void display(){
         if(display) {
@@ -105,8 +109,7 @@ public class Renderer implements IDisplayable {
         return this;
     }
 
-    public Renderer updateShaderValue(String name, Object object){
-        //System.out.println(name);
+    public Renderer updateShaderValue(String name, Object object) {
         shaderValues.get(name).setObject(object);
 
         return this;
@@ -123,14 +126,13 @@ public class Renderer implements IDisplayable {
         return other;
     }
 
-    protected void sentToShader(ShaderValue value){
+    protected void sentToShader(ShaderValue value) {
         shape.getShader().sendValueToShader(value);
     }
 
     public void draw(){
         shape.display();
     }
-
 
     public void setPosition(Vector3f position){
         this.position.x = position.x;
@@ -219,7 +221,7 @@ public class Renderer implements IDisplayable {
     }
 
     public void setMainTextureChannel(String name) {
-        setMainTextureChannel(Resources.getInstance().getResource(Texture.class, name));
+        setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(name), name));
     }
 
     public void setMainTextureChannel(String name, String nameOfUniform) {
@@ -227,18 +229,33 @@ public class Renderer implements IDisplayable {
                 new ShaderValue(nameOfUniform, Integer.class, 0)
         );
 
-        setMainTextureChannel(Resources.getInstance().getResource(Texture.class, name));
+        setMainTextureChannel(name);
     }
 
-    public void setMainTextureChannel(IRenderTextureBindable texture){
-        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+    public void setMainTextureChannel(IRenderTextureBindable texture) {
+        if (mainTexture instanceof GLElement) {
+            if (texture instanceof GLElement)
+                if (mainTexture == texture) {
+                    GLResources.getInstance().releaseResource((GLElement) texture);
+                    return;
+                }
 
+            glResources.releaseResource((GLElement) mainTexture);
+        }
+
+        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
         mainTexture = texture;
     }
 
     public void addTextureChannel(String name, String nameOfUniform, int channelNumber) {
+        if (textures == null || channelNumber <= 0)
+            return;
+
+        if (channelNumber > textures.length)
+            return;
+
         addTextureChannel(
-                Resources.getInstance().getResource(Texture.class, name),
+                GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture(name), name),
                 nameOfUniform, channelNumber);
     }
 
@@ -251,6 +268,10 @@ public class Renderer implements IDisplayable {
 
         if (textures == null)
             textures = new IRenderTextureBindable[30];
+        else {
+            if (textures[channelNumber - 1] instanceof GLElement)
+                glResources.releaseResource((GLElement) textures[channelNumber - 1]);
+        }
 
         textures[channelNumber - 1] = texture;
     }
@@ -303,7 +324,21 @@ public class Renderer implements IDisplayable {
         shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
     }
 
-    public void unload(){
+    public void unload() {
+        // TODO delete that
+        unload(0);
+    }
+    public void unload(int remainingMilliseconds) {
         shape.unload();
+
+        if (mainTexture instanceof GLElement)
+            glResources.releaseResource((GLElement) mainTexture);
+
+        if (textures != null) {
+            for (IRenderTextureBindable texture : textures) {
+                if (texture instanceof GLElement)
+                    glResources.releaseResource((GLElement) texture);
+            }
+        }
     }
 }

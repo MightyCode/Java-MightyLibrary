@@ -18,12 +18,12 @@ public class RectangleRenderer extends Shape2DRenderer {
     }
 
     @Override
-    public Shape2DRenderer init() {
-        super.init();
+    public boolean load(int remainingMilliseconds) {
+        super.load(remainingMilliseconds);
 
         setReferenceDirection(EDirection.LeftUp);
 
-        return this;
+        return true;
     }
 
     @Override
@@ -59,5 +59,11 @@ public class RectangleRenderer extends Shape2DRenderer {
         this.face.setRotation(textureRotation);
 
         return (RectangleRenderer) updateShapeTexture();
+    }
+
+
+    @Override
+    public void unload(int remainingMilliseconds) {
+        super.unload(remainingMilliseconds);
     }
 }

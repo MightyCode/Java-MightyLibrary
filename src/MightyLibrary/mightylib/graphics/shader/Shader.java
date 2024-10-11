@@ -37,8 +37,9 @@ public class Shader extends MultiSourceDataType {
         return shader2D;
     }
 
+    // Todo: move the shader opengl content to GLResources, load here only the texture content
     public Shader(String name, boolean shader2D, String ... paths){
-        super(name, paths);
+        super(TYPE_SET_UP.MAIN_CONTEXT, name, paths);
         shaderProgram = -1;
 
         this.shader2D = shader2D;
@@ -128,10 +129,11 @@ public class Shader extends MultiSourceDataType {
         }
     }
 
-    public void load() {
+     @Override
+    protected boolean internLoad() {
         if (vertexContent == null || fragmentContent == null) {
             System.err.println("No enough information to load the shader");
-            return;
+            return false;
         }
 
         shaderProgram = glCreateProgram();
@@ -167,7 +169,7 @@ public class Shader extends MultiSourceDataType {
         fShader = -1;
         gShader = -1;
 
-        correctlyLoaded = true;
+        return true;
     }
 
     public void use() {
@@ -245,7 +247,7 @@ public class Shader extends MultiSourceDataType {
         return buffer;
     }
 
-    public void unload() {
+    public void internUnload() {
         System.out.println("Unloading shader : " + shaderProgram);
         if (shaderProgram != -1) {
             glDeleteProgram(shaderProgram);
@@ -272,6 +274,5 @@ public class Shader extends MultiSourceDataType {
         }
 
         lastValues.clear();
-        correctlyLoaded = false;
     }
 }

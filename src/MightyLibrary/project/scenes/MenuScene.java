@@ -2,9 +2,10 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.GUI.BackgroundlessButton;
 import MightyLibrary.mightylib.graphics.GUI.GUIList;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
-import MightyLibrary.mightylib.resources.texture.BasicBindableObject;
-import MightyLibrary.mightylib.resources.texture.TextureParameters;
+import MightyLibrary.mightylib.graphics.surface.BasicBindableObject;
+import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.sounds.SoundSourceCreationInfo;
@@ -16,6 +17,9 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.main.InitProject;
+import MightyLibrary.project.scenes.loadingScenes.FirstLoadingScene;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -34,9 +38,21 @@ public class MenuScene extends Scene {
 
     private FloatTweening rotation;
 
+    private RectangleRenderer test;
+
     public void init(String[] args) {
-        super.init(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
+        if (args.length > 0 && args[0].equals("start")) {
+            super.init(args, new FirstLoadingScene());
+        } else {
+            super.init(args, new LoadingSceneImplementation());
+        }
+    }
+
+    public void launch(String[] args) {
+        super.launch(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
         /// SCENE INFORMATION ///
+
+        InitProject.Process();
 
         mainContext.getMouseManager().setCursor(true);
 
@@ -55,11 +71,9 @@ public class MenuScene extends Scene {
                 .setFontSize(40)
                 .setText("Test2DScene");
 
-
         button2DScene.Text.copyTo(button2DScene.OverlapsText);
         button2DScene.OverlapsText.setColor(new Color4f(0.3f))
                 .setText("->Test2DScene<-");
-
 
         BackgroundlessButton Test2DWaveFunctionCollapse = button2DScene.copy();
         Test2DWaveFunctionCollapse.Text.setPosition(new Vector2f(windowSize.x * 0.75f, windowSize.y * 0.4f))
@@ -135,8 +149,15 @@ public class MenuScene extends Scene {
         rotation.setTweeningOption(ETweeningOption.LoopReversed)
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
+
+        test = new RectangleRenderer("texture2D");
+        test.load(0);
+        test.setMainTextureChannel("error");
+        test.setSizePix(100, 100);
+        test.setPosition(new Vector2f(500, 10));
     }
 
+    @Override
     public void update() {
         super.update();
 
@@ -189,19 +210,24 @@ public class MenuScene extends Scene {
             sceneManagerInterface.exit(0);
     }
 
-
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();
+        super.display();
 
+        test.display();
         guiList.display();
+        test.display();
 
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload() {
         super.unload();
-        guiList.unload();
+
+        if (guiList != null)
+            guiList.unload();
     }
 }

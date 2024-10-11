@@ -2,7 +2,7 @@ package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.physics.collision.CollisionVisualisation;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.physics.collision.CollisionBoundedVolume2D;
@@ -15,6 +15,7 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
@@ -29,7 +30,12 @@ public class TestCollisionSystem extends Scene {
     FloatTweening rotation;
 
     public void init(String[] args) {
-        super.init(args);
+        super.init(args, new LoadingSceneImplementation());
+    }
+
+    @Override
+    public void launch(String[] args) {
+        super.launch(args);
         /// SCENE INFORMATION ///
 
         main3DCamera.setPos(new Vector3f(0, 0, 0));
@@ -55,7 +61,7 @@ public class TestCollisionSystem extends Scene {
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
     }
 
-
+    @Override
     public void update() {
         super.update();
 
@@ -112,10 +118,11 @@ public class TestCollisionSystem extends Scene {
         renderer2.updateShapePosition();
     }
 
-
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();
+        super.display();
 
         renderer.display();
         renderer2.display();
@@ -123,7 +130,7 @@ public class TestCollisionSystem extends Scene {
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload() {
         super.unload();
 

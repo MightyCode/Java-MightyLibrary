@@ -11,23 +11,30 @@ public class Icon extends SingleSourceDataType {
     private int width;
     private int height;
 
+    private BufferedImage tempImg;
     private final GLFWImage.Buffer buffer;
 
     public Icon(String dataName, String path) {
-        super(dataName, path);
+        super(TYPE_SET_UP.MAIN_CONTEXT, dataName, path);
 
         buffer = GLFWImage.create(1);
+        tempImg = null;
     }
 
-    public void createIcon(BufferedImage img){
-        int[] pixels = new int[img.getHeight() * img.getWidth()];
+    public void setBufferedImage(BufferedImage img){
+        tempImg = img;
+    }
 
-        img.getRGB(0, 0, img.getWidth(), img.getHeight(), pixels, 0, img.getWidth());
+    @Override
+    protected boolean internLoad() {
+        int[] pixels = new int[tempImg.getHeight() * tempImg.getWidth()];
 
-        ByteBuffer byteBuffer = BufferUtils.createByteBuffer(img.getWidth() * img.getHeight() * 4);
+        tempImg.getRGB(0, 0, tempImg.getWidth(), tempImg.getHeight(), pixels, 0, tempImg.getWidth());
 
-        this.width = img.getWidth();
-        this.height = img.getHeight();
+        ByteBuffer byteBuffer = BufferUtils.createByteBuffer(tempImg.getWidth() * tempImg.getHeight() * 4);
+
+        this.width = tempImg.getWidth();
+        this.height = tempImg.getHeight();
 
         for (int a = 0; a < height; ++a) {
             for (int b = 0; b < width; ++b) {
@@ -40,10 +47,11 @@ public class Icon extends SingleSourceDataType {
         }
 
         byteBuffer.flip();
+        tempImg = null;
         GLFWImage iconGI = GLFWImage.create().set(width, height, byteBuffer);
         buffer.put(0, iconGI);
 
-        correctlyLoaded = true;
+        return true;
     }
 
     public int getWidth(){ return width; }
@@ -52,9 +60,7 @@ public class Icon extends SingleSourceDataType {
     public GLFWImage.Buffer getBuffer(){ return buffer; }
 
     @Override
-    public void unload() {
+    public void internUnload() {
         buffer.clear();
-
-        correctlyLoaded = false;
     }
 }

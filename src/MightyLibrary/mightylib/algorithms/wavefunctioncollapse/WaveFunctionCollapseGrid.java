@@ -2,7 +2,6 @@ package MightyLibrary.mightylib.algorithms.wavefunctioncollapse;
 
 import MightyLibrary.mightylib.resources.map.TileLayer;
 import MightyLibrary.mightylib.resources.map.TileMap;
-import MightyLibrary.mightylib.resources.map.TileSet;
 import org.joml.Vector2i;
 
 import java.util.*;
@@ -11,18 +10,16 @@ public class WaveFunctionCollapseGrid {
     private final TileMap map;
     private final Vector2i mapSize;
 
-    private final WaveCollapseRule rule;
+    private final WaveCollapseRules rule;
 
-    private WaveCollapseRule.Rule initialRule;
+    private final List<Integer>[][] availableTiles;
 
-    private List<Integer>[][] availableTiles;
-
-    private Random random;
+    private final Random random;
 
     private boolean finished = false;
-    private Map<Integer, List<Vector2i>> minimumPossibleTilePositions;
+    private final Map<Integer, List<Vector2i>> minimumPossibleTilePositions;
 
-    public WaveFunctionCollapseGrid(WaveCollapseRule rule, TileMap map, TileSet set, Vector2i mapSize) {
+    public WaveFunctionCollapseGrid(WaveCollapseRules rule, TileMap map, Vector2i mapSize) {
         this.rule = rule;
         this.map = map;
         this.mapSize = mapSize;
@@ -32,8 +29,7 @@ public class WaveFunctionCollapseGrid {
         TileLayer[] layers = new TileLayer[1];
         layers[0] = layer;
 
-        map.addTileset(set, 0);
-        map.init(mapSize, layers, null, null);
+        map.setInformation(mapSize, layers, null, null);
 
         availableTiles = new ArrayList[mapSize.y][mapSize.x];
         for (int y = 0; y < mapSize.y; ++y) {
@@ -49,10 +45,8 @@ public class WaveFunctionCollapseGrid {
         init();
     }
 
-    private void init(){
-        initialRule = rule.getInitialRule();
-
-        Set<Integer> listOfTile = initialRule.getAvailableIds(WaveCollapseRule.Rule.INITIAl_POS);
+    private void init() {
+        Set<Integer> listOfTile = rule.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAl_POS);
         minimumPossibleTilePositions.clear();
         List<Vector2i> positions = new ArrayList<>();
 
@@ -112,7 +106,7 @@ public class WaveFunctionCollapseGrid {
         if (tileId != -1) {
             availableTiles[y][x].clear();
 
-            WaveCollapseRule.Rule ruleToApply = rule.getRule(tileId);
+            WaveCollapseRules.Rule ruleToApply = rule.getRule(tileId);
 
             for (Vector2i direction : ruleToApply.getDirections()) {
                 // Only keep for the direction tile the corresponding list
@@ -123,7 +117,7 @@ public class WaveFunctionCollapseGrid {
                 if (newPos.x < 0 || newPos.x >= mapSize.x || newPos.y < 0 || newPos.y >= mapSize.y)
                     continue;
 
-                if (availableTiles[newPos.y][newPos.x].size() > 0) {
+                if (!availableTiles[newPos.y][newPos.x].isEmpty()) {
                     int oldSize = availableTiles[newPos.y][newPos.x].size();
 
                     availableTiles[newPos.y][newPos.x].retainAll(availableTile);
@@ -145,7 +139,7 @@ public class WaveFunctionCollapseGrid {
                             }
                         }
 
-                        if (positions.size() == 0)
+                        if (positions.isEmpty())
                             minimumPossibleTilePositions.remove(oldSize);
 
                         // Add the new position to the new size list
@@ -164,12 +158,12 @@ public class WaveFunctionCollapseGrid {
     private Vector2i getNextTileToCompute(){
         // Return a tile from the minimum key of the map
 
-        if (minimumPossibleTilePositions.size() == 0)
+        if (minimumPossibleTilePositions.isEmpty())
             return null;
 
         int minKey = minimumPossibleTilePositions.keySet().iterator().next();
         List<Vector2i> positions = minimumPossibleTilePositions.get(minKey);
-        if (positions.size() == 0)
+        if (positions.isEmpty())
             return null;
 
         // Take and remove
@@ -177,7 +171,7 @@ public class WaveFunctionCollapseGrid {
         Vector2i pos = positions.get(index);
         positions.remove(index);
 
-        if (positions.size() == 0)
+        if (positions.isEmpty())
             minimumPossibleTilePositions.remove(minKey);
 
         return pos;
@@ -189,7 +183,7 @@ public class WaveFunctionCollapseGrid {
         while (currentPosition != null){
             int chosenTile = -1;
 
-            if (availableTiles[currentPosition.y][currentPosition.x].size() > 0)
+            if (!availableTiles[currentPosition.y][currentPosition.x].isEmpty())
                 chosenTile = availableTiles[currentPosition.y][currentPosition.x].get(
                         random.nextInt(availableTiles[currentPosition.y][currentPosition.x].size()));
 
@@ -215,10 +209,10 @@ public class WaveFunctionCollapseGrid {
 
         System.out.println("Chosen position : (" + currentPosition.x + ", " + currentPosition.y + ")");
 
-        for (int i = 0; i < n && currentPosition != null; ++i){
+        for (int i = 0; i < n; ++i){
             int chosenTile = -1;
 
-            if (availableTiles[currentPosition.y][currentPosition.x].size() > 0)
+            if (!availableTiles[currentPosition.y][currentPosition.x].isEmpty())
                 chosenTile = availableTiles[currentPosition.y][currentPosition.x].get(
                         random.nextInt(availableTiles[currentPosition.y][currentPosition.x].size()));
 

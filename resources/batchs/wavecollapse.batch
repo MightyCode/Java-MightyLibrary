@@ -1,0 +1,11 @@
+{
+     "batchs": [
+            {
+                "type" : "WaveCollapseRules",
+                "files" : [],
+                "regex" : [
+                    ".*"
+                ]
+            },
+     ]
+}

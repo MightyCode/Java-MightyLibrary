@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.utils;
 
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
 
 public class Timer {
     /**

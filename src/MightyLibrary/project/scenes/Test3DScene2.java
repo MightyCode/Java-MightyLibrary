@@ -10,13 +10,16 @@ import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.lightning.lights.PointLight;
 import MightyLibrary.mightylib.graphics.lightning.materials.Material;
 import MightyLibrary.mightylib.inputs.InputManager;
-import MightyLibrary.mightylib.main.GameTime;
-import MightyLibrary.mightylib.scenes.Camera3DCreationInfo;
+import MightyLibrary.mightylib.main.utils.GameTime;
+import MightyLibrary.mightylib.scenes.camera.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scenes.Scene;
+import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -45,13 +48,24 @@ public class Test3DScene2 extends Scene {
         };
     }
 
-    public void init(String[] args){
-        super.init(args);
+    public void init(String[] args) {
+        super.init(args, new LoadingSceneImplementation());
+    }
+
+    public void launch(String[] args){
+        super.launch(args);
         /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
+
+        addUpdatableAndDisplayable(
+                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                        .addInfo(DebugInfoCamera3D.POSITION)
+                        .addInfo(DebugInfoCamera3D.LOOK)
+                        .addInfo(DebugInfoCamera3D.SPEED)
+        );
 
         /// RENDERERS ///
 
@@ -266,10 +280,12 @@ public class Test3DScene2 extends Scene {
             point.display();
         }
 
+        super.display();
+
         super.setAndDisplayRealScene();
     }
 
-
+    @Override
     public void unload(){
         super.unload();
 

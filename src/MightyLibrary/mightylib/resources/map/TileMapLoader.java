@@ -9,7 +9,7 @@ import java.util.Map;
 public class TileMapLoader extends ResourceLoader {
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return TileMap.class;
     }
 
@@ -39,7 +39,7 @@ public class TileMapLoader extends ResourceLoader {
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof TileMap))
             return;
 
@@ -110,17 +110,9 @@ public class TileMapLoader extends ResourceLoader {
         }
 
         assert layers != null;
-        tileMap.init(layerSize, layers,
+        tileMap.setInformation(layerSize, layers,
                 layersCategories.toArray(new String[0]),
                 layersCategoriesBeginIndex.stream().mapToInt(i -> i).toArray());
-        tileMap.setCorrectlyLoaded();
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        TileMap tileMap = new TileMap(resourceName, resourcePath);
-        load(tileMap);
-        data.put(resourceName, tileMap);
     }
 }
 

@@ -1,6 +1,6 @@
 package MightyLibrary.mightylib.network;
 
-import MightyLibrary.mightylib.main.GameTime;
+import MightyLibrary.mightylib.main.utils.GameTime;
 
 public final class ClientThread extends CommunicationThread {
     public static final int SLEEP_TIME = 10; // MILLISECONDS

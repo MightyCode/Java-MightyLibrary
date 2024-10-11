@@ -15,7 +15,7 @@ public class ShaderLoader extends ResourceLoader {
 
     private final ShaderManager shaderManager = ShaderManager.getInstance();
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return Shader.class;
     }
 
@@ -75,7 +75,7 @@ public class ShaderLoader extends ResourceLoader {
     public String filterFile(String path) { return null; }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof Shader)) {
             return;
         }
@@ -127,12 +127,5 @@ public class ShaderLoader extends ResourceLoader {
 
             shader.setShaderContent(2, geometryShaderContent);
         }
-
-        shader.load();
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        System.out.println(resourceName);
     }
 }

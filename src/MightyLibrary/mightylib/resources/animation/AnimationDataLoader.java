@@ -13,7 +13,7 @@ public class AnimationDataLoader extends ResourceLoader {
     private static final int FRAME_ENUM_START_POS = 2;
 
     @Override
-    public Class<?> getType() {
+    public Class<? extends DataType> getType() {
         return AnimationData.class;
     }
 
@@ -36,14 +36,14 @@ public class AnimationDataLoader extends ResourceLoader {
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
-        if (ending.equals(".anim"))
+        if (Objects.equals(ending, ".anim"))
             return getFileName(path);
 
         return null;
     }
 
     @Override
-    public void load(DataType dataType) {
+    public void initWithFile(DataType dataType) {
         if (!(dataType instanceof AnimationData))
             return;
 
@@ -61,10 +61,5 @@ public class AnimationDataLoader extends ResourceLoader {
         }
 
         animationData.setTexture(parts[TEXTURE_POS].trim()).setFramesData(framesData);
-    }
-
-    @Override
-    public void createAndLoad(Map<String, DataType> data, String resourceName, String resourcePath) {
-        // Todo
     }
 }

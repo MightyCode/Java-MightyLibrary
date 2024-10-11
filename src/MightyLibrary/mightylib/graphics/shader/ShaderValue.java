@@ -34,24 +34,6 @@ public class ShaderValue implements Cloneable {
     }
 
     private boolean testEquals(final Class<?> type, final ShaderValue b){
-        /*if (type == Vector2f.class) {
-            return new ShaderValue(name, type, new Vector2f((Vector2f) object));
-        } else if (type == Vector3f.class) {
-            return new ShaderValue(name, type, new Vector3f((Vector3f) object));
-        } else if (type == Vector4f.class) {
-            return new ShaderValue(name, type, new Vector4f((Vector4f) object));
-        } else if (type == Vector2i.class) {
-            return new ShaderValue(name, type, new Vector2i((Vector2i) object));
-        } else if (type == Vector3i.class) {
-            return new ShaderValue(name, type, new Vector3i((Vector3i) object));
-        } else if (type == Vector4i.class) {
-            return new ShaderValue(name, type, new Vector4i((Vector4i) object));
-        } else if (type == FloatBuffer.class) {
-            return new ShaderValue(name, type, ((FloatBuffer)object).duplicate());
-        } else if (type == Integer.class) {
-            return new ShaderValue(name, type, (Integer) object);
-        }*/
-
         return getObjectTyped(type).equals(b.getObjectTyped(type));
     }
 
@@ -88,7 +70,7 @@ public class ShaderValue implements Cloneable {
     }
 
     @Override
-    public ShaderValue clone(){
+    public ShaderValue clone() {
         if (type == Float.class || type == float.class) {
             return new ShaderValue(name, type, getObjectTyped(Float.class));
         } else if (type == Vector2f.class) {
