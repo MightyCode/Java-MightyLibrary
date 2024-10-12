@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.GLElement;
 import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import MightyLibrary.mightylib.main.utils.IDisplayable;
+import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Texture;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
@@ -17,6 +18,8 @@ import java.util.HashMap;
 
 public class Renderer extends UUID implements IDisplayable {
     protected GLResources glResources = GLResources.getInstance();
+    protected Resources resources = Resources.getInstance();
+
     protected Camera referenceCamera;
 
     protected Shape shape;
@@ -234,11 +237,12 @@ public class Renderer extends UUID implements IDisplayable {
 
     public void setMainTextureChannel(IRenderTextureBindable texture) {
         if (mainTexture instanceof GLElement) {
-            if (texture instanceof GLElement)
+            if (texture instanceof GLElement) {
                 if (mainTexture == texture) {
-                    GLResources.getInstance().releaseResource((GLElement) texture);
+                    glResources.releaseResource((GLElement) texture);
                     return;
                 }
+            }
 
             glResources.releaseResource((GLElement) mainTexture);
         }
@@ -277,13 +281,19 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
 
-    public ShaderValue setColorMode(Color4f color) {
+    public ShaderValue setColorMode(Color4f color, boolean disableTexture) {
         ShaderValue value = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
         shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
 
-        shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+        if (disableTexture)
+            shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
 
         return value;
+    }
+
+
+    public ShaderValue setColorMode(Color4f color) {
+        return setColorMode(color, true);
     }
 
     public void setNoColorNoTextureMode() {
