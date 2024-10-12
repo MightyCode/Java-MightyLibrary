@@ -1,10 +1,16 @@
 package MightyLibrary.mightylib.resources.models;
 
+import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.resources.DataType;
+import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.ResourceLoader;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.sound.SoundData;
+import org.joml.Vector2f;
+import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ObjModelLoader extends ResourceLoader {
@@ -44,6 +50,43 @@ public class ObjModelLoader extends ResourceLoader {
             return;
 
         Model model = (Model) dataType;
-        System.out.println(model.path());
+        String file = FileMethods.readFileAsString(model.path());
+        String[] lines = file.split("\n");
+
+        for (String line : lines) {
+            String[] parsedLine = line.split(" ");
+
+            if (line.startsWith("v ")){
+                model.addVertexPosition(new Vector3f(Float.parseFloat(parsedLine[1]),
+                        Float.parseFloat(parsedLine[2]), Float.parseFloat(parsedLine[3])));
+            } else if (line.startsWith("vt")){
+                // Invert the y coordinate because the texture is flipped
+                model.addTextureCoordinate(new Vector2f(Float.parseFloat(parsedLine[1]),
+                       1 - Float.parseFloat(parsedLine[2])));
+            } else if (line.startsWith("vn")){
+                model.addNormalVector(new Vector3f(Float.parseFloat(parsedLine[1]),
+                        Float.parseFloat(parsedLine[2]), Float.parseFloat(parsedLine[3])));
+
+            } else if (line.startsWith("f ")) {
+                ModelTriangle modelTriangle = getModelTriangle(parsedLine);
+
+                model.addFace(modelTriangle);
+            }
+        }
+    }
+
+    private static ModelTriangle getModelTriangle(String[] parsedLine) {
+        ModelTriangle modelTriangle = new ModelTriangle(new String[]{Model.VERTEX_POSITION, Model.TEXTURE_COORDINATE, Model.NORMAL_VECTOR});
+
+        for (int i = 0; i < 3; ++i) {
+            // + 1 because the first element is the "f" character
+            String[] vertexData = parsedLine[i + 1].split("/");
+
+            modelTriangle.setVertexInfo(Model.VERTEX_POSITION, i, Integer.parseInt(vertexData[0]) - 1);
+            modelTriangle.setVertexInfo(Model.TEXTURE_COORDINATE, i, Integer.parseInt(vertexData[1]) - 1);
+            modelTriangle.setVertexInfo(Model.NORMAL_VECTOR, i, Integer.parseInt(vertexData[2]) - 1);
+        }
+
+        return modelTriangle;
     }
 }
