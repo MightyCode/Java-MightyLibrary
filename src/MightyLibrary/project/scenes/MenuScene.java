@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import MightyLibrary.mightylib.graphics.text.ETextAlignment;
 import MightyLibrary.mightylib.graphics.surface.BasicBindableObject;
 import MightyLibrary.mightylib.graphics.surface.TextureParameters;
+import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.sounds.SoundSourceCreationInfo;
@@ -17,12 +18,13 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.project.main.ActionId;
-import MightyLibrary.project.main.InitProject;
 import MightyLibrary.project.scenes.loadingScenes.FirstLoadingScene;
 import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
+
+import static org.lwjgl.glfw.GLFW.*;
 
 public class MenuScene extends Scene {
     private static final SoundSourceCreationInfo CREATION_INFO_SELECT = new SoundSourceCreationInfo();
@@ -51,8 +53,6 @@ public class MenuScene extends Scene {
     public void launch(String[] args) {
         super.launch(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
         /// SCENE INFORMATION ///
-
-        InitProject.Process();
 
         mainContext.getMouseManager().setCursor(true);
 
@@ -206,8 +206,15 @@ public class MenuScene extends Scene {
 
         //main2DCamera.setX(rotation.value() * 50);
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+        InputManager inputManager = mainContext.getInputManager();
+
+        if (inputManager.inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.exit(0);
+
+        if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
+                inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F2) )
+            sceneManagerInterface.setNewScene(new Test2DRopeSimulation(), new String[]{""});
+
     }
 
     @Override

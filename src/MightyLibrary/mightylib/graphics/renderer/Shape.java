@@ -22,8 +22,7 @@ public class Shape {
 
     public static final int COMMON_VERTEX_POSITION_CHANNEL = 0;
     public static final int COMMON_TEXTURE_POSITION_CHANNEL = 1;
-
-    public static final int COMMON_NORMAL_CHANNEL = 2;
+    public static final int COMMON_NORMAL_POSITION_CHANNEL = 2;
 
     protected int eboStorage;
 
@@ -68,7 +67,7 @@ public class Shape {
         setUseEbo(useEbo);
     }
 
-    public int addVboFloat(float[] vertices, int vertexSize, int storage){
+    public int addVboFloat(float[] vertices, int vertexSize, int storage) {
         bind();
         int vbo = glGenBuffers();
 
@@ -145,11 +144,17 @@ public class Shape {
 
         if (!vbosEnable.get(pos)) {
             bind();
-            glEnableVertexAttribArray(vboCount);
+            glEnableVertexAttribArray(pos);
             vbosEnable.set(pos, true);
         }
     }
 
+    public boolean isEnableVbo(int pos){
+        if (vbosEnable.size() <= pos)
+            return false;
+
+        return vbosEnable.get(pos);
+    }
 
     public void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
         int oneLineSize = MightyMath.Sum(vertexSizes);

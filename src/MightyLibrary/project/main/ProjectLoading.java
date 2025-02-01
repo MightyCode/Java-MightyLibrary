@@ -11,7 +11,6 @@ import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
-import MightyLibrary.mightylib.resources.data.JSONLoader;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;
 import MightyLibrary.mightylib.resources.models.ObjModelLoader;

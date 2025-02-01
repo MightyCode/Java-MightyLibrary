@@ -78,6 +78,7 @@ public class Test2DScene extends Scene {
 
     public void launch(String[] args) {
         super.launch(args);
+        setClearColor(52, 189, 235, 1f);
         /// SCENE INFORMATION ///
         hudCamera = main2DCamera.copy();
 
@@ -87,7 +88,7 @@ public class Test2DScene extends Scene {
         atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
         atlasRenderer.setPosition(new Vector2f(500, 10));
 
-        setClearColor(52, 189, 235, 1f);
+
         //setClearColor(0, 0, 0, 0f);
 
         /// RENDERERS ///
@@ -302,7 +303,6 @@ public class Test2DScene extends Scene {
         polygonRenderer.display();
 
         super.display();
-
         super.setAndDisplayRealScene();
     }
 
