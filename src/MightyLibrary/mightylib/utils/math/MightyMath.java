@@ -13,21 +13,22 @@ import java.util.ArrayList;
  * @author MightyCode
  * @version 1.0
  */
-public class MightyMath {
+public abstract class MightyMath {
+	private MightyMath() {}
 
-	public static final Vector3f LEFT_VECTOR = new Vector3f(0, 0, -1);
-	public static final Vector3f RIGHT_VECTOR = new Vector3f(0, 0, 1);
+	public static Vector3f LeftVector() { return new Vector3f(0, 0, -1); }
+	public static Vector3f RightVector() { return new Vector3f(0, 0, 1); }
 
-	public static final Vector3f UP_VECTOR = new Vector3f(0, 1, 0);
-	public static final Vector3f DOWN_VECTOR = new Vector3f(0, -1, 0);
+	public static Vector3f UpVector() { return new Vector3f(0, 1, 0); }
+	public static Vector3f DownVector() { return new Vector3f(0, -1, 0); }
 
-	public static final Vector3f FORWARD_VECTOR = new Vector3f(1, 0, 0);
-	public static final Vector3f BACKWARD_VECTOR = new Vector3f(-1, 0, 0);
+	public static Vector3f ForwardVector() { return new Vector3f(1, 0, 0); }
+	public static Vector3f BackwardVector() { return new Vector3f(-1, 0, 0); }
 
-	public static final Vector3f ONE_VECTOR = new Vector3f(1);
-	public static final Vector3f ZERO_VECTOR = new Vector3f(0);
+	public static Vector3f OnesVector() { return new Vector3f(1); }
+	public static Vector3f ZerosVector () { return new Vector3f(0); }
 
-	public static final float PI_FLOAT = (float)(Math.PI);
+	public static float PI_FLOAT = (float)(Math.PI);
 
 	/**
 	 * Calculate the position of a number in the first interval to transpose this number in an second interval.
@@ -123,20 +124,46 @@ public class MightyMath {
 	public static Vector3f ToVector(EDirection3D direction3D){
 		switch (direction3D){
 			case Forward:
-				return FORWARD_VECTOR;
+				return ForwardVector();
 			case Backward:
-				return BACKWARD_VECTOR;
+				return BackwardVector();
 			case Left:
-				return LEFT_VECTOR;
+				return LeftVector();
 			case Right:
-				return RIGHT_VECTOR;
+				return RightVector();
 			case Up:
-				return UP_VECTOR;
+				return UpVector();
 			case Down:
-				return DOWN_VECTOR;
+				return DownVector();
 			case None:
 			default:
-				return ZERO_VECTOR;
+				return ZerosVector();
 		}
+	}
+
+	/**
+	 *
+	 *
+	 * @param point x, y as value
+	 * @param line x1, y1, x2, y2 as value
+	 * @param precision the precision of the calculation
+	 * @return true if the point is over the line
+	 */
+	public static boolean isPositionOverridingLine(Vector2f point, Vector4f line, float precision){
+		// ax + b -> line;
+		float a = (line.y - line.w) / (line.x - line.z);
+		float b = line.y - a * line.x;
+
+		float xInf = Math.min(line.x, line.z);
+		float xSup = Math.max(line.x, line.z);
+		float yInf = Math.min(line.y, line.w);
+		float ySup = Math.max(line.y, line.w);
+
+		return a * point.x + b - precision <= point.y &&
+				point.y <= a * point.x + b + precision &&
+				xInf - precision <= point.x &&
+				point.x <= xSup + precision &&
+				yInf - precision <= point.y &&
+				point.y <= ySup + precision;
 	}
 }

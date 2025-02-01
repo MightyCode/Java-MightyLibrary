@@ -79,7 +79,7 @@ public abstract class GLElement implements LoadingElement {
     public abstract void unload(int remainingMilliseconds);
 
     void unloadByResource(int remainingMilliseconds) {
-        System.out.println("Unloading " + this.getClass().getSimpleName() + " = " + this.getName());
+        System.out.println("Gl Elements Unloading " + this.getClass().getSimpleName() + " = " + this.getName());
         if (reference != 0)
             return;
 
