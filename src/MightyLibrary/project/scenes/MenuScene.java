@@ -215,6 +215,9 @@ public class MenuScene extends Scene {
                 inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F2) )
             sceneManagerInterface.setNewScene(new Test2DRopeSimulation(), new String[]{""});
 
+        if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
+                inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F3) )
+            sceneManagerInterface.setNewScene(new TestGUI(), new String[]{""});
     }
 
     @Override

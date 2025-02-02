@@ -32,10 +32,15 @@ public class Text extends Renderer implements Cloneable {
 
     private final ShaderValue color;
 
+    // x -> left, y -> right, z -> up, w -> down
+    private final Vector4f padding;
+
     public Text() {
         super("coloredText", true);
 
         fontSize = 10.0f;
+
+        padding = new Vector4f(0, 0, 0, 0);
 
         this.font = null;
         this.text = "";
@@ -57,7 +62,7 @@ public class Text extends Renderer implements Cloneable {
     }
 
     private boolean shouldNotDrawText(){
-        return font == null || text == null || text.trim().equals("");
+        return font == null || text == null || text.trim().isEmpty();
     }
 
     public void display(){
@@ -98,7 +103,7 @@ public class Text extends Renderer implements Cloneable {
         String clean = (removeEscapeChars) ? text.replace("\n", "") : text;
 
         String result = "";
-        String temp = "";
+        String temp;
 
         Vector2f sizeTaken = new Vector2f();
 
@@ -185,6 +190,23 @@ public class Text extends Renderer implements Cloneable {
         return this;
     }
 
+    public Text setPadding(float left, float up, float right, float down) {
+        setPadding(new Vector4f(left, up, right, down));
+
+        return this;
+    }
+
+    public Text setPadding(Vector4f padding){
+        this.padding.set(padding);
+
+        computeRightUpPosition();
+        return this;
+    }
+
+    public Vector4f getPadding(){
+        return padding;
+    }
+
     public float getFontSize() {
         return this.fontSize;
     }
@@ -228,10 +250,12 @@ public class Text extends Renderer implements Cloneable {
         float lineAlignmentOffset = 0;
 
         rectangleSize.set(font.computeSize(text, fontSize));
+        rectangleSize.x += padding.x + padding.z;
+        rectangleSize.y += padding.y + padding.w;
 
         for (int j = 0; j < lines.length; ++j) {
             for (int i = 0; i < lines[j].length(); i++) {
-                currentCharOffset.x += font.getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize;
+                currentCharOffset.x += (float) (font.getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
                 ++charCount;
             }
 
@@ -242,29 +266,43 @@ public class Text extends Renderer implements Cloneable {
         currentCharOffset.x = 0;
         charCount = 0;
 
-        switch(this.reference){
-            case None:
-            case Up:
-            case Down:
-                textReference.x = rectangleSize.x / 2;
-                break;
+        switch(this.reference) {
             case RightDown:
             case Right:
             case RightUp:
                 textReference.x = rectangleSize.x;
+                textReference.x += padding.z;
+                break;
+            case LeftDown:
+            case Left:
+            case LeftUp:
+                textReference.x -= padding.x;
+                break;
+            case None:
+            case Up:
+            case Down:
+            default:
+                textReference.x = rectangleSize.x / 2;
                 break;
         }
 
         switch(this.reference){
-            case None:
-            case Left:
-            case Right:
-                textReference.y = rectangleSize.y / 2;
-                break;
             case LeftDown:
             case Down:
             case RightDown:
                 textReference.y = rectangleSize.y;
+                textReference.y += padding.w;
+                break;
+            case LeftUp:
+            case Up:
+            case RightUp:
+                textReference.y -= padding.y;
+                break;
+            case None:
+            case Left:
+            case Right:
+            default:
+                textReference.y = rectangleSize.y / 2;
                 break;
         }
 
@@ -296,8 +334,8 @@ public class Text extends Renderer implements Cloneable {
                 sizeTemp.x = (float)((fontChar.getWidth()) * fontSize);
                 sizeTemp.y = (float)((fontChar.getHeight()) * fontSize);
 
-                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset;
-                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y;
+                posTemp.x = currentCharOffset.x - textReference.x + lineAlignmentOffset;
+                posTemp.y = currentCharOffset.y - textReference.y;
 
                 temp.x = (posTemp.x);
                 temp.y = (sizeTemp.x + posTemp.x);
@@ -333,13 +371,13 @@ public class Text extends Renderer implements Cloneable {
                 texturePosition[charCount * SIZE_COORDINATES + 6] = temp.y;
                 texturePosition[charCount * SIZE_COORDINATES + 7] = temp.z;
 
-                currentCharOffset.x += fontChar.getxAdvance() * fontSize;
+                currentCharOffset.x += (float) (fontChar.getxAdvance() * fontSize);
 
                 ++charCount;
             }
 
             currentCharOffset.x = 0;
-            currentCharOffset.y += font.getFontFile().getLineHeight() * fontSize;
+            currentCharOffset.y += (float) (font.getFontFile().getLineHeight() * fontSize);
         }
 
         shape.setEbo(indices);
@@ -361,6 +399,7 @@ public class Text extends Renderer implements Cloneable {
         text.setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
+                .setPadding(padding)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
@@ -376,6 +415,7 @@ public class Text extends Renderer implements Cloneable {
                 .setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
+                .setPadding(padding)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
