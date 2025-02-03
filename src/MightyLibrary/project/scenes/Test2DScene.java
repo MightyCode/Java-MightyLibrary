@@ -5,6 +5,7 @@ import MightyLibrary.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.PolygonRenderer;
 import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.renderer.modules.StrokeModule;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
 import MightyLibrary.mightylib.graphics.renderer._2D.Animation2DRenderer;
@@ -49,6 +50,7 @@ public class Test2DScene extends Scene {
     private HexagonRenderer hexagonRenderer1, hexagonRenderer2;
 
     private EllipseRenderer testEllipseRenderer;
+    private EllipseRenderer testEllipseRenderer2;
 
     private PolygonRenderer polygonRenderer;
     private int indexVertexReference = 0;
@@ -193,6 +195,17 @@ public class Test2DScene extends Scene {
         testEllipseRenderer.setSizePix(200, 300);
         testEllipseRenderer.setPosition(new Vector2f(-200, 0));
 
+        StrokeModule strokeModuleSizePercent = new StrokeModule(testEllipseRenderer);
+        strokeModuleSizePercent.setEnabled(true).setColor(ColorList.Red()).setSizePercent(0.1f);
+
+
+        testEllipseRenderer2 = new EllipseRenderer();
+        testEllipseRenderer2.load(0);
+        testEllipseRenderer2.setColorMode(ColorList.DarkBlue());
+        testEllipseRenderer2.setSizePix(200, 300);
+        testEllipseRenderer2.setPosition(new Vector2f(-500, 0));
+
+
         polygonRenderer = new PolygonRenderer(
                 "texture2D",
                 Polygon.CreateBuilder()
@@ -299,6 +312,7 @@ public class Test2DScene extends Scene {
         }
 
         testEllipseRenderer.display();
+        testEllipseRenderer2.display();
 
         polygonRenderer.display();
 
@@ -317,6 +331,7 @@ public class Test2DScene extends Scene {
         hexagonRenderer2.unload();
 
         testEllipseRenderer.unload();
+        testEllipseRenderer2.unload();
         polygonRenderer.unload();
 
         mapRenderer.unload();

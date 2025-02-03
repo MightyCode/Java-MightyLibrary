@@ -21,6 +21,9 @@ public class EllipseRenderer extends RectangleRenderer {
         addShaderValue(ShaderProperty.Radius, Vector2f.class, new Vector2f());
         addShaderValue(ShaderProperty.Rotation, Float.class, 0f);
 
+        // Stroke
+        addShaderValue("strokeEnabled", Boolean.class, false);
+
         texturePosition = RectangularFace.BasicTexturePosition();
     }
 

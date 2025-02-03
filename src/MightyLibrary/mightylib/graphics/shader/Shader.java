@@ -231,9 +231,12 @@ public class Shader extends MultiSourceDataType {
             glUniform4f(link, v.x, v.y, v.z, v.w);
         } else if (value.getType() == Matrix4f.class) {
             glUniformMatrix4fv(link, false, MatrixToFloatBuffer(value.getObjectTyped(Matrix4f.class)));
-        } else if (value.getType() == Integer.class || value.getType() == Boolean.class) {
+        } else if (value.getType() == Integer.class) {
             Integer v = value.getObjectTyped(Integer.class);
             glUniform1i(link, v);
+        } else if (value.getType() == Boolean.class) {
+            Boolean v = value.getObjectTyped(Boolean.class);
+            glUniform1i(link, v ? 1 : 0);
         } else {
             System.err.println("Unknown shader value type : " + value.getType());
         }

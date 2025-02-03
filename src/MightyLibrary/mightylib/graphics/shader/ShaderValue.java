@@ -10,7 +10,7 @@ public class ShaderValue implements Cloneable {
     protected final Class<?> type;
     private boolean shouldForceUpdate;
 
-    public ShaderValue(final String a, final Class<?> type, final Object object){
+    public ShaderValue(final String a, final Class<?> type, final Object object) {
         this.name = a;
         this.object = object;
         this.type = type;
@@ -92,6 +92,10 @@ public class ShaderValue implements Cloneable {
             return new ShaderValue(name, type, new Matrix4f(getObjectTyped(Matrix4f.class)));
         } else if (type == Integer.class || type == int.class) {
             return new ShaderValue(name, type, getObjectTyped(Integer.class));
+        } else if (type == Boolean.class || type == boolean.class) {
+            return new ShaderValue(name, type, getObjectTyped(Boolean.class));
+        } else if (type == String.class) {
+            return new ShaderValue(name, type, getObjectTyped(String.class));
         }
 
         return new ShaderValue(name, type, null);

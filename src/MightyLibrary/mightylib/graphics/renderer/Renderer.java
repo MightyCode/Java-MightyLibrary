@@ -112,8 +112,18 @@ public class Renderer extends UUID implements IDisplayable {
         return this;
     }
 
+    public <T> T getShaderValue(String name, Class<T> type) {
+        return shaderValues.get(name).getObjectTyped(type);
+    }
+
+    public boolean hasShaderValue(String name) {
+        return shaderValues.containsKey(name);
+    }
+
     public Renderer updateShaderValue(String name, Object object) {
-        shaderValues.get(name).setObject(object);
+        ShaderValue value = shaderValues.get(name);
+
+        value.setObject(object);
 
         return this;
     }
@@ -133,7 +143,7 @@ public class Renderer extends UUID implements IDisplayable {
         shape.getShader().sendValueToShader(value);
     }
 
-    public void draw(){
+    public void draw() {
         shape.display();
     }
 
@@ -303,11 +313,11 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
 
-    public Shape getShape(){
+    public Shape getShape() {
         return shape;
     }
 
-    public void setShape(Shape shape){
+    public void setShape(Shape shape) {
         this.shape = shape;
     }
 

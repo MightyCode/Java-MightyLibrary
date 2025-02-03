@@ -12,9 +12,12 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 uniform Ellipse ellipse;
+uniform float strokeSize; // Stroke size in pixels
+uniform bool strokeEnabled; // Whether stroke is enabled
 
 out Ellipse transformedEllipse;
 out float screenSizeY;
+out float strokeSizePercent; // Stroke size transferred to screen space
 
 void main()
 {
@@ -26,4 +29,7 @@ void main()
     transformedEllipse.rotation = ellipse.rotation;
 
     screenSizeY = -2.0f / projection[1][1];
+
+    // Transfer stroke size to screen space
+    strokeSizePercent = strokeSize;
 }
