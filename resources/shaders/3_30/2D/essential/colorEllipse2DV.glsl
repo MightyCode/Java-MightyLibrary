@@ -12,7 +12,7 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
 uniform Ellipse ellipse;
-uniform float strokeSize; // Stroke size in pixels
+uniform float strokeSize; // Stroke size in percent
 uniform bool strokeEnabled; // Whether stroke is enabled
 
 out Ellipse transformedEllipse;

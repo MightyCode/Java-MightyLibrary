@@ -142,10 +142,10 @@ public class Shader extends MultiSourceDataType {
         glAttachShader(shaderProgram, vShader);
         Logger.CheckOpenGLError("Attach vertex shader (id : " + vShader + ")");
 
-        if (isUsingGeometryShader)
+        if (isUsingGeometryShader) {
             glAttachShader(shaderProgram, gShader);
-
-        Logger.CheckOpenGLError("Attach geometry shader (id : " + vShader + ")");
+            Logger.CheckOpenGLError("Attach geometry shader (id : " + vShader + ")");
+        }
 
         glAttachShader(shaderProgram, fShader);
         Logger.CheckOpenGLError("Attach program shader (id : " + vShader + ")");
@@ -154,7 +154,6 @@ public class Shader extends MultiSourceDataType {
         Logger.CheckOpenGLError("Link program shader (id : " + vShader + ")");
         Logger.CheckProgramError(shaderProgram, "Link program shader (id : " + vShader + ")");
 
-        Logger.CheckOpenGLError("Ma bite");
         glDeleteShader(vShader);
         Logger.CheckOpenGLError("Delete vertex shader (id : " + vShader + ")");
         glDeleteShader(fShader);
@@ -181,7 +180,7 @@ public class Shader extends MultiSourceDataType {
         return glGetUniformLocation(shaderProgram, valueName);
     }
 
-    public int getShaderId(){
+    public int getShaderId() {
         return shaderProgram;
     }
 
@@ -206,13 +205,21 @@ public class Shader extends MultiSourceDataType {
         Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 
         if (link == -1) {
+            // Check if uniform is not used in the shader
+            // TODO : check if the uniform is in the shader, because it is hidden by the preprocessor if not used
+            if (false) {
+                return;
+            }
+            /*
             System.out.println("Program content :\n=======\n " + vertexContent
                     + "\n======\n" + fragmentContent + "\n=======\n");
             System.out.println("Following program link not found : " + value.getName() + " in shader " + getDataName()
                     + " (id : " + shaderProgram + ")");
 
+            System.out.println(getSourcePath(0));
+
             // stack trace :
-            throw new MissingLinkRuntimeException(Logger.getCurrentStackTrace());
+            throw new MissingLinkRuntimeException(Logger.getCurrentStackTrace());*/
         }
 
         if (value.getType() == Float.class) {

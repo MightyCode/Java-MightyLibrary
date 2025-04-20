@@ -159,7 +159,13 @@ public class Resources {
         }
 
         process(-1);
-        while(!finishedCurrentLoading()){}
+        while(!finishedCurrentLoading()){
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         finishLoading();
     }

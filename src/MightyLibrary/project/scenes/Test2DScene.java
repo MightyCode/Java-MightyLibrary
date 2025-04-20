@@ -1,10 +1,7 @@
 package MightyLibrary.project.scenes;
 
 import MightyLibrary.mightylib.graphics.game.LayersTileMapRenderer;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.PolygonRenderer;
-import MightyLibrary.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import MightyLibrary.mightylib.graphics.renderer._2D.shape.*;
 import MightyLibrary.mightylib.graphics.renderer.modules.StrokeModule;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.mightylib.resources.map.TileMap;
@@ -51,6 +48,8 @@ public class Test2DScene extends Scene {
 
     private EllipseRenderer testEllipseRenderer;
     private EllipseRenderer testEllipseRenderer2;
+
+    private AdvancedRectangle advancedRectangle;
 
     private PolygonRenderer polygonRenderer;
     private int indexVertexReference = 0;
@@ -198,13 +197,17 @@ public class Test2DScene extends Scene {
         StrokeModule strokeModuleSizePercent = new StrokeModule(testEllipseRenderer);
         strokeModuleSizePercent.setEnabled(true).setColor(ColorList.Red()).setSizePercent(0.1f);
 
-
         testEllipseRenderer2 = new EllipseRenderer();
         testEllipseRenderer2.load(0);
         testEllipseRenderer2.setColorMode(ColorList.DarkBlue());
         testEllipseRenderer2.setSizePix(200, 300);
         testEllipseRenderer2.setPosition(new Vector2f(-500, 0));
 
+        advancedRectangle = new AdvancedRectangle();
+        advancedRectangle.load(0);
+        advancedRectangle.setColorMode(ColorList.Green());
+        advancedRectangle.setSizePix(200, 300);
+        advancedRectangle.setPosition(new Vector2f(-50, -50));
 
         polygonRenderer = new PolygonRenderer(
                 "texture2D",
@@ -249,6 +252,8 @@ public class Test2DScene extends Scene {
         testEllipseRenderer.setRotationZ(rotation.value());
 
         polygonRenderer.setRotationZ(rotation.value());
+
+        advancedRectangle.setRotationZ(rotation.value());
 
         mapRenderer.update();
 
@@ -314,6 +319,8 @@ public class Test2DScene extends Scene {
         testEllipseRenderer.display();
         testEllipseRenderer2.display();
 
+        advancedRectangle.display();
+
         polygonRenderer.display();
 
         super.display();
@@ -332,6 +339,8 @@ public class Test2DScene extends Scene {
 
         testEllipseRenderer.unload();
         testEllipseRenderer2.unload();
+
+        advancedRectangle.unload();
         polygonRenderer.unload();
 
         mapRenderer.unload();

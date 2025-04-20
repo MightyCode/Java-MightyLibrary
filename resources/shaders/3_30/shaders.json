@@ -5,7 +5,13 @@
 				"2D/essential/colorShape2DV.glsl",
 				"2D/essential/colorShape2DF.glsl"
 			],
-			"path": "",
+			"tags" : ["2D"]
+		},
+		"advancedRectangle2D": {
+			"files": [
+				"2D/complex/advancedRectangle2DV.glsl",
+				"2D/complex/advancedRectangle2DF.glsl"
+			],
 			"tags" : ["2D"]
 		},
 		"multiColoredShape2D": {
