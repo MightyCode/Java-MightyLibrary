@@ -125,7 +125,7 @@ public class Camera2D extends Camera {
     }
 
     public void moveY(float value){
-        setX(camPos.y + value);
+        setY(camPos.y + value);
     }
 
     public void moveXinZoom(float value){

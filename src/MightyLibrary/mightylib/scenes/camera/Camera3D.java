@@ -120,6 +120,17 @@ public class Camera3D extends Camera {
         camPos.z = z;
     }
 
+    public void moveX(float value){
+        setX(camPos.x + value);
+    }
+
+    public void moveY(float value){
+        setY(camPos.y + value);
+    }
+
+    public void moveZ(float value){
+        setZ(camPos.z + value);
+    }
 
     public void speedAngX(float speed) {
         camPos.x += speed * yawSin;
