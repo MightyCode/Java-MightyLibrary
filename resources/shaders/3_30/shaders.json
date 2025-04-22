@@ -57,6 +57,13 @@
 			],
 			"tags" : ["3D"]
 		},
+		"multiColoredLightning3D": {
+			"files": [
+				"3D/complex/multiColoredLightning3DV.glsl",
+				"3D/complex/multiColoredLightning3DF.glsl"
+			],
+			"tags" : ["3D"]
+		},
 		"colorMaterial3D": {
 			"files": [
 				"3D/complex/colorLightning3DV.glsl",

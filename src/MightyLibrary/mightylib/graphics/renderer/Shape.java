@@ -3,9 +3,12 @@ package MightyLibrary.mightylib.graphics.renderer;
 import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
 import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.math.ID;
 import MightyLibrary.mightylib.utils.math.MightyMath;
+import org.lwjgl.BufferUtils;
 
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
@@ -70,10 +73,21 @@ public class Shape {
     public int addVboFloat(float[] vertices, int vertexSize, int storage) {
         bind();
         int vbo = glGenBuffers();
+        Logger.CheckOpenGLError("Gen vbo buffer : " + vbo);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, vertices, storage);
+        Logger.CheckOpenGLError("bind vbo buffer : " + vbo);
+
+        // ✅ Convert float[] to FloatBuffer
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(vertices.length);
+        buffer.put(vertices).flip();
+
+        // ✅ Use the buffer, not the array
+        glBufferData(GL_ARRAY_BUFFER, buffer, storage);
+        Logger.CheckOpenGLError("Buffer vbo buffer : " + storage + " of size : " + vertices.length);
+
         glVertexAttribPointer(vboCount, vertexSize, GL_FLOAT, false, 0, 0);
+        Logger.CheckOpenGLError("Vbo attrib pointer : " + vbo);
 
         return endAddVbo(vbo, vertices.length, vertexSize, storage);
     }
@@ -145,6 +159,7 @@ public class Shape {
         if (!vbosEnable.get(pos)) {
             bind();
             glEnableVertexAttribArray(pos);
+            Logger.CheckOpenGLError("Vbo enable attrib : " + pos);
             vbosEnable.set(pos, true);
         }
     }
@@ -202,7 +217,9 @@ public class Shape {
             System.err.print(">(Shape.java) Providing EBO without using EBO !");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        Logger.CheckOpenGLError("Bind ebo : " + ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, eboStorage);
+        Logger.CheckOpenGLError("Buffer ebo data");
     }
 
     public void setEboNumberIndex(int newIndexSize) {
@@ -230,6 +247,7 @@ public class Shape {
 
     public void bind(){
         glBindVertexArray(vao);
+        Logger.CheckOpenGLError("Bind vao buffer : " + vao);
     }
 
 

@@ -59,7 +59,6 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     @Override
     public boolean load(int remainingMilliseconds) {
-        System.out.println("Load texture : " + data.getDataName());
         if (textureId != -1)
             unload(remainingMilliseconds);
 

@@ -50,12 +50,12 @@ public class Main {
 
         @Override
         public int returnFPS() {
-            return 240;
+            return 70;
         }
 
         @Override
         public int returnTPS() {
-            return 240;
+            return 70;
         }
 
         @Override

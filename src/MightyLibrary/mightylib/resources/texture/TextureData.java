@@ -15,6 +15,8 @@ public class TextureData extends SingleSourceDataType {
     protected int width;
     protected int height;
 
+    private int[] pixelCache = null;
+
     private BufferedImage tempBufferedImage;
     ByteBuffer byteBuffer;
 
@@ -104,5 +106,51 @@ public class TextureData extends SingleSourceDataType {
         byteBuffer = null;
         width = -1;
         height = -1;
+    }
+
+
+    public void computeCache() {
+        if (pixelCache != null)
+            return;
+
+        pixelCache = new int[width * height];
+
+        for (int a = 0; a < height; ++a) {
+            for (int b = 0; b < width; ++b) {
+                int index = a * width + b;
+                pixelCache[index] = getPixel(index);
+            }
+        }
+    }
+
+    public int getPixelCached(int x, int y) {
+        return getPixelCached(y * width + x);
+    }
+
+    public int getPixelCached(int index) {
+        return pixelCache[index];
+    }
+
+    public int getPixel(int x, int y) {
+        if (byteBuffer == null || x < 0 || y < 0 || x >= width || y >= height) {
+            throw new IllegalArgumentException("Invalid coordinates or texture not loaded.");
+        }
+
+        return getPixel(y * width + x);
+    }
+
+    public int getPixel(int index) {
+        byte r = byteBuffer.get(index * 4);
+        byte g = byteBuffer.get(index * 4 + 1);
+        byte b = byteBuffer.get(index * 4 + 2);
+        byte a = byteBuffer.get(index * 4 + 3);
+
+        // Combine RGBA bytes into a single int
+        int red   = r & 0xFF;
+        int green = g & 0xFF;
+        int blue  = b & 0xFF;
+        int alpha = a & 0xFF;
+
+        return (alpha << 24) | (red << 16) | (green << 8) | blue;
     }
 }

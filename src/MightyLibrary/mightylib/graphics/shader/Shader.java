@@ -173,8 +173,12 @@ public class Shader extends MultiSourceDataType {
     }
 
     public void use() {
+        use("Use program shader (id : " + shaderProgram + ")");
+    }
+
+    public void use(String message) {
         glUseProgram(shaderProgram);
-        Logger.CheckOpenGLError("Use program shader (id : " + shaderProgram + ")");
+        Logger.CheckOpenGLError(message);
     }
 
     public int getLink(String valueName){
@@ -201,7 +205,7 @@ public class Shader extends MultiSourceDataType {
 
         lastValues.put(value.getName(), value.clone());
 
-        this.use();
+        this.use("Send value " + value.getName() + " to shader " + getDataName());
         int link = glGetUniformLocation(shaderProgram, value.getName());
         Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 

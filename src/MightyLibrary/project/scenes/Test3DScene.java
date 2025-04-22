@@ -3,6 +3,7 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.lightning.materials.Material;
+import MightyLibrary.mightylib.graphics.renderer._3D.HeightMapRenderer;
 import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.inputs.InputManager;
@@ -17,6 +18,7 @@ import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scenes.camera.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
+import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.project.main.ActionId;
@@ -42,11 +44,16 @@ public class Test3DScene extends Scene {
 
     private CubeRenderer cubeTexturedMaterial;
 
+    private HeightMapRenderer heightMapRenderer;
+
     private FloatTweening displacementMapTweening;
 
     private FloatTweening rotationTweening;
 
     private ShaderValue timeShaderValue;
+
+    private int heightMapComputeTimes;
+    private double heightMapComputeTotal;
 
     public Test3DScene(){
         super(SCENE_CCI);
@@ -117,8 +124,6 @@ public class Test3DScene extends Scene {
         sphere.setScale(new Vector3f(10, 10, 10));
         sphere.setPosition(new Vector3f(20, 10, 10));
 
-        sphere.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
-                .addShaderValue("lightPos", Vector3f.class, light.position());
         cubeColorLightning.copyShaderValuesTo(sphere, false);
 
         cubeColorMaterial = new CubeRenderer("colorMaterial3D");
@@ -163,6 +168,32 @@ public class Test3DScene extends Scene {
         rotationTweening.setTweeningValues(ETweeningType.Quadratic, ETweeningBehaviour.InOut)
                 .setTweeningOption(ETweeningOption.LoopMirrored)
                 .initTwoValue(5f, 0f, (float)Math.PI * 2);
+
+        heightMapRenderer = new HeightMapRenderer("dispMap1", true);
+        heightMapRenderer.setPosition(new Vector3f(-4140, -920, -4640));
+        heightMapRenderer.setScale(new Vector3f(new Vector3f(10000, 1000, 10000)));
+
+        heightMapRenderer.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("worldColor", Vector3f.class, new Vector3f( 1f, 1f, 1f))
+                .addShaderValue("lightPos", Vector3f.class, light.position())
+                .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
+
+        heightMapRenderer.setHeightMapper(height -> {
+            height -= timeShaderValue.getObjectTyped(Float.class);
+
+            if (height < 0.7f) {
+                return 0.7f; // Water / flat land
+            } else if (height < 0.9f) {
+                return height;
+            } else {
+                // Steep transition for mountains
+                float t = (height - 0.9f) / 0.1f;
+                return 0.7f + (float)Math.pow(t, 0.5) * 0.6f; // sharper raise, nonlinear
+            }
+        }).setColorMode(HeightMapRenderer.ColorMode.GREENISH_MOUNTAIN);
+
+        heightMapRenderer.setHeightNormalized().setColorMode(HeightMapRenderer.ColorMode.SIMPLE_GRADIENT);
+        heightMapRenderer.load();
     }
 
 
@@ -207,11 +238,35 @@ public class Test3DScene extends Scene {
         timeShaderValue.setObject(displacementMapTweening.value());
         sBlock.getShape().getShader().sendValueToShader(timeShaderValue);
 
+        long startTime = System.nanoTime();
+        heightMapRenderer.setHeightMapper(height -> {
+            height = height -timeShaderValue.getObjectTyped(Float.class) * 0.1f;
+
+            if (height < 0.7f) {
+                return 0.7f; // Water / flat land
+            } else if (height < 0.9f) {
+                return height;
+            } else {
+                // Steep transition for mountains
+                float t = (height - 0.9f) / 0.1f;
+                return 0.7f + (float)Math.pow(t, 0.5) * 0.6f; // sharper raise, nonlinear
+            }
+        }).setColorMode(HeightMapRenderer.ColorMode.GREENISH_MOUNTAIN);
+        heightMapRenderer.load();
+
+        long endTime = System.nanoTime();
+        long duration = endTime - startTime; // Time taken in nanoseconds
+        double durationInSeconds = duration / 1_000_000_000.0;
+
+        heightMapComputeTimes += 1;
+        heightMapComputeTotal += durationInSeconds;
+
+        System.out.print("\rRecalculation took " + (heightMapComputeTotal / heightMapComputeTimes) + " seconds     ");
+        System.out.flush();
+
         rotationTweening.update();
 
         light.setX(rotationTweening.value() * 2);
-
-        //light.setZ(rotationTweening.value() * 2);
 
         cubeColorLightning.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
         cubeColorLightning.updateShaderValue("lightPos", light.position());
@@ -236,6 +291,8 @@ public class Test3DScene extends Scene {
         cubeColorLightning.display();
         cubeColorMaterial.display();
 
+        heightMapRenderer.display();
+
         cubeTexturedMaterial.display();
 
         sBlock.display();
@@ -259,6 +316,7 @@ public class Test3DScene extends Scene {
         light.unload();
         stand.unload();
         sphere.unload();
+        heightMapRenderer.unload();
     }
 
 
