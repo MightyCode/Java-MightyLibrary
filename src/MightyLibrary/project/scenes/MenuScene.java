@@ -61,7 +61,7 @@ public class MenuScene extends Scene {
 
         /// RENDERERS ///
 
-        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
+        Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeCopy();
 
         BackgroundlessButton button2DScene = new BackgroundlessButton(mainContext);
         button2DScene.Text.setFont("bahnschrift")

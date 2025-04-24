@@ -33,6 +33,7 @@ public class FrameBuffer implements IRenderTextureBindable {
 
     protected void update(IGLBindable bindable){
         renderTextureId = glGenTextures();
+
         glBindTexture(GL_TEXTURE_2D, renderTextureId);
         Logger.CheckOpenGLError("Generate Texture : " + renderTextureId);
 
@@ -40,6 +41,7 @@ public class FrameBuffer implements IRenderTextureBindable {
         Logger.CheckOpenGLError("Texture Image 2D : " + renderTextureId);
 
         TextureParameters.applyParameters(bindable);
+        glTexParameteri(bindable.getTextureType(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         Logger.CheckOpenGLError("Texture Parameters : " + renderTextureId);
 
         glBindTexture(GL_TEXTURE_2D, 0);
