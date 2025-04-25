@@ -11,6 +11,9 @@ public abstract class Camera extends UUID {
     protected final Matrix4f projection, view;
     protected final ShaderValue projectionShaderValue, viewShaderValue;
 
+    private boolean shouldUpdateProjection;
+    private boolean shouldUpdateView;
+
     public Camera(WindowInfo windowInfo) {
         this.windowInfo = windowInfo;
 
@@ -19,10 +22,41 @@ public abstract class Camera extends UUID {
 
         projectionShaderValue = new ShaderValue("projection", Matrix4f.class, projection);
         viewShaderValue = new ShaderValue("view", Matrix4f.class, view);
+
+        shouldUpdateProjection = true;
+        shouldUpdateView = true;
     }
 
     public abstract void updateProjection();
     public abstract void updateView();
+
+    public void superUpdateProjection() {
+        if (shouldUpdateProjection) {
+            updateProjection();
+        }
+    }
+
+    public void superUpdateView() {
+        if (shouldUpdateProjection) {
+            updateView();
+        }
+    }
+
+    public void setShouldUpdateProjection(boolean shouldUpdateProjection) {
+        this.shouldUpdateProjection = shouldUpdateProjection;
+    }
+
+    public void setShouldUpdateView(boolean shouldUpdateView) {
+        this.shouldUpdateView = shouldUpdateView;
+    }
+
+    public boolean shouldUpdateProjection() {
+        return shouldUpdateProjection;
+    }
+
+    public boolean shouldUpdateView() {
+        return shouldUpdateView;
+    }
 
     public ShaderValue getProjection(){
         projectionShaderValue.setObject(projection);

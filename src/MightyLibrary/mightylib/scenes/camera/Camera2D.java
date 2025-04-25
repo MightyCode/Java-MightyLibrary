@@ -209,7 +209,13 @@ public class Camera2D extends Camera {
         return rotation;
     }
 
-    public Vector2f getPosition(Vector2f position){
+    /**
+     * Transform a position from world 2D coordinates to screen coordinates
+     *
+     * @param position world position
+     * @return screen position
+     */
+    public Vector2f transformPosition(Vector2f position){
         Vector4f computedPosition = view.invert(new Matrix4f())
                 .transform(new Vector4f(position, 0.0f, 1.0f), new Vector4f());
 

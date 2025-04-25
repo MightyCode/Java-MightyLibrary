@@ -180,7 +180,7 @@ public class TestBox2D extends Scene {
             boxes.add(
                     new Box(world,
                             new Vector2f(
-                                    mapCamera.getPosition(mouseManager.pos())),
+                                    mapCamera.transformPosition(mouseManager.pos())),
                             new Vector2f(0.9f, 2))
             );
         }

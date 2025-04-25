@@ -372,7 +372,7 @@ public class Test2DRopeSimulation extends Scene {
         if (controlWind) {
             // Wind = 2 time the gravity if mouse on outer border
             // Wind 0 if mouse on center
-            Vector2f mousePosition = main2DCamera.getPosition(inputManager.getMouseManager().pos());
+            Vector2f mousePosition = main2DCamera.transformPosition(inputManager.getMouseManager().pos());
             Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
 
             windForce = new Vector2f(0, 0);
@@ -434,7 +434,7 @@ public class Test2DRopeSimulation extends Scene {
         InputManager inputManager = mainContext.getInputManager();
         KeyboardManager keyboardManager = mainContext.getKeyboardManager();
 
-        Vector2f mousePositionInWorld = main2DCamera.getPosition(inputManager.getMouseManager().pos());
+        Vector2f mousePositionInWorld = main2DCamera.transformPosition(inputManager.getMouseManager().pos());
         boolean noOverridePoints;
 
         switch (clickingMode) {

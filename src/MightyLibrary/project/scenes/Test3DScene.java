@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.lightning.materials.Material;
 import MightyLibrary.mightylib.graphics.renderer._3D.HeightMapRenderer;
+import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.inputs.InputManager;
@@ -18,7 +19,6 @@ import MightyLibrary.mightylib.graphics.renderer.Shape;
 import MightyLibrary.mightylib.scenes.camera.Camera3DCreationInfo;
 import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
-import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.project.main.ActionId;
@@ -51,6 +51,8 @@ public class Test3DScene extends Scene {
     private FloatTweening rotationTweening;
 
     private ShaderValue timeShaderValue;
+
+    private Text originLabel;
 
     private int heightMapComputeTimes;
     private double heightMapComputeTotal;
@@ -194,6 +196,13 @@ public class Test3DScene extends Scene {
 
         heightMapRenderer.setHeightNormalized().setColorMode(HeightMapRenderer.ColorMode.SIMPLE_GRADIENT);
         heightMapRenderer.load();
+
+        originLabel = new Text();
+        originLabel.setFont("arial")
+                .setText("(0, 0, 0)")
+                        .setFontSize(60);
+
+        originLabel.setColor(ColorList.Red());
     }
 
 
@@ -233,6 +242,9 @@ public class Test3DScene extends Scene {
             mainContext.getMouseManager().invertCursorState();
         }
 
+        originLabel.setPosition(main3DCamera.worldPositionToScreen(new Vector3f(0), main2DCamera));
+        System.out.println(originLabel.position().x + " " + originLabel.position().y);
+
         displacementMapTweening.update();
 
         timeShaderValue.setObject(displacementMapTweening.value());
@@ -261,8 +273,8 @@ public class Test3DScene extends Scene {
         heightMapComputeTimes += 1;
         heightMapComputeTotal += durationInSeconds;
 
-        System.out.print("\rRecalculation took " + (heightMapComputeTotal / heightMapComputeTimes) + " seconds     ");
-        System.out.flush();
+        /*System.out.print("\rRecalculation took " + (heightMapComputeTotal / heightMapComputeTimes) + " seconds     ");
+        System.out.flush();*/
 
         rotationTweening.update();
 
@@ -303,6 +315,8 @@ public class Test3DScene extends Scene {
 
         super.display();
 
+        originLabel.display();
+
         super.setAndDisplayRealScene();
     }
 
@@ -317,6 +331,7 @@ public class Test3DScene extends Scene {
         stand.unload();
         sphere.unload();
         heightMapRenderer.unload();
+        originLabel.unload();
     }
 
 

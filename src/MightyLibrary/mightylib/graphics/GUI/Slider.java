@@ -82,7 +82,7 @@ public abstract class Slider {
 
     public void update(){
         if (inputManager.inputPressed(clickActionId)){
-            Vector2f position = referenceCamera.getPosition(mouseManager.pos());
+            Vector2f position = referenceCamera.transformPosition(mouseManager.pos());
 
             if (button.position().x < position.x && button.position().x + button.scale().x > position.x &&
                     button.position().y < position.y && button.position().y + button.scale().y > position.y){

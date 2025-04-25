@@ -214,10 +214,13 @@ public class HeightMapRenderer extends Renderer {
         switch (colorMode) {
             case SIMPLE_GRADIENT :
                 heightToColorSimple(height);
+                break;
             case GREENISH_MOUNTAIN :
                 heightToColorMountain(height, 0.7f, 0.8f, 0.9f);
+                break;
             default:
-               heightToColorDefault(height);
+                heightToColorDefault(height);
+                break;
         }
     }
 

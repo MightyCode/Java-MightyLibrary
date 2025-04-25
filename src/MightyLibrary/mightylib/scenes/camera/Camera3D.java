@@ -3,10 +3,17 @@ package MightyLibrary.mightylib.scenes.camera;
 import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.WindowInfo;
 import MightyLibrary.mightylib.utils.math.MightyMath;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 
 
 public class Camera3D extends Camera {
+    public enum EViewMode {
+        Perspective,
+        Orthographic
+    }
+
     private final MouseManager mouseManager;
 
     private final Vector3f camPos, camFront, camUp;
@@ -21,10 +28,13 @@ public class Camera3D extends Camera {
     private float yawCos, yawSin;
     private float fov;
 
+    private EViewMode viewMode;
+
     public Camera3D(WindowInfo windowInfo, MouseManager mouseManager, float fov, Vector3f pos) {
         super(windowInfo);
         this.mouseManager = mouseManager;
 
+        this.viewMode = EViewMode.Perspective;
         camPos = new Vector3f();
 
         setViewAngle(fov);
@@ -78,7 +88,7 @@ public class Camera3D extends Camera {
 
     public void lookAt(Vector3f target) {
         camFront.set(target.sub(camPos, new Vector3f()).normalize());
-        updateView();
+        shouldUpdateView();
     }
 
     public void invertLockViewCursor() {
@@ -87,12 +97,17 @@ public class Camera3D extends Camera {
 
     public void setViewAngle(float fov) {
         this.fov = fov;
-        updateProjection();
+
+        superUpdateProjection();
     }
 
     public void updateProjection() {
-        projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
-        //projectionOrtho.ortho(0, windowInfo.getVirtualSizeRef().x, windowInfo.getVirtualSizeRef().y, 0 , -1, 1);
+        if (viewMode == EViewMode.Perspective)
+            projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
+        else
+            projection.ortho(-windowInfo.getVirtualSizeRef().x / 2f, windowInfo.getVirtualSizeRef().x / 2f,
+                    -windowInfo.getVirtualSizeRef().y / 2f, windowInfo.getVirtualSizeRef().y / 2f,
+                    -10000f, 10000f);
     }
 
     public Vector3f getCamPosRef() { return camPos; }
@@ -106,18 +121,26 @@ public class Camera3D extends Camera {
         camPos.x = newPos.x;
         camPos.y = newPos.y;
         camPos.z = newPos.z;
+
+        shouldUpdateView();
     }
 
     public void setX(float x) {
         camPos.x = x;
+
+        shouldUpdateView();
     }
 
     public void setY(float y) {
         camPos.y = y;
+
+        shouldUpdateView();
     }
 
     public void setZ(float z) {
         camPos.z = z;
+
+        shouldUpdateView();
     }
 
     public void moveX(float value){
@@ -135,11 +158,15 @@ public class Camera3D extends Camera {
     public void speedAngX(float speed) {
         camPos.x += speed * yawSin;
         camPos.z += speed * -yawCos;
+
+        shouldUpdateView();
     }
 
     public void speedAngZ(float speed) {
         camPos.x += speed * -yawCos;
         camPos.z += speed * -yawSin;
+
+        shouldUpdateView();
     }
 
     public Camera3D setSensitivity(float value) {
@@ -158,7 +185,39 @@ public class Camera3D extends Camera {
         return this;
     }
 
+    public Vector3f worldPositionToScreen(Vector3f position, Camera2D viewCamera) {
+        Vector4f clipSpacePos = new Vector4f(position.x, position.y, position.z, 1.0f);
+        clipSpacePos.mul(view).mul(projection);
+
+        if (clipSpacePos.w == 0) {
+            return new Vector3f(0, 0, 0);
+        }
+
+        clipSpacePos.x /= clipSpacePos.w;
+        clipSpacePos.y /= clipSpacePos.w;
+
+        // getView is matrix
+        float halfWidth = viewCamera.windowInfo.getVirtualSizeRef().x / 2f;
+        float halfHeight = viewCamera.windowInfo.getVirtualSizeRef().y / 2f;
+
+        Vector2f zoom = viewCamera.getZoomLevel();
+
+        float x = (clipSpacePos.x + 1) * halfWidth * zoom.x;
+        float y = (1 - clipSpacePos.y) * halfHeight * zoom.y;
+
+        return new Vector3f(x, y, clipSpacePos.z);
+    }
+
+
     public Vector3f getSpeed() {
         return speed;
+    }
+
+    public EViewMode getViewMode() { return viewMode; }
+
+    public void setViewMode(EViewMode eViewMode) {
+        this.viewMode = eViewMode;
+
+       superUpdateProjection();
     }
 }
