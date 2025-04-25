@@ -11,6 +11,7 @@ import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.sounds.SoundSourceCreationInfo;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
+import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;

@@ -4,12 +4,21 @@ out vec4 FragColor;
 in vec3 FragPos;
 in vec3 Normal;
 
-uniform vec4 color;
+uniform int color;
 
 uniform vec3 viewPos;
 uniform vec3 worldColor;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
+
+vec4 decodeColor(int colorPacked) {
+    float r = float((colorPacked >> 24) & 0xFF) / 255.0;
+    float g = float((colorPacked >> 16) & 0xFF) / 255.0;
+    float b = float((colorPacked >> 8) & 0xFF) / 255.0;
+    float a = float(colorPacked & 0xFF) / 255.0;
+
+    return vec4(r, g, b, a);
+}
 
 void main() {
     // ambient
@@ -28,6 +37,8 @@ void main() {
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
     vec3 specular = specularStrength * spec * lightColor;
 
-    vec3 result = (ambient + diffuse + specular) * color.xyz;
-    FragColor = vec4(result, color.w);
+    vec4 decodedColor = decodeColor(color);
+
+    vec3 result = (ambient + diffuse + specular) * decodedColor.xyz;
+    FragColor = vec4(result, decodedColor.w);
 }
