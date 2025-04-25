@@ -6,7 +6,6 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.TextureData;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 public class HeightMapRenderer extends Renderer {
 
@@ -38,10 +37,10 @@ public class HeightMapRenderer extends Renderer {
     private float[] rawHeights;
 
     private float[] positions;
-    private float[] colors;
+    private int[] colors;
     private float[] normals;
 
-    private final Vector4f tempColor;
+    private final Color4f tempColor;
 
     private final TextureData heightMapTexture;
     public HeightMapRenderer(String heightMapName, boolean willUpdateFrequently) {
@@ -81,14 +80,14 @@ public class HeightMapRenderer extends Renderer {
 
         if (willUpdateFrequently) {
             positions = new float[vertexCount * 3];
-            colors = new float[vertexCount * 4];
+            colors = new int[vertexCount];
             normals = new float[vertexCount * 3];
         }
 
         int store = willUpdateFrequently ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE;
 
         shapePosition = shape.addVboFloat(positions, 3, store);
-        colorPosition = shape.addVboFloat(colors, 4, store);
+        colorPosition = shape.addVboInt(colors, 1, store);
         normalPosition  = shape.addVboFloat(normals, 3, store);
 
         tempColor = new Color4f(1);
@@ -127,7 +126,7 @@ public class HeightMapRenderer extends Renderer {
             int vertexCount = width * height;
 
             positions = new float[vertexCount * 3];
-            colors = new float[vertexCount * 4];
+            colors = new int[vertexCount];
             normals = new float[vertexCount * 3];
         }
 
@@ -163,10 +162,7 @@ public class HeightMapRenderer extends Renderer {
 
                 heightToColor(y);
                 //System.out.println(tempColor);
-                colors[vertexIndex * 4] = tempColor.x;
-                colors[vertexIndex * 4 + 1] = tempColor.y;
-                colors[vertexIndex * 4 + 2] = tempColor.z;
-                colors[vertexIndex * 4 + 3] = 1;
+                colors[vertexIndex] = tempColor.toIntRGBA();
 
                 float heightL = getMappedHeightAt(rawHeights, x - 1, z, width, height);
                 float heightR = getMappedHeightAt(rawHeights, x + 1, z, width, height);

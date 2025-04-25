@@ -98,7 +98,7 @@ public class Shape {
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices, storage);
-        glVertexAttribPointer(vboCount, vertexSize, GL_INT, false, 0, 0);
+        glVertexAttribIPointer(vboCount, vertexSize, GL_INT,0, 0);
 
         return endAddVbo(vbo, vertices.length, vertexSize, storage);
     }

@@ -162,11 +162,11 @@ public class Color4f extends Vector4f {
         return new Vector3f(h, s, l);
     }
 
-    public int toRGB() {
+    public int toIntRGB() {
         return ((int) (x * 255) << 16) | ((int) (y * 255) << 8) | (int) (z * 255);
     }
 
-    public int toRGBA() {
+    public int toIntRGBA() {
         return ((int) (x * 255) << 24) | ((int) (y * 255) << 16) | ((int) (z * 255) << 8) | (int) (w * 255);
     }
 

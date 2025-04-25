@@ -13,7 +13,6 @@ import java.nio.FloatBuffer;
 import java.util.HashMap;
 
 import static org.lwjgl.opengl.GL20.*;
-import static org.lwjgl.opengl.GL30C.glUniform1ui;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
 public class Shader extends MultiSourceDataType {
@@ -233,7 +232,7 @@ public class Shader extends MultiSourceDataType {
             Vector4f v = value.getObjectTyped(Vector4f.class);
             glUniform4f(link, v.x, v.y, v.z, v.w);
         } else if (value.getType() == Color4f.class) {
-            glUniform1i(link, value.getObjectTyped(Color4f.class).toRGBA());
+            glUniform1i(link, value.getObjectTyped(Color4f.class).toIntRGBA());
         } else if (value.getType() == Matrix4f.class) {
             glUniformMatrix4fv(link, false, MatrixToFloatBuffer(value.getObjectTyped(Matrix4f.class)));
         } else if (value.getType() == Integer.class || value.getType() == Boolean.class) {

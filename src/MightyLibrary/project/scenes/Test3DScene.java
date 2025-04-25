@@ -243,7 +243,6 @@ public class Test3DScene extends Scene {
         }
 
         originLabel.setPosition(main3DCamera.worldPositionToScreen(new Vector3f(0), main2DCamera));
-        System.out.println(originLabel.position().x + " " + originLabel.position().y);
 
         displacementMapTweening.update();
 
@@ -273,8 +272,8 @@ public class Test3DScene extends Scene {
         heightMapComputeTimes += 1;
         heightMapComputeTotal += durationInSeconds;
 
-        /*System.out.print("\rRecalculation took " + (heightMapComputeTotal / heightMapComputeTimes) + " seconds     ");
-        System.out.flush();*/
+        System.out.print("\rRecalculation took " + (heightMapComputeTotal / heightMapComputeTimes) + " seconds     ");
+        System.out.flush();
 
         rotationTweening.update();
 
