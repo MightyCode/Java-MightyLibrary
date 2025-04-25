@@ -17,9 +17,29 @@ public class Color4f extends Vector4f {
         this(color.x, color.y, color.z, alpha);
     }
 
-
     public Color4f(float r, float g, float b, float a) {
         super(r, g, b, a);
+    }
+
+    public Color4f(String hexCode) {
+        super();
+        fromHex(hexCode);
+    }
+
+    private void fromHex(String hexCode) {
+        if (hexCode.length() != 7 && hexCode.length() != 9) {
+            throw new IllegalArgumentException("Invalid hex color code: " + hexCode);
+        }
+
+        x = Integer.parseInt(hexCode.substring(1, 3), 16) / 255f;
+        y = Integer.parseInt(hexCode.substring(3, 5), 16) / 255f;
+        z = Integer.parseInt(hexCode.substring(5, 7), 16) / 255f;
+
+        if (hexCode.length() == 9) {
+            w = Integer.parseInt(hexCode.substring(7, 9), 16) / 255f;
+        } else {
+            w = 1.0f;
+        }
     }
 
     public float getR() {
@@ -98,7 +118,6 @@ public class Color4f extends Vector4f {
         setColor(x / 255f);
     }
 
-
     public Color4f blend(Color4f otherColor, float amount){
         return new Color4f(
                 getR() * (1 - amount) + otherColor.getR() * amount,
@@ -107,7 +126,56 @@ public class Color4f extends Vector4f {
                 getA() * (1 - amount) + otherColor.getA() * amount);
     }
 
+    public String toHex() {
+        return String.format("#%02X%02X%02X%02X",
+                (int) (x * 255),
+                (int) (y * 255),
+                (int) (z * 255),
+                (int) (w * 255));
+    }
+
+    public Vector3f toHSL() {
+        float r = x;
+        float g = y;
+        float b = z;
+
+        float max = Math.max(r, Math.max(g, b));
+        float min = Math.min(r, Math.min(g, b));
+        float h, s, l = (max + min) / 2;
+
+        if (max == min) {
+            h = s = 0; // achromatic
+        } else {
+            float d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+            if (max == r) {
+                h = (g - b) / d + (g < b ? 6 : 0);
+            } else if (max == g) {
+                h = (b - r) / d + 2;
+            } else {
+                h = (r - g) / d + 4;
+            }
+            h /= 6;
+        }
+
+        return new Vector3f(h, s, l);
+    }
+
+    public int toRGB() {
+        return ((int) (x * 255) << 16) | ((int) (y * 255) << 8) | (int) (z * 255);
+    }
+
+    public int toRGBA() {
+        return ((int) (x * 255) << 24) | ((int) (y * 255) << 16) | ((int) (z * 255) << 8) | (int) (w * 255);
+    }
+
     public Color4f copy(){
         return new Color4f(x, y, z, w);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Color4f[r=%.2f, g=%.2f, b=%.2f, a=%.2f]", getR(), getG(), getB(), getA());
     }
 }
