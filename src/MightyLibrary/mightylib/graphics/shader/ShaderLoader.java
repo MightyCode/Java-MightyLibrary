@@ -6,17 +6,28 @@ import MightyLibrary.mightylib.resources.ResourceLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import static MightyLibrary.mightylib.graphics.shader.ShaderManager.SHADER_INFO_PATH;
+
 public class ShaderLoader extends ResourceLoader {
-    private static final String SHADER_INFO_PATH = "resources/shaders/";
-    private static final String LIST_SHADER_FILE_NAME = "shaders.json";
+
+    /*
+     * Shader library
+     * The shader library is a HashMap that contains the shader utility file name as key and the shader content as value.
+     */
+    private Map<String, String> shaderLibrary;
 
     private final ShaderManager shaderManager = ShaderManager.getInstance();
     @Override
     public Class<? extends DataType> getType() {
         return Shader.class;
+    }
+
+    public ShaderLoader() {
+        shaderLibrary = new HashMap<>();
     }
 
     @Override
@@ -26,18 +37,24 @@ public class ShaderLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        String shaderListPath = SHADER_INFO_PATH + shaderManager.getVersion() + "/" + LIST_SHADER_FILE_NAME;
+        JSONObject shadersInfo = shaderManager.getShadersInfo();
 
-        JSONObject file = new JSONObject(FileMethods.readFileAsString(shaderListPath));
-        file = file.getJSONObject("shaders");
+        // Load first the library files
+        JSONObject libraryObject = shadersInfo.getJSONObject("library");
+        for (String key : libraryObject.keySet()) {
+            String content = FileMethods.readFileAsString(SHADER_INFO_PATH + shaderManager.getVersion() + "/" + libraryObject.getString(key));
+            shaderLibrary.put(key, content);
+        }
 
-        Iterator<String> arrayShader = file.keys();
+        JSONObject shadersList = shadersInfo.getJSONObject("shaders");
 
+        // Then load the shaders
+        Iterator<String> arrayShader = shadersList.keys();
         do {
             // Name of the shader key (used by renderer)
             String currentShader = arrayShader.next();
 
-            JSONObject JShader = file.getJSONObject(currentShader);
+            JSONObject JShader = shadersList.getJSONObject(currentShader);
 
             // "Table" of the string path
             JSONArray files = JShader.getJSONArray("files");
@@ -102,7 +119,7 @@ public class ShaderLoader extends ResourceLoader {
             System.err.print("Error path :" + vertexShaderPath + " not found");
         }
 
-        shader.setShaderContent(0, vertexShaderContent);
+        shader.setShaderContent(0, completeWithLibraryFile(vertexShaderContent));
 
         String fragmentShaderContent = "error";
 
@@ -113,7 +130,7 @@ public class ShaderLoader extends ResourceLoader {
             System.err.print("Error path :" + fragmentShaderPath + " not found");
         }
 
-        shader.setShaderContent(1, fragmentShaderContent);
+        shader.setShaderContent(1, completeWithLibraryFile(fragmentShaderContent));
 
         if (useGeometryShader) {
             String geometryShaderContent = "error";
@@ -125,7 +142,45 @@ public class ShaderLoader extends ResourceLoader {
                 System.err.print("Error path :" + geometryShaderPath + " not found");
             }
 
-            shader.setShaderContent(2, geometryShaderContent);
+            shader.setShaderContent(2,  completeWithLibraryFile(geometryShaderContent));
         }
+    }
+
+    public String completeWithLibraryFile(String content) {
+        String includeTag = "#include";
+
+        if (content.contains(includeTag)) {
+            String[] lines = content.split("\n");
+            StringBuilder newContent = new StringBuilder();
+
+            for (String line : lines) {
+                line = line.trim();
+
+                if (line.startsWith(includeTag)) {
+                    String fileName = line.substring(includeTag.length());
+                    fileName = fileName.trim();
+
+                    if (fileName.startsWith("\"") && fileName.endsWith("\"")) {
+                        fileName = fileName.substring(1, fileName.length() - 1);
+                        System.out.println("Loading shader library file: " + fileName);
+                    } else {
+                        System.err.println("Error: shader library file name " + fileName + " is not valid");
+                        continue;
+                    }
+
+                    if (shaderLibrary.containsKey(fileName)) {
+                        newContent.append(shaderLibrary.get(fileName)).append("\n");
+                    } else {
+                        System.err.println("Error: shader library file " + fileName + " not found");
+                    }
+                } else {
+                    newContent.append(line).append("\n");
+                }
+            }
+
+            return newContent.toString();
+        }
+
+        return content;
     }
 }

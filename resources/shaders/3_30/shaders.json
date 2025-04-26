@@ -99,5 +99,8 @@
 			],
 			"tags" : ["2D"]
 		}
+	},
+	"library" : {
+		"colorsManipulation" : "utils/colorsManipulation.glsl"
 	}
 }
