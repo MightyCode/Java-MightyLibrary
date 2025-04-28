@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.renderer._2D;
 
 import MightyLibrary.mightylib.graphics.surface.IGLBindable;
 import MightyLibrary.mightylib.graphics.surface.TextureParameters;
+import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.utils.Logger;
 
 import static org.lwjgl.opengl.GL30.*;
@@ -23,7 +24,7 @@ public class FrameBuffer implements IRenderTextureBindable {
         rbo = 0;
         renderTextureId = 0;
 
-        fbo = glGenFramebuffers();
+        fbo = GenDeleteResources.GenFramebuffers();
         Logger.CheckOpenGLError("Generate FrameBuffer : " + fbo);
 
         bindFrameBuffer();
@@ -32,7 +33,7 @@ public class FrameBuffer implements IRenderTextureBindable {
     }
 
     protected void update(IGLBindable bindable){
-        renderTextureId = glGenTextures();
+        renderTextureId = GenDeleteResources.GenTexture();
 
         glBindTexture(GL_TEXTURE_2D, renderTextureId);
         Logger.CheckOpenGLError("Generate Texture : " + renderTextureId);
@@ -49,7 +50,7 @@ public class FrameBuffer implements IRenderTextureBindable {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTextureId, 0);
         Logger.CheckOpenGLError("FrameBuffer Texture 2D : " + renderTextureId);
 
-        rbo = glGenRenderbuffers();
+        rbo = GenDeleteResources.GenRenderBuffers();
         Logger.CheckOpenGLError("Generate RenderBuffer : " + rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
         Logger.CheckOpenGLError("Bind RenderBuffer : " + rbo);
@@ -103,13 +104,13 @@ public class FrameBuffer implements IRenderTextureBindable {
     }
 
     public void unload(){
-        glDeleteFramebuffers(fbo);
+        GenDeleteResources.DeleteFramebuffers(fbo);
         Logger.CheckOpenGLError("Delete FrameBuffer : " + fbo);
 
-        glDeleteTextures(renderTextureId);
+        GenDeleteResources.DeleteTexture(renderTextureId);
         Logger.CheckOpenGLError("Delete Texture : " + renderTextureId);
 
-        glDeleteRenderbuffers(rbo);
+        GenDeleteResources.DeleteRenderBuffers(rbo);
         Logger.CheckOpenGLError("Delete RenderBuffer : " + rbo);
     }
 }

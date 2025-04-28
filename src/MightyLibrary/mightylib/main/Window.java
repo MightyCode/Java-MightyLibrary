@@ -33,7 +33,7 @@ public final class Window {
 
     public WindowInfo getInfo() { return info; }
 
-    Window(){
+    Window() {
         info = new WindowInfo();
         info.windowId = 0;
 

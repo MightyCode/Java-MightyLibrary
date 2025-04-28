@@ -5,6 +5,7 @@ import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import MightyLibrary.mightylib.graphics.surface.IGLBindable;
 import MightyLibrary.mightylib.graphics.surface.TextureParameters;
+import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.utils.Logger;
 
@@ -69,7 +70,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         qualityType = data.defaultAspectTexture;
         textureType = data.defaultTextureType;
 
-        textureId = glGenTextures();
+        textureId = GenDeleteResources.GenTexture();
 
         try {
             glBindTexture(this.textureType, textureId);
@@ -86,7 +87,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         } catch (Exception e) {
             System.err.println("Fail to create texture " + data.path() + " :");
             e.printStackTrace();
-            glDeleteTextures(textureId);
+            GenDeleteResources.DeleteTexture(textureId);
 
             return false;
         }
@@ -128,6 +129,6 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
     @Override
     public void unload(int remainingMilliseconds) {
         if (!data.isLoaded())
-            glDeleteTextures(textureId);
+            GenDeleteResources.DeleteTexture(textureId);
     }
 }
