@@ -3,6 +3,8 @@ package MightyLibrary.mightylib.utils.math.color;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+import java.awt.*;
+
 public class Color4f extends Vector4f {
 
     public Color4f() {
@@ -19,6 +21,15 @@ public class Color4f extends Vector4f {
 
     public Color4f(float r, float g, float b, float a) {
         super(r, g, b, a);
+    }
+
+    public Color4f(Color awtColor) {
+        super(
+                awtColor.getRed() / 255.0f,
+                awtColor.getGreen() / 255.0f,
+                awtColor.getBlue() / 255.0f,
+                awtColor.getAlpha() / 255.0f
+        );
     }
 
     public Color4f(String hexCode) {
@@ -116,6 +127,19 @@ public class Color4f extends Vector4f {
 
     public void setColorBased256(float x){
         setColor(x / 255f);
+    }
+
+    public Color toColorAwt() {
+        return new Color(
+                clamp01(x) * 255.0f / 255.0f,
+                clamp01(y) * 255.0f / 255.0f,
+                clamp01(z) * 255.0f / 255.0f,
+                clamp01(w) * 255.0f / 255.0f
+        );
+    }
+
+    private float clamp01(float value) {
+        return Math.max(0.0f, Math.min(1.0f, value));
     }
 
     public Color4f blend(Color4f otherColor, float amount){

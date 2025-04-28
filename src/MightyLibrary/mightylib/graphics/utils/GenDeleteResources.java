@@ -21,6 +21,8 @@ public abstract class GenDeleteResources {
     private static ArrayList<Integer> FBOs;
     private static ArrayList<Integer> RBOs;
 
+    private GenDeleteResources(){}
+
     public enum EGraphicResources {
         VertexArrayBuffer,
         VertexBufferObject,

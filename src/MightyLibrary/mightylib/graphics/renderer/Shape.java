@@ -338,10 +338,19 @@ public class Shape {
         return drawMode;
     }
 
-    public void unload(){
+    public void unloadVBO() {
         for (int vbo : vbos){
             GenDeleteResources.DeleteBuffers(vbo);
         }
+
+        vbos.clear();
+        vbosEnable.clear();
+        vbosStorage.clear();
+        vboCount = 0;
+    }
+
+    public void unload(){
+        unloadVBO();
 
         GenDeleteResources.DeleteVertexArrays(vao);
 

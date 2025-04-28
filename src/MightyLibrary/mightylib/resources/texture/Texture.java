@@ -128,7 +128,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     @Override
     public void unload(int remainingMilliseconds) {
-        if (!data.isLoaded())
+        if (data.isLoaded())
             GenDeleteResources.DeleteTexture(textureId);
     }
 }
