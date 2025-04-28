@@ -58,32 +58,32 @@ public class ResourceWorker extends Thread {
 
                     //System.out.println("Thread " + threadNumber + " PROCESSED (" + entry.Data.getClass().getSimpleName() + ") : " + entry.Data.getDataName() + " " + entry.Data.isLoaded());
 
-                    if (numberErrorLoading > 0) {
+                   /*if (numberErrorLoading > 0) {
                         System.out.println("Thread " + threadNumber + " error loading/unloading/reloading " + entry.Data.getClass().getSimpleName() + " : " + entry.Data.getDataName());
-                    }
+                    }*/
                 }
 
                 entry = resource.getNextResourceToProcess();
             }
         }
 
-        System.out.println("End of thread " + threadNumber);
+        //System.out.println("End of thread " + threadNumber);
         isWorking = false;
     }
 
     int preloadData(DataType dataType, ResourceLoader loader) {
         if (dataType.isPreLoaded()) {
-            System.out.println("Thread " + threadNumber + " already preloaded " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+            //System.out.println("Thread " + threadNumber + " already preloaded " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
             return 1;
         }
 
 
-        System.out.println("Thread " + threadNumber + " preloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+        //System.out.println("Thread " + threadNumber + " preloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
 
         loader.preload(dataType);
 
         if (!dataType.isPreLoaded()) {
-            System.out.println("Thread " + threadNumber + " error preloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+            //System.out.println("Thread " + threadNumber + " error preloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
             return 1;
         }
 
@@ -94,16 +94,16 @@ public class ResourceWorker extends Thread {
 
     int loadData(DataType dataType) {
         if (dataType.isLoaded()) {
-            System.out.println("Thread " + threadNumber + " already loaded " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+            //System.out.println("Thread " + threadNumber + " already loaded " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
             return 1;
         }
 
-        System.out.println("Thread " + threadNumber + " loading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+       // System.out.println("Thread " + threadNumber + " loading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
 
         dataType.load();
 
         if (!dataType.isLoaded()) {
-            System.out.println("Thread " + threadNumber + " error loading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+            //System.out.println("Thread " + threadNumber + " error loading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
             return 1;
         }
 
@@ -114,7 +114,7 @@ public class ResourceWorker extends Thread {
         if (!dataType.isLoaded())
             return 1;
 
-        System.out.println("Thread " + threadNumber + " unloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+        //System.out.println("Thread " + threadNumber + " unloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
 
         dataType.unload();
 
@@ -128,7 +128,7 @@ public class ResourceWorker extends Thread {
         if (!entry.Data.isLoaded())
             return 1;
 
-        System.out.println("Thread " + threadNumber + " reloading " + entry.Data.getClass().getSimpleName() + " : " + entry.Data.getDataName());
+       // System.out.println("Thread " + threadNumber + " reloading " + entry.Data.getClass().getSimpleName() + " : " + entry.Data.getDataName());
         entry.Loader.preload(entry.Data);
 
         if (!entry.Data.isLoaded())

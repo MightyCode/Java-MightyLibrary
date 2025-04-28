@@ -313,6 +313,7 @@ public class Test2DScene extends Scene {
 
         text.unload();
 
+        atlasRenderer.unload();
         hexagonRenderer1.unload();
         hexagonRenderer2.unload();
 

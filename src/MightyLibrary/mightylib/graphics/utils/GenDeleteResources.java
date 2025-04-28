@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.utils;
 
+import MightyLibrary.mightylib.utils.valueDebug.TableDebug;
 import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
@@ -19,6 +20,15 @@ public abstract class GenDeleteResources {
 
     private static ArrayList<Integer> FBOs;
     private static ArrayList<Integer> RBOs;
+
+    public enum EGraphicResources {
+        VertexArrayBuffer,
+        VertexBufferObject,
+        ElementBufferObject,
+        Texture,
+        FramebufferObject,
+        RenderBufferObject
+    }
 
     public static void Init() {
         if (Initialized)
@@ -102,5 +112,43 @@ public abstract class GenDeleteResources {
     public static void DeleteRenderBuffers(Integer rbo) {
         RBOs.remove(rbo);
         glDeleteRenderbuffers(rbo);
+    }
+
+    public static void PrintList(EGraphicResources graphicResources) {
+        switch (graphicResources) {
+            case VertexArrayBuffer:
+                System.out.print("VertexArrayObjects (VAOs): ");
+                TableDebug.printi(VAOs);
+                break;
+            case VertexBufferObject:
+                System.out.print("VertexBufferObjects (VBOs): ");
+                TableDebug.printi(VBOs);
+                break;
+            case ElementBufferObject:
+                System.out.print("ElementBufferObjects (EBOs): ");
+                TableDebug.printi(EBOs);
+                break;
+            case Texture:
+                System.out.print("Textures: ");
+                TableDebug.printi(Textures);
+                break;
+            case FramebufferObject:
+                System.out.print("FramebufferObjects (FBOs): ");
+                TableDebug.printi(FBOs);
+                break;
+            case RenderBufferObject:
+                System.out.print("RenderBufferObjects (RBOs): ");
+                TableDebug.printi(RBOs);
+                break;
+            default:
+                System.out.print("Unknown resource type.");
+                break;
+        }
+    }
+
+    public static void PrintAll() {
+        for (EGraphicResources g : EGraphicResources.values()) {
+            PrintList(g);
+        }
     }
 }

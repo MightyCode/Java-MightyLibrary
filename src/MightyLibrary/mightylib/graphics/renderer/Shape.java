@@ -345,7 +345,7 @@ public class Shape {
 
         GenDeleteResources.DeleteVertexArrays(vao);
 
-        if(useEbo)
+        if (useEbo)
             GenDeleteResources.DeleteBuffersEBO(ebo);
     }
 }
