@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.main;
 
 import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
+import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
@@ -92,6 +93,8 @@ public final class MainLoop {
         if (!window.getInfo().isWindowCreated()) {
             exit(ListError.WINDOW_CREATION_FAIL);
         }
+
+        GenDeleteResources.Init();
 
         System.out.println("--Create ShaderManager");
         ShaderManager shaderManager = ShaderManager.getInstance();

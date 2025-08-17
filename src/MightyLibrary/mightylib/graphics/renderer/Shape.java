@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.graphics.renderer;
 
 import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
 import MightyLibrary.mightylib.graphics.shader.Shader;
+import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.math.ID;
@@ -14,7 +15,6 @@ import java.util.ArrayList;
 import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
 import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
 import static org.lwjgl.opengl.GL15.*;
-import static org.lwjgl.opengl.GL30.glGenVertexArrays;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL40.GL_PATCHES;
 
@@ -59,7 +59,7 @@ public class Shape {
         info = new int[0];
         indicesSize = 0;
 
-        vao = glGenVertexArrays();
+        vao = GenDeleteResources.GenVertexArrays();
         bind();
         vbos = new ArrayList<>();
         vbosStorage = new ArrayList<>();
@@ -72,17 +72,15 @@ public class Shape {
 
     public int addVboFloat(float[] vertices, int vertexSize, int storage) {
         bind();
-        int vbo = glGenBuffers();
+        int vbo = GenDeleteResources.GenBuffers();
         Logger.CheckOpenGLError("Gen vbo buffer : " + vbo);
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         Logger.CheckOpenGLError("bind vbo buffer : " + vbo);
 
-        // ✅ Convert float[] to FloatBuffer
         FloatBuffer buffer = BufferUtils.createFloatBuffer(vertices.length);
         buffer.put(vertices).flip();
 
-        // ✅ Use the buffer, not the array
         glBufferData(GL_ARRAY_BUFFER, buffer, storage);
         Logger.CheckOpenGLError("Buffer vbo buffer : " + storage + " of size : " + vertices.length);
 
@@ -94,7 +92,7 @@ public class Shape {
 
     public int addVboInt(int[] vertices, int vertexSize, int storage){
         bind();
-        int vbo = glGenBuffers();
+        int vbo = GenDeleteResources.GenBuffers();
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices, storage);
@@ -164,7 +162,7 @@ public class Shape {
         }
     }
 
-    public boolean isEnableVbo(int pos){
+    public boolean isEnableVbo(int pos) {
         if (vbosEnable.size() <= pos)
             return false;
 
@@ -192,12 +190,12 @@ public class Shape {
 
     public void setUseEbo(boolean state){
         if (this.useEbo && ebo != 0)
-            glDeleteBuffers(this.ebo);
+            GenDeleteResources.DeleteBuffersEBO(this.ebo);
 
         this.useEbo = state;
 
         if (this.useEbo)
-            ebo = glGenBuffers();
+            ebo = GenDeleteResources.GenBuffersEBO();
     }
 
 
@@ -340,14 +338,23 @@ public class Shape {
         return drawMode;
     }
 
-    public void unload(){
+    public void unloadVBO() {
         for (int vbo : vbos){
-            glDeleteBuffers(vbo);
+            GenDeleteResources.DeleteBuffers(vbo);
         }
 
-        glDeleteVertexArrays(vao);
+        vbos.clear();
+        vbosEnable.clear();
+        vbosStorage.clear();
+        vboCount = 0;
+    }
 
-        if(useEbo)
-            glDeleteBuffers(ebo);
+    public void unload(){
+        unloadVBO();
+
+        GenDeleteResources.DeleteVertexArrays(vao);
+
+        if (useEbo)
+            GenDeleteResources.DeleteBuffersEBO(ebo);
     }
 }

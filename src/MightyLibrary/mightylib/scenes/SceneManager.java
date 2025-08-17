@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.scenes;
 
 import MightyLibrary.mightylib.graphics.GLResources;
+import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.main.MainLoop;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.main.Context;
@@ -95,6 +96,8 @@ public class SceneManager {
 
             for (String batch : currentScene.getInvolvedBatch())
                 Resources.getInstance().unloadBatch(batch);
+
+            GenDeleteResources.PrintAll();
         }
 
         SoundManager.getInstance().clearAwaitedSong();

@@ -185,7 +185,7 @@ public class Resources {
             if (entry == null)
                 return;
 
-            System.out.println("Main thread doing " + entry.Data.getDataName());
+            //System.out.println("Main thread doing " + entry.Data.getDataName());
             mainContextHandleResource(entry);
         }
     }
@@ -229,7 +229,7 @@ public class Resources {
             worker.interrupt();
 
             try {
-                System.out.println("Join worker " + worker.getThreadNumber());
+                //System.out.println("Join worker " + worker.getThreadNumber());
                 worker.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -332,8 +332,8 @@ public class Resources {
     private void addResourceToProcess(ResourceEntry resourceEntry) {
         // Todo : not a good place to do that
         if (resourceEntry.Data.getTypeSetUp() == DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT) {
-            System.out.println("Immediate processing in main context of (" + resourceEntry.Data.getClass().getSimpleName() + ") :" + resourceEntry.Data.getDataName()
-                    + ", action : " + resourceEntry.Action);
+            /*System.out.println("Immediate processing in main context of (" + resourceEntry.Data.getClass().getSimpleName() + ") :" + resourceEntry.Data.getDataName()
+                    + ", action : " + resourceEntry.Action);*/
             mainContextHandleResource(resourceEntry);
 
             return;
@@ -341,16 +341,16 @@ public class Resources {
 
         if (resourceEntry.Data.getTypeSetUp() == DataType.TYPE_SET_UP.MAIN_CONTEXT) {
             resourcesToProcessMainContext.add(resourceEntry);
-            System.out.println("Added to main context (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
-                    ", action : " + resourceEntry.Action);
+            /*System.out.println("Added to main context (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
+                    ", action : " + resourceEntry.Action);*/
         } else {
             queueLock.lock();
             try {
                 resourcesToProcess.add(resourceEntry);
-                System.out.println("Added to worker (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
-                        ", action : " + resourceEntry.Action);
+                /*System.out.println("Added to worker (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
+                        ", action : " + resourceEntry.Action);*/
                 if (workers.size() < maxNumberOfWorkers && resourcesToProcess.size() > workers.size()) {
-                    System.out.println("Create worker n°" + (workers.size() + 1));
+                    //System.out.println("Create worker n°" + (workers.size() + 1));
                     ResourceWorker worker = new ResourceWorker(this, workers.size() + 1);
                     workers.add(worker);
                     worker.start();
