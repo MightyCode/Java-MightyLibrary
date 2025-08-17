@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ModelTriangle {
-    private Map<String, Integer[]> verticesInfo;
+    private final Map<String, Integer[]> verticesInfo;
 
     // List of info that will be saved by vertex id
     public ModelTriangle(String[] infoPerVertex) {

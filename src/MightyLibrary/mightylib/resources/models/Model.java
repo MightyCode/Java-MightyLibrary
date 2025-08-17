@@ -1,7 +1,5 @@
 package MightyLibrary.mightylib.resources.models;
 
-import MightyLibrary.mightylib.graphics.renderer.Shape;
-import MightyLibrary.mightylib.resources.FileMethods;
 import MightyLibrary.mightylib.resources.SingleSourceDataType;
 import org.joml.Vector2f;
 import org.joml.Vector3f;

@@ -171,6 +171,11 @@
             <artifactId>jbox2d-library</artifactId>
             <version>2.2.1.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.raylabz</groupId>
+            <artifactId>opensimplex</artifactId>
+            <version>1.0.3</version>
+        </dependency>
     </dependencies>
     
 </project>

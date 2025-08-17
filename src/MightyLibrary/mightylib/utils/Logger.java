@@ -5,7 +5,7 @@ import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
 import static org.lwjgl.opengl.GL20.*;
 
 public class Logger {
-    public static boolean DO_CHECK = false;
+    public static boolean DO_CHECK = true;
 
     public static String getCurrentStackTrace() {
         return Thread.currentThread().getStackTrace()[2].toString();

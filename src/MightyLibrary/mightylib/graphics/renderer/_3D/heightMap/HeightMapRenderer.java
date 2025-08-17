@@ -1,4 +1,4 @@
-package MightyLibrary.mightylib.graphics.renderer._3D;
+package MightyLibrary.mightylib.graphics.renderer._3D.heightMap;
 
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer.Shape;
@@ -8,26 +8,22 @@ import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Vector3f;
 
 public class HeightMapRenderer extends Renderer {
-
-    public enum ColorMode {
-        DEFAULT,
-        SIMPLE_GRADIENT,
-        GREENISH_MOUNTAIN,
-        // Add more if needed
+    @FunctionalInterface
+    public interface IHeightMapper {
+        float map(float height, float min, float max);
     }
 
     @FunctionalInterface
-    public interface IHeightMapper {
-        float map(float x);
+    public interface IColorMapper {
+        void map(float height, Color4f colorToFill);
     }
 
-    private ColorMode colorMode = ColorMode.GREENISH_MOUNTAIN; // Default
+    private IColorMapper colorMapper = HeightMapColorFunctions.HeightToColorDefault(); // Default
+    private IHeightMapper heightMapper = HeightMapHeightMappers.GetHeightMapperDefault();
 
     private float minHeight = Float.MAX_VALUE;
     private float maxHeight = Float.MIN_VALUE;
     private float heightRange = 0f;
-
-    private IHeightMapper heightMapper = x -> x;
 
     private final boolean willUpdateFrequently;
     private final int shapePosition;
@@ -93,24 +89,14 @@ public class HeightMapRenderer extends Renderer {
         tempColor = new Color4f(1);
     }
 
-    public HeightMapRenderer setColorMode(ColorMode mode) {
-        this.colorMode = mode;
+    public HeightMapRenderer setColorMapper(IColorMapper mode) {
+        this.colorMapper = mode;
 
         return this;
     }
 
     public HeightMapRenderer setHeightMapper(IHeightMapper mapper) {
         this.heightMapper = mapper;
-        return this;
-    }
-
-    public HeightMapRenderer setHeightMapperDefault() {
-        this.heightMapper = x -> x;
-        return this;
-    }
-
-    public HeightMapRenderer setHeightNormalized() {
-        this.heightMapper = x -> (x - minHeight) / (heightRange == 0 ? 1 : heightRange);
         return this;
     }
 
@@ -154,13 +140,13 @@ public class HeightMapRenderer extends Renderer {
         for (int z = 0; z < height; z++) {
             for (int x = 0; x < width; x++) {
                 float rawHeight = rawHeights[z * width + x];
-                float y = heightMapper.map(rawHeight);
+                float y = heightMapper.map(rawHeight, minHeight, maxHeight);
 
                 positions[vertexIndex * 3]     = x / (float)(width - 1);
                 positions[vertexIndex * 3 + 1] = y;
                 positions[vertexIndex * 3 + 2] = z / (float)(height - 1);
 
-                heightToColor(y);
+                heightToColor(rawHeight);
                 //System.out.println(tempColor);
                 colors[vertexIndex] = tempColor.toIntRGBA();
 
@@ -203,57 +189,14 @@ public class HeightMapRenderer extends Renderer {
     private float getMappedHeightAt(float[] rawHeights, int x, int z, int width, int height) {
         x = Math.max(0, Math.min(width - 1, x));
         z = Math.max(0, Math.min(height - 1, z));
-        return heightMapper.map(rawHeights[z * width + x]);
+        return heightMapper.map(rawHeights[z * width + x], minHeight, maxHeight);
     }
 
     public void heightToColor(float height) {
-        switch (colorMode) {
-            case SIMPLE_GRADIENT :
-                heightToColorSimple(height);
-                break;
-            case GREENISH_MOUNTAIN :
-                heightToColorMountain(height, 0.7f, 0.8f, 0.9f);
-                break;
-            default:
-                heightToColorDefault(height);
-                break;
-        }
+       colorMapper.map(height, tempColor);
     }
 
-    private void heightToColorDefault(float value) {
-        // Simple grayscale
-        tempColor.set(value, value, value, 1);
-    }
 
-    private void heightToColorSimple(float value) {
-        tempColor.set(value, 0f,  1f - value, 1);
-    }
-
-    public void heightToColorMountain(float height, float waterThreshold, float greenThreshold, float snowThreshold) {
-        height = Math.max(0f, Math.min(1f, height)); // Clamp between 0 and 1
-
-        if (height <= waterThreshold) {
-            tempColor.x = 0;
-            tempColor.y = 0.3f;
-            tempColor.z = 1;
-        } else if (height <= greenThreshold) {
-            float t = height / greenThreshold; // Normalize to 0–1
-
-            tempColor.x = 0.36f + 0.24f * t;
-            tempColor.y = 0.25f + 0.15f * t;
-            tempColor.z = 0.20f + 0.1f * t;
-        } else if (height <= snowThreshold) {
-            float t = (height - greenThreshold) / (1.0f - greenThreshold);
-
-            tempColor.x = 0.3f - 0.2f * t;
-            tempColor.y = 0.6f + 0.3f * t;
-            tempColor.z = 0.3f - 0.1f * t;
-        } else {
-            tempColor.x = 1;
-            tempColor.y = 1;
-            tempColor.z = 1;
-        }
-    }
     public float getMinHeight() {
         return minHeight;
     }

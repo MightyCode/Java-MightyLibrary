@@ -3,7 +3,8 @@ package MightyLibrary.project.scenes;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.lightning.materials.Material;
-import MightyLibrary.mightylib.graphics.renderer._3D.HeightMapRenderer;
+import MightyLibrary.mightylib.graphics.renderer._3D.heightMap.HeightMapColorFunctions;
+import MightyLibrary.mightylib.graphics.renderer._3D.heightMap.HeightMapRenderer;
 import MightyLibrary.mightylib.graphics.text.Text;
 import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
@@ -53,9 +54,6 @@ public class Test3DScene extends Scene {
     private ShaderValue timeShaderValue;
 
     private Text originLabel;
-
-    private int heightMapComputeTimes;
-    private double heightMapComputeTotal;
 
     public Test3DScene(){
         super(SCENE_CCI);
@@ -180,7 +178,7 @@ public class Test3DScene extends Scene {
                 .addShaderValue("lightPos", Vector3f.class, light.position())
                 .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
 
-        heightMapRenderer.setHeightMapper(height -> {
+        heightMapRenderer.setHeightMapper((height, min, max) -> {
             height -= timeShaderValue.getObjectTyped(Float.class);
 
             if (height < 0.7f) {
@@ -192,9 +190,7 @@ public class Test3DScene extends Scene {
                 float t = (height - 0.9f) / 0.1f;
                 return 0.7f + (float)Math.pow(t, 0.5) * 0.6f; // sharper raise, nonlinear
             }
-        }).setColorMode(HeightMapRenderer.ColorMode.GREENISH_MOUNTAIN);
-
-        heightMapRenderer.setHeightNormalized().setColorMode(HeightMapRenderer.ColorMode.SIMPLE_GRADIENT);
+        }).setColorMapper(HeightMapColorFunctions.HeightToColorMountain(0.7f, 0.75f, 0.9f));
         heightMapRenderer.load();
 
         originLabel = new Text();
@@ -248,32 +244,6 @@ public class Test3DScene extends Scene {
 
         timeShaderValue.setObject(displacementMapTweening.value());
         sBlock.getShape().getShader().sendValueToShader(timeShaderValue);
-
-        long startTime = System.nanoTime();
-        heightMapRenderer.setHeightMapper(height -> {
-            height = height -timeShaderValue.getObjectTyped(Float.class) * 0.1f;
-
-            if (height < 0.7f) {
-                return 0.7f; // Water / flat land
-            } else if (height < 0.9f) {
-                return height;
-            } else {
-                // Steep transition for mountains
-                float t = (height - 0.9f) / 0.1f;
-                return 0.7f + (float)Math.pow(t, 0.5) * 0.6f; // sharper raise, nonlinear
-            }
-        }).setColorMode(HeightMapRenderer.ColorMode.GREENISH_MOUNTAIN);
-        heightMapRenderer.load();
-
-        long endTime = System.nanoTime();
-        long duration = endTime - startTime; // Time taken in nanoseconds
-        double durationInSeconds = duration / 1_000_000_000.0;
-
-        heightMapComputeTimes += 1;
-        heightMapComputeTotal += durationInSeconds;
-
-        System.out.print("\rRecalculation took " + (heightMapComputeTotal / heightMapComputeTimes) + " seconds     ");
-        System.out.flush();
 
         rotationTweening.update();
 
