@@ -43,7 +43,7 @@ public abstract class GLElement implements LoadingElement {
         return reference != 0;
     }
 
-    int getNumberReference() {
+    public int getNumberReference() {
         return reference;
     }
 

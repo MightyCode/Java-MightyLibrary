@@ -1,7 +1,10 @@
 package MightyLibrary.mightylib.graphics;
 
+import org.json.JSONObject;
+
 import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Queue;
 
 public class GLResources {
@@ -154,6 +157,23 @@ public class GLResources {
             resources.get(element.getClass()).remove(element.getName());
             element.unloadByResource(150);
         }
+    }
+
+    // Registered elements by type and name with their number of references, to track leaks
+    public JSONObject describe() {
+        JSONObject json = new JSONObject();
+
+        for (Map.Entry<Class<? extends GLElement>, HashMap<String, GLElement>> typeEntry : resources.entrySet()) {
+            JSONObject elements = new JSONObject();
+            for (Map.Entry<String, GLElement> element : typeEntry.getValue().entrySet())
+                elements.put(element.getKey(), element.getValue().getNumberReference());
+
+            json.put(typeEntry.getKey().getSimpleName(), elements);
+        }
+
+        json.put("waitingToLoad", elementToLoad.size());
+
+        return json;
     }
 
     public void unload() {
