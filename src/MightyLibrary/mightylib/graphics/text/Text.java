@@ -14,6 +14,8 @@ public class Text extends Renderer implements Cloneable {
     private static final int NUMBER_INDICES = 4;
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;
+    // Font atlases are rectangle textures, so texture coordinates are in texels
+    private static final float HALF_TEXEL = 0.5f;
 
     private float fontSize;
     private final int positionIndex;
@@ -316,10 +318,12 @@ public class Text extends Renderer implements Cloneable {
                 charPositions[charCount * SIZE_COORDINATES + 6] = temp.y;
                 charPositions[charCount * SIZE_COORDINATES + 7] = temp.z;
 
-                temp.x = (float)(fontChar.getxAtlas());
-                temp.y = temp.x + (float)(fontChar.getWidthAtlas());
-                temp.z = (float)(fontChar.getyAtlas());
-                temp.w = temp.z + (float)(fontChar.getHeightAtlas());
+                // Inset by half a texel: with linear filtering, sampling exactly on the glyph border
+                // blends the neighbour glyph of the atlas when there is no spacing between them
+                temp.x = (float)(fontChar.getxAtlas()) + HALF_TEXEL;
+                temp.y = (float)(fontChar.getxAtlas() + fontChar.getWidthAtlas()) - HALF_TEXEL;
+                temp.z = (float)(fontChar.getyAtlas()) + HALF_TEXEL;
+                temp.w = (float)(fontChar.getyAtlas() + fontChar.getHeightAtlas()) - HALF_TEXEL;
 
                 texturePosition[charCount * SIZE_COORDINATES] = temp.x;
                 texturePosition[charCount * SIZE_COORDINATES + 1] = temp.z;
