@@ -60,7 +60,6 @@ public abstract class GLElement implements LoadingElement {
     }
 
     void loadByResource(int remainingMilliseconds) {
-        System.out.println("Loading gl (" + this.getClass().getSimpleName() + ") " + this.getName());
         for (DataType type : resourceDependencies) {
             if (!type.isLoaded()){
                 return;
@@ -73,6 +72,8 @@ public abstract class GLElement implements LoadingElement {
             }
         }
 
+        // Only printed once the dependencies are ready, the load can be retried each tick until then
+        System.out.println("Loading gl (" + this.getClass().getSimpleName() + ") " + this.getName());
         loaded = load(remainingMilliseconds);
     }
 

@@ -1,7 +1,7 @@
 package MightyLibrary.mightylib.graphics;
 
+import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.PriorityQueue;
 import java.util.Queue;
 
 public class GLResources {
@@ -38,8 +38,8 @@ public class GLResources {
     private GLResources(GLResourceCreation info) {
         millisecondAllowedToProcessPerFrame = info.MILLISECONDS_ALLOWED_TO_PROCESS_PER_FRAME;
 
-        elementToLoad = new PriorityQueue<>();
-        elementToUnload = new PriorityQueue<>();
+        elementToLoad = new ArrayDeque<>();
+        elementToUnload = new ArrayDeque<>();
 
         resources = new HashMap<>();
     }
@@ -47,12 +47,20 @@ public class GLResources {
     public void process() {
         long startTime = System.currentTimeMillis();
 
-        while (!elementToLoad.isEmpty() && System.currentTimeMillis() - startTime < millisecondAllowedToProcessPerFrame) {
+        // Each waiting element is tried at most once per call: those whose dependencies aren't loaded yet go back in the queue
+        int elementsToTry = elementToLoad.size();
+        while (elementsToTry > 0 && System.currentTimeMillis() - startTime < millisecondAllowedToProcessPerFrame) {
+            --elementsToTry;
             GLElement element = elementToLoad.poll();
-            if (element != null) {
-                long remainingMilliseconds = millisecondAllowedToProcessPerFrame - (System.currentTimeMillis() - startTime);
-                element.loadByResource((int) remainingMilliseconds);
-            }
+
+            if (element == null || element.isLoaded())
+                continue;
+
+            long remainingMilliseconds = millisecondAllowedToProcessPerFrame - (System.currentTimeMillis() - startTime);
+            element.loadByResource((int) remainingMilliseconds);
+
+            if (!element.isLoaded())
+                elementToLoad.add(element);
         }
 
         while (!elementToUnload.isEmpty() && System.currentTimeMillis() - startTime < millisecondAllowedToProcessPerFrame) {
@@ -65,28 +73,41 @@ public class GLResources {
         }
     }
 
+    /**
+     * Return the element already registered with this name, or register and load the given one.
+     * Either way a reference is added: call releaseResource once the element isn't used anymore.
+     */
     public <T extends GLElement> T addElementOrReturnIfPresent(Class<T> type, T T, String name) {
         if (T.isLoaded())
             throw new RuntimeException("Element is already loaded!");
 
-        GLElement element = getResource(type, name);
+        T element = getResource(type, name);
         if (element != null) {
-            return type.cast(element);
+            element.addReference();
+            return element;
         }
 
         resources.putIfAbsent(type, new HashMap<>());
         resources.get(type).put(name, T);
         T.setName(name);
-        T.loadByResource(150);
         T.addReference();
+        T.loadByResource(150);
+
+        // Its dependencies aren't loaded yet: retried by process() until they are
+        if (!T.isLoaded())
+            elementToLoad.add(T);
 
         return T;
     }
 
+    /**
+     * Same as addElementOrReturnIfPresent, but the element is loaded later by process().
+     */
     public <T extends GLElement> T addElementToLoadOrReturnIfPresent(Class<T> type, T t, String name) {
-        GLElement element = resources.get(type).get(name);
+        T element = getResource(type, name);
         if (element != null) {
-            return type.cast(element);
+            element.addReference();
+            return element;
         }
 
         resources.putIfAbsent(type, new HashMap<>());
@@ -109,6 +130,7 @@ public class GLResources {
         }
     }
 
+    // Lookup only: no reference is added, use addElementOrReturnIfPresent to share an element
     public <T extends GLElement> T getResource(Class<T> type, String name) {
         if (!resources.containsKey(type)) {
             return null;
@@ -119,7 +141,6 @@ public class GLResources {
             return null;
         }
 
-        element.addReference();
         return type.cast(element);
     }
 
@@ -127,6 +148,9 @@ public class GLResources {
         element.removeReference();
 
         if (!element.isReferenced()) {
+            // Not needed anymore: it must not be loaded later
+            elementToLoad.remove(element);
+
             resources.get(element.getClass()).remove(element.getName());
             element.unloadByResource(150);
         }
