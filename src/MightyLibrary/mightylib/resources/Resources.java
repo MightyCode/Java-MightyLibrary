@@ -12,6 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Matcher;
@@ -74,7 +75,8 @@ public class Resources {
 
     public final List<ResourceLoader> Loaders;
 
-    private final HashMap<Class<? extends DataType>, HashMap<String, DataType>> resources;
+    // Resources are read on the main thread while workers can remove deleted ones: concurrent maps
+    private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
     private final LoadingMethod loadingMethod;
 
     private final ArrayList<ResourceWorker> workers;
@@ -90,7 +92,7 @@ public class Resources {
 
     private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers) {
         this.loadingMethod = loadingMethod;
-        resources = new HashMap<>();
+        resources = new ConcurrentHashMap<>();
         Loaders = new ArrayList<>();
 
         workers = new ArrayList<>();
@@ -122,7 +124,7 @@ public class Resources {
 
         // Init all loaders
         for (ResourceLoader loader : Loaders){
-            HashMap<String, DataType> map = new HashMap<>();
+            Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
             resources.put(loader.getType(), map);
         }
@@ -226,25 +228,30 @@ public class Resources {
             return false;
         }
 
-        // iterate in inverse order to avoid ConcurrentModificationException
-        for (int i = workers.size() - 1; i >= 0; i--) {
-            ResourceWorker worker = workers.get(i);
-            if (worker.isAlive())
-                return false;
-
-            worker.interrupt();
-
-            try {
-                //System.out.println("Join worker " + worker.getThreadNumber());
-                worker.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+        // Workers are created by addResourceToProcess under the queue lock, possibly from a worker thread
+        ArrayList<ResourceWorker> finishedWorkers;
+        queueLock.lock();
+        try {
+            for (ResourceWorker worker : workers) {
+                if (worker.isAlive())
+                    return false;
             }
 
-            workers.remove(worker);
+            finishedWorkers = new ArrayList<>(workers);
+            workers.clear();
+        } finally {
+            queueLock.unlock();
         }
 
-        workers.clear();
+        // Joined outside the lock: the threads are already finished
+        for (ResourceWorker worker : finishedWorkers) {
+            try {
+                worker.join();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return false;
+            }
+        }
 
         return true;
     }
@@ -595,7 +602,7 @@ public class Resources {
         if (resources.containsKey(category))
             return;
 
-        resources.put(category, new HashMap<>());
+        resources.put(category, new ConcurrentHashMap<>());
         Loaders.add(loader);
     }
 

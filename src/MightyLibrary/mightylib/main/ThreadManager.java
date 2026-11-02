@@ -7,17 +7,30 @@ public class ThreadManager {
 
     private static int NumberThreadUsed = 1;
 
-    public static boolean ThreadAvailable() {
+    public static synchronized boolean ThreadAvailable() {
         return NumberThreadUsed < NumberMaxThreadToUse;
     }
 
+    // Check and reserve atomically, so two callers can't take the last available thread
+    private static synchronized boolean TryReserveThread() {
+        if (!ThreadAvailable())
+            return false;
+
+        ++NumberThreadUsed;
+        return true;
+    }
+
+    private static synchronized void FreeThread() {
+        --NumberThreadUsed;
+    }
+
     public static boolean RunThread(ThreadOrCurrent thread){
-        if (! ThreadAvailable()) {
+        if (!TryReserveThread()) {
+            // Run in the current thread, outside the lock
             thread.content();
             return false;
         }
 
-        ++NumberThreadUsed;
         thread.start();
 
         return true;
@@ -25,7 +38,7 @@ public class ThreadManager {
 
     public static boolean ReleaseThread(ThreadOrCurrent thread){
         if (thread.IsSeparateThread()) {
-            --NumberThreadUsed;
+            FreeThread();
             thread.interrupt();
 
             return true;

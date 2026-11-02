@@ -4,23 +4,26 @@ import MightyLibrary.mightylib.utils.LoadingElement;
 import MightyLibrary.mightylib.utils.math.UUID;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class DataType extends UUID implements LoadingElement {
     protected final Resources resources;
 
     protected final String dataName;
 
+    // Volatile: states are written by worker threads and read by the main thread
     // Step where data are read from disk and dependencies are listed
-    private boolean correctlyPreLoaded;
+    private volatile boolean correctlyPreLoaded;
 
     // When dependencies are loaded, this data can be loaded and well computed
-    private boolean correctlyLoaded;
+    private volatile boolean correctlyLoaded;
 
-    // Static table, max of 5 references
-    public int MAX_REFERENCES = 5;
-    protected String[] references;
+    // Names of what uses this data (batches, "manually"...), the same name can appear several times
+    protected final List<String> references;
 
-    private final ArrayList<DataType> dependencies;
+    // Filled while preloading in a worker thread, read from the main thread
+    private final List<DataType> dependencies;
 
     private final TYPE_SET_UP typeSetUp;
 
@@ -40,8 +43,8 @@ public abstract class DataType extends UUID implements LoadingElement {
         this.correctlyLoaded = false;
         this.typeSetUp = typeSetUp;
 
-        references = new String[5];
-        dependencies = new ArrayList<>();
+        references = new ArrayList<>();
+        dependencies = new CopyOnWriteArrayList<>();
         manuallyCreated = true;
     }
 
@@ -80,34 +83,16 @@ public abstract class DataType extends UUID implements LoadingElement {
     }
 
     public final void addReference(String reference) {
-        if (references[MAX_REFERENCES - 1] != null) {
-            System.err.println("Reference table is full for resources" + dataName);
-            return;
-        }
-        for (int i = 0; i < references.length; i++){
-            if (references[i] == null){
-                references[i] = reference;
-                return;
-            }
-        }
+        references.add(reference);
     }
 
-    // Remove and shift
+    // Remove one occurrence of the reference
     public final void removeReference(String reference){
-        for (int i = 0; i < references.length; i++){
-            if (references[i] != null && references[i].equals(reference)){
-                references[i] = null;
-                for (int j = i; j < references.length - 1; j++){
-                    references[j] = references[j + 1];
-                }
-                references[references.length - 1] = null;
-                return;
-            }
-        }
+        references.remove(reference);
     }
 
     public final boolean notReferenced() {
-        return references[0] == null;
+        return references.isEmpty();
     }
 
     public final String getDataName(){
