@@ -76,7 +76,10 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 
 ### Inputs
 - Les IDs d'action sont des `int` alloués statiquement via `InputManager.getAndIncrementId()` (0 et 1 réservés : `COMMAND`, `RELOAD_TEXTURE`). Projet : `ActionId` + bindings dans `ProjectLoading.contextLoading`.
-- Disposition clavier AZERTY forcée dans `MainLoop.run` (écrase la valeur de `IStartLibraryProcedure`).
+- La disposition clavier vient de `IStartLibraryProcedure.returnDefaultKeyboardLanguage()` (QWERTY si un contexte est créé sans `WindowCreationInfo`).
+
+### Temps
+- `GameTime.DeltaTime()` : temps réel mesuré entre deux ticks (variable). `GameTime.FixedDeltaTime()` : durée fixe d'un tick (1/TPS), **à utiliser pour la physique** (`world.step` de JBox2D).
 
 ## Conventions de code
 
@@ -89,7 +92,8 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 
 ## Règles pour Claude
 
-- Ne jamais importer `MightyLibrary.project.*` depuis `mightylib` (une violation existe déjà : `ZoomingCameraComponent` → `ActionId`).
+- Ne jamais importer `MightyLibrary.project.*` depuis `mightylib` : passer les IDs d'action en paramètre (ex. `ZoomingCameraComponent.initActionId`).
+- **Fins de ligne** : le dépôt mélange des fichiers stockés en LF et en CRLF, avec `core.autocrlf=true`. Ne jamais réécrire un fichier source avec `sed`/redirection shell (le `sed` de Git Bash retire les CR) : utiliser l'outil Edit. Avant de commiter, vérifier `git diff --cached --stat` : un fichier entier modifié signale un changement de fins de ligne. Pour un fichier stocké en CRLF (`git ls-files --eol <fichier>` → `i/crlf`), l'ajouter avec `git -c core.autocrlf=false add <fichier>`.
 - Tout code GL s'exécute sur le thread principal. Les workers de `Resources` ne doivent faire que de l'I/O/CPU.
 - Toute ressource GL créée dans une scène doit être libérée dans `unload()` (renderers, shapes, textures via `releaseResource`).
 - Pas de test automatisé : décrire comment vérifier manuellement (quelle scène lancer, quoi observer).
@@ -99,7 +103,6 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 
 - Recharger une `TextureData` relit les pixels mais ne met pas à jour les `Texture` GL déjà créées à partir d'elle : le rechargement à chaud ne se voit pas à l'écran.
 - `GLResources` : `PriorityQueue<GLElement>` alors que `GLElement` n'implémente pas `Comparable` ; `addElementToLoadOrReturnIfPresent` lit `resources.get(type)` avant `putIfAbsent`.
-- `ContextManager.createNewContext(name)` (sans `WindowCreationInfo`) → NPE sur `wci.KeyboardLanguage`.
 - `Resources.getInstance()` crée silencieusement une instance par défaut s'il est appelé avant `createInstance`.
 
 ### Spécifiques 2D
@@ -107,4 +110,4 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 - `Shape.updateVbo` fait un `glBufferData` (réallocation) et les `calculate*()` allouent un nouveau `float[]` : appelé à chaque changement de frame d'animation ou de texte.
 - `TileMapRenderer.update()` : dès qu'une tuile animée change de frame, **toute la carte** (positions, UV, indices) est recalculée et réuploadée.
 - `Shape2DRenderer` alloue ses VBO en `STATIC_STORE` alors qu'ils sont mis à jour à l'exécution.
-- `GameTime.DeltaTime()` est un temps réel variable, passé tel quel à `world.step()` de JBox2D (physique non déterministe ; préférer un pas fixe `1/TPS`).
+- La boucle principale abandonne les ticks en retard : sous forte charge le jeu ralentit au lieu de rattraper (la physique à pas fixe reste stable, mais le temps de jeu dérive du temps réel).
