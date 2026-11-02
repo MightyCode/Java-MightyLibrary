@@ -11,7 +11,6 @@ import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.sounds.SoundSourceCreationInfo;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
-import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
@@ -19,6 +18,7 @@ import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
 import MightyLibrary.mightylib.physics.tweenings.type.FloatTweening;
 import MightyLibrary.project.main.ActionId;
+import MightyLibrary.project.scenes.Platformer2D.Test2DPlatformerBox2D;
 import MightyLibrary.project.scenes.loadingScenes.FirstLoadingScene;
 import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
@@ -219,6 +219,10 @@ public class MenuScene extends Scene {
         if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
                 inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F3) )
             sceneManagerInterface.setNewScene(new Test3DSceneTerrainGeneration(), new String[]{""});
+
+        if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
+                inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F4) )
+            sceneManagerInterface.setNewScene(new Test2DPlatformerBox2D(), new String[]{""});
 
     }
 

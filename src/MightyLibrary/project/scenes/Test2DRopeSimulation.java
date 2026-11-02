@@ -30,10 +30,6 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class Test2DRopeSimulation extends Scene {
 
-    interface CallBackUpdate {
-        void update();
-    }
-
     static class Point implements IUpdatableDisplayable {
         private final RectangleRenderer renderer;
 

@@ -93,6 +93,12 @@ public abstract class Shape2DRenderer extends Renderer {
     }
 
     // Set size with size of pixel
+    public Shape2DRenderer setSizePix(Vector2f newSize){
+        setScale(new Vector3f(newSize.x, newSize.y, 1.0f));
+
+        return this;
+    }
+
     public Shape2DRenderer setSizePix(float width, float height){
         setScale(new Vector3f(width, height, 1.0f));
 
