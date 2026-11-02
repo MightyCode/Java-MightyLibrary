@@ -260,16 +260,12 @@ public class TileMapRenderer extends Renderer {
     public void update(){
         boolean needUpdate = tilemap.hasBeenUpdated();
 
+        // Every animation must advance each tick, otherwise they drift apart
         for (AnimatedTile animatedTile : animatedTiles) {
-            if (needUpdate)
-                break;
-
             animatedTile.update();
 
-            if (animatedTile.hasBeenUpdated()) {
+            if (animatedTile.hasBeenUpdated())
                 needUpdate = true;
-                break;
-            }
         }
 
         if (needUpdate)
