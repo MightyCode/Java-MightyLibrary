@@ -136,6 +136,10 @@ public final class MainLoop {
         int ticks = 0;
         int frames = 0;
 
+        // CPU time spent in update and display, to measure optimizations independently of the FPS cap
+        long tickNanos = 0;
+        long frameNanos = 0;
+
         double lastTick = 0.0;
         double lastFrame = 0.0;
         double lastSecond = 0.0;
@@ -149,15 +153,20 @@ public final class MainLoop {
         while (!window.wantExit()) {
             long now = System.nanoTime() - start;
             if (now - lastTick >= tickTime) {
+                long tickStart = System.nanoTime();
                 GameTime.update();
                 sceneManager.update();
                 sceneManager.dispose();
+                tickNanos += System.nanoTime() - tickStart;
                 ++ticks;
 
                 while (now - lastTick >= tickTime)
                     lastTick += tickTime;
             } else if (now - lastFrame >= frameTime) {
+                long frameStart = System.nanoTime();
                 sceneManager.display();
+                // Measured before the buffer swap, which can wait for the GPU
+                frameNanos += System.nanoTime() - frameStart;
                 window.dispose();
                 ++frames;
                 while (now - lastFrame >= frameTime)
@@ -165,10 +174,15 @@ public final class MainLoop {
             }
 
             if (now - lastSecond >= NANO_IN_SECOND) {
-                if (MainLoop.admin)
-                    window.setTitle(startLibraryProcedure.returnProjectName() + " | FPS:" + frames + "; TPS:" + ticks);
+                if (MainLoop.admin) {
+                    window.setTitle(String.format("%s | FPS:%d; TPS:%d | Frame: %.2f ms; Tick: %.2f ms",
+                            startLibraryProcedure.returnProjectName(), frames, ticks,
+                            frames == 0 ? 0 : frameNanos / 1e6 / frames,
+                            ticks == 0 ? 0 : tickNanos / 1e6 / ticks));
+                }
 
                 ticks = frames = 0;
+                tickNanos = frameNanos = 0;
                 lastSecond += NANO_IN_SECOND;
             }
 
