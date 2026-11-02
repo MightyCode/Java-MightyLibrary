@@ -4,7 +4,6 @@ import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
 import MightyLibrary.mightylib.main.utils.IUpdatable;
 import MightyLibrary.mightylib.scenes.camera.Camera2D;
-import MightyLibrary.project.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
@@ -21,6 +20,8 @@ public class ZoomingCameraComponent implements IUpdatable {
     protected int quickZoomActionId;
 
     public ZoomingCameraComponent(){
+        // No quick zoom action until initActionId is called
+        quickZoomActionId = -1;
     }
 
     public void init(InputManager inputManager, MouseManager mouseManager, Camera2D controlledCamera,
@@ -47,7 +48,7 @@ public class ZoomingCameraComponent implements IUpdatable {
                             mouseManager.posY() / windowSize.y
                     ));
 
-            if (inputManager.getState(ActionId.SHIFT))
+            if (inputManager.getState(quickZoomActionId))
                 zoom(new Vector2f(1 + mouseManager.getMouseScroll().y * 0.1f, 1));
             else
                 zoom(new Vector2f(1 + mouseManager.getMouseScroll().y * 0.1f));
