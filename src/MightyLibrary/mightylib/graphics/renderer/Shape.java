@@ -32,6 +32,8 @@ public class Shape {
     protected int vao, ebo;
     protected ArrayList<Integer> vbos;
     protected ArrayList<Integer> vbosStorage;
+    // Number of elements currently allocated for each vbo, to update without reallocating when it doesn't change
+    protected ArrayList<Integer> vbosSize;
     protected ArrayList<Boolean> vbosEnable;
     protected int vboCount;
     protected int indicesSize;
@@ -63,6 +65,7 @@ public class Shape {
         bind();
         vbos = new ArrayList<>();
         vbosStorage = new ArrayList<>();
+        vbosSize = new ArrayList<>();
         vbosEnable = new ArrayList<>();
         vboCount = 0;
         ebo = 0;
@@ -108,6 +111,7 @@ public class Shape {
         verticesToDraw = arrayLength / vertexSize;
         vbos.add(vbo);
         vbosStorage.add(storage);
+        vbosSize.add(arrayLength);
         ++vboCount;
 
         return vbos.size() - 1;
@@ -117,13 +121,27 @@ public class Shape {
     public void updateVbo(float[] vertices, int vboPosition){
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
-        glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+
+        // Same size: overwrite the existing storage instead of reallocating it
+        if (vbosSize.get(vboPosition) == vertices.length) {
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices);
+        } else {
+            glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+            vbosSize.set(vboPosition, vertices.length);
+        }
     }
 
     public void updateVbo(int[] vertices, int vboPosition){
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
-        glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+
+        // Same size: overwrite the existing storage instead of reallocating it
+        if (vbosSize.get(vboPosition) == vertices.length) {
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices);
+        } else {
+            glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+            vbosSize.set(vboPosition, vertices.length);
+        }
     }
 
 
@@ -349,6 +367,7 @@ public class Shape {
         vbos.clear();
         vbosEnable.clear();
         vbosStorage.clear();
+        vbosSize.clear();
         vboCount = 0;
     }
 

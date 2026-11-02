@@ -51,11 +51,12 @@ public class Text extends Renderer implements Cloneable {
         this.rectangleSize = new Vector2f(0, 0);
         this.leftUpPosition = new Vector2f(0, 0);
 
-        shape.setEboStorage(Shape.STATIC_STORE);
+        // Dynamic: text content can change every frame (debug info, counters...)
+        shape.setEboStorage(Shape.DYNAMIC_STORE);
         shape.setEbo(new int[0]);
 
-        positionIndex = shape.addVboFloat(new float[0], 2, Shape.STATIC_STORE);
-        textureIndex = shape.addVboFloat(new float[0], 2, Shape.STATIC_STORE);
+        positionIndex = shape.addVboFloat(new float[0], 2, Shape.DYNAMIC_STORE);
+        textureIndex = shape.addVboFloat(new float[0], 2, Shape.DYNAMIC_STORE);
     }
 
     private boolean shouldNotDrawText(){
