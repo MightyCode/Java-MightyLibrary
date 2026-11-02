@@ -86,7 +86,8 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 - Java 11 : pas de `record`, pas de `switch` expression, pas de `var` dans les lambdas… reste compatible 11.
 - Accolades K&R, 4 espaces, commentaires en anglais, peu de Javadoc.
 - Champs publics « config » en PascalCase (`wci.Size`, `resources.Loaders`), méthodes statiques utilitaires souvent en PascalCase (`GenDeleteResources.GenBuffers`, `Logger.CheckOpenGLError`). Enums préfixées `E` (`EDrawMode`, `EInputType`). Interfaces préfixées `I`.
-- Après un appel GL sensible : `Logger.CheckOpenGLError("message")`.
+- Après un appel GL sensible : `Logger.CheckOpenGLError("message")`. Ces vérifications (`glGetError`) ne sont actives que si `IStartLibraryProcedure.returnOpenGLErrorCheckState()` renvoie `true` (désactivées par défaut). Dans le code appelé à chaque dessin, entourer l'appel de `if (Logger.DO_CHECK)` pour ne pas construire le message inutilement.
+- Mesure de performance : en mode admin, le titre de la fenêtre affiche le temps CPU moyen par frame (`display()`, hors swap) et par tick. Le FPS étant plafonné, c'est ce chiffre qui sert à comparer avant/après une optimisation.
 - Logs via `System.out/err.println` avec préfixe `--` pour les étapes moteur.
 - Les scènes de test (`Test*Scene`) servent de démo/régression manuelle : en ajouter une plutôt que de modifier une existante pour tester une fonctionnalité.
 
@@ -107,7 +108,7 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 
 ### Spécifiques 2D
 - Pas de batching : chaque sprite/forme (`Shape2DRenderer`, `Animation2DRenderer`, `Text`) a son propre VAO/VBO/EBO et son draw call, avec `glUseProgram` + uniforms + toggle du depth test à chaque dessin.
-- `Shape.updateVbo` fait un `glBufferData` (réallocation) et les `calculate*()` allouent un nouveau `float[]` : appelé à chaque changement de frame d'animation ou de texte.
-- `TileMapRenderer.update()` : dès qu'une tuile animée change de frame, **toute la carte** (positions, UV, indices) est recalculée et réuploadée.
-- `Shape2DRenderer` alloue ses VBO en `STATIC_STORE` alors qu'ils sont mis à jour à l'exécution.
+- `Shape.updateVbo` réutilise le buffer (`glBufferSubData`) si la taille ne change pas, sinon il réalloue : préférer des tableaux de taille constante pour les données mises à jour souvent. Les `calculate*()` allouent encore un nouveau `float[]` à chaque appel.
+- `TileMapRenderer` : une animation de tuile ne réécrit que les UV des tuiles concernées ; une modification de la carte (`TileMap.hasBeenUpdated()`) reconstruit toujours tout.
+- `Shape2DRenderer` alloue ses VBO en `STATIC_STORE` même quand ils sont mis à jour à l'exécution.
 - La boucle principale abandonne les ticks en retard : sous forte charge le jeu ralentit au lieu de rattraper (la physique à pas fixe reste stable, mais le temps de jeu dérive du temps réel).
