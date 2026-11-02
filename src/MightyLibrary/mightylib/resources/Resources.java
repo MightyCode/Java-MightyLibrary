@@ -158,8 +158,10 @@ public class Resources {
             }
         }
 
-        process(-1);
-        while(!finishedCurrentLoading()){}
+        // Main context entries may depend on worker results, so keep processing until everything is done
+        do {
+            process(-1);
+        } while (!finishedCurrentLoading());
 
         finishLoading();
     }
@@ -208,9 +210,13 @@ public class Resources {
                 break;
             case UNLOAD:
                 entry.Data.unload();
+
+                if ("Delete".equals(entry.info))
+                    deleteResource(entry.Data);
                 break;
             case RELOAD:
                 entry.Loader.reload(entry.Data);
+                notifyPreLoadedResources(entry.Data);
                 break;
         }
     }
@@ -244,7 +250,7 @@ public class Resources {
     }
 
     boolean remainingResourceToProcess() {
-        return remainingResourceToProcess(true) && remainingResourceToProcess(false);
+        return remainingResourceToProcess(true) || remainingResourceToProcess(false);
     }
 
     boolean remainingResourceToProcess(boolean isMainContext) {
@@ -260,7 +266,24 @@ public class Resources {
         }
     }
 
+    // An entry is obsolete when its action has nothing left to do, keeping it would block the queue forever
+    private static boolean isObsolete(ResourceEntry entry) {
+        switch (entry.Action) {
+            case PRELOAD:
+                return entry.Data.isPreLoaded();
+            case LOAD:
+                return entry.Data.isLoaded();
+            case UNLOAD:
+            case RELOAD:
+                return !entry.Data.isPreLoaded() && !entry.Data.isLoaded();
+        }
+
+        return false;
+    }
+
     ResourceEntry getNextResourceToProcessMainContext() {
+        resourcesToProcessMainContext.removeIf(Resources::isObsolete);
+
         ResourceEntry first = resourcesToProcessMainContext.poll();
         ResourceEntry current = first;
         boolean start = true;
@@ -297,6 +320,8 @@ public class Resources {
         queueLock.lock();
 
         try {
+            resourcesToProcess.removeIf(Resources::isObsolete);
+
             int indexCurrent = 0;
             if (resourcesToProcess.isEmpty())
                 return null;
