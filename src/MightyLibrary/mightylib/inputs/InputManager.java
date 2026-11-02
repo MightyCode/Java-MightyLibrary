@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.inputType.EInputType;
 import MightyLibrary.mightylib.inputs.inputType.InputSimple;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +38,10 @@ public class InputManager {
 
     private final Map<Integer, ActionInput> actionConfigurations;
 
+    // Simulated actions (commands, scripts), combined with the real inputs
+    private final InputSimulation simulation;
+    public InputSimulation getSimulation() { return simulation; }
+
 
     /**
      * Input manager class.
@@ -47,6 +52,7 @@ public class InputManager {
         this.mouseManager = mouseManager;
 
         actionConfigurations = new HashMap<>();
+        simulation = new InputSimulation();
     }
 
 
@@ -64,7 +70,7 @@ public class InputManager {
         if (actionInput == null)
             return false;
 
-        return actionInput.getState(this);
+        return actionInput.getState(this) || simulation.getState(inputID);
     }
 
 
@@ -73,7 +79,7 @@ public class InputManager {
         if (actionInput == null)
             return false;
 
-        return actionInput.actionPressed(this);
+        return actionInput.actionPressed(this) || simulation.pressed(inputId);
     }
 
 
@@ -82,13 +88,33 @@ public class InputManager {
         if (actionInput == null)
             return false;
 
-        return actionInput.actionReleased(this);
+        return actionInput.actionReleased(this) || simulation.released(inputID);
+    }
+
+    // Find a configured action by its name (case insensitive) or its numeric id, null if unknown
+    public ActionInput findAction(String nameOrId) {
+        for (ActionInput actionInput : actionConfigurations.values()) {
+            if (actionInput.actionName().equalsIgnoreCase(nameOrId))
+                return actionInput;
+        }
+
+        try {
+            return actionConfigurations.get(Integer.parseInt(nameOrId));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public Collection<ActionInput> getActions() {
+        return actionConfigurations.values();
     }
 
 
+    // Compute the inputs of the next tick
     public void dispose(){
         keyManager.dispose();
         mouseManager.dispose();
+        simulation.update();
     }
 
 

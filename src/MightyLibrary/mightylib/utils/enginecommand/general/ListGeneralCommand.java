@@ -18,5 +18,6 @@ public abstract class ListGeneralCommand {
         commands.addCommand(new ScreenshotGenCom());
         commands.addCommand(new SceneGenCom(sceneManager));
         commands.addCommand(new GLGenCom());
+        commands.addCommand(new InputGenCom());
     }
 }
