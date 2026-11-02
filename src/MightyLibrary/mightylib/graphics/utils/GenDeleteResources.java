@@ -90,7 +90,7 @@ public abstract class GenDeleteResources {
     }
 
     public static void DeleteTexture(Integer texture) {
-        Textures.add(texture);
+        Textures.remove(texture);
         glDeleteTextures(texture);
     }
 

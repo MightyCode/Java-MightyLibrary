@@ -133,7 +133,10 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     @Override
     public void unload(int remainingMilliseconds) {
-        if (data.isLoaded())
+        // The GL texture exists independently of its CPU data, which can already be unloaded
+        if (textureId != -1) {
             GenDeleteResources.DeleteTexture(textureId);
+            textureId = -1;
+        }
     }
 }
