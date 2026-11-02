@@ -10,6 +10,17 @@ public class GameTime {
 
     private static final float NANO_TO_SEC = 1000000000.0f;
 
+    // Duration of one tick (1 / TPS), to use for deterministic simulations like physics
+    private static float fixedDeltaTime = 1f / 60f;
+
+    public static float FixedDeltaTime(){
+        return fixedDeltaTime;
+    }
+
+    public static void setFixedDeltaTime(float newFixedDeltaTime){
+        fixedDeltaTime = newFixedDeltaTime;
+    }
+
     public GameTime(){
         elapsedTime = 0;
         currentTime = System.nanoTime();

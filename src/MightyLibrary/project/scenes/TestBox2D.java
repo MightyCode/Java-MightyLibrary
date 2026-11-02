@@ -170,7 +170,7 @@ public class TestBox2D extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        world.step(GameTime.DeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
+        world.step(GameTime.FixedDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
         MouseManager mouseManager = mainContext.getMouseManager();
         InputManager inputManager = mainContext.getInputManager();

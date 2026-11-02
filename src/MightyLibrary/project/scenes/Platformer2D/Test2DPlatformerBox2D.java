@@ -48,6 +48,8 @@ public class Test2DPlatformerBox2D extends Scene {
         // === Player ===
         PlayerController controller = new PlayerController(mainContext.getInputManager());
         player = new PlayerManager(world, controller, new Vec2(0, 5), main2DCamera, mainContext.getWindow().getInfo().getSizeCopy());
+
+        setContactListener();
     }
 
     private StaticBox createStaticBox(Vec2 pos, Vec2 size, Color4f color) {
@@ -58,17 +60,14 @@ public class Test2DPlatformerBox2D extends Scene {
     public void update() {
         super.update();
 
-        float dt = GameTime.DeltaTime();
-
-        world.step(dt, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
+        // Fixed step keeps the physics deterministic
+        world.step(GameTime.FixedDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
         player.update();
-
-        checkCollisions();
     }
 
 
-    private void checkCollisions() {
+    private void setContactListener() {
         world.setContactListener(new ContactListener() {
             @Override
             public void beginContact(Contact contact) {

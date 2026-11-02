@@ -59,6 +59,7 @@ public final class MainLoop {
 
         tickTime = NANO_IN_SECOND / startProcedure.returnTPS();
         frameTime = NANO_IN_SECOND / startProcedure.returnFPS();
+        GameTime.setFixedDeltaTime(1f / startProcedure.returnTPS());
 
         System.out.println("--Create main context.");
         contextManager = ContextManager.getInstance();
