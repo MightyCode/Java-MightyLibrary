@@ -245,5 +245,8 @@ public class MenuScene extends Scene {
 
         if (guiList != null)
             guiList.unload();
+
+        if (test != null)
+            test.unload();
     }
 }
