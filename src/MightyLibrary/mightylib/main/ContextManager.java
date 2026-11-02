@@ -4,6 +4,8 @@ import MightyLibrary.mightylib.inputs.inputType.ActionInput;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.inputs.KeyboardManager;
 import MightyLibrary.mightylib.inputs.MouseManager;
+import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
+import MightyLibrary.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,7 +44,10 @@ public class ContextManager {
 
         window.createNewWindow();
 
-        KeyboardManager keyboardManager = new KeyboardManager(window.getInfo(), wci.KeyboardLanguage);
+        KeyboardLanguage keyboardLanguage = (wci != null && wci.KeyboardLanguage != null) ?
+                wci.KeyboardLanguage : QWERTKeyboardLanguage.getInstance();
+
+        KeyboardManager keyboardManager = new KeyboardManager(window.getInfo(), keyboardLanguage);
         MouseManager mouseManager = new MouseManager(window.getInfo());
         InputManager inputManager = new InputManager(keyboardManager, mouseManager);
         inputManager.init(new ActionInput[]{});

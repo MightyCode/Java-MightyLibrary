@@ -3,7 +3,6 @@ package MightyLibrary.mightylib.main;
 import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
-import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
 import MightyLibrary.mightylib.main.utils.GameTime;
@@ -144,7 +143,6 @@ public final class MainLoop {
         long start = System.nanoTime();
 
         Context mainContext = contextManager.getMainContext();
-        mainContext.getKeyboardManager().setKeyboardLanguage(AZERTYKeyboardLanguage.getInstance());
 
         Window window = mainContext.getWindow();
 
