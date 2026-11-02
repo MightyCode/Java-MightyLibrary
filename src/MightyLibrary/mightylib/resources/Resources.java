@@ -393,7 +393,15 @@ public class Resources {
                 return resourceLoader.getType();
         }
 
-        return DataType.class;
+        return null;
+    }
+
+    private static Class<? extends DataType> getClassFromBatchName(String batchName, String name) {
+        Class<? extends DataType> type = getClassFromName(name);
+        if (type == null)
+            throw new RuntimeException("Unknown resource type: " + name + " in batch: " + batchName);
+
+        return type;
     }
 
     public <T extends DataType> T getResource(Class<T> type, String name) {
@@ -435,7 +443,7 @@ public class Resources {
 
             String resourceTypeName = resource.getString("type");
 
-            Class<? extends DataType> type = getClassFromName(resourceTypeName);
+            Class<? extends DataType> type = getClassFromBatchName(batchName, resourceTypeName);
             ResourceLoader loader = getLoader(type);
 
             JSONArray resourceFiles = resource.getJSONArray("files");
@@ -546,7 +554,7 @@ public class Resources {
             JSONObject resource = content.getJSONObject(j);
 
             String resourceTypeName = resource.getString("type");
-            Class<? extends DataType> type = getClassFromName(resourceTypeName);
+            Class<? extends DataType> type = getClassFromBatchName(batchName, resourceTypeName);
 
             JSONArray resourceFiles = resource.getJSONArray("files");
             JSONArray regularExpressions = resource.getJSONArray("regex");
