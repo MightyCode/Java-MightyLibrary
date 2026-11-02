@@ -165,6 +165,11 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
             if (loadingScene.isFinished()) {
                 isWaitingForLoading = false;
+
+                // Its framebuffer, texts and textures would leak at each scene change otherwise
+                loadingScene.unload();
+                loadingScene = null;
+
                 this.launch(args);
             }
         } else {
@@ -209,6 +214,12 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     }
 
     public void unload() {
+        // The scene can be left while it is still loading
+        if (loadingScene != null) {
+            loadingScene.unload();
+            loadingScene = null;
+        }
+
         if (scRenderer != null)
             scRenderer.unload();
 
