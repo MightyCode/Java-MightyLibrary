@@ -84,6 +84,12 @@ public class Main {
         }
 
         @Override
+        public boolean returnOpenGLErrorCheckState() {
+            // Set to true to locate an OpenGL error, it slows down rendering
+            return false;
+        }
+
+        @Override
         public IProjectLoading returnIProjectLoading() {
             return  new ProjectLoading();
         }

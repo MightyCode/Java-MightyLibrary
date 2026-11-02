@@ -245,7 +245,10 @@ public class Shape {
 
     public void bind(){
         glBindVertexArray(vao);
-        Logger.CheckOpenGLError("Bind vao buffer : " + vao);
+
+        // Called for each draw: avoid building the message when checks are disabled
+        if (Logger.DO_CHECK)
+            Logger.CheckOpenGLError("Bind vao buffer : " + vao);
     }
 
 

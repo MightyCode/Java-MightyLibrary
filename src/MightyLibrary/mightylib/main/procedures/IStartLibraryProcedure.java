@@ -23,6 +23,11 @@ public interface IStartLibraryProcedure {
 
     boolean returnAdminState();
 
+    // Check OpenGL errors after each call (glGetError): helps to locate an error, but slows down rendering
+    default boolean returnOpenGLErrorCheckState() {
+        return false;
+    }
+
     IProjectLoading returnIProjectLoading();
 
     // Return -1 as the newest version

@@ -26,10 +26,8 @@ public class Logger {
         CheckOpenGLError("");
     }
 
+    // Shader compile and link status are always checked: only done at loading and a failure must never go unnoticed
     public static void CheckShaderError(int shader, String message) {
-        if (!DO_CHECK)
-            return;
-
         int status = glGetShaderi(shader, GL_COMPILE_STATUS);
         Logger.CheckOpenGLError("Error checking shader status: \n\t " + message);
 
@@ -40,9 +38,6 @@ public class Logger {
     }
 
     public static void CheckProgramError(int program, String message) {
-        if (!DO_CHECK)
-            return;
-
         int status = glGetProgrami(program, GL_LINK_STATUS);
         Logger.CheckOpenGLError("Error checking program status: \n\t" + message);
 

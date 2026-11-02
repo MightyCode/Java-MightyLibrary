@@ -10,6 +10,7 @@ import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Icon;
 import MightyLibrary.mightylib.scenes.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
+import MightyLibrary.mightylib.utils.Logger;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
 
@@ -48,6 +49,7 @@ public final class MainLoop {
 
     private static void setup(IStartLibraryProcedure startProcedure) {
         admin = startProcedure.returnAdminState();
+        Logger.DO_CHECK = startProcedure.returnOpenGLErrorCheckState();
 
         System.out.println("--Start program.");
         System.out.println("--Load libraries.");

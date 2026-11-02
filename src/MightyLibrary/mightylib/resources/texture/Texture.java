@@ -49,7 +49,10 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         glActiveTexture(GL_TEXTURE0 + texturePos);
         if (isLoaded()){
             glBindTexture(textureType, textureId);
-            Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
+
+            // Called for each draw: avoid building the message when checks are disabled
+            if (Logger.DO_CHECK)
+                Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
         // If isn't correct loaded, bind error texture
         } else {
             throw new RuntimeException("Texture : " + data.getDataName() + " , isn't loaded!");

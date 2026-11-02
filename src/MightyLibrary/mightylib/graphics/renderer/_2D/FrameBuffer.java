@@ -82,9 +82,11 @@ public class FrameBuffer implements IRenderTextureBindable {
     @Override
     public void bindRenderTexture(int position){
         glActiveTexture(GL_TEXTURE0 + position);
-        Logger.CheckOpenGLError("Active Texture : " + position);
         glBindTexture(GL_TEXTURE_2D, renderTextureId);
-        Logger.CheckOpenGLError("Bind Texture : " + renderTextureId);
+
+        // Called for each draw: avoid building the message when checks are disabled
+        if (Logger.DO_CHECK)
+            Logger.CheckOpenGLError("Bind Texture : " + renderTextureId);
     }
 
     public void unbindRenderTexture(){
