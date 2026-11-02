@@ -62,9 +62,13 @@ public class ResourceWorker extends Thread {
                         System.out.println("Thread " + threadNumber + " error loading/unloading/reloading " + entry.Data.getClass().getSimpleName() + " : " + entry.Data.getDataName());
                     }*/
                 }
-
-                entry = resource.getNextResourceToProcess();
+            } else {
+                // Remaining entries are waiting for their dependencies
+                Thread.onSpinWait();
             }
+
+            // Always query again, otherwise a worker that found nothing ready would spin forever
+            entry = resource.getNextResourceToProcess();
         }
 
         //System.out.println("End of thread " + threadNumber);

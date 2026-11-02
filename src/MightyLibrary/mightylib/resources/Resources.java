@@ -515,7 +515,9 @@ public class Resources {
 
     public void reloadAllOfType(Class<? extends DataType> typeOfResource) {
         for (DataType dataType : resources.get(typeOfResource).values()) {
-            addResourceToProcess(new ResourceEntry(getLoader(typeOfResource), dataType, ResourceEntry.ActionEnum.RELOAD));
+            // Only loaded data can be reloaded
+            if (dataType.isLoaded())
+                addResourceToProcess(new ResourceEntry(getLoader(typeOfResource), dataType, ResourceEntry.ActionEnum.RELOAD));
         }
     }
 
