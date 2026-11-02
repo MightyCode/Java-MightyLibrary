@@ -10,37 +10,47 @@ import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import org.joml.*;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 public class TileMapRenderer extends Renderer {
+    // Tile of the map using an animation: where it is in the buffers, to update only its texture position
+    private static class AnimatedTileInstance {
+        private final int bufferIndex;
+        private final int tileSetIndex;
+
+        public AnimatedTileInstance(int bufferIndex, int tileSetIndex) {
+            this.bufferIndex = bufferIndex;
+            this.tileSetIndex = tileSetIndex;
+        }
+    }
+
     private static class AnimatedTile {
         private float countTime;
         private int currentFrame;
         private int oldTileId;
-        private final List<TilePosition> listConcernedTiles;
+        private final List<AnimatedTileInstance> concernedTiles;
 
         private final TileSet.TileAnimation animation;
 
         public AnimatedTile(TileSet.TileAnimation animation) {
             this.animation = animation;
-            listConcernedTiles = new ArrayList<>();
+            concernedTiles = new ArrayList<>();
 
             countTime = 0;
             currentFrame = 0;
             oldTileId = -1;
         }
 
-        public void addConcernedTile(TilePosition tile){
-            listConcernedTiles.add(tile);
+        public void addConcernedTile(AnimatedTileInstance tile){
+            concernedTiles.add(tile);
         }
 
-        public void addConcernedTiles(Collection<TilePosition> tiles){
-            listConcernedTiles.addAll(tiles);
+        public void clearConcernedTiles(){
+            concernedTiles.clear();
         }
 
-        public Collection<TilePosition> getConcernedTiles(){
-            return listConcernedTiles;
+        public List<AnimatedTileInstance> getConcernedTiles(){
+            return concernedTiles;
         }
 
         public TileSet.TileAnimation getAnimationData(){
@@ -204,6 +214,10 @@ public class TileMapRenderer extends Renderer {
         int layerIndexFrom = tilemap.getLayerCategoryFrom(layerCategory);
         int layerIndexTo = tilemap.getLayerCategoryTo(layerCategory);
 
+        // Rebuilt from scratch below, otherwise the lists would grow at each reload
+        for (AnimatedTile animatedTile : animatedTiles)
+            animatedTile.clearConcernedTiles();
+
         for (int layer = layerIndexFrom; layer <= layerIndexTo; ++layer) {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
@@ -226,7 +240,7 @@ public class TileMapRenderer extends Renderer {
                         if (animatedTile.getAnimationData().getReferenceId() == rawTileType) {
                             //System.out.println("changed to " + animatedTile.getCurrentTileId());
                             rawTileType = animatedTile.getCurrentTileId();
-                            animatedTile.addConcernedTile(new TilePosition(x, y, layer));
+                            animatedTile.addConcernedTile(new AnimatedTileInstance(tileCount, tileSetIndex));
                         }
                     }
 
@@ -258,18 +272,39 @@ public class TileMapRenderer extends Renderer {
     }
 
     public void update(){
-        boolean needUpdate = tilemap.hasBeenUpdated();
+        boolean animationChanged = false;
 
         // Every animation must advance each tick, otherwise they drift apart
         for (AnimatedTile animatedTile : animatedTiles) {
             animatedTile.update();
 
-            if (animatedTile.hasBeenUpdated())
-                needUpdate = true;
+            if (animatedTile.hasBeenUpdated()) {
+                updateAnimatedTileTexture(animatedTile);
+                animationChanged = true;
+            }
         }
 
-        if (needUpdate)
+        // A map change needs a full rebuild, an animation only changes texture positions
+        if (tilemap.hasBeenUpdated())
             loadTileMapInformation();
+        else if (animationChanged)
+            shape.updateVbo(tilesTexturePosition, textureIndex);
+    }
+
+    private void updateAnimatedTileTexture(AnimatedTile animatedTile) {
+        int currentTileId = animatedTile.getCurrentTileId();
+
+        for (AnimatedTileInstance tile : animatedTile.getConcernedTiles()) {
+            TileSet tileSet = tileSetAtlas.getTileSet(tile.tileSetIndex);
+
+            Vector2i tileTexturePosition = getTilePosition(tileSet.getConvertedId(currentTileId), tileSet.tilesNumberAxis());
+            Vector4f tileTextureRect = getTileTextureRect(tileTexturePosition, tile.tileSetIndex);
+
+            setTexturePosition(tilesTexturePosition, tile.bufferIndex * SIZE_COORDINATES,
+                    tileTextureRect,
+                    tileSet.getTileRotation(currentTileId),
+                    tileSet.getTileFlip(currentTileId));
+        }
     }
 
     private void setTilesIndices(int[] tilesIndices, int tileCount) {
