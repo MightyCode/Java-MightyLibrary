@@ -18,7 +18,8 @@ import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -33,8 +34,9 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     protected SceneManagerInterface sceneManagerInterface;
     private VirtualSceneRenderer scRenderer;
 
-    private final ArrayList<IUpdatable> updatables = new ArrayList<>();
-    private final ArrayList<IDisplayable> displayables = new ArrayList<>();
+    // Copy on write: objects can be added or removed while the lists are iterated (update, display...)
+    private final List<IUpdatable> updatables = new CopyOnWriteArrayList<>();
+    private final List<IDisplayable> displayables = new CopyOnWriteArrayList<>();
 
     private TemplateSceneLoading loadingScene = null; // can be null
     private boolean isWaitingForLoading = false;
