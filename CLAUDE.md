@@ -49,8 +49,9 @@ Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux
 - À ajouter : segments et polylignes avec épaisseur, contours (outline) de toutes les formes, cercle/disque, triangle, rectangle arrondi, arc/secteur, points, flèches, grille ; et une API de dessin immédiat pour le debug (« dessine une ligne de A à B cette frame », utile pour la physique).
 - **Regroupement des dessins** (style `SpriteBatch`) : accumuler les quads de même texture/shader dans un buffer dynamique et dessiner en un appel. Complémentaire de `TextureDataAtlas` (un atlas réduit les changements de texture, seul le batch réduit les appels de dessin). À décider sur mesures (`stats` : `drawCallsPerFrame`).
 
-### 5. Entrées : remappage des touches
-Touches modifiables à l'exécution et sauvegardées/chargées depuis un fichier (le README liste aussi : chargement des entrées par fichier, scène prefab de changement des touches). Support des manettes à prévoir dans le même modèle d'actions.
+### 5. Entrées : remappage des touches et manettes
+- Touches modifiables à l'exécution et sauvegardées/chargées depuis un fichier (le README liste aussi : chargement des entrées par fichier, scène prefab de changement des touches).
+- **Support des manettes** (GLFW gamepad : boutons et axes), intégré au même modèle d'actions et remappable comme le clavier.
 
 ### 6. Son : formats
 Constat : `SoundLoader.filterFile` n'accepte que `.ogg` (décodé par STB Vorbis) ; **le WAV n'est plus chargé** malgré le README. Rétablir le WAV, envisager d'autres formats, et le streaming pour les musiques longues (aujourd'hui tout le fichier est décodé en mémoire).
@@ -65,7 +66,6 @@ Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son systèm
 ### 9. Intégrations plateformes
 - **Discord** : présence enrichie (statut de jeu) via le SDK Discord, bindings Java à évaluer.
 - **Steam** : Steamworks (succès, overlay, statistiques…) ; il existe des bindings Java à évaluer.
-- **Support console** : à préciser avec l'utilisateur (manettes, ou plateformes consoles de jeu ; Java sur consoles est très difficile).
 
 ## Priorités
 
