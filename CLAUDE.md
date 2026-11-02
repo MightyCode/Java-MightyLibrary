@@ -145,6 +145,7 @@ python tools/mighty.py exit
 
 ## Règles pour Claude
 
+- **Vérifier par le texte, pas par l'image** : une capture d'écran coûte bien plus cher à analyser qu'une réponse texte. Récupérer d'abord l'information par les commandes (`scene`, `stats`, `gl`, `input list`…) et la console du jeu. Ne faire de `screenshot` que pour vérifier un rendu qu'aucune donnée texte ne peut confirmer (aspect visuel, artefacts), et une seule à la fois. Quand une information utile manque, ajouter une commande (ou enrichir une existante) qui la renvoie en texte/JSON plutôt que de passer par une capture.
 - Ne jamais importer `MightyLibrary.project.*` depuis `mightylib` : passer les IDs d'action en paramètre (ex. `ZoomingCameraComponent.initActionId`).
 - **Fins de ligne** : le dépôt mélange des fichiers stockés en LF et en CRLF, avec `core.autocrlf=true`. Ne jamais réécrire un fichier source avec `sed`/redirection shell (le `sed` de Git Bash retire les CR) : utiliser l'outil Edit. Avant de commiter, vérifier `git diff --cached --stat` : un fichier entier modifié signale un changement de fins de ligne. Pour un fichier stocké en CRLF (`git ls-files --eol <fichier>` → `i/crlf`), l'ajouter avec `git -c core.autocrlf=false add <fichier>`.
 - Tout code GL s'exécute sur le thread principal. Les workers de `Resources` ne doivent faire que de l'I/O/CPU.
