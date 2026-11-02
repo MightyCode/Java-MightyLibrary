@@ -3,14 +3,19 @@ package MightyLibrary.mightylib.main;
 import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
+import MightyLibrary.mightylib.graphics.utils.Screenshot;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
+import MightyLibrary.mightylib.main.utils.EngineStats;
+import MightyLibrary.mightylib.main.utils.FrameEvent;
 import MightyLibrary.mightylib.main.utils.GameTime;
+import MightyLibrary.mightylib.main.utils.TickEvent;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.texture.Icon;
 import MightyLibrary.mightylib.scenes.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.utils.Logger;
+import MightyLibrary.mightylib.utils.enginecommand.DebugServer;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
 
@@ -22,6 +27,7 @@ public final class MainLoop {
     private final static float NANO_IN_SECOND = 1000000000.0f;
     private static ContextManager contextManager;
     private static SceneManager sceneManager;
+    private static DebugServer debugServer;
 
     private static double tickTime;
     private static double frameTime;
@@ -124,6 +130,18 @@ public final class MainLoop {
         resource.load();
         sceneManager.init(startProcedure.returnStartScene(), new String[]{"start"});
 
+        // Commands are only processed in admin state
+        if (admin) {
+            sceneManager.getCommands().startConsole();
+
+            int debugServerPort = startProcedure.returnDebugServerPort();
+            if (debugServerPort > 0) {
+                debugServer = new DebugServer(sceneManager.getCommands(), debugServerPort);
+                if (!debugServer.start())
+                    debugServer = null;
+            }
+        }
+
         if (startProcedure.returnIconName() != null) {
             if (resource.isExistingResource(Icon.class, startProcedure.returnIconName()))
                 context.getWindow().setIcon(resource.getResource(Icon.class, startProcedure.returnIconName()));
@@ -155,20 +173,28 @@ public final class MainLoop {
         while (!window.wantExit()) {
             long now = System.nanoTime() - start;
             if (now - lastTick >= tickTime) {
+                TickEvent tickEvent = new TickEvent();
+                tickEvent.begin();
                 long tickStart = System.nanoTime();
                 GameTime.update();
                 sceneManager.update();
                 sceneManager.dispose();
                 tickNanos += System.nanoTime() - tickStart;
+                tickEvent.commit();
                 ++ticks;
 
                 while (now - lastTick >= tickTime)
                     lastTick += tickTime;
             } else if (now - lastFrame >= frameTime) {
+                FrameEvent frameEvent = new FrameEvent();
+                frameEvent.begin();
                 long frameStart = System.nanoTime();
                 sceneManager.display();
                 // Measured before the buffer swap, which can wait for the GPU
                 frameNanos += System.nanoTime() - frameStart;
+                frameEvent.commit();
+
+                Screenshot.captureIfRequested(window.getInfo().getWindowId());
                 window.dispose();
                 ++frames;
                 while (now - lastFrame >= frameTime)
@@ -176,11 +202,12 @@ public final class MainLoop {
             }
 
             if (now - lastSecond >= NANO_IN_SECOND) {
+                EngineStats.endSecond(frames, ticks, frameNanos, tickNanos);
+
                 if (MainLoop.admin) {
                     window.setTitle(String.format("%s | FPS:%d; TPS:%d | Frame: %.2f ms; Tick: %.2f ms",
-                            startLibraryProcedure.returnProjectName(), frames, ticks,
-                            frames == 0 ? 0 : frameNanos / 1e6 / frames,
-                            ticks == 0 ? 0 : tickNanos / 1e6 / ticks));
+                            startLibraryProcedure.returnProjectName(), EngineStats.getFps(), EngineStats.getTps(),
+                            EngineStats.getFrameMs(), EngineStats.getTickMs()));
                 }
 
                 ticks = frames = 0;
@@ -208,6 +235,9 @@ public final class MainLoop {
     }
 
     private static void exit(int status) {
+        if (debugServer != null)
+            debugServer.stop();
+
         if (status != ListError.LIBRARIES_LOAD_FAIL) {
             // Terminate GLFW and free the error callback
             preUnload();

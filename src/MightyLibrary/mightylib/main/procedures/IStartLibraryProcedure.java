@@ -28,6 +28,12 @@ public interface IStartLibraryProcedure {
         return false;
     }
 
+    // Port of the local debug server receiving commands from other processes, -1 to disable it.
+    // Commands are only available in admin state.
+    default int returnDebugServerPort() {
+        return returnAdminState() ? 7777 : -1;
+    }
+
     IProjectLoading returnIProjectLoading();
 
     // Return -1 as the newest version

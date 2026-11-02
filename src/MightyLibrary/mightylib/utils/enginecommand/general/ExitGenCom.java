@@ -1,25 +1,28 @@
 package MightyLibrary.mightylib.utils.enginecommand.general;
 
+import MightyLibrary.mightylib.main.ListError;
+import MightyLibrary.mightylib.scenes.SceneManager;
 import MightyLibrary.mightylib.utils.enginecommand.BaseCommand;
-import MightyLibrary.mightylib.utils.enginecommand.Commands;
+import MightyLibrary.mightylib.utils.enginecommand.CommandResult;
 
 public class ExitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "exit";
-    private final Commands commands;
+    private final SceneManager sceneManager;
 
-    public ExitGenCom(Commands command){
+    public ExitGenCom(SceneManager sceneManager){
         super(COMMAND_NAME, GENERAL_COMMAND);
-        this.commands = command;
+        this.sceneManager = sceneManager;
     }
 
     @Override
-    public void sendCommand(String command) {
-        commands.cancelWritingCommand(this);
+    public CommandResult execute(String[] args) {
+        sceneManager.requestExit(ListError.NO_ERROR);
+
+        return CommandResult.ok("Exiting the program");
     }
 
     @Override
-    public void help() {
-        super.help();
-        System.out.println("Exit the commands terminal");
+    public String help() {
+        return super.help() + "\nClose the program properly (scenes and resources are unloaded)";
     }
 }

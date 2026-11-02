@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.graphics.renderer;
 import MightyLibrary.mightylib.graphics.renderer.utils.EDrawMode;
 import MightyLibrary.mightylib.graphics.shader.Shader;
 import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
+import MightyLibrary.mightylib.main.utils.EngineStats;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.math.ID;
@@ -119,6 +120,7 @@ public class Shape {
 
 
     public void updateVbo(float[] vertices, int vboPosition){
+        EngineStats.countBufferUpload((long) vertices.length * Float.BYTES);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
 
@@ -132,6 +134,7 @@ public class Shape {
     }
 
     public void updateVbo(int[] vertices, int vboPosition){
+        EngineStats.countBufferUpload((long) vertices.length * Integer.BYTES);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
 
@@ -293,6 +296,8 @@ public class Shape {
     }
 
     public void draw(){
+        EngineStats.countDrawCall();
+
         if (useEbo)
             glDrawElements(glDrawMode, indicesSize, GL_UNSIGNED_INT, 0);
         else

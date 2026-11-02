@@ -2,6 +2,7 @@ package MightyLibrary.mightylib.utils.enginecommand.general;
 
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.utils.enginecommand.BaseCommand;
+import MightyLibrary.mightylib.utils.enginecommand.CommandResult;
 
 public class ChangeSoundGainCom extends BaseCommand {
     public static final String COMMAND_NAME = "changegain";
@@ -11,46 +12,39 @@ public class ChangeSoundGainCom extends BaseCommand {
     }
 
     @Override
-    public void sendCommand(String command) {
-        String[] sub = command.split(" ");
-        if(checkArgumentHelp(sub))
-            return;
+    public CommandResult execute(String[] args) {
+        if (args.length < 2)
+            return noEnoughArgumentError();
 
-        if (sub.length > 1) {
-            if (sub[1].equalsIgnoreCase("list")){
-                SoundManager.getInstance().printGainTree();
-            } else {
-                if (sub.length < 3){
-                    System.err.println("Should precise new value of gain !");
-                    return;
-                }
+        if (args[1].equalsIgnoreCase("list")){
+            SoundManager.getInstance().printGainTree();
 
-                float value;
-
-                try {
-                    value = Float.parseFloat(sub[2]);
-                } catch (NumberFormatException e){
-                    System.err.println("Should write a valid new gain value (float) !");
-                    return;
-                }
-
-                if (SoundManager.getInstance().changeGain(sub[1], value)){
-                    System.out.println("Update " + sub[1] + " node to a new gain of " + value);
-                } else {
-                    System.err.println("Unknown node called " + sub[1]);
-                }
-            }
-        } else {
-            noEnoughArgumentError();
+            return CommandResult.ok("Gain tree printed in the program console");
         }
+
+        if (args.length < 3)
+            return CommandResult.error("Should precise new value of gain !");
+
+        float value;
+
+        try {
+            value = Float.parseFloat(args[2]);
+        } catch (NumberFormatException e){
+            return CommandResult.error("Should write a valid new gain value (float) !");
+        }
+
+        if (!SoundManager.getInstance().changeGain(args[1], value))
+            return CommandResult.error("Unknown node called " + args[1]);
+
+        return CommandResult.ok("Update " + args[1] + " node to a new gain of " + value);
     }
 
 
-        public void help() {
-        super.help();
-        System.out.println("Change gain of a gain node");
-        System.out.println("changegain node value : change the gain of a gain node by the writted value");
-        System.out.println("changegain list : List all of the gain node and their value");
-        System.out.println("changegain help : MightyLibrary.project.display tips about the command");
+    public String help() {
+        return super.help() +
+                "\nChange gain of a gain node" +
+                "\nchangegain node value : change the gain of a gain node by the written value" +
+                "\nchangegain list : list all of the gain nodes and their value" +
+                "\nchangegain help : display tips about the command";
     }
 }

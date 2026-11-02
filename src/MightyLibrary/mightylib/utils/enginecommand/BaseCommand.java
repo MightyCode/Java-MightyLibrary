@@ -13,8 +13,15 @@ public abstract class BaseCommand {
         else if (range == SPECIFIC_COMMAND) this.range = "Specific";
     }
 
-    // Command without the name of this current command
-    public abstract void sendCommand(String command);
+    /**
+     * Execute the command, always called on the main thread.
+     * @param args Words of the command, args[0] is the name of the command
+     */
+    public abstract CommandResult execute(String[] args);
+
+    public String getName() {
+        return commandName;
+    }
 
     public boolean isCommand(String commandName){
         return this.commandName.equals(commandName);
@@ -23,28 +30,19 @@ public abstract class BaseCommand {
     public int size() { return commandName.length(); }
 
     // Help to know how use the command
-    public void help(){
-        System.out.println("Help for " + commandName + " command (" + range + ")");
+    public String help(){
+        return "Help for " + commandName + " command (" + range + ")";
     }
 
     public boolean checkArgumentHelp(String[] commands){
-        if(commands.length > 1){
-            if (commands[1].equals("help")) {
-                this.help();
-                return true;
-            }
-            return false;
-        }
-        return  false;
+        return commands.length > 1 && commands[1].equals("help");
     }
 
-    public void noEnoughArgumentError(){
-        System.err.println("No argument !\nWrite -> " + commandName  + " help<- if you don't know what are/is argument(s)");
+    public CommandResult noEnoughArgumentError(){
+        return CommandResult.error("No argument !\nWrite -> " + commandName  + " help<- if you don't know what are/is argument(s)");
     }
 
-    public void unknownArgumentError(String command){
-        System.err.println("Unknown argument(s) ->" + command + "<-");
+    public CommandResult unknownArgumentError(String command){
+        return CommandResult.error("Unknown argument(s) ->" + command + "<-");
     }
-
-
 }

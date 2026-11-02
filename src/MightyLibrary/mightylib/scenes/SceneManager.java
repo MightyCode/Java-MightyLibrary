@@ -23,6 +23,9 @@ public class SceneManager {
     private final Commands commands;
     private final SoundManager soundManager;
 
+    // Package of the first scene, used to find scenes by their simple name
+    private String scenesPackage;
+
     public SceneManager(MainLoop.StopLibrary stopLibrary) {
         glResources = GLResources.getInstance();
         resources = Resources.getInstance();
@@ -31,7 +34,7 @@ public class SceneManager {
 
         sceneInterface = new SceneManagerInterface();
 
-        commands = new Commands();
+        commands = new Commands(this);
         soundManager = SoundManager.getInstance();
     }
 
@@ -39,6 +42,7 @@ public class SceneManager {
     public void init(Scene firstScene, String[] firstArguments){
         System.out.println("--Init SceneManager");
 
+        scenesPackage = firstScene.getClass().getPackage().getName();
         sceneInterface.setNewScene(firstScene, firstArguments);
 
         changeScene();
@@ -69,8 +73,11 @@ public class SceneManager {
         Context mainContext = ContextManager.getInstance().getMainContext();
         InputManager mainInputManager = mainContext.getInputManager();
 
-        if (mainInputManager.inputPressed(InputManager.COMMAND) || commands.isWriteCommands)
-            commands.writeCommand();
+        // Commands come from the console thread or the debug server, never block here
+        commands.processPendingCommands();
+
+        if (mainInputManager.inputPressed(InputManager.COMMAND))
+            System.out.println("Commands are read from the console without pausing the game, write -> help <- to list them");
 
         if (mainInputManager.inputPressed(InputManager.RELOAD_TEXTURE))
             Resources.getInstance().reloadAllOfType(TextureData.class);
@@ -119,6 +126,32 @@ public class SceneManager {
 
     public void exit(int status){
         stopLibrary.exit(status);
+    }
+
+    public Commands getCommands() {
+        return commands;
+    }
+
+    public Scene getCurrentScene() {
+        return currentScene;
+    }
+
+    public boolean isCurrentSceneLoading() {
+        return currentScene != null && currentScene.isWaitingForLoading();
+    }
+
+    public String getScenesPackage() {
+        return scenesPackage;
+    }
+
+    // The change is done at the beginning of the next tick
+    public void requestSceneChange(Scene scene, String[] args) {
+        sceneInterface.setNewScene(scene, args);
+    }
+
+    // The program stops at the beginning of the next tick
+    public void requestExit(int status) {
+        sceneInterface.exit(status);
     }
     public void unload(){
         System.out.println("--Unload SceneManager");

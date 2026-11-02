@@ -123,6 +123,10 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         isWaitingForLoading = true;
     }
 
+    boolean isWaitingForLoading() {
+        return isWaitingForLoading;
+    }
+
     public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface) {
         this.sceneManagerInterface = sceneManagerInterface;
     }

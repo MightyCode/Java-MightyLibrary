@@ -1,10 +1,16 @@
 package MightyLibrary.mightylib.main;
 
 import MightyLibrary.mightylib.resources.texture.Icon;
+import MightyLibrary.mightylib.utils.Logger;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL43;
+import org.lwjgl.opengl.GLCapabilities;
+import org.lwjgl.opengl.GLUtil;
+import org.lwjgl.opengl.KHRDebug;
+import org.lwjgl.system.Callback;
 import org.lwjgl.system.MemoryStack;
 
 
@@ -30,6 +36,9 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  */
 public final class Window {
     private final WindowInfo info;
+
+    // Only set when OpenGL error checks are enabled
+    private Callback debugMessageCallback;
 
     public WindowInfo getInfo() { return info; }
 
@@ -76,6 +85,9 @@ public final class Window {
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
+        // A debug context lets the driver report OpenGL errors itself, with a readable message
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, Logger.DO_CHECK ? GLFW_TRUE : GLFW_FALSE);
+
         if (info.fullscreen)
             info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, glfwGetPrimaryMonitor(), NULL);
         else
@@ -118,7 +130,10 @@ public final class Window {
 
         // Make the window visible
         glfwShowWindow(info.windowId);
-        GL.createCapabilities();
+        GLCapabilities capabilities = GL.createCapabilities();
+        if (Logger.DO_CHECK)
+            setupDebugMessages(capabilities);
+
         glfwSwapInterval(0);
 
         setViewPort(info.size.x, info.size.y);
@@ -178,7 +193,26 @@ public final class Window {
     /**
      * Destroy the current window.
      */
+    private void setupDebugMessages(GLCapabilities capabilities) {
+        debugMessageCallback = GLUtil.setupDebugMessageCallback(System.err);
+        if (debugMessageCallback == null) {
+            System.err.println("OpenGL debug messages are not supported by this driver");
+            return;
+        }
+
+        // Notifications are very frequent and not errors: only keep low, medium and high severity messages
+        if (capabilities.OpenGL43)
+            GL43.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL43.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
+        else if (capabilities.GL_KHR_debug)
+            KHRDebug.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, KHRDebug.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
+    }
+
     public void destroyWindow(){
+        if (debugMessageCallback != null) {
+            debugMessageCallback.free();
+            debugMessageCallback = null;
+        }
+
         if (info.isWindowCreated()) {
             glfwDestroyWindow(info.windowId);
             System.out.println("Window with id : " + info.windowId + " deleted");

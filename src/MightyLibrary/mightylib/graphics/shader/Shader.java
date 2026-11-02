@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics.shader;
 
+import MightyLibrary.mightylib.main.utils.EngineStats;
 import MightyLibrary.mightylib.resources.MultiSourceDataType;
 import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
@@ -186,6 +187,7 @@ public class Shader extends MultiSourceDataType {
 
         glUseProgram(shaderProgram);
         currentProgram = shaderProgram;
+        EngineStats.countProgramBind();
 
         if (Logger.DO_CHECK)
             Logger.CheckOpenGLError("Use program shader (id : " + shaderProgram + ")");
@@ -227,6 +229,7 @@ public class Shader extends MultiSourceDataType {
             lastValues.put(value.getName(), value.clone());
 
         use();
+        EngineStats.countUniformUpload();
         int link = getLink(value.getName());
 
         if (Logger.DO_CHECK)

@@ -1,9 +1,8 @@
 package MightyLibrary.mightylib.utils.enginecommand.general;
 
 import MightyLibrary.mightylib.utils.enginecommand.BaseCommand;
+import MightyLibrary.mightylib.utils.enginecommand.CommandResult;
 import MightyLibrary.mightylib.utils.enginecommand.Commands;
-
-import java.util.ArrayList;
 
 public class HelpGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "help";
@@ -15,33 +14,27 @@ public class HelpGenCom extends BaseCommand {
     }
 
     @Override
-    public void sendCommand(String command) {
-        String[] sub = command.split(" ");
-        if(checkArgumentHelp(sub)) return;
+    public CommandResult execute(String[] args) {
+        if (args.length > 1) {
+            BaseCommand command = commands.findCommand(args[1]);
 
-        if(sub.length > 1) {
-            ArrayList<BaseCommand> listCommands = this.commands.getCommands();
-            boolean found = false;
-            int i = 0;
-            while (!found && i < listCommands.size()) {
-                if (listCommands.get(i).isCommand(sub[1])) {
-                    listCommands.get(i).help();
-                    found = true;
-                }
-                ++i;
-            }
+            if (command == null)
+                return unknownArgumentError(args[1]);
 
-            if (!found) {
-                unknownArgumentError(sub[1]);
-            }
-        } else {
-            help();
+            return CommandResult.ok(command.help());
         }
+
+        StringBuilder result = new StringBuilder("Available commands :");
+        for (BaseCommand command : commands.getCommands())
+            result.append("\n- ").append(command.getName());
+
+        result.append("\nWrite -> [command] help <- to know how to use a command");
+
+        return CommandResult.ok(result.toString());
     }
 
     @Override
-    public void help(){
-        super.help();
-        System.out.println("TODO");
+    public String help(){
+        return super.help() + "\nhelp : list all commands\nhelp [command] : display tips about the command";
     }
 }

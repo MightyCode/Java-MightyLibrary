@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import MightyLibrary.mightylib.graphics.surface.IGLBindable;
 import MightyLibrary.mightylib.graphics.surface.TextureParameters;
 import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
+import MightyLibrary.mightylib.main.utils.EngineStats;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.utils.Logger;
 
@@ -49,6 +50,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         glActiveTexture(GL_TEXTURE0 + texturePos);
         if (isLoaded()){
             glBindTexture(textureType, textureId);
+            EngineStats.countTextureBind();
 
             // Called for each draw: avoid building the message when checks are disabled
             if (Logger.DO_CHECK)

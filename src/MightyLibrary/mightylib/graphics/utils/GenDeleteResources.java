@@ -148,6 +148,26 @@ public abstract class GenDeleteResources {
         }
     }
 
+    // Number of objects of this type currently alive
+    public static int Count(EGraphicResources graphicResources) {
+        switch (graphicResources) {
+            case VertexArrayBuffer:
+                return VAOs.size();
+            case VertexBufferObject:
+                return VBOs.size();
+            case ElementBufferObject:
+                return EBOs.size();
+            case Texture:
+                return Textures.size();
+            case FramebufferObject:
+                return FBOs.size();
+            case RenderBufferObject:
+                return RBOs.size();
+            default:
+                return 0;
+        }
+    }
+
     public static void PrintAll() {
         for (EGraphicResources g : EGraphicResources.values()) {
             PrintList(g);

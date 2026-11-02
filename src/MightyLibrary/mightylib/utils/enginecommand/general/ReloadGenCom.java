@@ -3,6 +3,7 @@ package MightyLibrary.mightylib.utils.enginecommand.general;
 import MightyLibrary.mightylib.resources.DataType;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.utils.enginecommand.BaseCommand;
+import MightyLibrary.mightylib.utils.enginecommand.CommandResult;
 
 public class ReloadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "reload";
@@ -12,43 +13,32 @@ public class ReloadGenCom extends BaseCommand {
     }
 
     @Override
-    public void sendCommand(String command) {
-        String[] sub = command.split(" ");
-        if(checkArgumentHelp(sub)) return;
+    public CommandResult execute(String[] args) {
+        if (args.length < 2)
+            return noEnoughArgumentError();
 
-        if (sub.length > 1) {
-            Class<? extends DataType> result = Resources.getClassFromName(sub[1]);
+        if (args[1].equalsIgnoreCase("all")) {
+            Resources.getInstance().reloadAllOfType();
 
-            if (result == null) {
-                if (sub[1].equalsIgnoreCase("all")) {
-                    System.out.println("Reload all resources");
-
-                    Resources.getInstance().reloadAllOfType();
-                } else {
-                    unknownArgumentError(sub[1]);
-                }
-            } else {
-                System.out.println("Reload " + sub[1] + " resources");
-
-                Resources.getInstance().reloadAllOfType(result);
-            }
-
-            /*if (incorrectlyReloaded > 0)
-                System.out.println(incorrectlyReloaded + " incorrectly reloaded.");*/
-
-        } else {
-            noEnoughArgumentError();
+            return CommandResult.ok("Reload all resources");
         }
+
+        Class<? extends DataType> result = Resources.getClassFromName(args[1]);
+        if (result == null)
+            return unknownArgumentError(args[1]);
+
+        Resources.getInstance().reloadAllOfType(result);
+
+        return CommandResult.ok("Reload " + args[1] + " resources");
     }
 
 
-    public void help() {
-        super.help();
-        System.out.println("-> Resources type : Animation, Texture, Sound, Font");
-        System.out.println("4 uses : ");
-        System.out.println("1. reload [resources type] : reload certain type of resources");
-        System.out.println("2. reload all : reload all resources / shader excluded");
-        System.out.println("3. reload shader : reload all shaders");
-        System.out.println("4. reload help : MightyLibrary.project.display help's tips about the command");
+    public String help() {
+        return super.help() +
+                "\n-> Resources type : name of the loader, for example TextureData, Shader, FontFace" +
+                "\n3 uses : " +
+                "\n1. reload [resources type] : reload loaded resources of a type" +
+                "\n2. reload all : reload all loaded resources" +
+                "\n3. reload help : display tips about the command";
     }
 }

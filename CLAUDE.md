@@ -81,6 +81,34 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 ### Temps
 - `GameTime.DeltaTime()` : temps réel mesuré entre deux ticks (variable). `GameTime.FixedDeltaTime()` : durée fixe d'un tick (1/TPS), **à utiliser pour la physique** (`world.step` de JBox2D).
 
+## Outils de debug et de mesure
+
+### Commandes
+- Une commande hérite de `BaseCommand` et implémente `CommandResult execute(String[] args)` (`args[0]` = nom). Elle **renvoie** son résultat (`CommandResult.ok(message, data JSON)` / `error(...)`), elle n'écrit pas dans la console. Résultat connu plus tard (ex. capture après la frame suivante) : `CommandResult.later(future)`.
+- Les commandes générales sont enregistrées dans `ListGeneralCommand` ; une scène peut ajouter les siennes (`Commands.addCommand`, retirées au changement de scène).
+- `Commands.submit(line)` est appelable depuis n'importe quel thread ; l'exécution a lieu sur le thread principal au début du tick suivant (`processPendingCommands`). La console est lue dans un thread à part : le jeu n'est jamais bloqué.
+- Commandes disponibles uniquement en mode admin.
+
+### Serveur de debug (piloter le jeu depuis un autre processus)
+- En mode admin, le jeu écoute sur `127.0.0.1:7777` (`IStartLibraryProcedure.returnDebugServerPort()`, `-1` pour désactiver). Protocole : une commande par ligne, une ligne JSON en réponse `{"success", "message", "data"}`.
+- Client : `python tools/mighty.py <commande>` (`--wait N` pour attendre le démarrage, `--json` pour la réponse brute, sans argument = mode interactif).
+- Commandes utiles : `help`, `stats` (temps, appels de dessin, changements de shader/texture, uniforms, octets envoyés, objets GL vivants, mémoire), `scene` (scène courante et `loading`), `scene <Nom>` (nom relatif au package de la première scène, ex. `Platformer2D.Test2DPlatformerBox2D`), `screenshot [chemin]` (PNG de la frame suivante, par défaut dans `screenshots/`), `reload`, `exit`.
+
+### Lancer et vérifier le jeu soi-même (Claude)
+```bash
+JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn" -q compile dependency:build-classpath -Dmdep.outputFile=<scratchpad>/cp.txt
+# depuis la racine du dépôt, en arrière-plan (une fenêtre s'ouvre sur l'écran de l'utilisateur : le prévenir)
+"/c/Autres/## Librairies ##/javajdk/bin/java" -cp "target/classes;$(cat <scratchpad>/cp.txt)" MightyLibrary.project.main.Main
+python tools/mighty.py --wait 60 scene Test2DScene   # puis attendre "loading": false via `scene`
+python tools/mighty.py screenshot <scratchpad>/capture.png   # puis lire l'image
+python tools/mighty.py exit
+```
+
+### Profilage
+- **JFR** : événements `mightylib.Frame` et `mightylib.Tick` (durée de chaque frame/tick), presque gratuits hors enregistrement. Enregistrer : `jcmd <pid> JFR.start duration=30s filename=rec.jfr` (pid via `jcmd -l`), ou lancer avec `-XX:StartFlightRecording=duration=30s,filename=rec.jfr`. Lire : `jfr print --events mightylib.Frame rec.jfr`, ou JDK Mission Control / VisualVM pour CPU, allocations et GC.
+- **GPU** : RenderDoc ou NVIDIA Nsight Graphics (contexte OpenGL 3.3 core) pour inspecter une frame et compter les appels de dessin.
+- **Erreurs OpenGL** : `returnOpenGLErrorCheckState()` à `true` active `glGetError` **et** un contexte de debug : le pilote signale les erreurs avec un message lisible (notifications filtrées).
+
 ## Conventions de code
 
 - Java 11 : pas de `record`, pas de `switch` expression, pas de `var` dans les lambdas… reste compatible 11.

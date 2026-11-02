@@ -1,94 +1,144 @@
 package MightyLibrary.mightylib.utils.enginecommand;
 
-import MightyLibrary.mightylib.main.Context;
-import MightyLibrary.mightylib.main.ContextManager;
+import MightyLibrary.mightylib.scenes.SceneManager;
 import MightyLibrary.mightylib.utils.enginecommand.general.ListGeneralCommand;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
 
+/**
+ * Registry of the commands.
+ * Commands can be submitted from any thread (console, debug server...), they are executed on the main thread
+ * at the beginning of the next tick, so the game is never blocked while waiting for a command.
+ */
 public class Commands {
+    private static class CommandRequest {
+        private final String line;
+        private final CompletableFuture<CommandResult> result;
+
+        private CommandRequest(String line) {
+            this.line = line;
+            this.result = new CompletableFuture<>();
+        }
+    }
+
     private final ArrayList<BaseCommand> commands;
     private final int endGeneralCommand;
-    private final Scanner scan;
 
-    private final ArrayList<Boolean> previousMouseStates;
+    private final ConcurrentLinkedQueue<CommandRequest> pendingRequests;
+    private Thread consoleThread;
 
-    public boolean isWriteCommands;
-
-    public Commands() {
-        isWriteCommands = false;
-
-        scan = new Scanner(System.in);
+    public Commands(SceneManager sceneManager) {
+        pendingRequests = new ConcurrentLinkedQueue<>();
 
         // Add commands -> General
         commands = new ArrayList<>();
-        ListGeneralCommand.addCommands(this);
+        ListGeneralCommand.addCommands(this, sceneManager);
         // Size
         endGeneralCommand = commands.size();
-
-        previousMouseStates = new ArrayList<>();
     }
 
+    /**
+     * Can be called from any thread.
+     * @return Completed on the main thread once the command is executed
+     */
+    public CompletableFuture<CommandResult> submit(String line) {
+        CommandRequest request = new CommandRequest(line);
+        pendingRequests.add(request);
 
-    public void writeCommand(){
-        for (Context context : ContextManager.getInstance().getAllContext()){
-            previousMouseStates.add(context.getMouseManager().getCursorState());
-            context.getMouseManager().setCursor(true);
-        }
-
-        isWriteCommands = true;
-        System.out.println("Write a command:");
-
-        String command = scan.nextLine();
-
-        System.out.print("\n");
-        checkCommand(command);
-
-        int i = 0;
-        for (Context context : ContextManager.getInstance().getAllContext()){
-            context.getMouseManager().setCursor(previousMouseStates.get(i));
-            ++i;
-        }
-        previousMouseStates.clear();
+        return request.result;
     }
 
+    // Main thread only
+    public void processPendingCommands() {
+        CommandRequest request;
+        while ((request = pendingRequests.poll()) != null) {
+            CommandResult result = execute(request.line);
 
-    private void checkCommand(String command) {
-        // Return -1 if error on detection
-        int firstWord = CommandMethods.indexFirstWord(command);
-
-        if (firstWord != -1)
-            submitCommand(command, command.substring(0, firstWord));
-        else
-            System.err.println("Error on the message : \n invalids chars or nothing in the char");
-    }
-
-    private void submitCommand(String command, String firstWord) {
-        boolean found = false;
-        int i = 0;
-        while (!found && i < commands.size()) {
-            // If write command and command in the array match
-            if (commands.get(i).isCommand(firstWord)) {
-                // Send and remove the unused first word
-                commands.get(i).sendCommand(command);
-                found = true;
+            if (result.isDeferred()) {
+                CompletableFuture<CommandResult> target = request.result;
+                result.getDeferred().whenComplete((deferredResult, exception) -> {
+                    if (exception != null)
+                        target.complete(CommandResult.error(exception.toString()));
+                    else
+                        target.complete(deferredResult);
+                });
+            } else {
+                request.result.complete(result);
             }
-            ++i;
-        }
-
-        if (!found) {
-            System.err.println("No command with its name ->" + firstWord + "<-");
         }
     }
 
+    // Main thread only
+    public CommandResult execute(String line) {
+        String trimmed = line.trim();
+        if (trimmed.isEmpty())
+            return CommandResult.error("Empty command");
 
-    public void cancelWritingCommand(Object o){
-        if (o instanceof BaseCommand){
-            isWriteCommands = false;
+        String[] args = trimmed.split("\\s+");
+        BaseCommand command = findCommand(args[0]);
+
+        if (command == null)
+            return CommandResult.error("No command with its name ->" + args[0] + "<-");
+
+        if (command.checkArgumentHelp(args))
+            return CommandResult.ok(command.help());
+
+        try {
+            return command.execute(args);
+        } catch (RuntimeException e) {
+            return CommandResult.error("Command " + command.getName() + " failed : " + e);
         }
     }
 
+    /**
+     * Read commands typed in the console from a separate thread, without blocking the game.
+     */
+    public void startConsole() {
+        if (consoleThread != null)
+            return;
+
+        consoleThread = new Thread(() -> {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+
+            try {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.trim().isEmpty())
+                        continue;
+
+                    CommandResult result = submit(line).get();
+
+                    if (result.isSuccess())
+                        System.out.println(result);
+                    else
+                        System.err.println(result);
+                }
+            } catch (IOException | ExecutionException e) {
+                System.err.println("Console commands stopped : " + e);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }, "MightyLibrary-Console");
+
+        consoleThread.setDaemon(true);
+        consoleThread.start();
+    }
+
+    public BaseCommand findCommand(String name) {
+        for (BaseCommand command : commands) {
+            if (command.isCommand(name))
+                return command;
+        }
+
+        return null;
+    }
 
     public ArrayList<BaseCommand> getCommands(){
         return commands;
