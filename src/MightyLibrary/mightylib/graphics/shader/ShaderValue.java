@@ -69,6 +69,32 @@ public class ShaderValue implements Cloneable {
         return objectType.cast(object);
     }
 
+    /**
+     * Copy the value of source into this value without allocating, for mutable types.
+     * @return false if the copy can't be done in place, a clone must be used instead
+     */
+    public boolean copyValueFrom(ShaderValue source) {
+        if (type != source.type || object == null || source.object == null)
+            return false;
+
+        if (type == Matrix4f.class) {
+            getObjectTyped(Matrix4f.class).set(source.getObjectTyped(Matrix4f.class));
+        } else if (type == Vector2f.class) {
+            getObjectTyped(Vector2f.class).set(source.getObjectTyped(Vector2f.class));
+        } else if (type == Vector3f.class) {
+            getObjectTyped(Vector3f.class).set(source.getObjectTyped(Vector3f.class));
+        } else if (type == Vector4f.class) {
+            getObjectTyped(Vector4f.class).set(source.getObjectTyped(Vector4f.class));
+        } else if (type == Float.class || type == float.class || type == Integer.class || type == int.class) {
+            // Immutable boxed values can be shared
+            object = source.object;
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public ShaderValue clone() {
         if (type == Float.class || type == float.class) {

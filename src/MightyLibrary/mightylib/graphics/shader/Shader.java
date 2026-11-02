@@ -26,8 +26,15 @@ public class Shader extends MultiSourceDataType {
     private String geometryContent;
     private boolean isUsingGeometryShader;
 
+    // Program currently bound, to skip redundant glUseProgram (GL calls only happen on the main thread)
+    private static int currentProgram = -1;
+    // Reused to send matrices without allocating a direct buffer for each uniform
+    private static final FloatBuffer MATRIX_BUFFER = BufferUtils.createFloatBuffer(16);
+
     private int shaderProgram;
     private final HashMap<String, ShaderValue> lastValues;
+    // Uniform locations never change for a linked program
+    private final HashMap<String, Integer> uniformLocations;
 
     private int vShader, fShader, gShader;
 
@@ -46,6 +53,7 @@ public class Shader extends MultiSourceDataType {
         isUsingGeometryShader = false;
 
         lastValues = new HashMap<>();
+        uniformLocations = new HashMap<>();
         vShader = -1;
         fShader = -1;
         gShader = -1;
@@ -173,16 +181,33 @@ public class Shader extends MultiSourceDataType {
     }
 
     public void use() {
-        use("Use program shader (id : " + shaderProgram + ")");
+        if (currentProgram == shaderProgram)
+            return;
+
+        glUseProgram(shaderProgram);
+        currentProgram = shaderProgram;
+
+        if (Logger.DO_CHECK)
+            Logger.CheckOpenGLError("Use program shader (id : " + shaderProgram + ")");
     }
 
     public void use(String message) {
         glUseProgram(shaderProgram);
+        currentProgram = shaderProgram;
         Logger.CheckOpenGLError(message);
     }
 
     public int getLink(String valueName){
-        return glGetUniformLocation(shaderProgram, valueName);
+        Integer location = uniformLocations.get(valueName);
+        if (location == null) {
+            location = glGetUniformLocation(shaderProgram, valueName);
+
+            // Only a linked program gives definitive locations
+            if (shaderProgram != -1)
+                uniformLocations.put(valueName, location);
+        }
+
+        return location;
     }
 
     public int getShaderId(){
@@ -190,24 +215,22 @@ public class Shader extends MultiSourceDataType {
     }
 
     public void sendValueToShader(ShaderValue value) {
-        boolean added = false;
-        if (!lastValues.containsKey(value.getName())) {
-            lastValues.put(value.getName(), value.clone());
-            added = true;
-        }
-
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        if (!added && value.equals(lastValue) && !value.shouldForceUpdate())
+        if (lastValue != null && value.equals(lastValue) && !value.shouldForceUpdate())
             return;
 
         value.resetForceUpdate();
 
-        lastValues.put(value.getName(), value.clone());
+        // Remember the sent value, in place when possible to avoid allocating
+        if (lastValue == null || !lastValue.copyValueFrom(value))
+            lastValues.put(value.getName(), value.clone());
 
-        this.use("Send value " + value.getName() + " to shader " + getDataName());
-        int link = glGetUniformLocation(shaderProgram, value.getName());
-        Logger.CheckOpenGLError("Get uniform location : " + value.getName());
+        use();
+        int link = getLink(value.getName());
+
+        if (Logger.DO_CHECK)
+            Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 
         if (link == -1) {
             System.out.println("Program content :\n=======\n " + vertexContent
@@ -234,7 +257,8 @@ public class Shader extends MultiSourceDataType {
         } else if (value.getType() == Color4f.class) {
             glUniform1i(link, value.getObjectTyped(Color4f.class).toIntRGBA());
         } else if (value.getType() == Matrix4f.class) {
-            glUniformMatrix4fv(link, false, MatrixToFloatBuffer(value.getObjectTyped(Matrix4f.class)));
+            value.getObjectTyped(Matrix4f.class).get(MATRIX_BUFFER);
+            glUniformMatrix4fv(link, false, MATRIX_BUFFER);
         } else if (value.getType() == Integer.class || value.getType() == Boolean.class) {
             Integer v = value.getObjectTyped(Integer.class);
             glUniform1i(link, v);
@@ -243,17 +267,13 @@ public class Shader extends MultiSourceDataType {
         }
     }
 
-    private static FloatBuffer MatrixToFloatBuffer(Matrix4f matrix){
-        FloatBuffer buffer = BufferUtils.createFloatBuffer(16);
-
-        matrix.get(buffer);
-
-        return buffer;
-    }
-
     public void internUnload() {
         System.out.println("Unloading shader : " + shaderProgram);
         if (shaderProgram != -1) {
+            // The id can be reused by a new program, it must not be considered bound anymore
+            if (currentProgram == shaderProgram)
+                currentProgram = -1;
+
             glDeleteProgram(shaderProgram);
             Logger.CheckOpenGLError("Delete program shader (id : " + shaderProgram + ")");
             shaderProgram = -1;
@@ -278,5 +298,6 @@ public class Shader extends MultiSourceDataType {
         }
 
         lastValues.clear();
+        uniformLocations.clear();
     }
 }
