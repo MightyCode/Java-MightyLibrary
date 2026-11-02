@@ -59,12 +59,12 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 - Chaque type est un `DataType` avec un `ResourceLoader` (enregistré dans `Resources.Loaders`; loaders projet dans `ProjectLoading.init`).
 - États : créé → **preload** (lecture disque, déclaration des dépendances) → **load** (finalisation, souvent GL) → unload.
 - `TYPE_SET_UP` : `THREAD_CONTEXT` (workers), `MAIN_CONTEXT` (file traitée par `process(ms)` sur le thread GL), `IMMEDIATELY_IN_CURRENT_CONTEXT`.
-- Références par nom de batch (max 5 par ressource, tableau fixe).
+- Références par nom de batch (liste, un même nom peut apparaître plusieurs fois). Les maps de ressources sont concurrentes et les états de chargement `volatile` : les workers et le thread principal y accèdent.
 - Le nom d'une ressource = nom de fichier sans extension → **les noms doivent être uniques par type**.
 - Accès : `Resources.getInstance().getResource(TextureData.class, "nom")`.
 
 ### Ressources GPU — `GLResources` / `GLElement`
-- Objets GL partagés et comptés par référence (ex. `Texture`). `getResource()` **incrémente** la référence ; tout `get`/`addElement…` doit être équilibré par un `releaseResource()`.
+- Objets GL partagés et comptés par référence (ex. `Texture`). `addElementOrReturnIfPresent()` ajoute une référence (élément existant ou nouveau) et doit être équilibré par un `releaseResource()`. `getResource()` est une simple recherche, sans référence. Un élément dont les dépendances ne sont pas encore chargées est réessayé à chaque tick par `GLResources.process()`.
 - `GenDeleteResources` enveloppe toutes les créations/destructions GL (VAO, VBO, EBO, textures, FBO, RBO) pour traquer les fuites (`PrintAll()` au changement de scène). **Toujours passer par lui**, jamais `glGen*`/`glDelete*` directement.
 
 ### Rendu
@@ -92,7 +92,8 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 ### Serveur de debug (piloter le jeu depuis un autre processus)
 - En mode admin, le jeu écoute sur `127.0.0.1:7777` (`IStartLibraryProcedure.returnDebugServerPort()`, `-1` pour désactiver). Protocole : une commande par ligne, une ligne JSON en réponse `{"success", "message", "data"}`.
 - Client : `python tools/mighty.py <commande>` (`--wait N` pour attendre le démarrage, `--json` pour la réponse brute, sans argument = mode interactif).
-- Commandes utiles : `help`, `stats` (temps, appels de dessin, changements de shader/texture, uniforms, octets envoyés, objets GL vivants, mémoire), `scene` (scène courante et `loading`), `scene <Nom>` (nom relatif au package de la première scène, ex. `Platformer2D.Test2DPlatformerBox2D`), `screenshot [chemin]` (PNG de la frame suivante, par défaut dans `screenshots/`), `reload`, `exit`.
+- Commandes utiles : `help`, `stats` (temps, appels de dessin, changements de shader/texture, uniforms, octets envoyés, objets GL vivants, mémoire), `scene` (scène courante et `loading`), `scene <Nom>` (nom relatif au package de la première scène, ex. `Platformer2D.Test2DPlatformerBox2D`), `screenshot [chemin]` (PNG de la frame suivante, par défaut dans `screenshots/`), `gl` (objets OpenGL vivants et éléments partagés avec leurs références), `reload`, `exit`.
+- **Traquer une fuite** : relever `gl` sur une scène, faire plusieurs allers-retours vers une autre scène, relever à nouveau sur la même scène. Les compteurs et les références doivent être identiques à chaque passage.
 
 ### Lancer et vérifier le jeu soi-même (Claude)
 ```bash
@@ -124,14 +125,13 @@ python tools/mighty.py exit
 - Ne jamais importer `MightyLibrary.project.*` depuis `mightylib` : passer les IDs d'action en paramètre (ex. `ZoomingCameraComponent.initActionId`).
 - **Fins de ligne** : le dépôt mélange des fichiers stockés en LF et en CRLF, avec `core.autocrlf=true`. Ne jamais réécrire un fichier source avec `sed`/redirection shell (le `sed` de Git Bash retire les CR) : utiliser l'outil Edit. Avant de commiter, vérifier `git diff --cached --stat` : un fichier entier modifié signale un changement de fins de ligne. Pour un fichier stocké en CRLF (`git ls-files --eol <fichier>` → `i/crlf`), l'ajouter avec `git -c core.autocrlf=false add <fichier>`.
 - Tout code GL s'exécute sur le thread principal. Les workers de `Resources` ne doivent faire que de l'I/O/CPU.
-- Toute ressource GL créée dans une scène doit être libérée dans `unload()` (renderers, shapes, textures via `releaseResource`).
+- Toute ressource GL créée dans une scène doit être libérée dans `unload()` (renderers, shapes, textures via `releaseResource`). Les objets ajoutés avec `addDisplayable`/`addUpdatable` sont déchargés par `Scene.unload()` ; ceux gardés seulement dans un champ doivent l'être à la main. Vérifier avec la commande `gl`.
 - Pas de test automatisé : décrire comment vérifier manuellement (quelle scène lancer, quoi observer).
 - Le dossier `target/` et `.idea/workspace.xml` ne doivent pas être modifiés/commités.
 
 ## Pièges connus (à garder en tête, non corrigés)
 
 - Recharger une `TextureData` relit les pixels mais ne met pas à jour les `Texture` GL déjà créées à partir d'elle : le rechargement à chaud ne se voit pas à l'écran.
-- `GLResources` : `PriorityQueue<GLElement>` alors que `GLElement` n'implémente pas `Comparable` ; `addElementToLoadOrReturnIfPresent` lit `resources.get(type)` avant `putIfAbsent`.
 - `Resources.getInstance()` crée silencieusement une instance par défaut s'il est appelé avant `createInstance`.
 
 ### Spécifiques 2D
