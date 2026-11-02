@@ -51,7 +51,7 @@ public class ResourceWorker extends Thread {
                     } else if (entry.Action == LOAD) {
                         numberErrorLoading += loadData(entry.Data);
                     } else if (entry.Action == UNLOAD) {
-                        numberErrorUnloading += unloadData(entry.Data);
+                        numberErrorUnloading += unloadData(entry);
                     } else if (entry.Action == RELOAD) {
                         numberErrorLoading += reloadData(entry);
                     }
@@ -110,7 +110,8 @@ public class ResourceWorker extends Thread {
         return 0;
     }
 
-    synchronized int unloadData(DataType dataType) {
+    synchronized int unloadData(Resources.ResourceEntry entry) {
+        DataType dataType = entry.Data;
         if (!dataType.isLoaded())
             return 1;
 
@@ -118,8 +119,11 @@ public class ResourceWorker extends Thread {
 
         dataType.unload();
 
-        if (!dataType.isLoaded())
+        if (dataType.isLoaded())
             return 1;
+
+        if ("Delete".equals(entry.info))
+            resource.deleteResource(dataType);
 
         return 0;
     }
@@ -129,13 +133,12 @@ public class ResourceWorker extends Thread {
             return 1;
 
        // System.out.println("Thread " + threadNumber + " reloading " + entry.Data.getClass().getSimpleName() + " : " + entry.Data.getDataName());
-        entry.Loader.preload(entry.Data);
+        entry.Loader.reload(entry.Data);
 
-        if (!entry.Data.isLoaded())
+        if (!entry.Data.isPreLoaded())
             return 1;
 
-        if (entry.info.equals("Delete"))
-            resource.deleteResource(entry.Data.getClass(), entry.Data.getDataName());
+        resource.notifyPreLoadedResources(entry.Data);
 
         return 0;
     }

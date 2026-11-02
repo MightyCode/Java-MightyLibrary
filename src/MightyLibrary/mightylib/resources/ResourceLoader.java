@@ -90,11 +90,9 @@ public abstract class ResourceLoader {
         dataType.load();
     }
 
+    // Unload then read again from disk, the caller must queue the LOAD step afterward
     public final void reload(DataType dataType) {
-        dataType.internUnload();
-
-        if (dataType.isLoaded())
-            return;
+        dataType.unload();
 
         preload(dataType);
     }
