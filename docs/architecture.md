@@ -48,7 +48,11 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 - Accès : `Resources.getInstance().getResource(TextureData.class, "nom")`.
 
 ### Ressources GPU — `GLResources` / `GLElement`
-- Objets GL partagés et comptés par référence (ex. `Texture`). `addElementOrReturnIfPresent()` ajoute une référence (élément existant ou nouveau) et doit être équilibré par un `releaseResource()`. `getResource()` est une simple recherche, sans référence. Un élément dont les dépendances ne sont pas encore chargées est réessayé à chaque tick par `GLResources.process()`.
+- Objets GL partagés et comptés par référence (ex. `Texture`). `addElementOrReturnIfPresent()` ajoute une référence (élément existant ou nouveau) et doit être équilibré par un `releaseResource()`. `getResource()` est une simple recherche, sans référence.
+- **Jamais bloquant** : `addElementOrReturnIfPresent()` ne fait que mettre en file. Après chaque `display()`, `MainLoop` appelle `GLResources.process(deadline)` avec le **reste de la frame** (jusqu'au prochain tick ou à la prochaine frame), et toujours **au moins une étape**, même si le temps est dépassé ; plafond facultatif `EngineConfig.setMaxGLUploadMillisecondsPerFrame`. `GLElement.load(remainingMilliseconds)` renvoie `false` tant qu'il n'a pas fini : il reprend à la frame suivante.
+- `Texture` : les petites textures sont envoyées d'un coup ; au-delà de 4 Mio (2D), par bandes `glTexSubImage2D` dimensionnées d'après le débit mesuré et le temps restant (256 Kio à 4 Mio par bande). Tant qu'une texture n'est pas chargée, son `bind` utilise une texture transparente 1×1 ; des données introuvables sont remplacées par la texture `error`.
+- Chargement d'une scène : l'écran de chargement reste affiché pendant le chargement des ressources, puis pendant l'envoi GL de ce que `launch()` a demandé ; la scène n'est affichée et mise à jour qu'une fois `GLResources` vide (avertissement après 10 s avec les éléments en attente).
+- Renderers 2D (`Shape2DRenderer` et dérivés) : utilisables dès le constructeur, la géométrie est envoyée au premier `display()` puis à chaque `display()` qui suit une modification.
 - `GenDeleteResources` enveloppe toutes les créations/destructions GL (VAO, VBO, EBO, textures, FBO, RBO) pour traquer les fuites (`PrintAll()` au changement de scène). **Toujours passer par lui**, jamais `glGen*`/`glDelete*` directement.
 
 ### Rendu

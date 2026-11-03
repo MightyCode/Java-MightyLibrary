@@ -26,6 +26,7 @@ python tools/scenario.py "scene Test2DScene" wait-loaded gl "input ESCAPE" sleep
 - Étapes en plus des commandes du jeu : `wait-loaded` (attend la fin du chargement et la scène demandée par le dernier `scene X`), `sleep:SECONDS`.
 - `--attach` utilise un jeu déjà lancé (par l'utilisateur) sans le lancer ni le fermer ; `--keep-open` laisse le jeu ouvert.
 - `stats` décrit la dernière seconde **complète** : attendre au moins une seconde de jeu (`sleep:1.5`) avant de la lire.
+- Fluidité d'un chargement : `stats reset` remet à zéro les pires valeurs `maxFrameMsSinceReset` (travail d'une frame), `maxFrameIntervalMsSinceReset` (écart entre deux frames, à garder < 100 ms), `maxTickMsSinceReset` et `maxSwapMsSinceReset`. Ex. : `python tools/scenario.py "scene TestGLLoading" "stats reset" wait-loaded stats` (le `reset` après le changement de scène exclut le tick qui exécute `init`).
 - Une capture (`screenshot <chemin>`) seulement si un rendu ne peut pas être vérifié par le texte.
 
 ### Profilage
