@@ -5,7 +5,6 @@ import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.graphics.utils.Screenshot;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
-import MightyLibrary.mightylib.main.procedures.IStartLibraryProcedure;
 import MightyLibrary.mightylib.main.utils.EngineStats;
 import MightyLibrary.mightylib.main.utils.FrameEvent;
 import MightyLibrary.mightylib.main.utils.GameTime;
@@ -16,7 +15,6 @@ import MightyLibrary.mightylib.scenes.SceneManager;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.enginecommand.DebugServer;
-import org.joml.Vector2i;
 import org.lwjgl.Version;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -36,14 +34,14 @@ public final class MainLoop {
     public static boolean isAdmin() { return admin; }
 
 
-    private static int loadLibraries(IStartLibraryProcedure startProcedure) {
+    private static int loadLibraries(EngineConfig config) {
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit()) {
             System.err.println("GLFW fail to initialize");
             return -1;
         }
 
-        SoundManager.initSoundManager(startProcedure.returnGainTreePath());
+        SoundManager.initSoundManager(config.getGainTreePath());
         SoundManager soundManager = SoundManager.getInstance();
         if (!soundManager.init()) {
             System.err.println("SoundManager fail to initialize");
@@ -53,38 +51,34 @@ public final class MainLoop {
         return 0;
     }
 
-    private static void setup(IStartLibraryProcedure startProcedure) {
-        admin = startProcedure.returnAdminState();
-        Logger.DO_CHECK = startProcedure.returnOpenGLErrorCheckState();
+    private static void setup(EngineConfig config) {
+        config.validate();
+        admin = config.isAdmin();
+        Logger.DO_CHECK = config.isOpenGLErrorCheck();
 
         System.out.println("--Start program.");
         System.out.println("--Load libraries.");
 
-        if (loadLibraries(startProcedure) == -1) {
+        if (loadLibraries(config) == -1) {
             exit(ListError.LIBRARIES_LOAD_FAIL);
         }
 
-        tickTime = NANO_IN_SECOND / startProcedure.returnTPS();
-        frameTime = NANO_IN_SECOND / startProcedure.returnFPS();
-        GameTime.setFixedDeltaTime(1f / startProcedure.returnTPS());
+        tickTime = NANO_IN_SECOND / config.getTps();
+        frameTime = NANO_IN_SECOND / config.getFps();
+        GameTime.setFixedDeltaTime(1f / config.getTps());
 
         System.out.println("--Create main context.");
         contextManager = ContextManager.getInstance();
 
-        ThreadManager.NumberMaxThreadToUse = startProcedure.returnMaxNumberOfThreadsToUse();
+        ThreadManager.NumberMaxThreadToUse = config.getMaxThreads();
 
         WindowCreationInfo wci = new WindowCreationInfo();
-        wci.Size = new Vector2i(
-                startProcedure.returnSceneSize().x,
-                startProcedure.returnSceneSize().y);
+        wci.Size = config.getWindowSize();
+        wci.VirtualSize = config.getVirtualSize();
 
-        wci.VirtualSize = new Vector2i(
-                startProcedure.returnVirtualSceneSize().x,
-                startProcedure.returnVirtualSceneSize().y);
-
-        wci.WindowName = startProcedure.returnProjectName();
-        wci.Fullscreen = startProcedure.returnFullscreenState();
-        wci.KeyboardLanguage = startProcedure.returnDefaultKeyboardLanguage();
+        wci.WindowName = config.getProjectName();
+        wci.Fullscreen = config.isFullscreen();
+        wci.KeyboardLanguage = config.getKeyboardLanguage();
 
         contextManager.createDefaultContext(wci);
 
@@ -106,35 +100,37 @@ public final class MainLoop {
 
         System.out.println("--Create ShaderManager");
         ShaderManager shaderManager = ShaderManager.getInstance();
-        shaderManager.init(startProcedure.returnShaderVersion());
+        shaderManager.init(config.getShaderVersion());
 
         System.out.println("--Create Resources");
         Resources resource = Resources.createInstance(
-                startProcedure.returnResourcesLoadingMethod(),
-                Math.max(1, startProcedure.returnMaxNumberOfThreadsToUse())
+                config.getResourcesLoadingMethod(),
+                Math.max(1, config.getMaxThreads())
         );
 
-        GLResources glResources = GLResources.createInstance(startProcedure.returnGLResourceCreation());
+        GLResources glResources = GLResources.createInstance(config.getGLResourceCreation());
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(new StopLibrary());
 
-        IProjectLoading projectLoading = startProcedure.returnIProjectLoading();
-        projectLoading.init(resource);
-        projectLoading.contextLoading(context);
+        IProjectLoading projectLoading = config.getProjectLoading();
+        if (projectLoading != null) {
+            projectLoading.init(resource);
+            projectLoading.contextLoading(context);
+        }
 
         // Create all resources dependencies
         resource.init();
 
         // Load all resources
         resource.load();
-        sceneManager.init(startProcedure.returnStartScene(), new String[]{"start"});
+        sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
         // Commands are only processed in admin state
         if (admin) {
             sceneManager.getCommands().startConsole();
 
-            int debugServerPort = startProcedure.returnDebugServerPort();
+            int debugServerPort = config.getDebugServerPort();
             if (debugServerPort > 0) {
                 debugServer = new DebugServer(sceneManager.getCommands(), debugServerPort);
                 if (!debugServer.start())
@@ -142,15 +138,15 @@ public final class MainLoop {
             }
         }
 
-        if (startProcedure.returnIconName() != null) {
-            if (resource.isExistingResource(Icon.class, startProcedure.returnIconName()))
-                context.getWindow().setIcon(resource.getResource(Icon.class, startProcedure.returnIconName()));
+        if (config.getIconName() != null) {
+            if (resource.isExistingResource(Icon.class, config.getIconName()))
+                context.getWindow().setIcon(resource.getResource(Icon.class, config.getIconName()));
         }
     }
 
     @SuppressWarnings("BusyWait")
-    public static void run(IStartLibraryProcedure startLibraryProcedure) {
-        setup(startLibraryProcedure);
+    public static void run(EngineConfig config) {
+        setup(config);
 
         // Set loop parameters
         int ticks = 0;
@@ -206,7 +202,7 @@ public final class MainLoop {
 
                 if (MainLoop.admin) {
                     window.setTitle(String.format("%s | FPS:%d; TPS:%d | Frame: %.2f ms; Tick: %.2f ms",
-                            startLibraryProcedure.returnProjectName(), EngineStats.getFps(), EngineStats.getTps(),
+                            config.getProjectName(), EngineStats.getFps(), EngineStats.getTps(),
                             EngineStats.getFrameMs(), EngineStats.getTickMs()));
                 }
 
