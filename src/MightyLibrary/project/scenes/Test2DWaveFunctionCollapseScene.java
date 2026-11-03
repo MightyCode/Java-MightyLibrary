@@ -141,7 +141,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
 
         //mapRenderer.getBackTileMapRenderer().setScale(new Vector3f(4f, 4f, 1f));
 
-        map.dispose();
+        map.clearTileChanges();
     }
 
 

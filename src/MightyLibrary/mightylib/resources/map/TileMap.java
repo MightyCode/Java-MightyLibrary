@@ -110,7 +110,7 @@ public class TileMap extends SingleSourceDataType {
     public int getLayerCategoryFrom(String category) { return layersCategoriesFrom.get(category); }
 
 
-    public void dispose(){
+    public void clearTileChanges(){
         tileChanges.clear();
     }
 

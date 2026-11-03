@@ -239,7 +239,7 @@ public class Test2DScene extends Scene {
 
         mapRenderer.update();
 
-        map.dispose();
+        map.clearTileChanges();
     }
 
 
