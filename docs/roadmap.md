@@ -6,7 +6,6 @@ Objectifs dans l'ordre ; retirer chaque objectif une fois atteint.
 
 ### 1. API : corrections urgentes (prochaine étape)
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
-- (U) **Cycle de vie de `Scene`** : `dispose()` signifie « fin de tick » et `unload()` « libération » → renommer `dispose()` en `lateUpdate()` (ou `endTick()`) partout (`IUpdatable`, managers d'entrées…), pour que `dispose` ne soit plus confondu avec une libération.
 - (U) **Démarrage d'une scène** : chaque scène doit appeler `super.init(args, new LoadingSceneImplementation())` puis `super.launch(args)` dans le bon ordre → une scène de chargement par défaut fournie par le moteur (injectable), et un seul point d'entrée clair (`init` pour déclarer, `launch` pour créer) sans appel `super` obligatoire à retenir.
 - (U) **Renderers 2D à finir à la main** : `new RectangleRenderer(...)` doit être suivi de `load(0)` sinon exception au premier `display()` → constructeur qui rend l'objet utilisable, ou fabrique explicite.
 - (U) **Configuration du démarrage** : `IStartLibraryProcedure` impose une douzaine de méthodes `returnXxx()` → un objet de configuration (`EngineConfig`, avec valeurs par défaut) rempli par le projet, qui deviendra le point d'injection.
@@ -35,7 +34,7 @@ Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux
 - **Distribution** : `mvn install` (dépôt local) au départ, puis JitPack ou GitHub Packages pour l'utiliser depuis n'importe quelle machine.
 - **Versions** sémantiques par release (`1.2.0`…) : chaque projet fixe la version qu'il utilise.
 - **Ressources** : séparer les ressources du moteur (shaders, texture `error`, polices par défaut), à embarquer dans le jar et lire depuis le classpath, des ressources du jeu, qui restent dans le dossier du projet utilisateur. Aujourd'hui tout est lu depuis le dossier `resources/` du disque : c'est le principal chantier.
-- **API publique** : pas encore définie, **à discuter avec l'utilisateur avant toute décision** (ce qui sera public, changements cassants comme `dispose()`/singletons à faire avant une 1.0).
+- **API publique** : pas encore définie, **à discuter avec l'utilisateur avant toute décision** (ce qui sera public, changements cassants comme les singletons à faire avant une 1.0).
 
 #### Modèle d'extension validé : le projet injecte, le projet étend
 - **Injection** : le projet fournit au moteur ce dont il a besoin via **un point d'injection unique**, appelé pendant une phase précise du démarrage (avant l'initialisation des ressources) : par exemple `register(EngineRegistry registry)`. Après le démarrage, le registre est figé. Remplace à terme `IProjectLoading.init`/`contextLoading` et les singletons modifiés depuis n'importe où.

@@ -27,15 +27,15 @@ resources/              # assets ; batchs/*.batch décrit les groupes de ressour
 GLFW + son → contexte `"Main"` (fenêtre + inputs) → `ShaderManager.init` → `Resources.createInstance` → `GLResources.createInstance` → `IProjectLoading.init` (ajout des loaders projet) → `contextLoading` (bindings d'input) → `resources.init()` puis `resources.load()` (bloquant) → première scène.
 
 ### Boucle principale (`MainLoop.run`)
-Pas fixe découplé : chaque itération fait **soit** un tick (`sceneManager.update()` + `dispose()`), **soit** une frame (`display()` + `window.dispose()` = swap + poll). Les ticks en retard sont abandonnés (pas de rattrapage). `GameTime.DeltaTime()` = temps réel mesuré entre deux ticks.
+Pas fixe découplé : chaque itération fait **soit** un tick (`sceneManager.update()` + `postUpdate()`), **soit** une frame (`display()` + `window.swapBuffersAndPollEvents()`). Les ticks en retard sont abandonnés (pas de rattrapage). `GameTime.DeltaTime()` = temps réel mesuré entre deux ticks.
 
 ### Cycle de vie d'une scène
-Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `dispose()` / `display()` → `unload()`.
+Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `postUpdate()` / `display()` → `unload()`.
 - Convention : `init` appelle `super.init(args, new LoadingSceneImplementation())`, `launch` appelle `super.launch(args)` **avant** de créer des renderers (les caméras et le framebuffer virtuel sont créés dans `launch`).
 - Les ressources nécessaires se déclarent en surchargeant `getInvolvedBatch()` (noms de fichiers dans `resources/batchs/`).
 - `display()` typique : `setVirtualScene(); clear(); …draw…; setAndDisplayRealScene();`
 - Changer de scène : `sceneManagerInterface.setNewScene(new XScene(), args)`.
-- ⚠️ Nommage trompeur : **`dispose()` = fin de tick** (reset des états d'input « pressed/released »), **`unload()` = libération** des ressources. Ne pas confondre.
+- `postUpdate()` = fin de tick (reset des états d'input « pressed/released »), `unload()` = libération des ressources.
 
 ### Ressources (CPU) — `Resources`
 - Chaque type est un `DataType` avec un `ResourceLoader` (enregistré dans `Resources.Loaders`; loaders projet dans `ProjectLoading.init`).

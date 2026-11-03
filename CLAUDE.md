@@ -24,7 +24,6 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Ne jamais importer `MightyLibrary.project.*` depuis `mightylib` (passer les IDs en paramètre).
 - Tout code GL s'exécute sur le thread principal ; les workers de `Resources` ne font que de l'I/O/CPU. Toujours créer/détruire les objets GL via `GenDeleteResources`.
 - Toute ressource GL créée dans une scène est libérée dans `unload()` ; vérifier les fuites avec `gl` (voir `docs/debug-tools.md`).
-- ⚠️ `dispose()` = **fin de tick** (états d'entrées), `unload()` = **libération**. Ne pas confondre.
 - Fins de ligne normalisées par `.gitattributes` (LF dans le dépôt) : `git add` normal. Ne pas réécrire de fichier source avec `sed` (utiliser Edit).
 - Git : travailler sur une branche, un commit par changement logique, avec la ligne `Co-Authored-By` demandée par le système. Ne pas modifier/commiter `target/` ni `.idea/workspace.xml`.
 - Décrire comment vérifier manuellement ce qui n'a pas pu l'être (quelle scène, quoi observer).
