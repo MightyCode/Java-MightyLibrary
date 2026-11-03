@@ -188,7 +188,9 @@ public final class MainLoop {
                 GameTime.update();
                 sceneManager.update();
                 sceneManager.postUpdate();
-                tickNanos += System.nanoTime() - tickStart;
+                long tickWork = System.nanoTime() - tickStart;
+                tickNanos += tickWork;
+                EngineStats.endTick(tickWork);
                 tickEvent.commit();
                 ++ticks;
 
@@ -212,7 +214,9 @@ public final class MainLoop {
                 frameEvent.commit();
 
                 Screenshot.captureIfRequested(window.getInfo().getWindowId());
+                long swapStart = System.nanoTime();
                 window.swapBuffersAndPollEvents();
+                EngineStats.endSwap(System.nanoTime() - swapStart);
                 ++frames;
                 while (now - lastFrame >= frameTime)
                     lastFrame += frameTime;
@@ -224,8 +228,7 @@ public final class MainLoop {
                 if (MainLoop.admin) {
                     window.setTitle(String.format("%s | FPS:%d; TPS:%d | Frame: %.2f ms; Tick: %.2f ms",
                             config.getProjectName(), EngineStats.getFps(), EngineStats.getTps(),
-                            EngineStats.getFrameMs(), EngineStats.getTickMs()));
-                }
+                            EngineStats.getFrameMs(), EngineStats.getTickMs()));                }
 
                 ticks = frames = 0;
                 tickNanos = frameNanos = 0;

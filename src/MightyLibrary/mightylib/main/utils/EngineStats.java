@@ -41,9 +41,26 @@ public final class EngineStats {
         lastFrameStart = frameStart;
     }
 
+    private static double maxTickMs;
+    private static double maxSwapMs;
+
+    // Buffer swap: waits for the GPU (vsync, uploads still processed by the driver)
+    public static void endSwap(long swapNanos) {
+        maxSwapMs = Math.max(maxSwapMs, swapNanos / 1e6);
+    }
+
+    // Called by the main loop after each tick
+    public static void endTick(long workNanos) {
+        maxTickMs = Math.max(maxTickMs, workNanos / 1e6);
+    }
+
     public static void resetMax() {
+        // The next interval would include what happened before the reset
+        lastFrameStart = -1;
         maxFrameMs = 0;
         maxFrameIntervalMs = 0;
+        maxTickMs = 0;
+        maxSwapMs = 0;
     }
 
     public static void countDrawCall() { ++drawCalls; }
@@ -84,6 +101,8 @@ public final class EngineStats {
         json.put("tickMs", round(tickMs));
         json.put("maxFrameMsSinceReset", round(maxFrameMs));
         json.put("maxFrameIntervalMsSinceReset", round(maxFrameIntervalMs));
+        json.put("maxTickMsSinceReset", round(maxTickMs));
+        json.put("maxSwapMsSinceReset", round(maxSwapMs));
         json.put("drawCallsPerFrame", round(drawCallsPerFrame));
         json.put("programBindsPerFrame", round(programBindsPerFrame));
         json.put("uniformUploadsPerFrame", round(uniformUploadsPerFrame));
