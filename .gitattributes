@@ -1,0 +1,12 @@
+# Text files are stored with LF in the repository and checked out with the platform line ending
+* text=auto
+
+# Binary assets, never converted
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.ogg binary
+*.wav binary
+*.jar binary
+*.jfr binary
