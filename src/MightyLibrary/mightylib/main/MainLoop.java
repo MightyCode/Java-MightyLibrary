@@ -195,7 +195,7 @@ public final class MainLoop {
                 frameEvent.commit();
 
                 Screenshot.captureIfRequested(window.getInfo().getWindowId());
-                window.dispose();
+                window.swapBuffersAndPollEvents();
                 ++frames;
                 while (now - lastFrame >= frameTime)
                     lastFrame += frameTime;

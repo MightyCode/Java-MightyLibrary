@@ -157,7 +157,7 @@ public final class Window {
     }
 
 
-    public void dispose(){
+    public void swapBuffersAndPollEvents(){
         glfwSwapBuffers(info.windowId);
         glfwPollEvents();
     }
