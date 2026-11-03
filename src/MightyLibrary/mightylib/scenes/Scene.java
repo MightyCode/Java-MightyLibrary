@@ -40,6 +40,12 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
     private TemplateSceneLoading loadingScene = null; // can be null
     private boolean isWaitingForLoading = false;
+    // launch() was called, the loading waits for the GL elements
+    private boolean launched = false;
+
+    private static final long GL_LOADING_WARNING_NANOS = 10_000_000_000L;
+    private long glLoadingStart = 0;
+    private boolean glLoadingWarned = false;
 
     protected String[] args;
 
@@ -98,6 +104,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     final void initByManager(String[] args) {
         this.args = args;
         isWaitingForLoading = true;
+        launched = false;
 
         loadingScene = createLoadingScene(args);
         if (loadingScene != null)
@@ -180,17 +187,26 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         }
     }
 
+    /*
+     * Loading in two phases, the loading scene stays displayed during both:
+     * 1. the resources are loaded (CPU, workers), then launch() creates the scene objects;
+     * 2. the GL elements they asked for are sent with the time left in each frame,
+     *    then the scene is displayed and updated: its first frame is complete.
+     */
     final void displayByManager() {
         if (isWaitingForLoading) {
-            boolean finished;
             if (loadingScene != null) {
+                loadingScene.useCameras();
                 loadingScene.displayByManager();
-                finished = loadingScene.isFinished();
-            } else {
-                finished = resources.finishedCurrentLoading();
             }
 
-            if (finished) {
+            if (!launched) {
+                boolean resourcesLoaded = loadingScene != null ? loadingScene.isFinished() : resources.finishedCurrentLoading();
+                if (resourcesLoaded) {
+                    launched = true;
+                    launchByManager(args);
+                }
+            } else if (!glResources.hasElementsToLoad()) {
                 isWaitingForLoading = false;
 
                 // Its framebuffer, texts and textures would leak at each scene change otherwise
@@ -199,11 +215,28 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
                     loadingScene = null;
                 }
 
-                launchByManager(args);
+                useCameras();
+            } else {
+                warnIfGLLoadingIsLong();
             }
         } else {
             display();
         }
+    }
+
+    // An element whose dependencies never load keeps the loading screen forever: say which one
+    private void warnIfGLLoadingIsLong() {
+        if (glLoadingStart == 0) {
+            glLoadingStart = System.nanoTime();
+        } else if (!glLoadingWarned && System.nanoTime() - glLoadingStart > GL_LOADING_WARNING_NANOS) {
+            glLoadingWarned = true;
+            System.err.println("--" + getClass().getSimpleName() + " still waits for GL elements : " + glResources.describeWaitingElements());
+        }
+    }
+
+    // The shaders use the cameras of the scene being displayed
+    final void useCameras() {
+        shaderManager.setCameras(main2DCamera, main3DCamera);
     }
 
     public void display() {
