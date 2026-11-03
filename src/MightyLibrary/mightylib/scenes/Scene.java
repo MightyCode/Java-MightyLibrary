@@ -47,6 +47,9 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     private long glLoadingStart = 0;
     private boolean glLoadingWarned = false;
 
+    // Null until the scene sets one
+    private float[] clearColor = null;
+
     protected String[] args;
 
     private final Camera3DCreationInfo cameraParameters;
@@ -220,6 +223,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
                 warnIfGLLoadingIsLong();
             }
         } else {
+            applyClearColor();
             display();
         }
     }
@@ -258,17 +262,25 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
     protected void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
-    protected void setClearColor(Color4f color) { glClearColor(color.getR(), color.getG(), color.getB(), color.getA());}
+    // The clear color is a global GL state: kept by the scene and applied again before each of its displays,
+    // so the loading scene (displayed after launch) or another scene can't replace it
+    protected void setClearColor(Color4f color) { setClearColor(color.getR(), color.getG(), color.getB(), color.getA());}
     protected void setClearColor(float color1, float color2, float color3, float alpha){
+        clearColor = new float[]{color1, color2, color3, alpha};
         glClearColor(color1, color2, color3, alpha); }
     protected void setClearColor(int color1, int color2, int color3, float alpha){
-        glClearColor((float)color1/255, (float)color2/255, (float)color3/255, alpha); }
+        setClearColor((float)color1/255, (float)color2/255, (float)color3/255, alpha); }
     protected void setClearColor(float color1, float color2, float color3){
-        glClearColor(color1, color2, color3, 1f);}
+        setClearColor(color1, color2, color3, 1f);}
     protected void setClearColor(float color, float alpha){
-        glClearColor(color, color, color, alpha);}
+        setClearColor(color, color, color, alpha);}
     protected void setClearColor(float color){
-        glClearColor(color, color, color, 1f);}
+        setClearColor(color, color, color, 1f);}
+
+    private void applyClearColor() {
+        if (clearColor != null)
+            glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
+    }
 
     // Resources
     protected String[] getInvolvedBatch(){
