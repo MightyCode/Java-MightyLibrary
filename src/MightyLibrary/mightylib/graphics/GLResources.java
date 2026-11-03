@@ -7,17 +7,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
+/**
+ * Shared GL elements (textures...), sent to the graphic card by the main loop with the time left in each frame.
+ * Asking for an element never blocks: it is queued and loaded in the next frames.
+ */
 public class GLResources {
-
-    public static class GLResourceCreation {
-        public int MILLISECONDS_ALLOWED_TO_PROCESS_PER_FRAME = 100;
-    }
+    private static final long NANO_IN_MILLISECOND = 1000000L;
 
     private static GLResources singletonInstance = null;
 
-    public static GLResources createInstance(GLResourceCreation info) {
+    // maxMillisecondsPerFrame: cap of the time spent per frame, -1 to only use the time left in the frame
+    public static GLResources createInstance(int maxMillisecondsPerFrame) {
         if (singletonInstance == null) {
-            singletonInstance = new GLResources(info);
+            singletonInstance = new GLResources(maxMillisecondsPerFrame);
         }
 
         return singletonInstance;
@@ -31,15 +33,15 @@ public class GLResources {
         return singletonInstance;
     }
 
-    private final int millisecondAllowedToProcessPerFrame;
+    private final long maxNanosPerFrame;
 
     private final Queue<GLElement> elementToLoad;
     private final Queue<GLElement> elementToUnload;
 
     private final HashMap<Class<? extends GLElement>, HashMap<String, GLElement>> resources;
 
-    private GLResources(GLResourceCreation info) {
-        millisecondAllowedToProcessPerFrame = info.MILLISECONDS_ALLOWED_TO_PROCESS_PER_FRAME;
+    private GLResources(int maxMillisecondsPerFrame) {
+        maxNanosPerFrame = maxMillisecondsPerFrame < 0 ? Long.MAX_VALUE : maxMillisecondsPerFrame * NANO_IN_MILLISECOND;
 
         elementToLoad = new ArrayDeque<>();
         elementToUnload = new ArrayDeque<>();
@@ -47,37 +49,52 @@ public class GLResources {
         resources = new HashMap<>();
     }
 
-    public void process() {
-        long startTime = System.currentTimeMillis();
+    /**
+     * Load and unload the waiting elements until the deadline (System.nanoTime) is reached.
+     * At least one step is done even if the deadline is already passed, so the loading always progresses:
+     * an element loaded in several steps (big texture) must keep each step short.
+     */
+    public void process(long deadlineNanos) {
+        long startTime = System.nanoTime();
+        long deadline = Math.min(deadlineNanos, startTime + Math.min(maxNanosPerFrame, Long.MAX_VALUE - startTime));
+        boolean stepDone = false;
 
-        // Each waiting element is tried at most once per call: those whose dependencies aren't loaded yet go back in the queue
+        // Each waiting element is tried at most once per call: unfinished ones go back in the queue
         int elementsToTry = elementToLoad.size();
-        while (elementsToTry > 0 && System.currentTimeMillis() - startTime < millisecondAllowedToProcessPerFrame) {
+        while (elementsToTry > 0 && (!stepDone || System.nanoTime() < deadline)) {
             --elementsToTry;
             GLElement element = elementToLoad.poll();
 
             if (element == null || element.isLoaded())
                 continue;
 
-            long remainingMilliseconds = millisecondAllowedToProcessPerFrame - (System.currentTimeMillis() - startTime);
-            element.loadByResource((int) remainingMilliseconds);
+            long remainingNanos = Math.max(0, deadline - System.nanoTime());
+            if (element.loadByResource((int) (remainingNanos / NANO_IN_MILLISECOND)))
+                stepDone = true;
 
             if (!element.isLoaded())
                 elementToLoad.add(element);
         }
 
-        while (!elementToUnload.isEmpty() && System.currentTimeMillis() - startTime < millisecondAllowedToProcessPerFrame) {
+        while (!elementToUnload.isEmpty() && (!stepDone || System.nanoTime() < deadline)) {
             GLElement element = elementToUnload.poll();
 
             if (element != null) {
-                long remainingMilliseconds = millisecondAllowedToProcessPerFrame - (System.currentTimeMillis() - startTime);
-                element.unloadByResource((int) remainingMilliseconds);
+                long remainingNanos = Math.max(0, deadline - System.nanoTime());
+                element.unloadByResource((int) (remainingNanos / NANO_IN_MILLISECOND));
+                stepDone = true;
             }
         }
     }
 
+    // True while elements wait to be loaded (an element whose dependencies never load keeps it true)
+    public boolean hasElementsToLoad() {
+        return !elementToLoad.isEmpty();
+    }
+
     /**
-     * Return the element already registered with this name, or register and load the given one.
+     * Return the element already registered with this name, or register the given one and queue it:
+     * it is loaded by process() in the next frames, never during this call.
      * Either way a reference is added: call releaseResource once the element isn't used anymore.
      */
     public <T extends GLElement> T addElementOrReturnIfPresent(Class<T> type, T T, String name) {
@@ -94,35 +111,21 @@ public class GLResources {
         resources.get(type).put(name, T);
         T.setName(name);
         T.addReference();
-        T.loadByResource(150);
-
-        // Its dependencies aren't loaded yet: retried by process() until they are
-        if (!T.isLoaded())
-            elementToLoad.add(T);
+        elementToLoad.add(T);
 
         return T;
     }
 
-    /**
-     * Same as addElementOrReturnIfPresent, but the element is loaded later by process().
-     */
-    public <T extends GLElement> T addElementToLoadOrReturnIfPresent(Class<T> type, T t, String name) {
-        T element = getResource(type, name);
-        if (element != null) {
-            element.addReference();
-            return element;
+    // Names of the elements waiting to be loaded, to find the one blocking a loading screen
+    public String describeWaitingElements() {
+        StringBuilder names = new StringBuilder();
+        for (GLElement element : elementToLoad) {
+            if (names.length() > 0)
+                names.append(", ");
+            names.append(element.getClass().getSimpleName()).append(' ').append(element.getName());
         }
 
-        resources.putIfAbsent(type, new HashMap<>());
-        resources.get(type).put(name, t);
-        t.setName(name);
-        t.addReference();
-
-        if (!t.isLoaded()) {
-            elementToLoad.add(t);
-        }
-
-        return t;
+        return names.toString();
     }
 
     public void addElementToUnload(GLElement element) {

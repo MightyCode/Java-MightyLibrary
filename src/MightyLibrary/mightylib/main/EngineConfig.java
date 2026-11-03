@@ -1,6 +1,5 @@
 package MightyLibrary.mightylib.main;
 
-import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
@@ -45,7 +44,7 @@ public class EngineConfig {
     private int shaderVersion = -1;
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
     private int maxThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
-    private GLResources.GLResourceCreation glResourceCreation = new GLResources.GLResourceCreation();
+    private int maxGLUploadMillisecondsPerFrame = -1;
 
     // Called once, when the engine is ready
     public EngineConfig setStartScene(Supplier<Scene> startScene) {
@@ -145,8 +144,10 @@ public class EngineConfig {
         return this;
     }
 
-    public EngineConfig setGLResourceCreation(GLResources.GLResourceCreation glResourceCreation) {
-        this.glResourceCreation = glResourceCreation;
+    // GL elements (textures...) are sent with the time left in each frame, at least one step per frame.
+    // This caps that time, for instance to keep a margin while streaming in game. -1: no cap (default).
+    public EngineConfig setMaxGLUploadMillisecondsPerFrame(int maxGLUploadMillisecondsPerFrame) {
+        this.maxGLUploadMillisecondsPerFrame = maxGLUploadMillisecondsPerFrame;
         return this;
     }
 
@@ -177,5 +178,5 @@ public class EngineConfig {
     public int getShaderVersion() { return shaderVersion; }
     public Resources.LoadingMethod getResourcesLoadingMethod() { return resourcesLoadingMethod; }
     public int getMaxThreads() { return maxThreads; }
-    public GLResources.GLResourceCreation getGLResourceCreation() { return glResourceCreation; }
+    public int getMaxGLUploadMillisecondsPerFrame() { return maxGLUploadMillisecondsPerFrame; }
 }

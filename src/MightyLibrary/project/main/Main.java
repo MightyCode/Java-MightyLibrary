@@ -1,6 +1,5 @@
 package MightyLibrary.project.main;
 
-import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.EngineConfig;
 import MightyLibrary.mightylib.main.MainLoop;
@@ -24,9 +23,6 @@ public class Main {
     }
 
     public static EngineConfig createConfig() {
-        GLResources.GLResourceCreation creation = new GLResources.GLResourceCreation();
-        creation.MILLISECONDS_ALLOWED_TO_PROCESS_PER_FRAME = 10;
-
         return new EngineConfig()
                 .setStartScene(MenuScene::new)
                 .setLoadingScene(LoadingSceneImplementation::new)
@@ -42,7 +38,6 @@ public class Main {
                 .setOpenGLErrorCheck(false)
                 .setProjectLoading(new ProjectLoading())
                 //.setResourcesLoadingMethod(new Resources.AllResourcesMethod())
-                .setResourcesLoadingMethod(new Resources.BatchResourcesMethod("init"))
-                .setGLResourceCreation(creation);
+                .setResourcesLoadingMethod(new Resources.BatchResourcesMethod("init"));
     }
 }

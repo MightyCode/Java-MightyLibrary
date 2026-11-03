@@ -15,6 +15,11 @@ public class StatsGenCom extends BaseCommand {
 
     @Override
     public CommandResult execute(String[] args) {
+        if (args.length > 1 && args[1].equals("reset")) {
+            EngineStats.resetMax();
+            return CommandResult.ok("Worst frame timings reset");
+        }
+
         JSONObject data = EngineStats.toJson();
 
         JSONObject glObjects = new JSONObject();
@@ -29,6 +34,7 @@ public class StatsGenCom extends BaseCommand {
     @Override
     public String help() {
         return super.help() +
-                "\nstats : timings and rendering counters of the last second, OpenGL objects alive and memory";
+                "\nstats : timings and rendering counters of the last second, OpenGL objects alive and memory" +
+                "\nstats reset : reset the worst frame timings (maxFrameMsSinceReset, maxFrameIntervalMsSinceReset)";
     }
 }

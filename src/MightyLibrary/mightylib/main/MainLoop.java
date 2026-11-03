@@ -110,7 +110,7 @@ public final class MainLoop {
                 Math.max(1, config.getMaxThreads())
         );
 
-        GLResources glResources = GLResources.createInstance(config.getGLResourceCreation());
+        GLResources.createInstance(config.getMaxGLUploadMillisecondsPerFrame());
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(config.getLoadingScene());
@@ -177,6 +177,7 @@ public final class MainLoop {
         Context mainContext = contextManager.getMainContext();
 
         Window window = mainContext.getWindow();
+        GLResources glResources = GLResources.getInstance();
 
         while (!window.wantExit() && !sceneManager.isExitRequested()) {
             long now = System.nanoTime() - start;
@@ -198,8 +199,16 @@ public final class MainLoop {
                 frameEvent.begin();
                 long frameStart = System.nanoTime();
                 sceneManager.display();
+
+                // GL elements are sent with the time left in this frame, before the next tick or frame.
+                // No tick is due now (the tick branch would have run), at least one step is done anyway.
+                long nextTick = start + (long) (lastTick + tickTime);
+                glResources.process(Math.min(nextTick, frameStart + (long) frameTime));
+
                 // Measured before the buffer swap, which can wait for the GPU
-                frameNanos += System.nanoTime() - frameStart;
+                long frameWork = System.nanoTime() - frameStart;
+                frameNanos += frameWork;
+                EngineStats.endFrame(frameStart, frameWork);
                 frameEvent.commit();
 
                 Screenshot.captureIfRequested(window.getInfo().getWindowId());

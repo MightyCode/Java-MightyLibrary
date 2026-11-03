@@ -27,6 +27,25 @@ public final class EngineStats {
     private static double textureBindsPerFrame;
     private static double bufferUploadBytesPerSecond;
 
+    // Worst frames since the last resetMax, to check that a loading screen stays fluid
+    private static long lastFrameStart = -1;
+    private static double maxFrameMs;
+    private static double maxFrameIntervalMs;
+
+    // Called by the main loop after each frame: frameStart is System.nanoTime at its start
+    public static void endFrame(long frameStart, long workNanos) {
+        maxFrameMs = Math.max(maxFrameMs, workNanos / 1e6);
+        if (lastFrameStart >= 0)
+            maxFrameIntervalMs = Math.max(maxFrameIntervalMs, (frameStart - lastFrameStart) / 1e6);
+
+        lastFrameStart = frameStart;
+    }
+
+    public static void resetMax() {
+        maxFrameMs = 0;
+        maxFrameIntervalMs = 0;
+    }
+
     public static void countDrawCall() { ++drawCalls; }
     public static void countProgramBind() { ++programBinds; }
     public static void countUniformUpload() { ++uniformUploads; }
@@ -63,6 +82,8 @@ public final class EngineStats {
         json.put("tps", tps);
         json.put("frameMs", round(frameMs));
         json.put("tickMs", round(tickMs));
+        json.put("maxFrameMsSinceReset", round(maxFrameMs));
+        json.put("maxFrameIntervalMsSinceReset", round(maxFrameIntervalMs));
         json.put("drawCallsPerFrame", round(drawCallsPerFrame));
         json.put("programBindsPerFrame", round(programBindsPerFrame));
         json.put("uniformUploadsPerFrame", round(uniformUploadsPerFrame));

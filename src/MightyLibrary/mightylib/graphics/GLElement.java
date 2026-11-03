@@ -8,6 +8,7 @@ import java.util.ArrayList;
 public abstract class GLElement implements LoadingElement {
     private String name;
     private boolean loaded;
+    private boolean loadStarted;
     private boolean preLoaded;
 
     public String getName() {
@@ -59,22 +60,32 @@ public abstract class GLElement implements LoadingElement {
         return loaded;
     }
 
-    void loadByResource(int remainingMilliseconds) {
+    /**
+     * Load the element, or continue its loading when it is done in several steps (load returns false until finished).
+     * remainingMilliseconds is the time left in the frame, it can be 0: do at least one short step anyway.
+     * @return true if a loading step was done, false if the dependencies are not loaded yet
+     */
+    boolean loadByResource(int remainingMilliseconds) {
         for (DataType type : resourceDependencies) {
             if (!type.isLoaded()){
-                return;
+                return false;
             }
         }
 
         for (GLElement element : glElementDependencies){
             if (!element.isLoaded()){
-                return;
+                return false;
             }
         }
 
-        // Only printed once the dependencies are ready, the load can be retried each tick until then
-        System.out.println("Loading gl (" + this.getClass().getSimpleName() + ") " + this.getName());
+        // Only printed once the dependencies are ready and once per element, even if loaded in several steps
+        if (!loadStarted) {
+            System.out.println("Loading gl (" + this.getClass().getSimpleName() + ") " + this.getName());
+            loadStarted = true;
+        }
+
         loaded = load(remainingMilliseconds);
+        return true;
     }
 
     public abstract void unload(int remainingMilliseconds);
@@ -86,5 +97,6 @@ public abstract class GLElement implements LoadingElement {
 
         unload(remainingMilliseconds);
         loaded = false;
+        loadStarted = false;
     }
 }

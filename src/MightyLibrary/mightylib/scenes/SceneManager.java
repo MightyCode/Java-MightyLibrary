@@ -61,7 +61,6 @@ public class SceneManager {
         if (sceneInterface.WantQuit)
             return;
 
-        glResources.process(); // Create Gl elements, takes a bit of time
         resources.process(15);
 
         currentScene.updateByManager();
