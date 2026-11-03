@@ -18,19 +18,15 @@ public class SceneManager {
     private final GLResources glResources;
     private final Resources resources;
 
-    private final MainLoop.StopLibrary stopLibrary;
-
     private final Commands commands;
     private final SoundManager soundManager;
 
     // Package of the first scene, used to find scenes by their simple name
     private String scenesPackage;
 
-    public SceneManager(MainLoop.StopLibrary stopLibrary) {
+    public SceneManager() {
         glResources = GLResources.getInstance();
         resources = Resources.getInstance();
-
-        this.stopLibrary = stopLibrary;
 
         sceneInterface = new SceneManagerInterface();
 
@@ -58,8 +54,9 @@ public class SceneManager {
         if (sceneInterface.isWantingChange())
             changeScene();
 
+        // MainLoop stops at the end of this tick
         if (sceneInterface.WantQuit)
-            exit(sceneInterface.ExitStatus);
+            return;
 
         glResources.process(); // Create Gl elements, takes a bit of time
         resources.process(15);
@@ -124,8 +121,12 @@ public class SceneManager {
         sceneInterface.reset();
     }
 
-    public void exit(int status){
-        stopLibrary.exit(status);
+    public boolean isExitRequested() {
+        return sceneInterface.WantQuit;
+    }
+
+    public int getExitStatus() {
+        return sceneInterface.ExitStatus;
     }
 
     public Commands getCommands() {

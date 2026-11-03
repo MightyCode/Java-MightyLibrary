@@ -51,7 +51,8 @@ public final class MainLoop {
         return 0;
     }
 
-    private static void setup(EngineConfig config) {
+    // Return ListError.NO_ERROR, or the error that prevents the engine from starting
+    private static int setup(EngineConfig config) {
         config.validate();
         admin = config.isAdmin();
         Logger.DO_CHECK = config.isOpenGLErrorCheck();
@@ -60,7 +61,7 @@ public final class MainLoop {
         System.out.println("--Load libraries.");
 
         if (loadLibraries(config) == -1) {
-            exit(ListError.LIBRARIES_LOAD_FAIL);
+            return ListError.LIBRARIES_LOAD_FAIL;
         }
 
         tickTime = NANO_IN_SECOND / config.getTps();
@@ -82,19 +83,20 @@ public final class MainLoop {
 
         contextManager.createDefaultContext(wci);
 
+        Context context = contextManager.getContext("Main");
+        Window window = context.getWindow();
+
+        // Checked before any GL call: there is no GL context without a window
+        if (!window.getInfo().isWindowCreated()) {
+            return ListError.WINDOW_CREATION_FAIL;
+        }
+
         System.out.println("\n" + Version.getVersion());
         System.out.println(glfwGetVersionString());
         System.out.println("GL VENDOR   : " + glGetString(GL_VENDOR));
         System.out.println("GL RENDERER : " + glGetString(GL_RENDERER));
         System.out.println("GL VERSION  : " + glGetString(GL_VERSION));
         System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
-
-        Context context = contextManager.getContext("Main");
-        Window window = context.getWindow();
-
-        if (!window.getInfo().isWindowCreated()) {
-            exit(ListError.WINDOW_CREATION_FAIL);
-        }
 
         GenDeleteResources.Init();
 
@@ -111,7 +113,7 @@ public final class MainLoop {
         GLResources glResources = GLResources.createInstance(config.getGLResourceCreation());
 
         System.out.println("--Create SceneManager");
-        sceneManager = new SceneManager(new StopLibrary());
+        sceneManager = new SceneManager();
 
         IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {
@@ -142,11 +144,21 @@ public final class MainLoop {
             if (resource.isExistingResource(Icon.class, config.getIconName()))
                 context.getWindow().setIcon(resource.getResource(Icon.class, config.getIconName()));
         }
+
+        return ListError.NO_ERROR;
     }
 
+    /**
+     * Run the engine until the window is closed or a scene asks to exit, then free everything.
+     * The JVM is not stopped: the application decides what to do with the returned status.
+     *
+     * @return ListError.NO_ERROR, a ListError start failure, or the status given by the scene
+     */
     @SuppressWarnings("BusyWait")
-    public static void run(EngineConfig config) {
-        setup(config);
+    public static int run(EngineConfig config) {
+        int setupStatus = setup(config);
+        if (setupStatus != ListError.NO_ERROR)
+            return shutdown(setupStatus);
 
         // Set loop parameters
         int ticks = 0;
@@ -166,7 +178,7 @@ public final class MainLoop {
 
         Window window = mainContext.getWindow();
 
-        while (!window.wantExit()) {
+        while (!window.wantExit() && !sceneManager.isExitRequested()) {
             long now = System.nanoTime() - start;
             if (now - lastTick >= tickTime) {
                 TickEvent tickEvent = new TickEvent();
@@ -221,47 +233,41 @@ public final class MainLoop {
             }
         }
 
-        exit(ListError.NO_ERROR);
+        return shutdown(sceneManager.isExitRequested() ? sceneManager.getExitStatus() : ListError.NO_ERROR);
     }
 
-    public static class StopLibrary{
-        public void exit(int status){
-            MainLoop.exit(status);
-        }
-    }
-
-    private static void exit(int status) {
-        if (debugServer != null)
+    // Free everything created by setup, return the status
+    private static int shutdown(int status) {
+        if (debugServer != null) {
             debugServer.stop();
-
-        if (status != ListError.LIBRARIES_LOAD_FAIL) {
-            // Terminate GLFW and free the error callback
-            preUnload();
+            debugServer = null;
         }
 
-        if (sceneManager != null)
+        // When the libraries failed to load, the sound manager may not exist
+        boolean librariesLoaded = status != ListError.LIBRARIES_LOAD_FAIL;
+        if (librariesLoaded)
+            SoundManager.getInstance().unloadSoundSource();
+
+        if (sceneManager != null) {
             sceneManager.unload();
-
-        if (contextManager != null)
-            contextManager.unload();
-
-        afterUnload();
-
-        if (status != ListError.NO_ERROR) {
-            System.err.println("Exit with error " + status);
-            System.exit(status);
-        } else {
-            System.out.println("Exit without error");
-            System.exit(0);
+            sceneManager = null;
         }
-    }
 
-    private static void preUnload() {
-        SoundManager.getInstance().unloadSoundSource();
-    }
+        if (contextManager != null) {
+            contextManager.unload();
+            contextManager = null;
+        }
 
-    private static void afterUnload() {
+        // Terminate GLFW and free the error callback
         glfwTerminate();
-        SoundManager.getInstance().unload();
+        if (librariesLoaded)
+            SoundManager.getInstance().unload();
+
+        if (status != ListError.NO_ERROR)
+            System.err.println("Exit with error " + status);
+        else
+            System.out.println("Exit without error");
+
+        return status;
     }
 }

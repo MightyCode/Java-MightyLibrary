@@ -19,7 +19,7 @@ public class Main {
      * Run the game.
      */
     public static void main(String[] args) {
-        MainLoop.run(createConfig());
+        System.exit(MainLoop.run(createConfig()));
     }
 
     public static EngineConfig createConfig() {

@@ -16,8 +16,6 @@ import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
 import java.util.Objects;
-
-import static java.lang.System.exit;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
