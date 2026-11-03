@@ -15,7 +15,7 @@ Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. L
 - **Chargement GL, suite** (le chargement par tranches avec le reste de la frame est fait, mesuré par `TestGLLoading`) : PBO, ou contexte GL partagé dans un second thread (fenêtre GLFW cachée + `glFenceSync`), seulement si des mesures montrent que les bandes ne suffisent pas (dépendant des pilotes, complexe). Les modèles 3D (`SimpleModelRenderer.init(int)`, `HeightMapRenderer`, `TerrainRenderer`) envoient encore leur géométrie d'un bloc.
 - **Uniforms absents d'un shader** : le compilateur GLSL retire les uniforms inutilisés, et `updateShaderValue` sur un tel uniform lève une exception (contournée sur la branche `dev` par un `if (false)`) → avertissement unique par shader/uniform plutôt qu'exception.
 - **Singletons statiques** (`Resources`, `GLResources`, `ShaderManager`, `ContextManager`, `SoundManager`) et `Resources.getInstance()` qui crée une instance par défaut en silence → accès via un contexte moteur, ou au minimum échec explicite. Lié à l'injection (étape 3).
-- **IDs d'action `int` statiques** (`InputManager.getAndIncrementId`) → identifiants texte avec espace de noms enregistrés au registre. Lié au remappage (étape 6) et au modding.
+- **IDs d'action `int` statiques** (`InputManager.getAndIncrementId`) → identifiants texte avec espace de noms enregistrés au registre. Lié au remappage (étape 7) et au modding.
 - **Champs publics modifiables** (`Resources.Loaders`, `GUIList.GUIs`, `ShouldLoop`, `WindowCreationInfo.Size`…) → méthodes.
 - **Fautes et noms trompeurs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`…
 
@@ -60,21 +60,29 @@ Dépend du point d'injection (étape 3) : thèmes et langues sont fournis par le
   - Une fois repris, supprimer les branches `dev` et `devShader` (local et `origin`) ; `devShader` (`b50dd27`, ajout de `CheckOpenGLError` dans `Texture`) est déjà couvert par `master`.
 - **Regroupement des dessins** (style `SpriteBatch`) : accumuler les quads de même texture/shader dans un buffer dynamique et dessiner en un appel. Complémentaire de `TextureDataAtlas` (un atlas réduit les changements de texture, seul le batch réduit les appels de dessin). À décider sur mesures (`stats` : `drawCallsPerFrame`).
 
-### 6. Entrées : remappage des touches et manettes
+### 6. Rendu SVG
+Après l'étape 5 : reprendre d'abord le travail des branches `dev` (`AdvancedRectangle`, `StrokeModule`, SDF), car les contours épais et l'anticrénelage y sont communs, et ce qui y changera conditionne cette étape.
+- **Norme** : SVG (W3C) est trop vaste pour être géré en entier (texte, CSS, filtres, masques, scripts, animations). Viser le noyau commun aux profils légers (SVG Tiny, SVG Native, NanoSVG/VectorDrawable) : tout se ramène à des chemins (segments et Bézier) remplis ou tracés. Les SVG exportés d'Inkscape/Figma/Illustrator s'y ramènent si le texte est converti en chemins.
+- **Sous-ensemble** : chemins et formes de base, remplissage et contour en couleur unie, opacité, transformations, `viewBox` ; plus tard dégradés linéaires et radiaux. Hors champ : texte, CSS, filtres, masques, animations SMIL.
+- **Approche retenue (à confirmer)** : tessellation au chargement + shader simple. `SVGData` (`DataType`, workers) lit le fichier (NanoSVG, inclus dans LWJGL), aplatit les courbes et triangule remplissages et contours (épaisseur, jointures, extrémités) ; `SVGRenderer extends Renderer` + shader `svg` fourni par le moteur ; un appel de dessin par SVG, net à toute échelle ; anticrénelage par MSAA ou bande de fondu sur les bords.
+- **Plus tard, si besoin** : courbes évaluées dans le fragment shader (Loop-Blinn, SDF), dans la lignée de `AdvancedRectangle`.
+- Scène `TestSVG` : quelques icônes à plusieurs échelles.
+
+### 7. Entrées : remappage des touches et manettes
 - Touches modifiables à l'exécution et sauvegardées/chargées depuis un fichier (le README liste aussi : chargement des entrées par fichier, scène prefab de changement des touches).
 - **Support des manettes** (GLFW gamepad : boutons et axes), intégré au même modèle d'actions et remappable comme le clavier.
 
-### 7. Son : formats
+### 8. Son : formats
 Constat : `SoundLoader.filterFile` n'accepte que `.ogg` (décodé par STB Vorbis) ; **le WAV n'est plus chargé** malgré le README. Rétablir le WAV, envisager d'autres formats, et le streaming pour les musiques longues (aujourd'hui tout le fichier est décodé en mémoire).
 
-### 8. Console et GUI en jeu
+### 9. Console et GUI en jeu
 Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son système `guicommand`, à unifier avec `Commands`) et une GUI de base pour afficher des informations en jeu (overlay de debug : stats, scène, entrées). S'appuie sur le thème, les tailles automatiques et les langues (étape 4).
 
-### 9. Réflexions de conception
+### 10. Réflexions de conception
 - **ECS et/ou graphe de scène** : aujourd'hui une scène gère de simples listes d'objets à mettre à jour/afficher. Décider du modèle d'entités.
 - **Alternative à Box2D** (secondaire) : JBox2D 2.2.1.1 n'est plus maintenu ; comparer une solution maison (le moteur a déjà des collisions maison) et des bibliothèques maintenues.
 
-### 10. Intégrations plateformes
+### 11. Intégrations plateformes
 - **Discord** : présence enrichie (statut de jeu) via le SDK Discord, bindings Java à évaluer.
 - **Steam** : Steamworks (succès, overlay, statistiques…) ; il existe des bindings Java à évaluer.
 
