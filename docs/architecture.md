@@ -28,6 +28,7 @@ GLFW + son → contexte `"Main"` (fenêtre + inputs) → `ShaderManager.init` �
 
 ### Boucle principale (`MainLoop.run`)
 Pas fixe découplé : chaque itération fait **soit** un tick (`sceneManager.update()` + `postUpdate()`), **soit** une frame (`display()` + `window.swapBuffersAndPollEvents()`). Les ticks en retard sont abandonnés (pas de rattrapage). `GameTime.DeltaTime()` = temps réel mesuré entre deux ticks.
+La boucle s'arrête quand la fenêtre est fermée ou qu'une scène demande à quitter (`sceneManagerInterface.exit(status)`, fin du tick en cours). `run` libère tout et **renvoie** le code de sortie (`ListError`) sans appeler `System.exit` : c'est l'application qui décide (`Main` fait `System.exit(MainLoop.run(config))`).
 
 ### Cycle de vie d'une scène
 Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `postUpdate()` / `display()` → `unload()`.
