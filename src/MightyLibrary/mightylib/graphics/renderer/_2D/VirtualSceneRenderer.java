@@ -38,13 +38,9 @@ public class VirtualSceneRenderer extends RectangleRenderer {
         frameBuffer.bindRenderTexture();
     }
 
-    public void unload(){
-        unload(0);
-    }
-
     @Override
-    public void unload(int remainingMilliseconds) {
-        super.unload(remainingMilliseconds);
+    public void unload() {
+        super.unload();
         frameBuffer.unload();
     }
 }

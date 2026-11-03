@@ -342,10 +342,6 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     public void unload() {
-        // TODO delete that
-        unload(0);
-    }
-    public void unload(int remainingMilliseconds) {
         shape.unload();
 
         if (mainTexture instanceof GLElement)

@@ -51,9 +51,4 @@ public class RectangleRenderer extends Shape2DRenderer {
         return (RectangleRenderer) updateShapeTexture();
     }
 
-
-    @Override
-    public void unload(int remainingMilliseconds) {
-        super.unload(remainingMilliseconds);
-    }
 }

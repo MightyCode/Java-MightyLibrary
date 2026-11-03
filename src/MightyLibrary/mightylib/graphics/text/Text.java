@@ -395,9 +395,4 @@ public class Text extends Renderer implements Cloneable {
     public Text clone() {
         return copyTo(new Text());
     }
-
-    @Override
-    public void unload(int remainingMilliseconds) {
-        super.unload(remainingMilliseconds);
-    }
 }

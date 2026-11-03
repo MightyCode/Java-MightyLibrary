@@ -442,9 +442,4 @@ public class TileMapRenderer extends Renderer {
 
         animatedTiles.clear();
     }
-
-    @Override
-    public void unload(int remainingMilliseconds) {
-        super.unload(remainingMilliseconds);
-    }
 }
