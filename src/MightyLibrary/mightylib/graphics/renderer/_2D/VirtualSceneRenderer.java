@@ -12,18 +12,15 @@ public class VirtualSceneRenderer extends RectangleRenderer {
         frameBuffer = new FrameBuffer(bindable, info.getVirtualSizeRef().x, info.getVirtualSizeRef().y);
     }
 
+    // The whole window, in normalized device coordinates
     @Override
-    public boolean load(int remainingMilliseconds) {
-        super.load(remainingMilliseconds);
-
-        this.shape.updateVbo(new float[]{
+    protected float[] calculatePosition() {
+        return new float[]{
                 -1, 1,
                 -1, -1,
                 1, -1,
                 1, 1
-        }, positionIndex);
-
-        return true;
+        };
     }
 
     public FrameBuffer getFrameBuffer(){

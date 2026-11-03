@@ -18,7 +18,11 @@ public abstract class Shape2DRenderer extends Renderer {
     protected final int positionIndex, textureIndex;
     protected Vector4f texturePosition;
 
-    private boolean initialized = false;
+    // The geometry is sent at the next display: subclasses' fields are not set yet in this constructor,
+    // and several changes in a tick cost a single upload
+    private boolean indicesDirty = true;
+    private boolean positionDirty = true;
+    private boolean textureDirty = true;
 
     public Shape2DRenderer(String shaderName, boolean useEbo) {
         super(shaderName, useEbo);
@@ -32,23 +36,27 @@ public abstract class Shape2DRenderer extends Renderer {
         textureIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
     }
 
-    public boolean load(int remainingMilliseconds) {
-        int[] indices = getIndices();
-        shape.setEboStorage(Shape.STATIC_STORE);
-        shape.setEbo(indices);
-        shape.updateVbo(calculatePosition(), positionIndex);
-        shape.updateVbo(calculateTexturePosition(), textureIndex);
+    private void uploadGeometry() {
+        if (indicesDirty) {
+            shape.setEboStorage(Shape.STATIC_STORE);
+            shape.setEbo(getIndices());
+            indicesDirty = false;
+        }
 
-        initialized = true;
+        if (positionDirty) {
+            shape.updateVbo(calculatePosition(), positionIndex);
+            positionDirty = false;
+        }
 
-        return true;
+        if (textureDirty) {
+            shape.updateVbo(calculateTexturePosition(), textureIndex);
+            textureDirty = false;
+        }
     }
 
     @Override
     public void display() {
-        if (!initialized) {
-            throw new RuntimeException("Shape not initialized : " + this);
-        }
+        uploadGeometry();
 
         super.display();
     }
@@ -64,7 +72,7 @@ public abstract class Shape2DRenderer extends Renderer {
         this.referenceDirection = reference;
         this.referencePoint = Direction.DirectionToRangedVector(reference, REFERENCE_RANGE_DIRECTION);
 
-        shape.updateVbo(calculatePosition(), positionIndex);
+        positionDirty = true;
 
         return this;
     }
@@ -77,7 +85,7 @@ public abstract class Shape2DRenderer extends Renderer {
         referencePoint = reference;
         referenceDirection = Direction.RangedVectorToDirection(reference, REFERENCE_RANGE_DIRECTION);
 
-        shape.updateVbo(calculatePosition(), positionIndex);
+        positionDirty = true;
 
         return this;
     }
@@ -125,14 +133,16 @@ public abstract class Shape2DRenderer extends Renderer {
         return new Vector2f(position.x, position.y);
     }
 
+    // Sent at the next display
     public Shape2DRenderer updateShapeTexture(){
-        shape.updateVbo(calculateTexturePosition(), textureIndex);
+        textureDirty = true;
 
         return this;
     }
 
+    // Sent at the next display
     public Shape2DRenderer updateShapePosition(){
-        shape.updateVbo(calculatePosition(), positionIndex);
+        positionDirty = true;
 
         return this;
     }

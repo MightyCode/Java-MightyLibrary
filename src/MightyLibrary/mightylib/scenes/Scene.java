@@ -111,7 +111,6 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         initGlobalParameters();
 
         scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), createVirtualSceneBindable());
-        scRenderer.load(0);
 
         launch(args);
     }

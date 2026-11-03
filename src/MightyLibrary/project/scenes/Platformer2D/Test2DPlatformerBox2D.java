@@ -139,7 +139,6 @@ public class Test2DPlatformerBox2D extends Scene {
             initializePhysics(world);
 
             renderer = new RectangleRenderer("colorShape2D");
-            renderer.load(0);
             renderer.setColorMode(color);
             renderer.setReferenceDirection(EDirection.None);
             renderer.setSizePix(B2Utils.b2ToEngine(size));

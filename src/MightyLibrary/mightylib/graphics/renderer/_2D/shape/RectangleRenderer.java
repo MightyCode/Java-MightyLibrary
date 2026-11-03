@@ -2,7 +2,6 @@ package MightyLibrary.mightylib.graphics.renderer._2D.shape;
 
 import MightyLibrary.mightylib.graphics.renderer.RectangularFace;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
-import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.mightylib.utils.math.geometry.EFlip;
 import MightyLibrary.mightylib.utils.math.geometry.ERotation;
 import org.joml.Vector2f;
@@ -15,15 +14,6 @@ public class RectangleRenderer extends Shape2DRenderer {
 
         face = new RectangularFace();
         texturePosition = RectangularFace.BasicTexturePosition();
-    }
-
-    @Override
-    public boolean load(int remainingMilliseconds) {
-        super.load(remainingMilliseconds);
-
-        setReferenceDirection(EDirection.LeftUp);
-
-        return true;
     }
 
     @Override

@@ -13,14 +13,7 @@ public class PolygonRenderer extends Shape2DRenderer {
         super(shaderName, true);
         this.polygon = polygon;
         texturePosition = RectangularFace.BasicTexturePosition();
-    }
-
-    @Override
-    public boolean load(int remainingMilliseconds) {
-        super.load(remainingMilliseconds);
         setReferenceDirection(EDirection.None);
-
-        return true;
     }
 
     // position of point comparing to the bounding box

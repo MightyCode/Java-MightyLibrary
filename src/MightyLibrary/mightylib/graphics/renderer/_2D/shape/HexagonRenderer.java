@@ -19,15 +19,8 @@ public class HexagonRenderer extends Shape2DRenderer {
         texturePosition = RectangularFace.BasicTexturePosition();
         if (useStretchRatio)
             setScale(new Vector3f(1f, STRETCH_RATIO, 1f));
-    }
-
-    @Override
-    public boolean load(int remainingMilliseconds){
-        super.load(remainingMilliseconds);
 
         setReferenceDirection(EDirection.None);
-
-        return true;
     }
 
     protected int[] getIndices(){

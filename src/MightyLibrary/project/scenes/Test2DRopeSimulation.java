@@ -46,7 +46,6 @@ public class Test2DRopeSimulation extends Scene {
             this.locked = locked;
 
             renderer = new RectangleRenderer("colorShape2D");
-            renderer.load(0);
             renderer.setColorMode(ColorList.Grey());
             renderer.setSizePix(POINT_SIZE, POINT_SIZE);
             renderer.setReferenceDirection(EDirection.None);
@@ -124,7 +123,6 @@ public class Test2DRopeSimulation extends Scene {
             this.designedLength = pointA.getPosition().distance(pointB.getPosition());
 
             renderer = new RectangleRenderer("colorShape2D");
-            renderer.load(0);
             renderer.setColorMode(ColorList.Yellow());
             renderer.setReferenceDirection(EDirection.None);
 

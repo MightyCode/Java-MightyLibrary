@@ -46,7 +46,6 @@ public abstract class Slider {
         maxPrecision = -1;
 
         button = new RectangleRenderer("colorShape2D");
-        button.load(0);
         button.setColorMode(ColorList.Grey());
         setButtonSize(button, referenceSize);
 
@@ -55,7 +54,6 @@ public abstract class Slider {
         button.setReferenceCamera(referenceCamera);
 
         bar = new RectangleRenderer("colorShape2D");
-        bar.load(0);
         bar.setColorMode(ColorList.DarkGrey());
         bar.setReferenceCamera(referenceCamera);
         setBarSize(bar, size);

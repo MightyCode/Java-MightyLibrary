@@ -16,7 +16,6 @@ public class PlayerRenderer {
         this.values = values;
 
         renderer = new RectangleRenderer("colorShape2D");
-        renderer.load(0);
         renderer.setColorMode(ColorList.Orange()); // Character color
         renderer.setReferenceDirection(EDirection.None);
         renderer.setSizePix(B2Utils.b2ToEngine(new Vec2(values.size.x, values.size.y)));

@@ -62,7 +62,6 @@ public class Test3D2DGame extends Scene {
                 mainContext.getWindow().getInfo().getVirtualSizeRef().y);
 
         background = new RectangleRenderer("texture2D");
-        background.load(0);
         background.setReferenceCamera(insideCamera);
         background.setMainTextureChannel("error");
         background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x,
@@ -84,7 +83,6 @@ public class Test3D2DGame extends Scene {
         slimeRenderer.update();
 
         debugView = new RectangleRenderer("texture2D");
-        debugView.load(0);
         debugView.setMainTextureChannel(game2DRender);
 
         Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeRef();

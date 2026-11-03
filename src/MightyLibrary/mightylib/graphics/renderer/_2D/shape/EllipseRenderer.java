@@ -22,16 +22,7 @@ public class EllipseRenderer extends RectangleRenderer {
         addShaderValue(ShaderProperty.Rotation, Float.class, 0f);
 
         texturePosition = RectangularFace.BasicTexturePosition();
-    }
-
-    @Override
-    public boolean load(int m){
-        boolean state = super.load(m);
-        if (!state) return false;
-
         setReferenceDirection(EDirection.None);
-
-        return true;
     }
 
     public EllipseRenderer(String shaderName) {

@@ -79,7 +79,6 @@ public class Test2DScene extends Scene {
         hudCamera = main2DCamera.copy();
 
         atlasRenderer = new RectangleRenderer("texture2D");
-        atlasRenderer.load(0);
         atlasRenderer.setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));
         atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
         atlasRenderer.setPosition(new Vector2f(500, 10));
@@ -168,13 +167,11 @@ public class Test2DScene extends Scene {
         main2DCamera.setZoomLevel(0.5f);
 
         hexagonRenderer1 = new HexagonRenderer("colorShape2D");
-        hexagonRenderer1.load(0);
         hexagonRenderer1.setColorMode(ColorList.Gold());
         hexagonRenderer1.setSizePix(200, 100);
         hexagonRenderer1.setPosition(new Vector2f(-100, 400));
 
         hexagonRenderer2 = new HexagonRenderer("texture2D");
-        hexagonRenderer2.load(0);
         hexagonRenderer2.setMainTextureChannel(glResources.addElementOrReturnIfPresent(
                 Texture.class,
                 new Texture(Resources.getInstance().getResource(TextureData.class,
@@ -184,7 +181,6 @@ public class Test2DScene extends Scene {
         //ellipseRenderer.setReference(EDirection.Right);
 
         testEllipseRenderer = new EllipseRenderer();
-        testEllipseRenderer.load(0);
         testEllipseRenderer.setColorMode(ColorList.DarkBlue());
         testEllipseRenderer.setSizePix(200, 300);
         testEllipseRenderer.setPosition(new Vector2f(-200, 0));
@@ -201,7 +197,6 @@ public class Test2DScene extends Scene {
                         .build()
         );
 
-        polygonRenderer.load(0);
         polygonRenderer.setMainTextureChannel("error");
         polygonRenderer.setSizePix(100, 100);
         polygonRenderer.setPosition(new Vector2f(1500, 300));

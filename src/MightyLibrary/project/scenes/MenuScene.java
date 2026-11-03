@@ -150,7 +150,6 @@ public class MenuScene extends Scene {
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
 
         test = new RectangleRenderer("texture2D");
-        test.load(0);
         test.setMainTextureChannel("error");
         test.setSizePix(100, 100);
         test.setPosition(new Vector2f(500, 10));
