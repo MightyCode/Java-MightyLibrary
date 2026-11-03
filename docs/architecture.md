@@ -23,7 +23,7 @@ resources/              # assets ; batchs/*.batch décrit les groupes de ressour
 ## Concepts clés
 
 ### Démarrage
-`Main` fournit un `IStartLibraryProcedure` (taille fenêtre, FPS/TPS, méthode de chargement, nb de threads…) → `MainLoop.run()` :
+`Main` remplit un `EngineConfig` (setters enchaînables avec valeurs par défaut ; seule la scène de départ est obligatoire : taille fenêtre, FPS/TPS, méthode de chargement, nb de threads…) → `MainLoop.run(config)` :
 GLFW + son → contexte `"Main"` (fenêtre + inputs) → `ShaderManager.init` → `Resources.createInstance` → `GLResources.createInstance` → `IProjectLoading.init` (ajout des loaders projet) → `contextLoading` (bindings d'input) → `resources.init()` puis `resources.load()` (bloquant) → première scène.
 
 ### Boucle principale (`MainLoop.run`)
@@ -58,7 +58,7 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 
 ### Inputs
 - Les IDs d'action sont des `int` alloués statiquement via `InputManager.getAndIncrementId()` (0 et 1 réservés : `COMMAND`, `RELOAD_TEXTURE`). Projet : `ActionId` + bindings dans `ProjectLoading.contextLoading`.
-- La disposition clavier vient de `IStartLibraryProcedure.returnDefaultKeyboardLanguage()` (QWERTY si un contexte est créé sans `WindowCreationInfo`).
+- La disposition clavier vient de `EngineConfig.setKeyboardLanguage()` (QWERTY par défaut, et si un contexte est créé sans `WindowCreationInfo`).
 
 ### Temps
 - `GameTime.DeltaTime()` : temps réel mesuré entre deux ticks (variable). `GameTime.FixedDeltaTime()` : durée fixe d'un tick (1/TPS), **à utiliser pour la physique** (`world.step` de JBox2D).
