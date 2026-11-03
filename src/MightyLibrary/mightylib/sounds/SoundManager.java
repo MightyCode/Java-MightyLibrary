@@ -54,7 +54,9 @@ public class SoundManager {
         soundsSource = new ArrayList<>();
 
         gainTree = new KeyTree<>();
-        SoundLoader.loadGainTree(gainPath, gainTree);
+        // No gain tree: every sound keeps a gain of 1
+        if (gainPath != null)
+            SoundLoader.loadGainTree(gainPath, gainTree);
     }
 
 
