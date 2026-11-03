@@ -33,7 +33,6 @@ import MightyLibrary.mightylib.physics.tweenings.type.Vector2fTweening;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.mightylib.utils.math.geometry.Polygon;
 import MightyLibrary.project.main.ActionId;
-import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.*;
 
 public class Test2DScene extends Scene {
@@ -65,8 +64,6 @@ public class Test2DScene extends Scene {
     }
 
     public void init(String[] args) {
-        super.init(args, new LoadingSceneImplementation());
-
         atlas = new TextureDataAtlas("atlas1");
 
         atlas.addTexture("tileset");
@@ -77,7 +74,6 @@ public class Test2DScene extends Scene {
     }
 
     public void launch(String[] args) {
-        super.launch(args);
         setClearColor(52, 189, 235, 1f);
         /// SCENE INFORMATION ///
         hudCamera = main2DCamera.copy();

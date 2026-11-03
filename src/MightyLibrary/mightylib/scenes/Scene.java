@@ -73,23 +73,47 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         shaderManager.setCameras(main2DCamera, main3DCamera);
     }
 
-    public abstract void init(String[] args);
+    /**
+     * Called when the scene is set, before its resources are loaded: declare what the scene needs here.
+     * The cameras and the virtual scene do not exist yet. No need to call super.
+     */
+    public void init(String[] args) {}
 
-    public void init(String[] args, TemplateSceneLoading loadingScene) {
-        this.args = args;
-        this.loadingScene = loadingScene;
-        this.loadingScene.launch(this.args);
+    /**
+     * Called once the resources are loaded: create the renderers here.
+     * The cameras and the virtual scene already exist. No need to call super.
+     */
+    public void launch(String[] args) {}
+
+    // Scene displayed while this scene loads, null to display nothing
+    protected TemplateSceneLoading createLoadingScene(String[] args) {
+        return sceneManagerInterface.createDefaultLoadingScene();
     }
 
-    public void launch(String[] args, IGLBindable bindable) {
+    // Surface on which the scene is drawn before being displayed on the window
+    protected IGLBindable createVirtualSceneBindable() {
+        return new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS);
+    }
+
+    final void initByManager(String[] args) {
+        this.args = args;
+        isWaitingForLoading = true;
+
+        loadingScene = createLoadingScene(args);
+        if (loadingScene != null)
+            loadingScene.launchByManager(args);
+
+        init(args);
+    }
+
+    final void launchByManager(String[] args) {
+        this.args = args;
         initGlobalParameters();
 
-        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), bindable);
+        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), createVirtualSceneBindable());
         scRenderer.load(0);
-    }
 
-    public void launch(String[] args) {
-        launch(args, new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS));
+        launch(args);
     }
 
     public void addUpdatable(IUpdatable updatable){
@@ -119,10 +143,6 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     }
 
 
-    public void setWaitForLoading() {
-        isWaitingForLoading = true;
-    }
-
     boolean isWaitingForLoading() {
         return isWaitingForLoading;
     }
@@ -133,7 +153,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
     final void updateByManager(){
         if (isWaitingForLoading) {
-            loadingScene.updateByManager();
+            if (loadingScene != null)
+                loadingScene.updateByManager();
         } else {
             update();
         }
@@ -147,7 +168,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
     void postUpdateByManager(){
         if (isWaitingForLoading) {
-            loadingScene.postUpdateByManager();
+            if (loadingScene != null)
+                loadingScene.postUpdateByManager();
         } else {
             postUpdate();
         }
@@ -161,16 +183,24 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
     final void displayByManager() {
         if (isWaitingForLoading) {
-            loadingScene.displayByManager();
+            boolean finished;
+            if (loadingScene != null) {
+                loadingScene.displayByManager();
+                finished = loadingScene.isFinished();
+            } else {
+                finished = resources.finishedCurrentLoading();
+            }
 
-            if (loadingScene.isFinished()) {
+            if (finished) {
                 isWaitingForLoading = false;
 
                 // Its framebuffer, texts and textures would leak at each scene change otherwise
-                loadingScene.unload();
-                loadingScene = null;
+                if (loadingScene != null) {
+                    loadingScene.unload();
+                    loadingScene = null;
+                }
 
-                this.launch(args);
+                launchByManager(args);
             }
         } else {
             display();

@@ -18,7 +18,6 @@ import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
-import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -215,8 +214,6 @@ public class Test2DRopeSimulation extends Scene {
     private Text textIsWindControlled;
 
     public void init(String[] args) {
-        super.init(args, new LoadingSceneImplementation());
-
         windForce = new Vector2f(0, 0);
 
         simulationWorking = false;
@@ -241,7 +238,6 @@ public class Test2DRopeSimulation extends Scene {
     }
 
     public void launch(String[] args) {
-        super.launch(args);
         setClearColor(52, 189, 235, 1f);
 
         /// SCENE INFORMATION ///

@@ -16,7 +16,6 @@ import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
 import MightyLibrary.project.main.ActionId;
-import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -35,10 +34,6 @@ public class Test3D2DGame extends Scene {
     private RectangleRenderer debugView;
     private CubeRenderer gameRenderer;
 
-    public void init(String[] args) {
-        super.init(args, new LoadingSceneImplementation());
-    }
-
     public Test3D2DGame(){
         super(SCENE_CCI);
     }
@@ -51,7 +46,6 @@ public class Test3D2DGame extends Scene {
     }
 
     public void launch(String[] args){
-        super.launch(args);
         /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);

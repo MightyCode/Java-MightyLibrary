@@ -5,7 +5,9 @@ import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.scenes.DefaultLoadingScene;
 import MightyLibrary.mightylib.scenes.Scene;
+import MightyLibrary.mightylib.scenes.TemplateSceneLoading;
 import org.joml.Vector2i;
 
 import java.util.function.Supplier;
@@ -18,6 +20,7 @@ public class EngineConfig {
     public static final int DEFAULT_DEBUG_SERVER_PORT = 7777;
 
     private Supplier<Scene> startScene;
+    private Supplier<TemplateSceneLoading> loadingScene = DefaultLoadingScene::new;
 
     private final Vector2i windowSize = new Vector2i(1280, 720);
     // Null: same as the window size
@@ -47,6 +50,12 @@ public class EngineConfig {
     // Called once, when the engine is ready
     public EngineConfig setStartScene(Supplier<Scene> startScene) {
         this.startScene = startScene;
+        return this;
+    }
+
+    // Displayed while a scene loads, unless the scene overrides Scene.createLoadingScene
+    public EngineConfig setLoadingScene(Supplier<TemplateSceneLoading> loadingScene) {
+        this.loadingScene = loadingScene;
         return this;
     }
 
@@ -144,11 +153,14 @@ public class EngineConfig {
     void validate() {
         if (startScene == null)
             throw new IllegalStateException("EngineConfig: no start scene, call setStartScene");
+        if (loadingScene == null)
+            throw new IllegalStateException("EngineConfig: no loading scene, keep the default one or call setLoadingScene");
         if (fps <= 0 || tps <= 0)
             throw new IllegalStateException("EngineConfig: fps and tps must be positive");
     }
 
     public Supplier<Scene> getStartScene() { return startScene; }
+    public Supplier<TemplateSceneLoading> getLoadingScene() { return loadingScene; }
     public Vector2i getWindowSize() { return new Vector2i(windowSize); }
     public Vector2i getVirtualSize() { return new Vector2i(virtualSize != null ? virtualSize : windowSize); }
     public String getProjectName() { return projectName; }

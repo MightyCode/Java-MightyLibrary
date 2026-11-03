@@ -1,14 +1,23 @@
 package MightyLibrary.mightylib.scenes;
 
+import java.util.function.Supplier;
+
 public class SceneManagerInterface {
     private String[] changeArgs;
     private Scene newScene;
 
+    private final Supplier<TemplateSceneLoading> defaultLoadingScene;
+
     boolean WantQuit;
     int ExitStatus;
 
-    public SceneManagerInterface(){
+    SceneManagerInterface(Supplier<TemplateSceneLoading> defaultLoadingScene){
+        this.defaultLoadingScene = defaultLoadingScene;
         reset();
+    }
+
+    TemplateSceneLoading createDefaultLoadingScene() {
+        return defaultLoadingScene.get();
     }
 
     /**

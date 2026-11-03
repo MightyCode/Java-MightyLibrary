@@ -16,6 +16,12 @@ public abstract class TemplateSceneLoading extends Scene {
         resources = Resources.getInstance();
     }
 
+    // A loading scene is displayed at once, it has no loading scene itself
+    @Override
+    protected final TemplateSceneLoading createLoadingScene(String[] args) {
+        return null;
+    }
+
     public void addElementToLoad(LoadingElement element) {
         elementToLoad.add(element);
     }

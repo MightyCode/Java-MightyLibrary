@@ -7,7 +7,6 @@ import MightyLibrary.mightylib.scenes.Scene;
 import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.geometry.EDirection;
-import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
@@ -26,14 +25,7 @@ public class Test2DPlatformerBox2D extends Scene {
     private final ArrayList<StaticBox> staticBoxes = new ArrayList<>();
 
     @Override
-    public void init(String[] args) {
-        super.init(args, new LoadingSceneImplementation());
-    }
-
-    @Override
     public void launch(String[] args) {
-        super.launch(args);
-
         B2Utils.setB2ToEngineVector(16);
 
         world = new World(new Vec2(0, -9.81f));

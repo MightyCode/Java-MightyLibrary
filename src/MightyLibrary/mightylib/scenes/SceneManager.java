@@ -11,6 +11,8 @@ import MightyLibrary.mightylib.resources.texture.TextureData;
 import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.utils.enginecommand.Commands;
 
+import java.util.function.Supplier;
+
 public class SceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
@@ -24,11 +26,12 @@ public class SceneManager {
     // Package of the first scene, used to find scenes by their simple name
     private String scenesPackage;
 
-    public SceneManager() {
+    // defaultLoadingScene: displayed while a scene loads, unless the scene overrides createLoadingScene
+    public SceneManager(Supplier<TemplateSceneLoading> defaultLoadingScene) {
         glResources = GLResources.getInstance();
         resources = Resources.getInstance();
 
-        sceneInterface = new SceneManagerInterface();
+        sceneInterface = new SceneManagerInterface(defaultLoadingScene);
 
         commands = new Commands(this);
         soundManager = SoundManager.getInstance();
@@ -115,8 +118,7 @@ public class SceneManager {
         for (String batch : currentScene.getInvolvedBatch())
             Resources.getInstance().loadBatch(batch);
 
-        currentScene.init(sceneInterface.getChangeArgs());
-        currentScene.setWaitForLoading();
+        currentScene.initByManager(sceneInterface.getChangeArgs());
 
         sceneInterface.reset();
     }

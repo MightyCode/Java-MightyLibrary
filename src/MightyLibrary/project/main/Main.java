@@ -6,6 +6,7 @@ import MightyLibrary.mightylib.main.EngineConfig;
 import MightyLibrary.mightylib.main.MainLoop;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.project.scenes.MenuScene;
+import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 
 /**
  * Main class of the project.
@@ -28,6 +29,7 @@ public class Main {
 
         return new EngineConfig()
                 .setStartScene(MenuScene::new)
+                .setLoadingScene(LoadingSceneImplementation::new)
                 .setWindowSize(1280, 720)
                 .setVirtualSize(1280, 720)
                 .setProjectName("Java-MightyLibrary")

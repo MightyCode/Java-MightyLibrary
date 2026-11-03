@@ -13,14 +13,8 @@ public class LoadingSceneImplementation extends TemplateSceneLoading {
         super();
     }
 
-    public void init(String[] args) {
-        super.init(args, new LoadingSceneImplementation());
-    }
-
     @Override
     public void launch(String[] args) {
-        super.launch(args);
-
         Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
 
         Text text = new Text();

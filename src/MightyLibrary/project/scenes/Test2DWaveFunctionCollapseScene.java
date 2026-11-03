@@ -16,7 +16,6 @@ import MightyLibrary.mightylib.scenes.camera.cameraComponents.ZoomingCameraCompo
 import MightyLibrary.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRules;
 import MightyLibrary.mightylib.utils.Timer;
 import MightyLibrary.project.main.ActionId;
-import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -38,12 +37,7 @@ public class Test2DWaveFunctionCollapseScene extends Scene {
         };
     }
 
-    public void init(String[] args) {
-        super.init(args, new LoadingSceneImplementation());
-    }
-
     public void launch(String[] args) {
-        super.launch(args);
         /// SCENE INFORMATION ///
 
         hudCamera = main2DCamera.copy();

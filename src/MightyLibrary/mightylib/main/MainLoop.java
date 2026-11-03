@@ -113,7 +113,7 @@ public final class MainLoop {
         GLResources glResources = GLResources.createInstance(config.getGLResourceCreation());
 
         System.out.println("--Create SceneManager");
-        sceneManager = new SceneManager();
+        sceneManager = new SceneManager(config.getLoadingScene());
 
         IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {

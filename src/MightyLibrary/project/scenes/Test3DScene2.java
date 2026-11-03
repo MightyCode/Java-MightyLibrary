@@ -18,7 +18,6 @@ import MightyLibrary.mightylib.utils.math.color.Color4f;
 import MightyLibrary.mightylib.utils.math.color.ColorList;
 import MightyLibrary.mightylib.utils.math.MightyMath;
 import MightyLibrary.project.main.ActionId;
-import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -48,12 +47,7 @@ public class Test3DScene2 extends Scene {
         };
     }
 
-    public void init(String[] args) {
-        super.init(args, new LoadingSceneImplementation());
-    }
-
     public void launch(String[] args){
-        super.launch(args);
         /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);
