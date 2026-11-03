@@ -32,7 +32,8 @@ La boucle s'arrête quand la fenêtre est fermée ou qu'une scène demande à qu
 
 ### Cycle de vie d'une scène
 Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `postUpdate()` / `display()` → `unload()`.
-- Convention : `init` appelle `super.init(args, new LoadingSceneImplementation())`, `launch` appelle `super.launch(args)` **avant** de créer des renderers (les caméras et le framebuffer virtuel sont créés dans `launch`).
+- `init` et `launch` sont facultatifs et **sans appel `super`** : le moteur (`initByManager` / `launchByManager`) crée la scène de chargement, puis, une fois les ressources chargées, les caméras et le framebuffer virtuel avant d'appeler `launch`. `init` déclare (ressources préchargées), `launch` crée les renderers.
+- Scène de chargement : `EngineConfig.setLoadingScene(...)` pour tout le jeu (`DefaultLoadingScene`, fond gris sans ressource, par défaut), ou surcharge de `createLoadingScene(args)` dans une scène (`null` = rien d'affiché). Surface du framebuffer virtuel : surcharge de `createVirtualSceneBindable()`.
 - Les ressources nécessaires se déclarent en surchargeant `getInvolvedBatch()` (noms de fichiers dans `resources/batchs/`).
 - `display()` typique : `setVirtualScene(); clear(); …draw…; setAndDisplayRealScene();`
 - Changer de scène : `sceneManagerInterface.setNewScene(new XScene(), args)`.

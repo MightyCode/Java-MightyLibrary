@@ -6,11 +6,10 @@ Objectifs dans l'ordre ; retirer chaque objectif une fois atteint.
 
 ### 1. API : corrections urgentes (prochaine étape)
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
-- (U) **Démarrage d'une scène** : chaque scène doit appeler `super.init(args, new LoadingSceneImplementation())` puis `super.launch(args)` dans le bon ordre → une scène de chargement par défaut fournie par le moteur (injectable), et un seul point d'entrée clair (`init` pour déclarer, `launch` pour créer) sans appel `super` obligatoire à retenir.
 - (U) **Renderers 2D à finir à la main** : `new RectangleRenderer(...)` doit être suivi de `load(0)` sinon exception au premier `display()` → constructeur qui rend l'objet utilisable, ou fabrique explicite.
 - (U) **Noms de packages** `MightyLibrary.mightylib` en majuscules (contraire aux conventions Java) → `mightylib` ou un nom de domaine inversé, à faire avant la première version publiée.
 - (U) **Multithreading** : `ThreadManager` ne fait que compter les threads et, s'il n'y en a plus, `RunThread` exécute la tâche dans le thread appelant (parfois le thread GL) ; chaque chargement crée de nouveaux `ResourceWorker extends Thread` ; réseau, `DebugServer`, console et `Screenshot` créent leurs threads chacun de leur côté. **Bug** : `Resources.mainContextHandleResource` (`LOAD`) attend avec `Thread.sleep(10)` sur le thread GL tant que `canBeLoad()` est faux, ce qui fige le rendu → remettre l'entrée en file. Cible :
-  - un `ExecutorService` de taille fixe possédé par le moteur (arrêté à la sortie), tâches renvoyant des `CompletableFuture` ; suppression de `ThreadManager`/`ThreadOrCurrent` ;
+  - un `ExecutorService` de taille fixe possédé par le moteur (arrêté à la sortie), tâches renvoyant des `CompletableFuture` ; suppression de `ThreadManager`/`ThreadOrCurrent` et de `LoadingScene`/`LoadingContent` (inutilisées) ;
   - une file `runOnMainThread(Runnable)` vidée à chaque frame avec un budget de temps, seule façon de revenir sur le thread GL ;
   - une vérification du thread GL dans `GenDeleteResources` (sous `Logger.DO_CHECK`) pour détecter tout appel GL hors du thread principal ;
   - threads réseau/debug nommés et daemon.
