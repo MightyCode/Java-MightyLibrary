@@ -37,7 +37,6 @@ public class GLResources {
     private final long maxNanosPerFrame;
 
     private final Queue<GLElement> elementToLoad;
-    private final Queue<GLElement> elementToUnload;
 
     private final HashMap<Class<? extends GLElement>, HashMap<String, GLElement>> resources;
 
@@ -45,13 +44,12 @@ public class GLResources {
         maxNanosPerFrame = maxMillisecondsPerFrame < 0 ? Long.MAX_VALUE : maxMillisecondsPerFrame * NANO_IN_MILLISECOND;
 
         elementToLoad = new ArrayDeque<>();
-        elementToUnload = new ArrayDeque<>();
 
         resources = new HashMap<>();
     }
 
     /**
-     * Load and unload the waiting elements until the deadline (System.nanoTime) is reached.
+     * Load the waiting elements until the deadline (System.nanoTime) is reached.
      * At least one step is done even if the deadline is already passed, so the loading always progresses:
      * an element loaded in several steps (big texture) must keep each step short.
      */
@@ -75,16 +73,6 @@ public class GLResources {
 
             if (!element.isLoaded())
                 elementToLoad.add(element);
-        }
-
-        while (!elementToUnload.isEmpty() && (!stepDone || System.nanoTime() < deadline)) {
-            GLElement element = elementToUnload.poll();
-
-            if (element != null) {
-                long remainingNanos = Math.max(0, deadline - System.nanoTime());
-                element.unloadByResource((int) (remainingNanos / NANO_IN_MILLISECOND));
-                stepDone = true;
-            }
         }
     }
 
@@ -127,14 +115,6 @@ public class GLResources {
         }
 
         return names.toString();
-    }
-
-    public void addElementToUnload(GLElement element) {
-        //TODO
-
-        if (element.isLoaded()) {
-            elementToUnload.add(element);
-        }
     }
 
     // Lookup only: no reference is added, use addElementOrReturnIfPresent to share an element
