@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.graphics;
 
+import MightyLibrary.mightylib.resources.texture.Texture;
 import org.json.JSONObject;
 
 import java.util.ArrayDeque;
@@ -185,5 +186,7 @@ public class GLResources {
                 element.unloadByResource(150);
             }
         }
+
+        Texture.DeletePlaceholder();
     }
 }
