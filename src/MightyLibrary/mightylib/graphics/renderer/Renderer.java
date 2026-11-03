@@ -31,7 +31,7 @@ public class Renderer extends UUID implements IDisplayable {
 
     protected Matrix4f model;
 
-    protected boolean display;
+    private boolean visible;
 
     // Textures channels
     protected IRenderTextureBindable mainTexture;
@@ -46,7 +46,7 @@ public class Renderer extends UUID implements IDisplayable {
 
         shaderValues = new HashMap<>();
 
-        display = true;
+        visible = true;
 
         position = new Vector3f();
         scale = new Vector3f(1f);
@@ -84,7 +84,7 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     public void display(){
-        if(display) {
+        if(visible) {
             updateShader();
             draw();
         }
@@ -216,11 +216,18 @@ public class Renderer extends UUID implements IDisplayable {
         this.model.scale(this.scale);
     }
 
-    public void hide(boolean state) {
-        display = state;
+    public Renderer setVisible(boolean visible) {
+        this.visible = visible;
+        return this;
     }
-    public void invertDisplayState() {
-        display = !display;
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public Renderer toggleVisible() {
+        visible = !visible;
+        return this;
     }
 
     public void setMainTextureChannel(String name) {

@@ -8,7 +8,6 @@ Objectifs dans l'ordre ; retirer chaque objectif une fois atteint.
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
 - (U) **Cycle de vie de `Scene`** : `dispose()` signifie « fin de tick » et `unload()` « libération » → renommer `dispose()` en `lateUpdate()` (ou `endTick()`) partout (`IUpdatable`, managers d'entrées…), pour que `dispose` ne soit plus confondu avec une libération.
 - (U) **Démarrage d'une scène** : chaque scène doit appeler `super.init(args, new LoadingSceneImplementation())` puis `super.launch(args)` dans le bon ordre → une scène de chargement par défaut fournie par le moteur (injectable), et un seul point d'entrée clair (`init` pour déclarer, `launch` pour créer) sans appel `super` obligatoire à retenir.
-- (U) **`Renderer.hide(boolean state)`** met `display = state` : `hide(true)` **affiche** l'objet → remplacer par `setVisible(boolean)` / `isVisible()`.
 - (U) **Renderers 2D à finir à la main** : `new RectangleRenderer(...)` doit être suivi de `load(0)` sinon exception au premier `display()` → constructeur qui rend l'objet utilisable, ou fabrique explicite.
 - (U) **Configuration du démarrage** : `IStartLibraryProcedure` impose une douzaine de méthodes `returnXxx()` → un objet de configuration (`EngineConfig`, avec valeurs par défaut) rempli par le projet, qui deviendra le point d'injection.
 - (U) **`System.exit` dans la bibliothèque** (`MainLoop.exit`) : une bibliothèque ne doit pas tuer la JVM de l'application hôte → `MainLoop.run` rend la main (ou renvoie un code) et l'application décide.
@@ -23,7 +22,7 @@ Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. L
 - **Singletons statiques** (`Resources`, `GLResources`, `ShaderManager`, `ContextManager`, `SoundManager`) et `Resources.getInstance()` qui crée une instance par défaut en silence → accès via un contexte moteur, ou au minimum échec explicite. Lié à l'injection (étape 3).
 - **IDs d'action `int` statiques** (`InputManager.getAndIncrementId`) → identifiants texte avec espace de noms enregistrés au registre. Lié au remappage (étape 6) et au modding.
 - **Champs publics modifiables** (`Resources.Loaders`, `GUIList.GUIs`, `ShouldLoop`, `WindowCreationInfo.Size`…) → méthodes.
-- **Fautes et noms trompeurs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`, `invertDisplayState`…
+- **Fautes et noms trompeurs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`…
 
 ### 2. Tests de non-régression
 Méthode à définir avec l'utilisateur. Pistes : JUnit pour la logique pure (ressources, références, `InputSimulation`, tilemaps, maths, algorithmes) ; scénarios en jeu pilotés par `tools/mighty.py` (`scene`, `input`, `gl`, `stats`) qui vérifient des valeurs texte, sans capture d'écran ; contrôle des fuites par allers-retours de scènes. Filet de sécurité avant les gros chantiers suivants.
