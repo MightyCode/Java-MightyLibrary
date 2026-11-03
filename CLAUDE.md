@@ -3,7 +3,8 @@
 Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB, Assimp ; JOML, org.json, JBox2D). `src/MightyLibrary/mightylib` = la bibliothèque, `src/MightyLibrary/project` = la démo qui sert de banc d'essai. Objectif : en faire une bibliothèque réutilisable (jar) pour les futurs jeux et logiciels de l'utilisateur.
 
 ## Documentation (à lire seulement quand la tâche le demande)
-- `docs/roadmap.md` : feuille de route ordonnée (prochaine étape : corrections urgentes de l'API, à valider avec l'utilisateur), modèle d'extension, modding.
+- `docs/roadmap.md` : feuille de route ordonnée (prochaine étape : discussions de `docs/discussions.md`, puis corrections urgentes de l'API à valider avec l'utilisateur), modèle d'extension, modding.
+- `docs/discussions.md` : sujets à discuter et planifier avec l'utilisateur (TODO, chargement de modèles 3D, pistes LearnOpenGL).
 - `docs/architecture.md` : structure, démarrage, boucle, cycle de vie des scènes, ressources CPU/GPU, rendu, entrées, temps, pièges connus.
 - `docs/debug-tools.md` : commandes, serveur de debug, simulation d'entrées, traque des fuites, profilage (JFR, RenderDoc).
 

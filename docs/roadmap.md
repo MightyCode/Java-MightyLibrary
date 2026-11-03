@@ -4,7 +4,10 @@ Objectifs dans l'ordre ; retirer chaque objectif une fois atteint.
 
 ## Feuille de route (dans l'ordre ; retirer chaque objectif de cette section une fois atteint)
 
-### 1. API : corrections urgentes (prochaine étape)
+### 0. Discussions en cours (maintenant)
+Discuter avec l'utilisateur des sujets de `docs/discussions.md`, dans l'ordre : TODO restants, chargement de modèles 3D (Assimp), pistes LearnOpenGL. Reporter chaque décision (code ou roadmap), puis supprimer ce fichier et cette étape.
+
+### 1. API : corrections urgentes (après l'étape 0)
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
 - (U) **Noms de packages** `MightyLibrary.mightylib` en majuscules (contraire aux conventions Java) → `mightylib` ou un nom de domaine inversé, à faire avant la première version publiée.
 - (U) **Multithreading** : `ThreadManager` ne fait que compter les threads et, s'il n'y en a plus, `RunThread` exécute la tâche dans le thread appelant (parfois le thread GL) ; chaque chargement crée de nouveaux `ResourceWorker extends Thread` ; réseau, `DebugServer`, console et `Screenshot` créent leurs threads chacun de leur côté. **Bug** : `Resources.mainContextHandleResource` (`LOAD`) attend avec `Thread.sleep(10)` sur le thread GL tant que `canBeLoad()` est faux, ce qui fige le rendu → remettre l'entrée en file. Cible :
