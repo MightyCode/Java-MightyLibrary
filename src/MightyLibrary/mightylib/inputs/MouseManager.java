@@ -64,7 +64,7 @@ public class MouseManager {
         });
 
         mouseUpdate();
-        dispose();
+        postUpdate();
     }
 
     public boolean getButton(int buttonId){
@@ -122,7 +122,7 @@ public class MouseManager {
 
     public Vector2f oldPos() { return new Vector2f(oldPos);}
 
-    public void dispose(){
+    public void postUpdate(){
         oldPos.set(pos);
         mouseUpdate();
 

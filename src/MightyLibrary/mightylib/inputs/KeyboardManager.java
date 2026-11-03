@@ -92,7 +92,7 @@ public class KeyboardManager {
         return (!state[keyID] && oldState[keyID]);
     }
 
-    public void dispose(){
+    public void postUpdate(){
         boolean mainKeyChanged = false;
         numberKeyPressed = 0;
 

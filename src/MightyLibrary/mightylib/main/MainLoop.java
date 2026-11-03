@@ -178,7 +178,7 @@ public final class MainLoop {
                 long tickStart = System.nanoTime();
                 GameTime.update();
                 sceneManager.update();
-                sceneManager.dispose();
+                sceneManager.postUpdate();
                 tickNanos += System.nanoTime() - tickStart;
                 tickEvent.commit();
                 ++ticks;

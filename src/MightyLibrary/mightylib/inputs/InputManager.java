@@ -111,9 +111,9 @@ public class InputManager {
 
 
     // Compute the inputs of the next tick
-    public void dispose(){
-        keyManager.dispose();
-        mouseManager.dispose();
+    public void postUpdate(){
+        keyManager.postUpdate();
+        mouseManager.postUpdate();
         simulation.update();
     }
 

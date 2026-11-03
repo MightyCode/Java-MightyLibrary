@@ -64,7 +64,7 @@ public class DebugInfoCamera2D implements IUpdatableDisplayable {
     public void update() {}
 
     @Override
-    public void dispose() {
+    public void postUpdate() {
         StringBuilder result = new StringBuilder();
         result.append("camera2D id : ").append(camera.id()).append("\n");
 

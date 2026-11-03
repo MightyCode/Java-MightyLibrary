@@ -88,9 +88,9 @@ public class SceneManager {
     }
 
 
-    public void dispose() {
-        ContextManager.getInstance().dispose();
-        currentScene.disposeByManager();
+    public void postUpdate() {
+        ContextManager.getInstance().postUpdate();
+        currentScene.postUpdateByManager();
     }
 
     private void changeScene() {

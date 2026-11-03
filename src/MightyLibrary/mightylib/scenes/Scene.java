@@ -145,17 +145,17 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         }
     }
 
-    void disposeByManager(){
+    void postUpdateByManager(){
         if (isWaitingForLoading) {
-            loadingScene.disposeByManager();
+            loadingScene.postUpdateByManager();
         } else {
-            dispose();
+            postUpdate();
         }
     }
 
-    public void dispose() {
+    public void postUpdate() {
         for (IUpdatable updatable : updatables) {
-            updatable.dispose();
+            updatable.postUpdate();
         }
     }
 

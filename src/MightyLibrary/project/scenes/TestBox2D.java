@@ -61,7 +61,7 @@ public class TestBox2D extends Scene {
         }
 
         @Override
-        public void dispose() {}
+        public void postUpdate() {}
 
         public void display(){
             renderer.display();

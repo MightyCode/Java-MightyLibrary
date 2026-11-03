@@ -87,9 +87,9 @@ public class ContextManager {
         return true;
     }
 
-    public void dispose(){
+    public void postUpdate(){
         for (Context context : contexts.values()){
-            context.dispose();
+            context.postUpdate();
         }
     }
 

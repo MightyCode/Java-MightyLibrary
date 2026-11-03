@@ -41,8 +41,8 @@ public class Context {
     }
 
 
-    public void dispose(){
-        inputManager.dispose();
+    public void postUpdate(){
+        inputManager.postUpdate();
     }
 
 

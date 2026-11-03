@@ -42,7 +42,7 @@ public class DraggingCameraComponent implements IUpdatable {
     }
 
     @Override
-    public void dispose() {}
+    public void postUpdate() {}
 
     @Override
     public void unload() {}

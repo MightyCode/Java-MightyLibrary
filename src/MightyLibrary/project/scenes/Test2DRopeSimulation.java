@@ -102,7 +102,7 @@ public class Test2DRopeSimulation extends Scene {
         }
 
         @Override
-        public void dispose() {}
+        public void postUpdate() {}
 
         public void display(){
             renderer.display();
@@ -168,7 +168,7 @@ public class Test2DRopeSimulation extends Scene {
         }
 
         @Override
-        public void dispose() {}
+        public void postUpdate() {}
 
         public void display(){
             renderer.display();

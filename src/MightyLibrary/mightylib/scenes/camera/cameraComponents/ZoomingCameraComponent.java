@@ -61,7 +61,7 @@ public class ZoomingCameraComponent implements IUpdatable {
     }
 
     @Override
-    public void dispose() {}
+    public void postUpdate() {}
 
     @Override
     public void unload() {}
