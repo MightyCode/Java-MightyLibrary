@@ -1,6 +1,6 @@
 # Techniques graphiques — Java-MightyLibrary
 
-Techniques de rendu tirées de LearnOpenGL (« Advanced OpenGL », « Advanced Lighting », « PBR », articles invités), à faire **après `docs/later.md`**. Elles touchent la 2D et la 3D. Aucune n'existe encore dans le moteur. Pas d'ordre imposé au-delà des groupes ; retirer chaque technique une fois faite, ou la déplacer dans la roadmap quand elle devient actuelle. Chaque technique a sa scène `Test*`.
+Techniques de rendu tirées de LearnOpenGL (« Advanced OpenGL », « Advanced Lighting », « PBR », articles invités), à faire **après `docs/later.md`**. Elles touchent la 2D et la 3D. Aucune n'existe encore dans le moteur. Pas d'ordre imposé au-delà des groupes ; retirer chaque technique une fois faite, ou la déplacer dans `docs/current.md` (après discussion avec l'utilisateur) quand elle devient actuelle. Chaque technique a sa scène `Test*`.
 
 ## 1. Simples et utiles
 - **Blinn-Phong** : correction de l'éclairage Phong actuel (reflets justes aux angles rasants) ; quelques lignes dans les shaders d'éclairage.

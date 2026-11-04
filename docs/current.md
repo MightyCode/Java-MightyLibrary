@@ -1,10 +1,7 @@
-# Feuille de route — Java-MightyLibrary
+# Gros point actuel — API : corrections urgentes
 
-Objectifs actuels, dans l'ordre ; retirer chaque objectif une fois atteint. La suite est dans `docs/later.md` (gamma, tests, bibliothèque réutilisable, effets 2D, thème, rendu 2D, SVG, entrées, son, console, réflexions, plateformes), puis dans `docs/techniquegraphique.md` (techniques de rendu 2D/3D de LearnOpenGL).
+Seul le gros point en cours est ici. La feuille de route globale est la chaîne `docs/later.md` → `docs/techniquegraphique.md`. Retirer chaque objectif une fois atteint ; quand ce fichier est vide, prendre le gros point suivant en tête de `docs/later.md`, **en discuter d'abord avec l'utilisateur** pour s'assurer que tout est prévu, puis l'écrire ici.
 
-## Feuille de route
-
-### 1. API : corrections urgentes (prochaine étape)
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
 
 **En premier : chargement de modèles 3D par Assimp** (pages LearnOpenGL Assimp, Mesh, Model ; plan validé). Fait avant le reste de l'étape car ce code sera touché par tous les changements suivants (ressources, chargement GL, shaders) : mieux vaut que ces changements portent sur le code final que sur l'ancien lecteur OBJ.
@@ -30,7 +27,3 @@ Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. L
 - **Fautes et noms trompeurs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`…
 - **Shaders découpés comme les textures** (TODO `Shader.java`) : aujourd'hui `Shader` (`MAIN_CONTEXT`) lit les `.glsl`, ajoute la bibliothèque GLSL (`ShaderLoader.completeWithLibraryFile`), compile (`setShaderContent`) et lie (`internLoad`) d'un bloc sur le thread principal. Cible : lecture et prétraitement (`#include`, `#define`, variantes) par les workers ; programme GL dans un `GLElement` de `GLResources` (compilation par tranches, références, suivi `gl`) ; avec `GL_KHR_parallel_shader_compile`, compiler sans attendre et interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes. Prépare l'injection de shaders par le projet (`later.md` : Bibliothèque réutilisable) et le rechargement à chaud.
 - **`Resources.addResourceToProcess`** (TODO `Resources.java`) : « ajoute » mais exécute tout de suite les données `IMMEDIATELY_IN_CURRENT_CONTEXT` → traiter ce cas en amont, ou renommer (`processOrQueue`).
-
-## Décisions prises
-- **Package `network` conservé** bien qu'inutilisé (`ServerThread.run()` vide) : utilisable un jour, ne pas le supprimer.
-- **Pas de Lombok** : gain de tokens faible (peu d'accesseurs triviaux), méthodes générées introuvables par recherche dans le source, processeur d'annotations à configurer (Maven + IntelliJ) et API publique implicite, contraire au choix d'une API publique explicite.

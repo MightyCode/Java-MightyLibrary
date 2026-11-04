@@ -1,6 +1,6 @@
 # Plus tard — Java-MightyLibrary
 
-Objectifs à reprendre une fois `docs/roadmap.md` terminée, dans l'ordre prévu (à revoir à ce moment-là). Retirer chaque objectif une fois atteint, ou le déplacer dans la roadmap quand il devient actuel. Ensuite : `docs/techniquegraphique.md`.
+Feuille de route globale, dans l'ordre : ce fichier, puis `docs/techniquegraphique.md`. Le gros point en cours est dans `docs/current.md`. Quand il est terminé, le gros point suivant (en tête de ce fichier) est **discuté avec l'utilisateur** pour s'assurer que tout est prévu, puis déplacé dans `docs/current.md`.
 
 ## Gamma : rendu linéaire activable et réglable (en premier)
 LearnOpenGL « Gamma Correction ». À faire en premier : l'activer change toutes les couleurs à l'écran, mieux vaut le décider avant d'accumuler du contenu.
@@ -43,8 +43,38 @@ Inspiré de LearnOpenGL « In Practice / 2D Game » (Breakout). Un jeu sans part
 - **Post-traitement** : effets sur l'image entière via un framebuffer (base : `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables et activables par scène. La passe finale du gamma (section Gamma) en fait partie.
 - Scène `TestParticles` : plusieurs émetteurs, compteur de particules et temps dans `stats`.
 
+## Entités et scripts Lua
+Besoin : dans un jeu (ex. plateformer), le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour faire agir les entités, modifiables sans relancer le moteur. L'utilisateur a déjà utilisé Lua ainsi dans un projet C++ avec un ami et en est très satisfait ; s'en inspirer (résumé ci-dessous) en corrigeant ses défauts.
+
+### Prérequis : modèle d'entités
+- **ECS et/ou graphe de scène** (déplacé de « Réflexions de conception ») : aujourd'hui une scène gère de simples listes d'objets à mettre à jour/afficher. Décider du modèle d'entités **avant** de les scripter ; à discuter au début de ce gros point.
+
+### Bibliothèque
+- **LuaJava de gudzpoz** (`party.iroiro.luajava`, MIT, Maven Central, ≥ 4.0.2) : vrai Lua (5.1 à 5.4) ou **LuaJIT** en natif par plateforme (comme LWJGL), Windows/Linux/macOS/Android ; secours LuaJ pur Java. **LuaJ** seul n'est plus maintenu (dernière version ~2015). Vérifier l'activité du projet au moment de l'adopter.
+- Interface de script indépendante du langage côté moteur ; LuaJava en est la première implémentation.
+- API **explicite** (fonctions enregistrées une par une), pas d'accès libre aux objets Java par réflexion : contrat clair, plus rapide, plus sûr pour les mods. Bibliothèques Lua limitées (pas de `io`/`os` libres).
+
+### Modèle du projet C++ (référence)
+- Un script par type d'entité, choisi depuis Tiled (propriété `LuaScript` de l'objet) ; propriétés Tiled copiées dans la mémoire de l'entité (`tiled_tileId`, `tiled_positionX/Y`, `tiled_sizeX/Y`, image…).
+- Rappels appelés par le moteur : `Init`, `Update(dt)`, `Draw`, `DrawLight`, `TakeDamage(damage, direction)`, `SetState(state)` (signaux de logique).
+- Drapeaux partagés lus par le moteur : `__canTakeDamage`, `__needBeDestroy`, `__needDrawSprite`, `__haveFinishChangeState`…
+- Familles de fonctions `_Xxx(entityPtr, …)` : mémoire de l'entité, sauvegarde permanente (fichier de sauvegarde du joueur), sprite et animations (ajout, lecture, retournement, position, échelle, couleur, fin d'animation), sprite de lumière, collisions (catégories/masques, hitbox, déplacement physique qui renvoie la position corrigée, plateformes traversables, objets poussables, tests de contact avec le joueur), attaque et dégâts, logique (signaux entre objets activables : levier → porte), création d'entités, UI du jeu (vie du boss, textes de dégâts), dessin de formes de debug, tremblement d'écran, vibration manette, log, temps.
+
+### Améliorations prévues par rapport au C++
+- **Entité = objet Lua** (`self:playAnimation("run", true)`) plutôt que des fonctions globales `_Xxx(entityPtr, …)` ; fonctions rangées par module (`sprite`, `physics`, `save`, `ui`, `log`…).
+- **Mémoire = simple table Lua** (`self.memory.hp = 3`) au lieu de `_AddField` / `_SetFloatValue` typés, ce qui supprime les erreurs int/float (« ajouter `.0` ») ; propriétés Tiled dans `self.props`.
+- **Sauvegarde** : `save.get(clé)` renvoie `nil` si absente (au lieu de `{find, value}`) ; clés avec espace de noms par carte/entité.
+- **Collisions par nom** (`"player"`, `"enemy"`, `"environment"`) déclarés par le projet, au lieu d'IDs entiers.
+- **Signaux de logique** via le bus d'événements (voir Modding) plutôt que des IDs d'objets en dur.
+- **Séparation moteur / jeu** : le moteur fournit le générique (sprites, animations, physique, sons, particules, caméra et tremblement, manettes, dessin de debug, log, temps, sauvegarde) ; le jeu enregistre ses propres fonctions (attaque du joueur, UI du boss…) par le point d'injection (Bibliothèque réutilisable).
+- **Rechargement à chaud** : surveillance des fichiers `.lua`, rechargement du script en gardant la mémoire des entités ; commandes de debug (`lua reload`, `lua eval <code>`).
+- **Erreurs** : une erreur de script est journalisée avec fichier:ligne et désactive l'entité fautive, sans arrêter le jeu.
+- **Documentation de l'API** générée depuis les fonctions enregistrées (fichier comme celui du projet C++), pour ne jamais être en retard sur le code.
+- À décider : un état Lua par scène (un environnement isolé par script) ou par entité ; coût des appels Java ↔ Lua mesuré (`stats`).
+- Scène `TestLuaPlatformer` : joueur, ennemi scripté, levier et porte, rechargement à chaud démontré.
+
 ## Thème, tailles automatiques et langues
-Dépend du point d'injection (Bibliothèque réutilisable) : thèmes et langues sont fournis par le projet (et les mods). Dès maintenant (`roadmap.md`, corrections de l'API), ne pas figer d'API `Text`/GUI qui empêcherait les clés de langue et le thème.
+Dépend du point d'injection (Bibliothèque réutilisable) : thèmes et langues sont fournis par le projet (et les mods). Dès maintenant (`current.md`, corrections de l'API), ne pas figer d'API `Text`/GUI qui empêcherait les clés de langue et le thème.
 - **Langues (l10n, inspirée de Flutter)** : un fichier par langue (`resources/lang/fr.json`, `en.json`, équivalent des ARB) chargé comme un `DataType` ; paramètres `{nom}` et pluriels simples ; langue de repli et log des clés manquantes ; un script `tools/` génère une classe de constantes typées (autocomplétion, fautes de clé détectées à la compilation) ; `Text` liable à une clé, mis à jour au changement de langue ; clés avec espace de noms (mods).
 - **Thème** : objet `Theme` chargé depuis du JSON (couleurs, polices, tailles, espacements, styles par composant), géré par un `ThemeManager` ; les composants GUI le lisent au lieu de valeurs en dur (ex. `setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
 - **Tailles automatiques** : unité indépendante de la résolution (facteur d'échelle par rapport à la résolution virtuelle), ancres et pourcentages, recalcul au redimensionnement de la fenêtre.
@@ -55,7 +85,7 @@ Dépend du point d'injection (Bibliothèque réutilisable) : thèmes et langues 
 - À ajouter : segments et polylignes avec épaisseur, contours (outline) de toutes les formes, cercle/disque, triangle, rectangle arrondi, arc/secteur, points, flèches, grille ; et une API de dessin immédiat pour le debug (« dessine une ligne de A à B cette frame », utile pour la physique).
 - **Point de départ sur la branche `dev`** (absent de `master`) :
   - `437b7ea` : `StrokeModule` réutilisable (activation, couleur, taille du contour via des valeurs de shader), contour dans le shader de l'ellipse, `Renderer.getShaderValue`/`hasShaderValue`, `Boolean`/`String` dans `ShaderValue`. Défauts : Java envoie `strokeSize` mais le shader lit `strokeSizePercent` (déclaré `in` et non `uniform`) → le contour ne fonctionne probablement pas ; `getSizePercent` lit la mauvaise clé ; `geEnabled` (faute) ; un contour en pourcentage du rayon n'a pas une épaisseur constante sur une ellipse aplatie → épaisseur en pixels.
-  - `983c18c` (« Temporary ») : `AdvancedRectangle`, rectangle à coins arrondis par SDF (champ de distance signée) avec rotation et anticrénelage (`fwidth` + `smoothstep`). Le contour y est commenté. La technique SDF peut servir de base commune aux contours, cercles et rectangles arrondis. Ne pas reprendre les modifications de `Shader.java` (vérification des uniforms désactivée, voir `roadmap.md`, uniforms absents ; message de log à supprimer).
+  - `983c18c` (« Temporary ») : `AdvancedRectangle`, rectangle à coins arrondis par SDF (champ de distance signée) avec rotation et anticrénelage (`fwidth` + `smoothstep`). Le contour y est commenté. La technique SDF peut servir de base commune aux contours, cercles et rectangles arrondis. Ne pas reprendre les modifications de `Shader.java` (vérification des uniforms désactivée, voir `current.md`, uniforms absents ; message de log à supprimer).
   - Une fois repris, supprimer les branches `dev` et `devShader` (local et `origin`) ; `devShader` (`b50dd27`, ajout de `CheckOpenGLError` dans `Texture`) est déjà couvert par `master`.
 - **Regroupement des dessins** : dessiner en un appel tout ce qui partage texture et shader. Complémentaire de `TextureDataAtlas` (un atlas réduit les changements de texture, seul le regroupement réduit les appels de dessin). Deux techniques à comparer sur mesures (`stats` : `drawCallsPerFrame`, temps CPU) :
   - **Batch** (style `SpriteBatch`) : le CPU transforme les sommets et les accumule dans un VBO dynamique, un `glDrawElements` ; pour le texte et les formes variées.
@@ -81,7 +111,6 @@ Constat : `SoundLoader.filterFile` n'accepte que `.ogg` (décodé par STB Vorbis
 Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son système `guicommand`, à unifier avec `Commands`) et une GUI de base pour afficher des informations en jeu (overlay de debug : stats, scène, entrées). S'appuie sur le thème, les tailles automatiques et les langues (Thème, tailles automatiques et langues).
 
 ## Réflexions de conception
-- **ECS et/ou graphe de scène** : aujourd'hui une scène gère de simples listes d'objets à mettre à jour/afficher. Décider du modèle d'entités.
 - **Alternative à Box2D** (secondaire) : JBox2D 2.2.1.1 n'est plus maintenu ; comparer une solution maison (le moteur a déjà des collisions maison) et des bibliothèques maintenues.
 
 ## Intégrations plateformes

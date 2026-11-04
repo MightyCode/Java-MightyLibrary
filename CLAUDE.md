@@ -3,9 +3,10 @@
 Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB, Assimp ; JOML, org.json, JBox2D). `src/MightyLibrary/mightylib` = la bibliothèque, `src/MightyLibrary/project` = la démo qui sert de banc d'essai. Objectif : en faire une bibliothèque réutilisable (jar) pour les futurs jeux et logiciels de l'utilisateur.
 
 ## Documentation (à lire seulement quand la tâche le demande)
-- `docs/roadmap.md` : objectifs actuels, ordonnés (corrections de l'API, à commencer par le chargement de modèles par Assimp), décisions prises.
-- `docs/later.md` : objectifs suivants (gamma, tests, bibliothèque réutilisable avec modèle d'extension et modding, effets 2D, thème, rendu 2D, SVG, entrées, son, console, réflexions, plateformes).
-- `docs/techniquegraphique.md` : après `later.md`, techniques de rendu 2D/3D de LearnOpenGL (Blinn-Phong, skybox, culling, ombres, normal mapping, animation squelettique, HDR/bloom…).
+- `docs/current.md` : seul le gros point en cours (API : corrections urgentes, à commencer par le chargement de modèles par Assimp).
+- `docs/later.md` : feuille de route globale, gros points suivants dans l'ordre (gamma, tests, bibliothèque réutilisable avec modèle d'extension et modding, effets 2D, entités et scripts Lua, thème, rendu 2D, SVG, entrées, son, console, réflexions, plateformes).
+- `docs/techniquegraphique.md` : suite de `later.md`, techniques de rendu 2D/3D de LearnOpenGL (Blinn-Phong, skybox, culling, ombres, normal mapping, animation squelettique, HDR/bloom…).
+- `docs/decisions.md` : décisions de conception durables (pas de Lombok, package `network` conservé…).
 - `docs/architecture.md` : structure, démarrage, boucle, cycle de vie des scènes, ressources CPU/GPU, rendu, entrées, temps, pièges connus.
 - `docs/debug-tools.md` : commandes, serveur de debug, simulation d'entrées, traque des fuites, profilage (JFR, RenderDoc).
 
@@ -28,6 +29,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Toute ressource GL créée dans une scène est libérée dans `unload()` ; vérifier les fuites avec `gl` (voir `docs/debug-tools.md`).
 - Fins de ligne normalisées par `.gitattributes` (LF dans le dépôt) : `git add` normal. Ne pas réécrire de fichier source avec `sed` (utiliser Edit).
 - Git : travailler sur une branche, un commit par changement logique, avec la ligne `Co-Authored-By` demandée par le système. Ne pas modifier/commiter `target/` ni `.idea/workspace.xml`.
+- Avant de commencer un gros point (passage de `later.md` à `current.md`), en discuter avec l'utilisateur pour s'assurer que tout est prévu.
 - Décrire comment vérifier manuellement ce qui n'a pas pu l'être (quelle scène, quoi observer).
 
 ## Conventions de code
