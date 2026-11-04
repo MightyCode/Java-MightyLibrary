@@ -43,6 +43,34 @@ Inspiré de LearnOpenGL « In Practice / 2D Game » (Breakout). Un jeu sans part
 - **Post-traitement** : effets sur l'image entière via un framebuffer (base : `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables et activables par scène. La passe finale du gamma (section Gamma) en fait partie.
 - Scène `TestParticles` : plusieurs émetteurs, compteur de particules et temps dans `stats`.
 
+## Physique 2D : remplacer JBox2D
+Exigences de l'utilisateur : **fonctionnalités 2D primordiales**, au pixel près, cas complexes compris ; **3D secondaire mais compatible** (ne rien concevoir qui l'empêche). Une boîte poussée par le joueur doit **rester collée à lui** (aucun écart, aucun tremblement). Un projet C++ précédent a été abandonné faute d'avoir réussi le cas ci-dessous à la main : c'est le test d'acceptation.
+
+### Constat
+- **JBox2D 2.2.1.1** n'est plus maintenu ; utilisé seulement par `physics/B2Utils`, `TestBox2D` et `Platformer2D`.
+- **Collisions maison** (`physics/collision`, ~500 lignes) : AABB `CollisionRectangle`, `CollisionBoundedVolume2D`, grille `Collision2DGrid`, `replaceComparedTo` (replacement selon une direction), `CollisionVisualisation`. Base de la physique arcade.
+
+### Test d'acceptation : `TestPhysicsCrates`
+Trois caisses empilées sur une plateforme mobile (horizontale et verticale) ; le joueur pousse la caisse du bas (la pile suit), puis celle du haut (elle seule bouge, puis tombe du bord) ; une caisse écrasée contre un mur. Aucun écart d'un pixel, aucun retard d'une frame, aucun tremblement ; la boîte poussée reste collée au joueur.
+
+### Physique arcade maison (physique principale du moteur)
+Modèle « solids / actors / riders » (Celeste, TowerFall) étendu aux objets poussables empilés ; c'est elle que l'API Lua expose (`physics.move` renvoie la position corrigée, comme `_PhysicsReplace` du projet C++).
+- **Au pixel près** : positions entières + reste sous-pixel, déplacement axe par axe ; deux objets se touchent ou non, jamais d'écart d'arrondi. Pas fixe (déterministe).
+- **Graphe d'appui** reconstruit à chaque pas : A est porté par B si le bas de A touche le haut de B (plateforme → caisse → caisse → joueur).
+- **Déplacement en deux phases** : calculer jusqu'où toute la chaîne peut aller (une poussée se propage aux objets devant et s'arrête au premier mur), puis appliquer le même déplacement à toute la chaîne. Le pousseur et l'objet poussé bougent dans le même pas, d'où le contact permanent.
+- **Les porteurs emportent ce qu'ils portent** (même delta, récursivement, du bas vers le haut) : pas de retard d'une frame.
+- **Écrasement** : objet coincé entre un porteur et un mur → événement ; le jeu décide (mort, arrêt de la plateforme).
+- Aussi : collisions avec les tilemaps, plateformes traversables par le dessous, pentes (option), zones de déclenchement, catégories de collision par nom (déclarées par le projet), raycasts, événements de contact, visualisation de debug.
+
+### Corps rigides (bibliothèque, derrière une interface)
+Pour ce qui tourne, s'empile librement ou s'articule (ponts, cordes, ragdolls, puzzles physiques). À la main : des mois pour faire moins bien.
+- Interface `IPhysicsWorld2D` ; candidats : **box2d-jni** (fabmax, Box2D v3 natif, Maven Central, Windows/Linux/macOS ; compatibilité Java 11 et activité à vérifier), **gdx-box2d** (libGDX, Box2D v3.1), **dyn4j** (pur Java, BSD-3, 5.0.2 de mars 2024, Java 1.6+). Trancher en refaisant `TestBox2D` avec chacun.
+- Coexistence avec la physique arcade (joueur arcade poussant des caisses simulées) : point délicat, à prototyper.
+- **Au début du gros point** : prototype rapide de `TestPhysicsCrates` avec Box2D v3 pour comparer avant de s'engager.
+
+### Compatibilité 3D
+Concevoir les interfaces (monde, corps, requêtes, événements) pour qu'un monde 3D puisse s'y brancher plus tard (ex. Jolt via bindings Java) sans changer l'API des entités ni des scripts ; ne rien implémenter en 3D maintenant.
+
 ## Entités et scripts Lua
 Besoin : dans un jeu (ex. plateformer), le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour faire agir les entités, modifiables sans relancer le moteur. L'utilisateur a déjà utilisé Lua ainsi dans un projet C++ avec un ami et en est très satisfait ; s'en inspirer (résumé ci-dessous) en corrigeant ses défauts.
 
@@ -109,9 +137,6 @@ Constat : `SoundLoader.filterFile` n'accepte que `.ogg` (décodé par STB Vorbis
 
 ## Console et GUI en jeu
 Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son système `guicommand`, à unifier avec `Commands`) et une GUI de base pour afficher des informations en jeu (overlay de debug : stats, scène, entrées). S'appuie sur le thème, les tailles automatiques et les langues (Thème, tailles automatiques et langues).
-
-## Réflexions de conception
-- **Alternative à Box2D** (secondaire) : JBox2D 2.2.1.1 n'est plus maintenu ; comparer une solution maison (le moteur a déjà des collisions maison) et des bibliothèques maintenues.
 
 ## Intégrations plateformes
 - **Discord** : présence enrichie (statut de jeu) via le SDK Discord, bindings Java à évaluer.
