@@ -5,10 +5,20 @@ Objectifs dans l'ordre ; retirer chaque objectif une fois atteint.
 ## Feuille de route (dans l'ordre ; retirer chaque objectif de cette section une fois atteint)
 
 ### 0. Discussions en cours (maintenant)
-Discuter avec l'utilisateur des sujets de `docs/discussions.md`, dans l'ordre : chargement de modèles 3D (Assimp), pistes LearnOpenGL (TODO du code : traités). Reporter chaque décision (code ou roadmap), puis supprimer ce fichier et cette étape.
+Discuter avec l'utilisateur des sujets de `docs/discussions.md` : pistes LearnOpenGL (TODO du code et chargement de modèles : décidés). Reporter chaque décision (code ou roadmap), puis supprimer ce fichier et cette étape.
 
 ### 1. API : corrections urgentes (après l'étape 0)
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
+
+**En premier : chargement de modèles 3D par Assimp** (pages LearnOpenGL Assimp, Mesh, Model ; plan validé). Fait avant le reste de l'étape car ce code sera touché par tous les changements suivants (ressources, chargement GL, shaders) : mieux vaut que ces changements portent sur le code final que sur l'ancien lecteur OBJ.
+- Constat : `lwjgl-assimp` est dans le pom mais inutilisé ; `ObjModelLoader` (OBJ maison) ne lit que des triangles `v/vt/vn`, sans `.mtl`, en un seul mesh, et identifie un sommet par sa seule position (TODO `SimpleModelRenderer.java:113` : UV/normales écrasées aux coutures). `renderer/_3D/Mesh` et `MeshEntry` sont inutilisés. L'éclairage est prêt (lumières, `MultiLightningManager`, shader `textureMultipleLights3D`).
+- **`Model` (CPU, workers)** : `aiImportFile` avec `Triangulate | FlipUVs | GenSmoothNormals | JoinIdenticalVertices` ; parcours récursif des nœuds en **appliquant leurs transformations** ; par mesh : positions, normales, UV, indices, matériau.
+- **Textures des matériaux** : chemins lus par `GetTexture`, relatifs au dossier du modèle ; chacune enregistrée comme `TextureData` nommée `modèle/fichier` et déclarée en dépendance du modèle (le registre de `Resources` remplace le cache `textures_loaded`). Retirer alors les entrées `models/backpack` de `textures.json`.
+- **`ModelRenderer`** : une `Shape` par mesh, envoyée un mesh par frame dans le budget de `GLResources` ; textures sur `material.diffuse` / `material.specular` (noms des shaders existants) ; texture par défaut sans carte spéculaire ; **face culling** activé.
+- **Remplacement complet** de `ObjModelLoader`, `ModelTriangle`, `SimpleModelRenderer`, `Mesh`, `MeshEntry` ; migration du stand de `Test3DScene`.
+- **Scène `Test3DModelLoading`** : sac à dos éclairé par plusieurs lumières, vérification des fuites `gl`. Le sac à dos fait partie du paquet de démonstration (non commité, étape 3) : la scène doit le signaler clairement s'il est absent.
+
+**Ensuite :**
 - (U) **Noms de packages** `MightyLibrary.mightylib` en majuscules (contraire aux conventions Java) → `mightylib` ou un nom de domaine inversé, à faire avant la première version publiée.
 - (U) **Multithreading** : `ThreadManager` ne fait que compter les threads et, s'il n'y en a plus, `RunThread` exécute la tâche dans le thread appelant (parfois le thread GL) ; chaque chargement crée de nouveaux `ResourceWorker extends Thread` ; réseau, `DebugServer`, console et `Screenshot` créent leurs threads chacun de leur côté. **Bug** : `Resources.mainContextHandleResource` (`LOAD`) attend avec `Thread.sleep(10)` sur le thread GL tant que `canBeLoad()` est faux, ce qui fige le rendu → remettre l'entrée en file. Cible :
   - un `ExecutorService` de taille fixe possédé par le moteur (arrêté à la sortie), tâches renvoyant des `CompletableFuture` ; suppression de `ThreadManager`/`ThreadOrCurrent` et de `LoadingScene`/`LoadingContent` (inutilisées) ;
@@ -34,7 +44,7 @@ Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux
 - **Jar léger**, sans dépendances embarquées (pas de jar-with-dependencies pour la bibliothèque) : LWJGL (natives comprises), JOML, org.json, JBox2D… sont déclarées dans le pom et récupérées par Maven.
 - **Distribution** : `mvn install` (dépôt local) au départ, puis JitPack ou GitHub Packages pour l'utiliser depuis n'importe quelle machine.
 - **Versions** sémantiques par release (`1.2.0`…) : chaque projet fixe la version qu'il utilise.
-- **Ressources** : séparer les ressources du moteur (shaders, texture `error`, polices par défaut), à embarquer dans le jar et lire depuis le classpath, des ressources du jeu, qui restent dans le dossier du projet utilisateur. Aujourd'hui tout est lu depuis le dossier `resources/` du disque : c'est le principal chantier. Un troisième ensemble : un **paquet de ressources de démonstration** (modèles lourds comme le sac à dos de LearnOpenGL, non commité, ignoré par `.gitignore`), distribué à part, pour montrer ce que fait le moteur ; la démo doit fonctionner, avec un message clair, quand il est absent.
+- **Ressources** : séparer les ressources du moteur (shaders, texture `error`, polices par défaut), à embarquer dans le jar et lire depuis le classpath, des ressources du jeu, qui restent dans le dossier du projet utilisateur. Aujourd'hui tout est lu depuis le dossier `resources/` du disque : c'est le principal chantier. Un troisième ensemble : un **paquet de ressources de démonstration** (tout ce qui ne sert qu'à la démo, par exemple les modèles `resources/models/backpack`, `basicShape`, `weapon`, `world`, non commités, ignorés par `.gitignore`), distribué à part, pour montrer ce que fait le moteur ; la démo doit fonctionner, avec un message clair, quand il est absent.
 - **API publique** : pas encore définie, **à discuter avec l'utilisateur avant toute décision** (ce qui sera public, changements cassants comme les singletons à faire avant une 1.0).
 
 #### Modèle d'extension validé : le projet injecte, le projet étend
