@@ -2,6 +2,15 @@
 
 Objectifs à reprendre une fois `docs/roadmap.md` terminée, dans l'ordre prévu (à revoir à ce moment-là). Retirer chaque objectif une fois atteint, ou le déplacer dans la roadmap quand il devient actuel.
 
+## Gamma : rendu linéaire activable et réglable (en premier)
+LearnOpenGL « Gamma Correction ». À faire en premier : l'activer change toutes les couleurs à l'écran, mieux vaut le décider avant d'accumuler du contenu.
+- **Principe** : les écrans affichent `couleur^2.2` environ ; les images et les couleurs choisies à l'œil sont donc stockées en sRGB (déjà « pré-éclaircies »). Les calculs (éclairage, mélange alpha, filtrage, dégradés, particules additives) ne sont justes qu'en espace linéaire. Chaîne correcte : textures sRGB converties en linéaire à la lecture → calculs en linéaire → conversion en sRGB à l'écriture à l'écran.
+- **Constat** : aucune gestion (pas de `GL_SRGB*`) : le moteur calcule directement en sRGB. Peu visible en 2D sans éclairage ni fondus (pixel art) ; éclairage 3D trop sombre/contrasté, fondus et dégradés ternes.
+- **Règle** : couleurs (`Color4f`) et textures fournies par le projet sont en sRGB.
+- **Activation simple** : option globale (`EngineConfig`) et par scène, désactivée par défaut, activée par défaut pour la 3D éclairée. Une fois activée : textures de couleur chargées en `GL_SRGB8_ALPHA8` (pas les cartes de données : normales, spéculaire, hauteurs), couleurs uniformes converties en linéaire, `GL_FRAMEBUFFER_SRGB` (ou conversion dans la passe finale si un framebuffer intermédiaire est utilisé, ex. `VirtualSceneRenderer`).
+- **Réglage** : valeur de gamma/luminosité (réglage joueur classique) appliquée dans une passe finale (`pow(couleur, 1/gamma)`), modifiable à l'exécution et sauvegardable.
+- Scène `TestGamma` : dégradés, fondus alpha, éclairage, option activée/désactivée côte à côte.
+
 ## Tests de non-régression
 Méthode à définir avec l'utilisateur. Pistes : JUnit pour la logique pure (ressources, références, `InputSimulation`, tilemaps, maths, algorithmes) ; scénarios en jeu pilotés par `tools/mighty.py` (`scene`, `input`, `gl`, `stats`) qui vérifient des valeurs texte, sans capture d'écran ; contrôle des fuites par allers-retours de scènes. Filet de sécurité avant les gros chantiers suivants.
 
