@@ -34,7 +34,7 @@ Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux
 - **Jar léger**, sans dépendances embarquées (pas de jar-with-dependencies pour la bibliothèque) : LWJGL (natives comprises), JOML, org.json, JBox2D… sont déclarées dans le pom et récupérées par Maven.
 - **Distribution** : `mvn install` (dépôt local) au départ, puis JitPack ou GitHub Packages pour l'utiliser depuis n'importe quelle machine.
 - **Versions** sémantiques par release (`1.2.0`…) : chaque projet fixe la version qu'il utilise.
-- **Ressources** : séparer les ressources du moteur (shaders, texture `error`, polices par défaut), à embarquer dans le jar et lire depuis le classpath, des ressources du jeu, qui restent dans le dossier du projet utilisateur. Aujourd'hui tout est lu depuis le dossier `resources/` du disque : c'est le principal chantier.
+- **Ressources** : séparer les ressources du moteur (shaders, texture `error`, polices par défaut), à embarquer dans le jar et lire depuis le classpath, des ressources du jeu, qui restent dans le dossier du projet utilisateur. Aujourd'hui tout est lu depuis le dossier `resources/` du disque : c'est le principal chantier. Un troisième ensemble : un **paquet de ressources de démonstration** (modèles lourds comme le sac à dos de LearnOpenGL, non commité, ignoré par `.gitignore`), distribué à part, pour montrer ce que fait le moteur ; la démo doit fonctionner, avec un message clair, quand il est absent.
 - **API publique** : pas encore définie, **à discuter avec l'utilisateur avant toute décision** (ce qui sera public, changements cassants comme les singletons à faire avant une 1.0).
 
 #### Modèle d'extension validé : le projet injecte, le projet étend

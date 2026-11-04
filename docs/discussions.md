@@ -18,11 +18,15 @@ Objectif de l'utilisateur : finir les pages Assimp, Mesh et Model. La 3D reste s
 4. **Remplacement** de `ObjModelLoader`, `ModelTriangle`, `SimpleModelRenderer`, `Mesh`, `MeshEntry` ; migration du stand de `Test3DScene`.
 5. **Scène `Test3DModelLoading`** : sac à dos éclairé par plusieurs lumières, vérification des fuites `gl`.
 
-### Choix à valider
-- Remplacer complètement le lecteur OBJ (recommandé) ou garder les deux.
-- Appliquer les transformations des nœuds (recommandé : FBX/glTF en ont besoin ; le tutoriel les ignore).
-- Activer le face culling pour les modèles dans ce même travail.
-- Ressources non suivies : `resources/models/backpack` (40 Mo), `basicShape`, `weapon`, `world` (8,4 Mo). Proposition : ne pas commiter le sac à dos (`.gitignore`) sauf Git LFS ; vérifier la licence Sketchfab (fichier d'attribution présent) avant toute publication. Décider aussi pour les autres dossiers.
+### Décisions
+- Assimp remplace complètement le lecteur OBJ (lecture native, plus de formats, matériaux, plusieurs meshes).
+- Les transformations des nœuds sont appliquées.
+- Face culling activé pour les modèles dans ce même travail.
+- Le sac à dos (`resources/models/backpack`, 40 Mo) n'est pas commité (`.gitignore`) : il fera partie d'un paquet de ressources de démonstration du moteur (voir étape 3 de la roadmap). Vérifier la licence Sketchfab (fichier d'attribution présent) avant de distribuer ce paquet.
+
+### Reste à décider
+- Autres dossiers non suivis : `resources/models/basicShape`, `weapon`, `world` (8,4 Mo) : commiter, ignorer, ou paquet de démonstration.
+- Quand implémenter ce plan : juste après l'étape 0 (avant l'étape 1), ou à une étape de la roadmap.
 
 ## 2. Pistes tirées du reste de LearnOpenGL
 
