@@ -36,6 +36,13 @@ Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux
 - Deux niveaux : mods de données (ressources/JSON, sans code) et mods de code (jars Java, sans sandbox possible : à n'installer que s'ils sont de confiance).
 - Ne pas implémenter le modding maintenant, mais ne pas prendre de décision qui l'empêcherait.
 
+## Effets 2D : particules et post-traitement
+Inspiré de LearnOpenGL « In Practice / 2D Game » (Breakout). Un jeu sans particules n'est pas complet.
+- **Particules** (absentes du moteur) : émetteurs (position, forme, débit, rafales), particules avec durée de vie, vitesse, gravité/forces, couleur/taille/rotation/opacité évoluant dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; recyclage des particules (pool, aucune allocation par frame) ; émetteurs décrits en JSON (`DataType`) et injectables par le projet ; option de mise à jour en espace monde ou local.
+- **Rendu** : une première version simple, puis passage à l'instancing quand le regroupement des dessins (Rendu 2D) sera fait (des milliers de particules en un appel).
+- **Post-traitement** : effets sur l'image entière via un framebuffer (base : `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables et activables par scène. La passe finale du gamma (section Gamma) en fait partie.
+- Scène `TestParticles` : plusieurs émetteurs, compteur de particules et temps dans `stats`.
+
 ## Thème, tailles automatiques et langues
 Dépend du point d'injection (Bibliothèque réutilisable) : thèmes et langues sont fournis par le projet (et les mods). Dès maintenant (`roadmap.md`, corrections de l'API), ne pas figer d'API `Text`/GUI qui empêcherait les clés de langue et le thème.
 - **Langues (l10n, inspirée de Flutter)** : un fichier par langue (`resources/lang/fr.json`, `en.json`, équivalent des ARB) chargé comme un `DataType` ; paramètres `{nom}` et pluriels simples ; langue de repli et log des clés manquantes ; un script `tools/` génère une classe de constantes typées (autocomplétion, fautes de clé détectées à la compilation) ; `Text` liable à une clé, mis à jour au changement de langue ; clés avec espace de noms (mods).

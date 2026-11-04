@@ -6,5 +6,4 @@ Sujets à discuter et planifier avec l'utilisateur **avant** de reprendre la feu
 
 À placer (ou non) dans la roadmap. Déjà présents dans le moteur : MSAA, blending, test de profondeur, callback de debug OpenGL, éclairage multiple. Face culling : décidé avec le chargement de modèles.
 
-- **Breakout** (« In Practice ») : système de particules (absent du moteur) et effets de post-traitement sur framebuffer (secousse, flou, inversion), utiles en 2D.
 - **Plus tard en 3D** : ombres, normal mapping (textures du sac à dos disponibles), skeletal animation via Assimp, frustum culling.
