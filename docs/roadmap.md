@@ -1,13 +1,10 @@
 # Feuille de route — Java-MightyLibrary
 
-Objectifs actuels, dans l'ordre ; retirer chaque objectif une fois atteint. La suite (tests, bibliothèque réutilisable, thème, rendu 2D, SVG, entrées, son, console, réflexions, plateformes) est dans `docs/later.md`.
+Objectifs actuels, dans l'ordre ; retirer chaque objectif une fois atteint. La suite est dans `docs/later.md` (gamma, tests, bibliothèque réutilisable, effets 2D, thème, rendu 2D, SVG, entrées, son, console, réflexions, plateformes), puis dans `docs/techniquegraphique.md` (techniques de rendu 2D/3D de LearnOpenGL).
 
 ## Feuille de route
 
-### 0. Discussions en cours (maintenant)
-Discuter avec l'utilisateur des sujets de `docs/discussions.md` : pistes LearnOpenGL (TODO du code et chargement de modèles : décidés). Reporter chaque décision (code ou roadmap), puis supprimer ce fichier et cette étape.
-
-### 1. API : corrections urgentes (après l'étape 0)
+### 1. API : corrections urgentes (prochaine étape)
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
 
 **En premier : chargement de modèles 3D par Assimp** (pages LearnOpenGL Assimp, Mesh, Model ; plan validé). Fait avant le reste de l'étape car ce code sera touché par tous les changements suivants (ressources, chargement GL, shaders) : mieux vaut que ces changements portent sur le code final que sur l'ancien lecteur OBJ.

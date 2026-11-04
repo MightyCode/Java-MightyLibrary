@@ -1,6 +1,6 @@
 # Plus tard — Java-MightyLibrary
 
-Objectifs à reprendre une fois `docs/roadmap.md` terminée, dans l'ordre prévu (à revoir à ce moment-là). Retirer chaque objectif une fois atteint, ou le déplacer dans la roadmap quand il devient actuel.
+Objectifs à reprendre une fois `docs/roadmap.md` terminée, dans l'ordre prévu (à revoir à ce moment-là). Retirer chaque objectif une fois atteint, ou le déplacer dans la roadmap quand il devient actuel. Ensuite : `docs/techniquegraphique.md`.
 
 ## Gamma : rendu linéaire activable et réglable (en premier)
 LearnOpenGL « Gamma Correction ». À faire en premier : l'activer change toutes les couleurs à l'écran, mieux vaut le décider avant d'accumuler du contenu.

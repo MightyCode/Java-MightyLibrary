@@ -3,9 +3,9 @@
 Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB, Assimp ; JOML, org.json, JBox2D). `src/MightyLibrary/mightylib` = la bibliothèque, `src/MightyLibrary/project` = la démo qui sert de banc d'essai. Objectif : en faire une bibliothèque réutilisable (jar) pour les futurs jeux et logiciels de l'utilisateur.
 
 ## Documentation (à lire seulement quand la tâche le demande)
-- `docs/roadmap.md` : objectifs actuels, ordonnés (discussions de `docs/discussions.md`, puis corrections de l'API, à commencer par le chargement de modèles par Assimp), décisions prises.
-- `docs/later.md` : objectifs suivants (tests, bibliothèque réutilisable avec modèle d'extension et modding, thème, rendu 2D, SVG, entrées, son, console, réflexions, plateformes).
-- `docs/discussions.md` : sujets à discuter et planifier avec l'utilisateur (pistes LearnOpenGL).
+- `docs/roadmap.md` : objectifs actuels, ordonnés (corrections de l'API, à commencer par le chargement de modèles par Assimp), décisions prises.
+- `docs/later.md` : objectifs suivants (gamma, tests, bibliothèque réutilisable avec modèle d'extension et modding, effets 2D, thème, rendu 2D, SVG, entrées, son, console, réflexions, plateformes).
+- `docs/techniquegraphique.md` : après `later.md`, techniques de rendu 2D/3D de LearnOpenGL (Blinn-Phong, skybox, culling, ombres, normal mapping, animation squelettique, HDR/bloom…).
 - `docs/architecture.md` : structure, démarrage, boucle, cycle de vie des scènes, ressources CPU/GPU, rendu, entrées, temps, pièges connus.
 - `docs/debug-tools.md` : commandes, serveur de debug, simulation d'entrées, traque des fuites, profilage (JFR, RenderDoc).
 
