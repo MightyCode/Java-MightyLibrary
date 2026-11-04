@@ -21,6 +21,7 @@ Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. L
 - **IDs d'action `int` statiques** (`InputManager.getAndIncrementId`) → identifiants texte avec espace de noms enregistrés au registre. Lié au remappage (étape 7) et au modding.
 - **Champs publics modifiables** (`Resources.Loaders`, `GUIList.GUIs`, `ShouldLoop`, `WindowCreationInfo.Size`…) → méthodes.
 - **Fautes et noms trompeurs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`…
+- **`Resources.addResourceToProcess`** (TODO `Resources.java`) : « ajoute » mais exécute tout de suite les données `IMMEDIATELY_IN_CURRENT_CONTEXT` → traiter ce cas en amont, ou renommer (`processOrQueue`).
 
 ### 2. Tests de non-régression
 Méthode à définir avec l'utilisateur. Pistes : JUnit pour la logique pure (ressources, références, `InputSimulation`, tilemaps, maths, algorithmes) ; scénarios en jeu pilotés par `tools/mighty.py` (`scene`, `input`, `gl`, `stats`) qui vérifient des valeurs texte, sans capture d'écran ; contrôle des fuites par allers-retours de scènes. Filet de sécurité avant les gros chantiers suivants.
@@ -90,4 +91,5 @@ Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son systèm
 - **Steam** : Steamworks (succès, overlay, statistiques…) ; il existe des bindings Java à évaluer.
 
 ## Décisions prises
+- **Package `network` conservé** bien qu'inutilisé (`ServerThread.run()` vide) : utilisable un jour, ne pas le supprimer.
 - **Pas de Lombok** : gain de tokens faible (peu d'accesseurs triviaux), méthodes générées introuvables par recherche dans le source, processeur d'annotations à configurer (Maven + IntelliJ) et API publique implicite, contraire au choix d'une API publique explicite.
