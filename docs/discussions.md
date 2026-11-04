@@ -7,8 +7,9 @@ Sujets à discuter et planifier avec l'utilisateur **avant** de reprendre la feu
 Déjà traités : `GLResources.addElementToUnload` (supprimé), `Renderer.unload()` (seul `unload()` reste), `SimpleModelRenderer.java:113` (réglé par Assimp, section 2), `ServerThread.java:24` (package `network` conservé), `Resources.java:365` (refactor en étape 1 de la roadmap).
 
 ### 1.2 `Shader.java:48` — séparer la partie OpenGL du shader
-- Constat : `Shader` est un `DataType` en `MAIN_CONTEXT` qui lit les sources **et** compile/lie le programme GL (`internLoad`). Les textures, elles, sont déjà séparées : `TextureData` (CPU, workers) et `Texture` (`GLElement`, `GLResources`).
+- Constat : `Shader` est un `DataType` en `MAIN_CONTEXT` : **tout** se fait sur le thread principal, d'un bloc : lecture des `.glsl` et ajout de la bibliothèque GLSL (`ShaderLoader.initWithFile` → `completeWithLibraryFile`), compilation dès `setShaderContent`, puis link (`internLoad`). Les textures, elles, sont déjà séparées : `TextureData` (CPU, workers) et `Texture` (`GLElement`, `GLResources`).
 - Proposition : même découpage pour les shaders : sources lues par les workers (`ShaderSource` ou similaire), programme GL dans un `GLElement` géré par `GLResources` (chargement par tranches, compteur de références, suivi des fuites `gl`). Lié à l'étape 1 de la roadmap (chargement GL) et à l'injection de shaders par le projet (étape 3).
+- Long terme (vrai projet : dizaines de shaders, variantes par `#define`, `#include`, rechargement à chaud, shaders de mods) : la lecture et le prétraitement passent aux workers ; compilation par tranches ; si le pilote expose `GL_KHR_parallel_shader_compile`, compiler sans attendre et interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes.
 - À décider : faire maintenant, en étape 1, ou plus tard ; les noms des classes.
 
 ## 2. Chargement de modèles 3D (LearnOpenGL « Model Loading »)
