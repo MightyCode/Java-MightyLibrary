@@ -5,7 +5,7 @@ Objectifs dans l'ordre ; retirer chaque objectif une fois atteint.
 ## Feuille de route (dans l'ordre ; retirer chaque objectif de cette section une fois atteint)
 
 ### 0. Discussions en cours (maintenant)
-Discuter avec l'utilisateur des sujets de `docs/discussions.md`, dans l'ordre : TODO restants, chargement de modèles 3D (Assimp), pistes LearnOpenGL. Reporter chaque décision (code ou roadmap), puis supprimer ce fichier et cette étape.
+Discuter avec l'utilisateur des sujets de `docs/discussions.md`, dans l'ordre : chargement de modèles 3D (Assimp), pistes LearnOpenGL (TODO du code : traités). Reporter chaque décision (code ou roadmap), puis supprimer ce fichier et cette étape.
 
 ### 1. API : corrections urgentes (après l'étape 0)
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
@@ -21,6 +21,7 @@ Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. L
 - **IDs d'action `int` statiques** (`InputManager.getAndIncrementId`) → identifiants texte avec espace de noms enregistrés au registre. Lié au remappage (étape 7) et au modding.
 - **Champs publics modifiables** (`Resources.Loaders`, `GUIList.GUIs`, `ShouldLoop`, `WindowCreationInfo.Size`…) → méthodes.
 - **Fautes et noms trompeurs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`…
+- **Shaders découpés comme les textures** (TODO `Shader.java`) : aujourd'hui `Shader` (`MAIN_CONTEXT`) lit les `.glsl`, ajoute la bibliothèque GLSL (`ShaderLoader.completeWithLibraryFile`), compile (`setShaderContent`) et lie (`internLoad`) d'un bloc sur le thread principal. Cible : lecture et prétraitement (`#include`, `#define`, variantes) par les workers ; programme GL dans un `GLElement` de `GLResources` (compilation par tranches, références, suivi `gl`) ; avec `GL_KHR_parallel_shader_compile`, compiler sans attendre et interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes. Prépare l'injection de shaders par le projet (étape 3) et le rechargement à chaud.
 - **`Resources.addResourceToProcess`** (TODO `Resources.java`) : « ajoute » mais exécute tout de suite les données `IMMEDIATELY_IN_CURRENT_CONTEXT` → traiter ce cas en amont, ou renommer (`processOrQueue`).
 
 ### 2. Tests de non-régression
