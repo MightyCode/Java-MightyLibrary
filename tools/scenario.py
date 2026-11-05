@@ -161,6 +161,14 @@ def main():
     if args.attach:
         return 0 if run_steps(args.port, args.steps, args.timeout) else 1
 
+    # Another game already listening would receive the commands instead of the launched one
+    try:
+        mighty.connect(args.port, 0).close()
+        print(f"A game already listens on port {args.port}: close it, or use --attach to drive it")
+        return 1
+    except OSError:
+        pass
+
     prepare(not args.no_compile)
     process = launch(args.log)
 
