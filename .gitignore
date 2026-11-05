@@ -4,6 +4,8 @@ src/META-INF/
 target/
 screenshots/
 *.jfr
+# Natives extracted by LWJGL at launch
+.lwjgl/
 
 # Demonstration resources, distributed apart from the repository
 resources/models/backpack/
