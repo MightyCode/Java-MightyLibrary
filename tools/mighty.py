@@ -28,10 +28,14 @@ def connect(port, wait_seconds):
             time.sleep(0.5)
 
 
+# Seconds to wait for an answer before considering the program blocked (socket.timeout is raised)
+ANSWER_TIMEOUT = 35
+
+
 def send(connection, reader, command):
     connection.sendall((command + "\n").encode("utf-8"))
     # Commands can wait for the next frames (screenshot, loading...)
-    connection.settimeout(35)
+    connection.settimeout(ANSWER_TIMEOUT)
     line = reader.readline()
     if not line:
         raise ConnectionError("Connection closed by the program")

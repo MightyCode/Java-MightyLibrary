@@ -24,6 +24,7 @@ python tools/scenario.py "scene Test2DScene" wait-loaded gl "input ESCAPE" sleep
 ```
 - Compile (`--no-compile` pour sauter), construit `target/classpath.txt` si besoin, lance le jeu (journal dans `target/scenario.log`), enchaîne les étapes, envoie `exit`, puis liste les lignes suspectes du journal (exceptions, erreurs OpenGL). Code de sortie 0 si tout a réussi.
 - Étapes en plus des commandes du jeu : `wait-loaded` (attend la fin du chargement et la scène demandée par le dernier `scene X`), `sleep:SECONDS`.
+- Blocages : sans résultat après `--timeout` secondes (20 par défaut : démarrage, réponse à une commande, `wait-loaded`), le jeu est considéré bloqué ; un `wait-loaded` trop long affiche `BLOCKED` avec l'état `gl` et arrête le scénario. Le jeu est tué après `--max-duration` secondes (300 par défaut) quoi qu'il fasse. Augmenter `--timeout` pour un chargement réellement long.
 - `--attach` utilise un jeu déjà lancé (par l'utilisateur) sans le lancer ni le fermer ; `--keep-open` laisse le jeu ouvert.
 - `stats` décrit la dernière seconde **complète** : attendre au moins une seconde de jeu (`sleep:1.5`) avant de la lire.
 - Fluidité d'un chargement : `stats reset` remet à zéro les pires valeurs `maxFrameMsSinceReset` (travail d'une frame), `maxFrameIntervalMsSinceReset` (écart entre deux frames, à garder < 100 ms), `maxTickMsSinceReset` et `maxSwapMsSinceReset`. Ex. : `python tools/scenario.py "scene TestGLLoading" "stats reset" wait-loaded stats` (le `reset` après le changement de scène exclut le tick qui exécute `init`).
