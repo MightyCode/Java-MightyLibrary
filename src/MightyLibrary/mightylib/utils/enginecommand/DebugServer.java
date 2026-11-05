@@ -5,10 +5,13 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -22,6 +25,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class DebugServer {
     private static final long COMMAND_TIMEOUT_SECONDS = 30;
     private static final long STOP_WAIT_MILLISECONDS = 500;
+    private static final int MAX_PORT = 65535;
+
+    // System property: file where the port really used is written once the server listens
+    public static final String PORT_FILE_PROPERTY = "mightylib.debugServer.portFile";
 
     private final Commands commands;
     private final int port;
@@ -36,11 +43,26 @@ public class DebugServer {
         this.pendingAnswers = new AtomicInteger();
     }
 
+    /**
+     * Listen on the requested port, or on the next free one (another game may already use it).
+     * The port really used is printed, given by getPort(), and written in the file named by the
+     * system property PORT_FILE_PROPERTY when it is set (used by tools/scenario.py).
+     */
     public boolean start() {
-        try {
-            serverSocket = new ServerSocket(port, 4, InetAddress.getLoopbackAddress());
-        } catch (IOException e) {
-            System.err.println("Debug server can't listen on port " + port + " : " + e);
+        for (int candidate = port; candidate <= MAX_PORT; ++candidate) {
+            try {
+                serverSocket = new ServerSocket(candidate, 4, InetAddress.getLoopbackAddress());
+                break;
+            } catch (BindException e) {
+                // Port already used: try the next one
+            } catch (IOException e) {
+                System.err.println("Debug server can't listen on port " + candidate + " : " + e);
+                return false;
+            }
+        }
+
+        if (serverSocket == null) {
+            System.err.println("Debug server can't find a free port from " + port);
             return false;
         }
 
@@ -48,9 +70,30 @@ public class DebugServer {
         acceptThread.setDaemon(true);
         acceptThread.start();
 
-        System.out.println("--Debug server listening on " + serverSocket.getInetAddress().getHostAddress() + ":" + port);
+        if (getPort() != port)
+            System.out.println("--Debug server : port " + port + " already used");
+        System.out.println("--Debug server listening on " + serverSocket.getInetAddress().getHostAddress() + ":" + getPort());
+
+        writePortFile();
 
         return true;
+    }
+
+    // Port really listened, -1 if the server is not started
+    public int getPort() {
+        return serverSocket == null ? -1 : serverSocket.getLocalPort();
+    }
+
+    private void writePortFile() {
+        String portFile = System.getProperty(PORT_FILE_PROPERTY);
+        if (portFile == null || portFile.isEmpty())
+            return;
+
+        try {
+            Files.write(Paths.get(portFile), String.valueOf(getPort()).getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            System.err.println("Debug server can't write its port in " + portFile + " : " + e);
+        }
     }
 
     private void acceptClients() {

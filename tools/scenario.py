@@ -37,6 +37,10 @@ MVN = os.environ.get("MIGHTY_MVN",
 MAVEN_JDK = os.environ.get("MIGHTY_MAVEN_JDK", os.path.expanduser("~/.jdks/ms-21.0.9"))
 MAIN_CLASS = "MightyLibrary.project.main.Main"
 CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
+# The launched game writes there the port of its debug server (the first free one from 7777):
+# one file per scenario, so that several games and scenarios can run at the same time
+PORT_FILE = os.path.join(ROOT, "target", f"scenario-{os.getpid()}.port")
+PORT_FILE_PROPERTY = "mightylib.debugServer.portFile"
 PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at MightyLibrary|OpenGL debug|Error:")
 
 
@@ -61,9 +65,27 @@ def launch(log_path):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
         classpath = os.path.join(ROOT, "target", "classes") + os.pathsep + file.read().strip()
 
+    if os.path.exists(PORT_FILE):
+        os.remove(PORT_FILE)
+
     log = open(log_path, "w", encoding="utf-8")
-    return subprocess.Popen([JAVA, "-cp", classpath, MAIN_CLASS], cwd=ROOT,
+    return subprocess.Popen([JAVA, f"-D{PORT_FILE_PROPERTY}={PORT_FILE}", "-cp", classpath, MAIN_CLASS], cwd=ROOT,
                             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
+
+
+def wait_port(process, timeout):
+    # Port chosen by the launched game, None if it exited or did not start its server in time
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline and process.poll() is None:
+        try:
+            with open(PORT_FILE, encoding="utf-8") as file:
+                text = file.read().strip()
+            if text:
+                return int(text)
+        except (OSError, ValueError):
+            pass
+        time.sleep(0.2)
+    return None
 
 
 def compact(answer):
@@ -120,6 +142,8 @@ def run_steps(port, steps, timeout):
 
 def stop(process, port):
     try:
+        if port is None:
+            raise ConnectionError("no port")
         connection = mighty.connect(port, 2)
         with connection:
             mighty.send(connection, connection.makefile("r", encoding="utf-8"), "exit")
@@ -145,7 +169,8 @@ def report_log(log_path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--port", type=int, default=7777)
+    parser.add_argument("--port", type=int, default=7777,
+                        help="port of the game for --attach (a launched game gives its own port)")
     parser.add_argument("--timeout", type=float, default=20,
                         help="seconds without result (start, answer, loading) before the game is considered blocked")
     parser.add_argument("--max-duration", type=float, default=300,
@@ -153,21 +178,14 @@ def main():
     parser.add_argument("--no-compile", action="store_true", help="skip the compilation")
     parser.add_argument("--attach", action="store_true", help="use an already running game, don't launch or close it")
     parser.add_argument("--keep-open", action="store_true", help="don't close the game at the end")
-    parser.add_argument("--log", default=os.path.join(ROOT, "target", "scenario.log"))
+    parser.add_argument("--log", default=os.path.join(ROOT, "target", "scenario.log"),
+                        help="game log, give another one to run several scenarios at the same time")
     parser.add_argument("steps", nargs="*")
     args = parser.parse_args()
     mighty.ANSWER_TIMEOUT = args.timeout
 
     if args.attach:
         return 0 if run_steps(args.port, args.steps, args.timeout) else 1
-
-    # Another game already listening would receive the commands instead of the launched one
-    try:
-        mighty.connect(args.port, 0).close()
-        print(f"A game already listens on port {args.port}: close it, or use --attach to drive it")
-        return 1
-    except OSError:
-        pass
 
     prepare(not args.no_compile)
     process = launch(args.log)
@@ -181,15 +199,25 @@ def main():
     watchdog = threading.Timer(args.max_duration, kill_blocked_game)
     watchdog.daemon = True
     watchdog.start()
+    port = None
     try:
-        success = run_steps(args.port, args.steps, args.timeout)
+        port = wait_port(process, args.timeout)
+        if port is None:
+            print(f"BLOCKED: the game gave no debug server port after {args.timeout:g}s")
+            success = False
+        else:
+            print(f"game: debug server on port {port}")
+            success = run_steps(port, args.steps, args.timeout)
     except OSError as error:
         print(f"Can't talk to the game: {error}")
         success = False
     finally:
         watchdog.cancel()
         if not args.keep_open:
-            stop(process, args.port)
+            stop(process, port)
+
+    if os.path.exists(PORT_FILE):
+        os.remove(PORT_FILE)
 
     log_ok = report_log(args.log)
     return 0 if success and log_ok else 1
