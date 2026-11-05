@@ -75,7 +75,7 @@ public class DebugInfoCamera3D implements IUpdatableDisplayable {
     @Override
     public void postUpdate() {
         StringBuilder result = new StringBuilder();
-        result.append("camera3D id : ").append(camera.id()).append("\n");
+        result.append("camera3D ").append(camera.getName()).append(" id : ").append(camera.getCameraId()).append("\n");
 
         for (Integer info : this.info) {
             switch (info) {

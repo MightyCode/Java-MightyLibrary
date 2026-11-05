@@ -10,6 +10,7 @@ import MightyLibrary.mightylib.main.Context;
 import MightyLibrary.mightylib.main.ContextManager;
 import MightyLibrary.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import MightyLibrary.mightylib.resources.Resources;
+import MightyLibrary.mightylib.scenes.camera.Camera;
 import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.scenes.camera.Camera3D;
 import MightyLibrary.mightylib.scenes.camera.Camera3DCreationInfo;
@@ -18,6 +19,7 @@ import MightyLibrary.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -54,6 +56,9 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
     private final Camera3DCreationInfo cameraParameters;
 
+    // Cameras reachable by the camera command
+    private final List<Camera> cameras = new CopyOnWriteArrayList<>();
+
     public Scene(Camera3DCreationInfo info) {
         resources = Resources.getInstance();
         glResources = GLResources.getInstance();
@@ -80,6 +85,37 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         main3DCamera = mainContext.createCamera(cameraParameters);
         main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
         shaderManager.setCameras(main2DCamera, main3DCamera);
+
+        cameras.clear();
+        registerCamera(main3DCamera, "main3D");
+        registerCamera(main2DCamera, "main2D");
+    }
+
+    /**
+     * Make a camera reachable by the camera command (by its id or its name), the main cameras are registered.
+     */
+    public final void registerCamera(Camera camera, String name) {
+        camera.setName(name);
+        if (!cameras.contains(camera))
+            cameras.add(camera);
+    }
+
+    public final void unregisterCamera(Camera camera) {
+        cameras.remove(camera);
+    }
+
+    public final List<Camera> getCameras() {
+        return Collections.unmodifiableList(cameras);
+    }
+
+    // Camera registered in this scene with this id or name, null if none
+    public final Camera findCamera(String idOrName) {
+        for (Camera camera : cameras) {
+            if (camera.getName().equals(idOrName) || String.valueOf(camera.getCameraId()).equals(idOrName))
+                return camera;
+        }
+
+        return null;
     }
 
     /**

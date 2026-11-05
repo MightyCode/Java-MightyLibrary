@@ -78,6 +78,10 @@ public class Camera3D extends Camera {
         if (!lockViewCursor)
             setToCursor();
 
+        computeView();
+    }
+
+    private void computeView() {
         view.identity();
         view.lookAt(camPos, camPos.add(camFront, new Vector3f()), camUp);
     }
@@ -86,9 +90,37 @@ public class Camera3D extends Camera {
         lockViewCursor = state;
     }
 
+    // Yaw and pitch are updated too: otherwise the cursor (setToCursor) would restore the previous direction
     public void lookAt(Vector3f target) {
-        camFront.set(target.sub(camPos, new Vector3f()).normalize());
-        shouldUpdateView();
+        Vector3f direction = target.sub(camPos, new Vector3f());
+        if (direction.lengthSquared() == 0)
+            return;
+
+        direction.normalize();
+        pitch = Math.max(-89.0f, Math.min(89.0f, (float) Math.toDegrees(Math.asin(direction.y))));
+        yaw = (float) Math.toDegrees(Math.atan2(direction.z, direction.x));
+
+        yawCos = (float) Math.cos(MightyMath.toRads(yaw));
+        yawSin = (float) Math.sin(MightyMath.toRads(yaw));
+
+        camFront.x = (float) (Math.cos(MightyMath.toRads(pitch)) * yawCos);
+        camFront.y = (float) (Math.sin(MightyMath.toRads(pitch)));
+        camFront.z = (float) (Math.cos(MightyMath.toRads(pitch)) * yawSin);
+        camFront.normalize();
+
+        computeView();
+    }
+
+    public float getYaw() {
+        return yaw;
+    }
+
+    public float getPitch() {
+        return pitch;
+    }
+
+    public float getViewAngle() {
+        return fov;
     }
 
     public void invertLockViewCursor() {
@@ -122,25 +154,25 @@ public class Camera3D extends Camera {
         camPos.y = newPos.y;
         camPos.z = newPos.z;
 
-        shouldUpdateView();
+        computeView();
     }
 
     public void setX(float x) {
         camPos.x = x;
 
-        shouldUpdateView();
+        computeView();
     }
 
     public void setY(float y) {
         camPos.y = y;
 
-        shouldUpdateView();
+        computeView();
     }
 
     public void setZ(float z) {
         camPos.z = z;
 
-        shouldUpdateView();
+        computeView();
     }
 
     public void moveX(float value){
@@ -159,14 +191,14 @@ public class Camera3D extends Camera {
         camPos.x += speed * yawSin;
         camPos.z += speed * -yawCos;
 
-        shouldUpdateView();
+        computeView();
     }
 
     public void speedAngZ(float speed) {
         camPos.x += speed * -yawCos;
         camPos.z += speed * -yawSin;
 
-        shouldUpdateView();
+        computeView();
     }
 
     public Camera3D setSensitivity(float value) {

@@ -6,6 +6,11 @@ import MightyLibrary.mightylib.utils.math.UUID;
 import org.joml.Matrix4f;
 
 public abstract class Camera extends UUID {
+    // Ids of the cameras only (UUID ids are shared with renderers), to target a camera with the camera command
+    private static int CAMERA_COUNT = 0;
+    private final int cameraId;
+    private String name;
+
     protected final WindowInfo windowInfo;
 
     protected final Matrix4f projection, view;
@@ -15,6 +20,8 @@ public abstract class Camera extends UUID {
     private boolean shouldUpdateView;
 
     public Camera(WindowInfo windowInfo) {
+        cameraId = CAMERA_COUNT++;
+        name = "camera" + cameraId;
         this.windowInfo = windowInfo;
 
         projection = new Matrix4f();
@@ -25,6 +32,19 @@ public abstract class Camera extends UUID {
 
         shouldUpdateProjection = true;
         shouldUpdateView = true;
+    }
+
+    public int getCameraId() {
+        return cameraId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Camera setName(String name) {
+        this.name = name;
+        return this;
     }
 
     public abstract void updateProjection();
