@@ -1,5 +1,10 @@
 package MightyLibrary.project.scenes;
 
+import MightyLibrary.mightylib.graphics.lightning.MultiLightningManager;
+import MightyLibrary.mightylib.graphics.lightning.lights.DirectionalLight;
+import MightyLibrary.mightylib.graphics.lightning.lights.LightDecrease;
+import MightyLibrary.mightylib.graphics.lightning.lights.PointLight;
+import MightyLibrary.mightylib.graphics.lightning.lights.SpotLight;
 import MightyLibrary.mightylib.graphics.renderer.RendererUtils;
 import MightyLibrary.mightylib.graphics.lightning.materials.BasicMaterial;
 import MightyLibrary.mightylib.graphics.lightning.materials.Material;
@@ -11,6 +16,7 @@ import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
 import MightyLibrary.mightylib.graphics.renderer._3D.ModelRenderer;
+import MightyLibrary.mightylib.resources.models.Model;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
@@ -35,6 +41,13 @@ public class Test3DScene extends Scene {
     private Renderer sphere;
 
     private ModelRenderer stand;
+
+    // Model of the demonstration package (not in the repository), behind the stand
+    private static final String BACKPACK_MODEL = "backpack";
+    private ModelRenderer backpack;
+    private MultiLightningManager backpackLights;
+    private CubeRenderer[] backpackLightCubes;
+    private Text missingBackpackLabel;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
@@ -152,6 +165,8 @@ public class Test3DScene extends Scene {
         stand.setPosition(new Vector3f(0.0f, 4.0f,5.0f));
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
 
+        createBackpack();
+
         displacementMapTweening = new FloatTweening();
         displacementMapTweening.setTweeningValues(ETweeningType.Linear, ETweeningBehaviour.InOut)
                 .setTweeningOption(ETweeningOption.LoopMirrored)
@@ -192,6 +207,67 @@ public class Test3DScene extends Scene {
                         .setFontSize(60);
 
         originLabel.setColor(ColorList.Red());
+    }
+
+    // Model loaded by Assimp with its material, lit by three coloured point lights and a spot light following the camera
+    private void createBackpack() {
+        Model data = resources.getResource(Model.class, BACKPACK_MODEL);
+        if (data == null || !data.isLoaded()) {
+            String message = "Model '" + BACKPACK_MODEL + "' missing: copy the demonstration package into resources/models/backpack/";
+            System.err.println("--Test3DScene : " + message);
+
+            missingBackpackLabel = new Text();
+            missingBackpackLabel.setFont("arial").setFontSize(20).setText(message);
+            missingBackpackLabel.setColor(ColorList.Red());
+            missingBackpackLabel.setPosition(new Vector2f(5, 120));
+            return;
+        }
+
+        Vector3f center = new Vector3f(0f, 4f, 13f);
+
+        backpack = new ModelRenderer(BACKPACK_MODEL);
+        backpack.setPosition(center);
+        backpack.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef());
+
+        LightDecrease lightDecrease = new LightDecrease(1.0f, 0.09f, 0.032f);
+
+        backpackLights = new MultiLightningManager("dirLight", "pointLights", "spotLight");
+        backpackLights.setDirectionalLight(new DirectionalLight(new BasicMaterial(
+                new Vector3f(0.05f), new Vector3f(0.3f), new Vector3f(0.3f)))
+                .setDirection(new Vector3f(-0.2f, -1.0f, -0.3f)));
+
+        backpackLights.setSpotLight(new SpotLight(new BasicMaterial(
+                new Vector3f(0f), new Vector3f(0.6f), new Vector3f(0.8f)), lightDecrease)
+                .setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector())
+                .enable());
+
+        Vector3f[] offsets = {
+                new Vector3f(3f, 1f, -2f),
+                new Vector3f(-3f, 1f, -2f),
+                new Vector3f(0f, 3f, 3f)
+        };
+        Vector3f[] colors = {
+                new Vector3f(1f, 0.3f, 0.3f),
+                new Vector3f(0.3f, 1f, 0.3f),
+                new Vector3f(0.3f, 0.3f, 1f)
+        };
+
+        backpackLightCubes = new CubeRenderer[offsets.length];
+        for (int i = 0; i < offsets.length; ++i) {
+            Vector3f position = new Vector3f(center).add(offsets[i]);
+
+            backpackLights.addPointLight(new PointLight(new BasicMaterial(
+                    new Vector3f(colors[i]).mul(0.05f), colors[i], colors[i]), lightDecrease)
+                    .setPosition(position));
+
+            backpackLightCubes[i] = new CubeRenderer("colorShape3D");
+            backpackLightCubes[i].setPosition(position);
+            backpackLightCubes[i].setScale(new Vector3f(0.2f));
+            backpackLightCubes[i].setColorMode(new Color4f(colors[i], 1));
+            backpackLightCubes[i].setNormal();
+        }
+
+        backpackLights.addRenderer(backpack);
     }
 
 
@@ -251,6 +327,12 @@ public class Test3DScene extends Scene {
         cubeTexturedMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
         cubeTexturedMaterial.updateShaderValue("light.vector", RendererUtils.ToLightPosition(light.position()));
 
+        if (backpack != null) {
+            backpack.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+            backpackLights.getSpotLight().setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector());
+            backpackLights.update();
+        }
+
         main3DCamera.updateView();
     }
 
@@ -273,11 +355,20 @@ public class Test3DScene extends Scene {
 
         stand.display();
 
+        if (backpack != null) {
+            backpack.display();
+            for (CubeRenderer cube : backpackLightCubes)
+                cube.display();
+        }
+
         sphere.display();
 
         super.display();
 
         originLabel.display();
+
+        if (missingBackpackLabel != null)
+            missingBackpackLabel.display();
 
         super.setAndDisplayRealScene();
     }
@@ -291,6 +382,15 @@ public class Test3DScene extends Scene {
         cubeTexturedMaterial.unload();
         light.unload();
         stand.unload();
+
+        if (backpack != null) {
+            backpack.unload();
+            for (CubeRenderer cube : backpackLightCubes)
+                cube.unload();
+        }
+
+        if (missingBackpackLabel != null)
+            missingBackpackLabel.unload();
         sphere.unload();
         heightMapRenderer.unload();
         originLabel.unload();

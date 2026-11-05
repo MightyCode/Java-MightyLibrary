@@ -221,10 +221,6 @@ public class MenuScene extends Scene {
                 inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F4) )
             sceneManagerInterface.setNewScene(new Test2DPlatformerBox2D(), new String[]{""});
 
-        if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
-                inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F5) )
-            sceneManagerInterface.setNewScene(new Test3DModelLoading(), new String[]{""});
-
     }
 
     @Override
