@@ -4,6 +4,7 @@ import MightyLibrary.mightylib.utils.LoadingElement;
 import MightyLibrary.mightylib.utils.math.UUID;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -43,7 +44,8 @@ public abstract class DataType extends UUID implements LoadingElement {
         this.correctlyLoaded = false;
         this.typeSetUp = typeSetUp;
 
-        references = new ArrayList<>();
+        // Owned resources (model textures) get their references from worker threads
+        references = Collections.synchronizedList(new ArrayList<>());
         dependencies = new CopyOnWriteArrayList<>();
         manuallyCreated = true;
     }
@@ -110,8 +112,13 @@ public abstract class DataType extends UUID implements LoadingElement {
         if (!correctlyPreLoaded)
             throw new RuntimeException("Data " + dataName + " is not preloaded");
 
-        if (internLoad())
+        if (internLoad()) {
             correctlyLoaded = true;
+        } else {
+            // Back to the initial state: an unload would otherwise wait forever for a loading that failed
+            correctlyPreLoaded = false;
+            System.err.println("--Can't load " + getClass().getSimpleName() + " " + dataName);
+        }
     }
 
     protected final void unload() {

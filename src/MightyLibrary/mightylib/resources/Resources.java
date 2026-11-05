@@ -371,13 +371,26 @@ public class Resources {
             return;
         }
 
+        // Unloaded then needed again before the unload was done (batch unloaded and loaded again):
+        // the pending unload would run after this entry and leave the data unloaded while used
+        // (only when referenced again: the LOAD queued after a PRELOAD must not cancel a wanted unload)
+        boolean cancelsUnload = (resourceEntry.Action == ResourceEntry.ActionEnum.PRELOAD
+                || resourceEntry.Action == ResourceEntry.ActionEnum.LOAD) && !resourceEntry.Data.notReferenced();
+        DataType data = resourceEntry.Data;
+
         if (resourceEntry.Data.getTypeSetUp() == DataType.TYPE_SET_UP.MAIN_CONTEXT) {
+            if (cancelsUnload)
+                resourcesToProcessMainContext.removeIf(entry -> entry.Data == data && entry.Action == ResourceEntry.ActionEnum.UNLOAD);
+
             resourcesToProcessMainContext.add(resourceEntry);
             /*System.out.println("Added to main context (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
                     ", action : " + resourceEntry.Action);*/
         } else {
             queueLock.lock();
             try {
+                if (cancelsUnload)
+                    resourcesToProcess.removeIf(entry -> entry.Data == data && entry.Action == ResourceEntry.ActionEnum.UNLOAD);
+
                 resourcesToProcess.add(resourceEntry);
                 /*System.out.println("Added to worker (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
                         ", action : " + resourceEntry.Action);*/
@@ -464,15 +477,17 @@ public class Resources {
                 if (dataType == null)
                     throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
 
-                // If it's reference so it's already loaded or preloaded (set up)
-                if (dataType.notReferenced()) {
+                // If it's referenced it's already loaded or preloaded (set up)
+                // The reference is added first: it cancels a pending unload of this data
+                boolean wasNotReferenced = dataType.notReferenced();
+                dataType.addReference(batchName);
+
+                if (wasNotReferenced) {
                     if (dataType.isPreLoaded())
                         addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.LOAD));
                     else
                         addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
                 }
-
-                dataType.addReference(batchName);
             }
 
             for (int i = 0; i < regularExpressions.length(); ++i) {
@@ -485,15 +500,17 @@ public class Resources {
                         if (matcher.matches()) {
                             DataType dataType = this.resources.get(type).get(resourceName);
 
-                            // If it's reference so it's already loaded or preloaded (set up)
-                            if (dataType.notReferenced()) {
+                            // If it's referenced it's already loaded or preloaded (set up)
+                            // The reference is added first: it cancels a pending unload of this data
+                            boolean wasNotReferenced = dataType.notReferenced();
+                            dataType.addReference(batchName);
+
+                            if (wasNotReferenced) {
                                 if (dataType.isPreLoaded())
                                     addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.LOAD));
                                 else
                                     addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
                             }
-
-                            dataType.addReference(batchName);
                         }
                     }
                 } catch (Exception e) {
