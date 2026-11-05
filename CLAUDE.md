@@ -24,7 +24,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Répertoire de travail = racine du dépôt (ressources lues depuis `resources/`). Point d'entrée : `MightyLibrary.project.main.Main`.
 
 ## Règles pour Claude
-- **Économiser les tokens** : lire des extraits (Grep, Read avec offset/limit) plutôt que des fichiers entiers ; filtrer les journaux ; réponses courtes ; pas de capture d'écran sauf rendu impossible à vérifier autrement (une seule à la fois) ; si une information manque, ajouter une commande qui la renvoie en texte/JSON.
+- **Économiser les tokens** : lire des extraits (Grep, Read avec offset/limit) plutôt que des fichiers entiers ; filtrer les journaux ; réponses courtes ; pas de capture d'écran sauf rendu impossible à vérifier autrement (une seule à la fois, et seulement la zone utile avec `screenshot rect x y largeur hauteur` ou `corners x y x2 y2` quand on sait où regarder ; cadrer avec la commande `camera`) ; si une information manque, ajouter une commande qui la renvoie en texte/JSON.
 - Ne jamais importer `MightyLibrary.project.*` depuis `mightylib` (passer les IDs en paramètre).
 - Tout code GL s'exécute sur le thread principal ; les workers de `Resources` ne font que de l'I/O/CPU. Toujours créer/détruire les objets GL via `GenDeleteResources`.
 - Toute ressource GL créée dans une scène est libérée dans `unload()` ; vérifier les fuites avec `gl` (voir `docs/debug-tools.md`).

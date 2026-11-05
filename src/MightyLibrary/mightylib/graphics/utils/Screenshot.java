@@ -18,16 +18,20 @@ import static org.lwjgl.opengl.GL11.*;
 /**
  * Capture of the rendered image to a PNG file.
  * The capture is done at the end of the next frame, before the buffers are swapped.
+ * A part of the image can be kept: region in pixels of the window, origin at the top left (as in the PNG).
  */
 public final class Screenshot {
     private Screenshot() {}
 
     private static class Request {
         private final File file;
+        // x, y, width, height, null for the whole image
+        private final int[] region;
         private final CompletableFuture<File> result;
 
-        private Request(File file) {
+        private Request(File file, int[] region) {
             this.file = file;
+            this.region = region;
             this.result = new CompletableFuture<>();
         }
     }
@@ -37,7 +41,15 @@ public final class Screenshot {
 
     // Main thread only
     public static CompletableFuture<File> request(File file) {
-        Request request = new Request(file);
+        return request(file, null);
+    }
+
+    /**
+     * Main thread only. region = {x, y, width, height} in pixels of the window (top left origin), null for the
+     * whole image; it is clipped to the image, the future fails if nothing is left.
+     */
+    public static CompletableFuture<File> request(File file, int[] region) {
+        Request request = new Request(file, region == null ? null : region.clone());
         requests.add(request);
 
         return request.result;
@@ -85,9 +97,9 @@ public final class Screenshot {
                     if (parent != null && !parent.exists() && !parent.mkdirs())
                         throw new IOException("Can't create folder " + parent);
 
-                    ImageIO.write(image, "png", request.file);
+                    ImageIO.write(crop(image, request.region), "png", request.file);
                     request.result.complete(request.file);
-                } catch (IOException e) {
+                } catch (IOException | IllegalArgumentException e) {
                     request.result.completeExceptionally(e);
                 }
             }
@@ -95,5 +107,21 @@ public final class Screenshot {
 
         encoder.setDaemon(true);
         encoder.start();
+    }
+
+    private static BufferedImage crop(BufferedImage image, int[] region) {
+        if (region == null)
+            return image;
+
+        int x = Math.max(0, region[0]);
+        int y = Math.max(0, region[1]);
+        int right = Math.min(image.getWidth(), region[0] + region[2]);
+        int bottom = Math.min(image.getHeight(), region[1] + region[3]);
+
+        if (right <= x || bottom <= y)
+            throw new IllegalArgumentException("Screenshot region outside the image (" + image.getWidth() + "x"
+                    + image.getHeight() + ")");
+
+        return image.getSubimage(x, y, right - x, bottom - y);
     }
 }
