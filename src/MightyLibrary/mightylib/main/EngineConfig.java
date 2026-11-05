@@ -2,6 +2,8 @@ package MightyLibrary.mightylib.main;
 
 import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
+import MightyLibrary.mightylib.main.monitors.IMonitorSelector;
+import MightyLibrary.mightylib.main.monitors.MonitorSelectors;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.scenes.DefaultLoadingScene;
@@ -30,6 +32,7 @@ public class EngineConfig {
     private int tps = 60;
     private String iconName;
     private boolean fullscreen;
+    private IMonitorSelector monitorSelector = MonitorSelectors.Primary();
     private KeyboardLanguage keyboardLanguage = QWERTKeyboardLanguage.getInstance();
 
     // Null: no gain tree, every sound keeps a gain of 1
@@ -91,6 +94,15 @@ public class EngineConfig {
 
     public EngineConfig setFullscreen(boolean fullscreen) {
         this.fullscreen = fullscreen;
+        return this;
+    }
+
+    /**
+     * Screen on which the window opens, decided before its creation (MonitorSelectors: Primary, Secondary, Index...).
+     * The system property MonitorSelectors.PROPERTY (-Dmightylib.window.monitor=secondary) overrides it.
+     */
+    public EngineConfig setMonitorSelector(IMonitorSelector monitorSelector) {
+        this.monitorSelector = monitorSelector;
         return this;
     }
 
@@ -169,6 +181,7 @@ public class EngineConfig {
     public int getTps() { return tps; }
     public String getIconName() { return iconName; }
     public boolean isFullscreen() { return fullscreen; }
+    public IMonitorSelector getMonitorSelector() { return monitorSelector; }
     public KeyboardLanguage getKeyboardLanguage() { return keyboardLanguage; }
     public String getGainTreePath() { return gainTreePath; }
     public boolean isAdmin() { return admin; }

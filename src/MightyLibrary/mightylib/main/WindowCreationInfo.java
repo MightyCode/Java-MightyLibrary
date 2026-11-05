@@ -1,6 +1,7 @@
 package MightyLibrary.mightylib.main;
 
 import MightyLibrary.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
+import MightyLibrary.mightylib.main.monitors.MonitorInfo;
 import org.joml.Vector2i;
 
 final class WindowCreationInfo {
@@ -8,5 +9,7 @@ final class WindowCreationInfo {
     public Vector2i VirtualSize;
     public String WindowName;
     public boolean Fullscreen;
+    // Screen of the window, null for the primary one
+    public MonitorInfo Monitor;
     public KeyboardLanguage KeyboardLanguage;
 }

@@ -3,6 +3,7 @@ package MightyLibrary.project.main;
 import MightyLibrary.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import MightyLibrary.mightylib.main.EngineConfig;
 import MightyLibrary.mightylib.main.MainLoop;
+import MightyLibrary.mightylib.main.monitors.MonitorSelectors;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.project.scenes.MenuScene;
 import MightyLibrary.project.scenes.loadingScenes.LoadingSceneImplementation;
@@ -27,6 +28,8 @@ public class Main {
                 .setStartScene(MenuScene::new)
                 .setLoadingScene(LoadingSceneImplementation::new)
                 .setWindowSize(1280, 720)
+                // Screen of the window, tools/scenario.py overrides it to open the tests on another screen
+                .setMonitorSelector(MonitorSelectors.Primary())
                 .setVirtualSize(1280, 720)
                 .setProjectName("Java-MightyLibrary")
                 .setFps(70)

@@ -64,6 +64,7 @@ public final class Window {
 
         info.windowName = wci.WindowName;
         info.fullscreen = wci.Fullscreen;
+        info.monitor = wci.Monitor;
     }
 
     public void createNewWindow(){
@@ -86,8 +87,10 @@ public final class Window {
         // A debug context lets the driver report OpenGL errors itself, with a readable message
         glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, Logger.DO_CHECK ? GLFW_TRUE : GLFW_FALSE);
 
+        long monitorHandle = info.monitor != null ? info.monitor.getHandle() : glfwGetPrimaryMonitor();
+
         if (info.fullscreen)
-            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, glfwGetPrimaryMonitor(), NULL);
+            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, monitorHandle, NULL);
         else
             info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
 
@@ -105,15 +108,18 @@ public final class Window {
             // Get the window size passed to glfwCreateWindow
             glfwGetWindowSize(info.windowId, pWidth, pHeight);
 
-            // Get the resolution of the primary monitor
-            GLFWVidMode videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+            // Center the window in the work area (without the task bar) of its screen, still hidden
+            IntBuffer areaX = stack.mallocInt(1), areaY = stack.mallocInt(1);
+            IntBuffer areaWidth = stack.mallocInt(1), areaHeight = stack.mallocInt(1);
+            glfwGetMonitorWorkarea(monitorHandle, areaX, areaY, areaWidth, areaHeight);
 
-            // Center the window
-            glfwSetWindowPos(
-                    info.windowId,
-                    (Objects.requireNonNull(videoMode).width() - pWidth.get(0)) / 2,
-                    (videoMode.height() - pHeight.get(0)) / 2
-            );
+            if (!info.fullscreen) {
+                glfwSetWindowPos(
+                        info.windowId,
+                        areaX.get(0) + Math.max(0, (areaWidth.get(0) - pWidth.get(0)) / 2),
+                        areaY.get(0) + Math.max(0, (areaHeight.get(0) - pHeight.get(0)) / 2)
+                );
+            }
             // the stack frame is popped automatically
         } catch (Error e){
             info.windowId = 0;

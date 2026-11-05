@@ -1,5 +1,6 @@
 package MightyLibrary.mightylib.main;
 
+import MightyLibrary.mightylib.main.monitors.MonitorInfo;
 import org.joml.Vector2i;
 
 public class WindowInfo {
@@ -26,6 +27,10 @@ public class WindowInfo {
     public String getWindowName() { return windowName; }
 
     boolean fullscreen;
+    // Screen chosen at the creation, null for the primary one
+    MonitorInfo monitor;
+    public MonitorInfo getMonitor() { return monitor; }
+
     public boolean getFullscreen() { return fullscreen; }
 
     WindowInfo(){

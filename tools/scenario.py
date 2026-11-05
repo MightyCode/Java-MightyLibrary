@@ -41,6 +41,7 @@ CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
 # one file per scenario, so that several games and scenarios can run at the same time
 PORT_FILE = os.path.join(ROOT, "target", f"scenario-{os.getpid()}.port")
 PORT_FILE_PROPERTY = "mightylib.debugServer.portFile"
+MONITOR_PROPERTY = "mightylib.window.monitor"
 PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at MightyLibrary|OpenGL debug|Error:")
 
 
@@ -61,7 +62,7 @@ def prepare(compile_sources):
         run_maven("dependency:build-classpath", "-Dmdep.outputFile=" + CLASSPATH_FILE)
 
 
-def launch(log_path):
+def launch(log_path, monitor):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
         classpath = os.path.join(ROOT, "target", "classes") + os.pathsep + file.read().strip()
 
@@ -69,7 +70,11 @@ def launch(log_path):
         os.remove(PORT_FILE)
 
     log = open(log_path, "w", encoding="utf-8")
-    return subprocess.Popen([JAVA, f"-D{PORT_FILE_PROPERTY}={PORT_FILE}", "-cp", classpath, MAIN_CLASS], cwd=ROOT,
+    options = [f"-D{PORT_FILE_PROPERTY}={PORT_FILE}"]
+    if monitor:
+        options.append(f"-D{MONITOR_PROPERTY}={monitor}")
+
+    return subprocess.Popen([JAVA, *options, "-cp", classpath, MAIN_CLASS], cwd=ROOT,
                             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
 
 
@@ -175,6 +180,9 @@ def main():
                         help="seconds without result (start, answer, loading) before the game is considered blocked")
     parser.add_argument("--max-duration", type=float, default=300,
                         help="seconds after which the game is killed, whatever it is doing")
+    parser.add_argument("--monitor", default="secondary",
+                        help="screen of the game window: secondary (default, falls back to the primary one), primary,"
+                             " largest, an index or a part of a name; empty to keep the choice of the project")
     parser.add_argument("--no-compile", action="store_true", help="skip the compilation")
     parser.add_argument("--attach", action="store_true", help="use an already running game, don't launch or close it")
     parser.add_argument("--keep-open", action="store_true", help="don't close the game at the end")
@@ -188,7 +196,7 @@ def main():
         return 0 if run_steps(args.port, args.steps, args.timeout) else 1
 
     prepare(not args.no_compile)
-    process = launch(args.log)
+    process = launch(args.log, args.monitor)
 
     # A blocked game (main thread stuck, no answer) must not block the caller forever
     def kill_blocked_game():

@@ -4,6 +4,10 @@ import MightyLibrary.mightylib.graphics.GLResources;
 import MightyLibrary.mightylib.graphics.shader.ShaderManager;
 import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.graphics.utils.Screenshot;
+import MightyLibrary.mightylib.main.monitors.IMonitorSelector;
+import MightyLibrary.mightylib.main.monitors.MonitorInfo;
+import MightyLibrary.mightylib.main.monitors.MonitorSelectors;
+import MightyLibrary.mightylib.main.monitors.Monitors;
 import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.main.utils.EngineStats;
 import MightyLibrary.mightylib.main.utils.FrameEvent;
@@ -16,6 +20,8 @@ import MightyLibrary.mightylib.sounds.SoundManager;
 import MightyLibrary.mightylib.utils.Logger;
 import MightyLibrary.mightylib.utils.enginecommand.DebugServer;
 import org.lwjgl.Version;
+
+import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11C.*;
@@ -51,6 +57,26 @@ public final class MainLoop {
         return 0;
     }
 
+    // Decide the screen of the window before its creation: system property, else the selector of the project
+    private static MonitorInfo chooseMonitor(EngineConfig config) {
+        List<MonitorInfo> monitors = Monitors.List();
+        System.out.println("--Monitors :");
+        for (MonitorInfo monitor : monitors)
+            System.out.println("--  " + monitor);
+
+        String property = System.getProperty(MonitorSelectors.PROPERTY);
+        IMonitorSelector selector = property != null && !property.trim().isEmpty()
+                ? MonitorSelectors.FromText(property) : config.getMonitorSelector();
+
+        MonitorInfo chosen = selector == null ? null : selector.select(monitors);
+        if (chosen == null)
+            System.out.println("--Window on the primary monitor" + (property != null ? " (no monitor matches " + property + ")" : ""));
+        else
+            System.out.println("--Window on monitor " + chosen.getIndex() + " : " + chosen.getName());
+
+        return chosen;
+    }
+
     // Return ListError.NO_ERROR, or the error that prevents the engine from starting
     private static int setup(EngineConfig config) {
         config.validate();
@@ -79,6 +105,7 @@ public final class MainLoop {
 
         wci.WindowName = config.getProjectName();
         wci.Fullscreen = config.isFullscreen();
+        wci.Monitor = chooseMonitor(config);
         wci.KeyboardLanguage = config.getKeyboardLanguage();
 
         contextManager.createDefaultContext(wci);
