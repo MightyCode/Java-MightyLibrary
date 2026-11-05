@@ -635,6 +635,53 @@ public class Resources {
         addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.LOAD));
     }
 
+    /**
+     * Register a resource owned by another one (textures of a model...), callable from a worker thread.
+     * If a resource with the same name already exists it is shared and returned instead of the given one.
+     * The owner adds a reference and must call releaseOwnedResource with the same owner name.
+     */
+    public <T extends DataType> T addOwnedResource(Class<T> type, T dataType, String owner) {
+        DataType registered;
+        boolean firstReference;
+
+        queueLock.lock();
+        try {
+            registered = resources.get(type).putIfAbsent(dataType.getDataName(), dataType);
+            if (registered == null) {
+                registered = dataType;
+                registered.setNotManuallyCreated();
+            }
+
+            firstReference = registered.notReferenced();
+            registered.addReference(owner);
+        } finally {
+            queueLock.unlock();
+        }
+
+        if (firstReference) {
+            ResourceEntry.ActionEnum action = registered.isPreLoaded() ? ResourceEntry.ActionEnum.LOAD : ResourceEntry.ActionEnum.PRELOAD;
+            addResourceToProcess(new ResourceEntry(getLoader(type), registered, action));
+        }
+
+        return type.cast(registered);
+    }
+
+    // Remove the reference added by addOwnedResource, the resource is unloaded when nothing uses it anymore
+    public void releaseOwnedResource(DataType dataType, String owner) {
+        boolean unused;
+
+        queueLock.lock();
+        try {
+            dataType.removeReference(owner);
+            unused = dataType.notReferenced();
+        } finally {
+            queueLock.unlock();
+        }
+
+        if (unused)
+            addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.UNLOAD));
+    }
+
     void notifyPreLoadedResources(DataType dataType) {
         addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.LOAD));
     }

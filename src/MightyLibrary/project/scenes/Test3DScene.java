@@ -10,7 +10,7 @@ import MightyLibrary.mightylib.main.utils.GameTime;
 import MightyLibrary.mightylib.graphics.shader.ShaderValue;
 import MightyLibrary.mightylib.inputs.InputManager;
 import MightyLibrary.mightylib.graphics.renderer.Renderer;
-import MightyLibrary.mightylib.graphics.renderer._3D.SimpleModelRenderer;
+import MightyLibrary.mightylib.graphics.renderer._3D.ModelRenderer;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningBehaviour;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningOption;
 import MightyLibrary.mightylib.physics.tweenings.ETweeningType;
@@ -34,7 +34,7 @@ public class Test3DScene extends Scene {
     private Renderer sBlock;
     private Renderer sphere;
 
-    private SimpleModelRenderer stand;
+    private ModelRenderer stand;
 
     private final int lineSize = 5;
     private final int faceSize = lineSize * 6;
@@ -145,11 +145,10 @@ public class Test3DScene extends Scene {
         lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
 
         // 3D Model
-        stand = new SimpleModelRenderer("texture3D");
-        stand.setModelName("stall");
-        stand.setUseTexture();
-        stand.init(0);
-        stand.setMainTextureChannel("stall");
+        // stall.obj has no material: its texture is given here
+        stand = new ModelRenderer("texture3D", "stall");
+        stand.setTextureUniforms("ourTexture", null);
+        stand.setDiffuseOverride("stall");
         stand.setPosition(new Vector3f(0.0f, 4.0f,5.0f));
         stand.setScale(new Vector3f(0.75f, 0.75f, 0.75f));
 

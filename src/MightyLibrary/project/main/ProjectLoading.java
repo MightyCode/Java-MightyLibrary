@@ -13,7 +13,7 @@ import MightyLibrary.mightylib.main.procedures.IProjectLoading;
 import MightyLibrary.mightylib.resources.Resources;
 import MightyLibrary.mightylib.resources.map.TileMapLoader;
 import MightyLibrary.mightylib.resources.map.TileSetLoader;
-import MightyLibrary.mightylib.resources.models.ObjModelLoader;
+import MightyLibrary.mightylib.resources.models.ModelLoader;
 import MightyLibrary.mightylib.resources.sound.SoundLoader;
 import MightyLibrary.mightylib.resources.texture.TextureDataAtlasLoader;
 
@@ -23,7 +23,7 @@ class ProjectLoading implements IProjectLoading {
         resources.Loaders.add(new TileSetLoader());
         resources.Loaders.add(new TileMapLoader());
         resources.Loaders.add(new SoundLoader());
-        resources.Loaders.add(new ObjModelLoader());
+        resources.Loaders.add(new ModelLoader());
         resources.Loaders.add(new TextureDataAtlasLoader());
         resources.Loaders.add(new WaveCollapseRulesLoader());
     }
