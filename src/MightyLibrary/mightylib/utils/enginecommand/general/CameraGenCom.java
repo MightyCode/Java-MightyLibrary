@@ -7,6 +7,7 @@ import MightyLibrary.mightylib.scenes.camera.Camera2D;
 import MightyLibrary.mightylib.scenes.camera.Camera3D;
 import MightyLibrary.mightylib.utils.enginecommand.BaseCommand;
 import MightyLibrary.mightylib.utils.enginecommand.CommandResult;
+import MightyLibrary.mightylib.utils.enginecommand.JsonSelect;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.json.JSONArray;
@@ -58,30 +59,36 @@ public class CameraGenCom extends BaseCommand {
     }
 
     private CommandResult execute3D(Camera3D camera, String action, float[] values) {
+        String[] changed;
         switch (action) {
             case "move":
                 if (values.length != 3)
                     return CommandResult.error("Usage : camera [camera] move [x] [y] [z]");
                 camera.setPos(new Vector3f(values[0], values[1], values[2]));
+                changed = new String[]{ "position" };
                 break;
             case "lookat":
                 if (values.length != 3)
                     return CommandResult.error("Usage : camera [camera] lookat [x] [y] [z]");
                 camera.lookAt(new Vector3f(values[0], values[1], values[2]));
+                changed = new String[]{ "front", "yaw", "pitch" };
                 break;
             default:
                 return unknownArgumentError(action + " (3D camera : move, lookat)");
         }
 
-        return CommandResult.ok("Camera " + camera.getName() + " updated", describe(camera));
+        // Only the changed fields: -> camera [camera] <- gives everything
+        return CommandResult.ok("Camera " + camera.getName() + " updated", JsonSelect.Select(describe(camera), changed));
     }
 
     private CommandResult execute2D(Camera2D camera, String action, float[] values) {
+        String[] changed;
         switch (action) {
             case "move":
                 if (values.length != 2)
                     return CommandResult.error("Usage : camera [camera] move [x] [y]");
                 camera.setPos(new Vector2f(values[0], values[1]));
+                changed = new String[]{ "position" };
                 break;
             case "zoom":
                 if (values.length == 1)
@@ -90,17 +97,21 @@ public class CameraGenCom extends BaseCommand {
                     camera.setZoomLevel(new Vector2f(values[0], values[1]));
                 else
                     return CommandResult.error("Usage : camera [camera] zoom [level] or zoom [levelX] [levelY]");
+                // The zoom keeps its reference point: the position changes too
+                changed = new String[]{ "zoom", "position" };
                 break;
             case "rotation":
                 if (values.length != 1)
                     return CommandResult.error("Usage : camera [camera] rotation [degrees]");
                 camera.setRotation((float) Math.toRadians(values[0]));
+                changed = new String[]{ "rotationDegrees" };
                 break;
             default:
                 return unknownArgumentError(action + " (2D camera : move, zoom, rotation)");
         }
 
-        return CommandResult.ok("Camera " + camera.getName() + " updated", describe(camera));
+        // Only the changed fields: -> camera [camera] <- gives everything
+        return CommandResult.ok("Camera " + camera.getName() + " updated", JsonSelect.Select(describe(camera), changed));
     }
 
     // Numbers after the action: camera [camera] [action] [values...]

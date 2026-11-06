@@ -4,7 +4,10 @@ import MightyLibrary.mightylib.graphics.utils.GenDeleteResources;
 import MightyLibrary.mightylib.main.utils.EngineStats;
 import MightyLibrary.mightylib.utils.enginecommand.BaseCommand;
 import MightyLibrary.mightylib.utils.enginecommand.CommandResult;
+import MightyLibrary.mightylib.utils.enginecommand.JsonSelect;
 import org.json.JSONObject;
+
+import java.util.Arrays;
 
 public class StatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "stats";
@@ -28,6 +31,10 @@ public class StatsGenCom extends BaseCommand {
 
         data.put("glObjects", glObjects);
 
+        // stats field1 field2... : only these fields (dotted paths, for example glObjects.Texture)
+        if (args.length > 1)
+            data = JsonSelect.Select(data, Arrays.copyOfRange(args, 1, args.length));
+
         return CommandResult.ok("Statistics of the last second", data);
     }
 
@@ -35,6 +42,7 @@ public class StatsGenCom extends BaseCommand {
     public String help() {
         return super.help() +
                 "\nstats : timings and rendering counters of the last second, OpenGL objects alive and memory" +
-                "\nstats reset : reset the worst frame timings (maxFrameMsSinceReset, maxFrameIntervalMsSinceReset)";
+                "\nstats [field...] : only the given fields (dotted paths, for example fps glObjects.Texture)" +
+                "\nstats reset :reset the worst frame timings (maxFrameMsSinceReset, maxFrameIntervalMsSinceReset)";
     }
 }

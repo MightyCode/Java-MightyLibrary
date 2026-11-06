@@ -26,10 +26,19 @@ public class MonitorsGenCom extends BaseCommand {
         if (checkArgumentHelp(args))
             return CommandResult.ok(help());
 
+        // Short by default: work area and refresh rate only with "monitors full"
+        boolean full = args.length > 1 && args[1].equals("full");
+
         List<MonitorInfo> monitors = Monitors.List();
         JSONArray list = new JSONArray();
-        for (MonitorInfo monitor : monitors)
-            list.put(monitor.toJson());
+        for (MonitorInfo monitor : monitors) {
+            JSONObject json = monitor.toJson();
+            if (!full) {
+                json.remove("workArea");
+                json.remove("refreshRate");
+            }
+            list.put(json);
+        }
 
         JSONObject data = new JSONObject();
         data.put("monitors", list);
@@ -44,7 +53,8 @@ public class MonitorsGenCom extends BaseCommand {
     @Override
     public String help() {
         return super.help() +
-                "\nmonitors : connected screens (index, name, resolution, position, work area) and the index of the one"
+                "\nmonitors full : also the work area (without the task bar) and the refresh rate" +
+                "\nmonitors : connected screens (index, name, resolution, position) and the index of the one"
                 + " showing the window. The screen is chosen at start by EngineConfig.setMonitorSelector or"
                 + " -Dmightylib.window.monitor=primary|secondary|largest|index|part of a name";
     }
