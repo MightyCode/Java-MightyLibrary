@@ -20,14 +20,14 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
   ```bash
   JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn" -o -q compile
   ```
-- Vérifier en jeu avec **un seul appel** : `python tools/scenario.py "scene Test2DScene" wait-loaded "gl" "input ENTER"` (compile, lance le jeu, enchaîne les commandes, résume en texte, ferme le jeu ; une fenêtre s'ouvre chez l'utilisateur : le prévenir). Détails : `python tools/scenario.py --help` et `docs/debug-tools.md`.
+- Vérifier en jeu avec **un seul appel** : `python tools/scenario.py "scene Test2DScene" wait-loaded "?gl summary" "input ENTER"` (compile, lance le jeu, enchaîne les commandes, résume en texte, ferme le jeu ; une fenêtre s'ouvre chez l'utilisateur : le prévenir). Détails : `python tools/scenario.py --help` et `docs/debug-tools.md`.
 - Répertoire de travail = racine du dépôt (ressources lues depuis `resources/`). Point d'entrée : `MightyLibrary.project.main.Main`.
 
 ## Règles pour Claude
 - **Économiser les tokens** : lire des extraits (Grep, Read avec offset/limit) plutôt que des fichiers entiers ; filtrer les journaux ; réponses courtes ; pas de capture d'écran sauf rendu impossible à vérifier autrement (une seule à la fois, et seulement la zone utile avec `screenshot rect x y largeur hauteur` ou `corners x y x2 y2` quand on sait où regarder ; cadrer avec la commande `camera`) ; si une information manque, ajouter une commande qui la renvoie en texte/JSON.
 - Ne jamais importer `MightyLibrary.project.*` depuis `mightylib` (passer les IDs en paramètre).
 - Tout code GL s'exécute sur le thread principal ; les workers de `Resources` ne font que de l'I/O/CPU. Toujours créer/détruire les objets GL via `GenDeleteResources`.
-- Toute ressource GL créée dans une scène est libérée dans `unload()` ; vérifier les fuites avec `gl` (voir `docs/debug-tools.md`).
+- Toute ressource GL créée dans une scène est libérée dans `unload()` ; vérifier les fuites avec l'étape `leakcheck <Scène>` de `scenario.py` (voir `docs/debug-tools.md`).
 - Fins de ligne normalisées par `.gitattributes` (LF dans le dépôt) : `git add` normal. Ne pas réécrire de fichier source avec `sed` (utiliser Edit).
 - Git : travailler sur une branche, un commit par changement logique, avec la ligne `Co-Authored-By` demandée par le système. Ne pas modifier/commiter `target/` ni `.idea/workspace.xml`.
 - Avant de commencer un gros point (passage de `later.md` à `current.md`), en discuter avec l'utilisateur pour s'assurer que tout est prévu.

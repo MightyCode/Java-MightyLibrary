@@ -7,10 +7,15 @@ Usage:
     python tools/scenario.py --no-compile "scene" ...  # skip compilation
 
 Steps are game commands (see `help` in the game) plus:
-    wait-loaded      wait until the current scene has finished loading
-    sleep:SECONDS    wait, for example sleep:0.5
+    wait-loaded                     wait until the current scene has finished loading
+    sleep:SECONDS                   wait, for example sleep:0.5
+    leakcheck SCENE [N] [VIA]       load SCENE, do N round trips (default 2) through VIA (default MenuScene),
+                                    print "no leak" or only the OpenGL counters that changed
+    log PATTERN [N]                 last N lines (default 10) of the game log matching the regex PATTERN
 
-Output is one compact line per step, then the problems found in the game log.
+Output is short: a successful step prints "ok" only (and the file of a screenshot); prefix a step with "?" to
+see its whole answer, for example "?gl summary". Failures always print the whole answer.
+Then the problems found in the game log, identical lines counted once.
 Without result after --timeout seconds (20 by default) the game is considered blocked: the scenario stops.
 The game is killed after --max-duration seconds whatever it is doing.
 Exit code: 0 if every step succeeded and the log has no problem, 1 otherwise.
@@ -115,7 +120,90 @@ def wait_loaded(connection, reader, timeout, expected_scene):
         time.sleep(0.25)
 
 
-def run_steps(port, steps, timeout):
+def short(answer):
+    # Successful answer reduced to what is needed to go on: the file of a screenshot
+    data = answer.get("data", {})
+    text = "ok"
+    if "path" in data:
+        text += " " + data["path"]
+    return text
+
+
+def gl_snapshot(connection, reader, timeout):
+    # OpenGL counters once the waiting GL elements are loaded; names lose their "#id" suffix (renderer ids change)
+    deadline = time.monotonic() + timeout
+    while True:
+        data = mighty.send(connection, reader, "gl").get("data", {})
+        shared = data.get("sharedElements", {})
+        if shared.get("waitingToLoad", 0) == 0 or time.monotonic() > deadline:
+            break
+        time.sleep(0.25)
+
+    counters = {}
+    for name, count in data.get("glObjects", {}).items():
+        counters["gl." + name] = count
+    for kind, elements in shared.items():
+        if isinstance(elements, dict):
+            for name, references in elements.items():
+                key = f"{kind}.{re.sub(r'#[0-9]+$', '', name)}"
+                counters[key] = counters.get(key, 0) + references
+    return counters
+
+
+def change_scene(connection, reader, timeout, scene):
+    answer = mighty.send(connection, reader, "scene " + scene)
+    if not answer.get("success"):
+        return answer, False
+    answer, timed_out = wait_loaded(connection, reader, timeout, scene)
+    return answer, not timed_out
+
+
+def leak_check(connection, reader, timeout, words):
+    if len(words) < 2:
+        print("> leakcheck\n  ERR usage: leakcheck SCENE [N] [VIA]")
+        return False
+    scene = words[1]
+    trips = int(words[2]) if len(words) > 2 else 2
+    via = words[3] if len(words) > 3 else "MenuScene"
+
+    answer, loaded = change_scene(connection, reader, timeout, scene)
+    if not loaded:
+        print(f"> leakcheck {scene}\n  ERR {compact(answer)}")
+        return False
+    before = gl_snapshot(connection, reader, timeout)
+
+    for _ in range(trips):
+        for target in (via, scene):
+            answer, loaded = change_scene(connection, reader, timeout, target)
+            if not loaded:
+                print(f"> leakcheck {scene}\n  ERR loading {target}: {compact(answer)}")
+                return False
+    after = gl_snapshot(connection, reader, timeout)
+
+    changes = [f"{key} {before.get(key, 0)}->{after.get(key, 0)}"
+               for key in sorted(set(before) | set(after)) if before.get(key, 0) != after.get(key, 0)]
+    if changes:
+        print(f"> leakcheck {scene}\n  LEAK after {trips} round trip(s) via {via}: " + ", ".join(changes))
+        return False
+    print(f"> leakcheck {scene}  no leak ({trips} round trip(s) via {via})")
+    return True
+
+
+def log_lines(log_path, words):
+    if log_path is None or len(words) < 2:
+        print("> log\n  ERR usage: log PATTERN [N], not available with --attach")
+        return False
+    pattern = re.compile(words[1])
+    count = int(words[2]) if len(words) > 2 else 10
+    with open(log_path, encoding="utf-8", errors="replace") as file:
+        lines = [line.rstrip() for line in file if pattern.search(line)]
+    print(f"> log {words[1]}  {len(lines)} line(s)" + ("" if len(lines) <= count else f", last {count}"))
+    for line in lines[-count:]:
+        print("  " + line)
+    return True
+
+
+def run_steps(port, steps, timeout, log_path=None):
     success = True
     expected_scene = None
     connection = mighty.connect(port, timeout)
@@ -124,10 +212,20 @@ def run_steps(port, steps, timeout):
         for step in steps:
             if step.startswith("sleep:"):
                 time.sleep(float(step[len("sleep:"):]))
-                print(f"> {step}")
                 continue
 
+            verbose = step.startswith("?")
+            if verbose:
+                step = step[1:]
+
             words = step.split()
+            if words and words[0] == "leakcheck":
+                success = leak_check(connection, reader, timeout, words) and success
+                continue
+            if words and words[0] == "log":
+                success = log_lines(log_path, words) and success
+                continue
+
             if len(words) >= 2 and words[0] == "scene":
                 # Class name relative to the scenes package, for example Platformer2D.Test2DPlatformerBox2D
                 expected_scene = words[1]
@@ -136,11 +234,15 @@ def run_steps(port, steps, timeout):
                 answer, timed_out = wait_loaded(connection, reader, timeout, expected_scene)
                 if timed_out:
                     print(f"> {step}\n  BLOCKED: still loading after {timeout:g}s, scenario stopped: {compact(answer)}")
-                    print("  gl " + compact(mighty.send(connection, reader, "gl")))
+                    print("  " + compact(mighty.send(connection, reader, "gl summary")))
                     return False
             else:
                 answer = mighty.send(connection, reader, step)
-            print(f"> {step}\n  {compact(answer)}")
+
+            if answer.get("success") and not verbose:
+                print(f"> {step}  {short(answer)}")
+            else:
+                print(f"> {step}\n  {compact(answer)}")
             success = success and answer.get("success", False)
     return success
 
@@ -166,9 +268,14 @@ def report_log(log_path):
     with open(log_path, encoding="utf-8", errors="replace") as file:
         problems = [line.rstrip() for line in file if PROBLEM_PATTERN.search(line)]
 
-    print(f"log: {len(problems)} problem line(s) ({log_path})")
-    for line in problems[:20]:
-        print("  " + line)
+    # A repeated exception is shown once with its number of occurrences
+    counts = {}
+    for line in problems:
+        counts[line] = counts.get(line, 0) + 1
+
+    print(f"log: {len(problems)} problem line(s), {len(counts)} distinct ({log_path})")
+    for line, count in list(counts.items())[:20]:
+        print("  " + line + (f"  (x{count})" if count > 1 else ""))
     return not problems
 
 
@@ -215,7 +322,7 @@ def main():
             success = False
         else:
             print(f"game: debug server on port {port}")
-            success = run_steps(port, args.steps, args.timeout)
+            success = run_steps(port, args.steps, args.timeout, args.log)
     except OSError as error:
         print(f"Can't talk to the game: {error}")
         success = False
