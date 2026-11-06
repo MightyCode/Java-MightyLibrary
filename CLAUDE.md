@@ -16,10 +16,13 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - **La 3D est secondaire** : ne pas l'étendre ni la refactorer sans demande, mais ne pas la casser (`Shape`/`Renderer`/`Shader` sont communs ; les scènes `Test3D*` doivent rester fonctionnelles).
 
 ## Build et vérification
-- Maven avec `sourceDirectory` = `src`. Pas de tests automatisés. `mvn`/`java` ne sont pas dans le PATH : compiler avec les outils d'IntelliJ, après chaque modification :
-  ```bash
-  JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn" -o -q compile
-  ```
+- Maven avec `sourceDirectory` = `src`. Pas de tests automatisés. Compiler après chaque modification :
+  - Linux : `mvn`/`java` (JDK 21) sont dans le PATH : `mvn -o -q compile`.
+  - Windows : `mvn`/`java` ne sont pas dans le PATH, utiliser les outils d'IntelliJ :
+    ```bash
+    JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn" -o -q compile
+    ```
+  - `scenario.py` choisit ces chemins selon l'OS (surchargeables par `MIGHTY_JAVA`, `MIGHTY_MVN`, `MIGHTY_MAVEN_JDK`). Sur une nouvelle machine, lancer une fois `mvn -q compile` (sans `-o`) pour télécharger les dépendances.
 - Vérifier en jeu avec **un seul appel** : `python tools/scenario.py "scene Test2DScene" wait-loaded "?gl summary" "input ENTER"` (compile, lance le jeu, enchaîne les commandes, résume en texte, ferme le jeu ; une fenêtre s'ouvre chez l'utilisateur : le prévenir). Détails : `python tools/scenario.py --help` et `docs/debug-tools.md`.
 - Répertoire de travail = racine du dépôt (ressources lues depuis `resources/`). Point d'entrée : `MightyLibrary.project.main.Main`.
 

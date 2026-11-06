@@ -36,10 +36,18 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mighty  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-JAVA = os.environ.get("MIGHTY_JAVA", "C:/Autres/## Librairies ##/javajdk/bin/java")
-MVN = os.environ.get("MIGHTY_MVN",
-                     "D:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn.cmd")
-MAVEN_JDK = os.environ.get("MIGHTY_MAVEN_JDK", os.path.expanduser("~/.jdks/ms-21.0.9"))
+if os.name == "nt":
+    _DEFAULT_JAVA = "C:/Autres/## Librairies ##/javajdk/bin/java"
+    _DEFAULT_MVN = "D:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn.cmd"
+    _DEFAULT_MAVEN_JDK = os.path.expanduser("~/.jdks/ms-21.0.9")
+else:
+    # Linux: java and mvn from the PATH, maven keeps the JAVA_HOME of the environment
+    _DEFAULT_JAVA = "java"
+    _DEFAULT_MVN = "mvn"
+    _DEFAULT_MAVEN_JDK = os.environ.get("JAVA_HOME")
+JAVA = os.environ.get("MIGHTY_JAVA", _DEFAULT_JAVA)
+MVN = os.environ.get("MIGHTY_MVN", _DEFAULT_MVN)
+MAVEN_JDK = os.environ.get("MIGHTY_MAVEN_JDK", _DEFAULT_MAVEN_JDK)
 MAIN_CLASS = "MightyLibrary.project.main.Main"
 CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
 # The launched game writes there the port of its debug server (the first free one from 7777):
@@ -51,7 +59,9 @@ PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at MightyLibrary|Op
 
 
 def run_maven(*goals):
-    environment = dict(os.environ, JAVA_HOME=MAVEN_JDK)
+    environment = dict(os.environ)
+    if MAVEN_JDK:
+        environment["JAVA_HOME"] = MAVEN_JDK
     result = subprocess.run([MVN, "-q", *goals], cwd=ROOT, env=environment, capture_output=True, text=True)
     if result.returncode != 0:
         print("Maven failed:\n" + (result.stdout + result.stderr)[-3000:])
