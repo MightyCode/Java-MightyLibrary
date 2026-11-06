@@ -3,6 +3,8 @@ package MightyLibrary.mightylib.graphics.utils;
 import org.lwjgl.BufferUtils;
 
 import javax.imageio.ImageIO;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -27,11 +29,14 @@ public final class Screenshot {
         private final File file;
         // x, y, width, height, null for the whole image
         private final int[] region;
+        // Size factor applied after the crop, 1 to keep the size
+        private final float scale;
         private final CompletableFuture<File> result;
 
-        private Request(File file, int[] region) {
+        private Request(File file, int[] region, float scale) {
             this.file = file;
             this.region = region;
+            this.scale = scale;
             this.result = new CompletableFuture<>();
         }
     }
@@ -41,15 +46,19 @@ public final class Screenshot {
 
     // Main thread only
     public static CompletableFuture<File> request(File file) {
-        return request(file, null);
+        return request(file, null, 1f);
     }
 
     /**
      * Main thread only. region = {x, y, width, height} in pixels of the window (top left origin), null for the
      * whole image; it is clipped to the image, the future fails if nothing is left.
+     * scale in ]0, 1] reduces the saved image (smooth), applied after the crop.
      */
-    public static CompletableFuture<File> request(File file, int[] region) {
-        Request request = new Request(file, region == null ? null : region.clone());
+    public static CompletableFuture<File> request(File file, int[] region, float scale) {
+        if (scale <= 0f || scale > 1f)
+            throw new IllegalArgumentException("Screenshot scale must be in ]0, 1] : " + scale);
+
+        Request request = new Request(file, region == null ? null : region.clone(), scale);
         requests.add(request);
 
         return request.result;
@@ -97,7 +106,7 @@ public final class Screenshot {
                     if (parent != null && !parent.exists() && !parent.mkdirs())
                         throw new IOException("Can't create folder " + parent);
 
-                    ImageIO.write(crop(image, request.region), "png", request.file);
+                    ImageIO.write(scale(crop(image, request.region), request.scale), "png", request.file);
                     request.result.complete(request.file);
                 } catch (IOException | IllegalArgumentException e) {
                     request.result.completeExceptionally(e);
@@ -107,6 +116,21 @@ public final class Screenshot {
 
         encoder.setDaemon(true);
         encoder.start();
+    }
+
+    private static BufferedImage scale(BufferedImage image, float scale) {
+        if (scale >= 1f)
+            return image;
+
+        int width = Math.max(1, Math.round(image.getWidth() * scale));
+        int height = Math.max(1, Math.round(image.getHeight() * scale));
+
+        BufferedImage scaled = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = scaled.createGraphics();
+        graphics.drawImage(image.getScaledInstance(width, height, Image.SCALE_AREA_AVERAGING), 0, 0, null);
+        graphics.dispose();
+
+        return scaled;
     }
 
     private static BufferedImage crop(BufferedImage image, int[] region) {
