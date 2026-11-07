@@ -98,7 +98,7 @@ public class SceneManager {
 
         if(currentScene != null) {
             System.out.println("--Unload scene" + currentScene.getClass().getName());
-            currentScene.unload();
+            currentScene.unloadByManager();
 
             for (String batch : currentScene.getInvolvedBatch())
                 Resources.getInstance().unloadBatch(batch);
@@ -160,7 +160,7 @@ public class SceneManager {
 
         if (currentScene != null){
             System.out.println("--Unload scene" + currentScene.getClass().getName());
-            currentScene.unload();
+            currentScene.unloadByManager();
         }
 
         Resources.getInstance().unload();

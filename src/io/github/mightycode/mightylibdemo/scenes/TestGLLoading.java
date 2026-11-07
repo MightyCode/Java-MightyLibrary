@@ -74,7 +74,10 @@ public class TestGLLoading extends Scene {
             if (renderer != null)
                 renderer.unload();
         }
+    }
 
+    @Override
+    public void release() {
         for (int i = 0; i < TEXTURE_COUNT; ++i)
             resources.deleteResource(TextureData.class, textureName(i));
     }

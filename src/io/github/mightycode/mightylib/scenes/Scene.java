@@ -323,13 +323,11 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         return new String[]{};
     }
 
+    /**
+     * Called when the scene is left, only if launch() was called: release what launch() created. Call super.unload().
+     * The scene can be left while it is still loading: then only release() is called.
+     */
     public void unload() {
-        // The scene can be left while it is still loading
-        if (loadingScene != null) {
-            loadingScene.unload();
-            loadingScene = null;
-        }
-
         if (scRenderer != null)
             scRenderer.unload();
 
@@ -338,5 +336,23 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
 
         for (IDisplayable displayable : displayables)
             displayable.unload();
+    }
+
+    /**
+     * Called when the scene is left, after unload(), launched or not: release what init() created
+     * (resources added or referenced by the scene). No need to call super.
+     */
+    public void release() {}
+
+    final void unloadByManager() {
+        if (loadingScene != null) {
+            loadingScene.unload();
+            loadingScene = null;
+        }
+
+        if (launched)
+            unload();
+
+        release();
     }
 }

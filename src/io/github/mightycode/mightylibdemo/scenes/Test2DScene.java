@@ -312,7 +312,10 @@ public class Test2DScene extends Scene {
         polygonRenderer.unload();
 
         mapRenderer.unload();
+    }
 
+    @Override
+    public void release() {
         resources.deleteResource(TextureDataAtlas.class, "atlas1");
     }
 }
