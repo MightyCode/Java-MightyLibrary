@@ -9,7 +9,7 @@ src/io/github/mightycode/
   mightylib/            # la bibliothèque (ne doit PAS dépendre de mightylibdemo/)
     main/               # MainLoop (statique), Window, Context/ContextManager, MainThread, Workers, GameTime
     scenes/             # Scene, SceneManager, SceneManagerInterface, TemplateSceneLoading, caméras 2D/3D
-    resources/          # Resources (singleton), DataType, ResourceLoader, ResourceWorker (tâche sur Workers), batchs
+    resources/          # Resources (singleton, pipeline de chargement), DataType, ResourceLoader, batchs
     graphics/           # GLResources, GLElement, renderer/ (Shape, Renderer, _2D, _3D), shader/, text/, GUI/, lightning/
     inputs/             # InputManager (actions), KeyboardManager, MouseManager, dispositions clavier
     sounds/             # SoundManager (singleton OpenAL), arbre de gains
@@ -32,12 +32,13 @@ La boucle s'arrête quand la fenêtre est fermée ou qu'une scène demande à qu
 
 ### Threads
 - **Thread principal** (`MainThread`) : seul à posséder le contexte GL. Les autres threads y reviennent par `MainThread.execute(Runnable)` / `run` / `supply` (→ `CompletableFuture`), ou `future.thenAcceptAsync(…, MainThread.EXECUTOR)`. La file est vidée après chaque `display()` avec le reste de la frame (au moins une tâche), avant `GLResources.process`, puis entièrement à la sortie.
-- **`Workers`** : pool fixe de `EngineConfig.maxThreads` threads (`MightyLibrary-Worker-N`, daemon), arrêté à la sortie, pour les tâches courtes d'I/O ou de calcul (`Workers.run` / `supply` → `CompletableFuture`), **sans appel GL**. Les `ResourceWorker` de `Resources` y tournent (au plus `maxThreads`, comptés sous le verrou de la file).
+- **`Workers`** : pool fixe de `EngineConfig.maxThreads` threads (`MightyLibrary-Worker-N`, daemon), arrêté à la sortie, pour les tâches courtes d'I/O ou de calcul (`Workers.run` / `supply` → `CompletableFuture`), **sans appel GL**. Les étapes `THREAD_CONTEXT` de `Resources` y tournent (au plus `maxThreads` à la fois).
 - Boucles longues ou bloquantes (réseau, `DebugServer`, console, encodage de `Screenshot`) : threads dédiés, nommés `MightyLibrary-…` et daemon.
 - Avec `Logger.DO_CHECK`, `GenDeleteResources` lève une exception si un objet GL est créé ou détruit hors du thread principal.
 
 ### Cycle de vie d'une scène
-Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `postUpdate()` / `display()` → `unload()`.
+Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `postUpdate()` / `display()` → `unload()` → `release()`.
+- Paires symétriques : `launch` ↔ `unload` (appelé seulement si `launch` l'a été, avec `super.unload()`), `init` ↔ `release` (toujours appelé, même si la scène est quittée pendant son chargement ; libère ce que `init` a ajouté, ex. `deleteResource`).
 - `init` et `launch` sont facultatifs et **sans appel `super`** : le moteur (`initByManager` / `launchByManager`) crée la scène de chargement, puis, une fois les ressources chargées, les caméras et le framebuffer virtuel avant d'appeler `launch`. `init` déclare (ressources préchargées), `launch` crée les renderers.
 - Scène de chargement : `EngineConfig.setLoadingScene(...)` pour tout le jeu (`DefaultLoadingScene`, fond gris sans ressource, par défaut), ou surcharge de `createLoadingScene(args)` dans une scène (`null` = rien d'affiché). Surface du framebuffer virtuel : surcharge de `createVirtualSceneBindable()`.
 - Les ressources nécessaires se déclarent en surchargeant `getInvolvedBatch()` (noms de fichiers dans `resources/batchs/`).
@@ -47,10 +48,14 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 
 ### Ressources (CPU) — `Resources`
 - Chaque type est un `DataType` avec un `ResourceLoader` (enregistré dans `Resources.Loaders`; loaders projet dans `ProjectLoading.init`).
-- États : créé → **preload** (lecture disque, déclaration des dépendances) → **load** (finalisation, souvent GL) → unload.
-- `TYPE_SET_UP` : `THREAD_CONTEXT` (workers), `MAIN_CONTEXT` (file traitée par `process(ms)` sur le thread GL), `IMMEDIATELY_IN_CURRENT_CONTEXT`.
-- Références par nom de batch (liste, un même nom peut apparaître plusieurs fois). Les maps de ressources sont concurrentes et les états de chargement `volatile` : les workers et le thread principal y accèdent.
-- Un UNLOAD dû à la perte de la dernière référence (`unloadBatch`, `releaseOwnedResource`) est ignoré si la donnée est de nouveau référencée ; référencée pendant le déchargement, elle est préchargée à nouveau. Un LOAD dont la donnée n'est plus préchargée est obsolète.
+- États : créé → **preload** (`initWithFile` : lecture disque, déclaration des dépendances) → **load** (`internLoad` : calcul, une fois les dépendances chargées) → unload (`internUnload`, ou `internCancelPreload` si seulement préchargée).
+- `TYPE_SET_UP` = où tournent preload et load : `THREAD_CONTEXT` (workers, au plus `maxThreads` à la fois), `MAIN_CONTEXT` (thread principal, dans le budget de `process(ms)`), `IMMEDIATELY_IN_CURRENT_CONTEXT` (tout de suite, dans l'appel qui la demande ; ex. descriptions de batchs). L'unload tourne toujours sur le thread principal.
+- **Propriétaire unique** : seul le thread principal modifie références et états. Les appels venant d'un autre thread (`addOwnedResource` depuis un loader, `addPreLoadedResource` depuis un `internLoad`) passent par une file vidée par `process`. Une étape de worker ne fait que lire/calculer la donnée ; son résultat est appliqué sur le thread principal.
+- **Réconciliation** (`Resources.update`) : voulue = référencée (sauf suppression ou sortie). Une donnée dont une étape tourne n'est jamais modifiée ; à la fin de l'étape, la comparaison voulue/état est refaite (déchargée si plus référencée, étape suivante sinon). Une donnée qui attend ses dépendances s'inscrit auprès d'elles et est réveillée quand l'une est chargée. Un échec n'est pas retenté tant que la donnée reste voulue.
+- Références par nom (batch, `"manually"`, `"all"` pour `loadAllOfType`, propriétaire pour les ressources possédées) ; une liste, un même nom peut apparaître plusieurs fois.
+- `reloadAllOfType` relit depuis le disque les données chargées (sauf celles préchargées par le code) : la donnée est vidée pendant la relecture (voir `current.md`).
+- Commande `resources` : par type, chargées/préchargées/référencées, données chargées sans référence (fuite) ou référencées non chargées, état du pipeline.
+- Tests : `test/.../resources/ResourcesLifecycleTest` (cycles avec des `FakeData` sans fichier ni GL).
 - Le nom d'une ressource = nom de fichier sans extension → **les noms doivent être uniques par type**.
 - Accès : `Resources.getInstance().getResource(TextureData.class, "nom")`.
 
