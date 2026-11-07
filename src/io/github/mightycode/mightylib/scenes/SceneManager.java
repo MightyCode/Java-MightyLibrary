@@ -137,6 +137,11 @@ public class SceneManager {
         return currentScene;
     }
 
+    // A scene change is asked (by a command or a scene) and will be done at the beginning of the next tick
+    public boolean isSceneChangePending() {
+        return sceneInterface.isWantingChange();
+    }
+
     public boolean isCurrentSceneLoading() {
         return currentScene != null && currentScene.isWaitingForLoading();
     }

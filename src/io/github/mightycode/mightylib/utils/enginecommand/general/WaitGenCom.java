@@ -71,13 +71,15 @@ public class WaitGenCom extends BaseCommand {
             return CommandResult.error("No scene manager");
 
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
-        // A scene change asked in this tick is done after the commands: check from the next tick
+        // A simulated input of this tick is seen by the next tick, whose scene can then ask a change,
+        // done at the beginning of the tick after: start checking two ticks later
         long startTick = commands.getTick();
         commands.addTickTask(() -> {
             if (future.isDone())
                 return true;
 
-            if (commands.getTick() <= startTick || sceneManager.isCurrentSceneLoading())
+            if (commands.getTick() < startTick + 2 || sceneManager.isSceneChangePending()
+                    || sceneManager.isCurrentSceneLoading())
                 return false;
 
             future.complete(CommandResult.ok(sceneManager.getCurrentScene().getClass().getName() + " loaded"));
@@ -91,8 +93,8 @@ public class WaitGenCom extends BaseCommand {
     public String help() {
         return super.help() +
                 "\nwait [ticks] [timeout] : answer after a number of ticks (game time, not real time)" +
-                "\nwait loaded [timeout] : answer once the current scene is loaded (from the next tick, so after a" +
-                " scene change asked just before)" +
+                "\nwait loaded [timeout] : answer once the current scene is loaded, checked from two ticks later so that" +
+                " a scene change asked just before (by a command or by a scene reacting to a simulated input) is waited" +
                 "\ntimeout : seconds before the wait becomes an error (" + Commands.COMMAND_TIMEOUT_SECONDS + " by default)";
     }
 }
