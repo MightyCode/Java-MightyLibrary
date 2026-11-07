@@ -1,0 +1,20 @@
+{
+    "batchs" : [
+        {
+            "type" : "JSONFile",
+            "files" : [
+                "documentationScene"
+            ],
+            "regex" : [
+            ]
+        },
+        {
+            "type" : "TextureData",
+            "files" : [
+                "painting"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}

@@ -1,0 +1,12 @@
+{
+    "title": "DocumentationScene",
+    "message": "Read the source code of this scene: each step of its life is explained.\nEscape: back to the menu. Enter: pause or resume the rotation.",
+    "backgroundColor": [0.11, 0.13, 0.17],
+    "textColor": [0.95, 0.85, 0.55],
+    "rotationSeconds": 4.0,
+    "squareSize": 220,
+    "squares": [
+        { "texture": "painting", "x": 360, "y": 380 },
+        { "texture": "documentationGenerated", "x": 920, "y": 380 }
+    ]
+}

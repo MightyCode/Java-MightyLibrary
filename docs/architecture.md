@@ -38,6 +38,7 @@ La boucle s'arrête quand la fenêtre est fermée ou qu'une scène demande à qu
 
 ### Cycle de vie d'une scène
 Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `postUpdate()` / `display()` → `unload()` → `release()`.
+- Exemple de référence commenté méthode par méthode : `mightylibdemo/scenes/DocumentationScene` (batch `documentation`, configuration `resources/data/documentationScene.json`, texture générée dans `init` et supprimée dans `release`).
 - Paires symétriques : `launch` ↔ `unload` (appelé seulement si `launch` l'a été, avec `super.unload()`), `init` ↔ `release` (toujours appelé, même si la scène est quittée pendant son chargement ; libère ce que `init` a ajouté, ex. `deleteResource`).
 - `init` et `launch` sont facultatifs et **sans appel `super`** : le moteur (`initByManager` / `launchByManager`) crée la scène de chargement, puis, une fois les ressources chargées, les caméras et le framebuffer virtuel avant d'appeler `launch`. `init` déclare (ressources préchargées), `launch` crée les renderers.
 - Scène de chargement : `EngineConfig.setLoadingScene(...)` pour tout le jeu (`DefaultLoadingScene`, fond gris sans ressource, par défaut), ou surcharge de `createLoadingScene(args)` dans une scène (`null` = rien d'affiché). Surface du framebuffer virtuel : surcharge de `createVirtualSceneBindable()`.
