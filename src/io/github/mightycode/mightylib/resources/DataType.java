@@ -47,6 +47,14 @@ public abstract class DataType extends UUID implements LoadingElement {
     final List<DataType> waiters = new ArrayList<>();
     // Dependencies this data references (see Resources.acquireDependencies), released with the data
     final List<DataType> acquiredDependencies = new ArrayList<>();
+    // Loaded data that depend on this one, told when its content changes (copies are not listed)
+    final List<DataType> dependents = new ArrayList<>();
+    // Hot reload: the copy reading the new version of a loaded data, and the data a copy is for
+    DataType reloadCopy;
+    DataType reloadOf;
+
+    // Increased each time the content changes (load, reload): users compare it to the version they used
+    private volatile int version;
 
     public enum TYPE_SET_UP {
         IMMEDIATELY_IN_CURRENT_CONTEXT,
@@ -156,8 +164,43 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     // On failure the data stays preloaded: Resources discards it (internCancelPreload)
     final void loadDone(boolean success) {
-        if (success)
+        if (success) {
             correctlyLoaded = true;
+            ++version;
+        }
+    }
+
+    public final int getVersion() {
+        return version;
+    }
+
+    /**
+     * Hot reload: a new data of the same type, name and source, read and loaded apart while this one stays usable,
+     * then given to swapContent. Null (default) when the type does not support it: the data is emptied then read again.
+     */
+    protected DataType createReloadCopy() {
+        return null;
+    }
+
+    /**
+     * Exchange the content (everything read or computed, not the pipeline state) with the loaded copy:
+     * this data gets the new version, the copy gets the previous one and is unloaded right after (internUnload).
+     */
+    protected void swapContent(DataType copy) {
+        throw new UnsupportedOperationException(getClass().getSimpleName() + " has a reload copy but no swapContent");
+    }
+
+    // Main thread (Resources): the loaded copy becomes the content of this data, its dependencies with it
+    final void takeReloadedContent(DataType copy) {
+        swapContent(copy);
+
+        List<DataType> previous = new ArrayList<>(dependencies);
+        dependencies.clear();
+        dependencies.addAll(copy.dependencies);
+        copy.dependencies.clear();
+        copy.dependencies.addAll(previous);
+
+        ++version;
     }
 
     // Back to the initial state, whether the data was loaded or only preloaded
@@ -181,6 +224,7 @@ public abstract class DataType extends UUID implements LoadingElement {
 
         if (internLoad()) {
             correctlyLoaded = true;
+            ++version;
         } else {
             // Back to the initial state: an unload would otherwise wait forever for a loading that failed
             correctlyPreLoaded = false;

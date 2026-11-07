@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.main.Workers;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -561,8 +562,15 @@ class ResourcesLifecycleTest {
         pump();
         assertSame(texture, resources.usable(FakeData.class, texture));
 
-        // Broken then reloaded: the fallback replaces it, a fixed reload brings it back
+        // A broken reload keeps the previous version
         texture.failLoad = true;
+        resources.reloadAllOfType(FakeData.class);
+        pump();
+        assertSame(texture, resources.usable(FakeData.class, texture));
+        assertEquals(1, texture.content());
+
+        // Broken while read in place: the fallback replaces it, a fixed reload brings it back
+        texture.reloadApart = false;
         resources.reloadAllOfType(FakeData.class);
         pump();
         assertSame(fallback, resources.usable(FakeData.class, texture));
@@ -726,6 +734,176 @@ class ResourcesLifecycleTest {
         }
 
         pump();
+        assertConsistent();
+    }
+
+    // ---- Hot reload ----
+
+    private JSONArray reloadingNames() {
+        JSONObject type = resources.describe().getJSONObject("types").getJSONObject("FakeData");
+        return type.has("reloading") ? type.getJSONArray("reloading") : new JSONArray();
+    }
+
+    // The new version is read apart: the data stays loaded with the previous one until it is replaced
+    @Test
+    void reloadKeepsThePreviousVersionUntilTheNewOneIsLoaded() throws Exception {
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        batch("level", "texture");
+        start();
+        resources.loadBatch("level");
+        pump();
+        assertEquals(1, texture.content());
+        int version = texture.getVersion();
+
+        texture.preloadMilliseconds = 50;
+        resources.reload(texture);
+        frame();
+        assertTrue(texture.isLoaded());
+        assertEquals(1, texture.content(), "previous version while reading");
+        assertSame(texture, resources.usable(FakeData.class, texture));
+        assertEquals("texture", reloadingNames().getString(0));
+
+        pump();
+        assertEquals(2, texture.content());
+        assertEquals(version + 1, texture.getVersion());
+        assertTrue(reloadingNames().isEmpty());
+        assertConsistent();
+    }
+
+    @Test
+    void failedReloadKeepsThePreviousVersion() throws Exception {
+        FakeData texture = fake(MAIN_CONTEXT, "texture");
+        batch("level", "texture");
+        start();
+        resources.loadBatch("level");
+        pump();
+        int version = texture.getVersion();
+
+        texture.failLoad = true;
+        resources.reload(texture);
+        pump();
+        assertTrue(texture.isLoaded());
+        assertFalse(texture.hasFailed());
+        assertEquals(1, texture.content());
+        assertEquals(version, texture.getVersion());
+        assertConsistent();
+
+        // Fixed: the next reload brings the new version
+        texture.failLoad = false;
+        resources.reload(texture);
+        pump();
+        assertEquals(3, texture.content());
+        assertConsistent();
+    }
+
+    // The data using a reloaded one are read again, in chain
+    @Test
+    void reloadedDependencyReloadsItsDependents() throws Exception {
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        FakeData tileSet = fake(THREAD_CONTEXT, "tileset");
+        tileSet.dependencyToAdd = texture;
+        FakeData map = fake(MAIN_CONTEXT, "map");
+        map.dependencyToAdd = tileSet;
+        FakeData other = fake(THREAD_CONTEXT, "other");
+        batch("level", "map", "other");
+        start();
+        resources.loadBatch("level");
+        pump();
+        int mapVersion = map.getVersion();
+
+        resources.reload(texture);
+        pump();
+        assertEquals(2, texture.preloads.get());
+        assertEquals(2, tileSet.preloads.get());
+        assertEquals(2, map.preloads.get());
+        assertEquals(1, other.preloads.get());
+        assertEquals(mapVersion + 1, map.getVersion());
+        assertEquals(1, texture.referenceCount(), "only the tileset references it");
+        assertConsistent();
+    }
+
+    // Everything reloaded at once: a data waits for its dependencies to be replaced, then is computed once
+    @Test
+    void reloadAllComputesEachDataOnce() throws Exception {
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        FakeData tileSet = fake(MAIN_CONTEXT, "tileset");
+        tileSet.dependencyToAdd = texture;
+        FakeData map = fake(THREAD_CONTEXT, "map");
+        map.dependencyToAdd = tileSet;
+        batch("level", "map");
+        start();
+        resources.loadBatch("level");
+        pump();
+
+        texture.preloadMilliseconds = 40;
+        resources.reloadAllOfType(FakeData.class);
+        pump();
+        for (FakeData data : all)
+            assertEquals(2, data.preloads.get(), data.getDataName());
+        assertConsistent();
+    }
+
+    // No longer wanted while its new version is read: the copy is dropped with it
+    @Test
+    void unloadDuringReloadDropsTheNewVersion() throws Exception {
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        FakeData model = fake(THREAD_CONTEXT, "model");
+        model.dependencyToAdd = texture;
+        batch("level", "model");
+        start();
+        resources.loadBatch("level");
+        pump();
+
+        model.preloadMilliseconds = 50;
+        resources.reload(model);
+        frame();
+        resources.unloadBatch("level");
+        pump();
+        assertFalse(model.isLoaded());
+        assertFalse(texture.isLoaded());
+        assertEquals(0, texture.referenceCount());
+        assertConsistent();
+    }
+
+    // A type without reload copy is emptied then read again
+    @Test
+    void typeWithoutReloadCopyIsReadAgainInPlace() throws Exception {
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        texture.reloadApart = false;
+        batch("level", "texture");
+        start();
+        resources.loadBatch("level");
+        pump();
+
+        texture.preloadMilliseconds = 50;
+        resources.reload(texture);
+        frame();
+        assertFalse(texture.isLoaded());
+        pump();
+        assertEquals(2, texture.content());
+        assertConsistent();
+    }
+
+    // Loaded with the fallback of a failed dependency: read again once the dependency is fixed
+    @Test
+    void fixedDependencyReloadsTheDataUsingItsFallback() throws Exception {
+        withFallback();
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        texture.failLoad = true;
+        FakeData tileSet = fake(THREAD_CONTEXT, "tileset");
+        tileSet.dependencyToAdd = texture;
+        batch("level", "tileset");
+        startWithFallbacks();
+        resources.loadBatch("level");
+        pump();
+        assertTrue(texture.hasFailed());
+        assertTrue(tileSet.isLoaded());
+
+        texture.failLoad = false;
+        resources.reload(texture);
+        pump();
+        assertTrue(texture.isLoaded());
+        assertEquals(2, tileSet.preloads.get());
         assertConsistent();
     }
 }

@@ -7,22 +7,63 @@ import java.util.concurrent.atomic.AtomicInteger;
  * (loaded twice, unloaded while not loaded, loaded before a dependency, loaded on a wrong thread).
  */
 public class FakeData extends DataType {
-    final AtomicInteger loads = new AtomicInteger();
-    final AtomicInteger unloads = new AtomicInteger();
-    final AtomicInteger preloads = new AtomicInteger();
-    final AtomicInteger errors = new AtomicInteger();
+    // Shared with the reload copies: counted for the data, whatever the instance
+    final AtomicInteger loads;
+    final AtomicInteger unloads;
+    final AtomicInteger preloads;
+    final AtomicInteger errors;
 
     private volatile boolean live;
 
-    // Read in the preload step, set by the test
+    // Read in the preload step, set by the test (on the data, read by its reload copies)
     volatile int preloadMilliseconds;
     volatile boolean failLoad;
     volatile FakeData dependencyToAdd;
+    // Supports reload copies (hot reload apart), true by default
+    volatile boolean reloadApart = true;
 
+    // Content: the number of the preload that read it, exchanged on reload
+    private volatile int content;
+    private volatile int readContent;
+
+    private final FakeData settings;
     private volatile Thread mainThread;
 
     public FakeData(TYPE_SET_UP typeSetUp, String name) {
         super(typeSetUp, name);
+        loads = new AtomicInteger();
+        unloads = new AtomicInteger();
+        preloads = new AtomicInteger();
+        errors = new AtomicInteger();
+        settings = this;
+    }
+
+    private FakeData(FakeData original) {
+        super(original.getTypeSetUp(), original.getDataName());
+        loads = original.loads;
+        unloads = original.unloads;
+        preloads = original.preloads;
+        errors = original.errors;
+        settings = original;
+        mainThread = original.mainThread;
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return settings.reloadApart ? new FakeData(settings) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        FakeData other = (FakeData) copy;
+        int previous = content;
+        content = other.content;
+        other.content = previous;
+    }
+
+    // 0 when not loaded
+    int content() {
+        return content;
     }
 
     // Main context data must be loaded on this thread
@@ -32,16 +73,16 @@ public class FakeData extends DataType {
     }
 
     void preloadStep() {
-        preloads.incrementAndGet();
-        if (preloadMilliseconds > 0) {
+        readContent = preloads.incrementAndGet();
+        if (settings.preloadMilliseconds > 0) {
             try {
-                Thread.sleep(preloadMilliseconds);
+                Thread.sleep(settings.preloadMilliseconds);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
         }
 
-        FakeData dependency = dependencyToAdd;
+        FakeData dependency = settings.dependencyToAdd;
         if (dependency != null)
             addDependency(dependency);
     }
@@ -60,10 +101,11 @@ public class FakeData extends DataType {
         if (mainThread != null && Thread.currentThread() != mainThread)
             error("loaded on " + Thread.currentThread().getName());
 
-        if (failLoad)
+        if (settings.failLoad)
             return false;
 
         live = true;
+        content = readContent;
         loads.incrementAndGet();
         return true;
     }
@@ -74,6 +116,7 @@ public class FakeData extends DataType {
             error("unloaded while not loaded");
 
         live = false;
+        content = 0;
         unloads.incrementAndGet();
     }
 
