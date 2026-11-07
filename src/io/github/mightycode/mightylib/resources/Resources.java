@@ -39,7 +39,6 @@ public class Resources {
     static final String DEPENDENCY_REFERENCE_PREFIX = "dependency:";
     // Name of the fallback of each type (ResourceLoader.createFallback), and the reference keeping it loaded
     public static final String FALLBACK_NAME = "error";
-    private static final String FALLBACK_REFERENCE = "fallback";
 
     public static abstract class LoadingMethod{}
     public static class AllResourcesMethod extends LoadingMethod{}
@@ -78,10 +77,6 @@ public class Resources {
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
-    // Fallback by loader type, filled by init then only read
-    private final Map<Class<? extends DataType>, DataType> fallbacks;
-    // Unknown names already reported by getResourceOrFallback (main thread)
-    private final Set<String> reportedUnknownNames;
     // Types without reload copy, reported once (main thread)
     private final Set<Class<?>> reportedNoReloadCopy = new HashSet<>();
     private final LoadingMethod loadingMethod;
@@ -89,6 +84,7 @@ public class Resources {
     private final ResourceWatcher watcher = new ResourceWatcher(this);
     private final ResourceDescriber describer = new ResourceDescriber(this);
     private final BatchManager batches = new BatchManager(this);
+    private final FallbackRegistry fallbacks = new FallbackRegistry(this);
 
     private final int maxNumberOfWorkers;
 
@@ -118,8 +114,6 @@ public class Resources {
     private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
         resources = new ConcurrentHashMap<>();
-        fallbacks = new ConcurrentHashMap<>();
-        reportedUnknownNames = new HashSet<>();
         Loaders = new ArrayList<>();
 
         this.maxNumberOfWorkers = Math.max(1, maxNumberOfWorkers);
@@ -161,74 +155,32 @@ public class Resources {
             Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
             resources.put(loader.getType(), map);
-            registerFallback(loader, map);
+            fallbacks.register(loader, map);
         }
 
         initialized = true;
     }
 
-    private void registerFallback(ResourceLoader loader, Map<String, DataType> map) {
-        DataType fallback = loader.createFallback();
-        if (fallback == null)
-            return;
+    // ---- Fallbacks (see FallbackRegistry) ----
 
-        if (!FALLBACK_NAME.equals(fallback.getDataName()))
-            throw new IllegalStateException("The fallback of " + loader.getResourceNameType() + " must be named " + FALLBACK_NAME);
-
-        if (map.containsKey(FALLBACK_NAME))
-            System.err.println("--The " + loader.getResourceNameType() + " named " + FALLBACK_NAME
-                    + " is replaced by the fallback of its type");
-
-        fallback.setNotManuallyCreated();
-        map.put(FALLBACK_NAME, fallback);
-        fallbacks.put(loader.getType(), fallback);
-    }
-
-    // Referenced for the whole program: loaded first, unloaded at the exit
     void loadFallbacks() {
-        runOnMainThread(() -> {
-            for (DataType fallback : fallbacks.values())
-                addReferenceAndUpdate(fallback, FALLBACK_REFERENCE);
-        });
+        fallbacks.loadAll();
     }
 
-    // ---- Fallbacks ----
-
-    // Fallback of the type, or of its closest parent type with a loader; null without fallback
     public <T extends DataType> T getFallback(Class<T> type) {
-        DataType fallback = fallbackOf(type);
-        return type.isInstance(fallback) ? type.cast(fallback) : null;
-    }
-
-    // A ColorTextureData uses the TextureData fallback
-    private DataType fallbackOf(Class<?> type) {
-        for (Class<?> current = type; current != null && DataType.class.isAssignableFrom(current); current = current.getSuperclass()) {
-            DataType fallback = fallbacks.get(current);
-            if (fallback != null)
-                return fallback;
-        }
-
-        return null;
+        return fallbacks.get(type);
     }
 
     boolean hasFallback(DataType data) {
-        return fallbackOf(data.getClass()) != null;
+        return fallbacks.has(data);
     }
 
     public boolean isFallback(DataType data) {
-        return data != null && fallbackOf(data.getClass()) == data;
+        return fallbacks.is(data);
     }
 
-    /**
-     * What to use for this data now: the data itself when loaded, otherwise the fallback of the type
-     * (data failed, still loading or null), or the data as is when the type has no fallback.
-     */
     public <T extends DataType> T usable(Class<T> type, T data) {
-        if (data != null && data.isLoaded())
-            return data;
-
-        T fallback = getFallback(type);
-        return fallback != null ? fallback : data;
+        return fallbacks.usable(type, data);
     }
 
     // getResource, with the fallback of the type for an unknown name (reported once per name)
@@ -237,15 +189,7 @@ public class Resources {
         if (data != null)
             return data;
 
-        T fallback = getFallback(type);
-        String key = type.getSimpleName() + " " + name;
-        if (strict)
-            throw new IllegalStateException("Strict resources: unknown " + key);
-
-        if (reportedUnknownNames.add(key))
-            System.err.println("--Unknown " + key + (fallback != null ? ", its fallback is used" : ""));
-
-        return fallback;
+        return fallbacks.forUnknown(type, name, strict);
     }
 
 
