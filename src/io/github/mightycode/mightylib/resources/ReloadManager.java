@@ -71,13 +71,13 @@ class ReloadManager {
         copy.acquiredDependencies.clear();
         copy.acquiredDependencies.addAll(previous);
         for (DataType dependency : data.acquiredDependencies)
-            Resources.addDependent(dependency, data);
+            DependencyGraph.addDependent(dependency, data);
 
         data.reloadCopy = null;
-        resources.releaseDependencies(copy);
+        resources.dependencies().release(copy);
         copy.discard();
 
-        resources.wakeWaiters(data);
+        resources.dependencies().wakeWaiters(data);
         contentChanged(data);
     }
 
@@ -107,8 +107,8 @@ class ReloadManager {
         DataType data = copy.reloadOf;
         boolean wanted = resources.isWanted(copy);
 
-        resources.stopWaitingDependencies(copy);
-        resources.releaseDependencies(copy);
+        resources.dependencies().stopWaiting(copy);
+        resources.dependencies().release(copy);
         copy.discard();
 
         if (!wanted)
@@ -116,6 +116,6 @@ class ReloadManager {
 
         data.reloadCopy = null;
         System.err.println("--" + message + ", the previous version is kept");
-        resources.wakeWaiters(data);
+        resources.dependencies().wakeWaiters(data);
     }
 }

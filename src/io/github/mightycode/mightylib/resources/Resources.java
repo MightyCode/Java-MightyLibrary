@@ -84,6 +84,7 @@ public class Resources {
     private final BatchManager batches = new BatchManager(this);
     private final FallbackRegistry fallbacks = new FallbackRegistry(this);
     private final ReloadManager reloads = new ReloadManager(this);
+    private final DependencyGraph dependencies = new DependencyGraph(this);
 
     private final int maxNumberOfWorkers;
 
@@ -97,7 +98,6 @@ public class Resources {
     private int runningWorkerSteps;
     // Queued steps dropped before starting because their result was no longer needed (see stepStillNeeded)
     private int skippedSteps;
-    private int waitingDependenciesCount;
     private boolean shuttingDown;
     // A failure throws instead of using the fallback (EngineConfig.setStrictResources)
     private boolean strict;
@@ -268,7 +268,7 @@ public class Resources {
     // Main thread: true when no data is being loaded or unloaded
     public boolean finishedCurrentLoading() {
         return inbox.isEmpty() && toUpdate.isEmpty() && mainContextSteps.isEmpty() && workerSteps.isEmpty()
-                && runningWorkerSteps == 0 && waitingDependenciesCount == 0;
+                && runningWorkerSteps == 0 && dependencies.waitingCount() == 0;
     }
 
     // Main thread: see ResourceDescriber
@@ -286,7 +286,7 @@ public class Resources {
         pipeline.put("waitingWorkerSteps", workerSteps.size());
         pipeline.put("mainContextSteps", mainContextSteps.size());
         pipeline.put("skippedSteps", skippedSteps);
-        pipeline.put("waitingDependencies", waitingDependenciesCount);
+        pipeline.put("waitingDependencies", dependencies.waitingCount());
         pipeline.put("finished", finishedCurrentLoading());
         return pipeline;
     }
@@ -306,6 +306,14 @@ public class Resources {
 
     BatchManager batches() {
         return batches;
+    }
+
+    DependencyGraph dependencies() {
+        return dependencies;
+    }
+
+    void enqueueUpdate(DataType data) {
+        toUpdate.add(data);
     }
 
     void requestUpdate(DataType data) {
@@ -329,8 +337,8 @@ public class Resources {
             return;
 
         if (!isWanted(data)) {
-            stopWaitingDependencies(data);
-            releaseDependencies(data);
+            dependencies.stopWaiting(data);
+            dependencies.release(data);
             data.failed = false;
             data.reloadWanted = false;
             data.discard();
@@ -358,8 +366,8 @@ public class Resources {
                 return;
 
             data.failed = false;
-            stopWaitingDependencies(data);
-            releaseDependencies(data);
+            dependencies.stopWaiting(data);
+            dependencies.release(data);
             data.discard();
         }
 
@@ -371,7 +379,7 @@ public class Resources {
             return;
         }
 
-        acquireDependencies(data);
+        dependencies.acquire(data);
 
         for (DataType dependency : data.getDependencies()) {
             // A failed dependency with a fallback is replaced by it (Resources.usable): the data can be loaded
@@ -382,55 +390,12 @@ public class Resources {
             }
         }
 
-        if (!dependenciesReady(data)) {
-            waitDependencies(data);
+        if (!dependencies.allReady(data)) {
+            dependencies.waitFor(data);
         } else {
-            stopWaitingDependencies(data);
+            dependencies.stopWaiting(data);
             startStep(data, false);
         }
-    }
-
-    // Loaded (or replaced by its fallback) and not reading a new version: computed once, with the latest one
-    private boolean dependencyReady(DataType dependency) {
-        return (dependency.isLoaded() && dependency.reloadCopy == null) || (dependency.failed && hasFallback(dependency));
-    }
-
-    private boolean dependenciesReady(DataType data) {
-        for (DataType dependency : data.getDependencies()) {
-            if (!dependencyReady(dependency))
-                return false;
-        }
-
-        return true;
-    }
-
-    // A wanted data references its dependencies (known once preloaded), so they are loaded without being listed
-    private void acquireDependencies(DataType data) {
-        for (DataType dependency : data.getDependencies()) {
-            if (!data.acquiredDependencies.contains(dependency)) {
-                data.acquiredDependencies.add(dependency);
-                addDependent(dependency, data);
-                addReferenceAndUpdate(dependency, data.dependencyReference());
-            }
-        }
-    }
-
-    void releaseDependencies(DataType data) {
-        if (data.acquiredDependencies.isEmpty())
-            return;
-
-        List<DataType> released = new ArrayList<>(data.acquiredDependencies);
-        data.acquiredDependencies.clear();
-        for (DataType dependency : released) {
-            dependency.dependents.remove(data);
-            removeReferenceAndUpdate(dependency, data.dependencyReference());
-        }
-    }
-
-    // A copy is not told: it waits for its dependencies to finish their own reload (dependencyReady)
-    static void addDependent(DataType dependency, DataType dependent) {
-        if (dependent.reloadOf == null && !dependency.dependents.contains(dependent))
-            dependency.dependents.add(dependent);
     }
 
     /**
@@ -457,8 +422,8 @@ public class Resources {
         System.err.println("--" + message + (replaced ? ", its fallback is used" : ""));
 
         data.failed = true;
-        stopWaitingDependencies(data);
-        releaseDependencies(data);
+        dependencies.stopWaiting(data);
+        dependencies.release(data);
         data.discard();
 
         List<DataType> waiters = new ArrayList<>(data.waiters);
@@ -473,34 +438,6 @@ public class Resources {
             else
                 fail(waiter, "its dependency " + data.getClass().getSimpleName() + " " + data.getDataName() + " failed");
         }
-    }
-
-    private void waitDependencies(DataType data) {
-        if (!data.waitingDependencies) {
-            data.waitingDependencies = true;
-            ++waitingDependenciesCount;
-        }
-
-        for (DataType dependency : data.getDependencies()) {
-            if (!dependencyReady(dependency) && !dependency.waiters.contains(data))
-                dependency.waiters.add(data);
-        }
-    }
-
-    void stopWaitingDependencies(DataType data) {
-        if (data.waitingDependencies) {
-            data.waitingDependencies = false;
-            --waitingDependenciesCount;
-        }
-    }
-
-    void wakeWaiters(DataType loaded) {
-        for (DataType waiter : loaded.waiters) {
-            if (waiter.waitingDependencies)
-                toUpdate.add(waiter);
-        }
-
-        loaded.waiters.clear();
     }
 
     // Preload (read the file) or load (compute) the data, where its type wants it
@@ -607,7 +544,7 @@ public class Resources {
                 reloads.commit(data);
             } else {
                 data.loadDone(true);
-                wakeWaiters(data);
+                dependencies.wakeWaiters(data);
                 reloads.contentChanged(data);
             }
         } else {
