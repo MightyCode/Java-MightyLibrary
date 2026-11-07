@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
+import io.github.mightycode.mightylib.main.MainThread;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.texture.IconLoader;
@@ -201,12 +202,10 @@ public class Resources {
                 notifyPreLoadedResources(entry.Data);
                 break;
             case LOAD:
-                while (!entry.Data.canBeLoad()){
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+                // Dependencies not loaded yet: wait in a queue instead of blocking this thread (the frame when it's the main one)
+                if (!entry.Data.canBeLoad()) {
+                    queueForLater(entry);
+                    break;
                 }
                 entry.Data.load();
                 break;
@@ -220,6 +219,21 @@ public class Resources {
                 entry.Loader.reload(entry.Data);
                 notifyPreLoadedResources(entry.Data);
                 break;
+        }
+    }
+
+    // An immediate entry that can't be done now goes to the queue of the thread that handles it later
+    private void queueForLater(ResourceEntry entry) {
+        if (MainThread.isMainThread()) {
+            resourcesToProcessMainContext.add(entry);
+            return;
+        }
+
+        queueLock.lock();
+        try {
+            resourcesToProcess.add(entry);
+        } finally {
+            queueLock.unlock();
         }
     }
 
