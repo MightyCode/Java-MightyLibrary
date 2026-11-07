@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
+import org.joml.Vector2f;
 
 public class MovingCameraComponent implements IUpdatable {
     public static class Inputs {
@@ -45,6 +46,8 @@ public class MovingCameraComponent implements IUpdatable {
 
     protected Inputs inputs;
 
+    private final Vector2f direction = new Vector2f();
+
     public MovingCameraComponent(float moveSpeed, float quickSpeed){
         this.moveSpeed = moveSpeed;
         this.quickSpeed = quickSpeed;
@@ -64,27 +67,29 @@ public class MovingCameraComponent implements IUpdatable {
     }
 
     public void update(){
-        float speed = MOVE_SPEED;
-        if (inputManager.getState(inputs.QuickSpeed))
-            speed = quickSpeed;
+        float speed = inputManager.getState(inputs.QuickSpeed) ? quickSpeed : moveSpeed;
 
-        speed *= GameTime.DeltaTime();
+        // Progressive with a stick, 1 with a key
+        direction.set(
+                inputManager.getValue(inputs.MoveRight) - inputManager.getValue(inputs.MoveLeft),
+                inputManager.getValue(inputs.MoveDown) - inputManager.getValue(inputs.MoveUp));
+        ClampLength(direction);
+        direction.mul(speed * GameTime.DeltaTime());
 
-        if (inputManager.getState(inputs.MoveLeft)){
-            controlledCamera.moveXinZoom(-speed);
-        }
+        if (direction.x != 0)
+            controlledCamera.moveXinZoom(direction.x);
 
-        if (inputManager.getState(inputs.MoveRight)){
-            controlledCamera.moveXinZoom(speed);
-        }
+        if (direction.y != 0)
+            controlledCamera.moveYinZoom(direction.y);
+    }
 
-        if (inputManager.getState(inputs.MoveUp)){
-            controlledCamera.moveYinZoom(-speed);
-        }
+    // A diagonal is not faster than a straight move : length limited to 1
+    static Vector2f ClampLength(Vector2f direction) {
+        float length = direction.length();
+        if (length > 1)
+            direction.div(length);
 
-        if (inputManager.getState(inputs.MoveDown)){
-            controlledCamera.moveYinZoom(speed);
-        }
+        return direction;
     }
 
     public float getMoveSpeed() {
