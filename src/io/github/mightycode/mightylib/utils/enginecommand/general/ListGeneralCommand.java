@@ -20,6 +20,7 @@ public abstract class ListGeneralCommand {
         commands.addCommand(new GLGenCom());
         commands.addCommand(new ResourcesGenCom());
         commands.addCommand(new InputGenCom());
+        commands.addCommand(new GamepadGenCom());
         commands.addCommand(new CameraGenCom(sceneManager));
         commands.addCommand(new MonitorsGenCom());
         commands.addCommand(new WaitGenCom(commands, sceneManager));
