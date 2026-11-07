@@ -10,14 +10,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TileSetAtlas {
+    // Content of the map, built with it and never registered in Resources (its textures are the map's dependencies)
     private final TextureDataAtlas textureAtlas;
-    private final List<TileSet> tilesets;
-    private final List<Integer> startIds;
+    private List<TileSet> tilesets;
+    private List<Integer> startIds;
 
-    public TileSetAtlas() {
-        textureAtlas = new TextureDataAtlas(DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT, "atlas", null);
+    TileSetAtlas(String mapName) {
+        textureAtlas = new TextureDataAtlas(DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT, "tilemap:" + mapName, null);
         tilesets = new ArrayList<>();
         startIds = new ArrayList<>();
+    }
+
+    // Reload of the map: takes the content of the new atlas, the same objects stay in use (renderers, GL texture)
+    void replaceContentWith(TileSetAtlas newer) {
+        List<TileSet> newerTilesets = newer.tilesets;
+        newer.tilesets = tilesets;
+        tilesets = newerTilesets;
+
+        List<Integer> newerStartIds = newer.startIds;
+        newer.startIds = startIds;
+        startIds = newerStartIds;
+
+        textureAtlas.replaceContentWith(newer.textureAtlas);
     }
 
     void addTileSet(TileSet tileset, int startId) {
@@ -25,15 +39,12 @@ public class TileSetAtlas {
         startIds.add(startId);
     }
 
-    void transferTileSetTextureToAtlas() {
-        for (TileSet tileset : tilesets) {
-            TextureData data = Resources.getInstance().getResource(TextureData.class, tileset.texture());
-            textureAtlas.addDependency(data);
-            textureAtlas.addTexture(data);
-        }
+    // The tilesets are loaded (dependencies of the map), so are their textures or their fallback
+    boolean build() {
+        for (TileSet tileset : tilesets)
+            textureAtlas.addTexture(tileset.textureData());
 
-        textureAtlas.setPreloaded();
-        Resources.getInstance().addPreLoadedResource(textureAtlas);
+        return textureAtlas.build();
     }
 
     public int getTileSetIndexRelatedTo(int tileId){
@@ -64,9 +75,8 @@ public class TileSetAtlas {
     }
 
     public Vector2i getTileSetPosition(int index) {
-        return textureAtlas.getTexturePosition(
-                tilesets.get(index).texture()
-        );
+        // By the data added to the atlas: the fallback one for an unknown texture name
+        return textureAtlas.getTexturePosition(tilesets.get(index).textureData().getDataName());
     }
 
     public int getStartId(int index){

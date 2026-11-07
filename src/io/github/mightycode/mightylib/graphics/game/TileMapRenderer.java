@@ -90,6 +90,8 @@ public class TileMapRenderer extends Renderer {
     private final Vector2f leftUpPosition;
     private EDirection reference;
     private TileMap tilemap;
+    // Version of the map the tiles were built with
+    private int tileMapVersion;
     private TileSetAtlas tileSetAtlas;
     private TextureDataAtlas textureDataAtlas;
     private final String layerCategory;
@@ -142,6 +144,7 @@ public class TileMapRenderer extends Renderer {
     public void setTilemap(TileMap tilemap) {
         reset();
         this.tilemap = tilemap;
+        this.tileMapVersion = tilemap.getVersion();
         this.tileSetAtlas = tilemap.tileSetAtlas();
         this.textureDataAtlas = tileSetAtlas.getTextureAtlas();
 
@@ -272,6 +275,13 @@ public class TileMapRenderer extends Renderer {
     }
 
     public void update(){
+        // Reloaded: built again from the new version (same atlas objects, their texture is sent again by itself)
+        if (tilemap.getVersion() != tileMapVersion) {
+            tileMapVersion = tilemap.getVersion();
+            loadGeneralInformation();
+            loadTileMapInformation();
+        }
+
         boolean animationChanged = false;
 
         // Every animation must advance each tick, otherwise they drift apart

@@ -37,15 +37,36 @@ public class TextureDataAtlas extends TextureData {
         this(name, null);
     }
 
-    // Only an atlas read from a file: one built by the code has nothing to read again
+    // Read again from its file, or built again from the same textures (atlas built by the code)
     @Override
     protected DataType createReloadCopy() {
-        if (getClass() != TextureDataAtlas.class || !validPath())
+        if (getClass() != TextureDataAtlas.class)
             return null;
 
         TextureDataAtlas copy = new TextureDataAtlas(getTypeSetUp(), dataName, path);
         copy.copySettingsFrom(this);
+        if (!validPath()) {
+            for (TextureData texture : textures) {
+                copy.addDependency(texture);
+                copy.addTexture(texture);
+            }
+            copy.setPreloaded();
+        }
+
         return copy;
+    }
+
+    // Atlas built and owned by another data (TileMap), outside Resources: takes the content of the new atlas
+    public void replaceContentWith(TextureDataAtlas newer) {
+        swapContent(newer);
+        markContentChanged();
+    }
+
+    // Atlas built by its owner outside Resources (no pipeline): placed and drawn now
+    public boolean build() {
+        setPreloaded();
+        load();
+        return isLoaded();
     }
 
     @Override

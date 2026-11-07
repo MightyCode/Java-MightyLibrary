@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.map;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import org.joml.Vector2i;
 
@@ -45,8 +46,8 @@ public class TileMap extends SingleSourceDataType {
     private TileLayer[] layers;
 
     private String[] layersCategories;
-    private final HashMap<String, Integer> layersCategoriesFrom;
-    private final HashMap<String, Integer> layersCategoriesTo;
+    private HashMap<String, Integer> layersCategoriesFrom;
+    private HashMap<String, Integer> layersCategoriesTo;
 
     public TileMap(String dataName, String path) {
         this(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
@@ -55,7 +56,7 @@ public class TileMap extends SingleSourceDataType {
     public TileMap(TYPE_SET_UP typeSetUp, String dataName, String path) {
         super(typeSetUp, dataName, path);
         this.mapSize = new Vector2i();
-        this.tileSetAtlas = new TileSetAtlas();
+        this.tileSetAtlas = new TileSetAtlas(dataName);
 
         this.tileChanges = new ArrayList<>();
 
@@ -65,6 +66,40 @@ public class TileMap extends SingleSourceDataType {
         unload();
     }
 
+
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == TileMap.class ? new TileMap(getTypeSetUp(), dataName, path) : null;
+    }
+
+    // The atlas objects stay the same (used by the renderers): only their content is exchanged.
+    // The changes made by the code to the previous version are lost.
+    @Override
+    protected void swapContent(DataType copy) {
+        TileMap other = (TileMap) copy;
+
+        int width = mapSize.x, height = mapSize.y;
+        mapSize.set(other.mapSize);
+        other.mapSize.set(width, height);
+
+        tileSetAtlas.replaceContentWith(other.tileSetAtlas);
+
+        TileLayer[] otherLayers = other.layers;
+        other.layers = layers;
+        layers = otherLayers;
+
+        String[] otherCategories = other.layersCategories;
+        other.layersCategories = layersCategories;
+        layersCategories = otherCategories;
+
+        HashMap<String, Integer> otherFrom = other.layersCategoriesFrom, otherTo = other.layersCategoriesTo;
+        other.layersCategoriesFrom = layersCategoriesFrom;
+        other.layersCategoriesTo = layersCategoriesTo;
+        layersCategoriesFrom = otherFrom;
+        layersCategoriesTo = otherTo;
+
+        tileChanges.clear();
+    }
 
     public void addTileset(TileSet tileset, int startId) {
         addDependency(tileset);
@@ -173,9 +208,7 @@ public class TileMap extends SingleSourceDataType {
 
     @Override
     protected boolean internLoad() {
-        tileSetAtlas.transferTileSetTextureToAtlas();
-
-        return layers != null && mapSize.x != 0 && mapSize.y != 0;
+        return layers != null && mapSize.x != 0 && mapSize.y != 0 && tileSetAtlas.build();
     }
 
     @Override

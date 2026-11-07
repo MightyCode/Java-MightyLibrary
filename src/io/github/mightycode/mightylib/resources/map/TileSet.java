@@ -145,6 +145,9 @@ public class TileSet extends SingleSourceDataType {
 
     public String texture(){ return texture; }
 
+    // The texture data used (the fallback one for an unknown name), placed in the atlas of the maps
+    TextureData textureData() { return textureData; }
+
     public Vector2i tileSize() { return new Vector2i(tileSize); }
 
     public int getConvertedId(int id){

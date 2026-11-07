@@ -190,6 +190,11 @@ public abstract class DataType extends UUID implements LoadingElement {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " has a reload copy but no swapContent");
     }
 
+    // A data managed by its owner outside Resources changed its content (see TextureDataAtlas.replaceContentWith)
+    protected final void markContentChanged() {
+        ++version;
+    }
+
     // Main thread (Resources): the loaded copy becomes the content of this data, its dependencies with it
     final void takeReloadedContent(DataType copy) {
         swapContent(copy);
