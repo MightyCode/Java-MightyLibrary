@@ -81,6 +81,7 @@ public final class MainLoop {
     private static int setup(EngineConfig config) {
         config.validate();
         MainThread.setCurrentAsMain();
+        Workers.start(config.getMaxThreads());
         admin = config.isAdmin();
         Logger.DO_CHECK = config.isOpenGLErrorCheck();
 
@@ -300,6 +301,8 @@ public final class MainLoop {
             contextManager.unload();
             contextManager = null;
         }
+
+        Workers.stop();
 
         // Terminate GLFW and free the error callback
         glfwTerminate();

@@ -2,24 +2,14 @@ package io.github.mightycode.mightylib.resources;
 
 import static io.github.mightycode.mightylib.resources.Resources.ResourceEntry.ActionEnum.*;
 
-public class ResourceWorker extends Thread {
-    private final int threadNumber;
-    public int getThreadNumber() {
-        return threadNumber;
-    }
-
+// Task run by the engine Workers: processes the resource queue until it is empty
+public class ResourceWorker implements Runnable {
     private final Resources resource;
 
     private int numberErrorUnloading;
     private int numberErrorLoading;
 
-    private boolean isWorking = true;
-    public boolean isWorking() {
-        return isWorking;
-    }
-
-    public ResourceWorker(Resources resource, int threadNumber) {
-        this.threadNumber = threadNumber;
+    public ResourceWorker(Resources resource) {
         this.resource = resource;
     }
 
@@ -39,40 +29,46 @@ public class ResourceWorker extends Thread {
         numberErrorLoading = 0;
         numberErrorUnloading = 0;
 
-        Resources.ResourceEntry entry = resource.getNextResourceToProcess();
+        try {
+            processQueue();
+        } catch (Throwable e) {
+            System.err.println("--Resource worker failed:");
+            e.printStackTrace();
+        } finally {
+            resource.workerEnded();
+        }
+    }
 
-        while (resource.remainingResourceToProcess(false) || entry != null) {
-            if (entry != null) {
-                //System.out.println("Thread " + threadNumber + " PROCESS (" + entry.Data.getClass().getSimpleName() + ") : " + entry.Data.getDataName() + " " + entry.Data.isLoaded() + " " + entry.Action);
+    private void processQueue() {
+        while (true) {
+            Resources.ResourceEntry entry = resource.getNextResourceToProcess();
+            if (entry == null) {
+                // Stops only when the queue is empty, checked with the queue lock so no entry added meanwhile is forgotten
+                if (resource.canWorkerStop())
+                    return;
 
-                synchronized (entry) {
-                    if (entry.Action == PRELOAD) {
-                        numberErrorLoading += preloadData(entry.Data, entry.Loader);
-                    } else if (entry.Action == LOAD) {
-                        numberErrorLoading += loadData(entry.Data);
-                    } else if (entry.Action == UNLOAD) {
-                        numberErrorUnloading += unloadData(entry);
-                    } else if (entry.Action == RELOAD) {
-                        numberErrorLoading += reloadData(entry);
-                    }
-
-                    //System.out.println("Thread " + threadNumber + " PROCESSED (" + entry.Data.getClass().getSimpleName() + ") : " + entry.Data.getDataName() + " " + entry.Data.isLoaded());
-
-                   /*if (numberErrorLoading > 0) {
-                        System.out.println("Thread " + threadNumber + " error loading/unloading/reloading " + entry.Data.getClass().getSimpleName() + " : " + entry.Data.getDataName());
-                    }*/
+                // Remaining entries wait for their dependencies, often loaded by the main thread
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return;
                 }
-            } else {
-                // Remaining entries are waiting for their dependencies
-                Thread.onSpinWait();
+                continue;
             }
 
-            // Always query again, otherwise a worker that found nothing ready would spin forever
-            entry = resource.getNextResourceToProcess();
+            synchronized (entry) {
+                if (entry.Action == PRELOAD) {
+                    numberErrorLoading += preloadData(entry.Data, entry.Loader);
+                } else if (entry.Action == LOAD) {
+                    numberErrorLoading += loadData(entry.Data);
+                } else if (entry.Action == UNLOAD) {
+                    numberErrorUnloading += unloadData(entry);
+                } else if (entry.Action == RELOAD) {
+                    numberErrorLoading += reloadData(entry);
+                }
+            }
         }
-
-        //System.out.println("End of thread " + threadNumber);
-        isWorking = false;
     }
 
     int preloadData(DataType dataType, ResourceLoader loader) {

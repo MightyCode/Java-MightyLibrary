@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources;
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.main.MainThread;
+import io.github.mightycode.mightylib.main.Workers;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.texture.IconLoader;
@@ -80,7 +81,8 @@ public class Resources {
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
     private final LoadingMethod loadingMethod;
 
-    private final ArrayList<ResourceWorker> workers;
+    // ResourceWorker tasks running on the engine Workers, guarded by queueLock
+    private int activeWorkers;
     private final int maxNumberOfWorkers;
 
     private final ArrayList<ResourceEntry> resourcesToProcess;
@@ -96,7 +98,7 @@ public class Resources {
         resources = new ConcurrentHashMap<>();
         Loaders = new ArrayList<>();
 
-        workers = new ArrayList<>();
+        activeWorkers = 0;
         this.maxNumberOfWorkers = maxNumberOfWorkers;
 
         resourcesToProcess = new ArrayList<>();
@@ -232,6 +234,7 @@ public class Resources {
         queueLock.lock();
         try {
             resourcesToProcess.add(entry);
+            startWorkersIfNeeded();
         } finally {
             queueLock.unlock();
         }
@@ -242,32 +245,43 @@ public class Resources {
             return false;
         }
 
-        // Workers are created by addResourceToProcess under the queue lock, possibly from a worker thread
-        ArrayList<ResourceWorker> finishedWorkers;
+        // A worker still running may add entries (LOAD after a PRELOAD)
         queueLock.lock();
         try {
-            for (ResourceWorker worker : workers) {
-                if (worker.isAlive())
-                    return false;
-            }
-
-            finishedWorkers = new ArrayList<>(workers);
-            workers.clear();
+            return activeWorkers == 0;
         } finally {
             queueLock.unlock();
         }
+    }
 
-        // Joined outside the lock: the threads are already finished
-        for (ResourceWorker worker : finishedWorkers) {
-            try {
-                worker.join();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return false;
-            }
+    // Called by a worker that found nothing ready: it stops only if the queue is empty
+    boolean canWorkerStop() {
+        queueLock.lock();
+        try {
+            return resourcesToProcess.isEmpty();
+        } finally {
+            queueLock.unlock();
         }
+    }
 
-        return true;
+    void workerEnded() {
+        queueLock.lock();
+        try {
+            --activeWorkers;
+
+            // An entry added between canWorkerStop and here found enough workers: start one again
+            startWorkersIfNeeded();
+        } finally {
+            queueLock.unlock();
+        }
+    }
+
+    // Under queueLock
+    private void startWorkersIfNeeded() {
+        while (activeWorkers < maxNumberOfWorkers && resourcesToProcess.size() > activeWorkers) {
+            ++activeWorkers;
+            Workers.execute(new ResourceWorker(this));
+        }
     }
 
     boolean remainingResourceToProcess() {
@@ -408,12 +422,7 @@ public class Resources {
                 resourcesToProcess.add(resourceEntry);
                 /*System.out.println("Added to worker (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
                         ", action : " + resourceEntry.Action);*/
-                if (workers.size() < maxNumberOfWorkers && resourcesToProcess.size() > workers.size()) {
-                    //System.out.println("Create worker n°" + (workers.size() + 1));
-                    ResourceWorker worker = new ResourceWorker(this, workers.size() + 1);
-                    workers.add(worker);
-                    worker.start();
-                }
+                startWorkersIfNeeded();
             }
             finally {
                 queueLock.unlock();
