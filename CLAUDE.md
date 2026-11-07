@@ -16,13 +16,15 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - **La 3D est secondaire** : ne pas l'étendre ni la refactorer sans demande, mais ne pas la casser (`Shape`/`Renderer`/`Shader` sont communs ; les scènes `Test3D*` doivent rester fonctionnelles).
 
 ## Build et vérification
-- Maven avec `sourceDirectory` = `src`. Pas de tests automatisés. Compiler après chaque modification :
+- Maven avec `sourceDirectory` = `src`, tests JUnit 5 dans `test/` (mêmes packages que le code testé, pour accéder au package-private). Compiler après chaque modification :
   - Linux : `mvn`/`java` (JDK 21) sont dans le PATH : `mvn -o -q compile`.
   - Windows : `mvn`/`java` ne sont pas dans le PATH, utiliser les outils d'IntelliJ :
     ```bash
     JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn" -o -q compile
     ```
+  - Tests : même commande avec `test` au lieu de `compile` (quelques secondes, sans fenêtre ni GL).
   - `scenario.py` choisit ces chemins selon l'OS (surchargeables par `MIGHTY_JAVA`, `MIGHTY_MVN`, `MIGHTY_MAVEN_JDK`). Sur une nouvelle machine, lancer une fois `mvn -q compile` (sans `-o`) pour télécharger les dépendances.
+- **Tests automatisés, à chaque modification** : se demander si elle touche du code couvert par les tests (aujourd'hui : `resources/`, `main/MainThread`, `main/Workers`) ; si oui, relancer `mvn -o -q test` avant de commiter. Se demander aussi si elle entre dans ce que les tests peuvent couvrir (logique sans GL : états, références, files, parsing, maths…) ; si oui, ajouter ou compléter le test, et pour un bug corrigé, un test qui le reproduit. Un bug connu non corrigé reste en test `@Disabled` avec sa raison, pas supprimé.
 - Vérifier en jeu avec **un seul appel** : `python tools/scenario.py "scene Test2DScene" wait-loaded "?gl summary" "input ENTER"` (compile, lance le jeu, enchaîne les commandes, résume en texte, ferme le jeu ; une fenêtre s'ouvre chez l'utilisateur : le prévenir). Détails : `python tools/scenario.py --help` et `docs/debug-tools.md`.
 - Répertoire de travail = racine du dépôt (ressources lues depuis `resources/`). Point d'entrée : `io.github.mightycode.mightylibdemo.main.Main`.
 

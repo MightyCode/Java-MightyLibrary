@@ -12,7 +12,7 @@ LearnOpenGL « Gamma Correction ». À faire en premier : l'activer change toute
 - Scène `TestGamma` : dégradés, fondus alpha, éclairage, option activée/désactivée côte à côte.
 
 ## Tests de non-régression
-Méthode à définir avec l'utilisateur. Pistes : JUnit pour la logique pure (ressources, références, `InputSimulation`, tilemaps, maths, algorithmes) ; scénarios en jeu pilotés par `tools/mighty.py` (`scene`, `input`, `gl`, `stats`) qui vérifient des valeurs texte, sans capture d'écran ; contrôle des fuites par allers-retours de scènes. Filet de sécurité avant les gros chantiers suivants.
+En place : JUnit 5 (`test/`, `mvn -o -q test`), premier ensemble `ResourcesLifecycleTest` (cycles charger/décharger de `Resources` avec des `FakeData` sans fichier ni GL, instance neuve par `Resources.createForTests`). À étendre : JUnit pour le reste de la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing des ressources) ; scénarios en jeu pilotés par `tools/mighty.py` (`scene`, `input`, `gl`, `stats`) qui vérifient des valeurs texte, sans capture d'écran ; contrôle des fuites par allers-retours de scènes. Filet de sécurité avant les gros chantiers suivants.
 
 ## Bibliothèque réutilisable
 
