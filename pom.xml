@@ -14,6 +14,7 @@
         <lwjgl.version>3.3.6</lwjgl.version>
         <joml.version>1.10.3</joml.version>
         <json.version>20231013</json.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <profiles>
@@ -57,7 +58,13 @@
 
     <build>
         <sourceDirectory>src</sourceDirectory>
+        <testSourceDirectory>test</testSourceDirectory>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
@@ -175,6 +182,12 @@
             <groupId>com.raylabz</groupId>
             <artifactId>opensimplex</artifactId>
             <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     

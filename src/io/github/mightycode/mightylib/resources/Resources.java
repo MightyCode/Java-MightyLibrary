@@ -83,6 +83,12 @@ public class Resources {
         return singletonInstance;
     }
 
+    // Tests only: replace the singleton by a fresh instance using only the given loaders (no GL loader)
+    static Resources createForTests(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
+        singletonInstance = new Resources(loadingMethod, maxNumberOfWorkers, loaders);
+        return singletonInstance;
+    }
+
     public final List<ResourceLoader> Loaders;
 
     // Resources are read on the main thread while workers can remove deleted ones: concurrent maps
@@ -102,6 +108,11 @@ public class Resources {
     private boolean firstLoadDone;
 
     private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers) {
+        this(loadingMethod, maxNumberOfWorkers, null);
+    }
+
+    // Without given loaders, the mandatory ones are used
+    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
         resources = new ConcurrentHashMap<>();
         Loaders = new ArrayList<>();
@@ -114,16 +125,20 @@ public class Resources {
 
         resourcesToProcessMainContext = new ArrayDeque<>();
 
-        // Mandatory loaders
-        Loaders.add(new ShaderLoader());
-        Loaders.add(new IconLoader());
-        Loaders.add(new TextureDataLoader());
-        Loaders.add(new AnimationDataLoader());
-        Loaders.add(new FontLoader());
-        JSONLoader jsonLoader = new JSONLoader();
-        Loaders.add(jsonLoader);
+        if (loaders != null) {
+            Loaders.addAll(loaders);
+        } else {
+            // Mandatory loaders
+            Loaders.add(new ShaderLoader());
+            Loaders.add(new IconLoader());
+            Loaders.add(new TextureDataLoader());
+            Loaders.add(new AnimationDataLoader());
+            Loaders.add(new FontLoader());
+            JSONLoader jsonLoader = new JSONLoader();
+            Loaders.add(jsonLoader);
 
-        Loaders.add(new BatchLoader(jsonLoader));
+            Loaders.add(new BatchLoader(jsonLoader));
+        }
 
         initialized = false;
         firstLoadDone = false;
@@ -592,7 +607,7 @@ public class Resources {
         }
     }
 
-    private void loadAllOfType(Class<? extends DataType> typeOfResource){
+    void loadAllOfType(Class<? extends DataType> typeOfResource){
         ResourceLoader loader = getLoader(typeOfResource);
 
         for (DataType dataType : resources.get(typeOfResource).values()){
