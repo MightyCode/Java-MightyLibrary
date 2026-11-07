@@ -31,6 +31,15 @@ public class FakeData extends DataType {
         return !settings.generated;
     }
 
+    // File watched for hot reload (null: none), set by the test
+    volatile String sourcePath;
+
+    @Override
+    public java.util.List<String> sourcePaths() {
+        String path = settings.sourcePath;
+        return path == null ? java.util.Collections.emptyList() : java.util.Collections.singletonList(path);
+    }
+
     // Content: the number of the preload that read it, exchanged on reload
     private volatile int content;
     private volatile int readContent;

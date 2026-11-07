@@ -29,6 +29,11 @@ public abstract class MultiSourceDataType extends DataType {
     }
 
     @Override
+    public final java.util.List<String> sourcePaths() {
+        return validPaths() ? Arrays.asList(sourcesPath) : java.util.Collections.emptyList();
+    }
+
+    @Override
     public final boolean hasSource() {
         return validPaths();
     }

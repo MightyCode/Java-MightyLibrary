@@ -175,6 +175,11 @@ public abstract class DataType extends UUID implements LoadingElement {
         return true;
     }
 
+    // Files this data is read from (watched for hot reload); empty when it has no file
+    public List<String> sourcePaths() {
+        return Collections.emptyList();
+    }
+
     public final int getVersion() {
         return version;
     }

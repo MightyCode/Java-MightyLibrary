@@ -141,6 +141,11 @@ public final class MainLoop {
         if (config.isStrictResources())
             System.out.println("--Strict resources: a resource that fails stops the program");
 
+        if (config.getWatchResources() != null) {
+            resource.watcher().configure(config.getWatchResources(), config.getWatchResourcesInterval());
+            resource.watcher().watchAll();
+        }
+
         GLResources.createInstance(config.getMaxGLUploadMillisecondsPerFrame());
 
         System.out.println("--Create SceneManager");
