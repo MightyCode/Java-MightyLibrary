@@ -97,8 +97,6 @@ public final class MainLoop {
         System.out.println("--Create main context.");
         contextManager = ContextManager.getInstance();
 
-        ThreadManager.NumberMaxThreadToUse = config.getMaxThreads();
-
         WindowCreationInfo wci = new WindowCreationInfo();
         wci.Size = config.getWindowSize();
         wci.VirtualSize = config.getVirtualSize();

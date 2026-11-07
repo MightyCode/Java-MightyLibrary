@@ -7,8 +7,8 @@ Structure, concepts clés du moteur et pièges connus.
 ```
 src/io/github/mightycode/
   mightylib/            # la bibliothèque (ne doit PAS dépendre de mightylibdemo/)
-    main/               # MainLoop (statique), Window, Context/ContextManager, ThreadManager, GameTime
-    scenes/             # Scene, SceneManager, SceneManagerInterface, LoadingScene, caméras 2D/3D
+    main/               # MainLoop (statique), Window, Context/ContextManager, GameTime
+    scenes/             # Scene, SceneManager, SceneManagerInterface, TemplateSceneLoading, caméras 2D/3D
     resources/          # Resources (singleton), DataType, ResourceLoader, ResourceWorker, batchs
     graphics/           # GLResources, GLElement, renderer/ (Shape, Renderer, _2D, _3D), shader/, text/, GUI/, lightning/
     inputs/             # InputManager (actions), KeyboardManager, MouseManager, dispositions clavier
