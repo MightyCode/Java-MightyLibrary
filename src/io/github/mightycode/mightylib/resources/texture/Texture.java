@@ -37,6 +37,8 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
     private int uploadedRows;
     // Version of the data in textureId
     private int uploadedVersion;
+    // Size of the data in textureId: the data may already have the size of its next version
+    private int uploadedWidth, uploadedHeight;
     // Hot reload: the new version is sent in this texture, which replaces textureId once complete
     private int pendingId = -1;
     private int pendingRows;
@@ -193,6 +195,8 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         textureId = pendingId;
         pendingId = -1;
         uploadedVersion = pendingVersion;
+        uploadedWidth = data.getWidth();
+        uploadedHeight = data.getHeight();
         finishLoad();
 
         return true;
@@ -249,6 +253,8 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 textureId = GenDeleteResources.GenTexture();
                 uploadedRows = 0;
                 uploadedVersion = data.getVersion();
+                uploadedWidth = data.getWidth();
+                uploadedHeight = data.getHeight();
 
                 glBindTexture(this.textureType, textureId);
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType + " , quality type : " + qualityType + " , path : " + data.path() + " width : " + data.getWidth() + " , height : " + data.getHeight());
@@ -349,12 +355,20 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     @Override
     public int getWidth() {
-        return isLoaded() ? data.getWidth() : sizeData().getWidth();
+        return isLoaded() ? uploadedWidth : sizeData().getWidth();
+    }
+
+    /**
+     * Shown with the latest version of its data (false while the new version is sent, or not loaded yet).
+     * What is computed from the texture (texture coordinates, sizes) waits for it, not for the data.
+     */
+    public boolean isUpToDate() {
+        return isLoaded() && data.getVersion() == uploadedVersion;
     }
 
     @Override
     public int getHeight() {
-        return isLoaded() ? data.getHeight() : sizeData().getHeight();
+        return isLoaded() ? uploadedHeight : sizeData().getHeight();
     }
 
     @Override

@@ -92,8 +92,10 @@ public class TileMapRenderer extends Renderer {
     private TileMap tilemap;
     // Version of the map the tiles were built with
     private int tileMapVersion;
+    // Texture of the atlas, and the tiles per axis of each tileset when the tiles were built
+    private Texture atlasTexture;
+    private Vector2i[] tileSetsNumber;
     private TileSetAtlas tileSetAtlas;
-    private TextureDataAtlas textureDataAtlas;
     private final String layerCategory;
     private final List<AnimatedTile> animatedTiles;
 
@@ -146,9 +148,10 @@ public class TileMapRenderer extends Renderer {
         this.tilemap = tilemap;
         this.tileMapVersion = tilemap.getVersion();
         this.tileSetAtlas = tilemap.tileSetAtlas();
-        this.textureDataAtlas = tileSetAtlas.getTextureAtlas();
+        TextureDataAtlas textureDataAtlas = tileSetAtlas.getTextureAtlas();
 
-        setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(textureDataAtlas), textureDataAtlas.getDataName()));
+        atlasTexture = glResources.addElementOrReturnIfPresent(Texture.class, new Texture(textureDataAtlas), textureDataAtlas.getDataName());
+        setMainTextureChannel(atlasTexture);
 
         loadGeneralInformation();
 
@@ -161,8 +164,11 @@ public class TileMapRenderer extends Renderer {
 
     private void loadGeneralInformation() {
         animatedTiles.clear();
+        tileSetsNumber = new Vector2i[tileSetAtlas.getNumberTileset()];
         for (int i = 0; i <  tileSetAtlas.getNumberTileset(); ++i){
             TileSet tileSet = tileSetAtlas.getTileSet(i);
+            // Kept: a reloaded tileset changes it before the atlas texture that matches it is shown
+            tileSetsNumber[i] = tileSet.tilesNumberAxis();
 
             for (TileSet.TileAnimation animation : tileSet.getAnimations()) {
                 animatedTiles.add(new AnimatedTile(animation));
@@ -255,7 +261,7 @@ public class TileMapRenderer extends Renderer {
 
                     setTilePosition(tilesPosition, tileCount, rect);
 
-                    Vector2i tileTexturePosition = getTilePosition(tileType, tileSet.tilesNumberAxis());
+                    Vector2i tileTexturePosition = getTilePosition(tileType, tileSetsNumber[tileSetIndex]);
 
                     Vector4f tileTextureRect = getTileTextureRect(tileTexturePosition, tileSetIndex);
 
@@ -275,8 +281,12 @@ public class TileMapRenderer extends Renderer {
     }
 
     public void update(){
-        // Reloaded: built again from the new version (same atlas objects, their texture is sent again by itself)
+        // Reloaded: built again from the new version (same atlas objects), once the atlas texture shows it.
+        // Meanwhile the previous tiles stay with the previous texture, the animations wait.
         if (tilemap.getVersion() != tileMapVersion) {
+            if (atlasTexture.isLoaded() && !atlasTexture.isUpToDate())
+                return;
+
             tileMapVersion = tilemap.getVersion();
             loadGeneralInformation();
             loadTileMapInformation();
@@ -307,7 +317,7 @@ public class TileMapRenderer extends Renderer {
         for (AnimatedTileInstance tile : animatedTile.getConcernedTiles()) {
             TileSet tileSet = tileSetAtlas.getTileSet(tile.tileSetIndex);
 
-            Vector2i tileTexturePosition = getTilePosition(tileSet.getConvertedId(currentTileId), tileSet.tilesNumberAxis());
+            Vector2i tileTexturePosition = getTilePosition(tileSet.getConvertedId(currentTileId), tileSetsNumber[tile.tileSetIndex]);
             Vector4f tileTextureRect = getTileTextureRect(tileTexturePosition, tile.tileSetIndex);
 
             setTexturePosition(tilesTexturePosition, tile.bufferIndex * SIZE_COORDINATES,
@@ -361,10 +371,10 @@ public class TileMapRenderer extends Renderer {
         Vector2i tileSetPosition = tileSetAtlas.getTileSetPosition(tileSetIndex);
 
         return new Vector4f(
-                (tileTexturePosition.x * 1.0f * tileSize.x + tileSetPosition.x) / textureDataAtlas.getWidth(),
-                ((tileTexturePosition.x + 1.0f) * tileSize.x + tileSetPosition.x) / textureDataAtlas.getWidth(),
-                (tileTexturePosition.y * 1.0f * tileSize.y + tileSetPosition.y) / textureDataAtlas.getHeight(),
-                ((tileTexturePosition.y + 1.0f) * tileSize.y + tileSetPosition.y) / textureDataAtlas.getHeight()
+                (tileTexturePosition.x * 1.0f * tileSize.x + tileSetPosition.x) / atlasTexture.getWidth(),
+                ((tileTexturePosition.x + 1.0f) * tileSize.x + tileSetPosition.x) / atlasTexture.getWidth(),
+                (tileTexturePosition.y * 1.0f * tileSize.y + tileSetPosition.y) / atlasTexture.getHeight(),
+                ((tileTexturePosition.y + 1.0f) * tileSize.y + tileSetPosition.y) / atlasTexture.getHeight()
         );
     }
 
