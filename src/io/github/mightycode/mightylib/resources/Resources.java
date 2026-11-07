@@ -96,8 +96,10 @@ public class Resources {
     // Main thread only
     private final ArrayDeque<DataType> toUpdate;
     private final ArrayDeque<Runnable> mainContextSteps;
-    private final ArrayDeque<Runnable> workerSteps;
+    private final ArrayDeque<WorkerStep> workerSteps;
     private int runningWorkerSteps;
+    // Queued steps dropped before starting because their result was no longer needed (see stepStillNeeded)
+    private int skippedSteps;
     private int waitingDependenciesCount;
     private boolean shuttingDown;
     // A failure throws instead of using the fallback (EngineConfig.setStrictResources)
@@ -385,6 +387,7 @@ public class Resources {
         pipeline.put("runningWorkerSteps", runningWorkerSteps);
         pipeline.put("waitingWorkerSteps", workerSteps.size());
         pipeline.put("mainContextSteps", mainContextSteps.size());
+        pipeline.put("skippedSteps", skippedSteps);
         pipeline.put("waitingDependencies", waitingDependenciesCount);
         pipeline.put("finished", finishedCurrentLoading());
 
@@ -748,21 +751,52 @@ public class Resources {
                 break;
             case MAIN_CONTEXT:
                 mainContextSteps.add(() -> {
+                    if (!stepStillNeeded(data)) {
+                        skipStep(data);
+                        return;
+                    }
+
                     work.run();
                     end.run();
                 });
                 break;
             case THREAD_CONTEXT:
-                workerSteps.add(() -> {
+                workerSteps.add(new WorkerStep(data, () -> {
                     work.run();
                     inbox.add(() -> {
                         --runningWorkerSteps;
                         end.run();
                     });
-                });
+                }));
                 startWorkerSteps();
                 break;
         }
+    }
+
+    private static class WorkerStep {
+        final DataType data;
+        final Runnable run;
+
+        WorkerStep(DataType data, Runnable run) {
+            this.data = data;
+            this.run = run;
+        }
+    }
+
+    /**
+     * Checked when a queued step is about to start (not when it is queued: a data unloaded then wanted again
+     * meanwhile keeps its step). False when its result would be thrown away: the data is no longer wanted
+     * (scene left during its loading, reload copy abandoned...) or must be read again from the start.
+     */
+    private boolean stepStillNeeded(DataType data) {
+        return isWanted(data) && !data.reloadWanted;
+    }
+
+    // The step is not run: update discards the data, or starts it again from the start
+    private void skipStep(DataType data) {
+        data.jobRunning = false;
+        ++skippedSteps;
+        requestUpdate(data);
     }
 
     private static class StepResult {
@@ -798,10 +832,15 @@ public class Resources {
     }
 
     private void startWorkerSteps() {
-        Runnable step;
+        WorkerStep step;
         while (runningWorkerSteps < maxNumberOfWorkers && (step = workerSteps.poll()) != null) {
+            if (!stepStillNeeded(step.data)) {
+                skipStep(step.data);
+                continue;
+            }
+
             ++runningWorkerSteps;
-            Workers.execute(step);
+            Workers.execute(step.run);
         }
     }
 
