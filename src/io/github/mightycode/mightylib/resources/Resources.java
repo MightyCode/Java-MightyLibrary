@@ -82,14 +82,13 @@ public class Resources {
     private final Map<Class<? extends DataType>, DataType> fallbacks;
     // Unknown names already reported by getResourceOrFallback (main thread)
     private final Set<String> reportedUnknownNames;
-    // Main thread: for each load of a batch (loaded once per loadBatch), the data it referenced, released by unloadBatch
-    private final Map<String, List<List<DataType>>> loadedBatches = new HashMap<>();
     // Types without reload copy, reported once (main thread)
     private final Set<Class<?>> reportedNoReloadCopy = new HashSet<>();
     private final LoadingMethod loadingMethod;
     // Hot reload on file change: created off, started explicitly (code, command watch, system property)
     private final ResourceWatcher watcher = new ResourceWatcher(this);
     private final ResourceDescriber describer = new ResourceDescriber(this);
+    private final BatchManager batches = new BatchManager(this);
 
     private final int maxNumberOfWorkers;
 
@@ -355,7 +354,7 @@ public class Resources {
 
     // ---- Reconciliation, main thread only ----
 
-    private void runOnMainThread(Runnable task) {
+    void runOnMainThread(Runnable task) {
         if (MainThread.isMainThread())
             task.run();
         else
@@ -554,7 +553,7 @@ public class Resources {
     // The loaded data using this one computed their content with the previous version: they are read again
     private void contentChanged(DataType data) {
         if (data instanceof BatchResources)
-            batchDescriptionChanged(data.getDataName());
+            batches.descriptionChanged(data.getDataName());
 
         for (DataType dependent : new ArrayList<>(data.dependents)) {
             // A fallback is never emptied: it must not depend on what can change
@@ -801,12 +800,12 @@ public class Resources {
         return null;
     }
 
-    private void addReferenceAndUpdate(DataType data, String reference) {
+    void addReferenceAndUpdate(DataType data, String reference) {
         data.addReference(reference);
         requestUpdate(data);
     }
 
-    private void removeReferenceAndUpdate(DataType data, String reference) {
+    void removeReferenceAndUpdate(DataType data, String reference) {
         data.removeReference(reference);
         requestUpdate(data);
     }
@@ -820,14 +819,6 @@ public class Resources {
         }
 
         return null;
-    }
-
-    private static Class<? extends DataType> getClassFromBatchName(String batchName, String name) {
-        Class<? extends DataType> type = getClassFromName(name);
-        if (type == null)
-            throw new RuntimeException("Unknown resource type: " + name + " in batch: " + batchName);
-
-        return type;
     }
 
     public <T extends DataType> T getResource(Class<T> type, String name) {
@@ -854,55 +845,7 @@ public class Resources {
         return resources.get(type).containsKey(name);
     }
 
-    // ---- Batches ----
-
-    private interface BatchAction {
-        void apply(DataType data);
-    }
-
-    // Calls the action on every data listed by the batch, by name or by regular expression
-    // Data listed by the batch description now
-    private List<DataType> collectBatch(String batchName) {
-        List<DataType> listed = new ArrayList<>();
-        forEachInBatch(batchName, listed::add);
-        return listed;
-    }
-
-    private void forEachInBatch(String batchName, BatchAction action) {
-        BatchResources batchResources = getResource(BatchResources.class, batchName);
-        if (batchResources == null || batchResources.getObject() == null)
-            throw new RuntimeException("Batch not loaded: " + batchName);
-
-        JSONArray content = batchResources.getObject().getJSONArray("batchs");
-        for (int j = 0; j < content.length(); ++j) {
-            JSONObject resource = content.getJSONObject(j);
-
-            Class<? extends DataType> type = getClassFromBatchName(batchName, resource.getString("type"));
-            Map<String, DataType> ofType = this.resources.get(type);
-
-            JSONArray resourceFiles = resource.getJSONArray("files");
-            for (int i = 0; i < resourceFiles.length(); ++i) {
-                String resourceName = resourceFiles.getString(i);
-                DataType dataType = ofType.get(resourceName);
-
-                if (dataType == null)
-                    throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
-
-                action.apply(dataType);
-            }
-
-            JSONArray regularExpressions = resource.getJSONArray("regex");
-            for (int i = 0; i < regularExpressions.length(); ++i) {
-                Pattern pattern = Pattern.compile(regularExpressions.getString(i));
-
-                for (Map.Entry<String, DataType> entry : ofType.entrySet()) {
-                    Matcher matcher = pattern.matcher(entry.getKey());
-                    if (matcher.matches())
-                        action.apply(entry.getValue());
-                }
-            }
-        }
-    }
+    // ---- Batches (see BatchManager) ----
 
     public void loadBatch(String batchName) {
         if (!(loadingMethod instanceof BatchResourcesMethod)) {
@@ -910,14 +853,7 @@ public class Resources {
             return;
         }
 
-        runOnMainThread(() -> {
-            System.out.println("--Load batch: " + batchName);
-            List<DataType> listed = collectBatch(batchName);
-            for (DataType data : listed)
-                addReferenceAndUpdate(data, batchName);
-
-            loadedBatches.computeIfAbsent(batchName, name -> new ArrayList<>()).add(listed);
-        });
+        batches.load(batchName);
     }
 
     public void unloadBatch(String batchName) {
@@ -926,51 +862,7 @@ public class Resources {
             return;
         }
 
-        runOnMainThread(() -> {
-            System.out.println("--Unload batch: " + batchName);
-
-            // The data referenced by the load, not by the description now (reloaded, new data matching a regex...)
-            List<List<DataType>> loads = loadedBatches.get(batchName);
-            if (loads == null || loads.isEmpty()) {
-                System.err.println("--Batch " + batchName + " unloaded but not loaded");
-                return;
-            }
-
-            List<DataType> listed = loads.remove(loads.size() - 1);
-            if (loads.isEmpty())
-                loadedBatches.remove(batchName);
-
-            for (DataType data : listed)
-                removeReferenceAndUpdate(data, batchName);
-        });
-    }
-
-    /**
-     * The description of a loaded batch changed (reload): its loads reference the new list, the data added are loaded,
-     * those removed are released. A description that lists an unknown data keeps the previous list.
-     */
-    private void batchDescriptionChanged(String batchName) {
-        List<List<DataType>> loads = loadedBatches.get(batchName);
-        if (loads == null)
-            return;
-
-        List<DataType> listed;
-        try {
-            listed = collectBatch(batchName);
-        } catch (RuntimeException e) {
-            System.err.println("--Batch " + batchName + " kept as loaded: " + e.getMessage());
-            return;
-        }
-
-        for (int i = 0; i < loads.size(); ++i) {
-            // Added before releasing: a data in both lists is never unloaded meanwhile
-            for (DataType data : listed)
-                addReferenceAndUpdate(data, batchName);
-            for (DataType data : loads.get(i))
-                removeReferenceAndUpdate(data, batchName);
-
-            loads.set(i, listed);
-        }
+        batches.unload(batchName);
     }
 
     // ---- Whole types ----
