@@ -18,6 +18,15 @@ public abstract class ResourceLoader {
 
     public abstract void create(Map<String, DataType> data);
 
+    /**
+     * Data used in place of a data of this type that failed, is still loading or has an unknown name
+     * (Resources.usable, Resources.getResourceOrFallback). Created by the code, named FALLBACK_NAME, it must never fail.
+     * Null (default): no fallback, for complex data that can't be replaced safely (maps, JSON...): users get null.
+     */
+    public DataType createFallback() {
+        return null;
+    }
+
     public abstract void fileDetected(Map<String, DataType> data, String currentPath, String name);
 
     public abstract String filterFile(String path);

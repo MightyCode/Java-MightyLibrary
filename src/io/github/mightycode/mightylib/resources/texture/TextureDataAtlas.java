@@ -48,16 +48,6 @@ public class TextureDataAtlas extends TextureData {
         texturesMap.put(texture.getDataName(), texture);
         texturesPosition.put(texture.getDataName(), new Vector2i());
 
-        // Sort the list by texture size (width * height)
-        textures.sort((o1, o2) -> {
-            int size1 = o1.getWidth() * o1.getHeight();
-            int size2 = o2.getWidth() * o2.getHeight();
-
-            if (size1 > size2) return -1;
-            else if (size1 < size2) return 1;
-            else return 0;
-        });
-
         if (isLoaded())
             createAtlas();
     }
@@ -67,7 +57,18 @@ public class TextureDataAtlas extends TextureData {
         return createAtlas();
     }
 
+    // A failed texture is replaced by the fallback (its sizes and pixels)
+    private TextureData usable(TextureData texture) {
+        return Resources.getInstance().usable(TextureData.class, texture);
+    }
+
     private boolean createAtlas() {
+        // Biggest first; sizes are known once the textures are loaded
+        textures.sort((o1, o2) -> {
+            TextureData u1 = usable(o1), u2 = usable(o2);
+            return Integer.compare(u2.getWidth() * u2.getHeight(), u1.getWidth() * u1.getHeight());
+        });
+
         placeTextures();
         defaultAspectTexture = textures.get(0).defaultAspectTexture;
         defaultTextureType = textures.get(0).defaultTextureType;
@@ -82,8 +83,8 @@ public class TextureDataAtlas extends TextureData {
         int maxHeightInRow = 0;
 
         for (TextureData texture : textures) {
-            int textureWidth = texture.getWidth();
-            int textureHeight = texture.getHeight();
+            int textureWidth = usable(texture).getWidth();
+            int textureHeight = usable(texture).getHeight();
 
             // If the texture exceeds the remaining width, move to the next row
             if (currentX + textureWidth > atlasWidth) {
@@ -111,12 +112,16 @@ public class TextureDataAtlas extends TextureData {
     public boolean constructTexture(){
         // fill an array with black pixels
         atlas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = atlas.createGraphics();
 
         for (TextureData texture : textures) {
             Vector2i position = texturesPosition.get(texture.getDataName());
 
-            g2d.drawImage(texture.loadBufferedImage(), position.x, position.y, null);
+            // From the loaded pixels: no second read of the file, and the fallback has no file
+            TextureData source = usable(texture);
+            int[] pixels = new int[source.getWidth() * source.getHeight()];
+            for (int i = 0; i < pixels.length; ++i)
+                pixels[i] = source.getPixel(i);
+            atlas.setRGB(position.x, position.y, source.getWidth(), source.getHeight(), pixels, 0, source.getWidth());
         }
 
         setBufferedImage(atlas);

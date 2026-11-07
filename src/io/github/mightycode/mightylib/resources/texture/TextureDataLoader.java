@@ -31,11 +31,12 @@ public class TextureDataLoader extends ResourceLoader {
     @Override
     public void create(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString(LIST_TEXTURES));
-
-        TextureData texture = new TextureData("error", Resources.FOLDER + "textures/error.png");
-
-        data.put("error", texture);
         create(data, obj, "");
+    }
+
+    @Override
+    public DataType createFallback() {
+        return new FallbackTextureData();
     }
 
     @Override
@@ -88,14 +89,17 @@ public class TextureDataLoader extends ResourceLoader {
 
         TextureData textureData = (TextureData) dataType;
 
-        try {
-            BufferedImage image = ImageIO.read(new FileInputStream(textureData.path()));
-            textureData.setBufferedImage(image);
-
+        // Failing here makes the preload fail: the fallback replaces the texture
+        BufferedImage image;
+        try (FileInputStream input = new FileInputStream(textureData.path())) {
+            image = ImageIO.read(input);
         } catch (Exception e) {
-            System.err.println("Can't find the path for :");
-            System.err.println(textureData.path() + "\n");
-            e.printStackTrace();
+            throw new IllegalStateException("Can't read the texture file " + textureData.path(), e);
         }
+
+        if (image == null)
+            throw new IllegalStateException("Unknown image format: " + textureData.path());
+
+        textureData.setBufferedImage(image);
     }
 }

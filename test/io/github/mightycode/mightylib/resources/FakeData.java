@@ -51,8 +51,11 @@ public class FakeData extends DataType {
         if (live)
             error("loaded twice");
 
-        if (!canBeLoad())
-            error("loaded before its dependencies");
+        // A failed dependency is replaced by its fallback
+        for (DataType dependency : getDependencies()) {
+            if (!dependency.isLoaded() && !dependency.failed)
+                error("loaded before its dependency " + dependency.getDataName());
+        }
 
         if (mainThread != null && Thread.currentThread() != mainThread)
             error("loaded on " + Thread.currentThread().getName());

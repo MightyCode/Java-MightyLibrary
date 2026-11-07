@@ -126,6 +126,11 @@ public abstract class DataType extends UUID implements LoadingElement {
         references.remove(reference);
     }
 
+    // Main thread: failed and not reloaded since (its fallback is used, if its type has one)
+    public final boolean hasFailed() {
+        return failed;
+    }
+
     public final boolean notReferenced() {
         return references.isEmpty();
     }

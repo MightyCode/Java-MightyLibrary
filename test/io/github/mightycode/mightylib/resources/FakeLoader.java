@@ -7,6 +7,8 @@ import java.util.Map;
 // Creates the given FakeData instead of exploring files
 public class FakeLoader extends ResourceLoader {
     private final List<FakeData> toCreate = new ArrayList<>();
+    // Given by createFallback when set
+    FakeData fallback;
 
     FakeLoader add(FakeData data) {
         toCreate.add(data);
@@ -27,6 +29,11 @@ public class FakeLoader extends ResourceLoader {
     public void create(Map<String, DataType> data) {
         for (FakeData fake : toCreate)
             data.put(fake.getDataName(), fake);
+    }
+
+    @Override
+    public DataType createFallback() {
+        return fallback;
     }
 
     @Override

@@ -532,6 +532,98 @@ class ResourcesLifecycleTest {
         assertEquals(1, broken.referenceCount(), "only the batch references it");
     }
 
+    // ---- Fallbacks ----
+
+    private FakeData withFallback() {
+        FakeData fallback = new FakeData(MAIN_CONTEXT, Resources.FALLBACK_NAME);
+        fakeLoader.fallback = fallback;
+        return fallback;
+    }
+
+    private void startWithFallbacks() {
+        start();
+        resources.loadFallbacks();
+    }
+
+    @Test
+    void usableGivesTheFallbackUntilLoadedThenWhenFailed() throws Exception {
+        FakeData fallback = withFallback();
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        texture.preloadMilliseconds = 30;
+        batch("level", "texture");
+        startWithFallbacks();
+        pump();
+        assertTrue(fallback.isLoaded());
+
+        resources.loadBatch("level");
+        frame();
+        assertSame(fallback, resources.usable(FakeData.class, texture), "still loading");
+        pump();
+        assertSame(texture, resources.usable(FakeData.class, texture));
+
+        // Broken then reloaded: the fallback replaces it, a fixed reload brings it back
+        texture.failLoad = true;
+        resources.reloadAllOfType(FakeData.class);
+        pump();
+        assertSame(fallback, resources.usable(FakeData.class, texture));
+        JSONArray usingFallback = resources.describe().getJSONObject("types").getJSONObject("FakeData")
+                .getJSONArray("usingFallback");
+        assertEquals("texture", usingFallback.getString(0));
+
+        texture.failLoad = false;
+        resources.reloadAllOfType(FakeData.class);
+        pump();
+        assertSame(texture, resources.usable(FakeData.class, texture));
+        assertTrue(fallback.isLoaded(), "the fallback is never reloaded nor unloaded");
+        assertEquals(0, fallback.errors.get());
+    }
+
+    @Test
+    void unknownNameGivesTheFallback() throws Exception {
+        FakeData fallback = withFallback();
+        startWithFallbacks();
+        pump();
+
+        assertSame(fallback, resources.getResourceOrFallback(FakeData.class, "missing"));
+        assertSame(fallback, resources.getResource(FakeData.class, Resources.FALLBACK_NAME));
+    }
+
+    // In debug, a broken texture must not break everything using it: its fallback is used instead
+    @Test
+    void failedDependencyWithFallbackDoesNotFailTheData() throws Exception {
+        withFallback();
+        FakeData broken = fake(THREAD_CONTEXT, "broken");
+        broken.preloadMilliseconds = 20;
+        broken.failLoad = true;
+        FakeData model = fake(THREAD_CONTEXT, "model");
+        model.dependencyToAdd = broken;
+        batch("level", "model");
+        startWithFallbacks();
+
+        resources.loadBatch("level");
+        pump();
+
+        assertTrue(broken.failed);
+        assertTrue(model.isLoaded());
+        assertFalse(model.failed);
+        assertEquals(0, model.errors.get());
+
+        resources.unloadBatch("level");
+        pump();
+        assertFalse(model.isLoaded());
+        assertFalse(broken.failed);
+        assertEquals(0, broken.referenceCount());
+    }
+
+    @Test
+    void failingFallbackThrows() {
+        FakeData fallback = withFallback();
+        fallback.failLoad = true;
+        startWithFallbacks();
+
+        assertThrows(IllegalStateException.class, this::pump);
+    }
+
     @Test
     void strictFailureThrows() throws Exception {
         FakeData broken = fake(MAIN_CONTEXT, "broken");

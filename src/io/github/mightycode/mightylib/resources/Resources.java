@@ -37,6 +37,9 @@ public class Resources {
     private static final String ALL_REFERENCE = "all";
     // Prefix of the references a data adds to its dependencies
     static final String DEPENDENCY_REFERENCE_PREFIX = "dependency:";
+    // Name of the fallback of each type (ResourceLoader.createFallback), and the reference keeping it loaded
+    public static final String FALLBACK_NAME = "error";
+    private static final String FALLBACK_REFERENCE = "fallback";
 
     public static abstract class LoadingMethod{}
     public static class AllResourcesMethod extends LoadingMethod{}
@@ -75,6 +78,10 @@ public class Resources {
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
+    // Fallback by loader type, filled by init then only read
+    private final Map<Class<? extends DataType>, DataType> fallbacks;
+    // Unknown names already reported by getResourceOrFallback (main thread)
+    private final Set<String> reportedUnknownNames;
     private final LoadingMethod loadingMethod;
 
     private final int maxNumberOfWorkers;
@@ -103,6 +110,8 @@ public class Resources {
     private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
         resources = new ConcurrentHashMap<>();
+        fallbacks = new ConcurrentHashMap<>();
+        reportedUnknownNames = new HashSet<>();
         Loaders = new ArrayList<>();
 
         this.maxNumberOfWorkers = Math.max(1, maxNumberOfWorkers);
@@ -144,9 +153,91 @@ public class Resources {
             Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
             resources.put(loader.getType(), map);
+            registerFallback(loader, map);
         }
 
         initialized = true;
+    }
+
+    private void registerFallback(ResourceLoader loader, Map<String, DataType> map) {
+        DataType fallback = loader.createFallback();
+        if (fallback == null)
+            return;
+
+        if (!FALLBACK_NAME.equals(fallback.getDataName()))
+            throw new IllegalStateException("The fallback of " + loader.getResourceNameType() + " must be named " + FALLBACK_NAME);
+
+        if (map.containsKey(FALLBACK_NAME))
+            System.err.println("--The " + loader.getResourceNameType() + " named " + FALLBACK_NAME
+                    + " is replaced by the fallback of its type");
+
+        fallback.setNotManuallyCreated();
+        map.put(FALLBACK_NAME, fallback);
+        fallbacks.put(loader.getType(), fallback);
+    }
+
+    // Referenced for the whole program: loaded first, unloaded at the exit
+    void loadFallbacks() {
+        runOnMainThread(() -> {
+            for (DataType fallback : fallbacks.values())
+                addReferenceAndUpdate(fallback, FALLBACK_REFERENCE);
+        });
+    }
+
+    // ---- Fallbacks ----
+
+    // Fallback of the type, or of its closest parent type with a loader; null without fallback
+    public <T extends DataType> T getFallback(Class<T> type) {
+        DataType fallback = fallbackOf(type);
+        return type.isInstance(fallback) ? type.cast(fallback) : null;
+    }
+
+    // A ColorTextureData uses the TextureData fallback
+    private DataType fallbackOf(Class<?> type) {
+        for (Class<?> current = type; current != null && DataType.class.isAssignableFrom(current); current = current.getSuperclass()) {
+            DataType fallback = fallbacks.get(current);
+            if (fallback != null)
+                return fallback;
+        }
+
+        return null;
+    }
+
+    private boolean hasFallback(DataType data) {
+        return fallbackOf(data.getClass()) != null;
+    }
+
+    public boolean isFallback(DataType data) {
+        return data != null && fallbackOf(data.getClass()) == data;
+    }
+
+    /**
+     * What to use for this data now: the data itself when loaded, otherwise the fallback of the type
+     * (data failed, still loading or null), or the data as is when the type has no fallback.
+     */
+    public <T extends DataType> T usable(Class<T> type, T data) {
+        if (data != null && data.isLoaded())
+            return data;
+
+        T fallback = getFallback(type);
+        return fallback != null ? fallback : data;
+    }
+
+    // getResource, with the fallback of the type for an unknown name (reported once per name)
+    public <T extends DataType> T getResourceOrFallback(Class<T> type, String name) {
+        T data = getResource(type, name);
+        if (data != null)
+            return data;
+
+        T fallback = getFallback(type);
+        String key = type.getSimpleName() + " " + name;
+        if (strict)
+            throw new IllegalStateException("Strict resources: unknown " + key);
+
+        if (reportedUnknownNames.add(key))
+            System.err.println("--Unknown " + key + (fallback != null ? ", its fallback is used" : ""));
+
+        return fallback;
     }
 
 
@@ -154,9 +245,8 @@ public class Resources {
         if (firstLoadDone)
             return;
 
-        // Load the texture error
-        DataType dataType = resources.get(TextureData.class).get("error");
-        addReferenceAndUpdate(dataType, "mandatory");
+        // Fallbacks first: they replace the data still loading
+        loadFallbacks();
 
         System.out.println("--Load Resources");
         if (loadingMethod instanceof BatchResourcesMethod){
@@ -242,6 +332,7 @@ public class Resources {
             JSONArray loadedNotReferenced = new JSONArray();
             JSONArray referencedNotLoaded = new JSONArray();
             JSONArray onlyAsDependency = new JSONArray();
+            JSONArray usingFallback = new JSONArray();
 
             for (DataType data : ofType.getValue().values()) {
                 boolean isReferenced = !data.notReferenced();
@@ -250,6 +341,8 @@ public class Resources {
                 if (isReferenced) ++referenced;
                 if (isReferenced && onlyReferencedAsDependency(data))
                     onlyAsDependency.put(data.getDataName());
+                if (isReferenced && data.failed && hasFallback(data))
+                    usingFallback.put(data.getDataName());
 
                 if (data.isLoaded() && !isReferenced)
                     loadedNotReferenced.put(data.getDataName());
@@ -271,6 +364,9 @@ public class Resources {
             // Wanted only because another data depends on it (not listed by a batch nor added by the code)
             if (!onlyAsDependency.isEmpty())
                 type.put("onlyAsDependency", onlyAsDependency);
+            // Failed, replaced by the fallback of the type until reloaded
+            if (!usingFallback.isEmpty())
+                type.put("usingFallback", usingFallback);
 
             types.put(ofType.getKey().getSimpleName(), type);
         }
@@ -358,19 +454,29 @@ public class Resources {
         acquireDependencies(data);
 
         for (DataType dependency : data.getDependencies()) {
-            if (dependency.failed) {
+            // A failed dependency with a fallback is replaced by it (Resources.usable): the data can be loaded
+            if (dependency.failed && !hasFallback(dependency)) {
                 fail(data, "its dependency " + dependency.getClass().getSimpleName() + " "
                         + dependency.getDataName() + " failed");
                 return;
             }
         }
 
-        if (!data.canBeLoad()) {
+        if (!dependenciesReady(data)) {
             waitDependencies(data);
         } else {
             stopWaitingDependencies(data);
             startStep(data, false);
         }
+    }
+
+    private boolean dependenciesReady(DataType data) {
+        for (DataType dependency : data.getDependencies()) {
+            if (!dependency.isLoaded() && !(dependency.failed && hasFallback(dependency)))
+                return false;
+        }
+
+        return true;
     }
 
     // A wanted data references its dependencies (known once preloaded), so they are loaded without being listed
@@ -399,10 +505,12 @@ public class Resources {
      */
     private void fail(DataType data, String reason) {
         String message = data.getClass().getSimpleName() + " " + data.getDataName() + " failed: " + reason;
-        if (strict)
-            throw new IllegalStateException("Strict resources: " + message);
+        // A fallback must never fail: nothing could replace it
+        if (strict || isFallback(data))
+            throw new IllegalStateException((strict ? "Strict resources: " : "Fallback failed: ") + message);
 
-        System.err.println("--" + message);
+        boolean replaced = hasFallback(data);
+        System.err.println("--" + message + (replaced ? ", its fallback is used" : ""));
 
         data.failed = true;
         stopWaitingDependencies(data);
@@ -412,7 +520,13 @@ public class Resources {
         List<DataType> waiters = new ArrayList<>(data.waiters);
         data.waiters.clear();
         for (DataType waiter : waiters) {
-            if (waiter.waitingDependencies && !waiter.failed)
+            if (!waiter.waitingDependencies || waiter.failed)
+                continue;
+
+            // Replaced by the fallback: the waiters go on with it
+            if (replaced)
+                toUpdate.add(waiter);
+            else
                 fail(waiter, "its dependency " + data.getClass().getSimpleName() + " " + data.getDataName() + " failed");
         }
     }
@@ -684,11 +798,12 @@ public class Resources {
     public void reloadAllOfType(Class<? extends DataType> typeOfResource) {
         runOnMainThread(() -> {
             for (DataType dataType : resources.get(typeOfResource).values()) {
-                // Preloaded by the code: nothing to read again
-                if (dataType.preloadedByCode)
+                // Preloaded or generated by the code: nothing to read again
+                if (dataType.preloadedByCode || isFallback(dataType))
                     continue;
 
-                if (dataType.isLoaded() || dataType.jobRunning) {
+                // A failed data is read again too: fixed, it replaces its fallback
+                if (dataType.isLoaded() || dataType.jobRunning || dataType.failed) {
                     dataType.reloadWanted = true;
                     requestUpdate(dataType);
                 }

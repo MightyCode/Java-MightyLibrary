@@ -39,7 +39,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
     private int textureType;
 
     public static void CreateErrorTexture() {
-        GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture("error"), "error");
+        GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture(Resources.FALLBACK_NAME), Resources.FALLBACK_NAME);
     }
 
     public static void DeletePlaceholder() {
@@ -67,15 +67,9 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         this(findData(name));
     }
 
-    // A missing texture would wait forever to be loaded (and block a loading screen): the error texture replaces it
+    // A missing texture would wait forever to be loaded (and block a loading screen): the fallback replaces it
     private static TextureData findData(String name) {
-        TextureData data = Resources.getInstance().getResource(TextureData.class, name);
-        if (data == null) {
-            System.err.println("--Texture data not found : " + name + ", the error texture is used");
-            data = Resources.getInstance().getResource(TextureData.class, "error");
-        }
-
-        return data;
+        return Resources.getInstance().getResourceOrFallback(TextureData.class, name);
     }
 
     public Texture(TextureData data) {
@@ -105,11 +99,25 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             // Called for each draw: avoid building the message when checks are disabled
             if (Logger.DO_CHECK)
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
-        // Still waiting to be sent to the graphic card: transparent until then
+        // Failed or still loading: the fallback texture instead
         } else {
-            glBindTexture(GL_TEXTURE_2D, getPlaceholderId());
+            glBindTexture(GL_TEXTURE_2D, getFallbackId());
             EngineStats.countTextureBind();
         }
+    }
+
+    // Texture of the fallback data (CreateErrorTexture), transparent until it is sent itself
+    private int getFallbackId() {
+        Texture fallback = GLResources.getInstance().getResource(Texture.class, Resources.FALLBACK_NAME);
+        if (fallback != null && fallback != this && fallback.isLoaded())
+            return fallback.textureId;
+
+        return getPlaceholderId();
+    }
+
+    // Data giving the size: the fallback one while this one is not loaded
+    private TextureData sizeData() {
+        return Resources.getInstance().usable(TextureData.class, data);
     }
 
     private boolean isSentByStrips() {
@@ -224,17 +232,17 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     @Override
     public int getRenderTextureId() {
-        return isLoaded() ? textureId : getPlaceholderId();
+        return isLoaded() ? textureId : getFallbackId();
     }
 
     @Override
     public int getWidth() {
-        return data.getWidth();
+        return isLoaded() ? data.getWidth() : sizeData().getWidth();
     }
 
     @Override
     public int getHeight() {
-        return data.getHeight();
+        return isLoaded() ? data.getHeight() : sizeData().getHeight();
     }
 
     @Override

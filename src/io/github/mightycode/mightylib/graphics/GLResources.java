@@ -76,9 +76,14 @@ public class GLResources {
         }
     }
 
-    // True while elements wait to be loaded (an element whose dependencies never load keeps it true)
+    // True while elements wait to be loaded, except those waiting for a failed data (they use the fallback)
     public boolean hasElementsToLoad() {
-        return !elementToLoad.isEmpty();
+        for (GLElement element : elementToLoad) {
+            if (!element.blockedByFailure())
+                return true;
+        }
+
+        return false;
     }
 
     /**

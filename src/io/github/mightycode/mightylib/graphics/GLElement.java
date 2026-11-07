@@ -88,6 +88,16 @@ public abstract class GLElement implements LoadingElement {
         return true;
     }
 
+    // A data needed by this element failed: it waits for a reload, its users get the fallback meanwhile
+    boolean blockedByFailure() {
+        for (DataType type : resourceDependencies) {
+            if (type.hasFailed())
+                return true;
+        }
+
+        return false;
+    }
+
     public abstract void unload(int remainingMilliseconds);
 
     void unloadByResource(int remainingMilliseconds) {

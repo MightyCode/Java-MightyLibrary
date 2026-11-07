@@ -11,6 +11,7 @@ import java.util.Map;
 
 public class TileSet extends SingleSourceDataType {
     private String texture;
+    private TextureData textureData;
     private final Vector2i tileSize;
     private final Vector2i tileNumber;
     private boolean useRotation, useFlip;
@@ -84,12 +85,9 @@ public class TileSet extends SingleSourceDataType {
 
         this.texture = texture;
 
-        TextureData text = Resources.getInstance().getResource(TextureData.class, texture);
-        System.out.println("Texture " + texture + " " + text);
-        addDependency(text);
-
-        tileNumber.x = text.getWidth() / tileSize.x;
-        tileNumber.y = text.getHeight() / tileSize.y;
+        // Unknown texture: the fallback one. The number of tiles is known once the texture is loaded (internLoad)
+        textureData = Resources.getInstance().getResourceOrFallback(TextureData.class, texture);
+        addDependency(textureData);
     }
 
     public Vector2i tilesNumberAxis() {
@@ -157,10 +155,14 @@ public class TileSet extends SingleSourceDataType {
 
     @Override
     protected boolean internLoad() {
-        if (!(tileNumber.x != 0 && tileNumber.y != 0))
+        if (textureData == null || tileSize.x <= 0 || tileSize.y <= 0)
             return false;
 
-        return !texture.equals("error");
+        // A failed texture is replaced by the fallback: at least one tile, so the map can still be drawn
+        TextureData usable = Resources.getInstance().usable(TextureData.class, textureData);
+        tileNumber.x = Math.max(1, usable.getWidth() / tileSize.x);
+        tileNumber.y = Math.max(1, usable.getHeight() / tileSize.y);
+        return true;
     }
 
 
@@ -169,6 +171,7 @@ public class TileSet extends SingleSourceDataType {
         useRotation = false;
         useFlip = false;
         texture = "error";
+        textureData = null;
 
         tileNumber.x = 0;
         tileNumber.y = 0;
