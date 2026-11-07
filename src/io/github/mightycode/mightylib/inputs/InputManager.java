@@ -36,6 +36,10 @@ public class InputManager {
 
     private final MouseManager mouseManager;
 
+    // Shared by all the contexts, updated by the ContextManager
+    private final GamepadManager gamepadManager;
+    public GamepadManager getGamepadManager() { return gamepadManager; }
+
     private final Map<Integer, ActionInput> actionConfigurations;
 
     // Simulated actions (commands, scripts), combined with the real inputs
@@ -47,9 +51,10 @@ public class InputManager {
      * Input manager class.
      * Instance the class, set the input and its types.
      */
-    public InputManager(KeyboardManager keyManager, MouseManager mouseManager){
+    public InputManager(KeyboardManager keyManager, MouseManager mouseManager, GamepadManager gamepadManager){
         this.keyManager = keyManager;
         this.mouseManager = mouseManager;
+        this.gamepadManager = gamepadManager;
 
         actionConfigurations = new HashMap<>();
         simulation = new InputSimulation();

@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
 import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.GamepadManager;
 
 public class InputSimple implements IAction {
     private final int inputId;
@@ -21,6 +22,8 @@ public class InputSimple implements IAction {
                return inputManager.getKeyboardManager().getKeyState(inputId);
            case Mouse:
                return inputManager.getMouseManager().getState(inputId);
+           case Controller:
+               return inputManager.getGamepadManager().getButton(inputId, GamepadManager.ANY_PLAYER);
        }
 
        return false;
@@ -33,6 +36,8 @@ public class InputSimple implements IAction {
                 return inputManager.getKeyboardManager().keyPressed(inputId);
             case Mouse:
                 return inputManager.getMouseManager().buttonPressed(inputId);
+            case Controller:
+                return inputManager.getGamepadManager().buttonPressed(inputId, GamepadManager.ANY_PLAYER);
         }
 
         return false;
@@ -45,6 +50,8 @@ public class InputSimple implements IAction {
                 return inputManager.getKeyboardManager().keyReleased(inputId);
             case Mouse:
                 return inputManager.getMouseManager().buttonReleased(inputId);
+            case Controller:
+                return inputManager.getGamepadManager().buttonReleased(inputId, GamepadManager.ANY_PLAYER);
         }
 
         return false;

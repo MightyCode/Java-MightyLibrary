@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.inputs.GamepadManager;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 
@@ -21,6 +22,7 @@ public class ContextManager {
 
     private String mainContext;
     private final Map<String, Context> contexts;
+    private GamepadManager gamepadManager;
 
     private ContextManager(){
         contexts = new HashMap<>();
@@ -49,7 +51,7 @@ public class ContextManager {
 
         KeyboardManager keyboardManager = new KeyboardManager(window.getInfo(), keyboardLanguage);
         MouseManager mouseManager = new MouseManager(window.getInfo());
-        InputManager inputManager = new InputManager(keyboardManager, mouseManager);
+        InputManager inputManager = new InputManager(keyboardManager, mouseManager, getGamepadManager());
         inputManager.init(new ActionInput[]{});
 
         return contexts.put(context, new Context(window, inputManager, keyboardManager, mouseManager)) != null;
@@ -87,7 +89,20 @@ public class ContextManager {
         return true;
     }
 
+    // Gamepads don't belong to a window : one manager for all the contexts, created with the first one (GLFW initialized)
+    public GamepadManager getGamepadManager(){
+        if (gamepadManager == null) {
+            gamepadManager = new GamepadManager();
+            gamepadManager.init();
+        }
+
+        return gamepadManager;
+    }
+
     public void postUpdate(){
+        if (gamepadManager != null)
+            gamepadManager.postUpdate();
+
         for (Context context : contexts.values()){
             context.postUpdate();
         }
@@ -96,6 +111,11 @@ public class ContextManager {
     public void unload(){
         for (Context context : contexts.values()){
             context.unload();
+        }
+
+        if (gamepadManager != null) {
+            gamepadManager.unload();
+            gamepadManager = null;
         }
     }
 }

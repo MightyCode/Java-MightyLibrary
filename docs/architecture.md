@@ -80,6 +80,11 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 ### Inputs
 - Les IDs d'action sont des `int` alloués statiquement via `InputManager.getAndIncrementId()` (0 et 1 réservés : `COMMAND`, `RELOAD_TEXTURE`). Projet : `ActionId` + bindings dans `ProjectLoading.contextLoading`.
 - La disposition clavier vient de `EngineConfig.setKeyboardLanguage()` (QWERTY par défaut, et si un contexte est créé sans `WindowCreationInfo`).
+- **Manettes** : un seul `GamepadManager` pour tous les contextes (`ContextManager.getGamepadManager()`, aussi `InputManager.getGamepadManager()`), mis à jour par `ContextManager.postUpdate` avant les contextes. Lecture GLFW (`glfwGetGamepadState` : disposition Xbox standard quel que soit le modèle, base SDL_GameControllerDB intégrée ; `addMappings` pour une manette inconnue) derrière `IGamepadSource`, remplacée par une fausse source dans les tests.
+  - Emplacements : un par id de joystick GLFW (0 à 15), puis 8 manettes virtuelles (16+) pour les tests et le multijoueur avec une seule manette. Connexions (rappel `glfwSetJoystickCallback`, ou lecture échouée) appliquées dans `postUpdate` : un tick voit un ensemble stable ; `connectedThisTick()`/`disconnectedThisTick()` durent un tick.
+  - Joueurs : une manette connectée prend le plus petit joueur libre, et reprend le sien en se reconnectant s'il est encore libre ; `setAutoAssign(false)` + `assignPlayer` pour un écran « appuyez pour rejoindre ». Un joystick sans mapping est connecté mais sans joueur.
+  - `Gamepad` : boutons/axes par ids GLFW (`GLFW_GAMEPAD_BUTTON_A`, `GLFW_GAMEPAD_AXIS_LEFT_X`…) ; sticks de -1 à 1 (y positif vers le bas, comme la fenêtre) avec zone morte radiale remise à l'échelle ; gâchettes de 0 à 1.
+  - Actions : `InputGamepadButton(bouton[, joueur])`, `InputGamepadAxis(axe, POSITIVE|NEGATIVE[, seuil, joueur])` (axe utilisé comme bouton), `InputSimple(bouton, EInputType.Controller)` ; sans joueur = `GamepadManager.ANY_PLAYER` (n'importe quelle manette). La valeur analogique se lit sur `GamepadManager.getAxis(axe, joueur)` ou `Gamepad`.
 
 ### Temps
 - `GameTime.DeltaTime()` : temps réel mesuré entre deux ticks (variable). `GameTime.FixedDeltaTime()` : durée fixe d'un tick (1/TPS), **à utiliser pour la physique** (`world.step` de JBox2D).
