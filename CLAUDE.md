@@ -27,6 +27,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Répertoire de travail = racine du dépôt (ressources lues depuis `resources/`). Point d'entrée : `io.github.mightycode.mightylibdemo.main.Main`.
 
 ## Règles pour Claude
+- **Penser à long terme, à l'échelle d'un vrai jeu** (des milliers de ressources, chargement en continu, nombreuses scènes, mods, projets tiers), pas à celle de la démo : une solution qui suffit à la démo mais ne tiendra pas à cette échelle doit être signalée comme telle, avec la cible durable, et inscrite dans `docs/current.md` ou `docs/later.md`. Préférer corriger le modèle qui produit les bugs plutôt qu'empiler des pansements.
 - **Économiser les tokens** : lire des extraits (Grep, Read avec offset/limit) plutôt que des fichiers entiers ; filtrer les journaux ; réponses courtes ; pas de capture d'écran sauf rendu impossible à vérifier autrement (une seule à la fois, et seulement la zone utile avec `screenshot rect x y largeur hauteur` ou `corners x y x2 y2` quand on sait où regarder ; cadrer avec la commande `camera`) ; si une information manque, ajouter une commande qui la renvoie en texte/JSON.
 - Ne jamais importer `io.github.mightycode.mightylibdemo.*` depuis `mightylib` (passer les IDs en paramètre).
 - Tout code GL s'exécute sur le thread principal (y revenir par `MainThread.execute`) ; les tâches de `Workers` (dont les workers de `Resources`) ne font que de l'I/O/CPU. Pas de `new Thread` pour une tâche courte : utiliser `Workers`. Toujours créer/détruire les objets GL via `GenDeleteResources`.
