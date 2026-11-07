@@ -23,6 +23,8 @@ public class Text extends Renderer implements Cloneable {
 
     private FontFace font;
     private FontFace builtWithFont;
+    // Version of the font the characters were placed with (a reloaded font file changes them)
+    private int builtWithVersion;
     private String text;
 
     private final Vector2f leftUpPosition;
@@ -68,7 +70,8 @@ public class Text extends Renderer implements Cloneable {
         if (shouldNotDrawText())
             return;
 
-        if (usedFont() != builtWithFont)
+        FontFace used = usedFont();
+        if (used != builtWithFont || used.getVersion() != builtWithVersion)
             computeRightUpPosition();
 
         super.display();
@@ -220,6 +223,7 @@ public class Text extends Renderer implements Cloneable {
             builtWithFont = used;
             setMainTextureChannel(used.getTexture().getDataName());
         }
+        builtWithVersion = used.getVersion();
 
         leftUpPosition.x = position.x;
         leftUpPosition.y = position.y;
