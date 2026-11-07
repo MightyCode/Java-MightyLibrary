@@ -13,4 +13,9 @@ public abstract class SingleSourceDataType extends DataType {
     }
 
     public final String path(){ return this.path; }
+
+    @Override
+    public final boolean hasSource() {
+        return validPath();
+    }
 }

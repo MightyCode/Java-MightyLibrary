@@ -28,6 +28,11 @@ public abstract class MultiSourceDataType extends DataType {
         sourceLoaded[index] = true;
     }
 
+    @Override
+    public final boolean hasSource() {
+        return validPaths();
+    }
+
     public boolean validPaths() {
         for (String path : sourcesPath){
             if (path == null || path.isEmpty()){
