@@ -10,6 +10,8 @@ import static org.lwjgl.openal.AL10.alGenSources;
 public class SoundSource {
     private SoundData soundData;
     private int sourceId;
+    // Buffer given to the source: the sound, or the fallback while the sound isn't loaded (0 = none)
+    private int boundBufferId;
     private boolean loop, relative;
 
     private float gain;
@@ -38,14 +40,25 @@ public class SoundSource {
     private boolean setSoundData(String soundName) {
         stop();
 
-        this.soundData = Resources.getInstance().getResource(SoundData.class, soundName);
+        // Unknown name: the fallback sound
+        this.soundData = Resources.getInstance().getResourceOrFallback(SoundData.class, soundName);
         if (soundData == null)
             return false;
 
-        AL10.alSourcei(sourceId, AL10.AL_BUFFER, soundData.getBufferId());
-        
-
+        bindUsableBuffer();
         return true;
+    }
+
+    // The sound if loaded, otherwise the fallback (failed or still loading): checked again at each play
+    private void bindUsableBuffer() {
+        SoundData usable = Resources.getInstance().usable(SoundData.class, soundData);
+        int bufferId = usable == null || !usable.isLoaded() ? 0 : usable.getBufferId();
+
+        if (bufferId != boundBufferId) {
+            AL10.alSourceStop(sourceId);
+            AL10.alSourcei(sourceId, AL10.AL_BUFFER, bufferId);
+            boundBufferId = bufferId;
+        }
     }
 
 
@@ -123,6 +136,8 @@ public class SoundSource {
     public void play() {
         hadPlayed = true;
 
+        if (soundData != null)
+            bindUsableBuffer();
         AL10.alSourcePlay(sourceId);
     }
 

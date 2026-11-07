@@ -50,12 +50,13 @@ public class Shape {
     private int glDrawMode;
 
     protected Shader shader;
-    public Shader getShader() { return shader; }
+    // The shader if loaded, otherwise the fallback one (failed or still loading)
+    public Shader getShader() { return Resources.getInstance().usable(Shader.class, shader); }
 
     public Shape(String shaderName, boolean useEbo) {
         setDrawMode(EDrawMode.Triangles);
 
-        shader = Resources.getInstance().getResource(Shader.class, shaderName);
+        shader = Resources.getInstance().getResourceOrFallback(Shader.class, shaderName);
         setDimensionTo2D(this.shader.isDimension2DShader());
 
         verticesToDraw = 0;
@@ -311,12 +312,12 @@ public class Shape {
 
 
     public void applyShader(){
-        shader.use();
+        getShader().use();
     }
 
 
     public ID getShaderId(){
-        return new ID(shader.getShaderId());
+        return new ID(getShader().getShaderId());
     }
 
 

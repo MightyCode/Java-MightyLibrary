@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.resources.ResourceLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -33,6 +34,11 @@ public class ShaderLoader extends ResourceLoader {
     @Override
     public String getResourceNameType() {
         return "Shader";
+    }
+
+    @Override
+    public DataType createFallback() {
+        return new FallbackShader(shaderManager.getVersion());
     }
 
     @Override
@@ -110,40 +116,19 @@ public class ShaderLoader extends ResourceLoader {
             geometryShaderPath = SHADER_INFO_PATH + shaderManager.getVersion() + "/" + shader.getSourcePath(2);
         }
 
-        String vertexShaderContent = "error";
+        // A missing file or a compilation error makes the preload fail: the fallback replaces the shader
+        shader.setShaderContent(0, completeWithLibraryFile(readSource(vertexShaderPath)));
+        shader.setShaderContent(1, completeWithLibraryFile(readSource(fragmentShaderPath)));
 
-        try {
-            vertexShaderContent = FileMethods.readFileAsString(vertexShaderPath);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.print("Error path :" + vertexShaderPath + " not found");
-        }
+        if (useGeometryShader)
+            shader.setShaderContent(2, completeWithLibraryFile(readSource(geometryShaderPath)));
+    }
 
-        shader.setShaderContent(0, completeWithLibraryFile(vertexShaderContent));
+    private static String readSource(String path) {
+        if (!new File(path).isFile())
+            throw new IllegalStateException("Shader file not found: " + path);
 
-        String fragmentShaderContent = "error";
-
-        try {
-            fragmentShaderContent = FileMethods.readFileAsString(fragmentShaderPath);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.print("Error path :" + fragmentShaderPath + " not found");
-        }
-
-        shader.setShaderContent(1, completeWithLibraryFile(fragmentShaderContent));
-
-        if (useGeometryShader) {
-            String geometryShaderContent = "error";
-
-            try {
-                geometryShaderContent = FileMethods.readFileAsString(geometryShaderPath);
-            } catch (Exception e) {
-                e.printStackTrace();
-                System.err.print("Error path :" + geometryShaderPath + " not found");
-            }
-
-            shader.setShaderContent(2,  completeWithLibraryFile(geometryShaderContent));
-        }
+        return FileMethods.readFileAsString(path);
     }
 
     public String completeWithLibraryFile(String content) {

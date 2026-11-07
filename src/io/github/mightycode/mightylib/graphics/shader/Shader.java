@@ -12,16 +12,15 @@ import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
 public class Shader extends MultiSourceDataType {
-    private static class MissingLinkRuntimeException extends RuntimeException {
-        public MissingLinkRuntimeException(String message) {
-            super(message);
-        }
-    }
+    // Uniforms already reported missing, cleared when the program is deleted
+    private final Set<String> missingUniforms = new HashSet<>();
 
     private String vertexContent, fragmentContent;
     private String geometryContent;
@@ -235,14 +234,12 @@ public class Shader extends MultiSourceDataType {
         if (Logger.DO_CHECK)
             Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 
+        // Removed by the GLSL compiler when unused, or absent from the fallback shader: reported once, ignored
         if (link == -1) {
-            System.out.println("Program content :\n=======\n " + vertexContent
-                    + "\n======\n" + fragmentContent + "\n=======\n");
-            System.out.println("Following program link not found : " + value.getName() + " in shader " + getDataName()
-                    + " (id : " + shaderProgram + ")");
-
-            // stack trace :
-            throw new MissingLinkRuntimeException(Logger.getCurrentStackTrace());
+            if (missingUniforms.add(value.getName()))
+                System.err.println("--Uniform " + value.getName() + " not found in shader " + getDataName()
+                        + " (unused or absent), its values are ignored");
+            return;
         }
 
         if (value.getType() == Float.class) {
@@ -302,5 +299,12 @@ public class Shader extends MultiSourceDataType {
 
         lastValues.clear();
         uniformLocations.clear();
+        missingUniforms.clear();
+    }
+
+    // Failed to compile or link: delete what was created
+    @Override
+    protected void internCancelPreload() {
+        internUnload();
     }
 }

@@ -52,6 +52,8 @@ public class SoundData extends SingleSourceDataType {
             int error = alGetError();
             if (error != AL_NO_ERROR)
                 SoundManager.DisplayError("al delete buffers (" + path + ")", error);
+            // Loaded again by a reload
+            this.bufferId = -1;
         }
     }
 }

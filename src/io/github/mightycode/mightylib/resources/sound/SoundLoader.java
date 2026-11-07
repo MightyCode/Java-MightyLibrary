@@ -33,6 +33,11 @@ public class SoundLoader extends ResourceLoader {
     }
 
     @Override
+    public DataType createFallback() {
+        return new FallbackSoundData();
+    }
+
+    @Override
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
@@ -58,9 +63,9 @@ public class SoundLoader extends ResourceLoader {
 
         SoundLoadInfo info = new SoundLoadInfo();
 
-        if (path.indexOf("ogg", lastIndex) != -1)
-            if(!loadOgg(path, info))
-                return;
+        // Failing here makes the preload fail: the fallback replaces the sound
+        if (path.indexOf("ogg", lastIndex) == -1 || !loadOgg(path, info))
+            throw new IllegalStateException("Can't read the sound file " + path);
 
         sound.setSoundLoadInfo(info);
     }
