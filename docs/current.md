@@ -1,25 +1,23 @@
 # Gros point actuel — API : corrections urgentes
 
-Seul le gros point en cours est ici. La feuille de route globale est la chaîne `docs/later.md` → `docs/techniquegraphique.md`. Retirer chaque objectif une fois atteint ; quand ce fichier est vide, prendre le gros point suivant en tête de `docs/later.md`, **en discuter d'abord avec l'utilisateur** pour s'assurer que tout est prévu, puis l'écrire ici.
+Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisateur du point en tête de `later.md`, puis l'écrire ici. Propositions **à valider avec l'utilisateur avant d'appliquer** ; changements cassants maintenant, avant toute version publiée. (U) = le plus urgent.
 
-Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
-
-**Ensuite :**
-- (U) **Pipeline de `Resources`, suite.** Fait (branche `tests`) : propriétaire unique (thread principal), réconciliation état voulu/état réel (une donnée en cours de lecture n'est jamais modifiée, puis réconciliée : remplace générations et pansements `onlyIfUnused`/`afterUnload`), dépendances qui réveillent les données en attente (plus de sondage), `addResourceToProcess` supprimé, commande `resources`, `ResourcesLifecycleTest` (19 tests). Reste :
-  - **rechargement à chaud** (fait, branche `hot-reload`, voir `architecture.md`) : copie lue à part puis échange du contenu, version par donnée, données dépendantes relues en chaîne, `Texture` renvoyée dans une seconde texture GL, `TileMapRenderer`/`Text`/`ModelRenderer` suivent la version, atlas des `TileMap` devenu un contenu de la carte, `Resources.reload(donnée)`. L'`IIOException` n'a plus été vue. Reste :
-    - **observateur de fichiers** (et rechargement des ressources d'un mod) qui appelle `reload(donnée)` sur ce qui a changé : `reload all` reste un outil de debug ;
-    - **mémoire** : ancienne et nouvelle version coexistent ; un `reload` de milliers de données crée toutes les copies d'un coup (les lectures sont bornées par les workers, pas les copies lues qui attendent leurs dépendances) → limiter le nombre de copies en cours ;
-    - deux relectures rapprochées relisent la copie en entier (pas d'annulation, voir priorités) ;
-    - `NetworkConfiguration` et `WaveCollapseRules` n'ont pas de copie (vidées pendant la relecture) ;
-  - **échecs attendus** (fichier manquant…) : la pile d'appels est affichée comme pour un bug → exception dédiée (`ResourceException`) affichée sans pile ;
-  - `leaves.obj` (Test3DScene) ne passe pas Assimp (`OBJ: vertex index out of range`) : le cube de secours s'affiche, et `--strict` arrête le jeu ;
-  - **priorités** (ressources de la scène courante avant le préchargement de la suivante) et **annulation** des lectures devenues inutiles : aujourd'hui une lecture inutile va au bout, puis la donnée est déchargée ;
-  - files : `Resources` garde sa file (`inbox`, vidée par `process`) et ses étapes `MAIN_CONTEXT` ; à fusionner avec `MainThread` et `GLResources` sous un même budget de frame ;
-  - dépendances (fait : référencées automatiquement, échec propagé en chaîne, `onlyAsDependency` dans `resources`). Reste : un **cycle** de dépendances attend sans fin (chaque donnée garde l'autre) → le détecter et faire échouer le cycle ; **voir à l'avance** ce qu'un batch va charger, dépendances comprises, et son **poids** (aucune taille n'est mesurée aujourd'hui : taille estimée par `DataType`, mémoire CPU et GPU, totalisée par batch et dans `resources`) ;
-  - `DataType` lit encore `Resources.getInstance()` dans son constructeur (voir singletons ci-dessous).
-- **Chargement GL, suite** (le chargement par tranches avec le reste de la frame est fait, mesuré par `TestGLLoading`) : PBO, ou contexte GL partagé dans un second thread (fenêtre GLFW cachée + `glFenceSync`), seulement si des mesures montrent que les bandes ne suffisent pas (dépendant des pilotes, complexe). `ModelRenderer` envoie un mesh par frame ; `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.
-- **Singletons statiques** (`Resources`, `GLResources`, `ShaderManager`, `ContextManager`, `SoundManager`) et `Resources.getInstance()` qui crée une instance par défaut en silence → accès via un contexte moteur, ou au minimum échec explicite. Lié à l'injection (`later.md` : Bibliothèque réutilisable).
-- **IDs d'action `int` statiques** (`InputManager.getAndIncrementId`) → identifiants texte avec espace de noms enregistrés au registre. Lié au remappage (`later.md` : Entrées) et au modding.
+- (U) **Pipeline de `Resources`** (propriétaire unique, réconciliation, dépendances, rechargement à chaud : faits, voir `architecture.md`). Reste :
+  - rechargement à chaud :
+    - **observateur de fichiers** (et ressources des mods) qui appelle `reload(donnée)` ; `reload all` reste un outil de debug ;
+    - **mémoire** : ancienne et nouvelle version coexistent, un `reload` de milliers de données crée toutes les copies d'un coup → limiter les copies en cours ;
+    - deux relectures rapprochées relisent tout (pas d'annulation) ;
+    - `NetworkConfiguration`, `WaveCollapseRules` sans copie (vidées pendant la relecture) ;
+  - **échecs attendus** (fichier manquant…) affichés avec pile comme un bug → `ResourceException` sans pile ;
+  - `leaves.obj` (Test3DScene) refusé par Assimp (`OBJ: vertex index out of range`) : cube de secours, `--strict` arrête le jeu ;
+  - **priorités** (scène courante avant préchargement de la suivante) et **annulation** des lectures inutiles (aujourd'hui menées au bout puis déchargées) ;
+  - fusionner les files (`inbox` et étapes `MAIN_CONTEXT` de `Resources`, `MainThread`, `GLResources`) sous un même budget de frame ;
+  - **cycle** de dépendances → attente sans fin : le détecter et le faire échouer ;
+  - **voir à l'avance** ce qu'un batch charge (dépendances comprises) et son **poids** (taille estimée par `DataType`, mémoire CPU/GPU, totaux par batch et dans `resources`) ;
+  - `DataType` lit `Resources.getInstance()` dans son constructeur (cf. singletons).
+- **Chargement GL** (bandes dans le reste de la frame : fait, `TestGLLoading`) : PBO ou contexte partagé (fenêtre cachée + `glFenceSync`) seulement si les mesures l'exigent. `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.
+- **Singletons statiques** (`Resources`, `GLResources`, `ShaderManager`, `ContextManager`, `SoundManager`) et instance par défaut silencieuse de `Resources.getInstance()` → contexte moteur, ou au minimum échec explicite. Lié à l'injection (`later.md`).
+- **IDs d'action `int` statiques** → identifiants texte à espace de noms enregistrés au registre (lié au remappage et au modding).
 - **Champs publics modifiables** (`Resources.Loaders`, `GUIList.GUIs`, `ShouldLoop`, `WindowCreationInfo.Size`…) → méthodes.
-- **Fautes et noms trompeurs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`…
-- **Shaders découpés comme les textures** (TODO `Shader.java`) : aujourd'hui `Shader` (`MAIN_CONTEXT`) lit les `.glsl`, ajoute la bibliothèque GLSL (`ShaderLoader.completeWithLibraryFile`), compile (`setShaderContent`) et lie (`internLoad`) d'un bloc sur le thread principal. Cible : lecture et prétraitement (`#include`, `#define`, variantes) par les workers ; programme GL dans un `GLElement` de `GLResources` (compilation par tranches, références, suivi `gl`) ; avec `GL_KHR_parallel_shader_compile`, compiler sans attendre et interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes. Prépare l'injection de shaders par le projet (`later.md` : Bibliothèque réutilisable) et le rechargement à chaud.
+- **Noms fautifs** : package `lightning` (= `lighting`), `getCurrentTIme`, `canBeLoad`…
+- **Shaders découpés comme les textures** (TODO `Shader.java`) : aujourd'hui lecture, ajout de la bibliothèque GLSL (`ShaderLoader.completeWithLibraryFile`), compilation (`setShaderContent`) et liaison (`internLoad`) d'un bloc sur le thread principal. Cible : lecture et prétraitement (`#include`, `#define`, variantes) par les workers ; programme dans un `GLElement` (compilation par tranches, références, suivi `gl`) ; avec `GL_KHR_parallel_shader_compile`, interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes. Prépare l'injection de shaders et leur rechargement à chaud.

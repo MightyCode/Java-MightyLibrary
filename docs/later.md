@@ -1,151 +1,141 @@
-# Plus tard — Java-MightyLibrary
+# Plus tard
 
-Feuille de route globale, dans l'ordre : ce fichier, puis `docs/techniquegraphique.md`. Le gros point en cours est dans `docs/current.md`. Quand il est terminé, le gros point suivant (en tête de ce fichier) est **discuté avec l'utilisateur** pour s'assurer que tout est prévu, puis déplacé dans `docs/current.md`.
+Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en cours : `current.md`. Quand il est fini, **discuter** du point en tête de ce fichier avec l'utilisateur, puis le déplacer dans `current.md`.
 
 ## Gamma : rendu linéaire activable et réglable (en premier)
-LearnOpenGL « Gamma Correction ». À faire en premier : l'activer change toutes les couleurs à l'écran, mieux vaut le décider avant d'accumuler du contenu.
-- **Principe** : les écrans affichent `couleur^2.2` environ ; les images et les couleurs choisies à l'œil sont donc stockées en sRGB (déjà « pré-éclaircies »). Les calculs (éclairage, mélange alpha, filtrage, dégradés, particules additives) ne sont justes qu'en espace linéaire. Chaîne correcte : textures sRGB converties en linéaire à la lecture → calculs en linéaire → conversion en sRGB à l'écriture à l'écran.
-- **Constat** : aucune gestion (pas de `GL_SRGB*`) : le moteur calcule directement en sRGB. Peu visible en 2D sans éclairage ni fondus (pixel art) ; éclairage 3D trop sombre/contrasté, fondus et dégradés ternes.
-- **Règle** : couleurs (`Color4f`) et textures fournies par le projet sont en sRGB.
-- **Activation simple** : option globale (`EngineConfig`) et par scène, désactivée par défaut, activée par défaut pour la 3D éclairée. Une fois activée : textures de couleur chargées en `GL_SRGB8_ALPHA8` (pas les cartes de données : normales, spéculaire, hauteurs), couleurs uniformes converties en linéaire, `GL_FRAMEBUFFER_SRGB` (ou conversion dans la passe finale si un framebuffer intermédiaire est utilisé, ex. `VirtualSceneRenderer`).
-- **Réglage** : valeur de gamma/luminosité (réglage joueur classique) appliquée dans une passe finale (`pow(couleur, 1/gamma)`), modifiable à l'exécution et sauvegardable.
-- Scène `TestGamma` : dégradés, fondus alpha, éclairage, option activée/désactivée côte à côte.
+LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs à l'écran.
+- Constat : aucun `GL_SRGB*`, calculs en sRGB → éclairage 3D trop sombre, fondus et dégradés ternes (peu visible en pixel art).
+- Règle : `Color4f` et textures du projet sont en sRGB.
+- Activation : option `EngineConfig` + par scène, désactivée par défaut, activée par défaut en 3D éclairée. Active : textures de couleur en `GL_SRGB8_ALPHA8` (pas les cartes de données : normales, spéculaire, hauteurs), couleurs uniformes converties en linéaire, `GL_FRAMEBUFFER_SRGB` ou conversion dans la passe finale si framebuffer intermédiaire (`VirtualSceneRenderer`).
+- Réglage joueur : gamma/luminosité dans une passe finale (`pow(c, 1/gamma)`), modifiable à l'exécution, sauvegardé.
+- `TestGamma` : dégradés, fondus alpha, éclairage, activé/désactivé côte à côte.
 
 ## Tests de non-régression
-En place : JUnit 5 (`test/`, `mvn -o -q test`), premier ensemble `ResourcesLifecycleTest` (cycles charger/décharger de `Resources` avec des `FakeData` sans fichier ni GL, instance neuve par `Resources.createForTests`). À étendre : JUnit pour le reste de la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing des ressources) ; scénarios en jeu pilotés par `tools/mighty.py` (`scene`, `input`, `gl`, `stats`) qui vérifient des valeurs texte, sans capture d'écran ; contrôle des fuites par allers-retours de scènes. Filet de sécurité avant les gros chantiers suivants.
+En place : JUnit 5 (`test/`), `ResourcesLifecycleTest` (`FakeData`, `Resources.createForTests`). À étendre : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
 
 ## Bibliothèque réutilisable
-
-Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux de l'utilisateur ; le package `mightylibdemo` en est l'illustration. Cap validé :
-- **Deux modules Maven** : `mightylib` (la bibliothèque, produit le jar) et `demo` (l'actuel `mightylibdemo`), qui dépend de `mightylib` comme un projet externe et prouve qu'elle s'utilise de l'extérieur.
-- **Jar léger**, sans dépendances embarquées (pas de jar-with-dependencies pour la bibliothèque) : LWJGL (natives comprises), JOML, org.json, JBox2D… sont déclarées dans le pom et récupérées par Maven.
-- **Distribution** : `mvn install` (dépôt local) au départ, puis JitPack ou GitHub Packages pour l'utiliser depuis n'importe quelle machine.
-- **Versions** sémantiques par release (`1.2.0`…) : chaque projet fixe la version qu'il utilise.
-- **Ressources** : séparer les ressources du moteur (shaders, texture `error`, polices par défaut), à embarquer dans le jar et lire depuis le classpath, des ressources du jeu, qui restent dans le dossier du projet utilisateur. Aujourd'hui tout est lu depuis le dossier `resources/` du disque : c'est le principal chantier. Un troisième ensemble : un **paquet de ressources de démonstration** (tout ce qui ne sert qu'à la démo, par exemple les modèles `resources/models/backpack`, `basicShape`, `weapon`, `world`, non commités, ignorés par `.gitignore`), distribué à part, pour montrer ce que fait le moteur ; la démo doit fonctionner, avec un message clair, quand il est absent.
-- **API publique** : pas encore définie, **à discuter avec l'utilisateur avant toute décision** (ce qui sera public, changements cassants comme les singletons à faire avant une 1.0).
+`mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
+- **Deux modules Maven** : `mightylib` (jar) et `demo`, qui en dépend comme un projet externe.
+- **Jar léger** : dépendances (LWJGL et natives, JOML, org.json, JBox2D…) déclarées dans le pom, pas embarquées.
+- **Distribution** : `mvn install`, puis JitPack ou GitHub Packages. **Versions** sémantiques par release.
+- **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
+- **API publique** : **à discuter avant toute décision** (périmètre, changements cassants comme les singletons avant une 1.0).
 
 ### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : le projet fournit au moteur ce dont il a besoin via **un point d'injection unique**, appelé pendant une phase précise du démarrage (avant l'initialisation des ressources) : par exemple `register(EngineRegistry registry)`. Après le démarrage, le registre est figé. Remplace à terme `IProjectLoading.init`/`contextLoading` et les singletons modifiés depuis n'importe où.
-- **Ce qui s'injecte** : sources de ressources (dossier du jeu, autres jars, en plus des ressources du moteur ; une ressource de même nom remplace celle du moteur), resource loaders et types de `DataType`, commandes, scènes enregistrées par nom, actions d'entrée et touches par défaut, shaders, scène de chargement par défaut, crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs pour `stats`, plus tard composants/thèmes GUI.
-- **Extension par héritage** : les classes du projet héritent de celles du moteur (`Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…). Les classes extensibles sont **choisies explicitement**, avec des points d'accroche prévus ; les autres sont fermées (`final` ou package-private), car tout membre `protected` devient un contrat envers les projets.
+- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading` et les singletons modifiés de partout.
+- **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
+- **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
 
-### Modding (secondaire, à garder en tête dans les choix de conception)
-- Le point d'injection doit accepter **plusieurs modules** : le jeu est le premier, chaque mod en est un autre (jars d'un dossier `mods/` découverts par `ServiceLoader`, descripteur avec identifiant, version et dépendances qui fixent l'ordre d'enregistrement).
-- **Identifiants avec espace de noms** (`jeu:slime`, `monmod:epee`) pour ressources, commandes, scènes et actions : aujourd'hui les noms de ressources sont globaux et les IDs d'action sont des `int` statiques (`InputManager.getAndIncrementId`), ce qui ferait entrer des mods en collision.
-- **Remplacement de ressources** par identifiant, et à terme un **bus d'événements** pour que plusieurs modules puissent réagir et modifier (ex. ajouter un bouton au menu).
-- Deux niveaux : mods de données (ressources/JSON, sans code) et mods de code (jars Java, sans sandbox possible : à n'installer que s'ils sont de confiance).
-- Ne pas implémenter le modding maintenant, mais ne pas prendre de décision qui l'empêcherait.
+### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
+- Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
+- **Identifiants à espace de noms** (`jeu:slime`) pour ressources, commandes, scènes, actions : aujourd'hui noms de ressources globaux et IDs d'action `int` statiques (`InputManager.getAndIncrementId`) → collisions.
+- Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
+- Mods de données (JSON/ressources) et mods de code (jars, sans sandbox : de confiance seulement).
 
 ## Effets 2D : particules et post-traitement
-Inspiré de LearnOpenGL « In Practice / 2D Game » (Breakout). Un jeu sans particules n'est pas complet.
-- **Particules** (absentes du moteur) : émetteurs (position, forme, débit, rafales), particules avec durée de vie, vitesse, gravité/forces, couleur/taille/rotation/opacité évoluant dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; recyclage des particules (pool, aucune allocation par frame) ; émetteurs décrits en JSON (`DataType`) et injectables par le projet ; option de mise à jour en espace monde ou local.
-- **Rendu** : une première version simple, puis passage à l'instancing quand le regroupement des dessins (Rendu 2D) sera fait (des milliers de particules en un appel).
-- **Post-traitement** : effets sur l'image entière via un framebuffer (base : `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables et activables par scène. La passe finale du gamma (section Gamma) en fait partie.
-- Scène `TestParticles` : plusieurs émetteurs, compteur de particules et temps dans `stats`.
+D'après LearnOpenGL « 2D Game » (Breakout).
+- **Particules** (absentes) : émetteurs (position, forme, débit, rafales) ; durée de vie, vitesse, forces, couleur/taille/rotation/opacité dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; pool sans allocation par frame ; émetteurs en JSON (`DataType`), injectables ; espace monde ou local.
+- **Rendu** : simple d'abord, instancing une fois le regroupement des dessins fait (Rendu 2D).
+- **Post-traitement** sur framebuffer (base `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables, par scène. Inclut la passe finale du gamma.
+- `TestParticles` : plusieurs émetteurs, compteur et temps dans `stats`.
 
 ## Physique 2D : remplacer JBox2D
-Exigences de l'utilisateur : **fonctionnalités 2D primordiales**, au pixel près, cas complexes compris ; **3D secondaire mais compatible** (ne rien concevoir qui l'empêche). Une boîte poussée par le joueur doit **rester collée à lui** (aucun écart, aucun tremblement). Un projet C++ précédent a été abandonné faute d'avoir réussi le cas ci-dessous à la main : c'est le test d'acceptation.
-
-### Constat
-- **JBox2D 2.2.1.1** n'est plus maintenu ; utilisé seulement par `physics/B2Utils`, `TestBox2D` et `Platformer2D`.
-- **Collisions maison** (`physics/collision`, ~500 lignes) : AABB `CollisionRectangle`, `CollisionBoundedVolume2D`, grille `Collision2DGrid`, `replaceComparedTo` (replacement selon une direction), `CollisionVisualisation`. Base de la physique arcade.
+Exigences : 2D au pixel près, cas complexes compris ; 3D compatible plus tard. Une boîte poussée **reste collée** au joueur (aucun écart, aucun tremblement). Un projet C++ précédent a échoué sur le test ci-dessous.
+- Constat : JBox2D 2.2.1.1 non maintenu (seulement `physics/B2Utils`, `TestBox2D`, `Platformer2D`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`, `CollisionVisualisation`), base de la physique arcade.
 
 ### Test d'acceptation : `TestPhysicsCrates`
-Trois caisses empilées sur une plateforme mobile (horizontale et verticale) ; le joueur pousse la caisse du bas (la pile suit), puis celle du haut (elle seule bouge, puis tombe du bord) ; une caisse écrasée contre un mur. Aucun écart d'un pixel, aucun retard d'une frame, aucun tremblement ; la boîte poussée reste collée au joueur.
+Trois caisses empilées sur une plateforme mobile (horizontale et verticale) ; pousser celle du bas (la pile suit), puis celle du haut (elle seule bouge et tombe du bord) ; une caisse écrasée contre un mur. Aucun écart d'un pixel, aucun retard d'une frame, aucun tremblement.
 
-### Physique arcade maison (physique principale du moteur)
-Modèle « solids / actors / riders » (Celeste, TowerFall) étendu aux objets poussables empilés ; c'est elle que l'API Lua expose (`physics.move` renvoie la position corrigée, comme `_PhysicsReplace` du projet C++).
-- **Au pixel près** : positions entières + reste sous-pixel, déplacement axe par axe ; deux objets se touchent ou non, jamais d'écart d'arrondi. Pas fixe (déterministe).
-- **Graphe d'appui** reconstruit à chaque pas : A est porté par B si le bas de A touche le haut de B (plateforme → caisse → caisse → joueur).
-- **Déplacement en deux phases** : calculer jusqu'où toute la chaîne peut aller (une poussée se propage aux objets devant et s'arrête au premier mur), puis appliquer le même déplacement à toute la chaîne. Le pousseur et l'objet poussé bougent dans le même pas, d'où le contact permanent.
-- **Les porteurs emportent ce qu'ils portent** (même delta, récursivement, du bas vers le haut) : pas de retard d'une frame.
-- **Écrasement** : objet coincé entre un porteur et un mur → événement ; le jeu décide (mort, arrêt de la plateforme).
-- Aussi : collisions avec les tilemaps, plateformes traversables par le dessous, pentes (option), zones de déclenchement, catégories de collision par nom (déclarées par le projet), raycasts, événements de contact, visualisation de debug.
+### Physique arcade maison (principale)
+Modèle solids/actors/riders (Celeste, TowerFall) étendu aux poussables empilés ; exposée en Lua (`physics.move` renvoie la position corrigée, comme `_PhysicsReplace` du C++).
+- Positions entières + reste sous-pixel, déplacement axe par axe, pas fixe déterministe.
+- **Graphe d'appui** reconstruit à chaque pas (A porté par B si le bas de A touche le haut de B).
+- **Deux phases** : calculer jusqu'où la chaîne peut aller (la poussée se propage, s'arrête au premier mur), puis déplacer toute la chaîne du même delta dans le même pas.
+- Les porteurs emportent ce qu'ils portent (récursif, du bas vers le haut).
+- **Écrasement** → événement, le jeu décide.
+- Aussi : tilemaps, plateformes traversables par dessous, pentes (option), zones de déclenchement, catégories par nom (déclarées par le projet), raycasts, événements de contact, visualisation.
 
-### Corps rigides (bibliothèque, derrière une interface)
-Pour ce qui tourne, s'empile librement ou s'articule (ponts, cordes, ragdolls, puzzles physiques). À la main : des mois pour faire moins bien.
-- Interface `IPhysicsWorld2D` ; candidats : **box2d-jni** (fabmax, Box2D v3 natif, Maven Central, Windows/Linux/macOS ; compatibilité Java 11 et activité à vérifier), **gdx-box2d** (libGDX, Box2D v3.1), **dyn4j** (pur Java, BSD-3, 5.0.2 de mars 2024, Java 1.6+). Trancher en refaisant `TestBox2D` avec chacun.
-- Coexistence avec la physique arcade (joueur arcade poussant des caisses simulées) : point délicat, à prototyper.
-- **Au début du gros point** : prototype rapide de `TestPhysicsCrates` avec Box2D v3 pour comparer avant de s'engager.
+### Corps rigides (bibliothèque derrière `IPhysicsWorld2D`)
+Pour rotation, empilement libre, articulations (ponts, cordes, ragdolls).
+- Candidats : **box2d-jni** (fabmax, Box2D v3 natif, Maven Central ; Java 11 et activité à vérifier), **gdx-box2d** (libGDX, Box2D v3.1), **dyn4j** (pur Java, BSD-3, 5.0.2 de mars 2024). Trancher en refaisant `TestBox2D` avec chacun.
+- Coexistence avec l'arcade (joueur arcade poussant des caisses simulées) : à prototyper.
+- Au début du point : prototype de `TestPhysicsCrates` avec Box2D v3 pour comparer.
 
 ### Compatibilité 3D
-Concevoir les interfaces (monde, corps, requêtes, événements) pour qu'un monde 3D puisse s'y brancher plus tard (ex. Jolt via bindings Java) sans changer l'API des entités ni des scripts ; ne rien implémenter en 3D maintenant.
+Interfaces (monde, corps, requêtes, événements) prêtes pour un monde 3D (ex. Jolt) sans changer l'API des entités et scripts ; rien en 3D maintenant.
 
 ## Entités et scripts Lua
-Besoin : dans un jeu (ex. plateformer), le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour faire agir les entités, modifiables sans relancer le moteur. L'utilisateur a déjà utilisé Lua ainsi dans un projet C++ avec un ami et en est très satisfait ; s'en inspirer (résumé ci-dessous) en corrigeant ses défauts.
-
-### Prérequis : modèle d'entités
-- **ECS et/ou graphe de scène** (déplacé de « Réflexions de conception ») : aujourd'hui une scène gère de simples listes d'objets à mettre à jour/afficher. Décider du modèle d'entités **avant** de les scripter ; à discuter au début de ce gros point.
+Le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour faire agir les entités, modifiables sans relancer. L'utilisateur en est très satisfait dans un projet C++ (avec un ami) : s'en inspirer en corrigeant ses défauts.
+- **Prérequis** : modèle d'entités (ECS et/ou graphe de scène ; aujourd'hui de simples listes par scène), à décider au début du point.
 
 ### Bibliothèque
-- **LuaJava de gudzpoz** (`party.iroiro.luajava`, MIT, Maven Central, ≥ 4.0.2) : vrai Lua (5.1 à 5.4) ou **LuaJIT** en natif par plateforme (comme LWJGL), Windows/Linux/macOS/Android ; secours LuaJ pur Java. **LuaJ** seul n'est plus maintenu (dernière version ~2015). Vérifier l'activité du projet au moment de l'adopter.
-- Interface de script indépendante du langage côté moteur ; LuaJava en est la première implémentation.
-- API **explicite** (fonctions enregistrées une par une), pas d'accès libre aux objets Java par réflexion : contrat clair, plus rapide, plus sûr pour les mods. Bibliothèques Lua limitées (pas de `io`/`os` libres).
+- **LuaJava de gudzpoz** (`party.iroiro.luajava`, MIT, Maven Central, ≥ 4.0.2) : Lua 5.1–5.4 ou LuaJIT natif par plateforme, secours LuaJ. LuaJ seul n'est plus maintenu (~2015). Vérifier l'activité à l'adoption.
+- Interface de script indépendante du langage ; LuaJava = première implémentation.
+- API **explicite** (fonctions enregistrées une à une, pas de réflexion), bibliothèques Lua limitées (pas de `io`/`os` libres).
 
-### Modèle du projet C++ (référence)
-- Un script par type d'entité, choisi depuis Tiled (propriété `LuaScript` de l'objet) ; propriétés Tiled copiées dans la mémoire de l'entité (`tiled_tileId`, `tiled_positionX/Y`, `tiled_sizeX/Y`, image…).
-- Rappels appelés par le moteur : `Init`, `Update(dt)`, `Draw`, `DrawLight`, `TakeDamage(damage, direction)`, `SetState(state)` (signaux de logique).
-- Drapeaux partagés lus par le moteur : `__canTakeDamage`, `__needBeDestroy`, `__needDrawSprite`, `__haveFinishChangeState`…
-- Familles de fonctions `_Xxx(entityPtr, …)` : mémoire de l'entité, sauvegarde permanente (fichier de sauvegarde du joueur), sprite et animations (ajout, lecture, retournement, position, échelle, couleur, fin d'animation), sprite de lumière, collisions (catégories/masques, hitbox, déplacement physique qui renvoie la position corrigée, plateformes traversables, objets poussables, tests de contact avec le joueur), attaque et dégâts, logique (signaux entre objets activables : levier → porte), création d'entités, UI du jeu (vie du boss, textes de dégâts), dessin de formes de debug, tremblement d'écran, vibration manette, log, temps.
+### Référence : le projet C++
+- Un script par type d'entité, choisi depuis Tiled (propriété `LuaScript`) ; propriétés Tiled copiées dans la mémoire de l'entité (`tiled_tileId`, `tiled_positionX/Y`, `tiled_sizeX/Y`, image…).
+- Rappels : `Init`, `Update(dt)`, `Draw`, `DrawLight`, `TakeDamage(damage, direction)`, `SetState(state)`.
+- Drapeaux lus par le moteur : `__canTakeDamage`, `__needBeDestroy`, `__needDrawSprite`, `__haveFinishChangeState`…
+- Fonctions `_Xxx(entityPtr, …)` : mémoire, sauvegarde permanente, sprite et animations (ajout, lecture, retournement, position, échelle, couleur, fin), sprite de lumière, collisions (catégories/masques, hitbox, déplacement corrigé, traversables, poussables, contact joueur), attaque et dégâts, signaux de logique (levier → porte), création d'entités, UI (vie du boss, textes de dégâts), formes de debug, tremblement, vibration, log, temps.
 
-### Améliorations prévues par rapport au C++
-- **Entité = objet Lua** (`self:playAnimation("run", true)`) plutôt que des fonctions globales `_Xxx(entityPtr, …)` ; fonctions rangées par module (`sprite`, `physics`, `save`, `ui`, `log`…).
-- **Mémoire = simple table Lua** (`self.memory.hp = 3`) au lieu de `_AddField` / `_SetFloatValue` typés, ce qui supprime les erreurs int/float (« ajouter `.0` ») ; propriétés Tiled dans `self.props`.
-- **Sauvegarde** : `save.get(clé)` renvoie `nil` si absente (au lieu de `{find, value}`) ; clés avec espace de noms par carte/entité.
-- **Collisions par nom** (`"player"`, `"enemy"`, `"environment"`) déclarés par le projet, au lieu d'IDs entiers.
-- **Signaux de logique** via le bus d'événements (voir Modding) plutôt que des IDs d'objets en dur.
-- **Séparation moteur / jeu** : le moteur fournit le générique (sprites, animations, physique, sons, particules, caméra et tremblement, manettes, dessin de debug, log, temps, sauvegarde) ; le jeu enregistre ses propres fonctions (attaque du joueur, UI du boss…) par le point d'injection (Bibliothèque réutilisable).
-- **Rechargement à chaud** : surveillance des fichiers `.lua`, rechargement du script en gardant la mémoire des entités ; commandes de debug (`lua reload`, `lua eval <code>`).
-- **Erreurs** : une erreur de script est journalisée avec fichier:ligne et désactive l'entité fautive, sans arrêter le jeu.
-- **Documentation de l'API** générée depuis les fonctions enregistrées (fichier comme celui du projet C++), pour ne jamais être en retard sur le code.
-- À décider : un état Lua par scène (un environnement isolé par script) ou par entité ; coût des appels Java ↔ Lua mesuré (`stats`).
-- Scène `TestLuaPlatformer` : joueur, ennemi scripté, levier et porte, rechargement à chaud démontré.
+### Améliorations prévues
+- **Entité = objet Lua** (`self:playAnimation("run", true)`), fonctions par module (`sprite`, `physics`, `save`, `ui`, `log`…).
+- **Mémoire = table** (`self.memory.hp = 3`) au lieu de `_AddField`/`_SetFloatValue` typés (fini les erreurs int/float) ; propriétés Tiled dans `self.props`.
+- `save.get(clé)` → `nil` si absente ; clés à espace de noms par carte/entité.
+- Collisions par nom (`"player"`, `"enemy"`, `"environment"`) déclarées par le projet.
+- Signaux de logique via le bus d'événements (Modding), pas d'IDs en dur.
+- Moteur = générique (sprites, animations, physique, sons, particules, caméra et tremblement, manettes, debug, log, temps, sauvegarde) ; le jeu enregistre ses fonctions par le point d'injection.
+- **Rechargement à chaud** des `.lua` en gardant la mémoire des entités ; commandes `lua reload`, `lua eval <code>`.
+- Erreur de script → log fichier:ligne, entité désactivée, le jeu continue.
+- Documentation de l'API générée depuis les fonctions enregistrées.
+- À décider : état Lua par scène (environnement isolé par script) ou par entité ; coût Java ↔ Lua mesuré dans `stats`.
+- `TestLuaPlatformer` : joueur, ennemi scripté, levier et porte, rechargement à chaud.
 
 ## Thème, tailles automatiques et langues
-Dépend du point d'injection (Bibliothèque réutilisable) : thèmes et langues sont fournis par le projet (et les mods). Dès maintenant (`current.md`, corrections de l'API), ne pas figer d'API `Text`/GUI qui empêcherait les clés de langue et le thème.
-- **Langues (l10n, inspirée de Flutter)** : un fichier par langue (`resources/lang/fr.json`, `en.json`, équivalent des ARB) chargé comme un `DataType` ; paramètres `{nom}` et pluriels simples ; langue de repli et log des clés manquantes ; un script `tools/` génère une classe de constantes typées (autocomplétion, fautes de clé détectées à la compilation) ; `Text` liable à une clé, mis à jour au changement de langue ; clés avec espace de noms (mods).
-- **Thème** : objet `Theme` chargé depuis du JSON (couleurs, polices, tailles, espacements, styles par composant), géré par un `ThemeManager` ; les composants GUI le lisent au lieu de valeurs en dur (ex. `setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
-- **Tailles automatiques** : unité indépendante de la résolution (facteur d'échelle par rapport à la résolution virtuelle), ancres et pourcentages, recalcul au redimensionnement de la fenêtre.
-- **Padding du texte** : à reprendre de la branche `dev` (commit `40f4d8a`, `Text.setPadding(left, up, right, down)` + scène `TestGUI`). À corriger en reprenant : le commentaire annonce l'ordre « gauche, droite, haut, bas » alors que le code utilise « gauche, haut, droite, bas » ; les cas Left/Up font `-= padding` en supposant `textReference` à 0, à vérifier.
+Dépend du point d'injection (thèmes et langues fournis par le projet et les mods). Dès maintenant, ne pas figer d'API `Text`/GUI qui empêcherait clés de langue et thème.
+- **Langues** (à la Flutter) : `resources/lang/<langue>.json` chargé comme `DataType` ; paramètres `{nom}`, pluriels simples ; langue de repli, log des clés manquantes ; script `tools/` générant des constantes typées ; `Text` liable à une clé, mis à jour au changement de langue ; clés à espace de noms.
+- **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
+- **Tailles automatiques** : unité relative à la résolution virtuelle, ancres et pourcentages, recalcul au redimensionnement.
+- **Padding du texte** : reprendre `dev` `40f4d8a` (`Text.setPadding(left, up, right, down)`, scène `TestGUI`). À corriger : le commentaire dit « gauche, droite, haut, bas », le code fait « gauche, haut, droite, bas » ; Left/Up font `-= padding` en supposant `textReference` à 0, à vérifier.
 
 ## Rendu 2D : formes manquantes et regroupement des dessins
-- Existant : rectangle, ellipse, hexagone, polygone (`renderer/_2D/shape`), et des renderers de debug (graphes, nœuds, matrices). Le README indique « formes avec contours » non fait.
-- À ajouter : segments et polylignes avec épaisseur, contours (outline) de toutes les formes, cercle/disque, triangle, rectangle arrondi, arc/secteur, points, flèches, grille ; et une API de dessin immédiat pour le debug (« dessine une ligne de A à B cette frame », utile pour la physique).
-- **Point de départ sur la branche `dev`** (absent de `master`) :
-  - `437b7ea` : `StrokeModule` réutilisable (activation, couleur, taille du contour via des valeurs de shader), contour dans le shader de l'ellipse, `Renderer.getShaderValue`/`hasShaderValue`, `Boolean`/`String` dans `ShaderValue`. Défauts : Java envoie `strokeSize` mais le shader lit `strokeSizePercent` (déclaré `in` et non `uniform`) → le contour ne fonctionne probablement pas ; `getSizePercent` lit la mauvaise clé ; `geEnabled` (faute) ; un contour en pourcentage du rayon n'a pas une épaisseur constante sur une ellipse aplatie → épaisseur en pixels.
-  - `983c18c` (« Temporary ») : `AdvancedRectangle`, rectangle à coins arrondis par SDF (champ de distance signée) avec rotation et anticrénelage (`fwidth` + `smoothstep`). Le contour y est commenté. La technique SDF peut servir de base commune aux contours, cercles et rectangles arrondis. Ne pas reprendre les modifications de `Shader.java` (vérification des uniforms désactivée, voir `current.md`, uniforms absents ; message de log à supprimer).
-  - Une fois repris, supprimer les branches `dev` et `devShader` (local et `origin`) ; `devShader` (`b50dd27`, ajout de `CheckOpenGLError` dans `Texture`) est déjà couvert par `master`.
-- **Regroupement des dessins** : dessiner en un appel tout ce qui partage texture et shader. Complémentaire de `TextureDataAtlas` (un atlas réduit les changements de texture, seul le regroupement réduit les appels de dessin). Deux techniques à comparer sur mesures (`stats` : `drawCallsPerFrame`, temps CPU) :
-  - **Batch** (style `SpriteBatch`) : le CPU transforme les sommets et les accumule dans un VBO dynamique, un `glDrawElements` ; pour le texte et les formes variées.
-  - **Instancing** (OpenGL 3.3, LearnOpenGL « Instancing ») : un quad unitaire + des attributs par instance (position, taille, rotation, rectangle UV, couleur ; `glVertexAttribDivisor`), un `glDrawElementsInstanced`, transformation dans le vertex shader ; pour les sprites et les particules.
-  - Dans les deux cas, remplir les buffers changeant à chaque frame efficacement (LearnOpenGL « Advanced Data » : `glMapBufferRange`, `glBufferSubData`).
+- Existant : rectangle, ellipse, hexagone, polygone (`renderer/_2D/shape`), renderers de debug (graphes, nœuds, matrices).
+- À ajouter : segments/polylignes épais, contours de toutes les formes, cercle, triangle, rectangle arrondi, arc/secteur, points, flèches, grille ; API de dessin immédiat pour le debug (ligne de A à B cette frame).
+- **Point de départ sur `dev`** (absent de `master`) :
+  - `437b7ea` : `StrokeModule` (activation, couleur, taille du contour par valeurs de shader), contour dans le shader de l'ellipse, `Renderer.getShaderValue`/`hasShaderValue`, `Boolean`/`String` dans `ShaderValue`. Défauts : Java envoie `strokeSize` mais le shader lit `strokeSizePercent` (`in`, pas `uniform`) → contour probablement cassé ; `getSizePercent` lit la mauvaise clé ; faute `geEnabled` ; contour en % du rayon inégal sur une ellipse aplatie → épaisseur en pixels.
+  - `983c18c` (« Temporary ») : `AdvancedRectangle`, rectangle arrondi par SDF avec rotation et anticrénelage (`fwidth` + `smoothstep`), contour commenté. Le SDF peut servir de base aux contours, cercles, rectangles arrondis. Ne pas reprendre ses changements de `Shader.java` (vérification des uniforms désactivée, log à supprimer).
+  - Ensuite supprimer `dev` et `devShader` (local et `origin`) ; `devShader` (`b50dd27`) est déjà couvert par `master`.
+- **Regroupement des dessins** (un appel par texture + shader ; complète `TextureDataAtlas`). Comparer sur mesures (`stats` : `drawCallsPerFrame`, temps CPU) :
+  - **Batch** (`SpriteBatch`) : sommets transformés sur CPU dans un VBO dynamique ; texte et formes variées.
+  - **Instancing** (quad + attributs par instance, `glVertexAttribDivisor`, `glDrawElementsInstanced`) : sprites et particules.
+  - Remplissage par frame efficace (`glMapBufferRange`, `glBufferSubData`).
 
 ## Rendu SVG
-Après le rendu 2D : reprendre d'abord le travail des branches `dev` (`AdvancedRectangle`, `StrokeModule`, SDF), car les contours épais et l'anticrénelage y sont communs, et ce qui y changera conditionne cette étape.
-- **Norme** : SVG (W3C) est trop vaste pour être géré en entier (texte, CSS, filtres, masques, scripts, animations). Viser le noyau commun aux profils légers (SVG Tiny, SVG Native, NanoSVG/VectorDrawable) : tout se ramène à des chemins (segments et Bézier) remplis ou tracés. Les SVG exportés d'Inkscape/Figma/Illustrator s'y ramènent si le texte est converti en chemins.
-- **Sous-ensemble** : chemins et formes de base, remplissage et contour en couleur unie, opacité, transformations, `viewBox` ; plus tard dégradés linéaires et radiaux. Hors champ : texte, CSS, filtres, masques, animations SMIL.
-- **Approche retenue (à confirmer)** : tessellation au chargement + shader simple. `SVGData` (`DataType`, workers) lit le fichier (NanoSVG, inclus dans LWJGL), aplatit les courbes et triangule remplissages et contours (épaisseur, jointures, extrémités) ; `SVGRenderer extends Renderer` + shader `svg` fourni par le moteur ; un appel de dessin par SVG, net à toute échelle ; anticrénelage par MSAA ou bande de fondu sur les bords.
-- **Plus tard, si besoin** : courbes évaluées dans le fragment shader (Loop-Blinn, SDF), dans la lignée de `AdvancedRectangle`.
-- Scène `TestSVG` : quelques icônes à plusieurs échelles.
+Après le rendu 2D et la reprise de `dev` (contours épais et anticrénelage communs).
+- Viser le noyau des profils légers (SVG Tiny/Native, NanoSVG) : chemins (segments, Bézier) remplis ou tracés ; texte converti en chemins à l'export.
+- Sous-ensemble : chemins et formes de base, remplissage et contour unis, opacité, transformations, `viewBox` ; plus tard dégradés. Hors champ : texte, CSS, filtres, masques, SMIL.
+- Approche (à confirmer) : `SVGData` (`DataType`, workers, NanoSVG de LWJGL) aplatit et triangule remplissages et contours (épaisseur, jointures, extrémités) ; `SVGRenderer extends Renderer` + shader `svg` ; un appel par SVG ; anticrénelage MSAA ou bande de fondu. Plus tard si besoin : courbes dans le fragment shader (Loop-Blinn, SDF).
+- `TestSVG` : icônes à plusieurs échelles.
 
-## Entrées : remappage des touches et manettes
-- Touches modifiables à l'exécution et sauvegardées/chargées depuis un fichier (le README liste aussi : chargement des entrées par fichier, scène prefab de changement des touches).
-- **Manettes** : base faite (`GamepadManager`, plusieurs manettes, joueurs, actions `InputGamepadButton`/`InputGamepadAxis`, manettes virtuelles, commande `gamepad`). Reste :
-  - **Actions par joueur** (cible durable pour le multijoueur local) : aujourd'hui une action se lie à un joueur fixe ou à `ANY_PLAYER`, il faudrait des liaisons `JUMP_P1`, `JUMP_P2`… Cible : évaluer une même table d'actions pour un joueur donné (`inputManager.getState(action, joueur)`), le clavier/souris étant attribué à un joueur comme une manette.
-  - **Ensembles d'actions activables** (« jeu », « menu », comme les cartes d'actions d'Unity/Unreal) : un même stick sert à se déplacer et à naviguer dans un menu (`MOVE_*_2D` et `SELECT_UP/DOWN` déjà), ouvrir un menu désactiverait l'ensemble « jeu » au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
-  - Sensibilité du regard réglable par le joueur (aujourd'hui constante `LOOK_SENSITIVITY` de `ProjectLoading`, partagée par la souris et le stick), éventuellement séparée souris / manette ; elle viendra avec le remappage, comme l'inversion de l'axe vertical (`scale` négatif).
-  - Le composant `MovingCameraComponent` (2D) lit encore deux actions soustraites : le passer aux axes comme `FreeCamera3DComponent`.
-  - Remappage des boutons de manette sauvegardé avec celui du clavier (`Gamepad.parseButton`/`buttonName` donnent déjà les noms).
-  - Charger un `gamecontrollerdb.txt` du projet au démarrage (`GamepadManager.addMappings`) pour les manettes inconnues de la base intégrée à GLFW.
-  - Vibrations et gyroscope : absents de GLFW (passer par SDL ou XInput directement si un jeu en a besoin).
-  - Icônes de boutons selon le modèle de la manette (Xbox, PlayStation, Switch), d'après le nom/GUID.
+## Entrées : remappage et manettes
+- Touches modifiables à l'exécution, sauvegardées/chargées depuis un fichier ; scène prefab de changement des touches.
+- **Manettes** (base faite : `GamepadManager`, joueurs, `InputGamepadButton`/`InputGamepadAxis`, virtuelles, commande `gamepad`). Reste :
+  - **Actions par joueur** (multijoueur local) : aujourd'hui joueur fixe ou `ANY_PLAYER` ; cible `inputManager.getState(action, joueur)`, clavier/souris attribués à un joueur comme une manette.
+  - **Ensembles d'actions activables** (« jeu », « menu ») au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
+  - Sensibilité du regard réglable (aujourd'hui `LOOK_SENSITIVITY` de `ProjectLoading`), séparable souris/manette, avec inversion verticale (`scale` négatif).
+  - `MovingCameraComponent` (2D) : passer aux axes comme `FreeCamera3DComponent`.
+  - Remappage manette sauvegardé avec le clavier (`Gamepad.parseButton`/`buttonName`).
+  - Charger un `gamecontrollerdb.txt` du projet (`GamepadManager.addMappings`).
+  - Vibrations, gyroscope : absents de GLFW (SDL ou XInput si besoin).
+  - Icônes de boutons selon le modèle (Xbox, PlayStation, Switch) d'après nom/GUID.
 
 ## Son : formats
-Constat : `SoundLoader.filterFile` n'accepte que `.ogg` (décodé par STB Vorbis) ; **le WAV n'est plus chargé** malgré le README. Rétablir le WAV, envisager d'autres formats, et le streaming pour les musiques longues (aujourd'hui tout le fichier est décodé en mémoire).
+`SoundLoader.filterFile` n'accepte que `.ogg` (STB Vorbis) : **le WAV n'est plus chargé** malgré le README. Rétablir le WAV, autres formats, streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
-Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son système `guicommand`, à unifier avec `Commands` ; lire le texte par `KeyboardManager.getTypedText()` plutôt que par `KeyboardLanguage`, qui ignore la disposition réelle et les accents) et une GUI de base pour afficher des informations en jeu (overlay de debug : stats, scène, entrées). S'appuie sur le thème, les tailles automatiques et les langues (Thème, tailles automatiques et langues).
+Console en jeu (base `graphics/GUI/Terminal` et `guicommand`, à unifier avec `Commands` ; lire le texte par `KeyboardManager.getTypedText()`, pas `KeyboardLanguage`) et overlay de debug (stats, scène, entrées). S'appuie sur thème, tailles et langues.
 
 ## Intégrations plateformes
-- **Discord** : présence enrichie (statut de jeu) via le SDK Discord, bindings Java à évaluer.
-- **Steam** : Steamworks (succès, overlay, statistiques…) ; il existe des bindings Java à évaluer.
+- **Discord** : présence enrichie (SDK Discord, bindings Java à évaluer).
+- **Steam** : Steamworks (succès, overlay, statistiques), bindings Java à évaluer.

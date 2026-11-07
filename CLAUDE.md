@@ -3,7 +3,7 @@
 Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB, Assimp ; JOML, org.json, JBox2D). `src/io/github/mightycode/mightylib` = la bibliothèque, `src/io/github/mightycode/mightylibdemo` = la démo qui sert de banc d'essai. Objectif : en faire une bibliothèque réutilisable (jar) pour les futurs jeux et logiciels de l'utilisateur.
 
 ## Documentation (à lire seulement quand la tâche le demande)
-- `docs/current.md` : seul le gros point en cours (API : corrections urgentes, à commencer par le chargement de modèles par Assimp).
+- `docs/current.md` : seul le gros point en cours (API : corrections urgentes, à commencer par la suite du pipeline de `Resources`).
 - `docs/later.md` : feuille de route globale, gros points suivants dans l'ordre (gamma, tests, bibliothèque réutilisable avec modèle d'extension et modding, effets 2D, physique 2D, entités et scripts Lua, thème, rendu 2D, SVG, entrées, son, console, plateformes).
 - `docs/techniquegraphique.md` : suite de `later.md`, techniques de rendu 2D/3D de LearnOpenGL (Blinn-Phong, skybox, culling, ombres, normal mapping, animation squelettique, HDR/bloom…).
 - `docs/futur-discussion.md` : sujets à discuter un jour, sans ordre (l'utilisateur décide quand).
