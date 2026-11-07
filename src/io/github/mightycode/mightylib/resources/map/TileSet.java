@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.map;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
@@ -44,7 +45,7 @@ public class TileSet extends SingleSourceDataType {
         }
     }
 
-    public Map<Integer, TileAnimation> animations;
+    private Map<Integer, TileAnimation> animations;
 
     public TileSet(String dataName, String path) {
         super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
@@ -57,6 +58,43 @@ public class TileSet extends SingleSourceDataType {
         animations = new HashMap<>();
 
         unload();
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return new TileSet(dataName, path);
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        TileSet other = (TileSet) copy;
+
+        String otherTexture = other.texture;
+        other.texture = texture;
+        texture = otherTexture;
+
+        TextureData otherTextureData = other.textureData;
+        other.textureData = textureData;
+        textureData = otherTextureData;
+
+        swap(tileSize, other.tileSize);
+        swap(tileNumber, other.tileNumber);
+
+        boolean otherRotation = other.useRotation, otherFlip = other.useFlip;
+        other.useRotation = useRotation;
+        other.useFlip = useFlip;
+        useRotation = otherRotation;
+        useFlip = otherFlip;
+
+        Map<Integer, TileAnimation> otherAnimations = other.animations;
+        other.animations = animations;
+        animations = otherAnimations;
+    }
+
+    private static void swap(Vector2i first, Vector2i second) {
+        int x = first.x, y = first.y;
+        first.set(second);
+        second.set(x, y);
     }
 
     public void setTileParameters(boolean useRotation, boolean useFlip){

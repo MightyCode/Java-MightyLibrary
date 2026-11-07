@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.data;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 
 import java.util.Collections;
@@ -11,12 +12,42 @@ public class CSVFile extends SingleSourceDataType {
     private String[][] data;
     private boolean containsHeader;
     private String[] names;
-    private final HashMap<String, Integer> nameToIndex;
+    private HashMap<String, Integer> nameToIndex;
     private int counter;
     public CSVFile(String dataName, String path) {
         super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
 
         nameToIndex = new HashMap<>();
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == CSVFile.class ? new CSVFile(dataName, path) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        CSVFile other = (CSVFile) copy;
+
+        String[][] otherData = other.data;
+        other.data = data;
+        data = otherData;
+
+        boolean otherHeader = other.containsHeader;
+        other.containsHeader = containsHeader;
+        containsHeader = otherHeader;
+
+        String[] otherNames = other.names;
+        other.names = names;
+        names = otherNames;
+
+        HashMap<String, Integer> otherIndex = other.nameToIndex;
+        other.nameToIndex = nameToIndex;
+        nameToIndex = otherIndex;
+
+        int otherCounter = other.counter;
+        other.counter = counter;
+        counter = otherCounter;
     }
 
     /**

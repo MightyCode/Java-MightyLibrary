@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.data;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import org.json.JSONObject;
 
@@ -12,6 +13,19 @@ public class JSONFile extends SingleSourceDataType {
 
     public JSONFile (TYPE_SET_UP typeSetUp, String dataName, String path){
         super(typeSetUp, dataName, path);
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == JSONFile.class ? new JSONFile(getTypeSetUp(), dataName, path) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        JSONFile other = (JSONFile) copy;
+        JSONObject otherObject = other.object;
+        other.object = object;
+        object = otherObject;
     }
 
     public void setJsonObject(JSONObject object){

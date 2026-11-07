@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import org.lwjgl.BufferUtils;
 
@@ -35,6 +36,42 @@ public class TextureData extends SingleSourceDataType {
         tempBufferedImage = null;
 
         internUnload();
+    }
+
+    // Subtypes give their own copy: a TextureData copy would lose what they add
+    @Override
+    protected DataType createReloadCopy() {
+        if (getClass() != TextureData.class)
+            return null;
+
+        TextureData copy = new TextureData(getTypeSetUp(), dataName, path);
+        copy.copySettingsFrom(this);
+        return copy;
+    }
+
+    // Set by the code, not read from the file: kept by the reload copy
+    protected final void copySettingsFrom(TextureData original) {
+        defaultAspectTexture = original.defaultAspectTexture;
+        defaultTextureType = original.defaultTextureType;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        TextureData other = (TextureData) copy;
+
+        int otherWidth = other.width, otherHeight = other.height;
+        other.width = width;
+        other.height = height;
+        width = otherWidth;
+        height = otherHeight;
+
+        ByteBuffer otherBuffer = other.byteBuffer;
+        other.byteBuffer = byteBuffer;
+        byteBuffer = otherBuffer;
+
+        int[] otherCache = other.pixelCache;
+        other.pixelCache = pixelCache;
+        pixelCache = otherCache;
     }
 
     public void setBufferedImage(BufferedImage img) {
@@ -109,6 +146,7 @@ public class TextureData extends SingleSourceDataType {
     @Override
     public void internUnload() {
         byteBuffer = null;
+        pixelCache = null;
         width = -1;
         height = -1;
     }

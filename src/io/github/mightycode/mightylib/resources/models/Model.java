@@ -12,16 +12,35 @@ import java.util.List;
  * The textures of the materials are resources owned by the model, loaded and unloaded with it.
  */
 public class Model extends SingleSourceDataType {
-    private final List<ModelMesh> meshes;
+    private List<ModelMesh> meshes;
 
     // Textures registered by this model, released when it is unloaded
-    private final List<DataType> ownedTextures;
+    private List<DataType> ownedTextures;
 
     public Model(String dataName, String path) {
         super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
 
         meshes = new ArrayList<>();
         ownedTextures = new ArrayList<>();
+    }
+
+    // The copy registers the textures again with the same owner name: the previous ones are released with it
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == Model.class ? new Model(dataName, path) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        Model other = (Model) copy;
+
+        List<ModelMesh> otherMeshes = other.meshes;
+        other.meshes = meshes;
+        meshes = otherMeshes;
+
+        List<DataType> otherTextures = other.ownedTextures;
+        other.ownedTextures = ownedTextures;
+        ownedTextures = otherTextures;
     }
 
     // Name used as reference on the owned textures

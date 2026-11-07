@@ -62,6 +62,16 @@ public class SoundSource {
     }
 
 
+    // The buffer will be deleted (reloaded or unloaded sound): OpenAL refuses while a source holds it
+    void detachBuffer(int bufferId) {
+        if (bufferId != boundBufferId || bufferId == 0)
+            return;
+
+        AL10.alSourceStop(sourceId);
+        AL10.alSourcei(sourceId, AL10.AL_BUFFER, 0);
+        boundBufferId = 0;
+    }
+
     public SoundSource setLoop(boolean value){
         this.loop = value;
 

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.sound;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import io.github.mightycode.mightylib.sounds.SoundManager;
@@ -14,6 +15,20 @@ public class SoundData extends SingleSourceDataType {
         super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
 
         bufferId = -1;
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == SoundData.class ? new SoundData(dataName, path) : null;
+    }
+
+    // The sources holding the previous buffer let it go when it is deleted (SoundManager.DetachBuffer)
+    @Override
+    protected void swapContent(DataType copy) {
+        SoundData other = (SoundData) copy;
+        int otherBuffer = other.bufferId;
+        other.bufferId = bufferId;
+        bufferId = otherBuffer;
     }
 
     public void setSoundLoadInfo(SoundLoadInfo info) {
@@ -48,6 +63,7 @@ public class SoundData extends SingleSourceDataType {
     @Override
     public void internUnload() {
         if (this.bufferId != -1) {
+            SoundManager.DetachBuffer(bufferId);
             alDeleteBuffers(this.bufferId);
             int error = alGetError();
             if (error != AL_NO_ERROR)

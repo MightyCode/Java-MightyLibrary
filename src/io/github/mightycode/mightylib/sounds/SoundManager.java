@@ -181,6 +181,15 @@ public class SoundManager {
         gainTree.printTree("List of gains");
     }
 
+    // Before deleting a buffer: the sources still holding it let it go
+    public static void DetachBuffer(int bufferId) {
+        if (instance == null)
+            return;
+
+        for (SoundSource source : instance.soundsSource)
+            source.detachBuffer(bufferId);
+    }
+
     public boolean unloadSoundSource(){
         if (device == NULL) {
             return false;

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.text;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
@@ -9,7 +10,29 @@ public class FontFace extends SingleSourceDataType {
     private static final String PATH = "resources/textures/fonts/";
     private final String name;
     private final TextureData fontAtlas;
-    private final FontFile fontFile;
+    private FontFile fontFile;
+
+    // Reload copy: same atlas, the font file read again
+    private FontFace(FontFace original) {
+        super(TYPE_SET_UP.THREAD_CONTEXT, original.dataName, original.path);
+        name = original.name;
+        fontAtlas = original.fontAtlas;
+        addDependency(fontAtlas);
+        fontFile = new FontFile(original.path);
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return validPath() ? new FontFace(this) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        FontFace other = (FontFace) copy;
+        FontFile otherFile = other.fontFile;
+        other.fontFile = fontFile;
+        fontFile = otherFile;
+    }
 
     FontFace(String fontFaceName, String textureName, String infoPath) {
         super(TYPE_SET_UP.THREAD_CONTEXT, fontFaceName, PATH + infoPath);

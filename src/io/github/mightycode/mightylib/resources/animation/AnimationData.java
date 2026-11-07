@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.animation;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
@@ -14,6 +15,24 @@ public class AnimationData extends SingleSourceDataType {
         textureName = "error";
     }
 
+
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == AnimationData.class ? new AnimationData(dataName, path) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        AnimationData other = (AnimationData) copy;
+
+        FrameData[] otherFrames = other.framesData;
+        other.framesData = framesData;
+        framesData = otherFrames;
+
+        String otherTexture = other.textureName;
+        other.textureName = textureName;
+        textureName = otherTexture;
+    }
 
     public AnimationData setTexture(String texture) {
         textureName = texture;

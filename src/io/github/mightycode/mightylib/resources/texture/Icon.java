@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWImage;
@@ -12,13 +13,33 @@ public class Icon extends SingleSourceDataType {
     private int height;
 
     private BufferedImage tempImg;
-    private final GLFWImage.Buffer buffer;
+    private GLFWImage.Buffer buffer;
 
     public Icon(String dataName, String path) {
         super(TYPE_SET_UP.MAIN_CONTEXT, dataName, path);
 
         buffer = GLFWImage.create(1);
         tempImg = null;
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == Icon.class ? new Icon(dataName, path) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        Icon other = (Icon) copy;
+
+        int otherWidth = other.width, otherHeight = other.height;
+        other.width = width;
+        other.height = height;
+        width = otherWidth;
+        height = otherHeight;
+
+        GLFWImage.Buffer otherBuffer = other.buffer;
+        other.buffer = buffer;
+        buffer = otherBuffer;
     }
 
     public void setBufferedImage(BufferedImage img){

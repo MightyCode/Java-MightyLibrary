@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
@@ -12,13 +13,13 @@ import java.util.Map;
 
 public class TextureDataAtlas extends TextureData {
     // Ordered list by texture size
-    private final List<TextureData> textures;
+    private List<TextureData> textures;
 
     // Get the texture by name
-    private final Map<String, TextureData> texturesMap;
+    private Map<String, TextureData> texturesMap;
 
     // Get the position of the texture in the atlas
-    private final Map<String, Vector2i> texturesPosition;
+    private Map<String, Vector2i> texturesPosition;
     private BufferedImage atlas;
 
     public TextureDataAtlas(String name, String path) {
@@ -34,6 +35,39 @@ public class TextureDataAtlas extends TextureData {
 
     public TextureDataAtlas(String name) {
         this(name, null);
+    }
+
+    // Only an atlas read from a file: one built by the code has nothing to read again
+    @Override
+    protected DataType createReloadCopy() {
+        if (getClass() != TextureDataAtlas.class || !validPath())
+            return null;
+
+        TextureDataAtlas copy = new TextureDataAtlas(getTypeSetUp(), dataName, path);
+        copy.copySettingsFrom(this);
+        return copy;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        super.swapContent(copy);
+        TextureDataAtlas other = (TextureDataAtlas) copy;
+
+        List<TextureData> otherTextures = other.textures;
+        other.textures = textures;
+        textures = otherTextures;
+
+        Map<String, TextureData> otherMap = other.texturesMap;
+        other.texturesMap = texturesMap;
+        texturesMap = otherMap;
+
+        Map<String, Vector2i> otherPositions = other.texturesPosition;
+        other.texturesPosition = texturesPosition;
+        texturesPosition = otherPositions;
+
+        BufferedImage otherAtlas = other.atlas;
+        other.atlas = atlas;
+        atlas = otherAtlas;
     }
 
     public void addTexture(String name) {

@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.main.utils.EngineStats;
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.MultiSourceDataType;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -11,8 +12,10 @@ import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.lwjgl.opengl.GL20.*;
@@ -20,7 +23,7 @@ import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
 public class Shader extends MultiSourceDataType {
     // Uniforms already reported missing, cleared when the program is deleted
-    private final Set<String> missingUniforms = new HashSet<>();
+    private Set<String> missingUniforms = new HashSet<>();
 
     private String vertexContent, fragmentContent;
     private String geometryContent;
@@ -34,7 +37,7 @@ public class Shader extends MultiSourceDataType {
     private int shaderProgram;
     private final HashMap<String, ShaderValue> lastValues;
     // Uniform locations never change for a linked program
-    private final HashMap<String, Integer> uniformLocations;
+    private HashMap<String, Integer> uniformLocations;
 
     private int vShader, fShader, gShader;
 
@@ -57,6 +60,57 @@ public class Shader extends MultiSourceDataType {
         vShader = -1;
         fShader = -1;
         gShader = -1;
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        if (getClass() != Shader.class || !validPaths())
+            return null;
+
+        String[] paths = new String[numberSource()];
+        for (int i = 0; i < paths.length; ++i)
+            paths[i] = getSourcePath(i);
+
+        Shader copy = new Shader(dataName, shader2D, paths);
+        copy.isUsingGeometryShader = isUsingGeometryShader;
+        return copy;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        Shader other = (Shader) copy;
+
+        String otherVertex = other.vertexContent, otherFragment = other.fragmentContent, otherGeometry = other.geometryContent;
+        other.vertexContent = vertexContent;
+        other.fragmentContent = fragmentContent;
+        other.geometryContent = geometryContent;
+        vertexContent = otherVertex;
+        fragmentContent = otherFragment;
+        geometryContent = otherGeometry;
+
+        int otherProgram = other.shaderProgram, otherV = other.vShader, otherF = other.fShader, otherG = other.gShader;
+        other.shaderProgram = shaderProgram;
+        other.vShader = vShader;
+        other.fShader = fShader;
+        other.gShader = gShader;
+        shaderProgram = otherProgram;
+        vShader = otherV;
+        fShader = otherF;
+        gShader = otherG;
+
+        HashMap<String, Integer> otherLocations = other.uniformLocations;
+        other.uniformLocations = uniformLocations;
+        uniformLocations = otherLocations;
+
+        Set<String> otherMissing = other.missingUniforms;
+        other.missingUniforms = missingUniforms;
+        missingUniforms = otherMissing;
+
+        // The new program has none of the values sent to the previous one (often sent once): sent again
+        List<ShaderValue> sent = new ArrayList<>(lastValues.values());
+        lastValues.clear();
+        for (ShaderValue value : sent)
+            sendValueToShader(value);
     }
 
     public void activateGeometryShader(){
