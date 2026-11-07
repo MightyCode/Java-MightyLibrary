@@ -45,6 +45,11 @@ public class MouseManager {
     private double lastRealCursorX, lastRealCursorY;
     private final Vector2f pendingScroll;
 
+    // Cursor movement in window pixels
+    private final Vector2f delta = new Vector2f();
+    private float lastWindowX = Float.NaN, lastWindowY = Float.NaN;
+    private boolean lastWindowSimulated;
+
     /**
      * Mouse manager class.
      * Instance the class
@@ -118,11 +123,28 @@ public class MouseManager {
         lastRealCursorX = realX;
         lastRealCursorY = realY;
 
-        if (simulatedCursor != null)
-            toVirtual(simulatedCursor.x, simulatedCursor.y, pos);
+        boolean simulated = simulatedCursor != null;
+        float windowX = simulated ? simulatedCursor.x : (float) realX;
+        float windowY = simulated ? simulatedCursor.y : (float) realY;
+
+        // No movement when the source changes (real / simulated) : it would be a jump
+        if (!Float.isNaN(lastWindowX) && simulated == lastWindowSimulated)
+            delta.set(windowX - lastWindowX, windowY - lastWindowY);
         else
-            toVirtual((float) realX, (float) realY, pos);
+            delta.set(0);
+        lastWindowX = windowX;
+        lastWindowY = windowY;
+        lastWindowSimulated = simulated;
+
+        toVirtual(windowX, windowY, pos);
     }
+
+    /**
+     * Movement of the cursor during the last tick in window pixels (y positive downward), independent of the
+     * virtual size : for a camera look. Unbounded when the cursor is disabled (setCursor(false)).
+     */
+    public float deltaX() { return delta.x; }
+    public float deltaY() { return delta.y; }
 
     // Window pixels (origin at the top left) to the virtual coordinates given by pos()
     private void toVirtual(float x, float y, Vector2f result) {

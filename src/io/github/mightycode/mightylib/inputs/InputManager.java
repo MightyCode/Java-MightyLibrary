@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.inputs;
 
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
+import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
 import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
 
@@ -58,16 +59,83 @@ public class InputManager {
 
         actionConfigurations = new HashMap<>();
         simulation = new InputSimulation();
+        axisConfigurations = new HashMap<>();
+        axisSimulation = new InputSimulation();
+        pendingAxisValues = new HashMap<>();
+        simulatedAxisValues = new HashMap<>();
     }
 
 
     public void init(ActionInput[] actionInputs){
+        init(actionInputs, new AxisInput[0]);
+    }
+
+    public void init(ActionInput[] actionInputs, AxisInput[] axisInputs){
         actionConfigurations.clear();
+        axisConfigurations.clear();
         initLibraryInputs();
 
         for (ActionInput actionInput : actionInputs) {
             this.actionConfigurations.put(actionInput.actionId(), actionInput);
         }
+
+        for (AxisInput axisInput : axisInputs) {
+            if (actionConfigurations.containsKey(axisInput.axisId()))
+                throw new IllegalArgumentException("Id " + axisInput.axisId() + " of the axis " + axisInput.axisName() + " is already an action");
+
+            this.axisConfigurations.put(axisInput.axisId(), axisInput);
+        }
+    }
+
+    /// Axes : signed values, not bounded, their meaning is given by their bindings (AxisBinding)
+
+    private final Map<Integer, AxisInput> axisConfigurations;
+    // Simulated axes (commands, scripts) : the value replaces the real one while it is held
+    private final InputSimulation axisSimulation;
+    private final Map<Integer, Float> pendingAxisValues;
+    private final Map<Integer, Float> simulatedAxisValues;
+
+    // Value of the axis for this tick, 0 if unknown
+    public float getAxis(int axisId){
+        AxisInput axisInput = axisConfigurations.get(axisId);
+        if (axisInput == null)
+            return 0;
+
+        if (axisSimulation.getState(axisId))
+            return simulatedAxisValues.getOrDefault(axisId, 0f);
+
+        return axisInput.axis().getAxis(this);
+    }
+
+    // Set the axis to a value during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
+    public void simulateAxis(int axisId, float value, int ticks){
+        if (!axisConfigurations.containsKey(axisId))
+            throw new IllegalArgumentException("Unknown axis " + axisId);
+
+        axisSimulation.press(axisId, ticks);
+        pendingAxisValues.put(axisId, value);
+    }
+
+    public void simulateAxisRelease(int axisId){
+        axisSimulation.release(axisId);
+    }
+
+    // Find a configured axis by its name (case insensitive) or its numeric id, null if unknown
+    public AxisInput findAxis(String nameOrId) {
+        for (AxisInput axisInput : axisConfigurations.values()) {
+            if (axisInput.axisName().equalsIgnoreCase(nameOrId))
+                return axisInput;
+        }
+
+        try {
+            return axisConfigurations.get(Integer.parseInt(nameOrId));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    public Collection<AxisInput> getAxes() {
+        return axisConfigurations.values();
     }
 
     public boolean getState(int inputID){
@@ -133,6 +201,14 @@ public class InputManager {
         keyManager.postUpdate();
         mouseManager.postUpdate();
         simulation.update();
+        updateAxisSimulation();
+    }
+
+    // Package-private for the tests (no keyboard nor mouse there)
+    void updateAxisSimulation(){
+        axisSimulation.update();
+        simulatedAxisValues.putAll(pendingAxisValues);
+        pendingAxisValues.clear();
     }
 
 

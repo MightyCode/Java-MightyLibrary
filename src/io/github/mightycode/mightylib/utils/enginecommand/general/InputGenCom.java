@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.inputs.InputSimulation;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
+import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
 import io.github.mightycode.mightylib.main.ContextManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
@@ -58,6 +59,8 @@ public class InputGenCom extends BaseCommand {
                     return scroll(inputManager.getMouseManager(), args);
                 case "key":
                     return key(inputManager.getKeyboardManager(), args);
+                case "axis":
+                    return axis(inputManager, args);
                 case "text":
                     if (args.length != 3)
                         return CommandResult.error("Usage : input text \"text to type\"");
@@ -155,6 +158,33 @@ public class InputGenCom extends BaseCommand {
         return CommandResult.ok("Key " + keyName(key) + " pressed from the next tick during " + ticks + " tick(s)");
     }
 
+    // input axis AXIS VALUE [ticks] | input axis AXIS hold VALUE | input axis AXIS release
+    private CommandResult axis(InputManager inputManager, String[] args) {
+        if (args.length < 4)
+            return CommandResult.error("Usage : input axis AXIS VALUE [ticks] | input axis AXIS hold VALUE | input axis AXIS release");
+
+        AxisInput axis = inputManager.findAxis(args[2]);
+        if (axis == null)
+            return CommandResult.error("Unknown axis ->" + args[2] + "<-, write -> input list <- to list them");
+
+        String mode = args[3].toLowerCase();
+        if (mode.equals("release")) {
+            inputManager.simulateAxisRelease(axis.axisId());
+            return CommandResult.ok(axis.axisName() + " released from the next tick");
+        }
+
+        if (mode.equals("hold")) {
+            if (args.length != 5)
+                return CommandResult.error("Usage : input axis AXIS hold VALUE");
+            inputManager.simulateAxis(axis.axisId(), parseFloat(args[4]), InputSimulation.UNTIL_RELEASE);
+            return CommandResult.ok(axis.axisName() + " held at " + args[4] + " from the next tick");
+        }
+
+        int ticks = args.length > 4 ? parseTicks(args[4]) : 1;
+        inputManager.simulateAxis(axis.axisId(), parseFloat(args[3]), ticks);
+        return CommandResult.ok(axis.axisName() + " at " + args[3] + " from the next tick during " + ticks + " tick(s)");
+    }
+
     private CommandResult press(InputManager inputManager, String actionName, String ticksText) {
         ActionInput action = inputManager.findAction(actionName);
         if (action == null)
@@ -182,7 +212,12 @@ public class InputGenCom extends BaseCommand {
         for (ActionInput action : inputManager.getActions())
             data.put(action.actionName(), action.actionId());
 
-        return CommandResult.ok("Actions with their id", data);
+        JSONObject axes = new JSONObject();
+        for (AxisInput axis : inputManager.getAxes())
+            axes.put(axis.axisName(), axis.axisId());
+        data.put("axes", axes);
+
+        return CommandResult.ok("Actions with their id, then the axes", data);
     }
 
     // Inputs seen by the current tick
@@ -217,6 +252,14 @@ public class InputGenCom extends BaseCommand {
                 actions.put(action.actionName());
         }
         data.put("actions", actions);
+
+        JSONObject axes = new JSONObject();
+        for (AxisInput axis : inputManager.getAxes()) {
+            float value = inputManager.getAxis(axis.axisId());
+            if (value != 0)
+                axes.put(axis.axisName(), value);
+        }
+        data.put("axes", axes);
 
         return CommandResult.ok("Inputs of the current tick (mouse position in virtual coordinates)", data);
     }
@@ -303,7 +346,9 @@ public class InputGenCom extends BaseCommand {
                 "\ninput press [action] [ticks] : same as above" +
                 "\ninput hold [action] : press the action until it is released" +
                 "\ninput release [action] : release a held action" +
-                "\ninput list : list the actions with their id" +
+                "\ninput list : list the actions with their id, then the axes" +
+                "\ninput axis AXIS VALUE [ticks] : set an axis (LOOK_X...) during ticks (1 by default), replacing its bindings" +
+                "\ninput axis AXIS hold VALUE / input axis AXIS release : hold or release an axis" +
                 "\nMouse : positions in window pixels, origin at the top left (like screenshots)," +
                 " button = left, right, middle or a number" +
                 "\ninput mouse x y : move the cursor, kept until the real cursor moves" +
