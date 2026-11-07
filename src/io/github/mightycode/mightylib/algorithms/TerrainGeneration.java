@@ -1,13 +1,9 @@
 package io.github.mightycode.mightylib.algorithms;
 
-import io.github.mightycode.mightylib.graphics.renderer._3D.Mesh;
-import io.github.mightycode.mightylib.graphics.renderer._3D.MeshEntry;
+import io.github.mightycode.mightylib.resources.models.ModelMesh;
 import com.raylabz.opensimplex.OpenSimplexNoise;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-
-import java.util.ArrayList;
-import java.util.List;
 
 // Inspired by Sebastien Lague (https://www.youtube.com/@SebastianLague) : https://www.youtube.com/watch?v=yyJ-hdISgnw
 public class TerrainGeneration {
@@ -80,60 +76,57 @@ public class TerrainGeneration {
         return new Vector2f(ox, oy);
     }
 
-    public Mesh<MeshEntry> generateTerrain(int resolution, float worldSize, Vector2f gridCentre) {
+    // Flat shaded terrain: each triangle has its own 3 vertices, sharing its surface normal
+    public ModelMesh generateTerrain(int resolution, float worldSize, Vector2f gridCentre) {
         Vector3f[][] pointMap = generatePointMap(resolution, worldSize, gridCentre);
-        List<Vector3f> points = new ArrayList<>();
-        List<Vector3f> normals = new ArrayList<>();
-        List<Vector2f> texCoords = new ArrayList<>();
 
+        int vertexCount = (resolution - 1) * (resolution - 1) * 2 * 3;
+        float[] positions = new float[vertexCount * 3];
+        float[] normals = new float[vertexCount * 3];
+        float[] textureCoordinates = new float[vertexCount * 2];
+        int[] indices = new int[vertexCount];
+
+        int vertex = 0;
         for (int y = 0; y < resolution - 1; y++) {
             for (int x = 0; x < resolution - 1; x++) {
                 // A, C, B
-                addTriangle(pointMap[x][y], pointMap[x][y + 1], pointMap[x + 1][y], points, normals, texCoords);
+                vertex = addTriangle(pointMap[x][y], pointMap[x][y + 1], pointMap[x + 1][y],
+                        vertex, positions, normals, textureCoordinates);
                 // B, C, D
-                addTriangle(pointMap[x + 1][y], pointMap[x][y + 1], pointMap[x + 1][y + 1], points, normals, texCoords);
+                vertex = addTriangle(pointMap[x + 1][y], pointMap[x][y + 1], pointMap[x + 1][y + 1],
+                        vertex, positions, normals, textureCoordinates);
             }
         }
 
-        // Convert raw arrays to Mesh<MeshEntry>
-        Mesh<MeshEntry> mesh = new Mesh<>();
-        for (int i = 0; i < points.size(); i++) {
-            MeshEntry entry = new MeshEntry();
-            entry.positions.set(points.get(i));
-            entry.normals.set(normals.get(i));
-            entry.texturesPositions.set(texCoords.get(i));
-            mesh.entries.add(entry);
-        }
+        for (int i = 0; i < indices.length; ++i)
+            indices[i] = i;
 
-        return mesh;
+        return new ModelMesh("terrain", positions, normals, textureCoordinates, indices, null, null, 0);
     }
 
-    private static void addTriangle(Vector3f a, Vector3f b, Vector3f c,
-                                    List<Vector3f> points,
-                                    List<Vector3f> normals,
-                                    List<Vector2f> texCoords) {
-
-        // texCoord = (a.y + b.y + c.y, 0) / 3
-        Vector2f texCoord = new Vector2f((a.y + b.y + c.y) / 3f, 0f);
+    // Writes the 3 vertices from the index vertex, returns the index of the next one
+    private static int addTriangle(Vector3f a, Vector3f b, Vector3f c, int vertex,
+                                   float[] positions, float[] normals, float[] textureCoordinates) {
+        // textureCoordinate = (a.y + b.y + c.y, 0) / 3
+        float textureCoordinate = (a.y + b.y + c.y) / 3f;
 
         // surfaceNormal = normalize(cross(b - a, c - b))
         Vector3f edge1 = new Vector3f(b).sub(a);
         Vector3f edge2 = new Vector3f(c).sub(b);
-        Vector3f surfaceNormal = edge1.cross(edge2, new Vector3f()).normalize();
+        Vector3f surfaceNormal = edge1.cross(edge2).normalize();
 
-        // Add 3 vertices
-        points.add(a);
-        points.add(b);
-        points.add(c);
+        for (Vector3f point : new Vector3f[]{a, b, c}) {
+            positions[vertex * 3] = point.x;
+            positions[vertex * 3 + 1] = point.y;
+            positions[vertex * 3 + 2] = point.z;
+            normals[vertex * 3] = surfaceNormal.x;
+            normals[vertex * 3 + 1] = surfaceNormal.y;
+            normals[vertex * 3 + 2] = surfaceNormal.z;
+            textureCoordinates[vertex * 2] = textureCoordinate;
+            textureCoordinates[vertex * 2 + 1] = 0f;
+            ++vertex;
+        }
 
-        // Add 3 normals (same for each vertex of triangle)
-        normals.add(surfaceNormal);
-        normals.add(surfaceNormal);
-        normals.add(surfaceNormal);
-
-        // Add 3 texture coordinates (same for each vertex)
-        texCoords.add(texCoord);
-        texCoords.add(texCoord);
-        texCoords.add(texCoord);
+        return vertex;
     }
 }

@@ -2,13 +2,12 @@ package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.algorithms.TerrainGeneration;
 import io.github.mightycode.mightylib.graphics.lightning.materials.BasicMaterial;
-import io.github.mightycode.mightylib.graphics.renderer._3D.Mesh;
-import io.github.mightycode.mightylib.graphics.renderer._3D.MeshEntry;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapColorFunctions;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._3D.terrain.TerrainRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.main.utils.GameTime;
+import io.github.mightycode.mightylib.resources.models.ModelMesh;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.graphics.renderer.Shape;
@@ -74,27 +73,7 @@ public class Test3DSceneTerrainGeneration extends Scene {
 
 
         TerrainGeneration generation = new TerrainGeneration();
-        Mesh<MeshEntry> mesh = generation.generateTerrain(35, 1000, new Vector2f(0, 0));
-
-        float minX = Float.MAX_VALUE;
-        float maxX = Float.MIN_VALUE;
-
-        float minY = Float.MAX_VALUE;
-        float maxY = Float.MIN_VALUE;
-
-        float minZ = Float.MAX_VALUE;
-        float maxZ = Float.MIN_VALUE;
-
-        for (MeshEntry meshEntry : mesh.entries) {
-            if (meshEntry.positions.x < minX) minX = meshEntry.positions.x;
-            if (meshEntry.positions.x > maxX) maxX = meshEntry.positions.x;
-
-            if (meshEntry.positions.y < minY) minY = meshEntry.positions.y;
-            if (meshEntry.positions.y > maxY) maxY = meshEntry.positions.y;
-
-            if (meshEntry.positions.z < minZ) minZ = meshEntry.positions.z;
-            if (meshEntry.positions.z > maxZ) maxZ = meshEntry.positions.z;
-        }
+        ModelMesh mesh = generation.generateTerrain(35, 1000, new Vector2f(0, 0));
 
         terrainRenderer = new TerrainRenderer(mesh, true);
         terrainRenderer.setPosition(new Vector3f(0, -30, 0));
