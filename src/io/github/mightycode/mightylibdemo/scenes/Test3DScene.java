@@ -283,23 +283,24 @@ public class Test3DScene extends Scene {
         if (inputManager.getState(ActionId.SHIFT))
             speed = 3;
 
-        if (inputManager.getState(ActionId.MOVE_LEFT))
-            main3DCamera.speedAngX(main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
+        // Values : progressive with the left stick and the triggers, 1 with a key ; a diagonal is not faster
+        float side = inputManager.getValue(ActionId.MOVE_LEFT) - inputManager.getValue(ActionId.MOVE_RIGHT);
+        float front = inputManager.getValue(ActionId.MOVE_BACKWARD) - inputManager.getValue(ActionId.MOVE_FORWARD);
+        float length = (float) Math.sqrt(side * side + front * front);
+        if (length > 1) {
+            side /= length;
+            front /= length;
+        }
+        float up = inputManager.getValue(ActionId.MOVE_UP) - inputManager.getValue(ActionId.MOVE_DOWN);
 
-        if (inputManager.getState(ActionId.MOVE_RIGHT))
-            main3DCamera.speedAngX(-main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
+        if (side != 0)
+            main3DCamera.speedAngX(side * main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
 
-        if (inputManager.getState(ActionId.MOVE_FORWARD))
-            main3DCamera.speedAngZ(-main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
+        if (front != 0)
+            main3DCamera.speedAngZ(front * main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
 
-        if (inputManager.getState(ActionId.MOVE_BACKWARD))
-            main3DCamera.speedAngZ(main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
-
-        if (inputManager.getState(ActionId.MOVE_UP))
-            main3DCamera.setY(main3DCamera.getCamPosRef().y + main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
-
-        if (inputManager.getState(ActionId.MOVE_DOWN))
-            main3DCamera.setY(main3DCamera.getCamPosRef().y - main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
+        if (up != 0)
+            main3DCamera.setY(main3DCamera.getCamPosRef().y + up * main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
 
 
         if (inputManager.inputPressed(ActionId.TAB)) {

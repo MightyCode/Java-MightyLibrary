@@ -41,20 +41,35 @@ class ProjectLoading implements IProjectLoading {
                                 new InputSimple(GLFW_KEY_ESCAPE, EInputType.Keyboard),
                                 new InputGamepadButton(GLFW_GAMEPAD_BUTTON_BACK))),
 
+                // 3D moves : left stick, triggers to go up and down, left stick click to go faster
                 new ActionInput(ActionId.MOVE_LEFT, "MOVE_LEFT",
-                        new InputSimple(GLFW_KEY_A, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_A, EInputType.Keyboard),
+                                new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X, InputGamepadAxis.NEGATIVE))),
                 new ActionInput(ActionId.MOVE_RIGHT, "MOVE_RIGHT",
-                        new InputSimple(GLFW_KEY_D, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_D, EInputType.Keyboard),
+                                new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X, InputGamepadAxis.POSITIVE))),
                 new ActionInput(ActionId.MOVE_FORWARD, "MOVE_FORWARD",
-                        new InputSimple(GLFW_KEY_W, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_W, EInputType.Keyboard),
+                                new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_Y, InputGamepadAxis.NEGATIVE))),
                 new ActionInput(ActionId.MOVE_BACKWARD, "MOVE_BACKWARD",
-                        new InputSimple(GLFW_KEY_S, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_S, EInputType.Keyboard),
+                                new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_Y, InputGamepadAxis.POSITIVE))),
                 new ActionInput(ActionId.MOVE_UP, "MOVE_UP",
-                        new InputSimple(GLFW_KEY_SPACE, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_SPACE, EInputType.Keyboard),
+                                new InputGamepadAxis(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, InputGamepadAxis.POSITIVE))),
                 new ActionInput(ActionId.MOVE_DOWN, "MOVE_DOWN",
-                        new InputSimple(GLFW_KEY_LEFT_CONTROL, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_LEFT_CONTROL, EInputType.Keyboard),
+                                new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, InputGamepadAxis.POSITIVE))),
                 new ActionInput(ActionId.SHIFT, "SHIFT",
-                        new InputSimple(GLFW_KEY_LEFT_SHIFT, EInputType.Keyboard)),
+                        new InputOr(
+                                new InputSimple(GLFW_KEY_LEFT_SHIFT, EInputType.Keyboard),
+                                new InputGamepadButton(GLFW_GAMEPAD_BUTTON_LEFT_THUMB))),
 
                 new ActionInput(ActionId.MOVE_LEFT_2D, "MOVE_LEFT_2D",
                         new InputOr(
