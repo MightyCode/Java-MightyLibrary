@@ -773,7 +773,10 @@ public class Resources {
     private void endStep(DataType data, boolean preload, StepResult result) {
         data.jobRunning = false;
 
-        if (result.error != null) {
+        if (result.error instanceof ResourceException) {
+            // Expected (the data is wrong, not the code): one line, no stack trace
+            fail(data, result.error.getMessage());
+        } else if (result.error != null) {
             result.error.printStackTrace();
             fail(data, (preload ? "preload" : "load") + " threw " + result.error);
         } else if (preload) {

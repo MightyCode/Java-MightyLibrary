@@ -18,6 +18,8 @@ public class FakeData extends DataType {
     // Read in the preload step, set by the test (on the data, read by its reload copies)
     volatile int preloadMilliseconds;
     volatile boolean failLoad;
+    // Thrown by the preload step when set
+    volatile RuntimeException preloadThrows;
     volatile FakeData dependencyToAdd;
     // Supports reload copies (hot reload apart), true by default
     volatile boolean reloadApart = true;
@@ -81,6 +83,9 @@ public class FakeData extends DataType {
 
     void preloadStep() {
         readContent = preloads.incrementAndGet();
+        if (settings.preloadThrows != null)
+            throw settings.preloadThrows;
+
         if (settings.preloadMilliseconds > 0) {
             try {
                 Thread.sleep(settings.preloadMilliseconds);

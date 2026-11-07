@@ -1,5 +1,8 @@
 package io.github.mightycode.mightylib.resources;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
@@ -28,30 +31,31 @@ public abstract class FileMethods {
     }
 
 
-    public static String readFileAsString(String filePath){
+    // Throws a ResourceException when the file is missing or unreadable
+    public static String readFileAsString(String filePath) {
         StringBuilder source = new StringBuilder();
-        try {
-
-            BufferedReader reader;
-            FileInputStream in = new FileInputStream(filePath);
-            reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8));
-
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 source.append(line).append('\n');
             }
-
-            reader.close();
-            in.close();
-
         } catch (FileNotFoundException e) {
-            System.err.println("Can't find the file : " + filePath);
-            e.printStackTrace();
+            throw new ResourceException("file not found: " + filePath);
         } catch (IOException e) {
-            System.err.println("reader can't read a part of the file");
-            e.printStackTrace();
+            throw new ResourceException("can't read the file " + filePath, e);
         }
 
         return source.toString();
+    }
+
+    // Throws a ResourceException when the file is missing, unreadable or not a JSON object
+    public static JSONObject readJSONObject(String filePath) {
+        String content = readFileAsString(filePath);
+        try {
+            return new JSONObject(content);
+        } catch (JSONException e) {
+            throw new ResourceException("invalid JSON in " + filePath, e);
+        }
     }
 }

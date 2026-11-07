@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.Resources;
-import org.json.JSONObject;
 
 import java.util.Map;
 
@@ -42,6 +41,6 @@ public class JSONLoader extends ResourceLoader {
             return;
 
         JSONFile json = (JSONFile) dataType;
-        json.setJsonObject(new JSONObject(FileMethods.readFileAsString(json.path())));
+        json.setJsonObject(FileMethods.readJSONObject(json.path()));
     }
 }

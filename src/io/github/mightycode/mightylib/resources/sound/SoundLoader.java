@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.resources.sound;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.sounds.SoundDataType;
@@ -64,33 +65,25 @@ public class SoundLoader extends ResourceLoader {
         SoundLoadInfo info = new SoundLoadInfo();
 
         // Failing here makes the preload fail: the fallback replaces the sound
-        if (path.indexOf("ogg", lastIndex) == -1 || !loadOgg(path, info))
-            throw new IllegalStateException("Can't read the sound file " + path);
+        if (path.indexOf("ogg", lastIndex) == -1)
+            throw new ResourceException("unsupported sound format (only ogg): " + path);
 
+        loadOgg(path, info);
         sound.setSoundLoadInfo(info);
     }
 
 
-    public boolean loadOgg(String path, SoundLoadInfo sInfo){
+    // Throws a ResourceException when the file is missing or not a valid ogg vorbis file
+    public void loadOgg(String path, SoundLoadInfo sInfo) {
         try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-            try {
-                sInfo.Buffer = SoundDataType.readVorbis(path, 32 * 1024, info);
-            } catch (Exception e) {
-                e.printStackTrace();
-
-                return false;
-            }
-
-            // Copy to buffer
+            sInfo.Buffer = SoundDataType.readVorbis(path, 32 * 1024, info);
             sInfo.Channel = info.channels();
             sInfo.SampleRate = info.sample_rate();
-        } catch (Exception e){
-            e.printStackTrace();
-
-            return false;
+        } catch (ResourceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResourceException("can't read the sound file " + path, e);
         }
-
-        return true;
     }
 
 

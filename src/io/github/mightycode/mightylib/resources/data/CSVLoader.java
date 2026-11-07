@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources.data;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.Resources;
 
@@ -78,7 +79,7 @@ public class CSVLoader extends ResourceLoader {
                 lineHeader = false;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ResourceException("can't read the file " + csv.path(), e);
         }
 
         if (columnsName == null)
