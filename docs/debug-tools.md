@@ -12,7 +12,7 @@
 - Protocole : une commande par ligne → une ligne JSON `{"success", "message", "data"}`. Client : `python tools/mighty.py <commande>` (`--wait N`, `--json`, sans argument = interactif).
 
 ## Commandes utiles
-- `help` ; `scene` (courante et `loading`) / `scene <Nom>` (relatif au package de la première scène, ex. `Platformer2D.Test2DPlatformerBox2D`) ; `wait <ticks>` / `wait loaded [délai]` ; `reload` ; `exit` ; `resources` (voir `architecture.md`).
+- `help` ; `scene` (courante et `loading`) / `scene <Nom>` (relatif au package de la première scène, ex. `Platformer2D.Test2DPlatformerBox2D`) ; `wait <ticks>` / `wait loaded [délai]` ; `reload <all|Type> [noms,…] [re:regex]` (sélection vide = 0 donnée, pas une erreur) ; `resources [all|Type] [noms,…] [re:regex]` (détail des données choisies, 100 au plus) ; `watch [status|<all|Type> [noms,…] [re:regex]|mode poll|service [ms]|off]` (rechargement à chaud sur changement de fichier, éteint par défaut, voir `architecture.md`) ; `exit` ; `resources` (voir `architecture.md`).
 - `stats [champs…]` (chemins pointés, ex. `fps glObjects.Texture` ; sinon temps, appels de dessin, changements de shader/texture, uniforms, octets envoyés, objets GL, mémoire). Décrit la dernière seconde **complète** (attendre `sleep:1.5`). `stats reset` remet à zéro `maxFrameMsSinceReset`, `maxFrameIntervalMsSinceReset` (< 100 ms visé), `maxTickMsSinceReset`, `maxSwapMsSinceReset`.
 - `gl` (objets GL vivants, éléments partagés et références) ; `gl summary` (par type `éléments/références`).
 - `screenshot [chemin]` (PNG de la frame suivante, défaut `screenshots/`) ; `scale 0.5` ; `rect x y l h` ou `corners x y x2 y2` (pixels fenêtre, origine en haut à gauche). Seulement si le texte ne suffit pas.

@@ -11,6 +11,7 @@ public abstract class ListGeneralCommand {
         }
 
         commands.addCommand(new ReloadGenCom());
+        commands.addCommand(new WatchGenCom());
         commands.addCommand(new HelpGenCom(commands));
         commands.addCommand(new ExitGenCom(sceneManager));
         commands.addCommand(new ChangeSoundGainCom());

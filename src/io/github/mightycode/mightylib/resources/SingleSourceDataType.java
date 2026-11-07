@@ -15,6 +15,11 @@ public abstract class SingleSourceDataType extends DataType {
     public final String path(){ return this.path; }
 
     @Override
+    public final java.util.List<String> sourcePaths() {
+        return validPath() ? java.util.Collections.singletonList(path) : java.util.Collections.emptyList();
+    }
+
+    @Override
     public final boolean hasSource() {
         return validPath();
     }

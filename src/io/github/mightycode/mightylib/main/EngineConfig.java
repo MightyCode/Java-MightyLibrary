@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLangu
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
+import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.scenes.DefaultLoadingScene;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -40,6 +41,8 @@ public class EngineConfig {
 
     private EEngineMode mode = EEngineMode.RELEASE;
     private boolean strictResources;
+    private ResourceWatcher.Mode watchResources;
+    private long watchResourcesInterval = ResourceWatcher.DEFAULT_INTERVAL_MS;
     private boolean openGLErrorCheck;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
 
@@ -135,6 +138,24 @@ public class EngineConfig {
 
     public static final String STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict";
 
+    /**
+     * Hot reload of all the resources when their files change, from the start (null = off, the default; it can
+     * still be started later by the code or the command watch). The system property WATCH_RESOURCES_PROPERTY
+     * (-Dmightylib.resources.watch=poll|service) overrides it, WATCH_INTERVAL_PROPERTY the interval in ms.
+     */
+    public EngineConfig setWatchResources(ResourceWatcher.Mode watchMode) {
+        this.watchResources = watchMode;
+        return this;
+    }
+
+    public EngineConfig setWatchResourcesInterval(long milliseconds) {
+        this.watchResourcesInterval = milliseconds;
+        return this;
+    }
+
+    public static final String WATCH_RESOURCES_PROPERTY = "mightylib.resources.watch";
+    public static final String WATCH_INTERVAL_PROPERTY = "mightylib.resources.watch.interval";
+
     // Check OpenGL errors after each call (glGetError): helps to locate an error, but slows down rendering
     public EngineConfig setOpenGLErrorCheck(boolean openGLErrorCheck) {
         this.openGLErrorCheck = openGLErrorCheck;
@@ -206,6 +227,32 @@ public class EngineConfig {
 
         String property = System.getProperty(STRICT_RESOURCES_PROPERTY);
         return property != null ? Boolean.parseBoolean(property) : strictResources;
+    }
+    // Null when the hot reload is not started with the engine
+    public ResourceWatcher.Mode getWatchResources() {
+        String property = System.getProperty(WATCH_RESOURCES_PROPERTY);
+        if (property == null)
+            return watchResources;
+
+        switch (property.trim().toLowerCase()) {
+            case "poll": case "polling": case "true":
+                return ResourceWatcher.Mode.POLLING;
+            case "service":
+                return ResourceWatcher.Mode.SERVICE;
+            default:
+                return null;
+        }
+    }
+
+    public long getWatchResourcesInterval() {
+        String property = System.getProperty(WATCH_INTERVAL_PROPERTY);
+        if (property != null) {
+            try {
+                return Long.parseLong(property.trim());
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return watchResourcesInterval;
     }
     public boolean isOpenGLErrorCheck() { return openGLErrorCheck; }
     public int getDebugServerPort() { return debugServerPort; }

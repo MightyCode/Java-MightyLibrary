@@ -4,7 +4,7 @@ Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisate
 
 - (U) **Pipeline de `Resources`** (propriétaire unique, réconciliation, dépendances, rechargement à chaud : faits, voir `architecture.md`). Reste :
   - rechargement à chaud :
-    - **observateur de fichiers** (et ressources des mods) qui appelle `reload(donnée)` ; `reload all` reste un outil de debug ;
+    - observateur de fichiers (fait, opt-in) : reste les **ressources des mods**, la **création** de fichiers nouveaux non référencés, et le regroupement des événements d'un même enregistrement (fichier de description + sources) ;
     - **mémoire** : ancienne et nouvelle version coexistent, un `reload` de milliers de données crée toutes les copies d'un coup (les workers bornent les lectures, pas les copies qui attendent leurs dépendances) → limiter les copies en cours ;
     - relecture abandonnée (nouveau `reload` pendant la lecture) : son étape en cours va au bout (CPU/I/O gaspillés, deux copies en mémoire un moment) → interruption coopérative (drapeau lu par les loaders longs) avec l'item **annulation** ci-dessous ; l'observateur de fichiers devra regrouper les événements d'un même enregistrement ;
   - **échecs attendus** (`ResourceException` : fait pour fichiers, JSON, CSV, textures, sons, modèles) : les formats maison (`TileSetLoader`, `TextureDataAtlasLoader`, `AnimationDataLoader`, reste de `TileMapLoader`) lèvent encore des `NumberFormatException`/`IndexOutOfBounds` affichées comme bugs → valider et lever `ResourceException` avec fichier et ligne ;
