@@ -3,64 +3,17 @@ package io.github.mightycode.mightylib.inputs;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 class GamepadManagerTest {
 
-    // Gamepads plugged by the test, read like GLFW would
-    private static class FakeSource implements IGamepadSource {
-        final Map<Integer, boolean[]> buttons = new HashMap<>();
-        final Map<Integer, float[]> axes = new HashMap<>();
-        final Map<Integer, Boolean> mapped = new HashMap<>();
-        IConnectionCallback callback;
-
-        void plug(int id, boolean isMapped) {
-            buttons.put(id, new boolean[Gamepad.BUTTONS]);
-            float[] values = new float[Gamepad.AXES];
-            values[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER] = -1;
-            values[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER] = -1;
-            axes.put(id, values);
-            mapped.put(id, isMapped);
-            if (callback != null)
-                callback.changed(id, true);
-        }
-
-        void unplug(int id) {
-            buttons.remove(id);
-            axes.remove(id);
-            mapped.remove(id);
-            if (callback != null)
-                callback.changed(id, false);
-        }
-
-        @Override public void setConnectionCallback(IConnectionCallback callback) { this.callback = callback; }
-        @Override public boolean isPresent(int id) { return buttons.containsKey(id); }
-        @Override public boolean isGamepad(int id) { return mapped.getOrDefault(id, false); }
-        @Override public String getName(int id) { return "Fake " + id; }
-        @Override public String getGuid(int id) { return "guid" + id; }
-        @Override public boolean addMappings(String mappings) { return true; }
-        @Override public void free() { callback = null; }
-
-        @Override
-        public boolean read(int id, boolean[] outButtons, float[] outAxes) {
-            if (!buttons.containsKey(id) || !mapped.get(id))
-                return false;
-            System.arraycopy(buttons.get(id), 0, outButtons, 0, Gamepad.BUTTONS);
-            System.arraycopy(axes.get(id), 0, outAxes, 0, Gamepad.AXES);
-            return true;
-        }
-    }
-
-    private FakeSource source;
+    private FakeGamepadSource source;
     private GamepadManager manager;
 
     @BeforeEach
     void setUp() {
-        source = new FakeSource();
+        source = new FakeGamepadSource();
         manager = new GamepadManager(source);
     }
 

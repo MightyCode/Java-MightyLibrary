@@ -49,6 +49,12 @@ public class InputGamepadAxis implements IAction {
         return beyond(inputManager.getGamepadManager().getAxis(axis, player));
     }
 
+    // How far the axis is pushed in the direction, from 0 to 1, without threshold (the dead zone already applies)
+    @Override
+    public float getValue(InputManager inputManager) {
+        return Math.max(0, inputManager.getGamepadManager().getAxis(axis, player) * direction);
+    }
+
     @Override
     public boolean actionPressed(InputManager inputManager) {
         GamepadManager gamepads = inputManager.getGamepadManager();

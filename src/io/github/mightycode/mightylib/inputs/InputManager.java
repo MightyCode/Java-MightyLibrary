@@ -79,6 +79,19 @@ public class InputManager {
     }
 
 
+    /**
+     * Strength of the action, from 0 to 1 : 1 when a key or a button is held (or the action is simulated),
+     * progressive for a gamepad axis. For a speed, a movement : value * maxSpeed.
+     */
+    public float getValue(int inputID){
+        ActionInput actionInput = actionConfigurations.get(inputID);
+        if (actionInput == null)
+            return 0;
+
+        return simulation.getState(inputID) ? 1 : actionInput.getValue(this);
+    }
+
+
     public boolean inputPressed(int inputId){
         ActionInput actionInput = actionConfigurations.get(inputId);
         if (actionInput == null)

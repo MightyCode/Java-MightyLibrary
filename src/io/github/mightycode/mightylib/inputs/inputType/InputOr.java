@@ -16,6 +16,12 @@ public class InputOr implements IAction {
         return input1.getState(inputManager) || input2.getState(inputManager);
     }
 
+    // The strongest of the two
+    @Override
+    public float getValue(InputManager inputManager) {
+        return Math.max(input1.getValue(inputManager), input2.getValue(inputManager));
+    }
+
     @Override
     public boolean actionPressed(InputManager inputManager) {
         return (!input1.getState(inputManager) && input2.actionPressed(inputManager))

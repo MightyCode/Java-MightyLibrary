@@ -24,6 +24,11 @@ public class ActionInput implements IAction {
     }
 
     @Override
+    public float getValue(InputManager inputManager) {
+        return actionInput().getValue(inputManager);
+    }
+
+    @Override
     public boolean actionPressed(InputManager inputManager) {
         return actionInput().actionPressed(inputManager);
     }

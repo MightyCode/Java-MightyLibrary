@@ -16,6 +16,12 @@ public class InputAnd implements IAction {
         return input1.getState(inputManager) && input2.getState(inputManager);
     }
 
+    // The weakest of the two : 0 if one of them is not used
+    @Override
+    public float getValue(InputManager inputManager) {
+        return Math.min(input1.getValue(inputManager), input2.getValue(inputManager));
+    }
+
     @Override
     public boolean actionPressed(InputManager inputManager) {
         return (input1.getState(inputManager) && input2.actionPressed(inputManager))

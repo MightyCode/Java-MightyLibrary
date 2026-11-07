@@ -132,7 +132,8 @@ Après le rendu 2D : reprendre d'abord le travail des branches `dev` (`AdvancedR
 - Touches modifiables à l'exécution et sauvegardées/chargées depuis un fichier (le README liste aussi : chargement des entrées par fichier, scène prefab de changement des touches).
 - **Manettes** : base faite (`GamepadManager`, plusieurs manettes, joueurs, actions `InputGamepadButton`/`InputGamepadAxis`, manettes virtuelles, commande `gamepad`). Reste :
   - **Actions par joueur** (cible durable pour le multijoueur local) : aujourd'hui une action se lie à un joueur fixe ou à `ANY_PLAYER`, il faudrait des liaisons `JUMP_P1`, `JUMP_P2`… Cible : évaluer une même table d'actions pour un joueur donné (`inputManager.getState(action, joueur)`), le clavier/souris étant attribué à un joueur comme une manette.
-  - Actions analogiques (valeur -1..1 ou 0..1 au lieu d'un booléen, ex. `MOVE_X` = stick ou A/D).
+  - Actions d'axe : `InputManager.getValue` (0 à 1 par action) est fait ; reste une vraie action d'axe -1..1 (`MOVE_X` = stick ou A/D) au lieu de deux actions soustraites, à décider avec les actions par joueur.
+  - Regarder autour en 3D au stick droit : sortir `Camera3D.rotate(dYaw, dPitch)` de `setToCursor` (vitesse en degrés/s pour le stick) ; idéalement un composant caméra libre 3D commun aux 5 scènes 3D qui recopient le code de déplacement.
   - Remappage des boutons de manette sauvegardé avec celui du clavier (`Gamepad.parseButton`/`buttonName` donnent déjà les noms).
   - Charger un `gamecontrollerdb.txt` du projet au démarrage (`GamepadManager.addMappings`) pour les manettes inconnues de la base intégrée à GLFW.
   - Vibrations et gyroscope : absents de GLFW (passer par SDL ou XInput directement si un jeu en a besoin).
