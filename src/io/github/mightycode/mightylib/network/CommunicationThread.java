@@ -20,6 +20,10 @@ public abstract class CommunicationThread extends Thread {
 
 
     CommunicationThread(){
+        // Named for profilers and thread dumps, daemon so it never keeps the program alive
+        super("MightyLibrary-Network");
+        setDaemon(true);
+
         receivedMessages = new ArrayList<>();
         messageToSend = new HashMap<>();
     }

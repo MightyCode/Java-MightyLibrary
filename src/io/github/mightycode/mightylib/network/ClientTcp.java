@@ -129,7 +129,7 @@ public class ClientTcp {
             this.socket = new Socket(configuration.getAddress(), configuration.getPort());
             this.socket.setSoTimeout(HEARTBEAT_INTERVAL_MS);
             lastHeartbeat = System.currentTimeMillis(); // Initialize lastHeartbeat at the time of connection
-            new Thread(this::heartbeatLoop).start();
+            startDaemon(this::heartbeatLoop, "MightyLibrary-Network-Heartbeat");
             startReading();
         } catch (IOException e) {
             e.printStackTrace();
@@ -165,11 +165,17 @@ public class ClientTcp {
 
 
     public void startReading() {
-        new Thread(() -> {
+        startDaemon(() -> {
             while (running) { // Only read messages while running
-                //System.out.println("HAHAHA");
                 readMessage();
             }
-        }).start();
+        }, "MightyLibrary-Network-Reader");
+    }
+
+    // Named for profilers and thread dumps, daemon so it never keeps the program alive
+    private static void startDaemon(Runnable loop, String name) {
+        Thread thread = new Thread(loop, name);
+        thread.setDaemon(true);
+        thread.start();
     }
 }
