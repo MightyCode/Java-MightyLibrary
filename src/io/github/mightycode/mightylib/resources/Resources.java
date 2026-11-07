@@ -82,6 +82,8 @@ public class Resources {
     private final Map<Class<? extends DataType>, DataType> fallbacks;
     // Unknown names already reported by getResourceOrFallback (main thread)
     private final Set<String> reportedUnknownNames;
+    // Main thread: for each load of a batch (loaded once per loadBatch), the data it referenced, released by unloadBatch
+    private final Map<String, List<List<DataType>>> loadedBatches = new HashMap<>();
     // Types without reload copy, reported once (main thread)
     private final Set<Class<?>> reportedNoReloadCopy = new HashSet<>();
     private final LoadingMethod loadingMethod;
@@ -605,6 +607,9 @@ public class Resources {
 
     // The loaded data using this one computed their content with the previous version: they are read again
     private void contentChanged(DataType data) {
+        if (data instanceof BatchResources)
+            batchDescriptionChanged(data.getDataName());
+
         for (DataType dependent : new ArrayList<>(data.dependents)) {
             // A fallback is never emptied: it must not depend on what can change
             if (!dependent.isLoaded() || isFallback(dependent))
@@ -871,6 +876,13 @@ public class Resources {
     }
 
     // Calls the action on every data listed by the batch, by name or by regular expression
+    // Data listed by the batch description now
+    private List<DataType> collectBatch(String batchName) {
+        List<DataType> listed = new ArrayList<>();
+        forEachInBatch(batchName, listed::add);
+        return listed;
+    }
+
     private void forEachInBatch(String batchName, BatchAction action) {
         BatchResources batchResources = getResource(BatchResources.class, batchName);
         if (batchResources == null || batchResources.getObject() == null)
@@ -915,7 +927,11 @@ public class Resources {
 
         runOnMainThread(() -> {
             System.out.println("--Load batch: " + batchName);
-            forEachInBatch(batchName, data -> addReferenceAndUpdate(data, batchName));
+            List<DataType> listed = collectBatch(batchName);
+            for (DataType data : listed)
+                addReferenceAndUpdate(data, batchName);
+
+            loadedBatches.computeIfAbsent(batchName, name -> new ArrayList<>()).add(listed);
         });
     }
 
@@ -927,8 +943,49 @@ public class Resources {
 
         runOnMainThread(() -> {
             System.out.println("--Unload batch: " + batchName);
-            forEachInBatch(batchName, data -> removeReferenceAndUpdate(data, batchName));
+
+            // The data referenced by the load, not by the description now (reloaded, new data matching a regex...)
+            List<List<DataType>> loads = loadedBatches.get(batchName);
+            if (loads == null || loads.isEmpty()) {
+                System.err.println("--Batch " + batchName + " unloaded but not loaded");
+                return;
+            }
+
+            List<DataType> listed = loads.remove(loads.size() - 1);
+            if (loads.isEmpty())
+                loadedBatches.remove(batchName);
+
+            for (DataType data : listed)
+                removeReferenceAndUpdate(data, batchName);
         });
+    }
+
+    /**
+     * The description of a loaded batch changed (reload): its loads reference the new list, the data added are loaded,
+     * those removed are released. A description that lists an unknown data keeps the previous list.
+     */
+    private void batchDescriptionChanged(String batchName) {
+        List<List<DataType>> loads = loadedBatches.get(batchName);
+        if (loads == null)
+            return;
+
+        List<DataType> listed;
+        try {
+            listed = collectBatch(batchName);
+        } catch (RuntimeException e) {
+            System.err.println("--Batch " + batchName + " kept as loaded: " + e.getMessage());
+            return;
+        }
+
+        for (int i = 0; i < loads.size(); ++i) {
+            // Added before releasing: a data in both lists is never unloaded meanwhile
+            for (DataType data : listed)
+                addReferenceAndUpdate(data, batchName);
+            for (DataType data : loads.get(i))
+                removeReferenceAndUpdate(data, batchName);
+
+            loads.set(i, listed);
+        }
     }
 
     // ---- Whole types ----

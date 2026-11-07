@@ -62,6 +62,7 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
   - les données chargées qui dépendent d'une donnée changée (`dependents`, tenus par `acquireDependencies`) sont relues à leur tour, en chaîne (texture → tileset → tilemap, atlas → police) ; une donnée attend que ses dépendances aient fini leur relecture (`dependencyReady`), donc chacune n'est calculée qu'une fois lors d'un `reload all` ;
   - pas relues : données sans source (`hasSource()` faux : générées par le code), préchargées par le code, placeholders ; elles sont seulement recalculées (sauf placeholders) quand une dépendance change (atlas construit par le code). Une donnée **en échec** ou en cours de premier chargement est relue sur place ;
   - un type sans copie (`createReloadCopy` → `null`, ex. `NetworkConfiguration`, `WaveCollapseRules`, types de mods qui ne l'implémentent pas) est vidé puis relu sur place (signalé une fois). Un sous-type n'hérite pas de la copie de son parent (il doit donner la sienne) ;
+  - un batch garde, par `loadBatch`, la liste des données qu'il a référencées, et `unloadBatch` libère exactement celle-là. Si sa description est relue alors qu'il est chargé, la nouvelle liste s'applique : les données ajoutées sont chargées, les données retirées sont libérées. Une description qui cite une donnée inconnue n'est pas appliquée ;
   - un nouveau type de donnée : implémenter `createReloadCopy` (copier aussi les réglages donnés par le code, ex. `TextureData.copySettingsFrom`) et `swapContent` (échanger, pas déplacer, tout ce que lisent `initWithFile` et `internLoad`).
 - Commande `resources` : par type, chargées/préchargées/référencées, données chargées sans référence (fuite) ou référencées non chargées, état du pipeline.
 - Tests : `test/.../resources/ResourcesLifecycleTest` (cycles avec des `FakeData` sans fichier ni GL).
@@ -105,7 +106,7 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 
 ## Pièges connus (à garder en tête, non corrigés)
 
-- Rechargement à chaud : pendant l'envoi GL d'une texture relue, `Texture.getWidth/getHeight` donnent déjà la nouvelle taille ; un `ModelRenderer` n'affiche rien le temps de renvoyer ses meshes ; une `TileMap` relue perd les changements faits par le code (`setTileType`). Relire un batch chargé dont la liste a changé fausse les références retirées par `unloadBatch`.
+- Rechargement à chaud : pendant l'envoi GL d'une texture relue, `Texture.getWidth/getHeight` donnent déjà la nouvelle taille ; un `ModelRenderer` n'affiche rien le temps de renvoyer ses meshes ; une `TileMap` relue perd les changements faits par le code (`setTileType`).
 - `Resources.getInstance()` crée silencieusement une instance par défaut s'il est appelé avant `createInstance`.
 
 ### Spécifiques 2D
