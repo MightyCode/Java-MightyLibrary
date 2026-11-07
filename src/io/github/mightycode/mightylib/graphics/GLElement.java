@@ -98,6 +98,35 @@ public abstract class GLElement implements LoadingElement {
         return false;
     }
 
+    // ---- Sent again (its data was reloaded) while it stays usable ----
+
+    private boolean reloadQueued;
+
+    // Queue the element to be sent again by GLResources (once, until it is done)
+    protected final void requestReload() {
+        if (!loaded || reloadQueued)
+            return;
+
+        reloadQueued = true;
+        GLResources.getInstance().queueReload(this);
+    }
+
+    /**
+     * Send the element again, in steps like load, while the current version stays in use.
+     * @return true once done (by default nothing to do)
+     */
+    protected boolean reload(int remainingMilliseconds) {
+        return true;
+    }
+
+    boolean reloadByResource(int remainingMilliseconds) {
+        boolean done = !loaded || reload(remainingMilliseconds);
+        if (done)
+            reloadQueued = false;
+
+        return done;
+    }
+
     public abstract void unload(int remainingMilliseconds);
 
     void unloadByResource(int remainingMilliseconds) {
@@ -108,5 +137,6 @@ public abstract class GLElement implements LoadingElement {
         unload(remainingMilliseconds);
         loaded = false;
         loadStarted = false;
+        reloadQueued = false;
     }
 }

@@ -35,6 +35,12 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
     private int textureId;
     // Rows already sent, for a big texture sent by strips
     private int uploadedRows;
+    // Version of the data in textureId
+    private int uploadedVersion;
+    // Hot reload: the new version is sent in this texture, which replaces textureId once complete
+    private int pendingId = -1;
+    private int pendingRows;
+    private int pendingVersion;
 
     private int qualityType;
 
@@ -121,6 +127,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         // Active the texture to right position
         glActiveTexture(GL_TEXTURE0 + texturePos);
         if (isLoaded()){
+            checkVersion();
             glBindTexture(textureType, textureId);
             EngineStats.countTextureBind();
 
@@ -136,6 +143,65 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             else
                 glBindTexture(GL_TEXTURE_2D, getFallbackId());
             EngineStats.countTextureBind();
+        }
+    }
+
+    // Its data was reloaded: sent again by GLResources, the current version is used meanwhile
+    private void checkVersion() {
+        if (data.isLoaded() && data.getVersion() != uploadedVersion)
+            requestReload();
+    }
+
+    @Override
+    protected boolean reload(int remainingMilliseconds) {
+        // Being read again in place (no reload copy): the current version stays until the data is loaded
+        if (!data.isLoaded())
+            return true;
+
+        int version = data.getVersion();
+        if (pendingId == -1 && version == uploadedVersion)
+            return true;
+
+        // Changed again while being sent: start again with the latest version
+        if (pendingId != -1 && pendingVersion != version)
+            deletePending();
+
+        if (pendingId == -1) {
+            pendingId = GenDeleteResources.GenTexture();
+            pendingVersion = version;
+            glBindTexture(textureType, pendingId);
+
+            if (isSentByStrips()) {
+                glTexImage2D(textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+                pendingRows = 0;
+            } else {
+                glTexImage2D(textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getData());
+                pendingRows = data.getHeight();
+            }
+            Logger.CheckOpenGLError("Send texture again : " + data.getDataName());
+        } else {
+            glBindTexture(textureType, pendingId);
+        }
+
+        if (pendingRows < data.getHeight())
+            pendingRows = sendStrips(pendingRows, remainingMilliseconds);
+
+        if (pendingRows < data.getHeight())
+            return false;
+
+        GenDeleteResources.DeleteTexture(textureId);
+        textureId = pendingId;
+        pendingId = -1;
+        uploadedVersion = pendingVersion;
+        finishLoad();
+
+        return true;
+    }
+
+    private void deletePending() {
+        if (pendingId != -1) {
+            GenDeleteResources.DeleteTexture(pendingId);
+            pendingId = -1;
         }
     }
 
@@ -171,6 +237,10 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         if (isLoaded())
             unload(remainingMilliseconds);
 
+        // Reloaded while being sent by strips: start again with the latest version
+        if (textureId != -1 && data.getVersion() != uploadedVersion)
+            unload(remainingMilliseconds);
+
         try {
             if (textureId == -1) {
                 qualityType = data.defaultAspectTexture;
@@ -178,6 +248,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
                 textureId = GenDeleteResources.GenTexture();
                 uploadedRows = 0;
+                uploadedVersion = data.getVersion();
 
                 glBindTexture(this.textureType, textureId);
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType + " , quality type : " + qualityType + " , path : " + data.path() + " width : " + data.getWidth() + " , height : " + data.getHeight());
@@ -196,7 +267,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 glBindTexture(this.textureType, textureId);
             }
 
-            sendStrips(remainingMilliseconds);
+            uploadedRows = sendStrips(uploadedRows, remainingMilliseconds);
 
             if (uploadedRows < data.getHeight())
                 return false;
@@ -212,30 +283,34 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         }
     }
 
-    private void sendStrips(int remainingMilliseconds) {
+    // Send rows of the data from this one to the bound texture while time is left (at least one strip): the next row
+    private int sendStrips(int fromRow, int remainingMilliseconds) {
         int width = data.getWidth();
         int height = data.getHeight();
         int rowBytes = width * 4;
+        int sentRows = fromRow;
         long start = System.nanoTime();
 
         do {
             double leftMilliseconds = remainingMilliseconds - (System.nanoTime() - start) / 1e6;
             long stripBytes = (long) Math.max(MIN_STRIP_BYTES, Math.min(MAX_STRIP_BYTES, bytesPerMillisecond * leftMilliseconds));
-            int rows = (int) Math.max(1, Math.min(height - uploadedRows, stripBytes / rowBytes));
+            int rows = (int) Math.max(1, Math.min(height - sentRows, stripBytes / rowBytes));
 
             ByteBuffer strip = data.getData().duplicate();
-            strip.position(uploadedRows * rowBytes);
-            strip.limit((uploadedRows + rows) * rowBytes);
+            strip.position(sentRows * rowBytes);
+            strip.limit((sentRows + rows) * rowBytes);
 
             long stripStart = System.nanoTime();
-            glTexSubImage2D(textureType, 0, 0, uploadedRows, width, rows, GL_RGBA, GL_UNSIGNED_BYTE, strip);
+            glTexSubImage2D(textureType, 0, 0, sentRows, width, rows, GL_RGBA, GL_UNSIGNED_BYTE, strip);
             Logger.CheckOpenGLError("Send texture strip : " + data.getDataName());
-            uploadedRows += rows;
+            sentRows += rows;
 
             // Smoothed, a single slow strip must not shrink the next ones too much
             double stripMilliseconds = Math.max(0.01, (System.nanoTime() - stripStart) / 1e6);
             bytesPerMillisecond = bytesPerMillisecond * 0.7 + ((double) rows * rowBytes / stripMilliseconds) * 0.3;
-        } while (uploadedRows < height && (System.nanoTime() - start) / 1e6 < remainingMilliseconds);
+        } while (sentRows < height && (System.nanoTime() - start) / 1e6 < remainingMilliseconds);
+
+        return sentRows;
     }
 
     private boolean finishLoad() {
@@ -265,7 +340,11 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     @Override
     public int getRenderTextureId() {
-        return isLoaded() ? textureId : getFallbackId();
+        if (!isLoaded())
+            return getFallbackId();
+
+        checkVersion();
+        return textureId;
     }
 
     @Override
@@ -286,6 +365,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             textureId = -1;
         }
 
+        deletePending();
         uploadedRows = 0;
     }
 }

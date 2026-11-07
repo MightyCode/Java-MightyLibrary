@@ -37,6 +37,8 @@ public class GLResources {
     private final long maxNanosPerFrame;
 
     private final Queue<GLElement> elementToLoad;
+    // Loaded elements to send again, their data having changed (hot reload)
+    private final Queue<GLElement> elementToReload = new ArrayDeque<>();
 
     private final HashMap<Class<? extends GLElement>, HashMap<String, GLElement>> resources;
 
@@ -74,6 +76,23 @@ public class GLResources {
             if (!element.isLoaded())
                 elementToLoad.add(element);
         }
+
+        // Then the elements sent again (reloaded data), shown with their previous version meanwhile
+        int reloadsToTry = elementToReload.size();
+        while (reloadsToTry > 0 && (!stepDone || System.nanoTime() < deadline)) {
+            --reloadsToTry;
+            GLElement element = elementToReload.poll();
+
+            long remainingNanos = Math.max(0, deadline - System.nanoTime());
+            if (!element.reloadByResource((int) (remainingNanos / NANO_IN_MILLISECOND)))
+                elementToReload.add(element);
+            stepDone = true;
+        }
+    }
+
+    // Called by GLElement.requestReload
+    void queueReload(GLElement element) {
+        elementToReload.add(element);
     }
 
     // True while elements wait to be loaded, except those waiting for a failed data (they use the fallback)
@@ -142,6 +161,7 @@ public class GLResources {
         if (!element.isReferenced()) {
             // Not needed anymore: it must not be loaded later
             elementToLoad.remove(element);
+            elementToReload.remove(element);
 
             resources.get(element.getClass()).remove(element.getName());
             element.unloadByResource(150);
@@ -172,6 +192,7 @@ public class GLResources {
             }
         }
 
+        elementToReload.clear();
         Texture.DeletePlaceholder();
     }
 }
