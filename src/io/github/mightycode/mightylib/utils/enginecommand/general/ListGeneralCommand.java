@@ -22,5 +22,7 @@ public abstract class ListGeneralCommand {
         commands.addCommand(new InputGenCom());
         commands.addCommand(new CameraGenCom(sceneManager));
         commands.addCommand(new MonitorsGenCom());
+        commands.addCommand(new WaitGenCom(commands, sceneManager));
+        commands.addCommand(new ExecGenCom(commands));
     }
 }

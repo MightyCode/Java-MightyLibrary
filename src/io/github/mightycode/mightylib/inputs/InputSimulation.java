@@ -9,7 +9,8 @@ import java.util.Queue;
 import java.util.Set;
 
 /**
- * Simulated actions (commands, scripts, later replays), stored then applied when the inputs of the next tick are computed.
+ * Simulated presses of ids (actions, keys or mouse buttons) from commands, scripts, later replays,
+ * stored then applied when the inputs of the next tick are computed.
  * A simulated press is seen by the whole next tick, exactly like a real one.
  * Main thread only.
  */

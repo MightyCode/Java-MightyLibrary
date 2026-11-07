@@ -14,28 +14,48 @@ public class CommandResult {
 
     // Set when the result is only known later (for example a screenshot taken at the end of the next frame)
     private final CompletableFuture<CommandResult> deferred;
+    // The deferred result becomes an error after this time
+    private final long timeoutSeconds;
 
-    private CommandResult(boolean success, String message, JSONObject data, CompletableFuture<CommandResult> deferred) {
+    private CommandResult(boolean success, String message, JSONObject data,
+                          CompletableFuture<CommandResult> deferred, long timeoutSeconds) {
         this.success = success;
         this.message = message;
         this.data = data;
         this.deferred = deferred;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     public static CommandResult ok(String message) {
-        return new CommandResult(true, message, null, null);
+        return new CommandResult(true, message, null, null, 0);
     }
 
     public static CommandResult ok(String message, JSONObject data) {
-        return new CommandResult(true, message, data, null);
+        return new CommandResult(true, message, data, null, 0);
     }
 
     public static CommandResult error(String message) {
-        return new CommandResult(false, message, null, null);
+        return new CommandResult(false, message, null, null, 0);
     }
 
+    public static CommandResult error(String message, JSONObject data) {
+        return new CommandResult(false, message, data, null, 0);
+    }
+
+    // Result known later, an error if it takes more than Commands.COMMAND_TIMEOUT_SECONDS
     public static CommandResult later(CompletableFuture<CommandResult> deferred) {
-        return new CommandResult(true, null, null, deferred);
+        return later(deferred, Commands.COMMAND_TIMEOUT_SECONDS);
+    }
+
+    public static CommandResult later(CompletableFuture<CommandResult> deferred, long timeoutSeconds) {
+        if (timeoutSeconds <= 0)
+            throw new IllegalArgumentException("Timeout must be positive");
+
+        return new CommandResult(true, null, null, deferred, timeoutSeconds);
+    }
+
+    public long getTimeoutSeconds() {
+        return timeoutSeconds;
     }
 
     public boolean isSuccess() {

@@ -20,7 +20,7 @@ public class MouseManager {
 
     private final WindowInfo windowInfo;
 
-    private static final int MOUSE_BUTTONS = 7;
+    public static final int MOUSE_BUTTONS = GLFW_MOUSE_BUTTON_LAST + 1;
     private final boolean[] state = new boolean[MOUSE_BUTTONS];
     private final boolean[] oldState = new boolean[MOUSE_BUTTONS];
 
@@ -35,6 +35,15 @@ public class MouseManager {
 
     private final Vector2f mouseScroll;
     private final GLFWScrollCallback scrollCallback;
+
+    // Simulated mouse (commands, scripts, later replays), applied at the next postUpdate like real inputs
+    private final InputSimulation buttonSimulation;
+    // Window pixels, origin at the top left
+    private Vector2f pendingSimulatedCursor;
+    // Kept until the real cursor moves
+    private Vector2f simulatedCursor;
+    private double lastRealCursorX, lastRealCursorY;
+    private final Vector2f pendingScroll;
 
     /**
      * Mouse manager class.
@@ -54,12 +63,17 @@ public class MouseManager {
         Arrays.fill(oldState, false);
 
         mouseScroll = new Vector2f();
+        buttonSimulation = new InputSimulation();
+        pendingScroll = new Vector2f();
+        lastRealCursorX = Double.NaN;
+        lastRealCursorY = Double.NaN;
 
         glfwSetScrollCallback(windowInfo.getWindowId(), scrollCallback = new GLFWScrollCallback() {
             @Override
             public void invoke(final long window, final double xOffset, final double yOffset) {
-                mouseScroll.x = (float) xOffset;
-                mouseScroll.y = (float) yOffset;
+                // Several scroll events can happen during one tick
+                mouseScroll.x += (float) xOffset;
+                mouseScroll.y += (float) yOffset;
             }
         });
 
@@ -68,7 +82,7 @@ public class MouseManager {
     }
 
     public boolean getButton(int buttonId){
-        if(buttonId < 7){
+        if(buttonId >= 0 && buttonId < MOUSE_BUTTONS){
             return state[buttonId];
         }
         return false;
@@ -91,21 +105,73 @@ public class MouseManager {
         DoubleBuffer y = BufferUtils.createDoubleBuffer(1);
 
         glfwGetCursorPos(windowInfo.getWindowId(), x, y);
+        double realX = x.get(0);
+        double realY = y.get(0);
+
+        if (pendingSimulatedCursor != null) {
+            simulatedCursor = pendingSimulatedCursor;
+            pendingSimulatedCursor = null;
+        } else if (simulatedCursor != null && (realX != lastRealCursorX || realY != lastRealCursorY)) {
+            // The real cursor moved: it takes over again
+            simulatedCursor = null;
+        }
+        lastRealCursorX = realX;
+        lastRealCursorY = realY;
+
+        if (simulatedCursor != null)
+            toVirtual(simulatedCursor.x, simulatedCursor.y, pos);
+        else
+            toVirtual((float) realX, (float) realY, pos);
+    }
+
+    // Window pixels (origin at the top left) to the virtual coordinates given by pos()
+    private void toVirtual(float x, float y, Vector2f result) {
         if (windowInfo.getRatio() <= windowInfo.getVirtualRatio()){
             float diff = windowInfo.getSizeRef().x * 1f / windowInfo.getVirtualSizeRef().x;
 
             int size = (int)(windowInfo.getVirtualSizeRef().y * diff);
 
-            pos.set(((float)x.get(0) / diff),
-                    (((float)y.get(0) - (windowInfo.getSizeRef().y - size) * 0.5f) / diff));
+            result.set((x / diff), ((y - (windowInfo.getSizeRef().y - size) * 0.5f) / diff));
         } else {
             float diff = windowInfo.getSizeRef().y * 1f / windowInfo.getVirtualSizeRef().y;
 
             int size = (int)(windowInfo.getVirtualSizeRef().x * diff);
 
-            pos.set((((float)x.get(0) - (windowInfo.getSizeRef().x - size) * 0.5f) / diff),
-                    ((float)y.get(0) / diff));
+            result.set(((x - (windowInfo.getSizeRef().x - size) * 0.5f) / diff), (y / diff));
         }
+    }
+
+    /**
+     * Move the cursor from the next tick, in window pixels (origin at the top left, like screenshots).
+     * The position is kept until the real cursor moves.
+     */
+    public void simulateMove(float windowX, float windowY) {
+        pendingSimulatedCursor = new Vector2f(windowX, windowY);
+    }
+
+    public boolean isCursorSimulated() {
+        return simulatedCursor != null;
+    }
+
+    // Press a button during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
+    public void simulateButton(int buttonId, int ticks) {
+        checkButton(buttonId);
+        buttonSimulation.press(buttonId, ticks);
+    }
+
+    public void simulateButtonRelease(int buttonId) {
+        checkButton(buttonId);
+        buttonSimulation.release(buttonId);
+    }
+
+    // Scroll seen by the next tick (positive y : up)
+    public void simulateScroll(float x, float y) {
+        pendingScroll.add(x, y);
+    }
+
+    private void checkButton(int buttonId) {
+        if (buttonId < 0 || buttonId >= MOUSE_BUTTONS)
+            throw new IllegalArgumentException("Mouse button must be between 0 and " + (MOUSE_BUTTONS - 1));
     }
 
     public float posX(){
@@ -130,13 +196,15 @@ public class MouseManager {
         relativePos.x = posX() / windowInfo.getSizeRef().x;
         relativePos.y = posY() / windowInfo.getSizeRef().y;
 
+        buttonSimulation.update();
         for(int key = 0; key < state.length; ++key){
             oldState[key] = state[key];
-            state[key] = getState(key);
+            state[key] = getState(key) || buttonSimulation.getState(key);
         }
 
-        mouseScroll.x = 0;
-        mouseScroll.y = 0;
+        // Real scroll events of the next tick are added by the callback
+        mouseScroll.set(pendingScroll);
+        pendingScroll.set(0);
     }
 
     public void invertCursorState(){

@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.WindowInfo;
 
+import org.lwjgl.glfw.GLFWCharCallback;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -37,6 +39,15 @@ public class KeyboardManager {
 
     private KeyboardLanguage language;
 
+    // Text typed during the tick, given by the system (keyboard layout, dead keys and IME already applied)
+    private final StringBuilder incomingText;
+    private String typedText;
+    private final GLFWCharCallback charCallback;
+
+    // Simulated keys and text (commands, scripts, later replays), applied at the next postUpdate like real inputs
+    private final InputSimulation keySimulation;
+    private final StringBuilder pendingSimulatedText;
+
     /**
      * Keyboard manager class.
      * Instance the class.
@@ -52,11 +63,49 @@ public class KeyboardManager {
         mainKey = -1;
         numberKeyPressed = 0;
         capsLockActivated = false;
+
+        incomingText = new StringBuilder();
+        typedText = "";
+        keySimulation = new InputSimulation();
+        pendingSimulatedText = new StringBuilder();
+
+        glfwSetCharCallback(info.getWindowId(), charCallback = new GLFWCharCallback() {
+            @Override
+            public void invoke(long window, int codepoint) {
+                incomingText.appendCodePoint(codepoint);
+            }
+        });
     }
 
     public boolean getKeyState(int keyID){
-        if(keyID >= BEGIN_KEYS && keyID <= BEGIN_KEYS + KEYS) return state[keyID];
+        if(keyID >= BEGIN_KEYS && keyID < KEYS) return state[keyID];
         return false;
+    }
+
+    // Text typed during this tick, empty if none : the way to read text (text fields, terminal)
+    public String getTypedText() {
+        return typedText;
+    }
+
+    // Press a key (GLFW_KEY_...) during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
+    public void simulateKey(int keyId, int ticks) {
+        checkKey(keyId);
+        keySimulation.press(keyId, ticks);
+    }
+
+    public void simulateKeyRelease(int keyId) {
+        checkKey(keyId);
+        keySimulation.release(keyId);
+    }
+
+    // Text seen by getTypedText() at the next tick
+    public void simulateText(String text) {
+        pendingSimulatedText.append(text);
+    }
+
+    private void checkKey(int keyId) {
+        if (keyId < BEGIN_KEYS || keyId >= KEYS)
+            throw new IllegalArgumentException("Key must be between " + BEGIN_KEYS + " and " + (KEYS - 1));
     }
 
     private boolean testState(int keyID){
@@ -96,9 +145,16 @@ public class KeyboardManager {
         boolean mainKeyChanged = false;
         numberKeyPressed = 0;
 
+        // Text typed since the last postUpdate, then the simulated one
+        incomingText.append(pendingSimulatedText);
+        pendingSimulatedText.setLength(0);
+        typedText = incomingText.toString();
+        incomingText.setLength(0);
+
+        keySimulation.update();
         for(int key = BEGIN_KEYS; key < state.length; ++key){
             oldState[key] = state[key];
-            state[key] = testState(key);
+            state[key] = testState(key) || keySimulation.getState(key);
 
             if (state[key]){
                 numberKeyPressed += 1;

@@ -1,0 +1,24 @@
+# Open Test2DScene from the menu with the mouse, type a text, then go back to the menu.
+# Run : python tools/scenario.py "?exec tools/scripts/menu-mouse.txt" --timeout 60
+# Positions are in window pixels: the "2D scene" button is at (25 %, 40 %) of the 1280x720 window.
+
+scene MenuScene
+wait loaded
+input mouse 320 288
+wait 2
+input state
+input click
+wait 2
+wait loaded 60
+scene
+input text "Héllo wörld"
+input key ENTER
+wait 1
+input state
+input scroll 2
+wait 1
+input state
+input ESCAPE
+wait 2
+wait loaded
+scene

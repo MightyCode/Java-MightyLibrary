@@ -13,8 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -124,9 +122,8 @@ public class DebugServer {
                 try {
                     CommandResult result;
                     try {
-                        result = commands.submit(line).get(Commands.COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                    } catch (TimeoutException e) {
-                        result = CommandResult.error("No answer after " + Commands.COMMAND_TIMEOUT_SECONDS + " seconds");
+                        // Always completed once executed: deferred results have their own timeout
+                        result = commands.submit(line).get();
                     } catch (ExecutionException e) {
                         result = CommandResult.error(e.getCause().toString());
                     }

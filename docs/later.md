@@ -136,7 +136,7 @@ Après le rendu 2D : reprendre d'abord le travail des branches `dev` (`AdvancedR
 Constat : `SoundLoader.filterFile` n'accepte que `.ogg` (décodé par STB Vorbis) ; **le WAV n'est plus chargé** malgré le README. Rétablir le WAV, envisager d'autres formats, et le streaming pour les musiques longues (aujourd'hui tout le fichier est décodé en mémoire).
 
 ## Console et GUI en jeu
-Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son système `guicommand`, à unifier avec `Commands`) et une GUI de base pour afficher des informations en jeu (overlay de debug : stats, scène, entrées). S'appuie sur le thème, les tailles automatiques et les langues (Thème, tailles automatiques et langues).
+Une console affichée dans le jeu (base : `graphics/GUI/Terminal` et son système `guicommand`, à unifier avec `Commands` ; lire le texte par `KeyboardManager.getTypedText()` plutôt que par `KeyboardLanguage`, qui ignore la disposition réelle et les accents) et une GUI de base pour afficher des informations en jeu (overlay de debug : stats, scène, entrées). S'appuie sur le thème, les tailles automatiques et les langues (Thème, tailles automatiques et langues).
 
 ## Intégrations plateformes
 - **Discord** : présence enrichie (statut de jeu) via le SDK Discord, bindings Java à évaluer.

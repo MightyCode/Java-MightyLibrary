@@ -9,10 +9,12 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
 
 /**
  * Registry of the commands.
@@ -20,7 +22,7 @@ import java.util.concurrent.TimeoutException;
  * at the beginning of the next tick, so the game is never blocked while waiting for a command.
  */
 public class Commands {
-    // Time given to a command to answer (deferred results included) before its caller stops waiting
+    // Default time given to a deferred result before it becomes an error
     public static final long COMMAND_TIMEOUT_SECONDS = 30;
 
     private static class CommandRequest {
@@ -37,10 +39,14 @@ public class Commands {
     private final int endGeneralCommand;
 
     private final ConcurrentLinkedQueue<CommandRequest> pendingRequests;
+    private final ArrayList<BooleanSupplier> tickTasks;
+    private static final int MAX_TASK_PASSES = 16;
+    private long tick;
     private Thread consoleThread;
 
     public Commands(SceneManager sceneManager) {
         pendingRequests = new ConcurrentLinkedQueue<>();
+        tickTasks = new ArrayList<>();
 
         // Add commands -> General
         commands = new ArrayList<>();
@@ -60,28 +66,86 @@ public class Commands {
         return request.result;
     }
 
+    /**
+     * Run a task at each tick (main thread, before the submitted commands) until it returns true.
+     * Used by commands whose result needs several ticks (wait, exec).
+     */
+    public void addTickTask(BooleanSupplier task) {
+        tickTasks.add(task);
+    }
+
+    // Number of calls to processPendingCommands, one per tick: tasks compare it instead of counting their calls
+    public long getTick() {
+        return tick;
+    }
+
     // Main thread only
     public void processPendingCommands() {
+        ++tick;
+
+        // A finished task can unblock another one (a script waiting for a wait): run them again in the same tick.
+        // Tasks must depend on getTick(), not on the number of times they are run.
+        boolean someFinished = true;
+        for (int pass = 0; someFinished && pass < MAX_TASK_PASSES; ++pass) {
+            someFinished = false;
+
+            ArrayList<BooleanSupplier> running = new ArrayList<>(tickTasks);
+            for (BooleanSupplier task : running) {
+                boolean finished;
+                try {
+                    finished = task.getAsBoolean();
+                } catch (RuntimeException e) {
+                    System.err.println("--Command task failed : " + e);
+                    finished = true;
+                }
+
+                if (finished) {
+                    tickTasks.remove(task);
+                    someFinished = true;
+                }
+            }
+        }
+
         CommandRequest request;
         while ((request = pendingRequests.poll()) != null) {
             CommandResult result = execute(request.line);
 
             if (result.isDeferred()) {
                 CompletableFuture<CommandResult> target = request.result;
-                result.getDeferred().whenComplete((deferredResult, exception) -> {
-                    if (exception != null)
-                        target.complete(CommandResult.error(exception.toString()));
-                    else
-                        target.complete(deferredResult);
-                });
+                result.getDeferred().whenComplete((deferredResult, exception) ->
+                        target.complete(ResolveDeferred(result, deferredResult, exception)));
             } else {
                 request.result.complete(result);
             }
         }
     }
 
-    // Main thread only
+    // Final result of a deferred command once its future is completed
+    public static CommandResult ResolveDeferred(CommandResult deferredCommand, CommandResult value, Throwable exception) {
+        if (exception == null)
+            return value == null ? CommandResult.error("Command answered nothing") : value;
+
+        Throwable cause = exception instanceof CompletionException && exception.getCause() != null ? exception.getCause() : exception;
+        if (cause instanceof TimeoutException)
+            return CommandResult.error("No answer after " + deferredCommand.getTimeoutSeconds() + " seconds");
+
+        return CommandResult.error(cause.toString());
+    }
+
+    /**
+     * Main thread only.
+     * A deferred result is completed with an error after its timeout, so it always ends.
+     */
     public CommandResult execute(String line) {
+        CommandResult result = executeNow(line);
+
+        if (result.isDeferred())
+            result.getDeferred().orTimeout(result.getTimeoutSeconds(), TimeUnit.SECONDS);
+
+        return result;
+    }
+
+    private CommandResult executeNow(String line) {
         String[] args;
         try {
             args = CommandLine.Split(line);
@@ -125,9 +189,8 @@ public class Commands {
 
                     CommandResult result;
                     try {
-                        result = submit(line).get(COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                    } catch (TimeoutException e) {
-                        result = CommandResult.error("No answer after " + COMMAND_TIMEOUT_SECONDS + " seconds");
+                        // Always completed once executed: deferred results have their own timeout
+                        result = submit(line).get();
                     } catch (ExecutionException e) {
                         result = CommandResult.error(e.getCause().toString());
                     }
