@@ -30,7 +30,7 @@ public class MenuScene extends Scene {
     static {
         CREATION_INFO_SELECT.name = "select";
         CREATION_INFO_SELECT.gainNode = "noise";
-        CREATION_INFO_SELECT.gain = 1f;
+        CREATION_INFO_SELECT.gain = 0.2f;
     }
 
     private GUIList guiList;
