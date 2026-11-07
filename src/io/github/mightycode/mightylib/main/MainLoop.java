@@ -80,6 +80,7 @@ public final class MainLoop {
     // Return ListError.NO_ERROR, or the error that prevents the engine from starting
     private static int setup(EngineConfig config) {
         config.validate();
+        MainThread.setCurrentAsMain();
         admin = config.isAdmin();
         Logger.DO_CHECK = config.isOpenGLErrorCheck();
 
@@ -230,7 +231,9 @@ public final class MainLoop {
                 // GL elements are sent with the time left in this frame, before the next tick or frame.
                 // No tick is due now (the tick branch would have run), at least one step is done anyway.
                 long nextTick = start + (long) (lastTick + tickTime);
-                glResources.process(Math.min(nextTick, frameStart + (long) frameTime));
+                long deadline = Math.min(nextTick, frameStart + (long) frameTime);
+                MainThread.process(deadline);
+                glResources.process(deadline);
 
                 // Measured before the buffer swap, which can wait for the GPU
                 long frameWork = System.nanoTime() - frameStart;
@@ -289,6 +292,9 @@ public final class MainLoop {
             sceneManager.unload();
             sceneManager = null;
         }
+
+        // Tasks still waiting can free GL objects: run them while the context exists
+        MainThread.processAll();
 
         if (contextManager != null) {
             contextManager.unload();
