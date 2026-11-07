@@ -147,30 +147,30 @@ class FileWatchTest {
         }
     }
 
-    // ---- WatchSelection ----
+    // ---- ResourceSelection ----
 
     @Test
     void selectionNarrowsByTypeNamesAndRegex() {
         FakeData grass = new FakeData(THREAD_CONTEXT, "grass");
         FakeData tileSand = new FakeData(THREAD_CONTEXT, "tile_sand");
 
-        assertTrue(WatchSelection.all().matches(FakeData.class, grass));
-        assertTrue(WatchSelection.ofType(FakeData.class).matches(FakeData.class, grass));
-        assertFalse(WatchSelection.ofType(BatchResources.class).matches(FakeData.class, grass));
+        assertTrue(ResourceSelection.all().matches(FakeData.class, grass));
+        assertTrue(ResourceSelection.ofType(FakeData.class).matches(FakeData.class, grass));
+        assertFalse(ResourceSelection.ofType(BatchResources.class).matches(FakeData.class, grass));
 
-        WatchSelection names = WatchSelection.ofType(FakeData.class).withNames("grass");
+        ResourceSelection names = ResourceSelection.ofType(FakeData.class).withNames("grass");
         assertTrue(names.matches(FakeData.class, grass));
         assertFalse(names.matches(FakeData.class, tileSand));
 
-        WatchSelection regex = WatchSelection.ofType(FakeData.class).withRegex("tile_.*");
+        ResourceSelection regex = ResourceSelection.ofType(FakeData.class).withRegex("tile_.*");
         assertFalse(regex.matches(FakeData.class, grass));
         assertTrue(regex.matches(FakeData.class, tileSand));
 
-        WatchSelection both = names.withRegex("tile_.*");
+        ResourceSelection both = names.withRegex("tile_.*");
         assertTrue(both.matches(FakeData.class, grass));
         assertTrue(both.matches(FakeData.class, tileSand));
 
-        assertThrows(IllegalArgumentException.class, () -> WatchSelection.all().withRegex("(["));
+        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.all().withRegex("(["));
     }
 
     // ---- ResourceWatcher ----
@@ -232,7 +232,7 @@ class FileWatchTest {
         watcher = resources.watcher();
         assertFalse(watcher.isRunning(), "off until asked");
         watcher.configure(ResourceWatcher.Mode.POLLING, 50);
-        watcher.watch(WatchSelection.ofType(FakeData.class).withNames("a"));
+        watcher.watch(ResourceSelection.ofType(FakeData.class).withNames("a"));
         assertTrue(watcher.isRunning());
 
         pump(resources, 1500); // the files are tracked

@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.resources.WatchSelection;
+import io.github.mightycode.mightylib.resources.ResourceSelection;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 
@@ -38,7 +38,7 @@ public class WatchGenCom extends BaseCommand {
         if (type == null)
             return unknownArgumentError(args[1]);
 
-        WatchSelection selection = WatchSelection.ofType(type);
+        ResourceSelection selection = ResourceSelection.ofType(type);
         for (int i = 2; i < args.length; ++i) {
             if (args[i].startsWith("re:")) {
                 try {

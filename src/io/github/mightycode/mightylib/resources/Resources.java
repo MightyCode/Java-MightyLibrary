@@ -1063,7 +1063,7 @@ public class Resources {
         runOnMainThread(() -> requestReload(dataType));
     }
 
-    // Off until asked: watcher().watchAll(), watcher().watch(WatchSelection...), command watch
+    // Off until asked: watcher().watchAll(), watcher().watch(ResourceSelection...), command watch
     public ResourceWatcher watcher() {
         return watcher;
     }

@@ -33,7 +33,7 @@ public final class ResourceWatcher {
     private static final long REFRESH_MS = 1000;
 
     private final Resources resources;
-    private final List<WatchSelection> selections = new CopyOnWriteArrayList<>();
+    private final List<ResourceSelection> selections = new CopyOnWriteArrayList<>();
     private Mode mode = Mode.POLLING;
     private long intervalMs = DEFAULT_INTERVAL_MS;
     private FileChangeDetector detector;
@@ -55,18 +55,18 @@ public final class ResourceWatcher {
     }
 
     /** Watch this selection too; starts the watcher when it is not running. */
-    public synchronized void watch(WatchSelection selection) {
+    public synchronized void watch(ResourceSelection selection) {
         selections.add(selection);
         if (!isRunning())
             startDetector();
     }
 
     public void watchAll() {
-        watch(WatchSelection.all());
+        watch(ResourceSelection.all());
     }
 
     public void watchType(Class<? extends DataType> type) {
-        watch(WatchSelection.ofType(type));
+        watch(ResourceSelection.ofType(type));
     }
 
     /** Stop watching and forget the selections. */
@@ -80,7 +80,7 @@ public final class ResourceWatcher {
         return detector != null;
     }
 
-    public List<WatchSelection> getSelections() {
+    public List<ResourceSelection> getSelections() {
         return new ArrayList<>(selections);
     }
 
@@ -137,7 +137,7 @@ public final class ResourceWatcher {
     }
 
     private boolean matches(Class<? extends DataType> type, DataType data) {
-        for (WatchSelection selection : selections) {
+        for (ResourceSelection selection : selections) {
             if (selection.matches(type, data))
                 return true;
         }
