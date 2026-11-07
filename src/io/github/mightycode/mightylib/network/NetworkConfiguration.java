@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.network;
 
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 
 public class NetworkConfiguration extends SingleSourceDataType {
@@ -15,6 +16,21 @@ public class NetworkConfiguration extends SingleSourceDataType {
         this.address = address;
         this.id = id;
         this.port = port;
+    }
+
+    @Override
+    protected DataType createReloadCopy() {
+        return getClass() == NetworkConfiguration.class ? new NetworkConfiguration(getDataName(), path()) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        NetworkConfiguration other = (NetworkConfiguration) copy;
+        String otherAddress = other.address;
+        String otherId = other.id;
+        int otherPort = other.port;
+        other.init(address, id, port);
+        init(otherAddress, otherId, otherPort);
     }
 
     @Override

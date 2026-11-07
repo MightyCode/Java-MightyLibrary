@@ -556,15 +556,7 @@ public class Resources {
 
     // False when the type has no reload copy: the data is then emptied and read again in place
     private boolean startReloadCopy(DataType data) {
-        DataType copy = data.reloadCopy;
-        if (copy != null) {
-            // Already reading a new version: read it once more, the source may have changed again
-            copy.reloadWanted = true;
-            requestUpdate(copy);
-            return true;
-        }
-
-        copy = data.createReloadCopy();
+        DataType copy = data.createReloadCopy();
         if (copy == null) {
             if (reportedNoReloadCopy.add(data.getClass()))
                 System.err.println("--" + data.getClass().getSimpleName()
@@ -572,8 +564,14 @@ public class Resources {
             return false;
         }
 
+        // Already reading a new version: the source changed again, that one is abandoned (no longer wanted, see
+        // isWanted) and a new read starts at once. Its running step goes on (not interruptible), its result is dropped
+        DataType abandoned = data.reloadCopy;
+
         copy.reloadOf = data;
         data.reloadCopy = copy;
+        if (abandoned != null)
+            requestUpdate(abandoned);
         requestUpdate(copy);
         return true;
     }
