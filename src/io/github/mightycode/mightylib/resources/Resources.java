@@ -35,6 +35,8 @@ public class Resources {
 
     // Reference added by loadAllOfType (AllResourcesMethod, batch descriptions)
     private static final String ALL_REFERENCE = "all";
+    // Prefix of the references a data adds to its dependencies
+    static final String DEPENDENCY_REFERENCE_PREFIX = "dependency:";
 
     public static abstract class LoadingMethod{}
     public static class AllResourcesMethod extends LoadingMethod{}
@@ -233,12 +235,15 @@ public class Resources {
             int loaded = 0, preloaded = 0, referenced = 0;
             JSONArray loadedNotReferenced = new JSONArray();
             JSONArray referencedNotLoaded = new JSONArray();
+            JSONArray onlyAsDependency = new JSONArray();
 
             for (DataType data : ofType.getValue().values()) {
                 boolean isReferenced = !data.notReferenced();
                 if (data.isLoaded()) ++loaded;
                 if (data.isPreLoaded()) ++preloaded;
                 if (isReferenced) ++referenced;
+                if (isReferenced && onlyReferencedAsDependency(data))
+                    onlyAsDependency.put(data.getDataName());
 
                 if (data.isLoaded() && !isReferenced)
                     loadedNotReferenced.put(data.getDataName());
@@ -257,6 +262,9 @@ public class Resources {
                 type.put("loadedNotReferenced", loadedNotReferenced);
             if (!referencedNotLoaded.isEmpty())
                 type.put("referencedNotLoaded", referencedNotLoaded);
+            // Wanted only because another data depends on it (not listed by a batch nor added by the code)
+            if (!onlyAsDependency.isEmpty())
+                type.put("onlyAsDependency", onlyAsDependency);
 
             types.put(ofType.getKey().getSimpleName(), type);
         }
@@ -272,6 +280,17 @@ public class Resources {
         result.put("types", types);
         result.put("pipeline", pipeline);
         return result;
+    }
+
+    private static boolean onlyReferencedAsDependency(DataType data) {
+        synchronized (data.references) {
+            for (String reference : data.references) {
+                if (!reference.startsWith(DEPENDENCY_REFERENCE_PREFIX))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     // ---- Reconciliation, main thread only ----
@@ -301,6 +320,7 @@ public class Resources {
 
         if (!isWanted(data)) {
             stopWaitingDependencies(data);
+            releaseDependencies(data);
             data.failed = false;
             data.reloadWanted = false;
             data.discard();
@@ -317,6 +337,7 @@ public class Resources {
             data.reloadWanted = false;
             data.failed = false;
             stopWaitingDependencies(data);
+            releaseDependencies(data);
             data.discard();
         }
 
@@ -325,11 +346,64 @@ public class Resources {
 
         if (!data.isPreLoaded()) {
             startStep(data, true);
-        } else if (!data.canBeLoad()) {
+            return;
+        }
+
+        acquireDependencies(data);
+
+        for (DataType dependency : data.getDependencies()) {
+            if (dependency.failed) {
+                fail(data, "its dependency " + dependency.getClass().getSimpleName() + " "
+                        + dependency.getDataName() + " failed");
+                return;
+            }
+        }
+
+        if (!data.canBeLoad()) {
             waitDependencies(data);
         } else {
             stopWaitingDependencies(data);
             startStep(data, false);
+        }
+    }
+
+    // A wanted data references its dependencies (known once preloaded), so they are loaded without being listed
+    private void acquireDependencies(DataType data) {
+        for (DataType dependency : data.getDependencies()) {
+            if (!data.acquiredDependencies.contains(dependency)) {
+                data.acquiredDependencies.add(dependency);
+                addReferenceAndUpdate(dependency, data.dependencyReference());
+            }
+        }
+    }
+
+    private void releaseDependencies(DataType data) {
+        if (data.acquiredDependencies.isEmpty())
+            return;
+
+        List<DataType> released = new ArrayList<>(data.acquiredDependencies);
+        data.acquiredDependencies.clear();
+        for (DataType dependency : released)
+            removeReferenceAndUpdate(dependency, data.dependencyReference());
+    }
+
+    /**
+     * The data cannot be loaded: back to the initial state (its dependencies released) until it is no longer wanted
+     * or reloaded; the data waiting for it fail too, instead of waiting forever.
+     */
+    private void fail(DataType data, String reason) {
+        System.err.println("--" + data.getClass().getSimpleName() + " " + data.getDataName() + " failed: " + reason);
+
+        data.failed = true;
+        stopWaitingDependencies(data);
+        releaseDependencies(data);
+        data.discard();
+
+        List<DataType> waiters = new ArrayList<>(data.waiters);
+        data.waiters.clear();
+        for (DataType waiter : waiters) {
+            if (waiter.waitingDependencies && !waiter.failed)
+                fail(waiter, "its dependency " + data.getClass().getSimpleName() + " " + data.getDataName() + " failed");
         }
     }
 
@@ -367,8 +441,7 @@ public class Resources {
         if (preload) {
             loader = findLoader(data);
             if (loader == null) {
-                System.err.println("--No loader for " + data.getClass().getSimpleName() + " " + data.getDataName());
-                data.failed = true;
+                fail(data, "no loader");
                 return;
             }
         }
@@ -423,20 +496,15 @@ public class Resources {
         data.jobRunning = false;
 
         if (result.error != null) {
-            System.err.println("--" + (preload ? "Preload" : "Load") + " of " + data.getClass().getSimpleName()
-                    + " " + data.getDataName() + " failed:");
             result.error.printStackTrace();
-            data.failed = true;
-            if (!preload)
-                data.loadDone(false);
+            fail(data, (preload ? "preload" : "load") + " threw " + result.error);
         } else if (preload) {
             data.setPreloaded();
+        } else if (result.success) {
+            data.loadDone(true);
+            wakeWaiters(data);
         } else {
-            data.loadDone(result.success);
-            if (result.success)
-                wakeWaiters(data);
-            else
-                data.failed = true;
+            fail(data, "load returned false");
         }
 
         // Wanted state may have changed meanwhile: unloaded if no longer referenced, next step otherwise

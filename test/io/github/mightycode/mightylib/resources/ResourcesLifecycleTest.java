@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources;
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.main.Workers;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import org.json.JSONArray;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -434,28 +435,135 @@ class ResourcesLifecycleTest {
         assertConsistent();
     }
 
-    // The dependency is never wanted: the data waits, then is unloaded without blocking the queue
+    // The dependency is not listed by the batch: the data references it, and releases it when unloaded
     @Test
-    void unloadWhileWaitingForDependency() throws Exception {
-        FakeData never = fake(THREAD_CONTEXT, "never");
+    void dependencyNotListedIsLoadedThenReleased() throws Exception {
+        FakeData texture = fake(MAIN_CONTEXT, "texture");
         FakeData model = fake(THREAD_CONTEXT, "model");
-        model.dependencyToAdd = never;
+        model.dependencyToAdd = texture;
         batch("level", "model");
         start();
 
         resources.loadBatch("level");
-        for (int i = 0; i < 50; ++i) {
+        pump();
+        assertTrue(texture.isLoaded());
+        assertTrue(model.isLoaded());
+        assertConsistent();
+
+        JSONArray onlyAsDependency = resources.describe().getJSONObject("types").getJSONObject("FakeData")
+                .getJSONArray("onlyAsDependency");
+        assertEquals(1, onlyAsDependency.length());
+        assertEquals("texture", onlyAsDependency.getString(0));
+
+        resources.unloadBatch("level");
+        pump();
+        assertFalse(texture.isLoaded());
+        assertFalse(model.isLoaded());
+        assertEquals(0, texture.referenceCount());
+        assertConsistent();
+    }
+
+    // Unloaded while waiting for a slow dependency: both end unloaded
+    @Test
+    void unloadWhileWaitingForDependency() throws Exception {
+        FakeData slow = fake(THREAD_CONTEXT, "slow");
+        slow.preloadMilliseconds = 100;
+        FakeData model = fake(THREAD_CONTEXT, "model");
+        model.dependencyToAdd = slow;
+        batch("level", "model");
+        start();
+
+        resources.loadBatch("level");
+        for (int i = 0; i < 20 && !model.isPreLoaded(); ++i) {
             frame();
             Thread.sleep(1);
         }
-        assertFalse(resources.finishedCurrentLoading(), "waits for its dependency");
+        frame();
         assertFalse(model.isLoaded());
 
         resources.unloadBatch("level");
         pump();
         assertFalse(model.isLoaded());
         assertFalse(model.isPreLoaded());
+        assertFalse(slow.isLoaded());
         assertConsistent();
+    }
+
+    // The dependency fails after the data started waiting: the data fails instead of waiting forever
+    @Test
+    void failedDependencyFailsTheWaitingData() throws Exception {
+        FakeData broken = fake(THREAD_CONTEXT, "broken");
+        broken.preloadMilliseconds = 30;
+        broken.failLoad = true;
+        FakeData model = fake(THREAD_CONTEXT, "model");
+        model.dependencyToAdd = broken;
+        batch("level", "model");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+
+        assertFalse(model.isLoaded());
+        assertFalse(model.isPreLoaded());
+        assertTrue(model.failed);
+        // Released by the failed data: nothing keeps the broken dependency
+        assertEquals(0, broken.referenceCount());
+        assertEquals(0, model.errors.get());
+        assertEquals(0, broken.errors.get());
+    }
+
+    // The dependency already failed when the data is preloaded
+    @Test
+    void alreadyFailedDependencyFailsTheData() throws Exception {
+        FakeData broken = fake(MAIN_CONTEXT, "broken");
+        broken.failLoad = true;
+        FakeData model = fake(THREAD_CONTEXT, "model");
+        model.preloadMilliseconds = 30;
+        model.dependencyToAdd = broken;
+        batch("level", "broken", "model");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+
+        assertTrue(broken.failed);
+        assertTrue(model.failed);
+        assertFalse(model.isLoaded());
+        assertEquals(1, broken.referenceCount(), "only the batch references it");
+    }
+
+    @Test
+    void failureGoesUpTheDependencyChain() throws Exception {
+        FakeData a = fake(MAIN_CONTEXT, "a");
+        a.preloadMilliseconds = 20;
+        a.failLoad = true;
+        FakeData b = fake(THREAD_CONTEXT, "b");
+        b.dependencyToAdd = a;
+        FakeData c = fake(MAIN_CONTEXT, "c");
+        c.dependencyToAdd = b;
+        batch("level", "c");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+
+        // Only c is still wanted (by the batch): a and b were released by the failed data, which clears their failure
+        assertTrue(c.failed);
+        assertEquals(0, a.referenceCount());
+        assertEquals(0, b.referenceCount());
+        for (FakeData data : all) {
+            assertFalse(data.isLoaded(), data.getDataName());
+            assertFalse(data.isPreLoaded(), data.getDataName());
+            assertEquals(0, data.errors.get(), data.getDataName());
+        }
+
+        // Unloading the batch clears the failures
+        resources.unloadBatch("level");
+        pump();
+        for (FakeData data : all) {
+            assertFalse(data.failed, data.getDataName());
+            assertEquals(0, data.referenceCount(), data.getDataName());
+        }
     }
 
     @Test
@@ -481,6 +589,10 @@ class ResourcesLifecycleTest {
             data.preloadMilliseconds = i % 4;
             names[i] = data.getDataName();
         }
+        // A few dependencies, some of them crossing batches (data4 -> data9 is in no batch with data4 but b)
+        all.get(0).dependencyToAdd = all.get(7);
+        all.get(4).dependencyToAdd = all.get(9);
+        all.get(10).dependencyToAdd = all.get(1);
         batch("a", Arrays.copyOfRange(names, 0, 6));
         batch("b", Arrays.copyOfRange(names, 4, 10));
         batch("c", Arrays.copyOfRange(names, 8, 12));

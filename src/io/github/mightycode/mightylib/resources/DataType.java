@@ -29,7 +29,7 @@ public abstract class DataType extends UUID implements LoadingElement {
     protected final List<String> references;
 
     // Filled while preloading in a worker thread, read from the main thread
-    private final List<DataType> dependencies;
+    private final CopyOnWriteArrayList<DataType> dependencies;
 
     private final TYPE_SET_UP typeSetUp;
 
@@ -45,6 +45,8 @@ public abstract class DataType extends UUID implements LoadingElement {
     boolean preloadedByCode;
     // Data waiting for this one to be loaded
     final List<DataType> waiters = new ArrayList<>();
+    // Dependencies this data references (see Resources.acquireDependencies), released with the data
+    final List<DataType> acquiredDependencies = new ArrayList<>();
 
     public enum TYPE_SET_UP {
         IMMEDIATELY_IN_CURRENT_CONTEXT,
@@ -86,8 +88,19 @@ public abstract class DataType extends UUID implements LoadingElement {
         return dependencies;
     }
 
+    // A dependency is referenced by this data while it is wanted: it does not have to be listed by a batch
     public final void addDependency(DataType dependency){
-        dependencies.add(dependency);
+        if (dependency == null)
+            throw new IllegalArgumentException("Null dependency for " + getClass().getSimpleName() + " " + dataName
+                    + " (unknown resource name?)");
+
+        // Preloading again (reload) adds the same dependencies again
+        dependencies.addIfAbsent(dependency);
+    }
+
+    // Name of the reference this data adds to its dependencies
+    final String dependencyReference() {
+        return Resources.DEPENDENCY_REFERENCE_PREFIX + getClass().getSimpleName() + ":" + dataName;
     }
 
     public final void removeDependency(DataType dependency){
@@ -136,13 +149,10 @@ public abstract class DataType extends UUID implements LoadingElement {
         return internLoad();
     }
 
+    // On failure the data stays preloaded: Resources discards it (internCancelPreload)
     final void loadDone(boolean success) {
-        if (success) {
+        if (success)
             correctlyLoaded = true;
-        } else {
-            correctlyPreLoaded = false;
-            System.err.println("--Can't load " + getClass().getSimpleName() + " " + dataName);
-        }
     }
 
     // Back to the initial state, whether the data was loaded or only preloaded
