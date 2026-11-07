@@ -40,8 +40,16 @@ public class Resources {
             Action = action;
         }
 
+        // UNLOAD queued because nothing referenced the data anymore: skipped if it is referenced again meanwhile
+        public boolean onlyIfUnused;
+
         public ResourceEntry setInfo(String info){
             this.info = info;
+            return this;
+        }
+
+        public ResourceEntry setOnlyIfUnused() {
+            onlyIfUnused = true;
             return this;
         }
     }
@@ -212,7 +220,11 @@ public class Resources {
                 entry.Data.load();
                 break;
             case UNLOAD:
+                if (unloadNoLongerWanted(entry))
+                    break;
+
                 entry.Data.unload();
+                afterUnload(entry);
 
                 if ("Delete".equals(entry.info))
                     deleteResource(entry.Data);
@@ -222,6 +234,32 @@ public class Resources {
                 notifyPreLoadedResources(entry.Data);
                 break;
         }
+    }
+
+    // The data was referenced again after this UNLOAD was queued (batch unloaded then loaded again)
+    boolean unloadNoLongerWanted(ResourceEntry entry) {
+        return entry.onlyIfUnused && !entry.Data.notReferenced();
+    }
+
+    // Referenced again while it was unloading: its PRELOAD/LOAD were not queued or are now useless, start again
+    void afterUnload(ResourceEntry entry) {
+        if (entry.onlyIfUnused && !entry.Data.notReferenced() && !entry.Data.isPreLoaded())
+            addResourceToProcess(new ResourceEntry(entry.Loader != null ? entry.Loader : findLoader(entry.Data),
+                    entry.Data, ResourceEntry.ActionEnum.PRELOAD));
+    }
+
+    // Loader of the type of the data, or of one of its parent types
+    private ResourceLoader findLoader(DataType data) {
+        ResourceLoader loader = getLoader(data.getClass());
+        if (loader != null)
+            return loader;
+
+        for (ResourceLoader candidate : Loaders) {
+            if (candidate.getType().isInstance(data))
+                return candidate;
+        }
+
+        return null;
     }
 
     // An immediate entry that can't be done now goes to the queue of the thread that handles it later
@@ -307,7 +345,8 @@ public class Resources {
             case PRELOAD:
                 return entry.Data.isPreLoaded();
             case LOAD:
-                return entry.Data.isLoaded();
+                // Not preloaded: unloaded after this LOAD was queued, a new PRELOAD queues its own LOAD
+                return entry.Data.isLoaded() || !entry.Data.isPreLoaded();
             case UNLOAD:
             case RELOAD:
                 return !entry.Data.isPreLoaded() && !entry.Data.isLoaded();
@@ -613,7 +652,7 @@ public class Resources {
                 dataType.removeReference(batchName);
 
                 if (dataType.notReferenced())
-                    addResourceToProcess(new ResourceEntry(getLoader(type), dataType, ResourceEntry.ActionEnum.UNLOAD));
+                    addResourceToProcess(new ResourceEntry(getLoader(type), dataType, ResourceEntry.ActionEnum.UNLOAD).setOnlyIfUnused());
             }
 
             for (int i = 0; i < regularExpressions.length(); ++i) {
@@ -628,7 +667,7 @@ public class Resources {
                             dataType.removeReference(batchName);
 
                             if (dataType.notReferenced())
-                                addResourceToProcess(new ResourceEntry(getLoader(type), dataType, ResourceEntry.ActionEnum.UNLOAD));
+                                addResourceToProcess(new ResourceEntry(getLoader(type), dataType, ResourceEntry.ActionEnum.UNLOAD).setOnlyIfUnused());
                         }
                     }
                 } catch (Exception e) {
@@ -702,7 +741,7 @@ public class Resources {
         }
 
         if (unused)
-            addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.UNLOAD));
+            addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.UNLOAD).setOnlyIfUnused());
     }
 
     void notifyPreLoadedResources(DataType dataType) {

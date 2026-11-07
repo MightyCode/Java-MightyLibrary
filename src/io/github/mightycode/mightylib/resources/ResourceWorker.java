@@ -115,12 +115,15 @@ public class ResourceWorker implements Runnable {
         if (!dataType.isLoaded())
             return 1;
 
-        //System.out.println("Thread " + threadNumber + " unloading " + dataType.getClass().getSimpleName() + " : " + dataType.getDataName());
+        if (resource.unloadNoLongerWanted(entry))
+            return 0;
 
         dataType.unload();
 
         if (dataType.isLoaded())
             return 1;
+
+        resource.afterUnload(entry);
 
         if ("Delete".equals(entry.info))
             resource.deleteResource(dataType);
