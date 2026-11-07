@@ -15,46 +15,26 @@ import org.json.JSONObject;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Registry and loading pipeline of the data read from the disk.
+ *
+ * Single owner: references and states of the data are changed by the main thread only. Calls from other threads
+ * (owned resources registered by a worker) are posted to the main thread. Workers only run the preload (initWithFile)
+ * and, for THREAD_CONTEXT data, the load (internLoad), on a data that the main thread does not touch meanwhile.
+ *
+ * Reconciliation: for each data, update compares what is wanted (referenced or not) with its state and starts the
+ * next step. A data with a running step is never changed: when the step ends, update runs again, so a data unloaded
+ * then loaded again while it was read ends in the wanted state without any special case.
+ */
 public class Resources {
-    public static class ResourceEntry {
-        public ResourceLoader Loader;
-        public DataType Data;
-        public ActionEnum Action;
-        public String info;
-
-        public enum ActionEnum {
-            PRELOAD,
-            LOAD,
-            UNLOAD,
-            RELOAD
-        }
-
-        public ResourceEntry (ResourceLoader loader, DataType data, ActionEnum action) {
-            Loader = loader;
-            Data = data;
-            Action = action;
-        }
-
-        // UNLOAD queued because nothing referenced the data anymore: skipped if it is referenced again meanwhile
-        public boolean onlyIfUnused;
-
-        public ResourceEntry setInfo(String info){
-            this.info = info;
-            return this;
-        }
-
-        public ResourceEntry setOnlyIfUnused() {
-            onlyIfUnused = true;
-            return this;
-        }
-    }
-
     public static String FOLDER = "resources/";
+
+    // Reference added by loadAllOfType (AllResourcesMethod, batch descriptions)
+    private static final String ALL_REFERENCE = "all";
 
     public static abstract class LoadingMethod{}
     public static class AllResourcesMethod extends LoadingMethod{}
@@ -91,18 +71,22 @@ public class Resources {
 
     public final List<ResourceLoader> Loaders;
 
-    // Resources are read on the main thread while workers can remove deleted ones: concurrent maps
+    // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
     private final LoadingMethod loadingMethod;
 
-    // ResourceWorker tasks running on the engine Workers, guarded by queueLock
-    private int activeWorkers;
     private final int maxNumberOfWorkers;
 
-    private final ArrayList<ResourceEntry> resourcesToProcess;
-    private final Lock queueLock;
+    // Any thread -> main thread: calls from workers and ends of worker steps
+    private final ConcurrentLinkedQueue<Runnable> inbox;
 
-    private final Queue<ResourceEntry> resourcesToProcessMainContext;
+    // Main thread only
+    private final ArrayDeque<DataType> toUpdate;
+    private final ArrayDeque<Runnable> mainContextSteps;
+    private final ArrayDeque<Runnable> workerSteps;
+    private int runningWorkerSteps;
+    private int waitingDependenciesCount;
+    private boolean shuttingDown;
 
     private boolean initialized;
     private boolean firstLoadDone;
@@ -117,13 +101,12 @@ public class Resources {
         resources = new ConcurrentHashMap<>();
         Loaders = new ArrayList<>();
 
-        activeWorkers = 0;
-        this.maxNumberOfWorkers = maxNumberOfWorkers;
+        this.maxNumberOfWorkers = Math.max(1, maxNumberOfWorkers);
 
-        resourcesToProcess = new ArrayList<>();
-        queueLock = new ReentrantLock();
-
-        resourcesToProcessMainContext = new ArrayDeque<>();
+        inbox = new ConcurrentLinkedQueue<>();
+        toUpdate = new ArrayDeque<>();
+        mainContextSteps = new ArrayDeque<>();
+        workerSteps = new ArrayDeque<>();
 
         if (loaders != null) {
             Loaders.addAll(loaders);
@@ -165,31 +148,32 @@ public class Resources {
 
         // Load the texture error
         DataType dataType = resources.get(TextureData.class).get("error");
-        dataType.addReference("mandatory");
-        addResourceToProcess(new ResourceEntry(getLoader(TextureData.class), dataType, ResourceEntry.ActionEnum.PRELOAD));
+        addReferenceAndUpdate(dataType, "mandatory");
 
+        System.out.println("--Load Resources");
         if (loadingMethod instanceof BatchResourcesMethod){
-            System.out.println("--Load Resources");
-            // Load the batch resources first
-            for (ResourceLoader loader : Loaders){
-                if (loader.getType() == BatchResources.class){
-                    loadAllOfType(loader.getType());
-                    break;
-                }
-            }
-
+            // The batch descriptions first: they are loaded immediately
+            loadAllOfType(BatchResources.class);
             loadBatch(((BatchResourcesMethod) loadingMethod).firstBatch);
         } else {
-            System.out.println("--Load Resources");
             for (ResourceLoader loader : Loaders){
                 loadAllOfType(loader.getType());
             }
         }
 
-        // Main context entries may depend on worker results, so keep processing until everything is done
-        do {
+        // Main context steps may depend on worker results, so keep processing until everything is done
+        while (true) {
             process(-1);
-        } while (!finishedCurrentLoading());
+            if (finishedCurrentLoading())
+                break;
+
+            try {
+                Thread.sleep(1);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
 
         finishLoading();
     }
@@ -200,67 +184,271 @@ public class Resources {
         firstLoadDone = true;
     }
 
+    /**
+     * Main thread: apply the results of the workers, update the data and run the main context steps
+     * until the time is spent (at least one step), or until nothing is left with -1.
+     */
     public void process(int allowedMilliseconds) {
         if (!initialized)
             throw new RuntimeException("Resources not initialized");
 
-        if (!remainingResourceToProcess()) {
+        long startTime = System.currentTimeMillis();
+        boolean first = true;
+
+        while (first || allowedMilliseconds == -1 || System.currentTimeMillis() - startTime < allowedMilliseconds) {
+            first = false;
+
+            Runnable fromInbox;
+            while ((fromInbox = inbox.poll()) != null)
+                fromInbox.run();
+
+            DataType data;
+            while ((data = toUpdate.poll()) != null)
+                update(data);
+
+            startWorkerSteps();
+
+            Runnable step = mainContextSteps.poll();
+            if (step == null)
+                return;
+
+            step.run();
+        }
+    }
+
+    // Main thread: true when no data is being loaded or unloaded
+    public boolean finishedCurrentLoading() {
+        return inbox.isEmpty() && toUpdate.isEmpty() && mainContextSteps.isEmpty() && workerSteps.isEmpty()
+                && runningWorkerSteps == 0 && waitingDependenciesCount == 0;
+    }
+
+    /**
+     * Main thread: by type, the number of loaded, preloaded and referenced data, and the names of the data whose
+     * state does not match their references (loaded but not referenced = leak, referenced but not loaded = still loading
+     * or failed); then the state of the pipeline.
+     */
+    public JSONObject describe() {
+        JSONObject types = new JSONObject();
+        for (Map.Entry<Class<? extends DataType>, Map<String, DataType>> ofType : resources.entrySet()) {
+            int loaded = 0, preloaded = 0, referenced = 0;
+            JSONArray loadedNotReferenced = new JSONArray();
+            JSONArray referencedNotLoaded = new JSONArray();
+
+            for (DataType data : ofType.getValue().values()) {
+                boolean isReferenced = !data.notReferenced();
+                if (data.isLoaded()) ++loaded;
+                if (data.isPreLoaded()) ++preloaded;
+                if (isReferenced) ++referenced;
+
+                if (data.isLoaded() && !isReferenced)
+                    loadedNotReferenced.put(data.getDataName());
+                else if (!data.isLoaded() && isReferenced)
+                    referencedNotLoaded.put(data.getDataName() + (data.failed ? " (failed)" : ""));
+            }
+
+            if (loaded == 0 && referenced == 0)
+                continue;
+
+            JSONObject type = new JSONObject();
+            type.put("loaded", loaded);
+            type.put("preloaded", preloaded);
+            type.put("referenced", referenced);
+            if (!loadedNotReferenced.isEmpty())
+                type.put("loadedNotReferenced", loadedNotReferenced);
+            if (!referencedNotLoaded.isEmpty())
+                type.put("referencedNotLoaded", referencedNotLoaded);
+
+            types.put(ofType.getKey().getSimpleName(), type);
+        }
+
+        JSONObject pipeline = new JSONObject();
+        pipeline.put("runningWorkerSteps", runningWorkerSteps);
+        pipeline.put("waitingWorkerSteps", workerSteps.size());
+        pipeline.put("mainContextSteps", mainContextSteps.size());
+        pipeline.put("waitingDependencies", waitingDependenciesCount);
+        pipeline.put("finished", finishedCurrentLoading());
+
+        JSONObject result = new JSONObject();
+        result.put("types", types);
+        result.put("pipeline", pipeline);
+        return result;
+    }
+
+    // ---- Reconciliation, main thread only ----
+
+    private void runOnMainThread(Runnable task) {
+        if (MainThread.isMainThread())
+            task.run();
+        else
+            inbox.add(task);
+    }
+
+    private void requestUpdate(DataType data) {
+        // Immediate data are set up in the call that wants them (batch descriptions are read right after)
+        if (data.getTypeSetUp() == DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT)
+            update(data);
+        else
+            toUpdate.add(data);
+    }
+
+    private boolean isWanted(DataType data) {
+        return !shuttingDown && !data.deleteWanted && !data.notReferenced();
+    }
+
+    private void update(DataType data) {
+        if (data.jobRunning)
+            return;
+
+        if (!isWanted(data)) {
+            stopWaitingDependencies(data);
+            data.failed = false;
+            data.reloadWanted = false;
+            data.discard();
+
+            if (data.deleteWanted) {
+                Map<String, DataType> map = resources.get(data.getClass());
+                if (map != null)
+                    map.remove(data.getDataName(), data);
+            }
             return;
         }
 
-        long startTime = System.currentTimeMillis();
+        if (data.reloadWanted) {
+            data.reloadWanted = false;
+            data.failed = false;
+            stopWaitingDependencies(data);
+            data.discard();
+        }
 
-        while (System.currentTimeMillis() - startTime < allowedMilliseconds || allowedMilliseconds == -1) {
-            ResourceEntry entry = getNextResourceToProcessMainContext();
-            if (entry == null)
+        if (data.failed || data.isLoaded())
+            return;
+
+        if (!data.isPreLoaded()) {
+            startStep(data, true);
+        } else if (!data.canBeLoad()) {
+            waitDependencies(data);
+        } else {
+            stopWaitingDependencies(data);
+            startStep(data, false);
+        }
+    }
+
+    private void waitDependencies(DataType data) {
+        if (!data.waitingDependencies) {
+            data.waitingDependencies = true;
+            ++waitingDependenciesCount;
+        }
+
+        for (DataType dependency : data.getDependencies()) {
+            if (!dependency.isLoaded() && !dependency.waiters.contains(data))
+                dependency.waiters.add(data);
+        }
+    }
+
+    private void stopWaitingDependencies(DataType data) {
+        if (data.waitingDependencies) {
+            data.waitingDependencies = false;
+            --waitingDependenciesCount;
+        }
+    }
+
+    private void wakeWaiters(DataType loaded) {
+        for (DataType waiter : loaded.waiters) {
+            if (waiter.waitingDependencies)
+                toUpdate.add(waiter);
+        }
+
+        loaded.waiters.clear();
+    }
+
+    // Preload (read the file) or load (compute) the data, where its type wants it
+    private void startStep(DataType data, boolean preload) {
+        ResourceLoader loader = null;
+        if (preload) {
+            loader = findLoader(data);
+            if (loader == null) {
+                System.err.println("--No loader for " + data.getClass().getSimpleName() + " " + data.getDataName());
+                data.failed = true;
                 return;
+            }
+        }
 
-            //System.out.println("Main thread doing " + entry.Data.getDataName());
-            mainContextHandleResource(entry);
+        data.jobRunning = true;
+        StepResult result = new StepResult();
+        ResourceLoader stepLoader = loader;
+
+        Runnable work = () -> {
+            try {
+                if (preload)
+                    stepLoader.read(data);
+                else
+                    result.success = data.runLoad();
+            } catch (Throwable e) {
+                result.error = e;
+            }
+        };
+
+        Runnable end = () -> endStep(data, preload, result);
+
+        switch (data.getTypeSetUp()) {
+            case IMMEDIATELY_IN_CURRENT_CONTEXT:
+                work.run();
+                end.run();
+                break;
+            case MAIN_CONTEXT:
+                mainContextSteps.add(() -> {
+                    work.run();
+                    end.run();
+                });
+                break;
+            case THREAD_CONTEXT:
+                workerSteps.add(() -> {
+                    work.run();
+                    inbox.add(() -> {
+                        --runningWorkerSteps;
+                        end.run();
+                    });
+                });
+                startWorkerSteps();
+                break;
         }
     }
 
-    private void mainContextHandleResource(ResourceEntry entry){
-        switch (entry.Action) {
-            case PRELOAD:
-                entry.Loader.preload(entry.Data);
-                notifyPreLoadedResources(entry.Data);
-                break;
-            case LOAD:
-                // Dependencies not loaded yet: wait in a queue instead of blocking this thread (the frame when it's the main one)
-                if (!entry.Data.canBeLoad()) {
-                    queueForLater(entry);
-                    break;
-                }
-                entry.Data.load();
-                break;
-            case UNLOAD:
-                if (unloadNoLongerWanted(entry))
-                    break;
+    private static class StepResult {
+        boolean success = true;
+        Throwable error;
+    }
 
-                entry.Data.unload();
-                afterUnload(entry);
+    private void endStep(DataType data, boolean preload, StepResult result) {
+        data.jobRunning = false;
 
-                if ("Delete".equals(entry.info))
-                    deleteResource(entry.Data);
-                break;
-            case RELOAD:
-                entry.Loader.reload(entry.Data);
-                notifyPreLoadedResources(entry.Data);
-                break;
+        if (result.error != null) {
+            System.err.println("--" + (preload ? "Preload" : "Load") + " of " + data.getClass().getSimpleName()
+                    + " " + data.getDataName() + " failed:");
+            result.error.printStackTrace();
+            data.failed = true;
+            if (!preload)
+                data.loadDone(false);
+        } else if (preload) {
+            data.setPreloaded();
+        } else {
+            data.loadDone(result.success);
+            if (result.success)
+                wakeWaiters(data);
+            else
+                data.failed = true;
         }
+
+        // Wanted state may have changed meanwhile: unloaded if no longer referenced, next step otherwise
+        requestUpdate(data);
     }
 
-    // The data was referenced again after this UNLOAD was queued (batch unloaded then loaded again)
-    boolean unloadNoLongerWanted(ResourceEntry entry) {
-        return entry.onlyIfUnused && !entry.Data.notReferenced();
-    }
-
-    // Referenced again while it was unloading: its PRELOAD/LOAD were not queued or are now useless, start again
-    void afterUnload(ResourceEntry entry) {
-        if (entry.onlyIfUnused && !entry.Data.notReferenced() && !entry.Data.isPreLoaded())
-            addResourceToProcess(new ResourceEntry(entry.Loader != null ? entry.Loader : findLoader(entry.Data),
-                    entry.Data, ResourceEntry.ActionEnum.PRELOAD));
+    private void startWorkerSteps() {
+        Runnable step;
+        while (runningWorkerSteps < maxNumberOfWorkers && (step = workerSteps.poll()) != null) {
+            ++runningWorkerSteps;
+            Workers.execute(step);
+        }
     }
 
     // Loader of the type of the data, or of one of its parent types
@@ -277,212 +465,17 @@ public class Resources {
         return null;
     }
 
-    // An immediate entry that can't be done now goes to the queue of the thread that handles it later
-    private void queueForLater(ResourceEntry entry) {
-        if (MainThread.isMainThread()) {
-            resourcesToProcessMainContext.add(entry);
-            return;
-        }
-
-        queueLock.lock();
-        try {
-            resourcesToProcess.add(entry);
-            startWorkersIfNeeded();
-        } finally {
-            queueLock.unlock();
-        }
+    private void addReferenceAndUpdate(DataType data, String reference) {
+        data.addReference(reference);
+        requestUpdate(data);
     }
 
-    public boolean finishedCurrentLoading() {
-        if (remainingResourceToProcess()) {
-            return false;
-        }
-
-        // A worker still running may add entries (LOAD after a PRELOAD)
-        queueLock.lock();
-        try {
-            return activeWorkers == 0;
-        } finally {
-            queueLock.unlock();
-        }
+    private void removeReferenceAndUpdate(DataType data, String reference) {
+        data.removeReference(reference);
+        requestUpdate(data);
     }
 
-    // Called by a worker that found nothing ready: it stops only if the queue is empty
-    boolean canWorkerStop() {
-        queueLock.lock();
-        try {
-            return resourcesToProcess.isEmpty();
-        } finally {
-            queueLock.unlock();
-        }
-    }
-
-    void workerEnded() {
-        queueLock.lock();
-        try {
-            --activeWorkers;
-
-            // An entry added between canWorkerStop and here found enough workers: start one again
-            startWorkersIfNeeded();
-        } finally {
-            queueLock.unlock();
-        }
-    }
-
-    // Under queueLock
-    private void startWorkersIfNeeded() {
-        while (activeWorkers < maxNumberOfWorkers && resourcesToProcess.size() > activeWorkers) {
-            ++activeWorkers;
-            Workers.execute(new ResourceWorker(this));
-        }
-    }
-
-    boolean remainingResourceToProcess() {
-        return remainingResourceToProcess(true) || remainingResourceToProcess(false);
-    }
-
-    boolean remainingResourceToProcess(boolean isMainContext) {
-        if (isMainContext)
-            return !resourcesToProcessMainContext.isEmpty();
-
-        queueLock.lock();
-        try {
-            return !resourcesToProcess.isEmpty();
-        }
-        finally {
-            queueLock.unlock();
-        }
-    }
-
-    // An entry is obsolete when its action has nothing left to do, keeping it would block the queue forever
-    private static boolean isObsolete(ResourceEntry entry) {
-        switch (entry.Action) {
-            case PRELOAD:
-                return entry.Data.isPreLoaded();
-            case LOAD:
-                // Not preloaded: unloaded after this LOAD was queued, a new PRELOAD queues its own LOAD
-                return entry.Data.isLoaded() || !entry.Data.isPreLoaded();
-            case UNLOAD:
-            case RELOAD:
-                return !entry.Data.isPreLoaded() && !entry.Data.isLoaded();
-        }
-
-        return false;
-    }
-
-    ResourceEntry getNextResourceToProcessMainContext() {
-        resourcesToProcessMainContext.removeIf(Resources::isObsolete);
-
-        ResourceEntry first = resourcesToProcessMainContext.poll();
-        ResourceEntry current = first;
-        boolean start = true;
-
-        while ((start || first != current) && current != null) {
-            if (current.Action == ResourceEntry.ActionEnum.PRELOAD && !current.Data.isPreLoaded())
-                return current;
-            else if (current.Action == ResourceEntry.ActionEnum.LOAD && current.Data.canBeLoad() && !current.Data.isLoaded()) {
-                return current;
-            } else if ((current.Action == ResourceEntry.ActionEnum.UNLOAD || current.Action == ResourceEntry.ActionEnum.RELOAD)
-                    && current.Data.isLoaded()) {
-                return current;
-            }
-
-            start = false;
-
-            resourcesToProcessMainContext.add(current);
-            current = resourcesToProcessMainContext.poll();
-        }
-
-        return null;
-    }
-
-    void printQueue() {
-        System.out.println("----------------------------------");
-        System.out.println("Queue size: " + resourcesToProcess.size());
-        for (ResourceEntry entry : resourcesToProcess) {
-            System.out.println("(" + entry.Data.getClass().getSimpleName() + ") " + entry.Data.getDataName());
-        }
-        System.out.println("----------------------------------");
-    }
-
-    ResourceEntry getNextResourceToProcess() {
-        queueLock.lock();
-
-        try {
-            resourcesToProcess.removeIf(Resources::isObsolete);
-
-            int indexCurrent = 0;
-            if (resourcesToProcess.isEmpty())
-                return null;
-
-            ResourceEntry current = resourcesToProcess.get(0);
-            boolean start = true;
-
-            while ((start || indexCurrent != 0) && current != null) {
-                if (current.Action == ResourceEntry.ActionEnum.PRELOAD && !current.Data.isPreLoaded()) {
-                    return resourcesToProcess.remove(indexCurrent);
-                } else if (current.Action == ResourceEntry.ActionEnum.LOAD && current.Data.canBeLoad() && !current.Data.isLoaded()) {
-                    //printQueue();
-                    resourcesToProcess.remove(indexCurrent);
-                    return current;
-                } else if ((current.Action == ResourceEntry.ActionEnum.UNLOAD || current.Action == ResourceEntry.ActionEnum.RELOAD)
-                        && current.Data.isLoaded()) {
-                    //printQueue();
-                    resourcesToProcess.remove(indexCurrent);
-                    return current;
-                }
-
-                start = false;
-                indexCurrent = (indexCurrent + 1) % resourcesToProcess.size();
-                current = resourcesToProcess.get(indexCurrent);
-            }
-        } finally {
-            queueLock.unlock();
-        }
-
-        return null;
-    }
-
-    private void addResourceToProcess(ResourceEntry resourceEntry) {
-        // Todo : not a good place to do that
-        if (resourceEntry.Data.getTypeSetUp() == DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT) {
-            /*System.out.println("Immediate processing in main context of (" + resourceEntry.Data.getClass().getSimpleName() + ") :" + resourceEntry.Data.getDataName()
-                    + ", action : " + resourceEntry.Action);*/
-            mainContextHandleResource(resourceEntry);
-
-            return;
-        }
-
-        // Unloaded then needed again before the unload was done (batch unloaded and loaded again):
-        // the pending unload would run after this entry and leave the data unloaded while used
-        // (only when referenced again: the LOAD queued after a PRELOAD must not cancel a wanted unload)
-        boolean cancelsUnload = (resourceEntry.Action == ResourceEntry.ActionEnum.PRELOAD
-                || resourceEntry.Action == ResourceEntry.ActionEnum.LOAD) && !resourceEntry.Data.notReferenced();
-        DataType data = resourceEntry.Data;
-
-        if (resourceEntry.Data.getTypeSetUp() == DataType.TYPE_SET_UP.MAIN_CONTEXT) {
-            if (cancelsUnload)
-                resourcesToProcessMainContext.removeIf(entry -> entry.Data == data && entry.Action == ResourceEntry.ActionEnum.UNLOAD);
-
-            resourcesToProcessMainContext.add(resourceEntry);
-            /*System.out.println("Added to main context (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
-                    ", action : " + resourceEntry.Action);*/
-        } else {
-            queueLock.lock();
-            try {
-                if (cancelsUnload)
-                    resourcesToProcess.removeIf(entry -> entry.Data == data && entry.Action == ResourceEntry.ActionEnum.UNLOAD);
-
-                resourcesToProcess.add(resourceEntry);
-                /*System.out.println("Added to worker (" + resourceEntry.Data.getClass().getSimpleName() + ") : " + resourceEntry.Data.getDataName() +
-                        ", action : " + resourceEntry.Action);*/
-                startWorkersIfNeeded();
-            }
-            finally {
-                queueLock.unlock();
-            }
-        }
-    }
+    // ---- Registry ----
 
     public static Class<? extends DataType> getClassFromName(String name) {
         for (ResourceLoader resourceLoader : singletonInstance.Loaders) {
@@ -525,95 +518,82 @@ public class Resources {
         return resources.get(type).containsKey(name);
     }
 
+    // ---- Batches ----
+
+    private interface BatchAction {
+        void apply(DataType data);
+    }
+
+    // Calls the action on every data listed by the batch, by name or by regular expression
+    private void forEachInBatch(String batchName, BatchAction action) {
+        BatchResources batchResources = getResource(BatchResources.class, batchName);
+        if (batchResources == null || batchResources.getObject() == null)
+            throw new RuntimeException("Batch not loaded: " + batchName);
+
+        JSONArray content = batchResources.getObject().getJSONArray("batchs");
+        for (int j = 0; j < content.length(); ++j) {
+            JSONObject resource = content.getJSONObject(j);
+
+            Class<? extends DataType> type = getClassFromBatchName(batchName, resource.getString("type"));
+            Map<String, DataType> ofType = this.resources.get(type);
+
+            JSONArray resourceFiles = resource.getJSONArray("files");
+            for (int i = 0; i < resourceFiles.length(); ++i) {
+                String resourceName = resourceFiles.getString(i);
+                DataType dataType = ofType.get(resourceName);
+
+                if (dataType == null)
+                    throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
+
+                action.apply(dataType);
+            }
+
+            JSONArray regularExpressions = resource.getJSONArray("regex");
+            for (int i = 0; i < regularExpressions.length(); ++i) {
+                Pattern pattern = Pattern.compile(regularExpressions.getString(i));
+
+                for (Map.Entry<String, DataType> entry : ofType.entrySet()) {
+                    Matcher matcher = pattern.matcher(entry.getKey());
+                    if (matcher.matches())
+                        action.apply(entry.getValue());
+                }
+            }
+        }
+    }
+
     public void loadBatch(String batchName) {
         if (!(loadingMethod instanceof BatchResourcesMethod)) {
             System.err.println("Can't load batch: " + batchName + " when loading method is not BatchResources");
             return;
         }
 
-        System.out.println("--Load batch: " + batchName);
-
-        BatchResources batchResources = getResource(BatchResources.class, batchName);
-        JSONArray content = batchResources.getObject().getJSONArray("batchs");
-        for (int j = 0; j < content.length(); ++j) {
-            JSONObject resource = content.getJSONObject(j);
-
-            String resourceTypeName = resource.getString("type");
-
-            Class<? extends DataType> type = getClassFromBatchName(batchName, resourceTypeName);
-            ResourceLoader loader = getLoader(type);
-
-            JSONArray resourceFiles = resource.getJSONArray("files");
-            JSONArray regularExpressions = resource.getJSONArray("regex");
-
-            for (int i = 0; i < resourceFiles.length(); ++i) {
-                String resourceName = resourceFiles.getString(i);
-
-                DataType dataType = this.resources.get(type).get(resourceName);
-
-                if (dataType == null)
-                    throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
-
-                // If it's referenced it's already loaded or preloaded (set up)
-                // The reference is added first: it cancels a pending unload of this data
-                boolean wasNotReferenced = dataType.notReferenced();
-                dataType.addReference(batchName);
-
-                if (wasNotReferenced) {
-                    if (dataType.isPreLoaded())
-                        addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.LOAD));
-                    else
-                        addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
-                }
-            }
-
-            for (int i = 0; i < regularExpressions.length(); ++i) {
-                String regularExpression = regularExpressions.getString(i);
-                try {
-                    Pattern pattern = Pattern.compile(regularExpression);
-
-                    for (String resourceName : this.resources.get(type).keySet()) {
-                        Matcher matcher = pattern.matcher(resourceName);
-                        if (matcher.matches()) {
-                            DataType dataType = this.resources.get(type).get(resourceName);
-
-                            // If it's referenced it's already loaded or preloaded (set up)
-                            // The reference is added first: it cancels a pending unload of this data
-                            boolean wasNotReferenced = dataType.notReferenced();
-                            dataType.addReference(batchName);
-
-                            if (wasNotReferenced) {
-                                if (dataType.isPreLoaded())
-                                    addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.LOAD));
-                                else
-                                    addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
-                            }
-                        }
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
+        runOnMainThread(() -> {
+            System.out.println("--Load batch: " + batchName);
+            forEachInBatch(batchName, data -> addReferenceAndUpdate(data, batchName));
+        });
     }
 
-
-    public void createAndInit(Class<? extends DataType> resourceType, String resourceName, String resourcePath){
-        for (ResourceLoader resourceLoader : singletonInstance.Loaders) {
-            if (resourceType == resourceLoader.getType()) {
-                resourceLoader.createAndSetUp(resourceType, resources.get(resourceType), resourceName, resourcePath);
-                break;
-            }
+    public void unloadBatch(String batchName) {
+        if (!(loadingMethod instanceof BatchResourcesMethod)) {
+            System.err.println("Can't unload batch: " + batchName + " when loading method is not BatchResources");
+            return;
         }
+
+        runOnMainThread(() -> {
+            System.out.println("--Unload batch: " + batchName);
+            forEachInBatch(batchName, data -> removeReferenceAndUpdate(data, batchName));
+        });
     }
+
+    // ---- Whole types ----
 
     void loadAllOfType(Class<? extends DataType> typeOfResource){
-        ResourceLoader loader = getLoader(typeOfResource);
-
-        for (DataType dataType : resources.get(typeOfResource).values()){
-            if (dataType.notReferenced())
-                addResourceToProcess(new ResourceEntry(loader, dataType, ResourceEntry.ActionEnum.PRELOAD));
-        }
+        runOnMainThread(() -> {
+            for (DataType dataType : resources.get(typeOfResource).values()) {
+                if (!dataType.references.contains(ALL_REFERENCE))
+                    addReferenceAndUpdate(dataType, ALL_REFERENCE);
+            }
+        });
     }
 
     public void reloadAllOfType() {
@@ -622,75 +602,35 @@ public class Resources {
         }
     }
 
+    // Read again from the disk the loaded data of this type
     public void reloadAllOfType(Class<? extends DataType> typeOfResource) {
-        for (DataType dataType : resources.get(typeOfResource).values()) {
-            // Only loaded data can be reloaded
-            if (dataType.isLoaded())
-                addResourceToProcess(new ResourceEntry(getLoader(typeOfResource), dataType, ResourceEntry.ActionEnum.RELOAD));
-        }
-    }
+        runOnMainThread(() -> {
+            for (DataType dataType : resources.get(typeOfResource).values()) {
+                // Preloaded by the code: nothing to read again
+                if (dataType.preloadedByCode)
+                    continue;
 
-
-    public void unload(){
-        System.out.println("--Unload Resources");
-        for (Class<? extends DataType> c : resources.keySet()){
-            unloadAllOfType(c);
-        }
-    }
-
-    public void unloadAllOfType(Class<? extends DataType> typeOfResource){
-        for (DataType dataType : resources.get(typeOfResource).values())
-            addResourceToProcess(new ResourceEntry(getLoader(typeOfResource), dataType, ResourceEntry.ActionEnum.UNLOAD));
-    }
-
-    public void unloadBatch(String batchName) {
-        if (!(loadingMethod instanceof BatchResourcesMethod)) {
-            System.err.println("Can't unload batch: " + batchName + " when loading method is not BatchResources");
-        }
-
-        System.out.println("--Unload batch: " + batchName);
-        BatchResources batchResources = getResource(BatchResources.class, batchName);
-        JSONArray content = batchResources.getObject().getJSONArray("batchs");
-        for (int j = 0; j < content.length(); ++j) {
-            JSONObject resource = content.getJSONObject(j);
-
-            String resourceTypeName = resource.getString("type");
-            Class<? extends DataType> type = getClassFromBatchName(batchName, resourceTypeName);
-
-            JSONArray resourceFiles = resource.getJSONArray("files");
-            JSONArray regularExpressions = resource.getJSONArray("regex");
-
-            for (int i = 0; i < resourceFiles.length(); ++i) {
-                String resourceName = resourceFiles.getString(i);
-
-                DataType dataType = this.resources.get(type).get(resourceName);
-                dataType.removeReference(batchName);
-
-                if (dataType.notReferenced())
-                    addResourceToProcess(new ResourceEntry(getLoader(type), dataType, ResourceEntry.ActionEnum.UNLOAD).setOnlyIfUnused());
-            }
-
-            for (int i = 0; i < regularExpressions.length(); ++i) {
-                String regularExpression = regularExpressions.getString(i);
-                try {
-                    Pattern pattern = Pattern.compile(regularExpression);
-
-                    for (String resourceName : this.resources.get(type).keySet()) {
-                        Matcher matcher = pattern.matcher(resourceName);
-                        if (matcher.matches()) {
-                            DataType dataType = this.resources.get(type).get(resourceName);
-                            dataType.removeReference(batchName);
-
-                            if (dataType.notReferenced())
-                                addResourceToProcess(new ResourceEntry(getLoader(type), dataType, ResourceEntry.ActionEnum.UNLOAD).setOnlyIfUnused());
-                        }
-                    }
-                } catch (Exception e) {
-                    System.err.println("Can't compile regular expression: " + regularExpression);
+                if (dataType.isLoaded() || dataType.jobRunning) {
+                    dataType.reloadWanted = true;
+                    requestUpdate(dataType);
                 }
             }
-        }
+        });
     }
+
+    // At the exit: unload everything not being read, whatever its references
+    public void unload(){
+        System.out.println("--Unload Resources");
+        runOnMainThread(() -> {
+            shuttingDown = true;
+            for (Map<String, DataType> ofType : resources.values()) {
+                for (DataType dataType : ofType.values())
+                    update(dataType);
+            }
+        });
+    }
+
+    // ---- Data added by the code ----
 
     public void addCategoryAndLoader(Class<? extends DataType> category, ResourceLoader loader) {
         if (resources.containsKey(category))
@@ -700,16 +640,21 @@ public class Resources {
         Loaders.add(loader);
     }
 
+    // Data created by the code, read by its loader then loaded; referenced as "manually"
     public void addResourceAndSetUp(Class<? extends DataType> type, DataType dataType) {
-        resources.get(type).put(dataType.getDataName(), dataType);
-        dataType.addReference("manually");
-        addResourceToProcess(new ResourceEntry(getLoader(type), dataType, ResourceEntry.ActionEnum.PRELOAD));
+        runOnMainThread(() -> {
+            resources.get(type).put(dataType.getDataName(), dataType);
+            addReferenceAndUpdate(dataType, "manually");
+        });
     }
 
+    // Data created and preloaded (setPreloaded) by the code, then loaded; referenced as "manually"
     public void addPreLoadedResource(DataType dataType) {
-        resources.get(dataType.getClass()).put(dataType.getDataName(), dataType);
-        dataType.addReference("manually");
-        addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.LOAD));
+        runOnMainThread(() -> {
+            dataType.preloadedByCode = true;
+            resources.get(dataType.getClass()).put(dataType.getDataName(), dataType);
+            addReferenceAndUpdate(dataType, "manually");
+        });
     }
 
     /**
@@ -718,55 +663,24 @@ public class Resources {
      * The owner adds a reference and must call releaseOwnedResource with the same owner name.
      */
     public <T extends DataType> T addOwnedResource(Class<T> type, T dataType, String owner) {
-        DataType registered;
-        boolean firstReference;
-
-        queueLock.lock();
-        try {
-            registered = resources.get(type).putIfAbsent(dataType.getDataName(), dataType);
-            if (registered == null) {
-                registered = dataType;
-                registered.setNotManuallyCreated();
-            }
-
-            firstReference = registered.notReferenced();
-            registered.addReference(owner);
-        } finally {
-            queueLock.unlock();
+        DataType registered = resources.get(type).putIfAbsent(dataType.getDataName(), dataType);
+        if (registered == null) {
+            registered = dataType;
+            registered.setNotManuallyCreated();
         }
 
-        if (firstReference) {
-            ResourceEntry.ActionEnum action = registered.isPreLoaded() ? ResourceEntry.ActionEnum.LOAD : ResourceEntry.ActionEnum.PRELOAD;
-            addResourceToProcess(new ResourceEntry(getLoader(type), registered, action));
-        }
+        DataType shared = registered;
+        runOnMainThread(() -> addReferenceAndUpdate(shared, owner));
 
         return type.cast(registered);
     }
 
     // Remove the reference added by addOwnedResource, the resource is unloaded when nothing uses it anymore
     public void releaseOwnedResource(DataType dataType, String owner) {
-        boolean unused;
-
-        queueLock.lock();
-        try {
-            dataType.removeReference(owner);
-            unused = dataType.notReferenced();
-        } finally {
-            queueLock.unlock();
-        }
-
-        if (unused)
-            addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.UNLOAD).setOnlyIfUnused());
+        runOnMainThread(() -> removeReferenceAndUpdate(dataType, owner));
     }
 
-    void notifyPreLoadedResources(DataType dataType) {
-        addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.LOAD));
-    }
-
-    public void unloadResource(Class<? extends DataType> type, String name) {
-        addResourceToProcess(new ResourceEntry(null, resources.get(type).get(name), ResourceEntry.ActionEnum.UNLOAD));
-    }
-
+    // Unload then remove a data created by the code
     public void deleteResource(Class<? extends DataType> type, String name) {
         DataType dataType = resources.get(type).get(name);
         deleteResource(dataType);
@@ -779,16 +693,9 @@ public class Resources {
         if (!dataType.isManuallyCreated())
             throw new RuntimeException("Can't delete resource: " + dataType.getDataName() + " because it's not manually created");
 
-        if (dataType.isLoaded())
-            addResourceToProcess(new ResourceEntry(null, dataType, ResourceEntry.ActionEnum.UNLOAD).setInfo("Delete"));
-        else {
-            queueLock.lock();
-            try {
-                resources.get(dataType.getClass()).remove(dataType.getDataName());
-            }
-            finally {
-                queueLock.unlock();
-            }
-        }
+        runOnMainThread(() -> {
+            dataType.deleteWanted = true;
+            update(dataType);
+        });
     }
 }

@@ -75,6 +75,11 @@ public class Model extends SingleSourceDataType {
         releaseTextures();
     }
 
+    @Override
+    protected void internCancelPreload() {
+        internUnload();
+    }
+
     private void releaseTextures() {
         for (DataType texture : ownedTextures) {
             removeDependency(texture);

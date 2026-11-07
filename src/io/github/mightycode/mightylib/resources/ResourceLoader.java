@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -69,7 +68,8 @@ public abstract class ResourceLoader {
 
     protected abstract void initWithFile(DataType dataType);
 
-    public final void preload(DataType dataType) {
+    // Preload step run by Resources (maybe on a worker): the state is set afterward, on the main thread
+    final void read(DataType dataType) {
         if (dataType instanceof SingleSourceDataType) {
             SingleSourceDataType singleSourceDataType = (SingleSourceDataType) dataType;
             if (singleSourceDataType.validPath())
@@ -81,30 +81,6 @@ public abstract class ResourceLoader {
                 initWithFile(multiSourceDataType);
         } else {
             initWithFile(dataType);
-        }
-
-        dataType.setPreloaded();
-    }
-
-    public final void load(DataType dataType) {
-        dataType.load();
-    }
-
-    // Unload then read again from disk, the caller must queue the LOAD step afterward
-    public final void reload(DataType dataType) {
-        dataType.unload();
-
-        preload(dataType);
-    }
-
-    public final void createAndSetUp(Class<? extends DataType> type, Map<String, DataType> data, String resourceName, String resourcePath) {
-        try {
-            DataType dataType = type.getConstructor(type).newInstance(resourceName, resourcePath);
-            data.put(resourceName, dataType);
-            preload(dataType);
-            load(dataType);
-        } catch (InstantiationException | NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-            throw new RuntimeException(e);
         }
     }
 }

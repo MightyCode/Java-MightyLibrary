@@ -5,7 +5,6 @@ import io.github.mightycode.mightylib.main.Workers;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -32,11 +31,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class ResourcesLifecycleTest {
     private static final long PUMP_TIMEOUT_MILLISECONDS = 10_000;
     private static final int WORKERS = 4;
-
-    // The UNLOAD queued while the PRELOAD runs is dropped as obsolete (nothing preloaded yet), then the PRELOAD
-    // ends and queues a LOAD: the data ends loaded while nothing references it (leak)
-    private static final String KNOWN_BUG_UNLOAD_DURING_PRELOAD =
-            "Known bug, fixed by the Resources rework (generations, docs/current.md)";
 
     @TempDir
     Path folder;
@@ -228,7 +222,6 @@ class ResourcesLifecycleTest {
     }
 
     // Batch loaded then unloaded while the slow preload is still running in a worker
-    @Disabled(KNOWN_BUG_UNLOAD_DURING_PRELOAD)
     @Test
     void unloadDuringPreloadEndsUnloaded() throws Exception {
         FakeData slow = fake(THREAD_CONTEXT, "slow");
@@ -311,10 +304,177 @@ class ResourcesLifecycleTest {
         assertConsistent();
     }
 
+    @Test
+    void reloadReadsAgain() throws Exception {
+        FakeData worker = fake(THREAD_CONTEXT, "worker");
+        FakeData main = fake(MAIN_CONTEXT, "main");
+        batch("level", "worker", "main");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+        resources.reloadAllOfType(FakeData.class);
+        pump();
+
+        for (FakeData data : Arrays.asList(worker, main)) {
+            assertTrue(data.isLoaded(), data.getDataName());
+            assertEquals(2, data.preloads.get(), data.getDataName());
+            assertEquals(2, data.loads.get(), data.getDataName());
+            assertEquals(1, data.unloads.get(), data.getDataName());
+        }
+        assertConsistent();
+    }
+
+    // Reload asked while the first preload runs: read once more once it ends
+    @Test
+    void reloadDuringPreloadReadsAgain() throws Exception {
+        FakeData slow = fake(THREAD_CONTEXT, "slow");
+        slow.preloadMilliseconds = 30;
+        batch("level", "slow");
+        start();
+
+        resources.loadBatch("level");
+        frame();
+        resources.reloadAllOfType(FakeData.class);
+        pump();
+
+        assertTrue(slow.isLoaded());
+        assertEquals(2, slow.preloads.get());
+        assertConsistent();
+    }
+
+    @Test
+    void deleteManualResource() throws Exception {
+        start();
+        FakeData manual = new FakeData(MAIN_CONTEXT, "manual").expectMainThread(Thread.currentThread());
+        all.add(manual);
+
+        resources.addResourceAndSetUp(FakeData.class, manual);
+        pump();
+        assertTrue(manual.isLoaded());
+
+        resources.deleteResource(manual);
+        pump();
+        assertFalse(manual.isLoaded());
+        assertFalse(resources.isExistingResource(FakeData.class, "manual"));
+        assertEquals(1, manual.unloads.get());
+    }
+
+    // TestGLLoading: data deleted and created again with the same name in the same frame
+    @Test
+    void deleteThenAddSameNameKeepsTheNewOne() throws Exception {
+        start();
+        FakeData first = new FakeData(THREAD_CONTEXT, "same");
+        first.setPreloaded();
+        resources.addPreLoadedResource(first);
+        pump();
+
+        FakeData second = new FakeData(THREAD_CONTEXT, "same");
+        second.setPreloaded();
+        resources.deleteResource(first);
+        resources.addPreLoadedResource(second);
+        pump();
+
+        assertFalse(first.isLoaded());
+        assertTrue(second.isLoaded());
+        assertSame(second, resources.getResource(FakeData.class, "same"));
+    }
+
+    // A data built by the code has no file: reload leaves it as it is
+    @Test
+    void reloadSkipsDataPreloadedByCode() throws Exception {
+        start();
+        FakeData built = new FakeData(THREAD_CONTEXT, "built");
+        all.add(built);
+        built.setPreloaded();
+        resources.addPreLoadedResource(built);
+        pump();
+
+        resources.reloadAllOfType(FakeData.class);
+        pump();
+
+        assertTrue(built.isLoaded());
+        assertEquals(0, built.preloads.get());
+        assertEquals(1, built.loads.get());
+        assertConsistent();
+    }
+
+    @Test
+    void allResourcesMethodLoadsEverything() throws Exception {
+        fakeLoader = new FakeLoader();
+        resources = Resources.createForTests(new Resources.AllResourcesMethod(), WORKERS, Arrays.asList(fakeLoader));
+        fake(THREAD_CONTEXT, "a");
+        fake(MAIN_CONTEXT, "b");
+        resources.init();
+
+        resources.loadAllOfType(FakeData.class);
+        pump();
+
+        for (FakeData data : all)
+            assertTrue(data.isLoaded(), data.getDataName());
+        assertConsistent();
+    }
+
+    @Test
+    void chainedDependenciesLoadInOrder() throws Exception {
+        FakeData a = fake(MAIN_CONTEXT, "a");
+        a.preloadMilliseconds = 10;
+        FakeData b = fake(THREAD_CONTEXT, "b");
+        b.dependencyToAdd = a;
+        FakeData c = fake(MAIN_CONTEXT, "c");
+        c.dependencyToAdd = b;
+        batch("level", "c", "b", "a");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+
+        for (FakeData data : all)
+            assertTrue(data.isLoaded(), data.getDataName());
+        assertConsistent();
+    }
+
+    // The dependency is never wanted: the data waits, then is unloaded without blocking the queue
+    @Test
+    void unloadWhileWaitingForDependency() throws Exception {
+        FakeData never = fake(THREAD_CONTEXT, "never");
+        FakeData model = fake(THREAD_CONTEXT, "model");
+        model.dependencyToAdd = never;
+        batch("level", "model");
+        start();
+
+        resources.loadBatch("level");
+        for (int i = 0; i < 50; ++i) {
+            frame();
+            Thread.sleep(1);
+        }
+        assertFalse(resources.finishedCurrentLoading(), "waits for its dependency");
+        assertFalse(model.isLoaded());
+
+        resources.unloadBatch("level");
+        pump();
+        assertFalse(model.isLoaded());
+        assertFalse(model.isPreLoaded());
+        assertConsistent();
+    }
+
+    @Test
+    void randomCyclesWithOtherSeeds() throws Exception {
+        for (int seed = 1; seed <= 5; ++seed)
+            randomCycles(seed);
+    }
+
     // Random load / unload of overlapping batches, with a few frames between them, then a final check
-    @Disabled(KNOWN_BUG_UNLOAD_DURING_PRELOAD)
     @Test
     void randomCyclesStayConsistent() throws Exception {
+        randomCycles(42);
+    }
+
+    private void randomCycles(int seed) throws Exception {
+        resources = Resources.createForTests(new Resources.BatchResourcesMethod("unused"), WORKERS,
+                Arrays.asList(fakeLoader = new FakeLoader(), new JSONLoader(), new BatchLoader(new JSONLoader())));
+        all.clear();
+
         String[] names = new String[12];
         for (int i = 0; i < names.length; ++i) {
             FakeData data = fake(i % 3 == 0 ? MAIN_CONTEXT : THREAD_CONTEXT, "data" + i);
@@ -328,7 +488,7 @@ class ResourcesLifecycleTest {
 
         String[] batches = {"a", "b", "c"};
         boolean[] loaded = new boolean[batches.length];
-        Random random = new Random(42);
+        Random random = new Random(seed);
 
         for (int step = 0; step < 300; ++step) {
             int index = random.nextInt(batches.length);

@@ -8,12 +8,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * Data read from the disk (preload) then computed (load), managed by Resources.
+ * States and references are changed by the main thread only (Resources is their single owner);
+ * workers only run initWithFile and internLoad on a data that Resources does not touch meanwhile.
+ */
 public abstract class DataType extends UUID implements LoadingElement {
     protected final Resources resources;
 
     protected final String dataName;
 
-    // Volatile: states are written by worker threads and read by the main thread
+    // Volatile: written by the main thread, read by any thread
     // Step where data are read from disk and dependencies are listed
     private volatile boolean correctlyPreLoaded;
 
@@ -29,6 +34,17 @@ public abstract class DataType extends UUID implements LoadingElement {
     private final TYPE_SET_UP typeSetUp;
 
     private boolean manuallyCreated;
+
+    // Pipeline state, main thread only (see Resources)
+    boolean jobRunning;
+    boolean failed;
+    boolean reloadWanted;
+    boolean deleteWanted;
+    boolean waitingDependencies;
+    // Added by addPreLoadedResource: no file to read again on reload
+    boolean preloadedByCode;
+    // Data waiting for this one to be loaded
+    final List<DataType> waiters = new ArrayList<>();
 
     public enum TYPE_SET_UP {
         IMMEDIATELY_IN_CURRENT_CONTEXT,
@@ -64,6 +80,10 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     public final boolean hasDependencies(){
         return !dependencies.isEmpty();
+    }
+
+    final List<DataType> getDependencies(){
+        return dependencies;
     }
 
     public final void addDependency(DataType dependency){
@@ -108,6 +128,38 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     protected abstract boolean internLoad();
 
+    // Load step run by Resources (maybe on a worker): the state is set afterward by loadDone, on the main thread
+    final boolean runLoad() {
+        if (!correctlyPreLoaded)
+            throw new RuntimeException("Data " + dataName + " is not preloaded");
+
+        return internLoad();
+    }
+
+    final void loadDone(boolean success) {
+        if (success) {
+            correctlyLoaded = true;
+        } else {
+            correctlyPreLoaded = false;
+            System.err.println("--Can't load " + getClass().getSimpleName() + " " + dataName);
+        }
+    }
+
+    // Back to the initial state, whether the data was loaded or only preloaded
+    final void discard() {
+        if (correctlyLoaded)
+            internUnload();
+        else if (correctlyPreLoaded)
+            internCancelPreload();
+
+        correctlyPreLoaded = false;
+        correctlyLoaded = false;
+    }
+
+    // Preloaded but no longer wanted before being loaded: release what initWithFile kept (decoded files, owned resources)
+    protected void internCancelPreload() {}
+
+    // Compute again a loaded data (its content changed)
     protected final void load() {
         if (!correctlyPreLoaded)
             throw new RuntimeException("Data " + dataName + " is not preloaded");

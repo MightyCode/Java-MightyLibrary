@@ -102,6 +102,11 @@ public class TextureData extends SingleSourceDataType {
     }
 
     @Override
+    protected void internCancelPreload() {
+        tempBufferedImage = null;
+    }
+
+    @Override
     public void internUnload() {
         byteBuffer = null;
         width = -1;
