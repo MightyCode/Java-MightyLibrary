@@ -8,8 +8,8 @@ Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisate
     - **mémoire** : ancienne et nouvelle version coexistent, un `reload` de milliers de données crée toutes les copies d'un coup (les workers bornent les lectures, pas les copies qui attendent leurs dépendances) → limiter les copies en cours ;
     - deux relectures rapprochées relisent tout (pas d'annulation) ;
     - `NetworkConfiguration`, `WaveCollapseRules` sans copie (vidées pendant la relecture) ;
-  - **échecs attendus** (fichier manquant…) affichés avec pile comme un bug → `ResourceException` sans pile ;
-  - `leaves.obj` (Test3DScene) refusé par Assimp (`OBJ: vertex index out of range`) : cube de secours, `--strict` arrête le jeu ;
+  - **échecs attendus** (`ResourceException` : fait pour fichiers, JSON, CSV, textures, sons, modèles) : les formats maison (`TileSetLoader`, `TextureDataAtlasLoader`, `AnimationDataLoader`, reste de `TileMapLoader`) lèvent encore des `NumberFormatException`/`IndexOutOfBounds` affichées comme bugs → valider et lever `ResourceException` avec fichier et ligne ;
+  - `leaves.obj` (Test3DScene) refusé par Assimp (`OBJ: vertex index out of range`) : cube de secours (une ligne d'erreur), `--strict` arrête le jeu ;
   - **priorités** (scène courante avant préchargement de la suivante) et **annulation** des lectures inutiles (aujourd'hui menées au bout puis déchargées) ;
   - fusionner les files (`inbox` et étapes `MAIN_CONTEXT` de `Resources`, `MainThread`, `GLResources`) sous un même budget de frame ;
   - **cycle** de dépendances → attente sans fin : le détecter et le faire échouer ;
