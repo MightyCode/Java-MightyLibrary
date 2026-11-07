@@ -892,6 +892,67 @@ class ResourcesLifecycleTest {
         assertConsistent();
     }
 
+    // Plays frames until the condition holds (false after the timeout)
+    private boolean frameUntil(java.util.function.BooleanSupplier condition, long timeoutMilliseconds)
+            throws InterruptedException {
+        long end = System.currentTimeMillis() + timeoutMilliseconds;
+        while (!condition.getAsBoolean()) {
+            if (System.currentTimeMillis() > end)
+                return false;
+            frame();
+            Thread.sleep(1);
+        }
+        return true;
+    }
+
+    // The source changed again while its new version is read: a new read starts at once, the first one is dropped
+    @Test
+    void secondReloadAbandonsTheFirstRead() throws Exception {
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        batch("level", "texture");
+        start();
+        resources.loadBatch("level");
+        pump();
+        int version = texture.getVersion();
+
+        texture.preloadMilliseconds = 300;
+        resources.reload(texture);
+        assertTrue(frameUntil(() -> texture.preloads.get() == 2, 1000));
+
+        resources.reload(texture);
+        assertTrue(frameUntil(() -> texture.preloads.get() == 3, 200), "second read started without waiting");
+        assertEquals(1, texture.content(), "previous version while reading");
+
+        pump();
+        assertEquals(3, texture.content(), "the latest read wins");
+        assertEquals(version + 1, texture.getVersion(), "replaced once");
+        assertTrue(reloadingNames().isEmpty());
+        assertConsistent();
+    }
+
+    // An abandoned copy waiting for its dependencies is dropped at once and releases them
+    @Test
+    void abandonedCopyWaitingDependenciesIsReleased() throws Exception {
+        FakeData texture = fake(THREAD_CONTEXT, "texture");
+        FakeData model = fake(THREAD_CONTEXT, "model");
+        model.dependencyToAdd = texture;
+        batch("level", "model");
+        start();
+        resources.loadBatch("level");
+        pump();
+
+        texture.preloadMilliseconds = 100;
+        resources.reloadAllOfType(FakeData.class);
+        assertTrue(frameUntil(() -> model.preloads.get() == 2 && texture.preloads.get() == 2, 1000));
+        resources.reload(model);
+        pump();
+
+        assertEquals(3, model.preloads.get());
+        assertEquals(1, texture.referenceCount(), "only the model references it");
+        assertTrue(reloadingNames().isEmpty());
+        assertConsistent();
+    }
+
     // No longer wanted while its new version is read: the copy is dropped with it
     @Test
     void unloadDuringReloadDropsTheNewVersion() throws Exception {

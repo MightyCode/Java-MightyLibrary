@@ -100,11 +100,42 @@ public class WaveCollapseRules extends DataType {
     }
 
     @Override
+    protected DataType createReloadCopy() {
+        return getClass() == WaveCollapseRules.class ? new WaveCollapseRules(getDataName()) : null;
+    }
+
+    @Override
+    protected void swapContent(DataType copy) {
+        WaveCollapseRules other = (WaveCollapseRules) copy;
+
+        JSONFile otherData = other.data;
+        other.data = data;
+        data = otherData;
+
+        String otherTileset = other.recommendedTileset;
+        other.recommendedTileset = recommendedTileset;
+        recommendedTileset = otherTileset;
+
+        int otherNumber = other.numberRuledTiles;
+        other.numberRuledTiles = numberRuledTiles;
+        numberRuledTiles = otherNumber;
+
+        Map<Integer, Rule> otherRules = other.rules;
+        other.rules = rules;
+        rules = otherRules;
+
+        Rule otherInitial = other.initialRule;
+        other.initialRule = initialRule;
+        initialRule = otherInitial;
+    }
+
+    @Override
     protected boolean internLoad() {
         JSONObject root = data.getObject();
         JSONObject info = root.getJSONObject("info");
 
         recommendedTileset = info.getString("tileset");
+        numberRuledTiles = 0;
 
         rules = new TreeMap<>(Comparator.comparingInt(o -> o));
         initialRule = new Rule(-1);
