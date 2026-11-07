@@ -10,19 +10,22 @@ import io.github.mightycode.mightylib.graphics.lightning.materials.BasicMaterial
 import io.github.mightycode.mightylib.graphics.lightning.lights.PointLight;
 import io.github.mightycode.mightylib.graphics.lightning.materials.Material;
 import io.github.mightycode.mightylib.inputs.InputManager;
-import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
+import io.github.mightycode.mightylib.scenes.camera.cameraComponents.FreeCamera3DComponent;
 import io.github.mightycode.mightylibdemo.main.ActionId;
+import io.github.mightycode.mightylibdemo.main.AxisId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public class Test3DScene2 extends Scene {
+    private FreeCamera3DComponent cameraComponent;
+
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
     private CubeRenderer[] cubeTexturedMaterialsDirectional;
 
@@ -51,6 +54,10 @@ public class Test3DScene2 extends Scene {
         /// SCENE INFORMATION ///
 
         mainContext.getMouseManager().setCursor(false);
+        cameraComponent = new FreeCamera3DComponent(mainContext.getInputManager(), main3DCamera, AxisId.freeCamera3DInputs());
+        addUpdatable(cameraComponent);
+        main3DCamera.setSpeed(new Vector3f(8));
+        cameraComponent.setQuickFactor(2);
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
 
@@ -212,31 +219,9 @@ public class Test3DScene2 extends Scene {
 
         InputManager inputManager = mainContext.getInputManager();
 
-        int speed = 8;
-        if (inputManager.getState(ActionId.SHIFT))
-            speed = 16;
-
-        if (inputManager.getState(ActionId.MOVE_LEFT))
-            main3DCamera.speedAngX(main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
-
-        if (inputManager.getState(ActionId.MOVE_RIGHT))
-            main3DCamera.speedAngX(-main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
-
-        if (inputManager.getState(ActionId.MOVE_FORWARD))
-            main3DCamera.speedAngZ(-main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
-
-        if (inputManager.getState(ActionId.MOVE_BACKWARD))
-            main3DCamera.speedAngZ(main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
-
-        if (inputManager.getState(ActionId.MOVE_UP))
-            main3DCamera.setY(main3DCamera.getCamPosRef().y + main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
-
-        if (inputManager.getState(ActionId.MOVE_DOWN))
-            main3DCamera.setY(main3DCamera.getCamPosRef().y - main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
-
 
         if (inputManager.inputPressed(ActionId.TAB)) {
-            main3DCamera.invertLockViewCursor();
+            cameraComponent.toggleLookLocked();
             mainContext.getMouseManager().invertCursorState();
         }
 

@@ -11,7 +11,6 @@ import io.github.mightycode.mightylib.graphics.lightning.materials.Material;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapColorFunctions;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
@@ -26,9 +25,11 @@ import io.github.mightycode.mightylib.graphics.renderer.Shape;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
+import io.github.mightycode.mightylib.scenes.camera.cameraComponents.FreeCamera3DComponent;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylibdemo.main.ActionId;
+import io.github.mightycode.mightylibdemo.main.AxisId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -67,6 +68,8 @@ public class Test3DScene extends Scene {
 
     private Text originLabel;
 
+    private FreeCamera3DComponent cameraComponent;
+
     public Test3DScene(){
         super(SCENE_CCI);
     }
@@ -87,6 +90,8 @@ public class Test3DScene extends Scene {
 
         timeShaderValue = new ShaderValue("time", Float.class, 0f);
         main3DCamera.setSpeed(new Vector3f(10));
+        cameraComponent = new FreeCamera3DComponent(mainContext.getInputManager(), main3DCamera, AxisId.freeCamera3DInputs());
+        addUpdatable(cameraComponent);
 
         addUpdatableAndDisplayable(
                 new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
@@ -279,32 +284,9 @@ public class Test3DScene extends Scene {
 
         InputManager inputManager = mainContext.getInputManager();
 
-        int speed = 1;
-        if (inputManager.getState(ActionId.SHIFT))
-            speed = 3;
-
-        // Values : progressive with the left stick and the triggers, 1 with a key ; a diagonal is not faster
-        float side = inputManager.getValue(ActionId.MOVE_LEFT) - inputManager.getValue(ActionId.MOVE_RIGHT);
-        float front = inputManager.getValue(ActionId.MOVE_BACKWARD) - inputManager.getValue(ActionId.MOVE_FORWARD);
-        float length = (float) Math.sqrt(side * side + front * front);
-        if (length > 1) {
-            side /= length;
-            front /= length;
-        }
-        float up = inputManager.getValue(ActionId.MOVE_UP) - inputManager.getValue(ActionId.MOVE_DOWN);
-
-        if (side != 0)
-            main3DCamera.speedAngX(side * main3DCamera.getSpeed().x * speed * GameTime.DeltaTime());
-
-        if (front != 0)
-            main3DCamera.speedAngZ(front * main3DCamera.getSpeed().z * speed * GameTime.DeltaTime());
-
-        if (up != 0)
-            main3DCamera.setY(main3DCamera.getCamPosRef().y + up * main3DCamera.getSpeed().y * speed * GameTime.DeltaTime());
-
-
+        // The camera has been moved by its component (super.update)
         if (inputManager.inputPressed(ActionId.TAB)) {
-            main3DCamera.invertLockViewCursor();
+            cameraComponent.toggleLookLocked();
             mainContext.getMouseManager().invertCursorState();
         }
 

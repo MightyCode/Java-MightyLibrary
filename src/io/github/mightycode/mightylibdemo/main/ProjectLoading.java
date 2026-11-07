@@ -5,6 +5,12 @@ import static org.lwjgl.glfw.GLFW.*;
 import io.github.mightycode.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRulesLoader;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
+import io.github.mightycode.mightylib.inputs.inputType.AxisBinding;
+import io.github.mightycode.mightylib.inputs.inputType.AxisButtons;
+import io.github.mightycode.mightylib.inputs.inputType.AxisGamepad;
+import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
+import io.github.mightycode.mightylib.inputs.inputType.AxisMouse;
+import io.github.mightycode.mightylib.inputs.inputType.AxisSum;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
 import io.github.mightycode.mightylib.inputs.inputType.IAction;
 import io.github.mightycode.mightylib.inputs.inputType.InputGamepadAxis;
@@ -118,7 +124,45 @@ class ProjectLoading implements IProjectLoading {
                         "RIGHT_CLICK", new InputSimple(GLFW_MOUSE_BUTTON_2, EInputType.Mouse)),
         };
 
-        inputManager.init(configurations);
+        // 3D moves from the actions above (keys or left stick and triggers, progressive) : no double counting
+        AxisInput[] axes = {
+                new AxisInput(AxisId.MOVE_RIGHT_3D, "MOVE_RIGHT_3D", new AxisButtons(
+                        find(configurations, ActionId.MOVE_LEFT), find(configurations, ActionId.MOVE_RIGHT))),
+                new AxisInput(AxisId.MOVE_FORWARD_3D, "MOVE_FORWARD_3D", new AxisButtons(
+                        find(configurations, ActionId.MOVE_BACKWARD), find(configurations, ActionId.MOVE_FORWARD))),
+                new AxisInput(AxisId.MOVE_UP_3D, "MOVE_UP_3D", new AxisButtons(
+                        find(configurations, ActionId.MOVE_DOWN), find(configurations, ActionId.MOVE_UP))),
+
+                // Degrees for this tick : the mouse in pixels and the right stick (pixels per second when fully pushed)
+                // added, then multiplied by the same sensitivity. Up is positive : the y of both are inverted.
+                new AxisInput(AxisId.LOOK_RIGHT, "LOOK_RIGHT", new AxisSum(
+                        new AxisMouse(AxisMouse.X),
+                        lookStick(GLFW_GAMEPAD_AXIS_RIGHT_X)).scale(LOOK_SENSITIVITY)),
+                new AxisInput(AxisId.LOOK_UP, "LOOK_UP", new AxisSum(
+                        new AxisMouse(AxisMouse.Y),
+                        lookStick(GLFW_GAMEPAD_AXIS_RIGHT_Y)).scale(-LOOK_SENSITIVITY)),
+        };
+
+        inputManager.init(configurations, axes);
+    }
+
+    // Degrees per mouse pixel, not adjustable yet
+    private static final float LOOK_SENSITIVITY = 0.05f;
+    // A stick fully pushed turns like a mouse moving this number of pixels per second (150 degrees per second)
+    private static final float LOOK_STICK_PIXELS_PER_SECOND = 3000;
+
+    // Curve 2 : precise near the center, full speed fully pushed
+    private static AxisBinding lookStick(int axis) {
+        return new AxisGamepad(axis).curve(2).scale(LOOK_STICK_PIXELS_PER_SECOND).perSecond();
+    }
+
+    private static ActionInput find(ActionInput[] actions, int actionId) {
+        for (ActionInput action : actions) {
+            if (action.actionId() == actionId)
+                return action;
+        }
+
+        throw new IllegalArgumentException("No action " + actionId);
     }
 
     // A direction of any gamepad : its d-pad button or its left stick pushed beyond the half
