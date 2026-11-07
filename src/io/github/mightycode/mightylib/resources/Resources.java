@@ -399,6 +399,52 @@ public class Resources {
         return result;
     }
 
+    private static final int DESCRIBE_SELECTION_LIMIT = 100;
+
+    /**
+     * Main thread: the detail of each data matching the selection (state, references, version, sources),
+     * at most DESCRIBE_SELECTION_LIMIT of them.
+     */
+    public JSONObject describe(ResourceSelection selection) {
+        JSONArray list = new JSONArray();
+        int[] count = {0};
+        forEachRegistered((type, data) -> {
+            if (!selection.matches(type, data))
+                return;
+            if (++count[0] > DESCRIBE_SELECTION_LIMIT)
+                return;
+
+            JSONObject item = new JSONObject();
+            item.put("type", type.getSimpleName());
+            item.put("name", data.getDataName());
+            item.put("state", data.isLoaded() ? "loaded" : data.failed ? "failed"
+                    : data.isPreLoaded() ? "preloaded" : "unloaded");
+            item.put("version", data.getVersion());
+            JSONArray references;
+            synchronized (data.references) {
+                references = new JSONArray(data.references);
+            }
+            item.put("references", references);
+            if (data.reloadCopy != null)
+                item.put("reloading", true);
+            if (isFallback(data))
+                item.put("fallback", true);
+            if (data.failed && hasFallback(data))
+                item.put("usingFallback", true);
+            if (!data.sourcePaths().isEmpty())
+                item.put("sources", new JSONArray(data.sourcePaths()));
+            list.put(item);
+        });
+
+        JSONObject result = new JSONObject();
+        result.put("selection", selection.toString());
+        result.put("count", count[0]);
+        if (count[0] > DESCRIBE_SELECTION_LIMIT)
+            result.put("truncatedTo", DESCRIBE_SELECTION_LIMIT);
+        result.put("data", list);
+        return result;
+    }
+
     private static boolean onlyReferencedAsDependency(DataType data) {
         synchronized (data.references) {
             for (String reference : data.references) {
@@ -1045,6 +1091,26 @@ public class Resources {
         for (Class<? extends DataType> c : resources.keySet()) {
             reloadAllOfType(c);
         }
+    }
+
+    /**
+     * Read again the loaded (or failed) data matching the selection, see reload(DataType).
+     *
+     * @return the number of data concerned (0 is not an error)
+     */
+    public int reload(ResourceSelection selection) {
+        List<DataType> selected = new ArrayList<>();
+        forEachRegistered((type, data) -> {
+            if ((data.isLoaded() || data.hasFailed() || data.jobRunning) && isReloadable(data)
+                    && selection.matches(type, data))
+                selected.add(data);
+        });
+
+        runOnMainThread(() -> {
+            for (DataType data : selected)
+                requestReload(data);
+        });
+        return selected.size();
     }
 
     // Read again from the disk the loaded data of this type

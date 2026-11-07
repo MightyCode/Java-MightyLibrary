@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
-import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.ResourceSelection;
@@ -29,26 +28,11 @@ public class WatchGenCom extends BaseCommand {
         if (args[1].equalsIgnoreCase("mode"))
             return setMode(watcher, args);
 
-        if (args[1].equalsIgnoreCase("all")) {
-            watcher.watchAll();
-            return CommandResult.ok("Watching all resources\n" + watcher.status());
-        }
-
-        Class<? extends DataType> type = Resources.getClassFromName(args[1]);
-        if (type == null)
-            return unknownArgumentError(args[1]);
-
-        ResourceSelection selection = ResourceSelection.ofType(type);
-        for (int i = 2; i < args.length; ++i) {
-            if (args[i].startsWith("re:")) {
-                try {
-                    selection = selection.withRegex(args[i].substring(3));
-                } catch (IllegalArgumentException e) {
-                    return CommandResult.error(e.getMessage());
-                }
-            } else {
-                selection = selection.withNames(args[i].split(","));
-            }
+        ResourceSelection selection;
+        try {
+            selection = ResourceSelection.parse(args, 1);
+        } catch (IllegalArgumentException e) {
+            return CommandResult.error(e.getMessage());
         }
 
         watcher.watch(selection);
@@ -84,7 +68,7 @@ public class WatchGenCom extends BaseCommand {
         return super.help() +
                 "\nReload a resource when its file changes. Off by default, polling the files unless told otherwise." +
                 "\n1. watch [status] : state of the watcher" +
-                "\n2. watch all : watch every loaded resource (starts the watcher)" +
+                "\n2. watch all [name1,name2] [re:regex] : watch every loaded resource (starts the watcher)" +
                 "\n3. watch [type] [name1,name2] [re:regex] : watch a type, only some names and/or names matching the" +
                 " regex (a name in the list OR matching the regex), for example watch TextureData grass,sand re:tile.*" +
                 "\n4. watch mode poll|service [interval ms] : compare the files each interval (default, works everywhere)" +
