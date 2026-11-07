@@ -11,7 +11,6 @@ Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. L
     - **mémoire** : ancienne et nouvelle version coexistent ; un `reload` de milliers de données crée toutes les copies d'un coup (les lectures sont bornées par les workers, pas les copies lues qui attendent leurs dépendances) → limiter le nombre de copies en cours ;
     - deux relectures rapprochées relisent la copie en entier (pas d'annulation, voir priorités) ;
     - `NetworkConfiguration` et `WaveCollapseRules` n'ont pas de copie (vidées pendant la relecture) ;
-    - pendant l'envoi GL d'une texture relue, sa taille (`getWidth`) est déjà la nouvelle ; `ModelRenderer` n'affiche rien le temps de renvoyer ses meshes (pas de double tampon côté 3D) ;
   - **échecs attendus** (fichier manquant…) : la pile d'appels est affichée comme pour un bug → exception dédiée (`ResourceException`) affichée sans pile ;
   - `leaves.obj` (Test3DScene) ne passe pas Assimp (`OBJ: vertex index out of range`) : le cube de secours s'affiche, et `--strict` arrête le jeu ;
   - **priorités** (ressources de la scène courante avant le préchargement de la suivante) et **annulation** des lectures devenues inutiles : aujourd'hui une lecture inutile va au bout, puis la donnée est déchargée ;
