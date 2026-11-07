@@ -229,6 +229,10 @@ public class InputGenCom extends BaseCommand {
         JSONObject mouseData = new JSONObject();
         mouseData.put("position", new JSONArray().put(mouse.posX()).put(mouse.posY()));
         mouseData.put("simulated", mouse.isCursorSimulated());
+        // Asked by the game (shown or captured), then what GLFW really does (no capture during the tests)
+        mouseData.put("cursorShown", mouse.getCursorState());
+        int cursorMode = GLFW.glfwGetInputMode(ContextManager.getInstance().getMainContext().getWindow().getInfo().getWindowId(), GLFW.GLFW_CURSOR);
+        mouseData.put("cursorMode", cursorMode == GLFW.GLFW_CURSOR_DISABLED ? "captured" : cursorMode == GLFW.GLFW_CURSOR_HIDDEN ? "hidden" : "normal");
         JSONArray buttons = new JSONArray();
         for (int button = 0; button < MouseManager.MOUSE_BUTTONS; ++button) {
             if (mouse.getButton(button))

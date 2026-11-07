@@ -240,11 +240,19 @@ public class MouseManager {
     }
 
     private void glfwSetCursor(){
-        if(displayCursor)
+        // Without capture (tests run next to the work of the user) : the cursor stays free, the state is kept
+        if(displayCursor || NO_CAPTURE)
             glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         else
             glfwSetInputMode(windowInfo.getWindowId(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
+
+    // -Dmightylib.input.noCursorCapture=true : setCursor(false) never captures nor hides the cursor (scenario.py)
+    public static final String NO_CAPTURE_PROPERTY = "mightylib.input.noCursorCapture";
+    private static final boolean NO_CAPTURE = Boolean.getBoolean(NO_CAPTURE_PROPERTY);
+
+    // True when the cursor is never captured (NO_CAPTURE_PROPERTY)
+    public static boolean isCaptureDisabled() { return NO_CAPTURE; }
 
     public boolean getCursorState(){
         return displayCursor;
