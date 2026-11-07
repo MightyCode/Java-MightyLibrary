@@ -5,7 +5,7 @@ Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisate
 - (U) **Pipeline de `Resources`** (propriétaire unique, réconciliation, dépendances, rechargement à chaud : faits, voir `architecture.md`). Reste :
   - rechargement à chaud :
     - **observateur de fichiers** (et ressources des mods) qui appelle `reload(donnée)` ; `reload all` reste un outil de debug ;
-    - **mémoire** : ancienne et nouvelle version coexistent, un `reload` de milliers de données crée toutes les copies d'un coup → limiter les copies en cours ;
+    - **mémoire** : ancienne et nouvelle version coexistent, un `reload` de milliers de données crée toutes les copies d'un coup (les workers bornent les lectures, pas les copies qui attendent leurs dépendances) → limiter les copies en cours ;
     - deux relectures rapprochées relisent tout (pas d'annulation) ;
     - `NetworkConfiguration`, `WaveCollapseRules` sans copie (vidées pendant la relecture) ;
   - **échecs attendus** (fichier manquant…) affichés avec pile comme un bug → `ResourceException` sans pile ;

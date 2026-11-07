@@ -17,7 +17,7 @@
 - `gl` (objets GL vivants, éléments partagés et références) ; `gl summary` (par type `éléments/références`).
 - `screenshot [chemin]` (PNG de la frame suivante, défaut `screenshots/`) ; `scale 0.5` ; `rect x y l h` ou `corners x y x2 y2` (pixels fenêtre, origine en haut à gauche). Seulement si le texte ne suffit pas.
 - `camera` (liste : position, direction/yaw/pitch/fov en 3D, zoom/rotation en 2D) ; `camera <id|nom>`. 3D : `camera main3D move x y z` / `lookat x y z`. 2D : `camera main2D move x y`, `zoom n` ou `zoom nx ny` (borné, garde le point de référence), `rotation degrés`. Une scène expose ses caméras par `registerCamera(camera, nom)` (`main3D`, `main2D` d'office).
-- `monitors [full]` : écrans, index de celui de la fenêtre. Choix de l'écran au démarrage (liste `--Monitors :` au journal) : `-Dmightylib.window.monitor=primary|secondary|largest|<index>|<nom>`, sinon `EngineConfig.setMonitorSelector(MonitorSelectors.Primary()|Secondary()|Index(i)|Name(t)|Largest())` ; introuvable → principal ; fenêtre centrée dans la zone de travail.
+- `monitors [full]` : écrans (résolution, position ; `full` : zone de travail, fréquence), index de celui de la fenêtre. Choix de l'écran au démarrage (liste `--Monitors :` au journal) : `-Dmightylib.window.monitor=primary|secondary|largest|<index>|<nom>`, sinon `EngineConfig.setMonitorSelector(MonitorSelectors.Primary()|Secondary()|Index(i)|Name(t)|Largest())` ; introuvable → principal ; fenêtre centrée dans la zone de travail.
 
 ## Simuler des entrées (`input`)
 Appliqué par `InputManager.postUpdate()` au tick suivant, vu par tout ce tick (déterministe). Action = nom (insensible à la casse) ou id.
@@ -27,12 +27,12 @@ Appliqué par `InputManager.postUpdate()` au tick suivant, vu par tout ce tick (
 - Texte : lire `KeyboardManager.getTypedText()` (rappel `glfwSetCharCallback` + texte simulé), pas `getCorrespondingCharMainKeyPressed`.
 - Axes : `input axis <AXE> <valeur> [ticks]`, `… hold <valeur>`, `… release` (remplace les liaisons ; ex. `input axis LOOK_RIGHT 2 30`).
 - `input state` : ce que voit le tick (souris virtuelle, boutons, défilement, touches, texte, actions, axes non nuls, `cursorShown`, `cursorMode`).
-- Manettes (`gamepad` ; boutons `A`, `DPAD_UP`, `START`… ; axes `LEFT_X`, `RIGHT_TRIGGER`…) : `gamepad list`, `gamepad connect` / `disconnect <id>` (virtuelle 16+), `gamepad <id> button <B> [ticks]`, `gamepad <id> hold|release <B>`, `gamepad <id> axis <AXE> <valeur> [ticks]` / `hold <valeur>` / `release`, `gamepad assign <id> <joueur>`, `gamepad autoassign on|off`. Scène : `TestGamepadScene`.
+- Manettes (`gamepad` ; boutons `A`, `DPAD_UP`, `START`… ; axes `LEFT_X`, `RIGHT_TRIGGER`…) : `gamepad list` (connectées, boutons tenus, axes hors zone morte, joueurs), `gamepad connect` / `disconnect <id>` (virtuelle 16+), `gamepad <id> button <B> [ticks]`, `gamepad <id> hold|release <B>`, `gamepad <id> axis <AXE> <valeur> [ticks]` / `hold <valeur>` / `release`, `gamepad assign <id> <joueur>`, `gamepad autoassign on|off`. Scène : `TestGamepadScene`.
 
 ## Scripts (`exec <fichier> [délai]`)
-- Une commande par ligne, chemin relatif au répertoire de travail ; vides et `#` ignorées ; arrêt au premier échec. Réponse `{"lines": [{line, command, success, message, data}]}`. Scripts ponctuels dans `tools/scripts/` (ignoré par git).
+- Une commande par ligne, chemin relatif au répertoire de travail ; vides et `#` ignorées ; arrêt au premier échec. Réponse `{"lines": [{line, command, success, message, data}]}`. Scripts ponctuels dans `tools/scripts/` (ignoré par git) ; seul un script permanent est versionné, ailleurs.
 - Les lignes s'enchaînent dans le même tick jusqu'à une réponse différée (`wait`, `screenshot`, `exec`). Entrée simulée vue au tick suivant (`input click`, `wait 1`, `input state`) ; après `scene X`, `wait loaded`.
-- Délai par réponse différée : 30 s (`exec` 300 s). Script récursif refusé.
+- Délai par réponse différée : 30 s (`exec` 300 s). Script récursif refusé. Script long avec `scenario.py` : augmenter `--timeout` (`python tools/scenario.py --timeout 60 "?exec tools/scripts/x.txt"`).
 
 ## `scenario.py` (lancer et vérifier le jeu, Claude)
 Une fenêtre s'ouvre chez l'utilisateur (sur l'écran secondaire, `--monitor` vide = choix du projet) : le prévenir.
@@ -40,12 +40,12 @@ Une fenêtre s'ouvre chez l'utilisateur (sur l'écran secondaire, `--monitor` vi
 python tools/scenario.py "scene Test2DScene" wait-loaded "?gl summary" "input ESCAPE" sleep:0.5 scene
 ```
 - Compile (`--no-compile`), construit `target/classpath.txt`, lance (journal `target/scenario.log`), enchaîne, envoie `exit`, liste les lignes suspectes du journal (dédoublonnées `(xN)`). Code 0 si tout réussit.
-- Étapes en plus : `wait-loaded` (fin de chargement de la scène du dernier `scene X`), `sleep:S`, `leakcheck <Scène> [n=2] [via=MenuScene]` (allers-retours ; affiche `no leak` ou les compteurs `gl` modifiés), `log <regex> [n=10]`.
+- Étapes en plus : `wait-loaded` (fin de chargement de la scène du dernier `scene X`), `sleep:S`, `leakcheck <Scène> [n=2] [via=MenuScene]` (allers-retours ; affiche `no leak` ou les compteurs `gl` modifiés, noms sans suffixe `#id`), `log <regex> [n=10]`.
 - Sortie : `ok` par étape réussie ; `?` devant une étape = réponse complète ; un échec affiche tout.
 - Blocage : rien après `--timeout` s (20) → bloqué ; `wait-loaded` trop long → `BLOCKED` + état `gl`, arrêt. Jeu tué après `--max-duration` (300 s).
-- `--strict` (voir `architecture.md` ; démo des placeholders : `TestFallbackScene` sans `--strict`), `--attach` (jeu déjà lancé, ni lancé ni fermé), `--keep-open`.
-- Souris jamais capturée (`-Dmightylib.input.noCursorCapture=true`) : regard 3D testé par `input mouse`/`input axis`/`gamepad` ; `--capture-mouse` pour la capture.
-- Fluidité d'un chargement : `python tools/scenario.py "scene TestGLLoading" "stats reset" wait-loaded stats`.
+- `--strict` : échec ou nom inconnu arrête le jeu (sinon log `… its fallback is used` et `usingFallback` dans `resources` ; démo : `TestFallbackScene` sans `--strict`). `--attach` (jeu déjà lancé, ni lancé ni fermé), `--keep-open`.
+- Souris jamais capturée (`-Dmightylib.input.noCursorCapture=true`, `MouseManager.NO_CAPTURE_PROPERTY` : curseur visible et libre pour l'utilisateur) : regard 3D testé par `input mouse`/`input axis`/`gamepad` ; `--capture-mouse` pour la capture.
+- Fluidité d'un chargement : `python tools/scenario.py "scene TestGLLoading" "stats reset" wait-loaded stats` (`reset` après `scene` exclut le tick qui exécute `init`).
 - Fuite à la main : `gl` sur une scène, allers-retours, `gl` à nouveau : compteurs et références identiques.
 
 ## Profilage

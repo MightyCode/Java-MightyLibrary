@@ -57,7 +57,7 @@ Modèle solids/actors/riders (Celeste, TowerFall) étendu aux poussables empilé
 
 ### Corps rigides (bibliothèque derrière `IPhysicsWorld2D`)
 Pour rotation, empilement libre, articulations (ponts, cordes, ragdolls).
-- Candidats : **box2d-jni** (fabmax, Box2D v3 natif, Maven Central ; Java 11 et activité à vérifier), **gdx-box2d** (libGDX, Box2D v3.1), **dyn4j** (pur Java, BSD-3, 5.0.2 de mars 2024). Trancher en refaisant `TestBox2D` avec chacun.
+- Candidats : **box2d-jni** (fabmax, Box2D v3 natif, Maven Central, Windows/Linux/macOS ; Java 11 et activité à vérifier), **gdx-box2d** (libGDX, Box2D v3.1), **dyn4j** (pur Java, BSD-3, 5.0.2 de mars 2024, Java 1.6+). Trancher en refaisant `TestBox2D` avec chacun.
 - Coexistence avec l'arcade (joueur arcade poussant des caisses simulées) : à prototyper.
 - Au début du point : prototype de `TestPhysicsCrates` avec Box2D v3 pour comparer.
 
@@ -69,7 +69,7 @@ Le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour fa
 - **Prérequis** : modèle d'entités (ECS et/ou graphe de scène ; aujourd'hui de simples listes par scène), à décider au début du point.
 
 ### Bibliothèque
-- **LuaJava de gudzpoz** (`party.iroiro.luajava`, MIT, Maven Central, ≥ 4.0.2) : Lua 5.1–5.4 ou LuaJIT natif par plateforme, secours LuaJ. LuaJ seul n'est plus maintenu (~2015). Vérifier l'activité à l'adoption.
+- **LuaJava de gudzpoz** (`party.iroiro.luajava`, MIT, Maven Central, ≥ 4.0.2) : Lua 5.1–5.4 ou LuaJIT natif par plateforme (Windows/Linux/macOS/Android), secours LuaJ. LuaJ seul n'est plus maintenu (~2015). Vérifier l'activité à l'adoption.
 - Interface de script indépendante du langage ; LuaJava = première implémentation.
 - API **explicite** (fonctions enregistrées une à une, pas de réflexion), bibliothèques Lua limitées (pas de `io`/`os` libres).
 
@@ -122,7 +122,7 @@ Après le rendu 2D et la reprise de `dev` (contours épais et anticrénelage com
 - Touches modifiables à l'exécution, sauvegardées/chargées depuis un fichier ; scène prefab de changement des touches.
 - **Manettes** (base faite : `GamepadManager`, joueurs, `InputGamepadButton`/`InputGamepadAxis`, virtuelles, commande `gamepad`). Reste :
   - **Actions par joueur** (multijoueur local) : aujourd'hui joueur fixe ou `ANY_PLAYER` ; cible `inputManager.getState(action, joueur)`, clavier/souris attribués à un joueur comme une manette.
-  - **Ensembles d'actions activables** (« jeu », « menu ») au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
+  - **Ensembles d'actions activables** (« jeu », « menu » : un même stick déplace et navigue, `MOVE_*_2D` et `SELECT_UP/DOWN`) au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
   - Sensibilité du regard réglable (aujourd'hui `LOOK_SENSITIVITY` de `ProjectLoading`), séparable souris/manette, avec inversion verticale (`scale` négatif).
   - `MovingCameraComponent` (2D) : passer aux axes comme `FreeCamera3DComponent`.
   - Remappage manette sauvegardé avec le clavier (`Gamepad.parseButton`/`buttonName`).
