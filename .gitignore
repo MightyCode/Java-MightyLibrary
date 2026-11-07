@@ -4,6 +4,8 @@ src/META-INF/
 target/
 screenshots/
 *.jfr
+# Local command scripts (exec), only shared when they are used all the time
+tools/scripts/
 # Natives extracted by LWJGL at launch
 .lwjgl/
 
