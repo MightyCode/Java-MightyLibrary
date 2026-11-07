@@ -13,7 +13,7 @@ public class StatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "stats";
 
     public StatsGenCom() {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
     }
 
     @Override

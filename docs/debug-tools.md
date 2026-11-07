@@ -5,8 +5,9 @@ Commandes, serveur de debug, lancement du jeu par Claude et profilage.
 ## Outils de debug et de mesure
 
 ### Commandes
-- Une commande hérite de `BaseCommand` et implémente `CommandResult execute(String[] args)` (`args[0]` = nom). Elle **renvoie** son résultat (`CommandResult.ok(message, data JSON)` / `error(...)`), elle n'écrit pas dans la console. Résultat connu plus tard (ex. capture après la frame suivante) : `CommandResult.later(future)`.
-- Les commandes générales sont enregistrées dans `ListGeneralCommand` ; une scène peut ajouter les siennes (`Commands.addCommand`, retirées au changement de scène).
+- Une commande hérite de `BaseCommand` et implémente `CommandResult execute(String[] args)` (`args[0]` = nom). Elle **renvoie** son résultat (`CommandResult.ok(message, data JSON)` / `error(...)`), elle n'écrit pas dans la console. Résultat connu plus tard (ex. capture après la frame suivante) : `CommandResult.later(future)` ; l'appelant (console, serveur) abandonne après `Commands.COMMAND_TIMEOUT_SECONDS` (30 s).
+- Découpage de la ligne (`CommandLine.Split`) : mots séparés par des espaces, un mot avec espaces entre guillemets doubles (`screenshot "target/a b.png"`), barres obliques inverses gardées telles quelles (chemins Windows) ; guillemet non fermé → erreur. Avec `scenario.py`, entourer l'étape de guillemets simples : `'screenshot "target/a b.png"'`.
+- Les commandes générales sont enregistrées dans `ListGeneralCommand` ; une scène peut ajouter les siennes (`Commands.addCommand`, retirées au changement de scène, marquées `(scene)` dans `help`). Un nom déjà pris lève `IllegalArgumentException`.
 - `Commands.submit(line)` est appelable depuis n'importe quel thread ; l'exécution a lieu sur le thread principal au début du tick suivant (`processPendingCommands`). La console est lue dans un thread à part : le jeu n'est jamais bloqué.
 - Commandes disponibles uniquement en mode admin.
 

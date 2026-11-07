@@ -23,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Protocol : one command per line, one JSON line in answer : {"success": bool, "message": "...", "data": {...}}
  */
 public class DebugServer {
-    private static final long COMMAND_TIMEOUT_SECONDS = 30;
     private static final long STOP_WAIT_MILLISECONDS = 500;
     private static final int MAX_PORT = 65535;
 
@@ -125,9 +124,9 @@ public class DebugServer {
                 try {
                     CommandResult result;
                     try {
-                        result = commands.submit(line).get(COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                        result = commands.submit(line).get(Commands.COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
                     } catch (TimeoutException e) {
-                        result = CommandResult.error("No answer after " + COMMAND_TIMEOUT_SECONDS + " seconds");
+                        result = CommandResult.error("No answer after " + Commands.COMMAND_TIMEOUT_SECONDS + " seconds");
                     } catch (ExecutionException e) {
                         result = CommandResult.error(e.getCause().toString());
                     }

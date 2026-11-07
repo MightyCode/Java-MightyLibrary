@@ -9,7 +9,7 @@ public class ReloadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "reload";
 
     public ReloadGenCom() {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
     }
 
     @Override

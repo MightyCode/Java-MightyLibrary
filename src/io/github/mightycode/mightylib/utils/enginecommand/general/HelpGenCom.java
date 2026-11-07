@@ -9,7 +9,7 @@ public class HelpGenCom extends BaseCommand {
     private final Commands commands;
 
     public HelpGenCom(Commands commands) {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
         this.commands = commands;
     }
 
@@ -25,10 +25,14 @@ public class HelpGenCom extends BaseCommand {
         }
 
         StringBuilder result = new StringBuilder("Available commands :");
-        for (BaseCommand command : commands.getCommands())
+        for (BaseCommand command : commands.getCommands()) {
             result.append("\n- ").append(command.getName());
+            if (commands.isSceneCommand(command))
+                result.append(" (scene)");
+        }
 
         result.append("\nWrite -> [command] help <- to know how to use a command");
+        result.append("\nWrite a word with spaces between double quotes : screenshot \"my folder/a.png\"");
 
         return CommandResult.ok(result.toString());
     }

@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Registry of the commands.
@@ -18,6 +20,9 @@ import java.util.concurrent.ExecutionException;
  * at the beginning of the next tick, so the game is never blocked while waiting for a command.
  */
 public class Commands {
+    // Time given to a command to answer (deferred results included) before its caller stops waiting
+    public static final long COMMAND_TIMEOUT_SECONDS = 30;
+
     private static class CommandRequest {
         private final String line;
         private final CompletableFuture<CommandResult> result;
@@ -77,11 +82,16 @@ public class Commands {
 
     // Main thread only
     public CommandResult execute(String line) {
-        String trimmed = line.trim();
-        if (trimmed.isEmpty())
+        String[] args;
+        try {
+            args = CommandLine.Split(line);
+        } catch (IllegalArgumentException e) {
+            return CommandResult.error(e.getMessage());
+        }
+
+        if (args.length == 0)
             return CommandResult.error("Empty command");
 
-        String[] args = trimmed.split("\\s+");
         BaseCommand command = findCommand(args[0]);
 
         if (command == null)
@@ -113,14 +123,21 @@ public class Commands {
                     if (line.trim().isEmpty())
                         continue;
 
-                    CommandResult result = submit(line).get();
+                    CommandResult result;
+                    try {
+                        result = submit(line).get(COMMAND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                    } catch (TimeoutException e) {
+                        result = CommandResult.error("No answer after " + COMMAND_TIMEOUT_SECONDS + " seconds");
+                    } catch (ExecutionException e) {
+                        result = CommandResult.error(e.getCause().toString());
+                    }
 
                     if (result.isSuccess())
                         System.out.println(result);
                     else
                         System.err.println(result);
                 }
-            } catch (IOException | ExecutionException e) {
+            } catch (IOException e) {
                 System.err.println("Console commands stopped : " + e);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -145,12 +162,22 @@ public class Commands {
     }
 
 
+    /**
+     * Commands added after the general ones belong to the current scene and are removed when it changes.
+     * @throws IllegalArgumentException if a command with the same name already exists
+     */
     public void addCommand(BaseCommand command){
+        if (findCommand(command.getName()) != null)
+            throw new IllegalArgumentException("A command named ->" + command.getName() + "<- already exists");
+
         commands.add(command);
     }
 
+    public boolean isSceneCommand(BaseCommand command) {
+        return commands.indexOf(command) >= endGeneralCommand;
+    }
 
-    public void removeSpecificCommand(){
+    public void removeSceneCommands(){
         if (commands.size() > endGeneralCommand) {
             commands.subList(endGeneralCommand, commands.size()).clear();
         }

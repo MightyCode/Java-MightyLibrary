@@ -19,7 +19,7 @@ public class ScreenshotGenCom extends BaseCommand {
     private static final String SCALE = "scale";
 
     public ScreenshotGenCom() {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
     }
 
     @Override

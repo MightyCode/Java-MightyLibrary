@@ -10,7 +10,7 @@ public class ExitGenCom extends BaseCommand {
     private final SceneManager sceneManager;
 
     public ExitGenCom(SceneManager sceneManager){
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
         this.sceneManager = sceneManager;
     }
 

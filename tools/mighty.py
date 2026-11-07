@@ -75,7 +75,10 @@ def main():
         reader = connection.makefile("r", encoding="utf-8")
 
         if args.command:
-            answer = send(connection, reader, " ".join(args.command))
+            # The shell removed the quotes: put them back around words with spaces
+            words = [f'"{word}"' if (not word or any(c.isspace() for c in word)) else word
+                     for word in args.command]
+            answer = send(connection, reader, " ".join(words))
             show(answer, args.json)
             return 0 if answer.get("success") else 1
 

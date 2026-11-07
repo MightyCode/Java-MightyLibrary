@@ -8,7 +8,7 @@ public class ChangeSoundGainCom extends BaseCommand {
     public static final String COMMAND_NAME = "changegain";
 
     public ChangeSoundGainCom() {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
     }
 
     @Override

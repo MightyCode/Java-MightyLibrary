@@ -1,16 +1,13 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
 public abstract class BaseCommand {
-    public static final int GENERAL_COMMAND = 0;
-    public static final int SPECIFIC_COMMAND = 1;
-
     private final String commandName;
-    private String range;
 
-    public BaseCommand (String commandName, int range){
+    public BaseCommand(String commandName) {
+        if (commandName == null || commandName.isEmpty() || !commandName.equals(commandName.trim()) || commandName.contains("\""))
+            throw new IllegalArgumentException("Invalid command name ->" + commandName + "<-");
+
         this.commandName = commandName;
-        if (range == GENERAL_COMMAND) this.range = "General";
-        else if (range == SPECIFIC_COMMAND) this.range = "Specific";
     }
 
     /**
@@ -27,11 +24,9 @@ public abstract class BaseCommand {
         return this.commandName.equals(commandName);
     }
 
-    public int size() { return commandName.length(); }
-
     // Help to know how use the command
     public String help(){
-        return "Help for " + commandName + " command (" + range + ")";
+        return "Help for " + commandName + " command";
     }
 
     public boolean checkArgumentHelp(String[] commands){

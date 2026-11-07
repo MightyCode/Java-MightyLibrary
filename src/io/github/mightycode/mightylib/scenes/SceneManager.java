@@ -93,8 +93,7 @@ public class SceneManager {
     }
 
     private void changeScene() {
-        if (MainLoop.isAdmin())
-            commands.removeSpecificCommand();
+        commands.removeSceneCommands();
 
         if(currentScene != null) {
             System.out.println("--Unload scene" + currentScene.getClass().getName());

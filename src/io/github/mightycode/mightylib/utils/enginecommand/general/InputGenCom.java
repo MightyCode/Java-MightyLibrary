@@ -12,7 +12,7 @@ public class InputGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "input";
 
     public InputGenCom() {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
     }
 
     @Override

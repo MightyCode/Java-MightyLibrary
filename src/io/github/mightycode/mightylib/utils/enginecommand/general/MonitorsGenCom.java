@@ -18,7 +18,7 @@ public class MonitorsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "monitors";
 
     public MonitorsGenCom() {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
     }
 
     @Override

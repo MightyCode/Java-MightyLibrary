@@ -8,7 +8,7 @@ public class ResourcesGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "resources";
 
     public ResourcesGenCom() {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
     }
 
     @Override

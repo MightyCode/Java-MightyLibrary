@@ -21,7 +21,7 @@ public class CameraGenCom extends BaseCommand {
     private final SceneManager sceneManager;
 
     public CameraGenCom(SceneManager sceneManager) {
-        super(COMMAND_NAME, GENERAL_COMMAND);
+        super(COMMAND_NAME);
         this.sceneManager = sceneManager;
     }
 
