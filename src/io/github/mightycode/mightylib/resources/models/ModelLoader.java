@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources.models;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.ColorTextureData;
@@ -83,10 +84,10 @@ public class ModelLoader extends ResourceLoader {
 
         AIScene scene = aiImportFile(model.path(), IMPORT_FLAGS);
         if (scene == null || scene.mRootNode() == null) {
-            System.err.println("--Can't import the model " + model.getDataName() + " (" + model.path() + ") : " + aiGetErrorString());
+            String error = aiGetErrorString();
             if (scene != null)
                 aiReleaseImport(scene);
-            return;
+            throw new ResourceException("can't import the model " + model.path() + ": " + error);
         }
 
         try {

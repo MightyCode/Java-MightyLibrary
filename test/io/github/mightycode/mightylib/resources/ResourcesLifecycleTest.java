@@ -10,7 +10,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -272,6 +274,53 @@ class ResourcesLifecycleTest {
         assertFalse(broken.isPreLoaded());
         assertTrue(fine.isLoaded());
         assertEquals(0, broken.errors.get());
+    }
+
+    // Runs the batch, returns what Resources wrote on System.err meanwhile
+    private String loadCapturingErrors(String batchName) throws Exception {
+        PrintStream previous = System.err;
+        ByteArrayOutputStream captured = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(captured, true, "UTF-8"));
+        try {
+            resources.loadBatch(batchName);
+            pump();
+        } finally {
+            System.setErr(previous);
+        }
+        return captured.toString("UTF-8");
+    }
+
+    // Missing file, bad format...: the data is wrong, not the code, one line without stack trace
+    @Test
+    void expectedFailureIsLoggedWithoutStackTrace() throws Exception {
+        FakeData missing = fake(THREAD_CONTEXT, "missing");
+        missing.preloadThrows = new ResourceException("file not found: textures/missing.png");
+        FakeData fine = fake(MAIN_CONTEXT, "fine");
+        batch("level", "missing", "fine");
+        start();
+
+        String errors = loadCapturingErrors("level");
+
+        assertTrue(missing.failed);
+        assertFalse(missing.isPreLoaded());
+        assertTrue(fine.isLoaded());
+        assertTrue(errors.contains("FakeData missing failed: file not found: textures/missing.png"), errors);
+        assertFalse(errors.contains("\tat "), errors);
+    }
+
+    // Any other exception is a bug: its stack trace is kept
+    @Test
+    void unexpectedFailureKeepsTheStackTrace() throws Exception {
+        FakeData buggy = fake(THREAD_CONTEXT, "buggy");
+        buggy.preloadThrows = new IllegalStateException("bug in the loader");
+        batch("level", "buggy");
+        start();
+
+        String errors = loadCapturingErrors("level");
+
+        assertTrue(buggy.failed);
+        assertTrue(errors.contains("bug in the loader"), errors);
+        assertTrue(errors.contains("\tat "), errors);
     }
 
     // Owned resources (textures of a model) are registered from worker threads

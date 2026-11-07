@@ -91,8 +91,8 @@ public class TileMapLoader extends ResourceLoader {
                 int layerNumber = Integer.parseInt(linePart[1]);
 
                 if (numberOfBackLayers == -1 || layerSize == null)
-                    throw new RuntimeException("Tilemap file is not correctly formated, please define first map size"
-                        + " number of layers");
+                    throw new ResourceException("bad format in " + tileMap.path()
+                        + ": the map size and the number of layers must come before the layers");
 
                 assert layers != null;
                 layers[layerNumber] = new TileLayer(layerSize);

@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources.texture;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.Resources;
 import org.json.JSONObject;
@@ -94,11 +95,11 @@ public class TextureDataLoader extends ResourceLoader {
         try (FileInputStream input = new FileInputStream(textureData.path())) {
             image = ImageIO.read(input);
         } catch (Exception e) {
-            throw new IllegalStateException("Can't read the texture file " + textureData.path(), e);
+            throw new ResourceException("can't read the texture file " + textureData.path(), e);
         }
 
         if (image == null)
-            throw new IllegalStateException("Unknown image format: " + textureData.path());
+            throw new ResourceException("unknown image format: " + textureData.path());
 
         textureData.setBufferedImage(image);
     }
