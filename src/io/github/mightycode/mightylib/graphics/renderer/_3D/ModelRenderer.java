@@ -54,10 +54,9 @@ public class ModelRenderer extends Renderer {
         this.shaderName = shaderName;
         this.modelName = modelName;
 
-        Model model = resources.getResource(Model.class, modelName);
-        if (model == null)
-            throw new IllegalArgumentException("Model not found : " + modelName);
-        if (!model.isLoaded())
+        // Unknown, failed or not loaded yet: the fallback cube (not replaced by the model once loaded)
+        Model model = resources.usable(Model.class, resources.getResourceOrFallback(Model.class, modelName));
+        if (model == null || !model.isLoaded())
             throw new IllegalStateException("Model not loaded : " + modelName + " (load its batch before creating the renderer)");
 
         meshes = model.getMeshes();

@@ -42,6 +42,12 @@ public class AnimationDataLoader extends ResourceLoader {
         return null;
     }
 
+    // Needs the TextureData loader registered first (its fallback is the texture of this one)
+    @Override
+    public DataType createFallback() {
+        return new FallbackAnimationData();
+    }
+
     @Override
     public void initWithFile(DataType dataType) {
         if (!(dataType instanceof AnimationData))

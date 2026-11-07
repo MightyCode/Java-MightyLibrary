@@ -5,19 +5,27 @@ import io.github.mightycode.mightylib.resources.Resources;
 
 import java.awt.image.BufferedImage;
 
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+
 /**
  * Fallback of the textures: magenta and black checkerboard created in memory, it can't fail.
  * Used in place of a texture that failed, is still loading or has an unknown name.
  */
 public class FallbackTextureData extends TextureData {
-    private static final int SIZE = 16;
+    public static final int SIZE = 16;
     private static final int CELL = 8;
     private static final int MAGENTA = 0xFFFF00FF;
     private static final int BLACK = 0xFF000000;
 
     public FallbackTextureData() {
-        super(Resources.FALLBACK_NAME, null);
+        this(Resources.FALLBACK_NAME, GL_TEXTURE_2D);
+    }
+
+    // Another checkerboard, for the fallbacks needing their own texture (GL_TEXTURE_RECTANGLE of the fallback font)
+    public FallbackTextureData(String name, int textureType) {
+        super(name, null);
         defaultAspectTexture = TextureParameters.PIXEL_ART_PARAMETERS;
+        defaultTextureType = textureType;
     }
 
     @Override

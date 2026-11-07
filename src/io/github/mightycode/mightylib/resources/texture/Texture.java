@@ -14,6 +14,7 @@ import org.lwjgl.BufferUtils;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class Texture extends GLElement implements IGLBindable, IRenderTextureBindable {
     // 2D textures bigger than this are sent in several steps, by strips of rows, so a frame never waits for a whole texture
@@ -28,6 +29,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     // Bound while a texture is not loaded yet: draws nothing instead of failing
     private static int placeholderId = -1;
+    private static int fallbackRectangleId = -1;
 
     private final TextureData data;
     private int textureId;
@@ -47,6 +49,32 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             GenDeleteResources.DeleteTexture(placeholderId);
             placeholderId = -1;
         }
+
+        if (fallbackRectangleId != -1) {
+            GenDeleteResources.DeleteTexture(fallbackRectangleId);
+            fallbackRectangleId = -1;
+        }
+    }
+
+    // The fallback checkerboard as a rectangle texture, for the samplers of rectangle textures (fonts); -1 until ready
+    private static int getFallbackRectangleId() {
+        if (fallbackRectangleId == -1) {
+            TextureData fallback = Resources.getInstance().getFallback(TextureData.class);
+            if (fallback == null || !fallback.isLoaded())
+                return -1;
+
+            fallbackRectangleId = GenDeleteResources.GenTexture();
+            glBindTexture(GL_TEXTURE_RECTANGLE, fallbackRectangleId);
+            glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, fallback.getWidth(), fallback.getHeight(), 0,
+                    GL_RGBA, GL_UNSIGNED_BYTE, fallback.getData());
+            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            Logger.CheckOpenGLError("Create rectangle fallback texture");
+        }
+
+        return fallbackRectangleId;
     }
 
     private static int getPlaceholderId() {
@@ -101,7 +129,12 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
         // Failed or still loading: the fallback texture instead
         } else {
-            glBindTexture(GL_TEXTURE_2D, getFallbackId());
+            // Same target as this texture: a rectangle sampler can't read a 2D texture
+            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? getFallbackRectangleId() : -1;
+            if (rectangleId != -1)
+                glBindTexture(GL_TEXTURE_RECTANGLE, rectangleId);
+            else
+                glBindTexture(GL_TEXTURE_2D, getFallbackId());
             EngineStats.countTextureBind();
         }
     }

@@ -50,6 +50,11 @@ public class ModelLoader extends ResourceLoader {
     }
 
     @Override
+    public DataType createFallback() {
+        return new FallbackModel();
+    }
+
+    @Override
     public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
         data.put(name, new Model(name, currentPath));
     }

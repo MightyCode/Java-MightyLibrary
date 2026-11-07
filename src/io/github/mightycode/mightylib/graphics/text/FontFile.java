@@ -22,6 +22,32 @@ public class FontFile {
         this.path = path;
     }
 
+    // Font of the fallback: each printable character is the whole atlas (a box), the space is empty
+    static FontFile CreateBoxes(int atlasSize) {
+        FontFile file = new FontFile(null);
+        file.size = atlasSize;
+        file.padding = new Vector4i();
+        file.lineHeight = 1.2;
+        file.atlasWidth = atlasSize;
+        file.atlasHeight = atlasSize;
+        file.characters = new HashMap<>();
+
+        for (int code = SPACE_CHAR_CODE; code < 127; ++code) {
+            boolean space = code == SPACE_CHAR_CODE;
+            FontChar fontChar = new FontChar();
+            fontChar.setId(code)
+                    .setxAtlas(0).setyAtlas(0)
+                    .setWidthAtlas(atlasSize).setHeightAtlas(atlasSize)
+                    .setWidth(space ? 0 : 0.6).setHeight(space ? 0 : 0.8)
+                    .setxOffset(0).setyOffset(0)
+                    .setxAdvance(0.7);
+            file.characters.put(code, fontChar);
+        }
+
+        file.numChars = file.characters.size();
+        return file;
+    }
+
     public boolean load(){
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(path));

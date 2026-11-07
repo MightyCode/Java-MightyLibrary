@@ -22,6 +22,7 @@ public class Text extends Renderer implements Cloneable {
     private final int textureIndex;
 
     private FontFace font;
+    private FontFace builtWithFont;
     private String text;
 
     private final Vector2f leftUpPosition;
@@ -67,6 +68,9 @@ public class Text extends Renderer implements Cloneable {
         if (shouldNotDrawText())
             return;
 
+        if (usedFont() != builtWithFont)
+            computeRightUpPosition();
+
         super.display();
     }
 
@@ -77,9 +81,8 @@ public class Text extends Renderer implements Cloneable {
             return this;
         }
 
-        this.font = Resources.getInstance().getResource(FontFace.class, fontName);
-
-        setMainTextureChannel(fontName);
+        // Unknown name: the fallback font
+        this.font = Resources.getInstance().getResourceOrFallback(FontFace.class, fontName);
 
         computeRightUpPosition();
 
@@ -115,7 +118,7 @@ public class Text extends Renderer implements Cloneable {
 
                 result = temp;
             } else {
-                sizeTaken = font.computeSize(temp, fontSize);
+                sizeTaken = usedFont().computeSize(temp, fontSize);
 
                 if (sizeTaken.x > boxSize.x){
                     result = result + "\n" + breakLineFirstChar + c;
@@ -202,9 +205,21 @@ public class Text extends Renderer implements Cloneable {
     }
 
 
+    // The font if loaded, otherwise the fallback one (failed or still loading)
+    private FontFace usedFont() {
+        return Resources.getInstance().usable(FontFace.class, font);
+    }
+
     private void computeRightUpPosition() {
         if (shouldNotDrawText())
             return;
+
+        // Built with this font: rebuilt by display when the usable font changes (loaded, failed, reloaded)
+        FontFace used = usedFont();
+        if (used != builtWithFont) {
+            builtWithFont = used;
+            setMainTextureChannel(used.getTexture().getDataName());
+        }
 
         leftUpPosition.x = position.x;
         leftUpPosition.y = position.y;
@@ -230,11 +245,11 @@ public class Text extends Renderer implements Cloneable {
         Vector2f textReference = new Vector2f();
         float lineAlignmentOffset = 0;
 
-        rectangleSize.set(font.computeSize(text, fontSize));
+        rectangleSize.set(usedFont().computeSize(text, fontSize));
 
         for (int j = 0; j < lines.length; ++j) {
             for (int i = 0; i < lines[j].length(); i++) {
-                currentCharOffset.x += font.getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize;
+                currentCharOffset.x += usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize;
                 ++charCount;
             }
 
@@ -294,7 +309,7 @@ public class Text extends Renderer implements Cloneable {
                 indices[charCount * SIZE_INDICES + 4] = charCount * NUMBER_INDICES;
                 indices[charCount * SIZE_INDICES + 5] = charCount * NUMBER_INDICES + 3;
 
-                fontChar = font.getFontFile().getCharacter(c);
+                fontChar = usedFont().getFontFile().getCharacter(c);
 
                 sizeTemp.x = (float)((fontChar.getWidth()) * fontSize);
                 sizeTemp.y = (float)((fontChar.getHeight()) * fontSize);
@@ -344,7 +359,7 @@ public class Text extends Renderer implements Cloneable {
             }
 
             currentCharOffset.x = 0;
-            currentCharOffset.y += font.getFontFile().getLineHeight() * fontSize;
+            currentCharOffset.y += usedFont().getFontFile().getLineHeight() * fontSize;
         }
 
         shape.setEbo(indices);

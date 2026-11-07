@@ -293,6 +293,11 @@ def report_log(log_path):
 
 
 def main():
+    # The Windows console code page can't print every character of the game log
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
+
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--port", type=int, default=7777,
                         help="port of the game for --attach (a launched game gives its own port)")

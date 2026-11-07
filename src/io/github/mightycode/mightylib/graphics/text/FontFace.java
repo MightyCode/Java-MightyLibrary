@@ -21,6 +21,17 @@ public class FontFace extends SingleSourceDataType {
         fontFile = new FontFile(PATH + infoPath);
     }
 
+    // Fallback font (FontLoader.createFallback): no file, the characters are given
+    FontFace(TextureData atlas, FontFile generatedFile) {
+        super(TYPE_SET_UP.THREAD_CONTEXT, Resources.FALLBACK_NAME, null);
+
+        name = Resources.FALLBACK_NAME;
+        fontAtlas = atlas;
+        addDependency(fontAtlas);
+
+        fontFile = generatedFile;
+    }
+
     /**
      * Compute the size of given text
      * @param text Text's size to compute

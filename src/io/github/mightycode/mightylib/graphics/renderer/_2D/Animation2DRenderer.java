@@ -13,6 +13,7 @@ import org.joml.Vector4f;
 public class Animation2DRenderer extends Renderer {
     private final Vector2f referencePosition;
     private Animator animator;
+    private String currentTextureName;
     private final int positionIndex;
     private final int textureIndex;
     private final Vector4f texturePosition;
@@ -49,15 +50,26 @@ public class Animation2DRenderer extends Renderer {
         this.animator = animator;
 
         updateInfoForFrame();
-        setMainTextureChannel(animator.getCurrentAnimation().getData().getTextureName());
+        updateTextureChannel();
+    }
+
+    // The texture of the usable animation: it changes when the animation changes, or is loaded after its fallback
+    private void updateTextureChannel() {
+        String textureName = animator.getCurrentAnimation().getData().getTextureName();
+        if (!textureName.equals(currentTextureName)) {
+            currentTextureName = textureName;
+            setMainTextureChannel(textureName);
+        }
     }
 
 
     public void update(){
         animator.update();
 
-        if (animator.animationChanged()) {
-            setMainTextureChannel(animator.getCurrentAnimation().getData().getTextureName());
+        String previousTexture = currentTextureName;
+        updateTextureChannel();
+
+        if (animator.animationChanged() || !currentTextureName.equals(previousTexture)) {
             updateInfoForFrame();
         } else if (animator.isFrameChanged()){
             updateInfoForFrame();

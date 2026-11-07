@@ -3,12 +3,16 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.texture.FallbackTextureData;
+import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.json.JSONObject;
 
 import java.util.Iterator;
 import java.util.Map;
 
 import static org.lwjgl.opengl.GL11C.glGetError;
+import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class FontLoader extends ResourceLoader {
     @Override
@@ -28,6 +32,20 @@ public class FontLoader extends ResourceLoader {
 
         create(data, obj);
     }
+
+    /**
+     * Each character is a magenta and black box. The font shader reads a rectangle texture: the fallback font has its
+     * own checkerboard of this type, owned for the whole program (the TextureData loader must be registered first).
+     */
+    @Override
+    public DataType createFallback() {
+        TextureData atlas = Resources.getInstance().addOwnedResource(TextureData.class,
+                new FallbackTextureData(FALLBACK_ATLAS_NAME, GL_TEXTURE_RECTANGLE), "fallback font");
+
+        return new FontFace(atlas, FontFile.CreateBoxes(FallbackTextureData.SIZE));
+    }
+
+    private static final String FALLBACK_ATLAS_NAME = "error-font";
 
     @Override
     public void fileDetected(Map<String, DataType> data, String currentPath, String name) {}
@@ -60,6 +78,8 @@ public class FontLoader extends ResourceLoader {
             return;
 
         FontFace fontFace = (FontFace) dataType;
-        fontFace.getFontFile().load();
+        // Failing here makes the preload fail: the fallback replaces the font
+        if (!fontFace.getFontFile().load())
+            throw new IllegalStateException("Can't read the font file of " + fontFace.getFontName());
     }
 }

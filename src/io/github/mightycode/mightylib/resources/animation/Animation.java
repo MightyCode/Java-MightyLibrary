@@ -19,7 +19,8 @@ public class Animation {
     private boolean looping;
     private boolean animationFinished;
 
-    private TextureData texture;
+    // Data given by the last data() call
+    private AnimationData usedData;
 
     public Animation(){
         this.looping = false;
@@ -28,13 +29,28 @@ public class Animation {
         restart();
     }
 
+    // Null data (unknown name): the fallback animation
     public void init(AnimationData animationData, boolean isLooping){
         this.animationData = animationData;
         this.looping = isLooping;
 
-        this.texture = Resources.getInstance().getResource(TextureData.class, animationData.getTextureName());
-
         restart();
+    }
+
+    // The animation if loaded, otherwise the fallback one (failed or still loading); restarted when it changes
+    private AnimationData data() {
+        AnimationData usable = Resources.getInstance().usable(AnimationData.class, animationData);
+        if (usable != usedData) {
+            usedData = usable;
+            restart();
+        }
+
+        return usable;
+    }
+
+    private TextureData texture() {
+        TextureData texture = Resources.getInstance().getResourceOrFallback(TextureData.class, data().getTextureName());
+        return Resources.getInstance().usable(TextureData.class, texture);
     }
 
 
@@ -42,12 +58,12 @@ public class Animation {
         if (!animationFinished)
             elapsedTime += GameTime.DeltaTime() * speed;
 
-        while(elapsedTime >= animationData.getFrame(currentFrame).getFrameTime() &&
-                (currentFrame <= animationData.frameNumber() || looping)){
+        while(elapsedTime >= data().getFrame(currentFrame).getFrameTime() &&
+                (currentFrame <= data().frameNumber() || looping)){
 
-            elapsedTime -= animationData.getFrame(currentFrame).getFrameTime();
+            elapsedTime -= data().getFrame(currentFrame).getFrameTime();
 
-            if (currentFrame + 1 < animationData.frameNumber()) {
+            if (currentFrame + 1 < data().frameNumber()) {
                 ++currentFrame;
             } else {
                 if (looping)
@@ -86,14 +102,16 @@ public class Animation {
     }
 
 
-    public AnimationData getData(){ return animationData; }
+    // The usable data: the fallback one while the animation is not loaded
+    public AnimationData getData(){ return data(); }
 
 
     public Vector4f currentTexturePosition() {
         Vector4f computedPosition = new Vector4f(0, 0, 0, 0);
 
-        FrameData data = animationData.getFrame(currentFrame);
+        FrameData data = data().getFrame(currentFrame);
         Vector4i texturePositions = data.getFramePositionCopy();
+        TextureData texture = texture();
 
         computedPosition.x = (texturePositions.x) / (texture.getWidth() * 1.0f);
         computedPosition.y = (texturePositions.z + texturePositions.x) / (texture.getWidth() * 1.0f);
@@ -109,7 +127,7 @@ public class Animation {
     }
 
     public Vector2i currentHotPoint(boolean horizontalFlip, boolean verticalFlip){
-        FrameData data = animationData.getFrame(currentFrame);
+        FrameData data = data().getFrame(currentFrame);
 
         Vector2i result = data.getHotPointCopy();
 
@@ -124,6 +142,6 @@ public class Animation {
 
 
     public Vector2i getFrameSize(){
-        return animationData.getFrame(currentFrame).getSize();
+        return data().getFrame(currentFrame).getSize();
     }
 }
