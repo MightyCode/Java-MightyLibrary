@@ -7,9 +7,9 @@ Structure, concepts clés du moteur et pièges connus.
 ```
 src/io/github/mightycode/
   mightylib/            # la bibliothèque (ne doit PAS dépendre de mightylibdemo/)
-    main/               # MainLoop (statique), Window, Context/ContextManager, GameTime
+    main/               # MainLoop (statique), Window, Context/ContextManager, MainThread, Workers, GameTime
     scenes/             # Scene, SceneManager, SceneManagerInterface, TemplateSceneLoading, caméras 2D/3D
-    resources/          # Resources (singleton), DataType, ResourceLoader, ResourceWorker, batchs
+    resources/          # Resources (singleton), DataType, ResourceLoader, ResourceWorker (tâche sur Workers), batchs
     graphics/           # GLResources, GLElement, renderer/ (Shape, Renderer, _2D, _3D), shader/, text/, GUI/, lightning/
     inputs/             # InputManager (actions), KeyboardManager, MouseManager, dispositions clavier
     sounds/             # SoundManager (singleton OpenAL), arbre de gains
@@ -30,6 +30,12 @@ GLFW + son → contexte `"Main"` (fenêtre + inputs) → `ShaderManager.init` �
 Pas fixe découplé : chaque itération fait **soit** un tick (`sceneManager.update()` + `postUpdate()`), **soit** une frame (`display()` + `window.swapBuffersAndPollEvents()`). Les ticks en retard sont abandonnés (pas de rattrapage). `GameTime.DeltaTime()` = temps réel mesuré entre deux ticks.
 La boucle s'arrête quand la fenêtre est fermée ou qu'une scène demande à quitter (`sceneManagerInterface.exit(status)`, fin du tick en cours). `run` libère tout et **renvoie** le code de sortie (`ListError`) sans appeler `System.exit` : c'est l'application qui décide (`Main` fait `System.exit(MainLoop.run(config))`).
 
+### Threads
+- **Thread principal** (`MainThread`) : seul à posséder le contexte GL. Les autres threads y reviennent par `MainThread.execute(Runnable)` / `run` / `supply` (→ `CompletableFuture`), ou `future.thenAcceptAsync(…, MainThread.EXECUTOR)`. La file est vidée après chaque `display()` avec le reste de la frame (au moins une tâche), avant `GLResources.process`, puis entièrement à la sortie.
+- **`Workers`** : pool fixe de `EngineConfig.maxThreads` threads (`MightyLibrary-Worker-N`, daemon), arrêté à la sortie, pour les tâches courtes d'I/O ou de calcul (`Workers.run` / `supply` → `CompletableFuture`), **sans appel GL**. Les `ResourceWorker` de `Resources` y tournent (au plus `maxThreads`, comptés sous le verrou de la file).
+- Boucles longues ou bloquantes (réseau, `DebugServer`, console, encodage de `Screenshot`) : threads dédiés, nommés `MightyLibrary-…` et daemon.
+- Avec `Logger.DO_CHECK`, `GenDeleteResources` lève une exception si un objet GL est créé ou détruit hors du thread principal.
+
 ### Cycle de vie d'une scène
 Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) → `launch(args)` → boucle `update()` / `postUpdate()` / `display()` → `unload()`.
 - `init` et `launch` sont facultatifs et **sans appel `super`** : le moteur (`initByManager` / `launchByManager`) crée la scène de chargement, puis, une fois les ressources chargées, les caméras et le framebuffer virtuel avant d'appeler `launch`. `init` déclare (ressources préchargées), `launch` crée les renderers.
@@ -44,6 +50,7 @@ Ordre : `init(args)` → (scène de chargement tant que les batchs chargent) →
 - États : créé → **preload** (lecture disque, déclaration des dépendances) → **load** (finalisation, souvent GL) → unload.
 - `TYPE_SET_UP` : `THREAD_CONTEXT` (workers), `MAIN_CONTEXT` (file traitée par `process(ms)` sur le thread GL), `IMMEDIATELY_IN_CURRENT_CONTEXT`.
 - Références par nom de batch (liste, un même nom peut apparaître plusieurs fois). Les maps de ressources sont concurrentes et les états de chargement `volatile` : les workers et le thread principal y accèdent.
+- Un UNLOAD dû à la perte de la dernière référence (`unloadBatch`, `releaseOwnedResource`) est ignoré si la donnée est de nouveau référencée ; référencée pendant le déchargement, elle est préchargée à nouveau. Un LOAD dont la donnée n'est plus préchargée est obsolète.
 - Le nom d'une ressource = nom de fichier sans extension → **les noms doivent être uniques par type**.
 - Accès : `Resources.getInstance().getResource(TextureData.class, "nom")`.
 
