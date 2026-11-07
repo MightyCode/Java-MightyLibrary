@@ -9,7 +9,7 @@ public class TableDebug {
     /** Print part of table part with start and size **/
 
     public static void printPartd(double[] table, int start, int size){
-        if (!MainLoop.isAdmin()) return;
+        if (!MainLoop.isDebug()) return;
         for (int i = start; i < size; ++i){
             System.out.print(table[i]);
 
@@ -21,7 +21,7 @@ public class TableDebug {
     }
 
     public static void printPartf(float[] table, int start, int size){
-        if (!MainLoop.isAdmin()) return;
+        if (!MainLoop.isDebug()) return;
         for (int i = start; i < size; ++i){
             System.out.print(table[i]);
 
@@ -33,7 +33,7 @@ public class TableDebug {
     }
 
     public static void printParti(int[] table, int start, int size){
-        if (!MainLoop.isAdmin()) return;
+        if (!MainLoop.isDebug()) return;
         for (int i = start; i < size; ++i){
             System.out.print(table[i]);
 
@@ -45,7 +45,7 @@ public class TableDebug {
     }
 
     public static void printPartb(boolean[] table, int start, int size){
-        if (!MainLoop.isAdmin()) return;
+        if (!MainLoop.isDebug()) return;
         for (int i = start; i < size; ++i){
             System.out.print(table[i]);
 

@@ -89,6 +89,8 @@ public class Resources {
     private int runningWorkerSteps;
     private int waitingDependenciesCount;
     private boolean shuttingDown;
+    // A failure throws instead of using the fallback (EngineConfig.setStrictResources)
+    private boolean strict;
 
     private boolean initialized;
     private boolean firstLoadDone;
@@ -127,6 +129,10 @@ public class Resources {
 
         initialized = false;
         firstLoadDone = false;
+    }
+
+    public void setStrict(boolean strict) {
+        this.strict = strict;
     }
 
     public void init() {
@@ -392,7 +398,11 @@ public class Resources {
      * or reloaded; the data waiting for it fail too, instead of waiting forever.
      */
     private void fail(DataType data, String reason) {
-        System.err.println("--" + data.getClass().getSimpleName() + " " + data.getDataName() + " failed: " + reason);
+        String message = data.getClass().getSimpleName() + " " + data.getDataName() + " failed: " + reason;
+        if (strict)
+            throw new IllegalStateException("Strict resources: " + message);
+
+        System.err.println("--" + message);
 
         data.failed = true;
         stopWaitingDependencies(data);

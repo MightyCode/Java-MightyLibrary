@@ -55,6 +55,7 @@ CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
 PORT_FILE = os.path.join(ROOT, "target", f"scenario-{os.getpid()}.port")
 PORT_FILE_PROPERTY = "mightylib.debugServer.portFile"
 MONITOR_PROPERTY = "mightylib.window.monitor"
+STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict"
 PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:")
 
 
@@ -77,7 +78,7 @@ def prepare(compile_sources):
         run_maven("dependency:build-classpath", "-Dmdep.outputFile=" + CLASSPATH_FILE)
 
 
-def launch(log_path, monitor):
+def launch(log_path, monitor, strict=False):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
         classpath = os.path.join(ROOT, "target", "classes") + os.pathsep + file.read().strip()
 
@@ -88,6 +89,8 @@ def launch(log_path, monitor):
     options = [f"-D{PORT_FILE_PROPERTY}={PORT_FILE}"]
     if monitor:
         options.append(f"-D{MONITOR_PROPERTY}={monitor}")
+    if strict:
+        options.append(f"-D{STRICT_RESOURCES_PROPERTY}=true")
 
     return subprocess.Popen([JAVA, *options, "-cp", classpath, MAIN_CLASS], cwd=ROOT,
                             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
@@ -301,6 +304,8 @@ def main():
                         help="screen of the game window: secondary (default, falls back to the primary one), primary,"
                              " largest, an index or a part of a name; empty to keep the choice of the project")
     parser.add_argument("--no-compile", action="store_true", help="skip the compilation")
+    parser.add_argument("--strict", action="store_true",
+                        help="a resource that fails stops the game instead of using its fallback (debug mode only)")
     parser.add_argument("--attach", action="store_true", help="use an already running game, don't launch or close it")
     parser.add_argument("--keep-open", action="store_true", help="don't close the game at the end")
     parser.add_argument("--log", default=os.path.join(ROOT, "target", "scenario.log"),
@@ -313,7 +318,7 @@ def main():
         return 0 if run_steps(args.port, args.steps, args.timeout) else 1
 
     prepare(not args.no_compile)
-    process = launch(args.log, args.monitor)
+    process = launch(args.log, args.monitor, args.strict)
 
     # A blocked game (main thread stuck, no answer) must not block the caller forever
     def kill_blocked_game():

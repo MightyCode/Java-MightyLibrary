@@ -533,6 +533,19 @@ class ResourcesLifecycleTest {
     }
 
     @Test
+    void strictFailureThrows() throws Exception {
+        FakeData broken = fake(MAIN_CONTEXT, "broken");
+        broken.failLoad = true;
+        batch("level", "broken");
+        start();
+        resources.setStrict(true);
+
+        resources.loadBatch("level");
+        IllegalStateException error = assertThrows(IllegalStateException.class, this::pump);
+        assertTrue(error.getMessage().contains("broken"));
+    }
+
+    @Test
     void failureGoesUpTheDependencyChain() throws Exception {
         FakeData a = fake(MAIN_CONTEXT, "a");
         a.preloadMilliseconds = 20;

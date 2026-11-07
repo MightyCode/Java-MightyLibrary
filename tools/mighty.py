@@ -66,7 +66,7 @@ def main():
         connection = connect(args.port, args.wait)
     except OSError as error:
         print(f"Can't reach the program on port {args.port}: {error}", file=sys.stderr)
-        print("The program must be running in admin state, its console shows "
+        print("The program must be running in debug mode, its console shows "
               f"'--Debug server listening on 127.0.0.1:{args.port}'. "
               "Use --wait SECONDS to wait for it to start.", file=sys.stderr)
         return 2

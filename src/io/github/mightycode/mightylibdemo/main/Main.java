@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylibdemo.main;
 
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
+import io.github.mightycode.mightylib.main.EEngineMode;
 import io.github.mightycode.mightylib.main.EngineConfig;
 import io.github.mightycode.mightylib.main.MainLoop;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
@@ -36,7 +37,7 @@ public class Main {
                 .setTps(70)
                 .setKeyboardLanguage(AZERTYKeyboardLanguage.getInstance())
                 .setGainTreePath("sounds/sounds.gaintree")
-                .setAdmin(true)
+                .setMode(EEngineMode.DEBUG)
                 // Set to true to locate an OpenGL error, it slows down rendering
                 .setOpenGLErrorCheck(false)
                 .setProjectLoading(new ProjectLoading())

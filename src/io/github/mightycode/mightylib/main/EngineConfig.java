@@ -38,7 +38,8 @@ public class EngineConfig {
     // Null: no gain tree, every sound keeps a gain of 1
     private String gainTreePath;
 
-    private boolean admin;
+    private EEngineMode mode = EEngineMode.RELEASE;
+    private boolean strictResources;
     private boolean openGLErrorCheck;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
 
@@ -116,11 +117,23 @@ public class EngineConfig {
         return this;
     }
 
-    // Enables the console, the commands and the debug server
-    public EngineConfig setAdmin(boolean admin) {
-        this.admin = admin;
+    // DEBUG enables the console, the commands and the debug server
+    public EngineConfig setMode(EEngineMode mode) {
+        this.mode = mode;
         return this;
     }
+
+    /**
+     * Debug only: a resource that fails throws an exception instead of being replaced by its fallback,
+     * so that no fallback goes unnoticed (tests, tools/scenario.py --strict).
+     * The system property STRICT_RESOURCES_PROPERTY (-Dmightylib.resources.strict=true) overrides it.
+     */
+    public EngineConfig setStrictResources(boolean strictResources) {
+        this.strictResources = strictResources;
+        return this;
+    }
+
+    public static final String STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict";
 
     // Check OpenGL errors after each call (glGetError): helps to locate an error, but slows down rendering
     public EngineConfig setOpenGLErrorCheck(boolean openGLErrorCheck) {
@@ -129,7 +142,7 @@ public class EngineConfig {
     }
 
     // Port of the local debug server receiving commands from other processes, -1 to disable it.
-    // The server only starts in admin state.
+    // The server only starts in debug mode.
     public EngineConfig setDebugServerPort(int debugServerPort) {
         this.debugServerPort = debugServerPort;
         return this;
@@ -184,7 +197,16 @@ public class EngineConfig {
     public IMonitorSelector getMonitorSelector() { return monitorSelector; }
     public KeyboardLanguage getKeyboardLanguage() { return keyboardLanguage; }
     public String getGainTreePath() { return gainTreePath; }
-    public boolean isAdmin() { return admin; }
+    public EEngineMode getMode() { return mode; }
+
+    // Strict only in debug mode, the system property wins over the configuration
+    public boolean isStrictResources() {
+        if (mode != EEngineMode.DEBUG)
+            return false;
+
+        String property = System.getProperty(STRICT_RESOURCES_PROPERTY);
+        return property != null ? Boolean.parseBoolean(property) : strictResources;
+    }
     public boolean isOpenGLErrorCheck() { return openGLErrorCheck; }
     public int getDebugServerPort() { return debugServerPort; }
     public IProjectLoading getProjectLoading() { return projectLoading; }

@@ -50,7 +50,7 @@ public class SceneManager {
 
     public void update() {
         // Command
-        if (MainLoop.isAdmin()) {
+        if (MainLoop.isDebug()) {
             updateMain();
         }
 

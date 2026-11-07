@@ -36,8 +36,9 @@ public final class MainLoop {
     private static double tickTime;
     private static double frameTime;
 
-    private static boolean admin = false;
-    public static boolean isAdmin() { return admin; }
+    private static EEngineMode mode = EEngineMode.RELEASE;
+    public static EEngineMode getMode() { return mode; }
+    public static boolean isDebug() { return mode == EEngineMode.DEBUG; }
 
 
     private static int loadLibraries(EngineConfig config) {
@@ -82,7 +83,7 @@ public final class MainLoop {
         config.validate();
         MainThread.setCurrentAsMain();
         Workers.start(config.getMaxThreads());
-        admin = config.isAdmin();
+        mode = config.getMode();
         Logger.DO_CHECK = config.isOpenGLErrorCheck();
 
         System.out.println("--Start program.");
@@ -136,6 +137,9 @@ public final class MainLoop {
                 config.getResourcesLoadingMethod(),
                 Math.max(1, config.getMaxThreads())
         );
+        resource.setStrict(config.isStrictResources());
+        if (config.isStrictResources())
+            System.out.println("--Strict resources: a resource that fails stops the program");
 
         GLResources.createInstance(config.getMaxGLUploadMillisecondsPerFrame());
 
@@ -155,8 +159,8 @@ public final class MainLoop {
         resource.load();
         sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
-        // Commands are only processed in admin state
-        if (admin) {
+        // Commands are only processed in debug mode
+        if (isDebug()) {
             sceneManager.getCommands().startConsole();
 
             int debugServerPort = config.getDebugServerPort();
@@ -254,7 +258,7 @@ public final class MainLoop {
             if (now - lastSecond >= NANO_IN_SECOND) {
                 EngineStats.endSecond(frames, ticks, frameNanos, tickNanos);
 
-                if (MainLoop.admin) {
+                if (isDebug()) {
                     window.setTitle(String.format("%s | FPS:%d; TPS:%d | Frame: %.2f ms; Tick: %.2f ms",
                             config.getProjectName(), EngineStats.getFps(), EngineStats.getTps(),
                             EngineStats.getFrameMs(), EngineStats.getTickMs()));                }
