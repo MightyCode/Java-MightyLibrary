@@ -6,8 +6,7 @@ Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisate
   - rechargement à chaud :
     - **observateur de fichiers** (et ressources des mods) qui appelle `reload(donnée)` ; `reload all` reste un outil de debug ;
     - **mémoire** : ancienne et nouvelle version coexistent, un `reload` de milliers de données crée toutes les copies d'un coup (les workers bornent les lectures, pas les copies qui attendent leurs dépendances) → limiter les copies en cours ;
-    - deux relectures rapprochées relisent tout (pas d'annulation) ;
-    - `NetworkConfiguration`, `WaveCollapseRules` sans copie (vidées pendant la relecture) ;
+    - relecture abandonnée (nouveau `reload` pendant la lecture) : son étape en cours va au bout (CPU/I/O gaspillés, deux copies en mémoire un moment) → interruption coopérative (drapeau lu par les loaders longs) avec l'item **annulation** ci-dessous ; l'observateur de fichiers devra regrouper les événements d'un même enregistrement ;
   - **échecs attendus** (`ResourceException` : fait pour fichiers, JSON, CSV, textures, sons, modèles) : les formats maison (`TileSetLoader`, `TextureDataAtlasLoader`, `AnimationDataLoader`, reste de `TileMapLoader`) lèvent encore des `NumberFormatException`/`IndexOutOfBounds` affichées comme bugs → valider et lever `ResourceException` avec fichier et ligne ;
   - `leaves.obj` (Test3DScene) refusé par Assimp (`OBJ: vertex index out of range`) : cube de secours (une ligne d'erreur), `--strict` arrête le jeu ;
   - **priorités** (scène courante avant préchargement de la suivante) et **annulation** des lectures inutiles (aujourd'hui menées au bout puis déchargées) ;
