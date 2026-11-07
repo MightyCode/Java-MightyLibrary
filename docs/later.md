@@ -132,8 +132,9 @@ Après le rendu 2D : reprendre d'abord le travail des branches `dev` (`AdvancedR
 - Touches modifiables à l'exécution et sauvegardées/chargées depuis un fichier (le README liste aussi : chargement des entrées par fichier, scène prefab de changement des touches).
 - **Manettes** : base faite (`GamepadManager`, plusieurs manettes, joueurs, actions `InputGamepadButton`/`InputGamepadAxis`, manettes virtuelles, commande `gamepad`). Reste :
   - **Actions par joueur** (cible durable pour le multijoueur local) : aujourd'hui une action se lie à un joueur fixe ou à `ANY_PLAYER`, il faudrait des liaisons `JUMP_P1`, `JUMP_P2`… Cible : évaluer une même table d'actions pour un joueur donné (`inputManager.getState(action, joueur)`), le clavier/souris étant attribué à un joueur comme une manette.
-  - Actions d'axe : `InputManager.getValue` (0 à 1 par action) est fait ; reste une vraie action d'axe -1..1 (`MOVE_X` = stick ou A/D) au lieu de deux actions soustraites, à décider avec les actions par joueur.
-  - Regarder autour en 3D au stick droit : sortir `Camera3D.rotate(dYaw, dPitch)` de `setToCursor` (vitesse en degrés/s pour le stick) ; idéalement un composant caméra libre 3D commun aux 5 scènes 3D qui recopient le code de déplacement.
+  - **Ensembles d'actions activables** (« jeu », « menu », comme les cartes d'actions d'Unity/Unreal) : un même stick sert à se déplacer et à naviguer dans un menu (`MOVE_*_2D` et `SELECT_UP/DOWN` déjà), ouvrir un menu désactiverait l'ensemble « jeu » au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
+  - Sensibilité du regard réglable par le joueur (aujourd'hui constante `LOOK_SENSITIVITY` de `ProjectLoading`, partagée par la souris et le stick), éventuellement séparée souris / manette ; elle viendra avec le remappage, comme l'inversion de l'axe vertical (`scale` négatif).
+  - Le composant `MovingCameraComponent` (2D) lit encore deux actions soustraites : le passer aux axes comme `FreeCamera3DComponent`.
   - Remappage des boutons de manette sauvegardé avec celui du clavier (`Gamepad.parseButton`/`buttonName` donnent déjà les noms).
   - Charger un `gamecontrollerdb.txt` du projet au démarrage (`GamepadManager.addMappings`) pour les manettes inconnues de la base intégrée à GLFW.
   - Vibrations et gyroscope : absents de GLFW (passer par SDL ou XInput directement si un jeu en a besoin).

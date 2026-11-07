@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.scenes.camera;
 
-import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.main.WindowInfo;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector2f;
@@ -14,15 +13,10 @@ public class Camera3D extends Camera {
         Orthographic
     }
 
-    private final MouseManager mouseManager;
-
+    // The camera doesn't read the inputs : FreeCamera3DComponent (or the game) moves and turns it
     private final Vector3f camPos, camFront, camUp;
 
-    private boolean lockViewCursor = false;
-
     private Vector3f speed;
-
-    private float sensitivity;
 
     private float yaw = 180.0f, pitch = 0.0f;
     private float yawCos, yawSin;
@@ -30,9 +24,8 @@ public class Camera3D extends Camera {
 
     private EViewMode viewMode;
 
-    public Camera3D(WindowInfo windowInfo, MouseManager mouseManager, float fov, Vector3f pos) {
+    public Camera3D(WindowInfo windowInfo, float fov, Vector3f pos) {
         super(windowInfo);
-        this.mouseManager = mouseManager;
 
         this.viewMode = EViewMode.Perspective;
         camPos = new Vector3f();
@@ -43,18 +36,25 @@ public class Camera3D extends Camera {
         setPos(pos);
 
         speed = new Vector3f(1);
-        sensitivity = 0.05f;
+        applyAngles();
         updateView();
     }
 
 
-    public void setToCursor() {
-        float offsetX = (mouseManager.posX() - mouseManager.oldPosX()) * sensitivity;
-        float offsetY = (-mouseManager.posY() + mouseManager.oldPosY()) * sensitivity;
+    /**
+     * Turn the camera, in degrees : deltaYaw positive to the right, deltaPitch positive upward
+     * (pitch limited to [-89, 89]). Seen by the view at the next updateView.
+     */
+    public void rotate(float deltaYaw, float deltaPitch) {
+        if (deltaYaw == 0 && deltaPitch == 0)
+            return;
 
-        yaw += offsetX;
-        pitch += offsetY;
+        yaw += deltaYaw;
+        pitch += deltaPitch;
+        applyAngles();
+    }
 
+    private void applyAngles() {
         if (yaw > 360.0f) yaw -= 360.0f;
         if (yaw < -360.0f) yaw += 360.0f;
 
@@ -75,9 +75,6 @@ public class Camera3D extends Camera {
 
     @Override
     public void updateView() {
-        if (!lockViewCursor)
-            setToCursor();
-
         computeView();
     }
 
@@ -86,11 +83,7 @@ public class Camera3D extends Camera {
         view.lookAt(camPos, camPos.add(camFront, new Vector3f()), camUp);
     }
 
-    public void setLockViewCursor(boolean state) {
-        lockViewCursor = state;
-    }
-
-    // Yaw and pitch are updated too: otherwise the cursor (setToCursor) would restore the previous direction
+    // Yaw and pitch are updated too: otherwise the next rotate would restore the previous direction
     public void lookAt(Vector3f target) {
         Vector3f direction = target.sub(camPos, new Vector3f());
         if (direction.lengthSquared() == 0)
@@ -121,10 +114,6 @@ public class Camera3D extends Camera {
 
     public float getViewAngle() {
         return fov;
-    }
-
-    public void invertLockViewCursor() {
-        setLockViewCursor(!lockViewCursor);
     }
 
     public void setViewAngle(float fov) {
@@ -199,16 +188,6 @@ public class Camera3D extends Camera {
         camPos.z += speed * -yawSin;
 
         computeView();
-    }
-
-    public Camera3D setSensitivity(float value) {
-        sensitivity = value;
-
-        return this;
-    }
-
-    public float getSensitivity() {
-        return sensitivity;
     }
 
     public Camera3D setSpeed(Vector3f value) {
