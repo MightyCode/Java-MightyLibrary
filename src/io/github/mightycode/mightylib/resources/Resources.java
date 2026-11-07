@@ -2,22 +2,15 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
-import io.github.mightycode.mightylib.main.MainThread;
-import io.github.mightycode.mightylib.main.Workers;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.texture.IconLoader;
 import io.github.mightycode.mightylib.resources.texture.Texture;
-import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Registry and loading pipeline of the data read from the disk.
@@ -86,18 +79,7 @@ public class Resources {
     private final ReloadManager reloads = new ReloadManager(this);
     private final DependencyGraph dependencies = new DependencyGraph(this);
 
-    private final int maxNumberOfWorkers;
-
-    // Any thread -> main thread: calls from workers and ends of worker steps
-    private final ConcurrentLinkedQueue<Runnable> inbox;
-
-    // Main thread only
-    private final ArrayDeque<DataType> toUpdate;
-    private final ArrayDeque<Runnable> mainContextSteps;
-    private final ArrayDeque<WorkerStep> workerSteps;
-    private int runningWorkerSteps;
-    // Queued steps dropped before starting because their result was no longer needed (see stepStillNeeded)
-    private int skippedSteps;
+    private final ResourceScheduler scheduler;
     private boolean shuttingDown;
     // A failure throws instead of using the fallback (EngineConfig.setStrictResources)
     private boolean strict;
@@ -115,12 +97,7 @@ public class Resources {
         resources = new ConcurrentHashMap<>();
         Loaders = new ArrayList<>();
 
-        this.maxNumberOfWorkers = Math.max(1, maxNumberOfWorkers);
-
-        inbox = new ConcurrentLinkedQueue<>();
-        toUpdate = new ArrayDeque<>();
-        mainContextSteps = new ArrayDeque<>();
-        workerSteps = new ArrayDeque<>();
+        scheduler = new ResourceScheduler(this, maxNumberOfWorkers);
 
         if (loaders != null) {
             Loaders.addAll(loaders);
@@ -241,34 +218,12 @@ public class Resources {
         if (!initialized)
             throw new RuntimeException("Resources not initialized");
 
-        long startTime = System.currentTimeMillis();
-        boolean first = true;
-
-        while (first || allowedMilliseconds == -1 || System.currentTimeMillis() - startTime < allowedMilliseconds) {
-            first = false;
-
-            Runnable fromInbox;
-            while ((fromInbox = inbox.poll()) != null)
-                fromInbox.run();
-
-            DataType data;
-            while ((data = toUpdate.poll()) != null)
-                update(data);
-
-            startWorkerSteps();
-
-            Runnable step = mainContextSteps.poll();
-            if (step == null)
-                return;
-
-            step.run();
-        }
+        scheduler.process(allowedMilliseconds);
     }
 
     // Main thread: true when no data is being loaded or unloaded
     public boolean finishedCurrentLoading() {
-        return inbox.isEmpty() && toUpdate.isEmpty() && mainContextSteps.isEmpty() && workerSteps.isEmpty()
-                && runningWorkerSteps == 0 && dependencies.waitingCount() == 0;
+        return scheduler.isIdle() && dependencies.waitingCount() == 0;
     }
 
     // Main thread: see ResourceDescriber
@@ -282,10 +237,7 @@ public class Resources {
 
     JSONObject describePipeline() {
         JSONObject pipeline = new JSONObject();
-        pipeline.put("runningWorkerSteps", runningWorkerSteps);
-        pipeline.put("waitingWorkerSteps", workerSteps.size());
-        pipeline.put("mainContextSteps", mainContextSteps.size());
-        pipeline.put("skippedSteps", skippedSteps);
+        scheduler.describe(pipeline);
         pipeline.put("waitingDependencies", dependencies.waitingCount());
         pipeline.put("finished", finishedCurrentLoading());
         return pipeline;
@@ -298,10 +250,7 @@ public class Resources {
     // ---- Reconciliation, main thread only ----
 
     void runOnMainThread(Runnable task) {
-        if (MainThread.isMainThread())
-            task.run();
-        else
-            inbox.add(task);
+        scheduler.runOnMainThread(task);
     }
 
     BatchManager batches() {
@@ -313,7 +262,7 @@ public class Resources {
     }
 
     void enqueueUpdate(DataType data) {
-        toUpdate.add(data);
+        scheduler.enqueueUpdate(data);
     }
 
     void requestUpdate(DataType data) {
@@ -321,7 +270,7 @@ public class Resources {
         if (data.getTypeSetUp() == DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT)
             update(data);
         else
-            toUpdate.add(data);
+            scheduler.enqueueUpdate(data);
     }
 
     boolean isWanted(DataType data) {
@@ -332,7 +281,7 @@ public class Resources {
         return !shuttingDown && !data.deleteWanted && !data.notReferenced();
     }
 
-    private void update(DataType data) {
+    void update(DataType data) {
         if (data.jobRunning)
             return;
 
@@ -434,7 +383,7 @@ public class Resources {
 
             // Replaced by the fallback: the waiters go on with it
             if (replaced)
-                toUpdate.add(waiter);
+                scheduler.enqueueUpdate(waiter);
             else
                 fail(waiter, "its dependency " + data.getClass().getSimpleName() + " " + data.getDataName() + " failed");
         }
@@ -468,59 +417,7 @@ public class Resources {
 
         Runnable end = () -> endStep(data, preload, result);
 
-        switch (data.getTypeSetUp()) {
-            case IMMEDIATELY_IN_CURRENT_CONTEXT:
-                work.run();
-                end.run();
-                break;
-            case MAIN_CONTEXT:
-                mainContextSteps.add(() -> {
-                    if (!stepStillNeeded(data)) {
-                        skipStep(data);
-                        return;
-                    }
-
-                    work.run();
-                    end.run();
-                });
-                break;
-            case THREAD_CONTEXT:
-                workerSteps.add(new WorkerStep(data, () -> {
-                    work.run();
-                    inbox.add(() -> {
-                        --runningWorkerSteps;
-                        end.run();
-                    });
-                }));
-                startWorkerSteps();
-                break;
-        }
-    }
-
-    private static class WorkerStep {
-        final DataType data;
-        final Runnable run;
-
-        WorkerStep(DataType data, Runnable run) {
-            this.data = data;
-            this.run = run;
-        }
-    }
-
-    /**
-     * Checked when a queued step is about to start (not when it is queued: a data unloaded then wanted again
-     * meanwhile keeps its step). False when its result would be thrown away: the data is no longer wanted
-     * (scene left during its loading, reload copy abandoned...) or must be read again from the start.
-     */
-    private boolean stepStillNeeded(DataType data) {
-        return isWanted(data) && !data.reloadWanted;
-    }
-
-    // The step is not run: update discards the data, or starts it again from the start
-    private void skipStep(DataType data) {
-        data.jobRunning = false;
-        ++skippedSteps;
-        requestUpdate(data);
+        scheduler.submit(data, work, end);
     }
 
     private static class StepResult {
@@ -553,19 +450,6 @@ public class Resources {
 
         // Wanted state may have changed meanwhile: unloaded if no longer referenced, next step otherwise
         requestUpdate(data);
-    }
-
-    private void startWorkerSteps() {
-        WorkerStep step;
-        while (runningWorkerSteps < maxNumberOfWorkers && (step = workerSteps.poll()) != null) {
-            if (!stepStillNeeded(step.data)) {
-                skipStep(step.data);
-                continue;
-            }
-
-            ++runningWorkerSteps;
-            Workers.execute(step.run);
-        }
     }
 
     // Loader of the type of the data, or of one of its parent types
