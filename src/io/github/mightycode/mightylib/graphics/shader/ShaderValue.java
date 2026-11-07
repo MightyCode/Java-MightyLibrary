@@ -1,0 +1,125 @@
+package io.github.mightycode.mightylib.graphics.shader;
+
+import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import org.joml.*;
+
+public class ShaderValue implements Cloneable {
+    protected final String name;
+    protected Object object;
+
+    protected final Class<?> type;
+    private boolean shouldForceUpdate;
+
+    public ShaderValue(final String a, final Class<?> type, final Object object){
+        this.name = a;
+        this.object = object;
+        this.type = type;
+    }
+
+    public boolean equals(final ShaderValue value){
+        if (value == null)
+            return false;
+
+        if (value.object == null || object == null) {
+            return (value.object == null && object == null);
+        }
+
+        if (!value.name.equals(name))
+            return false;
+
+        if (type != value.type)
+            return false;
+
+        return testEquals(type, value);
+    }
+
+    private boolean testEquals(final Class<?> type, final ShaderValue b){
+        return getObjectTyped(type).equals(b.getObjectTyped(type));
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Object getObject() {
+        return object;
+    }
+
+    public void setObject(Object object) {
+        this.object = object;
+    }
+
+    public void forceUpdate(){
+        shouldForceUpdate = true;
+    }
+
+    public boolean shouldForceUpdate(){
+        return shouldForceUpdate;
+    }
+
+    public void resetForceUpdate(){
+        shouldForceUpdate = false;
+    }
+
+    public Class<?> getType() {
+        return type;
+    }
+
+    public <T> T getObjectTyped(Class<T> objectType){
+        return objectType.cast(object);
+    }
+
+    /**
+     * Copy the value of source into this value without allocating, for mutable types.
+     * @return false if the copy can't be done in place, a clone must be used instead
+     */
+    public boolean copyValueFrom(ShaderValue source) {
+        if (type != source.type || object == null || source.object == null)
+            return false;
+
+        if (type == Matrix4f.class) {
+            getObjectTyped(Matrix4f.class).set(source.getObjectTyped(Matrix4f.class));
+        } else if (type == Vector2f.class) {
+            getObjectTyped(Vector2f.class).set(source.getObjectTyped(Vector2f.class));
+        } else if (type == Vector3f.class) {
+            getObjectTyped(Vector3f.class).set(source.getObjectTyped(Vector3f.class));
+        } else if (type == Vector4f.class) {
+            getObjectTyped(Vector4f.class).set(source.getObjectTyped(Vector4f.class));
+        } else if (type == Float.class || type == float.class || type == Integer.class || type == int.class) {
+            // Immutable boxed values can be shared
+            object = source.object;
+        } else {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public ShaderValue clone() {
+        if (type == Float.class || type == float.class) {
+            return new ShaderValue(name, type, getObjectTyped(Float.class));
+        } else if (type == Vector2f.class) {
+            return new ShaderValue(name, type, new Vector2f(getObjectTyped(Vector2f.class)));
+        } else if (type == Vector3f.class) {
+            return new ShaderValue(name, type, new Vector3f(getObjectTyped(Vector3f.class)));
+        } else if (type == Vector4f.class) {
+            return new ShaderValue(name, type, new Vector4f(getObjectTyped(Vector4f.class)));
+        } else if (type == Color4f.class) {
+            Color4f obj = getObjectTyped(Color4f.class);
+            return new ShaderValue(name, type, new Color4f(obj.getR(), obj.getG(), obj.getB(), obj.getA()));
+        } else if (type == Vector2i.class) {
+            return new ShaderValue(name, type, new Vector2i(getObjectTyped(Vector2i.class)));
+        } else if (type == Vector3i.class) {
+            return new ShaderValue(name, type, new Vector3i(getObjectTyped(Vector3i.class)));
+        } else if (type == Vector4i.class) {
+            return new ShaderValue(name, type, new Vector4i(getObjectTyped(Vector4i.class)));
+        } else if (type == Matrix4f.class) {
+            return new ShaderValue(name, type, new Matrix4f(getObjectTyped(Matrix4f.class)));
+        } else if (type == Integer.class || type == int.class) {
+            return new ShaderValue(name, type, getObjectTyped(Integer.class));
+        }
+
+        return new ShaderValue(name, type, null);
+    }
+}

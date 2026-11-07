@@ -5,7 +5,6 @@ Seul le gros point en cours est ici. La feuille de route globale est la chaîne 
 Propositions commentées, **à valider avec l'utilisateur avant d'appliquer**. Les changements cassants se font maintenant, avant toute version publiée ; marquées (U) = les plus urgentes.
 
 **Ensuite :**
-- (U) **Noms de packages** `MightyLibrary.mightylib` en majuscules (contraire aux conventions Java) → `mightylib` ou un nom de domaine inversé, à faire avant la première version publiée.
 - (U) **Multithreading** : `ThreadManager` ne fait que compter les threads et, s'il n'y en a plus, `RunThread` exécute la tâche dans le thread appelant (parfois le thread GL) ; chaque chargement crée de nouveaux `ResourceWorker extends Thread` ; réseau, `DebugServer`, console et `Screenshot` créent leurs threads chacun de leur côté. **Bug** : `Resources.mainContextHandleResource` (`LOAD`) attend avec `Thread.sleep(10)` sur le thread GL tant que `canBeLoad()` est faux, ce qui fige le rendu → remettre l'entrée en file. **Course restante** : un PRELOAD/LOAD d'une donnée de nouveau référencée annule son UNLOAD en file, mais pas un UNLOAD déjà pris par un worker. Cible :
   - un `ExecutorService` de taille fixe possédé par le moteur (arrêté à la sortie), tâches renvoyant des `CompletableFuture` ; suppression de `ThreadManager`/`ThreadOrCurrent` et de `LoadingScene`/`LoadingContent` (inutilisées) ;
   - une file `runOnMainThread(Runnable)` vidée à chaque frame avec un budget de temps, seule façon de revenir sur le thread GL ;

@@ -16,8 +16,8 @@ Méthode à définir avec l'utilisateur. Pistes : JUnit pour la logique pure (re
 
 ## Bibliothèque réutilisable
 
-Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux de l'utilisateur ; le dossier `project` en est l'illustration. Cap validé :
-- **Deux modules Maven** : `mightylib` (la bibliothèque, produit le jar) et `demo` (l'actuel `project`), qui dépend de `mightylib` comme un projet externe et prouve qu'elle s'utilise de l'extérieur.
+Faire de `mightylib` une base de code utilisée par les futurs logiciels et jeux de l'utilisateur ; le package `mightylibdemo` en est l'illustration. Cap validé :
+- **Deux modules Maven** : `mightylib` (la bibliothèque, produit le jar) et `demo` (l'actuel `mightylibdemo`), qui dépend de `mightylib` comme un projet externe et prouve qu'elle s'utilise de l'extérieur.
 - **Jar léger**, sans dépendances embarquées (pas de jar-with-dependencies pour la bibliothèque) : LWJGL (natives comprises), JOML, org.json, JBox2D… sont déclarées dans le pom et récupérées par Maven.
 - **Distribution** : `mvn install` (dépôt local) au départ, puis JitPack ou GitHub Packages pour l'utiliser depuis n'importe quelle machine.
 - **Versions** sémantiques par release (`1.2.0`…) : chaque projet fixe la version qu'il utilise.

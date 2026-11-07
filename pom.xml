@@ -63,7 +63,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>MightyLibrary.project.main.Main</mainClass>
+                            <mainClass>io.github.mightycode.mightylibdemo.main.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -85,7 +85,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>1.2.1</version>
                 <configuration>
-                    <mainClass>MightyLibrary.project.main.Main</mainClass>
+                    <mainClass>io.github.mightycode.mightylibdemo.main.Main</mainClass>
                             <arguments>
                                 <argument>-f</argument>
                                 <argument>false</argument>

@@ -1,0 +1,387 @@
+package io.github.mightycode.mightylib.graphics.renderer;
+
+import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
+import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
+import io.github.mightycode.mightylib.main.utils.EngineStats;
+import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.math.ID;
+import io.github.mightycode.mightylib.utils.math.MightyMath;
+import org.lwjgl.BufferUtils;
+
+import java.nio.FloatBuffer;
+import java.util.ArrayList;
+
+import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
+import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
+import static org.lwjgl.opengl.GL15.*;
+import static org.lwjgl.opengl.GL32.*;
+import static org.lwjgl.opengl.GL40.GL_PATCHES;
+
+public class Shape {
+    public static final int STATIC_STORE = GL_STATIC_DRAW;
+    public static final int DYNAMIC_STORE = GL_DYNAMIC_DRAW;
+    public static final int STREAM_STORE = GL_STREAM_DRAW;
+
+    public static final int COMMON_VERTEX_POSITION_CHANNEL = 0;
+    public static final int COMMON_TEXTURE_POSITION_CHANNEL = 1;
+    public static final int COMMON_NORMAL_POSITION_CHANNEL = 2;
+
+    protected int eboStorage;
+
+    protected int vao, ebo;
+    protected ArrayList<Integer> vbos;
+    protected ArrayList<Integer> vbosStorage;
+    // Number of elements currently allocated for each vbo, to update without reallocating when it doesn't change
+    protected ArrayList<Integer> vbosSize;
+    protected ArrayList<Boolean> vbosEnable;
+    protected int vboCount;
+    protected int indicesSize;
+
+    protected int[] info;
+
+    protected boolean useEbo;
+    protected int verticesToDraw;
+
+    protected boolean in2D;
+
+    protected EDrawMode drawMode;
+    private int glDrawMode;
+
+    protected Shader shader;
+    public Shader getShader() { return shader; }
+
+    public Shape(String shaderName, boolean useEbo) {
+        setDrawMode(EDrawMode.Triangles);
+
+        shader = Resources.getInstance().getResource(Shader.class, shaderName);
+        setDimensionTo2D(this.shader.isDimension2DShader());
+
+        verticesToDraw = 0;
+        info = new int[0];
+        indicesSize = 0;
+
+        vao = GenDeleteResources.GenVertexArrays();
+        bind();
+        vbos = new ArrayList<>();
+        vbosStorage = new ArrayList<>();
+        vbosSize = new ArrayList<>();
+        vbosEnable = new ArrayList<>();
+        vboCount = 0;
+        ebo = 0;
+        eboStorage = STATIC_STORE;
+        setUseEbo(useEbo);
+    }
+
+    public int addVboFloat(float[] vertices, int vertexSize, int storage) {
+        bind();
+        int vbo = GenDeleteResources.GenBuffers();
+        Logger.CheckOpenGLError("Gen vbo buffer : " + vbo);
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        Logger.CheckOpenGLError("bind vbo buffer : " + vbo);
+
+        FloatBuffer buffer = BufferUtils.createFloatBuffer(vertices.length);
+        buffer.put(vertices).flip();
+
+        glBufferData(GL_ARRAY_BUFFER, buffer, storage);
+        Logger.CheckOpenGLError("Buffer vbo buffer : " + storage + " of size : " + vertices.length);
+
+        glVertexAttribPointer(vboCount, vertexSize, GL_FLOAT, false, 0, 0);
+        Logger.CheckOpenGLError("Vbo attrib pointer : " + vbo);
+
+        return endAddVbo(vbo, vertices.length, vertexSize, storage);
+    }
+
+    public int addVboInt(int[] vertices, int vertexSize, int storage){
+        bind();
+        int vbo = GenDeleteResources.GenBuffers();
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, vertices, storage);
+        glVertexAttribIPointer(vboCount, vertexSize, GL_INT,0, 0);
+
+        return endAddVbo(vbo, vertices.length, vertexSize, storage);
+    }
+
+    private int endAddVbo(int vbo, int arrayLength, int vertexSize, int storage){
+        vbosEnable.add(false);
+        enableVbo(vboCount);
+
+        verticesToDraw = arrayLength / vertexSize;
+        vbos.add(vbo);
+        vbosStorage.add(storage);
+        vbosSize.add(arrayLength);
+        ++vboCount;
+
+        return vbos.size() - 1;
+    }
+
+
+    public void updateVbo(float[] vertices, int vboPosition){
+        EngineStats.countBufferUpload((long) vertices.length * Float.BYTES);
+        bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
+
+        // Same size: overwrite the existing storage instead of reallocating it
+        if (vbosSize.get(vboPosition) == vertices.length) {
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices);
+        } else {
+            glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+            vbosSize.set(vboPosition, vertices.length);
+        }
+    }
+
+    public void updateVbo(int[] vertices, int vboPosition){
+        EngineStats.countBufferUpload((long) vertices.length * Integer.BYTES);
+        bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
+
+        // Same size: overwrite the existing storage instead of reallocating it
+        if (vbosSize.get(vboPosition) == vertices.length) {
+            glBufferSubData(GL_ARRAY_BUFFER, 0, vertices);
+        } else {
+            glBufferData(GL_ARRAY_BUFFER, vertices, vbosStorage.get(vboPosition));
+            vbosSize.set(vboPosition, vertices.length);
+        }
+    }
+
+
+    public void updateSubVbo(float[] vertices, int vboPosition, int startIndex){
+        bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
+        glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
+    }
+
+    public void updateSubVbo(int[] vertices, int vboPosition, int startIndex){
+        bind();
+        glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
+        glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
+    }
+
+
+    public void disableVbo(int pos){
+        if(vbosEnable.size() <= pos)
+            return;
+
+        if (vbosEnable.get(pos)) {
+            bind();
+            glDisableVertexAttribArray(pos);
+            vbosEnable.set(pos, false);
+        }
+    }
+
+    public void enableVbo(int pos){
+        if(vbosEnable.size() <= pos) return;
+
+        if (!vbosEnable.get(pos)) {
+            bind();
+            glEnableVertexAttribArray(pos);
+            Logger.CheckOpenGLError("Vbo enable attrib : " + pos);
+            vbosEnable.set(pos, true);
+        }
+    }
+
+    public boolean isEnableVbo(int pos) {
+        if (vbosEnable.size() <= pos)
+            return false;
+
+        return vbosEnable.get(pos);
+    }
+
+    public void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
+        int oneLineSize = MightyMath.Sum(vertexSizes);
+        int currentSum = 0;
+
+        for (int i = 0; i < vertexSizes.length; ++i){
+            float[] coordinatesInfo = new float[vertices.length / oneLineSize * vertexSizes[i]];
+            for (int line = 0; line < vertices.length / oneLineSize; ++line){
+                for (int inLine = 0; inLine < vertexSizes[i]; ++inLine){
+                    coordinatesInfo[line * vertexSizes[i] + inLine]
+                            = vertices[line * oneLineSize + currentSum + inLine];
+                }
+            }
+
+            addVboFloat(coordinatesInfo, vertexSizes[i], storage[i]);
+            currentSum += vertexSizes[i];
+        }
+    }
+
+
+    public void setUseEbo(boolean state){
+        if (this.useEbo && ebo != 0)
+            GenDeleteResources.DeleteBuffersEBO(this.ebo);
+
+        this.useEbo = state;
+
+        if (this.useEbo)
+            ebo = GenDeleteResources.GenBuffersEBO();
+    }
+
+
+    public void setEboStorage(int eboStorage){
+        this.eboStorage = eboStorage;
+    }
+
+    public void setEbo(int[] indices){
+        setEbo(indices, indices.length);
+    }
+
+    public void setEbo(int[] indices, int indicesSize){
+        bind();
+        this.indicesSize = indicesSize;
+
+        if (!useEbo)
+            System.err.print(">(Shape.java) Providing EBO without using EBO !");
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        Logger.CheckOpenGLError("Bind ebo : " + ebo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, eboStorage);
+        Logger.CheckOpenGLError("Buffer ebo data");
+    }
+
+    public void setEboNumberIndex(int newIndexSize) {
+        this.indicesSize = newIndexSize;
+    }
+
+    public void updateEbo(int[] newArray, int startIndex) {
+        bind();
+        if (!useEbo) {
+            System.err.print(">(Shape.java) Trying to update array without using EBO !");
+            return;
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+        glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, startIndex, newArray);
+    }
+
+    public void display() {
+        applyDimension();
+        applyShader();
+        bind();
+        draw();
+    }
+
+
+    public void bind(){
+        glBindVertexArray(vao);
+
+        // Called for each draw: avoid building the message when checks are disabled
+        if (Logger.DO_CHECK)
+            Logger.CheckOpenGLError("Bind vao buffer : " + vao);
+    }
+
+
+    public void unbind(){
+        glBindVertexArray(0);
+    }
+
+
+    public void applyDimension() {
+        if (in2D)
+            glDisable(GL_DEPTH_TEST);
+        else
+            glEnable(GL_DEPTH_TEST);
+    }
+
+
+    public void setDimensionTo2D(boolean state){
+        this.in2D = state;
+    }
+
+
+    public boolean is2DPurpose(){
+        return this.in2D;
+    }
+
+    public void draw(){
+        EngineStats.countDrawCall();
+
+        if (useEbo)
+            glDrawElements(glDrawMode, indicesSize, GL_UNSIGNED_INT, 0);
+        else
+            glDrawArrays(glDrawMode, 0, verticesToDraw);
+    }
+
+
+    public void printStatus(){
+        System.out.println("ebo" +  ebo + " vao  " + vao + " size " + indicesSize);
+    }
+
+
+    public void applyShader(){
+        shader.use();
+    }
+
+
+    public ID getShaderId(){
+        return new ID(shader.getShaderId());
+    }
+
+
+    public void setDrawMode(EDrawMode drawMode) {
+        this.drawMode = drawMode;
+
+        switch (drawMode){
+            case Triangles:
+                glDrawMode = GL_TRIANGLES;
+                break;
+            case Lines:
+                glDrawMode = GL_LINES;
+                break;
+            case LineStrip:
+                glDrawMode = GL_LINE_STRIP;
+                break;
+            case LineLoop:
+                glDrawMode = GL_LINE_LOOP;
+                break;
+            case LineAdjacency:
+                glDrawMode = GL_LINES_ADJACENCY;
+                break;
+            case LineStripAdjacency:
+                glDrawMode = GL_LINE_STRIP_ADJACENCY;
+                break;
+            case TriangleStrip:
+                glDrawMode = GL_TRIANGLE_STRIP;
+                break;
+            case TriangleFan:
+                glDrawMode = GL_TRIANGLE_FAN;
+                break;
+            case TrianglesAdjacency:
+                glDrawMode = GL_TRIANGLES_ADJACENCY;
+                break;
+            case TriangleStripAdjacency:
+                glDrawMode = GL_TRIANGLE_STRIP_ADJACENCY;
+                break;
+            case Patches:
+                glDrawMode = GL_PATCHES;
+                break;
+        }
+    }
+
+    public EDrawMode getDrawMode(){
+        return drawMode;
+    }
+
+    public void unloadVBO() {
+        for (int vbo : vbos){
+            GenDeleteResources.DeleteBuffers(vbo);
+        }
+
+        vbos.clear();
+        vbosEnable.clear();
+        vbosStorage.clear();
+        vbosSize.clear();
+        vboCount = 0;
+    }
+
+    public void unload(){
+        unloadVBO();
+
+        GenDeleteResources.DeleteVertexArrays(vao);
+
+        if (useEbo)
+            GenDeleteResources.DeleteBuffersEBO(ebo);
+    }
+}

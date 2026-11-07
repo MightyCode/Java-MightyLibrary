@@ -48,14 +48,14 @@ else:
 JAVA = os.environ.get("MIGHTY_JAVA", _DEFAULT_JAVA)
 MVN = os.environ.get("MIGHTY_MVN", _DEFAULT_MVN)
 MAVEN_JDK = os.environ.get("MIGHTY_MAVEN_JDK", _DEFAULT_MAVEN_JDK)
-MAIN_CLASS = "MightyLibrary.project.main.Main"
+MAIN_CLASS = "io.github.mightycode.mightylibdemo.main.Main"
 CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
 # The launched game writes there the port of its debug server (the first free one from 7777):
 # one file per scenario, so that several games and scenarios can run at the same time
 PORT_FILE = os.path.join(ROOT, "target", f"scenario-{os.getpid()}.port")
 PORT_FILE_PROPERTY = "mightylib.debugServer.portFile"
 MONITOR_PROPERTY = "mightylib.window.monitor"
-PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at MightyLibrary|OpenGL debug|Error:")
+PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:")
 
 
 def run_maven(*goals):

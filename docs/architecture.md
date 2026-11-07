@@ -5,8 +5,8 @@ Structure, concepts clés du moteur et pièges connus.
 ## Structure
 
 ```
-src/MightyLibrary/
-  mightylib/            # la bibliothèque (ne doit PAS dépendre de project/)
+src/io/github/mightycode/
+  mightylib/            # la bibliothèque (ne doit PAS dépendre de mightylibdemo/)
     main/               # MainLoop (statique), Window, Context/ContextManager, ThreadManager, GameTime
     scenes/             # Scene, SceneManager, SceneManagerInterface, LoadingScene, caméras 2D/3D
     resources/          # Resources (singleton), DataType, ResourceLoader, ResourceWorker, batchs
@@ -16,7 +16,7 @@ src/MightyLibrary/
     physics/            # collisions maison, tweenings, B2Utils (pont JBox2D)
     algorithms/         # A*, Dijkstra, graphes, Wave Function Collapse
     utils/              # commandes moteur/terminal, JSON, maths, Logger
-  project/              # jeu de démo : Main, ProjectLoading, ActionId, scènes Test*
+  mightylibdemo/        # jeu de démo : Main, ProjectLoading, ActionId, scènes Test*
 resources/              # assets ; batchs/*.batch décrit les groupes de ressources
 ```
 

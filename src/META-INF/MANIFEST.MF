@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: MightyLibrary.project.main.Main
+Main-Class: io.github.mightycode.mightylibdemo.main.Main
 
