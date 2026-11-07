@@ -2,22 +2,15 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
-import io.github.mightycode.mightylib.main.MainThread;
-import io.github.mightycode.mightylib.main.Workers;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.texture.IconLoader;
 import io.github.mightycode.mightylib.resources.texture.Texture;
-import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Registry and loading pipeline of the data read from the disk.
@@ -39,7 +32,6 @@ public class Resources {
     static final String DEPENDENCY_REFERENCE_PREFIX = "dependency:";
     // Name of the fallback of each type (ResourceLoader.createFallback), and the reference keeping it loaded
     public static final String FALLBACK_NAME = "error";
-    private static final String FALLBACK_REFERENCE = "fallback";
 
     public static abstract class LoadingMethod{}
     public static class AllResourcesMethod extends LoadingMethod{}
@@ -78,31 +70,16 @@ public class Resources {
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
-    // Fallback by loader type, filled by init then only read
-    private final Map<Class<? extends DataType>, DataType> fallbacks;
-    // Unknown names already reported by getResourceOrFallback (main thread)
-    private final Set<String> reportedUnknownNames;
-    // Main thread: for each load of a batch (loaded once per loadBatch), the data it referenced, released by unloadBatch
-    private final Map<String, List<List<DataType>>> loadedBatches = new HashMap<>();
-    // Types without reload copy, reported once (main thread)
-    private final Set<Class<?>> reportedNoReloadCopy = new HashSet<>();
     private final LoadingMethod loadingMethod;
     // Hot reload on file change: created off, started explicitly (code, command watch, system property)
     private final ResourceWatcher watcher = new ResourceWatcher(this);
+    private final ResourceDescriber describer = new ResourceDescriber(this);
+    private final BatchManager batches = new BatchManager(this);
+    private final FallbackRegistry fallbacks = new FallbackRegistry(this);
+    private final ReloadManager reloads = new ReloadManager(this);
+    private final DependencyGraph dependencies = new DependencyGraph(this);
 
-    private final int maxNumberOfWorkers;
-
-    // Any thread -> main thread: calls from workers and ends of worker steps
-    private final ConcurrentLinkedQueue<Runnable> inbox;
-
-    // Main thread only
-    private final ArrayDeque<DataType> toUpdate;
-    private final ArrayDeque<Runnable> mainContextSteps;
-    private final ArrayDeque<WorkerStep> workerSteps;
-    private int runningWorkerSteps;
-    // Queued steps dropped before starting because their result was no longer needed (see stepStillNeeded)
-    private int skippedSteps;
-    private int waitingDependenciesCount;
+    private final ResourceScheduler scheduler;
     private boolean shuttingDown;
     // A failure throws instead of using the fallback (EngineConfig.setStrictResources)
     private boolean strict;
@@ -118,16 +95,9 @@ public class Resources {
     private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
         resources = new ConcurrentHashMap<>();
-        fallbacks = new ConcurrentHashMap<>();
-        reportedUnknownNames = new HashSet<>();
         Loaders = new ArrayList<>();
 
-        this.maxNumberOfWorkers = Math.max(1, maxNumberOfWorkers);
-
-        inbox = new ConcurrentLinkedQueue<>();
-        toUpdate = new ArrayDeque<>();
-        mainContextSteps = new ArrayDeque<>();
-        workerSteps = new ArrayDeque<>();
+        scheduler = new ResourceScheduler(this, maxNumberOfWorkers);
 
         if (loaders != null) {
             Loaders.addAll(loaders);
@@ -161,74 +131,32 @@ public class Resources {
             Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
             resources.put(loader.getType(), map);
-            registerFallback(loader, map);
+            fallbacks.register(loader, map);
         }
 
         initialized = true;
     }
 
-    private void registerFallback(ResourceLoader loader, Map<String, DataType> map) {
-        DataType fallback = loader.createFallback();
-        if (fallback == null)
-            return;
+    // ---- Fallbacks (see FallbackRegistry) ----
 
-        if (!FALLBACK_NAME.equals(fallback.getDataName()))
-            throw new IllegalStateException("The fallback of " + loader.getResourceNameType() + " must be named " + FALLBACK_NAME);
-
-        if (map.containsKey(FALLBACK_NAME))
-            System.err.println("--The " + loader.getResourceNameType() + " named " + FALLBACK_NAME
-                    + " is replaced by the fallback of its type");
-
-        fallback.setNotManuallyCreated();
-        map.put(FALLBACK_NAME, fallback);
-        fallbacks.put(loader.getType(), fallback);
-    }
-
-    // Referenced for the whole program: loaded first, unloaded at the exit
     void loadFallbacks() {
-        runOnMainThread(() -> {
-            for (DataType fallback : fallbacks.values())
-                addReferenceAndUpdate(fallback, FALLBACK_REFERENCE);
-        });
+        fallbacks.loadAll();
     }
 
-    // ---- Fallbacks ----
-
-    // Fallback of the type, or of its closest parent type with a loader; null without fallback
     public <T extends DataType> T getFallback(Class<T> type) {
-        DataType fallback = fallbackOf(type);
-        return type.isInstance(fallback) ? type.cast(fallback) : null;
+        return fallbacks.get(type);
     }
 
-    // A ColorTextureData uses the TextureData fallback
-    private DataType fallbackOf(Class<?> type) {
-        for (Class<?> current = type; current != null && DataType.class.isAssignableFrom(current); current = current.getSuperclass()) {
-            DataType fallback = fallbacks.get(current);
-            if (fallback != null)
-                return fallback;
-        }
-
-        return null;
-    }
-
-    private boolean hasFallback(DataType data) {
-        return fallbackOf(data.getClass()) != null;
+    boolean hasFallback(DataType data) {
+        return fallbacks.has(data);
     }
 
     public boolean isFallback(DataType data) {
-        return data != null && fallbackOf(data.getClass()) == data;
+        return fallbacks.is(data);
     }
 
-    /**
-     * What to use for this data now: the data itself when loaded, otherwise the fallback of the type
-     * (data failed, still loading or null), or the data as is when the type has no fallback.
-     */
     public <T extends DataType> T usable(Class<T> type, T data) {
-        if (data != null && data.isLoaded())
-            return data;
-
-        T fallback = getFallback(type);
-        return fallback != null ? fallback : data;
+        return fallbacks.usable(type, data);
     }
 
     // getResource, with the fallback of the type for an unknown name (reported once per name)
@@ -237,15 +165,7 @@ public class Resources {
         if (data != null)
             return data;
 
-        T fallback = getFallback(type);
-        String key = type.getSimpleName() + " " + name;
-        if (strict)
-            throw new IllegalStateException("Strict resources: unknown " + key);
-
-        if (reportedUnknownNames.add(key))
-            System.err.println("--Unknown " + key + (fallback != null ? ", its fallback is used" : ""));
-
-        return fallback;
+        return fallbacks.forUnknown(type, name, strict);
     }
 
 
@@ -298,182 +218,62 @@ public class Resources {
         if (!initialized)
             throw new RuntimeException("Resources not initialized");
 
-        long startTime = System.currentTimeMillis();
-        boolean first = true;
-
-        while (first || allowedMilliseconds == -1 || System.currentTimeMillis() - startTime < allowedMilliseconds) {
-            first = false;
-
-            Runnable fromInbox;
-            while ((fromInbox = inbox.poll()) != null)
-                fromInbox.run();
-
-            DataType data;
-            while ((data = toUpdate.poll()) != null)
-                update(data);
-
-            startWorkerSteps();
-
-            Runnable step = mainContextSteps.poll();
-            if (step == null)
-                return;
-
-            step.run();
-        }
+        scheduler.process(allowedMilliseconds);
     }
 
     // Main thread: true when no data is being loaded or unloaded
     public boolean finishedCurrentLoading() {
-        return inbox.isEmpty() && toUpdate.isEmpty() && mainContextSteps.isEmpty() && workerSteps.isEmpty()
-                && runningWorkerSteps == 0 && waitingDependenciesCount == 0;
+        return scheduler.isIdle() && dependencies.waitingCount() == 0;
     }
 
-    /**
-     * Main thread: by type, the number of loaded, preloaded and referenced data, and the names of the data whose
-     * state does not match their references (loaded but not referenced = leak, referenced but not loaded = still loading
-     * or failed); then the state of the pipeline.
-     */
+    // Main thread: see ResourceDescriber
     public JSONObject describe() {
-        JSONObject types = new JSONObject();
-        for (Map.Entry<Class<? extends DataType>, Map<String, DataType>> ofType : resources.entrySet()) {
-            int loaded = 0, preloaded = 0, referenced = 0;
-            JSONArray loadedNotReferenced = new JSONArray();
-            JSONArray referencedNotLoaded = new JSONArray();
-            JSONArray onlyAsDependency = new JSONArray();
-            JSONArray usingFallback = new JSONArray();
-            JSONArray reloading = new JSONArray();
-
-            for (DataType data : ofType.getValue().values()) {
-                boolean isReferenced = !data.notReferenced();
-                if (data.reloadCopy != null)
-                    reloading.put(data.getDataName());
-                if (data.isLoaded()) ++loaded;
-                if (data.isPreLoaded()) ++preloaded;
-                if (isReferenced) ++referenced;
-                if (isReferenced && onlyReferencedAsDependency(data))
-                    onlyAsDependency.put(data.getDataName());
-                if (isReferenced && data.failed && hasFallback(data))
-                    usingFallback.put(data.getDataName());
-
-                if (data.isLoaded() && !isReferenced)
-                    loadedNotReferenced.put(data.getDataName());
-                else if (!data.isLoaded() && isReferenced)
-                    referencedNotLoaded.put(data.getDataName() + (data.failed ? " (failed)" : ""));
-            }
-
-            if (loaded == 0 && referenced == 0)
-                continue;
-
-            JSONObject type = new JSONObject();
-            type.put("loaded", loaded);
-            type.put("preloaded", preloaded);
-            type.put("referenced", referenced);
-            if (!loadedNotReferenced.isEmpty())
-                type.put("loadedNotReferenced", loadedNotReferenced);
-            if (!referencedNotLoaded.isEmpty())
-                type.put("referencedNotLoaded", referencedNotLoaded);
-            // Wanted only because another data depends on it (not listed by a batch nor added by the code)
-            if (!onlyAsDependency.isEmpty())
-                type.put("onlyAsDependency", onlyAsDependency);
-            // Failed, replaced by the fallback of the type until reloaded
-            if (!usingFallback.isEmpty())
-                type.put("usingFallback", usingFallback);
-            // Loaded and reading their new version apart
-            if (!reloading.isEmpty())
-                type.put("reloading", reloading);
-
-            types.put(ofType.getKey().getSimpleName(), type);
-        }
-
-        JSONObject pipeline = new JSONObject();
-        pipeline.put("runningWorkerSteps", runningWorkerSteps);
-        pipeline.put("waitingWorkerSteps", workerSteps.size());
-        pipeline.put("mainContextSteps", mainContextSteps.size());
-        pipeline.put("skippedSteps", skippedSteps);
-        pipeline.put("waitingDependencies", waitingDependenciesCount);
-        pipeline.put("finished", finishedCurrentLoading());
-
-        JSONObject result = new JSONObject();
-        result.put("types", types);
-        result.put("pipeline", pipeline);
-        return result;
+        return describer.describe();
     }
 
-    private static final int DESCRIBE_SELECTION_LIMIT = 100;
-
-    /**
-     * Main thread: the detail of each data matching the selection (state, references, version, sources),
-     * at most DESCRIBE_SELECTION_LIMIT of them.
-     */
     public JSONObject describe(ResourceSelection selection) {
-        JSONArray list = new JSONArray();
-        int[] count = {0};
-        forEachRegistered((type, data) -> {
-            if (!selection.matches(type, data))
-                return;
-            if (++count[0] > DESCRIBE_SELECTION_LIMIT)
-                return;
-
-            JSONObject item = new JSONObject();
-            item.put("type", type.getSimpleName());
-            item.put("name", data.getDataName());
-            item.put("state", data.isLoaded() ? "loaded" : data.failed ? "failed"
-                    : data.isPreLoaded() ? "preloaded" : "unloaded");
-            item.put("version", data.getVersion());
-            JSONArray references;
-            synchronized (data.references) {
-                references = new JSONArray(data.references);
-            }
-            item.put("references", references);
-            if (data.reloadCopy != null)
-                item.put("reloading", true);
-            if (isFallback(data))
-                item.put("fallback", true);
-            if (data.failed && hasFallback(data))
-                item.put("usingFallback", true);
-            if (!data.sourcePaths().isEmpty())
-                item.put("sources", new JSONArray(data.sourcePaths()));
-            list.put(item);
-        });
-
-        JSONObject result = new JSONObject();
-        result.put("selection", selection.toString());
-        result.put("count", count[0]);
-        if (count[0] > DESCRIBE_SELECTION_LIMIT)
-            result.put("truncatedTo", DESCRIBE_SELECTION_LIMIT);
-        result.put("data", list);
-        return result;
+        return describer.describe(selection);
     }
 
-    private static boolean onlyReferencedAsDependency(DataType data) {
-        synchronized (data.references) {
-            for (String reference : data.references) {
-                if (!reference.startsWith(DEPENDENCY_REFERENCE_PREFIX))
-                    return false;
-            }
-        }
+    JSONObject describePipeline() {
+        JSONObject pipeline = new JSONObject();
+        scheduler.describe(pipeline);
+        pipeline.put("waitingDependencies", dependencies.waitingCount());
+        pipeline.put("finished", finishedCurrentLoading());
+        return pipeline;
+    }
 
-        return true;
+    Map<Class<? extends DataType>, Map<String, DataType>> registry() {
+        return resources;
     }
 
     // ---- Reconciliation, main thread only ----
 
-    private void runOnMainThread(Runnable task) {
-        if (MainThread.isMainThread())
-            task.run();
-        else
-            inbox.add(task);
+    void runOnMainThread(Runnable task) {
+        scheduler.runOnMainThread(task);
     }
 
-    private void requestUpdate(DataType data) {
+    BatchManager batches() {
+        return batches;
+    }
+
+    DependencyGraph dependencies() {
+        return dependencies;
+    }
+
+    void enqueueUpdate(DataType data) {
+        scheduler.enqueueUpdate(data);
+    }
+
+    void requestUpdate(DataType data) {
         // Immediate data are set up in the call that wants them (batch descriptions are read right after)
         if (data.getTypeSetUp() == DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT)
             update(data);
         else
-            toUpdate.add(data);
+            scheduler.enqueueUpdate(data);
     }
 
-    private boolean isWanted(DataType data) {
+    boolean isWanted(DataType data) {
         // A reload copy is wanted while it is the current copy of a wanted data
         if (data.reloadOf != null)
             return data.reloadOf.reloadCopy == data && isWanted(data.reloadOf);
@@ -481,13 +281,13 @@ public class Resources {
         return !shuttingDown && !data.deleteWanted && !data.notReferenced();
     }
 
-    private void update(DataType data) {
+    void update(DataType data) {
         if (data.jobRunning)
             return;
 
         if (!isWanted(data)) {
-            stopWaitingDependencies(data);
-            releaseDependencies(data);
+            dependencies.stopWaiting(data);
+            dependencies.release(data);
             data.failed = false;
             data.reloadWanted = false;
             data.discard();
@@ -511,12 +311,12 @@ public class Resources {
             data.reloadWanted = false;
 
             // Loaded: the new version is read apart, the data stays usable meanwhile
-            if (data.isLoaded() && data.reloadOf == null && startReloadCopy(data))
+            if (data.isLoaded() && data.reloadOf == null && reloads.startCopy(data))
                 return;
 
             data.failed = false;
-            stopWaitingDependencies(data);
-            releaseDependencies(data);
+            dependencies.stopWaiting(data);
+            dependencies.release(data);
             data.discard();
         }
 
@@ -528,7 +328,7 @@ public class Resources {
             return;
         }
 
-        acquireDependencies(data);
+        dependencies.acquire(data);
 
         for (DataType dependency : data.getDependencies()) {
             // A failed dependency with a fallback is replaced by it (Resources.usable): the data can be loaded
@@ -539,157 +339,12 @@ public class Resources {
             }
         }
 
-        if (!dependenciesReady(data)) {
-            waitDependencies(data);
+        if (!dependencies.allReady(data)) {
+            dependencies.waitFor(data);
         } else {
-            stopWaitingDependencies(data);
+            dependencies.stopWaiting(data);
             startStep(data, false);
         }
-    }
-
-    // Loaded (or replaced by its fallback) and not reading a new version: computed once, with the latest one
-    private boolean dependencyReady(DataType dependency) {
-        return (dependency.isLoaded() && dependency.reloadCopy == null) || (dependency.failed && hasFallback(dependency));
-    }
-
-    private boolean dependenciesReady(DataType data) {
-        for (DataType dependency : data.getDependencies()) {
-            if (!dependencyReady(dependency))
-                return false;
-        }
-
-        return true;
-    }
-
-    // A wanted data references its dependencies (known once preloaded), so they are loaded without being listed
-    private void acquireDependencies(DataType data) {
-        for (DataType dependency : data.getDependencies()) {
-            if (!data.acquiredDependencies.contains(dependency)) {
-                data.acquiredDependencies.add(dependency);
-                addDependent(dependency, data);
-                addReferenceAndUpdate(dependency, data.dependencyReference());
-            }
-        }
-    }
-
-    private void releaseDependencies(DataType data) {
-        if (data.acquiredDependencies.isEmpty())
-            return;
-
-        List<DataType> released = new ArrayList<>(data.acquiredDependencies);
-        data.acquiredDependencies.clear();
-        for (DataType dependency : released) {
-            dependency.dependents.remove(data);
-            removeReferenceAndUpdate(dependency, data.dependencyReference());
-        }
-    }
-
-    // A copy is not told: it waits for its dependencies to finish their own reload (dependencyReady)
-    private static void addDependent(DataType dependency, DataType dependent) {
-        if (dependent.reloadOf == null && !dependency.dependents.contains(dependent))
-            dependency.dependents.add(dependent);
-    }
-
-    // ---- Hot reload ----
-
-    // Request to read again a data: apart if it is loaded (see update), in place otherwise
-    private void requestReload(DataType data) {
-        // Preloaded or generated by the code: nothing to read again (computed again when a dependency changes)
-        if (!isReloadable(data))
-            return;
-
-        // A failed data is read again too: fixed, it replaces its fallback
-        if (data.isLoaded() || data.jobRunning || data.failed) {
-            data.reloadWanted = true;
-            requestUpdate(data);
-        }
-    }
-
-    // False when the type has no reload copy: the data is then emptied and read again in place
-    private boolean startReloadCopy(DataType data) {
-        DataType copy = data.createReloadCopy();
-        if (copy == null) {
-            if (reportedNoReloadCopy.add(data.getClass()))
-                System.err.println("--" + data.getClass().getSimpleName()
-                        + " has no reload copy: emptied while it is read again");
-            return false;
-        }
-
-        // Already reading a new version: the source changed again, that one is abandoned (no longer wanted, see
-        // isWanted) and a new read starts at once. Its running step goes on (not interruptible), its result is dropped
-        DataType abandoned = data.reloadCopy;
-
-        copy.reloadOf = data;
-        data.reloadCopy = copy;
-        if (abandoned != null)
-            requestUpdate(abandoned);
-        requestUpdate(copy);
-        return true;
-    }
-
-    // The copy is loaded: its content replaces the one of its data, the previous content is unloaded with the copy
-    private void commitReload(DataType copy) {
-        DataType data = copy.reloadOf;
-        copy.loadDone(true);
-
-        for (DataType dependency : data.acquiredDependencies)
-            dependency.dependents.remove(data);
-
-        data.takeReloadedContent(copy);
-
-        // The references to the dependencies follow them: the copy releases the previous ones
-        List<DataType> previous = new ArrayList<>(data.acquiredDependencies);
-        data.acquiredDependencies.clear();
-        data.acquiredDependencies.addAll(copy.acquiredDependencies);
-        copy.acquiredDependencies.clear();
-        copy.acquiredDependencies.addAll(previous);
-        for (DataType dependency : data.acquiredDependencies)
-            addDependent(dependency, data);
-
-        data.reloadCopy = null;
-        releaseDependencies(copy);
-        copy.discard();
-
-        wakeWaiters(data);
-        contentChanged(data);
-    }
-
-    // The loaded data using this one computed their content with the previous version: they are read again
-    private void contentChanged(DataType data) {
-        if (data instanceof BatchResources)
-            batchDescriptionChanged(data.getDataName());
-
-        for (DataType dependent : new ArrayList<>(data.dependents)) {
-            // A fallback is never emptied: it must not depend on what can change
-            if (!dependent.isLoaded() || isFallback(dependent))
-                continue;
-
-            DataType copy = dependent.reloadCopy;
-            if (copy == null) {
-                dependent.reloadWanted = true;
-                requestUpdate(dependent);
-            // A copy still reading waits for its dependencies; one being computed may use the previous version
-            } else if (copy.jobRunning && copy.isPreLoaded()) {
-                copy.reloadWanted = true;
-            }
-        }
-    }
-
-    // The new version could not be read: the data keeps the previous one
-    private void failReload(DataType copy, String message) {
-        DataType data = copy.reloadOf;
-        boolean wanted = isWanted(copy);
-
-        stopWaitingDependencies(copy);
-        releaseDependencies(copy);
-        copy.discard();
-
-        if (!wanted)
-            return;
-
-        data.reloadCopy = null;
-        System.err.println("--" + message + ", the previous version is kept");
-        wakeWaiters(data);
     }
 
     /**
@@ -700,7 +355,7 @@ public class Resources {
         String message = data.getClass().getSimpleName() + " " + data.getDataName() + " failed: " + reason;
         // A fallback must never fail: nothing could replace it
         if (data.reloadOf != null && !isWanted(data)) {
-            failReload(data, message);
+            reloads.fail(data, message);
             return;
         }
 
@@ -708,7 +363,7 @@ public class Resources {
             throw new IllegalStateException((strict ? "Strict resources: " : "Fallback failed: ") + message);
 
         if (data.reloadOf != null) {
-            failReload(data, message);
+            reloads.fail(data, message);
             return;
         }
 
@@ -716,8 +371,8 @@ public class Resources {
         System.err.println("--" + message + (replaced ? ", its fallback is used" : ""));
 
         data.failed = true;
-        stopWaitingDependencies(data);
-        releaseDependencies(data);
+        dependencies.stopWaiting(data);
+        dependencies.release(data);
         data.discard();
 
         List<DataType> waiters = new ArrayList<>(data.waiters);
@@ -728,38 +383,10 @@ public class Resources {
 
             // Replaced by the fallback: the waiters go on with it
             if (replaced)
-                toUpdate.add(waiter);
+                scheduler.enqueueUpdate(waiter);
             else
                 fail(waiter, "its dependency " + data.getClass().getSimpleName() + " " + data.getDataName() + " failed");
         }
-    }
-
-    private void waitDependencies(DataType data) {
-        if (!data.waitingDependencies) {
-            data.waitingDependencies = true;
-            ++waitingDependenciesCount;
-        }
-
-        for (DataType dependency : data.getDependencies()) {
-            if (!dependencyReady(dependency) && !dependency.waiters.contains(data))
-                dependency.waiters.add(data);
-        }
-    }
-
-    private void stopWaitingDependencies(DataType data) {
-        if (data.waitingDependencies) {
-            data.waitingDependencies = false;
-            --waitingDependenciesCount;
-        }
-    }
-
-    private void wakeWaiters(DataType loaded) {
-        for (DataType waiter : loaded.waiters) {
-            if (waiter.waitingDependencies)
-                toUpdate.add(waiter);
-        }
-
-        loaded.waiters.clear();
     }
 
     // Preload (read the file) or load (compute) the data, where its type wants it
@@ -790,59 +417,7 @@ public class Resources {
 
         Runnable end = () -> endStep(data, preload, result);
 
-        switch (data.getTypeSetUp()) {
-            case IMMEDIATELY_IN_CURRENT_CONTEXT:
-                work.run();
-                end.run();
-                break;
-            case MAIN_CONTEXT:
-                mainContextSteps.add(() -> {
-                    if (!stepStillNeeded(data)) {
-                        skipStep(data);
-                        return;
-                    }
-
-                    work.run();
-                    end.run();
-                });
-                break;
-            case THREAD_CONTEXT:
-                workerSteps.add(new WorkerStep(data, () -> {
-                    work.run();
-                    inbox.add(() -> {
-                        --runningWorkerSteps;
-                        end.run();
-                    });
-                }));
-                startWorkerSteps();
-                break;
-        }
-    }
-
-    private static class WorkerStep {
-        final DataType data;
-        final Runnable run;
-
-        WorkerStep(DataType data, Runnable run) {
-            this.data = data;
-            this.run = run;
-        }
-    }
-
-    /**
-     * Checked when a queued step is about to start (not when it is queued: a data unloaded then wanted again
-     * meanwhile keeps its step). False when its result would be thrown away: the data is no longer wanted
-     * (scene left during its loading, reload copy abandoned...) or must be read again from the start.
-     */
-    private boolean stepStillNeeded(DataType data) {
-        return isWanted(data) && !data.reloadWanted;
-    }
-
-    // The step is not run: update discards the data, or starts it again from the start
-    private void skipStep(DataType data) {
-        data.jobRunning = false;
-        ++skippedSteps;
-        requestUpdate(data);
+        scheduler.submit(data, work, end);
     }
 
     private static class StepResult {
@@ -863,11 +438,11 @@ public class Resources {
             data.setPreloaded();
         } else if (result.success) {
             if (data.reloadOf != null && isWanted(data)) {
-                commitReload(data);
+                reloads.commit(data);
             } else {
                 data.loadDone(true);
-                wakeWaiters(data);
-                contentChanged(data);
+                dependencies.wakeWaiters(data);
+                reloads.contentChanged(data);
             }
         } else {
             fail(data, "load returned false");
@@ -875,19 +450,6 @@ public class Resources {
 
         // Wanted state may have changed meanwhile: unloaded if no longer referenced, next step otherwise
         requestUpdate(data);
-    }
-
-    private void startWorkerSteps() {
-        WorkerStep step;
-        while (runningWorkerSteps < maxNumberOfWorkers && (step = workerSteps.poll()) != null) {
-            if (!stepStillNeeded(step.data)) {
-                skipStep(step.data);
-                continue;
-            }
-
-            ++runningWorkerSteps;
-            Workers.execute(step.run);
-        }
     }
 
     // Loader of the type of the data, or of one of its parent types
@@ -904,12 +466,12 @@ public class Resources {
         return null;
     }
 
-    private void addReferenceAndUpdate(DataType data, String reference) {
+    void addReferenceAndUpdate(DataType data, String reference) {
         data.addReference(reference);
         requestUpdate(data);
     }
 
-    private void removeReferenceAndUpdate(DataType data, String reference) {
+    void removeReferenceAndUpdate(DataType data, String reference) {
         data.removeReference(reference);
         requestUpdate(data);
     }
@@ -923,14 +485,6 @@ public class Resources {
         }
 
         return null;
-    }
-
-    private static Class<? extends DataType> getClassFromBatchName(String batchName, String name) {
-        Class<? extends DataType> type = getClassFromName(name);
-        if (type == null)
-            throw new RuntimeException("Unknown resource type: " + name + " in batch: " + batchName);
-
-        return type;
     }
 
     public <T extends DataType> T getResource(Class<T> type, String name) {
@@ -957,55 +511,7 @@ public class Resources {
         return resources.get(type).containsKey(name);
     }
 
-    // ---- Batches ----
-
-    private interface BatchAction {
-        void apply(DataType data);
-    }
-
-    // Calls the action on every data listed by the batch, by name or by regular expression
-    // Data listed by the batch description now
-    private List<DataType> collectBatch(String batchName) {
-        List<DataType> listed = new ArrayList<>();
-        forEachInBatch(batchName, listed::add);
-        return listed;
-    }
-
-    private void forEachInBatch(String batchName, BatchAction action) {
-        BatchResources batchResources = getResource(BatchResources.class, batchName);
-        if (batchResources == null || batchResources.getObject() == null)
-            throw new RuntimeException("Batch not loaded: " + batchName);
-
-        JSONArray content = batchResources.getObject().getJSONArray("batchs");
-        for (int j = 0; j < content.length(); ++j) {
-            JSONObject resource = content.getJSONObject(j);
-
-            Class<? extends DataType> type = getClassFromBatchName(batchName, resource.getString("type"));
-            Map<String, DataType> ofType = this.resources.get(type);
-
-            JSONArray resourceFiles = resource.getJSONArray("files");
-            for (int i = 0; i < resourceFiles.length(); ++i) {
-                String resourceName = resourceFiles.getString(i);
-                DataType dataType = ofType.get(resourceName);
-
-                if (dataType == null)
-                    throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
-
-                action.apply(dataType);
-            }
-
-            JSONArray regularExpressions = resource.getJSONArray("regex");
-            for (int i = 0; i < regularExpressions.length(); ++i) {
-                Pattern pattern = Pattern.compile(regularExpressions.getString(i));
-
-                for (Map.Entry<String, DataType> entry : ofType.entrySet()) {
-                    Matcher matcher = pattern.matcher(entry.getKey());
-                    if (matcher.matches())
-                        action.apply(entry.getValue());
-                }
-            }
-        }
-    }
+    // ---- Batches (see BatchManager) ----
 
     public void loadBatch(String batchName) {
         if (!(loadingMethod instanceof BatchResourcesMethod)) {
@@ -1013,14 +519,7 @@ public class Resources {
             return;
         }
 
-        runOnMainThread(() -> {
-            System.out.println("--Load batch: " + batchName);
-            List<DataType> listed = collectBatch(batchName);
-            for (DataType data : listed)
-                addReferenceAndUpdate(data, batchName);
-
-            loadedBatches.computeIfAbsent(batchName, name -> new ArrayList<>()).add(listed);
-        });
+        batches.load(batchName);
     }
 
     public void unloadBatch(String batchName) {
@@ -1029,51 +528,7 @@ public class Resources {
             return;
         }
 
-        runOnMainThread(() -> {
-            System.out.println("--Unload batch: " + batchName);
-
-            // The data referenced by the load, not by the description now (reloaded, new data matching a regex...)
-            List<List<DataType>> loads = loadedBatches.get(batchName);
-            if (loads == null || loads.isEmpty()) {
-                System.err.println("--Batch " + batchName + " unloaded but not loaded");
-                return;
-            }
-
-            List<DataType> listed = loads.remove(loads.size() - 1);
-            if (loads.isEmpty())
-                loadedBatches.remove(batchName);
-
-            for (DataType data : listed)
-                removeReferenceAndUpdate(data, batchName);
-        });
-    }
-
-    /**
-     * The description of a loaded batch changed (reload): its loads reference the new list, the data added are loaded,
-     * those removed are released. A description that lists an unknown data keeps the previous list.
-     */
-    private void batchDescriptionChanged(String batchName) {
-        List<List<DataType>> loads = loadedBatches.get(batchName);
-        if (loads == null)
-            return;
-
-        List<DataType> listed;
-        try {
-            listed = collectBatch(batchName);
-        } catch (RuntimeException e) {
-            System.err.println("--Batch " + batchName + " kept as loaded: " + e.getMessage());
-            return;
-        }
-
-        for (int i = 0; i < loads.size(); ++i) {
-            // Added before releasing: a data in both lists is never unloaded meanwhile
-            for (DataType data : listed)
-                addReferenceAndUpdate(data, batchName);
-            for (DataType data : loads.get(i))
-                removeReferenceAndUpdate(data, batchName);
-
-            loads.set(i, listed);
-        }
+        batches.unload(batchName);
     }
 
     // ---- Whole types ----
@@ -1108,7 +563,7 @@ public class Resources {
 
         runOnMainThread(() -> {
             for (DataType data : selected)
-                requestReload(data);
+                reloads.request(data);
         });
         return selected.size();
     }
@@ -1117,7 +572,7 @@ public class Resources {
     public void reloadAllOfType(Class<? extends DataType> typeOfResource) {
         runOnMainThread(() -> {
             for (DataType dataType : resources.get(typeOfResource).values())
-                requestReload(dataType);
+                reloads.request(dataType);
         });
     }
 
@@ -1126,7 +581,7 @@ public class Resources {
      * is loaded (or kept if it fails); then the data using it are read again. A failed data is read again in place.
      */
     public void reload(DataType dataType) {
-        runOnMainThread(() -> requestReload(dataType));
+        runOnMainThread(() -> reloads.request(dataType));
     }
 
     // Off until asked: watcher().watchAll(), watcher().watch(ResourceSelection...), command watch

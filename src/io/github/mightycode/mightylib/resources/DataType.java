@@ -45,7 +45,7 @@ public abstract class DataType extends UUID implements LoadingElement {
     boolean preloadedByCode;
     // Data waiting for this one to be loaded
     final List<DataType> waiters = new ArrayList<>();
-    // Dependencies this data references (see Resources.acquireDependencies), released with the data
+    // Dependencies this data references (see DependencyGraph.acquire), released with the data
     final List<DataType> acquiredDependencies = new ArrayList<>();
     // Loaded data that depend on this one, told when its content changes (copies are not listed)
     final List<DataType> dependents = new ArrayList<>();
