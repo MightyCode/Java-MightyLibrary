@@ -1,6 +1,6 @@
 # Bonnes pratiques
 
-Points que le projet doit continuer à respecter. **Revue hebdomadaire** : quand l'utilisateur demande si le projet les respecte toujours, Claude vérifie chaque point avec sa vérification, puis répond point par point : **respecté**, ou **dérive** (avec la preuve : commande, fichier, chiffre) et l'action proposée. Les corrections ne se font qu'après accord. Ce fichier contient les règles, jamais l'état ni l'historique : l'état est dans la réponse de la revue.
+Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill `/revue-pratiques`) : quand l'utilisateur demande si le projet les respecte toujours, Claude vérifie chaque point avec sa vérification, puis répond point par point : **respecté**, ou **dérive** (avec la preuve : commande, fichier, chiffre) et l'action proposée. Les corrections ne se font qu'après accord. Ce fichier contient les règles, jamais l'état ni l'historique : l'état est dans la réponse de la revue.
 
 ## Méthode
 1. **Une branche par sujet, un commit par changement logique, fusion `--no-ff` dans master** (jamais de commit direct sur master). Branche fusionnée = branche supprimée ; une branche non fusionnée a une raison connue de l'utilisateur.
