@@ -177,6 +177,26 @@ public class InputManager {
         return actionInput.actionReleased(this) || simulation.released(inputID);
     }
 
+    /** Same as getState (Press, Release) or inputPressed/inputReleased (Pressed, Released), chosen by the enum. */
+    public boolean isInput(int inputID, EInputState state) {
+        // An unknown action is never in any state
+        if (!actionConfigurations.containsKey(inputID))
+            return false;
+
+        switch (state) {
+            case Press:
+                return getState(inputID);
+            case Release:
+                return !getState(inputID);
+            case Pressed:
+                return inputPressed(inputID);
+            case Released:
+                return inputReleased(inputID);
+            default:
+                return false;
+        }
+    }
+
     // Find a configured action by its name (case insensitive) or its numeric id, null if unknown
     public ActionInput findAction(String nameOrId) {
         for (ActionInput actionInput : actionConfigurations.values()) {
