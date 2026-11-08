@@ -82,6 +82,7 @@ public class MenuScene extends Scene {
         guiList.GUIs.put(1, button3DScene);
         guiList.GUIs.put(2, button3D_2Scene);
         guiList.GUIs.put(3, buttonQuit);
+        guiList.setupActivationActions(ActionId.ENTER, ActionId.LEFT_CLICK);
         guiList.ShouldLoop = false;
 
         // Right : every scene of the demo, scrollable
@@ -92,6 +93,7 @@ public class MenuScene extends Scene {
 
         sceneList = new ScrollList(mainContext, windowSize.x * 0.55f, windowSize.y * 0.25f,
                 windowSize.x * 0.4f, windowSize.y * 0.56f, windowSize.y * 0.08f, "bahnschrift", 30);
+        sceneList.setupActivationActions(ActionId.LEFT_CLICK);
         sceneList.setItems(names);
 
         rotation = new FloatTweening();
@@ -164,28 +166,25 @@ public class MenuScene extends Scene {
 
         sceneList.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ENTER)
-                || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)) {
-            Integer hovered = sceneList.getHovered();
-            Integer id = guiList.getSelected();
+        Integer activatedScene = sceneList.getActivated();
+        Integer id = guiList.getActivated();
 
-            if (hovered != null && mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)) {
-                sceneManagerInterface.setNewScene(sceneEntries.get(hovered).factory.get(), new String[]{""});
-            } else if (id != null) {
-                switch (id) {
-                    case 0:
-                        sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
-                        break;
-                    case 1:
-                        sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
-                        break;
-                    case 2:
-                        sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
-                        break;
-                    case 3:
-                        sceneManagerInterface.exit(0);
-                        break;
-                }
+        if (activatedScene != null) {
+            sceneManagerInterface.setNewScene(sceneEntries.get(activatedScene).factory.get(), new String[]{""});
+        } else if (id != null) {
+            switch (id) {
+                case 0:
+                    sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
+                    break;
+                case 1:
+                    sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
+                    break;
+                case 2:
+                    sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
+                    break;
+                case 3:
+                    sceneManagerInterface.exit(0);
+                    break;
             }
         }
 

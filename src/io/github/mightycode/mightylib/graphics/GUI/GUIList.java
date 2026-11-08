@@ -20,6 +20,8 @@ public class GUIList {
     private int actionUpValue = -1,
             actionDownValue = -1;
 
+    private int[] activationActions = new int[0];
+
     public boolean ShouldLoop = true;
 
     public GUIList(InputManager inputManager, MouseManager mouseManager) {
@@ -42,6 +44,19 @@ public class GUIList {
     public void setupActionInputValues(int actionUpValue, int actionDownValue){
         this.actionUpValue = actionUpValue;
         this.actionDownValue = actionDownValue;
+    }
+
+    /** Actions (Enter, left click...) that activate the selected element, each on its own trigger. */
+    public void setupActivationActions(int... actionIds) {
+        this.activationActions = actionIds;
+    }
+
+    /** Id of the selected element if it is activated at this tick, null otherwise. */
+    public Integer getActivated() {
+        if (id == null || selected == null)
+            return null;
+
+        return selected.isActivated(inputManager, activationActions) ? id : null;
     }
 
     public boolean isStateChanged() {

@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
+import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -33,6 +34,7 @@ public class ScrollList {
     private final List<String> items = new ArrayList<>();
     private int firstItem;
     private int hovered = -1;
+    private int[] activationActions = new int[0];
 
     private boolean needRefill = true;
 
@@ -87,6 +89,31 @@ public class ScrollList {
     /** Index in the items of the row under the mouse, null if none. */
     public Integer getHovered() {
         return hovered < 0 ? null : hovered;
+    }
+
+    public void setupActivationActions(int... actionIds) {
+        this.activationActions = actionIds;
+    }
+
+    /** Moment of the input that activates a row : Pressed (default) or Released. */
+    public ScrollList setTrigger(EInputState trigger) {
+        for (BackgroundlessButton row : rows)
+            row.setTrigger(trigger);
+
+        return this;
+    }
+
+    public EInputState getTrigger() {
+        return rows.get(0).getTrigger();
+    }
+
+    /** Index in the items of the row activated at this tick, null otherwise. */
+    public Integer getActivated() {
+        if (hovered < 0)
+            return null;
+
+        BackgroundlessButton row = rows.get(hovered - firstItem);
+        return row.isActivated(context.getInputManager(), activationActions) ? hovered : null;
     }
 
     public int getFirstVisible() {
