@@ -5,7 +5,6 @@ import io.github.mightycode.mightylib.graphics.renderer.Shape;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.map.*;
 import io.github.mightycode.mightylib.resources.texture.Texture;
-import io.github.mightycode.mightylib.resources.texture.TextureDataAtlas;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.*;
 
@@ -147,9 +146,8 @@ public class TileMapRenderer extends Renderer {
         this.tilemap = tilemap;
         this.tileMapVersion = tilemap.getVersion();
         this.tileSetAtlas = tilemap.tileSetAtlas();
-        TextureDataAtlas textureDataAtlas = tileSetAtlas.getTextureAtlas();
-
-        atlasTexture = glResources.addElementOrReturnIfPresent(Texture.class, new Texture(textureDataAtlas), textureDataAtlas.getDataName());
+        // The same element as the one a batch listing the map sends during the loading
+        atlasTexture = glResources.addElementOrReturnIfPresent(Texture.class, tilemap.createGLElement(), tilemap.glElementName());
         setMainTextureChannel(atlasTexture);
 
         loadGeneralInformation();

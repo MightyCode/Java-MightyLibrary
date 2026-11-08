@@ -1,7 +1,9 @@
 package io.github.mightycode.mightylib.resources.map;
 
+import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
+import io.github.mightycode.mightylib.resources.texture.Texture;
 import org.joml.Vector2i;
 
 import java.util.ArrayList;
@@ -66,6 +68,24 @@ public class TileMap extends SingleSourceDataType {
         unload();
     }
 
+    // The texture of the atlas (shared with TileMapRenderer), sent once the map is loaded (its atlas built)
+    @Override
+    public Class<? extends GLElement> glElementType() {
+        return Texture.class;
+    }
+
+    @Override
+    public String glElementName() {
+        return tileSetAtlas.getTextureAtlas().getDataName();
+    }
+
+    @Override
+    public Texture createGLElement() {
+        Texture texture = new Texture(tileSetAtlas.getTextureAtlas());
+        // The atlas is not managed by Resources: a failed map must not keep a loading screen waiting
+        texture.addResourceDependency(this);
+        return texture;
+    }
 
     @Override
     protected DataType createReloadCopy() {

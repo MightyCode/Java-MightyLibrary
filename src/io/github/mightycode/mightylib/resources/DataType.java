@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.utils.LoadingElement;
 import io.github.mightycode.mightylib.utils.math.UUID;
 
@@ -229,6 +230,23 @@ public abstract class DataType extends UUID implements LoadingElement {
     // Memory (bytes) of the card this data takes once its GL element is loaded, 0 for the data that are not sent to it
     public long estimatedGpuBytes() {
         return 0;
+    }
+
+    /**
+     * The GL element a batch listing this data sends to the card during the loading ("gpu": false in the batch to
+     * skip it): its class and name, the key the renderers use to share it, null when the data has none.
+     */
+    public Class<? extends GLElement> glElementType() {
+        return null;
+    }
+
+    public String glElementName() {
+        return dataName;
+    }
+
+    // Called once per element registered (main thread), only when glElementType is not null
+    public GLElement createGLElement() {
+        throw new UnsupportedOperationException(getClass().getSimpleName() + " has no GL element");
     }
 
     public final int getVersion() {

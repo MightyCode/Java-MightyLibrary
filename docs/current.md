@@ -3,7 +3,6 @@
 **Ce fichier ne contient que ce qui reste à faire, jamais l'historique.** Quand un objectif est atteint (même en partie) : supprimer sa ligne, ou la réécrire pour ne garder que le reste. Aucun « fait », « déjà », « aujourd'hui fait X » : l'état actuel est décrit dans `architecture.md`, l'historique est dans git. Fichier vide → **discuter** avec l'utilisateur du point en tête de `later.md`, puis l'écrire ici. Propositions **à valider avec l'utilisateur avant d'appliquer** ; changements cassants maintenant, avant toute version publiée. (U) = le plus urgent.
 
 - (U) **Pipeline de `Resources`** (voir `architecture.md`). Reste :
-  - **précharger les éléments GL** (aujourd'hui seules les ressources CPU le sont : les `GLElement` n'existent qu'après le `launch` de la scène) ;
   - **temps restant d'un chargement** : débits mesurés par type, et part GL dans la progression ;
   - **estimations de poids** par type pour les modèles et les sons (aujourd'hui : taille du fichier) ; les dépendances d'une donnée non lue ne sont connues qu'après sa lecture (`dependenciesKnown`) ;
   - `DataType` lit `Resources.getInstance()` dans son constructeur (cf. singletons).

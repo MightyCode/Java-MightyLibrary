@@ -19,6 +19,8 @@ public abstract class GLElement implements LoadingElement {
     }
 
     private int reference;
+    // References wanting the element now (renderers, loaded batches), the others only preload it
+    private int urgentReference;
 
     protected ArrayList<DataType> resourceDependencies;
     protected ArrayList<GLElement> glElementDependencies;
@@ -29,22 +31,42 @@ public abstract class GLElement implements LoadingElement {
         glElementDependencies = new ArrayList<>();
     }
 
-    void addReference() {
-        //System.out.println("Adding reference to " + this.getClass().getSimpleName() + " = " + this.getName());
-        ++reference;
+    // The element also waits for this data (and is blocked by its failure)
+    public final void addResourceDependency(DataType data) {
+        resourceDependencies.add(data);
     }
 
-    void removeReference() {
-        //System.out.println("Removing reference to " + this.getClass().getSimpleName() + " = " + this.getName());
+    void addReference(boolean urgent) {
+        ++reference;
+        if (urgent)
+            ++urgentReference;
+    }
+
+    void removeReference(boolean urgent) {
         --reference;
+        if (urgent)
+            --urgentReference;
+    }
+
+    void clearReferences() {
+        reference = 0;
+        urgentReference = 0;
     }
 
     boolean isReferenced(){
         return reference != 0;
     }
 
+    boolean isUrgent() {
+        return urgentReference != 0;
+    }
+
     public int getNumberReference() {
         return reference;
+    }
+
+    public int getNumberUrgentReference() {
+        return urgentReference;
     }
 
     public abstract boolean load(int remainingMilliseconds);
