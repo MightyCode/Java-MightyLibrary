@@ -1,7 +1,9 @@
 package io.github.mightycode.mightylib.resources;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Links between the data: a wanted data references its dependencies (so they are loaded without being listed) and
@@ -32,6 +34,47 @@ class DependencyGraph {
         }
 
         return true;
+    }
+
+    /**
+     * Path of a dependency cycle going through the data ("A -> B -> A"), or null. Such data would wait for each other
+     * forever. A reload copy is checked as the data it replaces (its dependencies are the same).
+     */
+    static String findCycle(DataType data) {
+        DataType root = data.reloadOf != null ? data.reloadOf : data;
+        List<DataType> path = new ArrayList<>();
+        path.add(root);
+
+        if (!reaches(root, root, path, new HashSet<>()))
+            return null;
+
+        StringBuilder text = new StringBuilder();
+        for (DataType step : path) {
+            if (text.length() > 0)
+                text.append(" -> ");
+            text.append(step.getClass().getSimpleName()).append(' ').append(step.getDataName());
+        }
+        return text.toString();
+    }
+
+    // Depth-first search of target among the dependencies of current; path ends with target when found
+    private static boolean reaches(DataType current, DataType target, List<DataType> path, Set<DataType> visited) {
+        for (DataType dependency : current.getDependencies()) {
+            if (dependency == target) {
+                path.add(dependency);
+                return true;
+            }
+
+            if (!visited.add(dependency))
+                continue;
+
+            path.add(dependency);
+            if (reaches(dependency, target, path, visited))
+                return true;
+            path.remove(path.size() - 1);
+        }
+
+        return false;
     }
 
     // A wanted data references its dependencies (known once preloaded), so they are loaded without being listed

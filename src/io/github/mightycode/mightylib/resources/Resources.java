@@ -340,6 +340,12 @@ public class Resources {
         }
 
         if (!dependencies.allReady(data)) {
+            String cycle = DependencyGraph.findCycle(data);
+            if (cycle != null) {
+                fail(data, "dependency cycle (" + cycle + ")");
+                return;
+            }
+
             dependencies.waitFor(data);
         } else {
             dependencies.stopWaiting(data);
