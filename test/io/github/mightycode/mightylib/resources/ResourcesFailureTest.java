@@ -28,6 +28,26 @@ class ResourcesFailureTest extends ResourcesTestBase {
         assertEquals(0, broken.errors.get());
     }
 
+    // A failed load goes back to the initial state: its unload must not wait forever for a loading that never came
+    @Test
+    void unloadAfterAFailedLoadDoesNotGetStuck() throws Exception {
+        FakeData broken = fake(THREAD_CONTEXT, "broken");
+        broken.failLoad = true;
+        FakeData fine = fake(MAIN_CONTEXT, "fine");
+        batch("level", "broken", "fine");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+        resources.unloadBatch("level");
+        pump();
+
+        assertFalse(broken.isLoaded());
+        assertFalse(fine.isLoaded());
+        assertEquals(0, broken.referenceCount());
+        assertConsistent();
+    }
+
     // Missing file, bad format...: the data is wrong, not the code, one line without stack trace
     @Test
     void expectedFailureIsLoggedWithoutStackTrace() throws Exception {
