@@ -10,7 +10,6 @@ Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisate
   - `leaves.obj` (Test3DScene) refusé par Assimp (`OBJ: vertex index out of range`) : cube de secours (une ligne d'erreur), `--strict` arrête le jeu ;
   - **priorités** (scène courante avant préchargement de la suivante) et **annulation** des lectures inutiles : étapes encore en file sautées (fait, `skippedSteps`) ; reste l'interruption des étapes déjà commencées (drapeau `cancelled` + `checkCancelled()` aux points naturels des loaders longs, `try/finally` pour la mémoire native ; lecture du fichier par blocs séparée du décodage) et la limite de copies en cours ;
   - fusionner les files (`inbox` et étapes `MAIN_CONTEXT` de `Resources`, `MainThread`, `GLResources`) sous un même budget de frame ;
-  - **cycle** de dépendances → attente sans fin : le détecter et le faire échouer ;
   - **voir à l'avance** ce qu'un batch charge (dépendances comprises) et son **poids** (taille estimée par `DataType`, mémoire CPU/GPU, totaux par batch et dans `resources`) ;
   - `DataType` lit `Resources.getInstance()` dans son constructeur (cf. singletons).
 - **Chargement GL** (bandes dans le reste de la frame : fait, `TestGLLoading`) : PBO ou contexte partagé (fenêtre cachée + `glFenceSync`) seulement si les mesures l'exigent. `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.

@@ -571,6 +571,35 @@ class ResourcesLifecycleTest {
         assertConsistent();
     }
 
+    // Data waiting for each other would wait forever: the cycle is detected and every member fails
+    @Test
+    void dependencyCycleFailsInsteadOfWaitingForever() throws Exception {
+        FakeData a = fake(THREAD_CONTEXT, "a");
+        FakeData b = fake(THREAD_CONTEXT, "b");
+        FakeData c = fake(THREAD_CONTEXT, "c");
+        a.dependencyToAdd = b;
+        b.dependencyToAdd = c;
+        c.dependencyToAdd = a;
+        FakeData fine = fake(MAIN_CONTEXT, "fine");
+        batch("level", "a", "b", "c", "fine");
+        start();
+
+        String errors = loadCapturingErrors("level");
+
+        for (FakeData data : new FakeData[]{a, b, c}) {
+            assertTrue(data.failed, data.getDataName());
+            assertFalse(data.isLoaded(), data.getDataName());
+        }
+        assertTrue(fine.isLoaded());
+        assertTrue(errors.contains("dependency cycle"), errors);
+        assertTrue(errors.contains("FakeData a -> FakeData b -> FakeData c -> FakeData a")
+                || errors.contains("FakeData b -> FakeData c -> FakeData a -> FakeData b")
+                || errors.contains("FakeData c -> FakeData a -> FakeData b -> FakeData c"), errors);
+        assertEquals(0, resources.dependencies().waitingCount());
+        for (FakeData data : all)
+            assertEquals(0, data.errors.get(), data.getDataName());
+    }
+
     // The dependency is not listed by the batch: the data references it, and releases it when unloaded
     @Test
     void dependencyNotListedIsLoadedThenReleased() throws Exception {
