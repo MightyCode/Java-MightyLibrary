@@ -11,7 +11,7 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - `TestGamma` : dégradés, fondus alpha, éclairage, activé/désactivé côte à côte.
 
 ## Tests de non-régression
-En place : JUnit 5 (`test/`), `ResourcesLifecycleTest` (`FakeData`, `Resources.createForTests`). À étendre : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
+En place : JUnit 5 (`test/`), `Resources*Test` (`ResourcesTestBase`, `FakeData`, `Resources.createForTests`). À étendre : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
