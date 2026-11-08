@@ -184,7 +184,7 @@ public class ModelLoader extends ResourceLoader {
             return null;
         }
 
-        TextureData texture = Resources.getInstance().addOwnedResource(TextureData.class,
+        TextureData texture = model.ownedResources().addOwnedResource(TextureData.class,
                 new TextureData(model.getDataName() + "/" + file, fullPath), model.ownerName());
         model.addOwnedTexture(texture);
 
@@ -192,7 +192,7 @@ public class ModelLoader extends ResourceLoader {
     }
 
     private String registerColor(Model model, int argb) {
-        TextureData texture = Resources.getInstance().addOwnedResource(TextureData.class, new ColorTextureData(argb), model.ownerName());
+        TextureData texture = model.ownedResources().addOwnedResource(TextureData.class, new ColorTextureData(argb), model.ownerName());
         model.addOwnedTexture(texture);
 
         return texture.getDataName();

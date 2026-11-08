@@ -150,6 +150,8 @@ public class Resources {
         for (ResourceLoader loader : Loaders){
             Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
+            for (DataType data : map.values())
+                data.attachTo(this);
             resources.put(loader.getType(), map);
             fallbacks.register(loader, map);
         }
@@ -722,6 +724,7 @@ public class Resources {
                     if (registered.containsKey(entry.getKey()) || !accepted.test(ofType.getKey(), entry.getValue()))
                         continue;
 
+                    entry.getValue().attachTo(this);
                     registered.put(entry.getKey(), entry.getValue());
                     ++added;
                     System.out.println("--Watch: new " + ofType.getKey().getSimpleName() + " " + entry.getKey());
@@ -792,6 +795,7 @@ public class Resources {
     // Data created by the code, read by its loader then loaded; referenced as "manually"
     public void addResourceAndSetUp(Class<? extends DataType> type, DataType dataType) {
         runOnMainThread(() -> {
+            dataType.attachTo(this);
             resources.get(type).put(dataType.getDataName(), dataType);
             addReferenceAndUpdate(dataType, "manually");
         });
@@ -801,6 +805,7 @@ public class Resources {
     public void addPreLoadedResource(DataType dataType) {
         runOnMainThread(() -> {
             dataType.preloadedByCode = true;
+            dataType.attachTo(this);
             resources.get(dataType.getClass()).put(dataType.getDataName(), dataType);
             addReferenceAndUpdate(dataType, "manually");
         });
@@ -812,6 +817,8 @@ public class Resources {
      * The owner adds a reference and must call releaseOwnedResource with the same owner name.
      */
     public <T extends DataType> T addOwnedResource(Class<T> type, T dataType, String owner) {
+        // Attached before being visible to other threads; a data given while another one is shared is dropped
+        dataType.attachTo(this);
         DataType registered = resources.get(type).putIfAbsent(dataType.getDataName(), dataType);
         if (registered == null) {
             registered = dataType;

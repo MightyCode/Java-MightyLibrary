@@ -94,6 +94,7 @@ class ReloadManager {
         // is dropped
         DataType abandoned = data.reloadCopy;
 
+        copy.attachTo(data.resources());
         copy.reloadOf = data;
         data.reloadCopy = copy;
         if (abandoned != null)

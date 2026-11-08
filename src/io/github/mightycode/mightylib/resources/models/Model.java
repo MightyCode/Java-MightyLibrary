@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources.models;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 
 import java.util.ArrayList;
@@ -41,6 +42,11 @@ public class Model extends SingleSourceDataType {
         List<DataType> otherTextures = other.ownedTextures;
         other.ownedTextures = ownedTextures;
         ownedTextures = otherTextures;
+    }
+
+    // The Resources the owned textures are added to and released from (the one managing this model)
+    Resources ownedResources() {
+        return resources();
     }
 
     // Name used as reference on the owned textures
@@ -118,7 +124,7 @@ public class Model extends SingleSourceDataType {
     private void releaseTextures() {
         for (DataType texture : ownedTextures) {
             removeDependency(texture);
-            resources.releaseOwnedResource(texture, ownerName());
+            resources().releaseOwnedResource(texture, ownerName());
         }
 
         ownedTextures.clear();
