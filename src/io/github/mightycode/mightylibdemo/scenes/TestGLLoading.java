@@ -3,6 +3,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 
 import java.awt.*;
@@ -53,6 +54,14 @@ public class TestGLLoading extends Scene {
             renderers[i].setSizePix(cellSize - 10, cellSize - 10);
             renderers[i].setPosition(new Vector2f((i % 3) * cellSize + 5, (i / 3) * cellSize + 5));
         }
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
     }
 
     @Override
