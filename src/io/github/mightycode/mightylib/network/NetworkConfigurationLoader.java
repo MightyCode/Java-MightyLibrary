@@ -46,11 +46,9 @@ public class NetworkConfigurationLoader extends ResourceLoader {
         }
 
         char symbol = '=';
-        BufferedReader reader;
         String[] values = {"","","","",""};
         int i = 0;
-        try {
-            reader = new BufferedReader(new FileReader(((NetworkConfiguration) dataType).path()));
+        try (BufferedReader reader = new BufferedReader(new FileReader(((NetworkConfiguration) dataType).path()))) {
             String line = reader.readLine();
 
             while (line != null) {
@@ -62,8 +60,6 @@ public class NetworkConfigurationLoader extends ResourceLoader {
                 }
                 line = reader.readLine();
             }
-
-            reader.close();
         } catch (IOException e) {
             Logger.LogException("Can't read the network configuration " + ((NetworkConfiguration) dataType).path(), e);
         }

@@ -3,10 +3,10 @@
 Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill `/revue-pratiques`) : quand l'utilisateur demande si le projet les respecte toujours, Claude vérifie chaque point avec sa vérification, puis répond point par point : **respecté**, ou **dérive** (avec la preuve : commande, fichier, chiffre) et l'action proposée. Les corrections ne se font qu'après accord. Ce fichier contient les règles, jamais l'état ni l'historique : l'état est dans la réponse de la revue.
 
 ## Méthode
-1. **Une branche par sujet, un commit par changement logique, fusion `--no-ff` dans master** (jamais de commit direct sur master). Branche fusionnée = branche supprimée ; une branche non fusionnée a une raison connue de l'utilisateur.
-   *Vérification* : `git log --first-parent --oneline master` depuis la dernière revue (seulement des fusions) ; `git branch --merged master` (vide hors master) ; `git branch --no-merged master` (chaque branche expliquée).
+1. **Une branche par sujet, un commit par changement logique, fusion `--no-ff` dans `dev`** (jamais de commit direct sur `dev` ni sur master). `dev` est la branche de travail ; `master` ne reçoit que des versions, par fusion `--no-ff` de `dev` sur demande de l'utilisateur. Branche fusionnée = branche supprimée ; une branche non fusionnée a une raison connue de l'utilisateur.
+   *Vérification* : `git log --first-parent --oneline dev` depuis la dernière revue (seulement des fusions) ; `git branch --merged dev` (vide hors dev et master) ; `git branch --no-merged dev` (chaque branche expliquée).
 2. **Docs à jour dans le même commit que le code.** `current.md` / `later.md` = ce qui reste, sans historique ; `architecture.md` = l'état présent.
-   *Vérification* : les commits de la semaine qui changent un comportement touchent aussi la doc concernée (`git log --since="1 week ago" --stat master`) ; `current.md` ne contient aucune trace d'objectif terminé.
+   *Vérification* : les commits de la semaine qui changent un comportement touchent aussi la doc concernée (`git log --since="1 week ago" --stat dev`) ; `current.md` ne contient aucune trace d'objectif terminé.
 3. **Tests verts, et un test pour chaque bug corrigé** quand il peut s'écrire sans GL. La liste du code couvert dans `CLAUDE.md` est à jour.
    *Vérification* : `mvn -o -q test` ; pour chaque correctif de la semaine, le test qui le reproduit (ou la raison de son absence).
 4. **Vérification en jeu** de ce que les tests ne couvrent pas (`tools/scenario.py`, journal sans problème), et description de la vérification manuelle restante.

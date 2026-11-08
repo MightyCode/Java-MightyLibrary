@@ -24,6 +24,10 @@ def git(*args):
     return subprocess.run(["git", *args], capture_output=True, text=True, encoding="utf-8").stdout.strip()
 
 
+# Integration branch: topic branches merge into dev, dev merges into master for a version.
+BASE = "dev" if git("branch", "--list", "dev") else "master"
+
+
 def section(title):
     print(f"\n## {title}")
 
@@ -32,17 +36,19 @@ section("[1] Branches et fusions")
 print("branche courante:", git("branch", "--show-current"))
 changes = [line for line in git("status", "--short").splitlines() if not line.startswith("??")]
 print("modifications non commitées:", len(changes))
-merged = [b for b in git("branch", "--merged", "master", "--format=%(refname:short)").splitlines() if b != "master"]
+merged = [b for b in git("branch", "--merged", BASE, "--format=%(refname:short)").splitlines() if b not in (BASE, "master")]
 print("fusionnées non supprimées:", ", ".join(merged) or "aucune")
-for branch in git("branch", "--no-merged", "master", "--format=%(refname:short)").splitlines():
-    print(f"non fusionnée: {branch} (+{git('rev-list', '--count', 'master..' + branch)}) {git('log', '-1', '--format=%ad %s', '--date=short', branch)[:80]}")
-direct = [line for line in git("log", "--first-parent", "--no-merges", "--since=" + since, "--format=%h %s", "master").splitlines()]
-print("commits directs sur master (hors fusion):", len(direct))
+for branch in git("branch", "--no-merged", BASE, "--format=%(refname:short)").splitlines():
+    print(f"non fusionnée: {branch} (+{git('rev-list', '--count', BASE + '..' + branch)}) {git('log', '-1', '--format=%ad %s', '--date=short', branch)[:80]}")
+direct = [line for line in git("log", "--first-parent", "--no-merges", "--since=" + since, "--format=%h %s", BASE).splitlines()]
+print(f"commits directs sur {BASE} (hors fusion):", len(direct))
+if BASE != "master":
+    print(f"{BASE} en avance sur master: {git('rev-list', '--count', 'master..' + BASE)} commits")
 for line in direct[:10]:
     print("  ", line[:100])
 
-section(f"[2][3][8] Commits de master depuis « {since} »")
-log = git("log", "--no-merges", "--since=" + since, "--name-only", "--format=@@%h %s", "master")
+section(f"[2][3][8] Commits de {BASE} depuis « {since} »")
+log = git("log", "--no-merges", "--since=" + since, "--name-only", "--format=@@%h %s", BASE)
 commits = []
 for block in log.split("@@")[1:]:
     lines = [line for line in block.splitlines() if line.strip()]
