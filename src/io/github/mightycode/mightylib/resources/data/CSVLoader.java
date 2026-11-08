@@ -71,7 +71,7 @@ public class CSVLoader extends ResourceLoader {
                     if (lineHeader) {
                         columnsName = new String[data.length];
                         header = false;
-                    } else if (!line.equals("\n") && !line.equals("")) {
+                    } else if (!line.equals("\n") && !line.isEmpty()) {
                         dataList.add(parseCsvLine(line, csvSplitBy));
                     }
                 }

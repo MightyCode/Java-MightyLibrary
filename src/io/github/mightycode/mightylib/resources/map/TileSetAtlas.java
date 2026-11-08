@@ -1,8 +1,6 @@
 package io.github.mightycode.mightylib.resources.map;
 
 import io.github.mightycode.mightylib.resources.DataType;
-import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureDataAtlas;
 import org.joml.Vector2i;
 

@@ -129,14 +129,14 @@ abstract class ResourcesTestBase {
     protected String loadCapturingErrors(String batchName) throws Exception {
         PrintStream previous = System.err;
         ByteArrayOutputStream captured = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(captured, true, "UTF-8"));
+        System.setErr(new PrintStream(captured, true, StandardCharsets.UTF_8));
         try {
             resources.loadBatch(batchName);
             pump();
         } finally {
             System.setErr(previous);
         }
-        return captured.toString("UTF-8");
+        return captured.toString(StandardCharsets.UTF_8);
     }
 
     protected FakeData withFallback() {

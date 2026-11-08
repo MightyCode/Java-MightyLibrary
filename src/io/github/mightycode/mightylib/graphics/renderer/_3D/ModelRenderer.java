@@ -176,7 +176,7 @@ public class ModelRenderer extends Renderer {
      */
     public ModelRenderer setTextureUniforms(String diffuseUniform, String specularUniform) {
         sendSampler(diffuseUniform, DIFFUSE_UNIT);
-        bindSpecular = specularUniform != null && sendSampler(specularUniform, SPECULAR_UNIT);
+        bindSpecular = sendSampler(specularUniform, SPECULAR_UNIT);
 
         return this;
     }

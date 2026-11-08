@@ -8,7 +8,6 @@ import java.util.Random;
 
 import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.MAIN_CONTEXT;
 import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.THREAD_CONTEXT;
-import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Random load and unload cycles: the final state must stay consistent.

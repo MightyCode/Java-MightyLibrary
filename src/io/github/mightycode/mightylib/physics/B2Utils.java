@@ -6,7 +6,7 @@ import org.joml.Vector2f;
 
 public class B2Utils {
 
-    private static Vector2f b2ToEngineVector = new Vector2f(1);
+    private static final Vector2f b2ToEngineVector = new Vector2f(1);
     public static Vector2f getB2ToEngineVector(){ return new Vector2f(b2ToEngineVector);}
 
     public static void setB2ToEngineVector(float newB2ToEngineValue){

@@ -7,10 +7,7 @@ import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
 
-import static org.lwjgl.opengl.GL15.glDeleteBuffers;
-import static org.lwjgl.opengl.GL15.glGenBuffers;
 import static org.lwjgl.opengl.GL30.*;
-import static org.lwjgl.opengl.GL30.glGenRenderbuffers;
 
 public abstract class GenDeleteResources {
     private static boolean Initialized = false;

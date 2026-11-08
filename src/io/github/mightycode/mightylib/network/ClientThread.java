@@ -56,7 +56,7 @@ public final class ClientThread extends CommunicationThread {
                 //System.out.println(messageProcessed + " " + messageReceived + " " + messageToSend.size());
 
                 if (client.isConnected()){
-                    if (messageToSend.size() > 0 && receivedMessageNumber == processedMessageNumber) {
+                    if (!messageToSend.isEmpty() && receivedMessageNumber == processedMessageNumber) {
                         String toSend = processedMessageNumber + HEADER_SEPARATION + messageToSend.get(processedMessageNumber);
 
                         System.out.println("Messaged sent(" + receivedMessageNumber + ") :" + toSend);

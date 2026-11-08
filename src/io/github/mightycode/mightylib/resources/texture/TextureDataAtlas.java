@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;

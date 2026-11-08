@@ -51,7 +51,7 @@ public class TileMapLoader extends ResourceLoader {
         int lineIndex = 0;
 
         Vector2i layerSize = null;
-        int numberOfBackLayers = 0, numberOfForLayers = 0;
+        int numberOfBackLayers, numberOfForLayers;
 
         TileLayer[] layers = null;
 

@@ -110,10 +110,6 @@ public class PlayerManager extends Box2DActor{
         return values;
     }
 
-    public Body getBody() {
-        return body;
-    }
-
     /** Free rendering resources */
     public void unload() {
         renderer.unload();

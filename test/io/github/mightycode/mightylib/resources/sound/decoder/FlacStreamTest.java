@@ -48,7 +48,7 @@ class FlacStreamTest {
     }
 
     @Test
-    void rejectsFilesThatAreNotFlac() throws Exception {
+    void rejectsFilesThatAreNotFlac() {
         assertThrows(ResourceException.class, () -> new FlacStream(new byte[]{1, 2, 3, 4, 5, 6, 7, 8}));
         assertThrows(ResourceException.class, () -> new FlacStream(Files.readAllBytes(Paths.get("resources/sounds/selectwav.wav"))));
     }

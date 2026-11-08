@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.lwjgl.opengl.GL11C.glGetError;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class FontLoader extends ResourceLoader {

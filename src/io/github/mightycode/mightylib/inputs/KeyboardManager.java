@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.WindowInfo;
 
 import org.lwjgl.glfw.GLFWCharCallback;

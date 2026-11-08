@@ -1,7 +1,5 @@
 package io.github.mightycode.mightylib.utils;
 
-import static org.lwjgl.opengl.GL11.glGetError;
-import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
 import static org.lwjgl.opengl.GL20.*;
 
 public class Logger {

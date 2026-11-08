@@ -63,7 +63,7 @@ public class Text extends Renderer implements Cloneable {
     }
 
     private boolean shouldNotDrawText(){
-        return font == null || text == null || text.trim().equals("");
+        return font == null || text == null || text.trim().isEmpty();
     }
 
     public void display(){
@@ -107,7 +107,7 @@ public class Text extends Renderer implements Cloneable {
         String clean = (removeEscapeChars) ? text.replace("\n", "") : text;
 
         String result = "";
-        String temp = "";
+        String temp;
 
         Vector2f sizeTaken = new Vector2f();
 

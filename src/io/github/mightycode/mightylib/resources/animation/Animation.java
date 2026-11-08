@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.resources.animation;
 
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Vector2i;
 import org.joml.Vector4f;

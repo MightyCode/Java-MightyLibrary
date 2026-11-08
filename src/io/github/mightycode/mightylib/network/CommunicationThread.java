@@ -50,7 +50,7 @@ public abstract class CommunicationThread extends Thread {
     public boolean isRunning(){ return running; }
 
     public boolean didReceiveMessage() {
-        return receivedMessages.size() != 0;
+        return !receivedMessages.isEmpty();
     }
 
     public final NetworkMessage[] message() {

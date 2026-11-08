@@ -82,9 +82,4 @@ public class TestPreloadScene extends Scene {
         super.display();
         setAndDisplayRealScene();
     }
-
-    @Override
-    public void unload() {
-        super.unload();
-    }
 }

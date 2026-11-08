@@ -1,10 +1,8 @@
 package io.github.mightycode.mightylib.utils.math.geometry;
 
-import io.github.mightycode.mightylib.utils.valueDebug.TableDebug;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-import java.awt.image.AreaAveragingScaleFilter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -174,7 +172,7 @@ public class Polygon {
                 polygonIndices.remove(indexCopy);
             }
 
-            if (earVertices.size() == 0){
+            if (earVertices.isEmpty()){
                 break;
             }
         }

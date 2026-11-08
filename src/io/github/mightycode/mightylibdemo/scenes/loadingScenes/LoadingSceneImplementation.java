@@ -65,8 +65,4 @@ public class LoadingSceneImplementation extends TemplateSceneLoading {
 
         super.setAndDisplayRealScene();
     }
-
-    public void unload() {
-        super.unload();
-    }
 }

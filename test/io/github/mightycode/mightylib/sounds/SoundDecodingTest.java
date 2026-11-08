@@ -42,7 +42,7 @@ class SoundDecodingTest {
     }
 
     @Test
-    void checksTheCancellationBetweenChunks() throws Exception {
+    void checksTheCancellationBetweenChunks() {
         AtomicInteger checks = new AtomicInteger();
         int[] channels = new int[1];
 
