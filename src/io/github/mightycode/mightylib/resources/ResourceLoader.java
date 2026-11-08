@@ -19,6 +19,14 @@ public abstract class ResourceLoader {
     public abstract void create(Map<String, DataType> data);
 
     /**
+     * Data of the files present now (the resource watcher looks for new files). Same as create by default; a loader
+     * whose files are listed by a description can also add the files missing from it, with default settings.
+     */
+    public void discover(Map<String, DataType> data) {
+        create(data);
+    }
+
+    /**
      * Data used in place of a data of this type that failed, is still loading or has an unknown name
      * (Resources.usable, Resources.getResourceOrFallback). Created by the code, named FALLBACK_NAME, it must never fail.
      * Null (default): no fallback, for complex data that can't be replaced safely (maps, JSON...): users get null.

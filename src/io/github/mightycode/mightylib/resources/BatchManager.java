@@ -62,6 +62,12 @@ class BatchManager {
      * The description of a loaded batch changed (reload): its loads reference the new list, the data added are loaded,
      * those removed are released. A description that lists an unknown data keeps the previous list.
      */
+    // New data may match the patterns of the loaded batches
+    void refreshLoaded() {
+        for (String batchName : new ArrayList<>(loadedBatches.keySet()))
+            descriptionChanged(batchName);
+    }
+
     void descriptionChanged(String batchName) {
         List<List<DataType>> loads = loadedBatches.get(batchName);
         if (loads == null)

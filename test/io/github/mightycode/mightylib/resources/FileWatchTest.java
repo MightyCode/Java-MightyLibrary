@@ -173,6 +173,19 @@ class FileWatchTest {
         assertThrows(IllegalArgumentException.class, () -> ResourceSelection.all().withRegex("(["));
     }
 
+    @Test
+    void fileCreatedInATrackedDirectoryIsReported() throws IOException {
+        Path directory = folder.toAbsolutePath();
+        Files.setLastModifiedTime(directory, FileTime.fromMillis(1_000_000));
+        FileChangeDetector detector = detector(Collections.singleton(directory), 0);
+        assertTrue(detector.tick(0, null).isEmpty(), "first look only records the directory");
+
+        write(folder.resolve("new.txt"), "new", 2_000_000);
+        Files.setLastModifiedTime(directory, FileTime.fromMillis(2_000_000));
+
+        assertEquals(Collections.singletonList(directory), detector.tick(100, null));
+    }
+
     // ---- ResourceWatcher ----
 
     private void pump(Resources resources, long milliseconds) throws InterruptedException {
@@ -250,5 +263,72 @@ class FileWatchTest {
 
         watcher.stop();
         assertFalse(watcher.isRunning());
+    }
+
+    // The description file and the source of a data are written one after the other: one reload
+    @Test
+    void changesOfTheFilesOfOneDataMakeASingleReload() throws Exception {
+        FakeLoader fakeLoader = new FakeLoader();
+        Resources resources = newResources(fakeLoader);
+
+        Path description = folder.resolve("a.desc").toAbsolutePath();
+        Path source = folder.resolve("a.src").toAbsolutePath();
+        write(description, "d", 1_000_000);
+        write(source, "s", 1_000_000);
+
+        FakeData a = new FakeData(THREAD_CONTEXT, "a");
+        a.sourcePath = description.toString();
+        a.extraSourcePath = source.toString();
+        fakeLoader.add(a);
+
+        Files.write(folder.resolve("batchs").resolve("level.batch"),
+                ("{\"batchs\":[{\"type\":\"Fake\",\"files\":[\"a\"],\"regex\":[]}]}")
+                        .getBytes(StandardCharsets.UTF_8));
+        resources.init();
+        resources.loadAllOfType(BatchResources.class);
+        resources.loadBatch("level");
+        pumpUntilIdle(resources);
+        int version = a.getVersion();
+
+        watcher = resources.watcher();
+        watcher.configure(ResourceWatcher.Mode.POLLING, 50);
+        watcher.watchType(FakeData.class);
+        pump(resources, 1500);
+
+        write(description, "d changed", 2_000_000);
+        pump(resources, 150);
+        write(source, "s changed", 2_000_000);
+
+        long end = System.currentTimeMillis() + 10_000;
+        while (a.getVersion() == version && System.currentTimeMillis() < end)
+            pump(resources, 50);
+        pump(resources, 1000);
+        pumpUntilIdle(resources);
+
+        assertEquals(1, watcher.getReloadCount());
+        assertEquals(version + 1, a.getVersion());
+    }
+
+    // A file created after the start gives a new data, usable by name
+    @Test
+    void newFileGivesANewData() throws Exception {
+        FakeLoader fakeLoader = new FakeLoader();
+        Resources resources = newResources(fakeLoader);
+        resources.init();
+
+        watcher = resources.watcher();
+        watcher.configure(ResourceWatcher.Mode.POLLING, 50);
+        watcher.watchType(FakeData.class);
+        pump(resources, 1500); // the folders are tracked
+
+        FakeData late = new FakeData(THREAD_CONTEXT, "late");
+        fakeLoader.add(late);
+        write(folder.resolve("late.dat"), "late", 2_000_000);
+
+        long end = System.currentTimeMillis() + 10_000;
+        while (resources.getResource(FakeData.class, "late") == null && System.currentTimeMillis() < end)
+            pump(resources, 50);
+
+        assertSame(late, resources.getResource(FakeData.class, "late"));
     }
 }
