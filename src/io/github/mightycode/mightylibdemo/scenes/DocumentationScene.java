@@ -58,7 +58,7 @@ public class DocumentationScene extends Scene {
      * Constructor: called by the code that asks for the scene, e.g. new DocumentationScene() in MenuScene.
      * The scene is not active yet and the previous scene is still displayed:
      * only store parameters here, never load or create GL objects.
-     * The parent constructor already gives access to resources, glResources, shaderManager and mainContext.
+     * The parent constructor already gives access to resources, glResources and mainContext.
      */
     public DocumentationScene() {
         super();

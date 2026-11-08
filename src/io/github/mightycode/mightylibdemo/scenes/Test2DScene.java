@@ -70,7 +70,7 @@ public class Test2DScene extends Scene {
         atlas.addTexture("painting");
         atlas.setPreloaded();
 
-        Resources.getInstance().addPreLoadedResource(atlas);
+        resources.addPreLoadedResource(atlas);
     }
 
     public void launch(String[] args) {
@@ -174,7 +174,7 @@ public class Test2DScene extends Scene {
         hexagonRenderer2 = new HexagonRenderer("texture2D");
         hexagonRenderer2.setMainTextureChannel(glResources.addElementOrReturnIfPresent(
                 Texture.class,
-                new Texture(Resources.getInstance().getResource(TextureData.class,
+                new Texture(resources.getResource(TextureData.class,
                         "hexagon")), "hexagon"));
         hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         hexagonRenderer2.setPosition(new Vector2f(0,0));

@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+
 import io.github.mightycode.mightylib.resources.ResourceSelection;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
@@ -19,12 +21,12 @@ public class ReloadGenCom extends BaseCommand {
 
         ResourceSelection selection;
         try {
-            selection = ResourceSelection.parse(args, 1);
+            selection = ResourceSelection.parse(Views.engine().resources(), args, 1);
         } catch (IllegalArgumentException e) {
             return CommandResult.error(e.getMessage());
         }
 
-        int count = Resources.getInstance().reload(selection);
+        int count = Views.engine().resources().reload(selection);
         return CommandResult.ok("Reload " + count + " data (" + selection + ")");
     }
 

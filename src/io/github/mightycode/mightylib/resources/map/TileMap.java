@@ -228,7 +228,7 @@ public class TileMap extends SingleSourceDataType {
 
     @Override
     protected boolean internLoad() {
-        return layers != null && mapSize.x != 0 && mapSize.y != 0 && tileSetAtlas.build();
+        return layers != null && mapSize.x != 0 && mapSize.y != 0 && tileSetAtlas.build(resources());
     }
 
     @Override

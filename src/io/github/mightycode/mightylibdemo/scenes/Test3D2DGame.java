@@ -101,7 +101,7 @@ public class Test3D2DGame extends Scene {
         gameRenderer = new CubeRenderer("texture3D");
         gameRenderer.setMainTextureChannel(
                 game2DRender
-                /*Resources.getInstance().getResource(Texture.class, "error")*/);
+                );
 
         gameRenderer.setPosition(new Vector3f(-40f, 0.0f, 0f));
         gameRenderer.setScale(new Vector3f(10));

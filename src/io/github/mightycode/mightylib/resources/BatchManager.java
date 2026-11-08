@@ -307,8 +307,8 @@ class BatchManager {
         }
     }
 
-    private static Class<? extends DataType> getClassFromBatchName(String batchName, String name) {
-        Class<? extends DataType> type = Resources.getClassFromName(name);
+    private Class<? extends DataType> getClassFromBatchName(String batchName, String name) {
+        Class<? extends DataType> type = resources.getClassFromName(name);
         if (type == null)
             throw new RuntimeException("Unknown resource type: " + name + " in batch: " + batchName);
 

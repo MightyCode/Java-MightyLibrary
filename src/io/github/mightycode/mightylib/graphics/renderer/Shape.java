@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.renderer;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -46,13 +47,15 @@ public class Shape {
     private int glDrawMode;
 
     protected Shader shader;
+    // Belongs to the engine of the view that creates it
+    private final Resources resources = Views.engine().resources();
     // The shader if loaded, otherwise the fallback one (failed or still loading)
-    public Shader getShader() { return Resources.getInstance().usable(Shader.class, shader); }
+    public Shader getShader() { return resources.usable(Shader.class, shader); }
 
     public Shape(String shaderName, boolean useEbo) {
         setDrawMode(EDrawMode.Triangles);
 
-        shader = Resources.getInstance().getResourceOrFallback(Shader.class, shaderName);
+        shader = resources.getResourceOrFallback(Shader.class, shaderName);
         setDimensionTo2D(this.shader.isDimension2DShader());
 
         verticesToDraw = 0;

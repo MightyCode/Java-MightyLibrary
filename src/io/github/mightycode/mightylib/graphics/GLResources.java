@@ -2,7 +2,9 @@ package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.IGLElementSink;
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.resources.texture.TexturePlaceholders;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import org.json.JSONObject;
 
@@ -24,26 +26,11 @@ import java.util.Queue;
 public class GLResources implements IGLElementSink {
     private static final long NANO_IN_MILLISECOND = 1000000L;
 
-    private static GLResources singletonInstance = null;
-
-    // maxMillisecondsPerFrame: cap of the time spent per frame, -1 to only use the time left in the frame
-    public static GLResources createInstance(int maxMillisecondsPerFrame) {
-        if (singletonInstance == null) {
-            singletonInstance = new GLResources(maxMillisecondsPerFrame);
-        }
-
-        return singletonInstance;
-    }
-
-    public static GLResources getInstance(){
-        if (singletonInstance == null){
-            throw new RuntimeException("No GL resource instance created!");
-        }
-
-        return singletonInstance;
-    }
-
     private final long maxNanosPerFrame;
+
+    // The CPU data these elements are made from (null in the tests without data)
+    private final Resources cpuResources;
+    private final TexturePlaceholders placeholders = new TexturePlaceholders();
 
     // Elements waiting to be loaded, in order; an element is in one of them (moved in O(1) when its urgency changes)
     private final LinkedHashSet<GLElement> urgentToLoad = new LinkedHashSet<>();
@@ -53,7 +40,9 @@ public class GLResources implements IGLElementSink {
 
     private final HashMap<Class<? extends GLElement>, HashMap<String, GLElement>> resources;
 
-    private GLResources(int maxMillisecondsPerFrame) {
+    // maxMillisecondsPerFrame: cap of the time spent per frame, -1 to only use the time left in the frame
+    public GLResources(Resources cpuResources, int maxMillisecondsPerFrame) {
+        this.cpuResources = cpuResources;
         maxNanosPerFrame = maxMillisecondsPerFrame < 0 ? Long.MAX_VALUE : maxMillisecondsPerFrame * NANO_IN_MILLISECOND;
 
         resources = new HashMap<>();
@@ -153,6 +142,7 @@ public class GLResources implements IGLElementSink {
             return element;
         }
 
+        T.attachTo(this);
         resources.computeIfAbsent(type, key -> new HashMap<>()).put(name, T);
         T.setName(name);
         T.addReference(urgent);
@@ -168,7 +158,18 @@ public class GLResources implements IGLElementSink {
             urgentToLoad.add(element);
     }
 
+    // Textures bound while a texture is not loaded
+    public TexturePlaceholders placeholders() {
+        return placeholders;
+    }
+
     // ---- IGLElementSink: the GL elements held by the batches ----
+
+    // The texture of the fallback data, shown in place of the textures that failed
+    @Override
+    public void fallbackDataLoaded() {
+        addElementOrReturnIfPresent(Texture.class, new Texture(cpuResources, Resources.FALLBACK_NAME), Resources.FALLBACK_NAME);
+    }
 
     @Override
     public GLElement acquire(DataType data, boolean urgent) {
@@ -293,6 +294,6 @@ public class GLResources implements IGLElementSink {
         preloadToLoad.clear();
         elementToReload.clear();
         TextureUploader.releaseBuffers();
-        Texture.DeletePlaceholder();
+        placeholders.delete();
     }
 }

@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.main.Context;
@@ -42,7 +42,7 @@ public class ScrollList {
     public ScrollList(Context context, float x, float y, float width, float height,
                       float rowHeight, String fontName, float fontSize) {
         this.context = context;
-        this.camera = ShaderManager.getInstance().getMainCamera2D();
+        this.camera = Views.current().camera2D();
 
         this.x = x;
         this.y = y;

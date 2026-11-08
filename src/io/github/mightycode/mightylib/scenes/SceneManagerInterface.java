@@ -8,6 +8,7 @@ public class SceneManagerInterface {
     private String[] changeArgs;
     private Scene newScene;
 
+    private final Resources resources;
     private final Supplier<TemplateSceneLoading> defaultLoadingScene;
 
     // Scene whose batches are loaded in advance (preloadScene)
@@ -16,7 +17,8 @@ public class SceneManagerInterface {
     boolean WantQuit;
     int ExitStatus;
 
-    SceneManagerInterface(Supplier<TemplateSceneLoading> defaultLoadingScene){
+    SceneManagerInterface(Resources resources, Supplier<TemplateSceneLoading> defaultLoadingScene){
+        this.resources = resources;
         this.defaultLoadingScene = defaultLoadingScene;
         reset();
     }
@@ -46,7 +48,7 @@ public class SceneManagerInterface {
 
         preloadedScene = scene;
         for (String batch : scene.getInvolvedBatch())
-            Resources.getInstance().preloadBatch(batch);
+            resources.preloadBatch(batch);
     }
 
     // What the preload loaded stays only if something else wants it (the batches of the scene set since)
@@ -55,7 +57,7 @@ public class SceneManagerInterface {
             return;
 
         for (String batch : preloadedScene.getInvolvedBatch())
-            Resources.getInstance().cancelPreloadBatch(batch);
+            resources.cancelPreloadBatch(batch);
 
         preloadedScene = null;
     }

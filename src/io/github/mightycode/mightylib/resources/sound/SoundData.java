@@ -113,7 +113,7 @@ public class SoundData extends SingleSourceDataType {
     @Override
     public void internUnload() {
         if (this.bufferId != -1) {
-            SoundManager.DetachBuffer(bufferId);
+            resources().detachSoundBuffer(bufferId);
             alDeleteBuffers(this.bufferId);
             int error = alGetError();
             if (error != AL_NO_ERROR)

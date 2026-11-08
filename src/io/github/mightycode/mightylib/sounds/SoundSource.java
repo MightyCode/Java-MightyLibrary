@@ -11,6 +11,7 @@ public class SoundSource {
     private SoundData soundData;
     private int sourceId;
     // Buffer given to the source: the sound, or the fallback while the sound isn't loaded (0 = none)
+    private final Resources resources;
     private int boundBufferId;
     private boolean loop, relative;
 
@@ -20,7 +21,8 @@ public class SoundSource {
 
     private boolean hadPlayed;
 
-    SoundSource(String gainNode) {
+    SoundSource(Resources resources, String gainNode) {
+        this.resources = resources;
         this.soundData = null;
         this.sourceId  = -1;
         this.gain = 1;
@@ -41,7 +43,7 @@ public class SoundSource {
         stop();
 
         // Unknown name: the fallback sound
-        this.soundData = Resources.getInstance().getResourceOrFallback(SoundData.class, soundName);
+        this.soundData = resources.getResourceOrFallback(SoundData.class, soundName);
         if (soundData == null)
             return false;
 
@@ -51,7 +53,7 @@ public class SoundSource {
 
     // The sound if loaded, otherwise the fallback (failed or still loading): checked again at each play
     private void bindUsableBuffer() {
-        SoundData usable = Resources.getInstance().usable(SoundData.class, soundData);
+        SoundData usable = resources.usable(SoundData.class, soundData);
         int bufferId = usable == null || !usable.isLoaded() ? 0 : usable.getBufferId();
 
         if (bufferId != boundBufferId) {

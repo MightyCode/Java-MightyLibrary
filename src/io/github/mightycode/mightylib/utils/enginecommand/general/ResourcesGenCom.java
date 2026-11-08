@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+
 import io.github.mightycode.mightylib.resources.ResourceSelection;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
@@ -18,7 +20,7 @@ public class ResourcesGenCom extends BaseCommand {
             if (args.length < 3)
                 return CommandResult.error("resources batch <name>");
 
-            return CommandResult.ok("What the batch loads", Resources.getInstance().describeBatch(args[2]));
+            return CommandResult.ok("What the batch loads", Views.engine().resources().describeBatch(args[2]));
         }
 
         // For tests and debugging: load a batch in advance, then cancel it
@@ -27,9 +29,9 @@ public class ResourcesGenCom extends BaseCommand {
                 return CommandResult.error("resources " + args[1] + " <batch>");
 
             if (args[1].equals("preload"))
-                Resources.getInstance().preloadBatch(args[2]);
+                Views.engine().resources().preloadBatch(args[2]);
             else
-                Resources.getInstance().cancelPreloadBatch(args[2]);
+                Views.engine().resources().cancelPreloadBatch(args[2]);
 
             return CommandResult.ok(args[1] + " " + args[2]);
         }
@@ -37,15 +39,15 @@ public class ResourcesGenCom extends BaseCommand {
         if (args.length > 1) {
             ResourceSelection selection;
             try {
-                selection = ResourceSelection.parse(args, 1);
+                selection = ResourceSelection.parse(Views.engine().resources(), args, 1);
             } catch (IllegalArgumentException e) {
                 return CommandResult.error(e.getMessage());
             }
 
-            return CommandResult.ok("Detail of the selected data", Resources.getInstance().describe(selection));
+            return CommandResult.ok("Detail of the selected data", Views.engine().resources().describe(selection));
         }
 
-        return CommandResult.ok("Resources by type and state of the loading pipeline", Resources.getInstance().describe());
+        return CommandResult.ok("Resources by type and state of the loading pipeline", Views.engine().resources().describe());
     }
 
     @Override

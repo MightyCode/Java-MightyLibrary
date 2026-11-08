@@ -34,11 +34,11 @@ public class FontFace extends SingleSourceDataType {
         fontFile = otherFile;
     }
 
-    FontFace(String fontFaceName, String textureName, String infoPath) {
+    FontFace(Resources resources, String fontFaceName, String textureName, String infoPath) {
         super(TYPE_SET_UP.THREAD_CONTEXT, fontFaceName, PATH + infoPath);
 
         name = fontFaceName;
-        fontAtlas = Resources.getInstance().getResource(TextureData.class, textureName);
+        fontAtlas = resources.getResource(TextureData.class, textureName);
         addDependency(fontAtlas);
 
         fontFile = new FontFile(PATH + infoPath);

@@ -53,7 +53,7 @@ public final class ResourceSelection {
      *
      * @throws IllegalArgumentException unknown type, invalid regex, or nothing at args[from]
      */
-    public static ResourceSelection parse(String[] args, int from) {
+    public static ResourceSelection parse(Resources resources, String[] args, int from) {
         if (args.length <= from)
             throw new IllegalArgumentException("Missing type: all or the name of a resource type");
 
@@ -61,7 +61,7 @@ public final class ResourceSelection {
         if (args[from].equalsIgnoreCase("all")) {
             selection = all();
         } else {
-            Class<? extends DataType> type = Resources.getClassFromName(args[from]);
+            Class<? extends DataType> type = resources.getClassFromName(args[from]);
             if (type == null)
                 throw new IllegalArgumentException("Unknown resource type ->" + args[from] + "<-");
             selection = ofType(type);

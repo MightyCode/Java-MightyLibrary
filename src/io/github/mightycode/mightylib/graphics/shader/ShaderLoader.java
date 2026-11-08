@@ -21,13 +21,15 @@ public class ShaderLoader extends ResourceLoader {
      */
     private final Map<String, String> shaderLibrary;
 
-    private final ShaderManager shaderManager = ShaderManager.getInstance();
+    private final ShaderManager shaderManager;
+
     @Override
     public Class<? extends DataType> getType() {
         return Shader.class;
     }
 
-    public ShaderLoader() {
+    public ShaderLoader(ShaderManager shaderManager) {
+        this.shaderManager = shaderManager;
         shaderLibrary = new ConcurrentHashMap<>();
     }
 

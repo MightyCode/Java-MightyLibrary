@@ -35,7 +35,7 @@ class ResourceSelectionTest {
 
         FakeLoader fakeLoader = new FakeLoader();
         JSONLoader jsonLoader = new JSONLoader();
-        resources = Resources.createForTests(new Resources.BatchResourcesMethod("unused"), 2,
+        resources = new Resources(new Resources.BatchResourcesMethod("unused"), 2,
                 Arrays.asList(fakeLoader, jsonLoader, new BatchLoader(jsonLoader)));
 
         grass = new FakeData(THREAD_CONTEXT, "grass");
@@ -74,20 +74,20 @@ class ResourceSelectionTest {
 
     @Test
     void parseBuildsTheSelectionFromWords() {
-        ResourceSelection selection = ResourceSelection.parse(new String[]{"cmd", "Fake", "grass,x", "re:tile_.*"}, 1);
+        ResourceSelection selection = ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "grass,x", "re:tile_.*"}, 1);
         assertTrue(selection.matches(FakeData.class, grass));
         assertTrue(selection.matches(FakeData.class, sand));
 
-        assertTrue(ResourceSelection.parse(new String[]{"cmd", "all"}, 1).matches(FakeData.class, grass));
-        assertFalse(ResourceSelection.parse(new String[]{"cmd", "all", "re:tile_.*"}, 1)
+        assertTrue(ResourceSelection.parse(resources, new String[]{"cmd", "all"}, 1).matches(FakeData.class, grass));
+        assertFalse(ResourceSelection.parse(resources, new String[]{"cmd", "all", "re:tile_.*"}, 1)
                 .matches(FakeData.class, grass));
     }
 
     @Test
     void parseRejectsWhatIsWrong() {
-        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(new String[]{"cmd"}, 1));
-        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(new String[]{"cmd", "Nope"}, 1));
-        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(new String[]{"cmd", "all", "re:(["}, 1));
+        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(resources, new String[]{"cmd"}, 1));
+        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(resources, new String[]{"cmd", "Nope"}, 1));
+        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(resources, new String[]{"cmd", "all", "re:(["}, 1));
     }
 
     @Test
@@ -95,7 +95,7 @@ class ResourceSelectionTest {
         int grassVersion = grass.getVersion();
         int sandVersion = sand.getVersion();
 
-        assertEquals(2, resources.reload(ResourceSelection.parse(new String[]{"cmd", "Fake", "re:tile_.*"}, 1)));
+        assertEquals(2, resources.reload(ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "re:tile_.*"}, 1)));
         pump();
 
         assertEquals(grassVersion, grass.getVersion());
@@ -105,12 +105,12 @@ class ResourceSelectionTest {
 
     @Test
     void reloadingNothingIsNotAnError() {
-        assertEquals(0, resources.reload(ResourceSelection.parse(new String[]{"cmd", "Fake", "nothing"}, 1)));
+        assertEquals(0, resources.reload(ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "nothing"}, 1)));
     }
 
     @Test
     void describeListsTheSelectedData() {
-        JSONObject result = resources.describe(ResourceSelection.parse(new String[]{"cmd", "Fake", "grass"}, 1));
+        JSONObject result = resources.describe(ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "grass"}, 1));
 
         assertEquals(1, result.getInt("count"));
         JSONObject item = result.getJSONArray("data").getJSONObject(0);

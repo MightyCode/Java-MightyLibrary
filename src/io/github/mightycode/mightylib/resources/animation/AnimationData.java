@@ -54,7 +54,7 @@ public class AnimationData extends SingleSourceDataType {
 
     @Override
     protected boolean internLoad() {
-        return framesData != null && Resources.getInstance().isExistingResource(TextureData.class, textureName);
+        return framesData != null && resources().isExistingResource(TextureData.class, textureName);
     }
 
 

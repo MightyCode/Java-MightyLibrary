@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.utils.math.UUID;
@@ -17,8 +18,8 @@ import org.joml.Vector3f;
 import java.util.HashMap;
 
 public class Renderer extends UUID implements IDisplayable {
-    protected GLResources glResources = GLResources.getInstance();
-    protected Resources resources = Resources.getInstance();
+    protected GLResources glResources = Views.engine().glResources();
+    protected Resources resources = Views.engine().resources();
 
     protected Camera referenceCamera;
 
@@ -59,20 +60,20 @@ public class Renderer extends UUID implements IDisplayable {
         if (shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1){
             if (shape.is2DPurpose())
                 shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
-                        ShaderManager.getInstance().getMainCamera2D().getProjection());
+                        Views.current().camera2D().getProjection());
             else
                 shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
-                        ShaderManager.getInstance().getMainCamera3D().getView());
+                        Views.current().camera3D().getView());
         }
 
         if (shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1){
             if (shape.is2DPurpose()) {
                 shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
-                        ShaderManager.getInstance().getMainCamera2D().getView());
+                        Views.current().camera2D().getView());
             }
             else
                 shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
-                        ShaderManager.getInstance().getMainCamera3D().getProjection());
+                        Views.current().camera3D().getProjection());
         }
 
         applyModel();
@@ -266,7 +267,7 @@ public class Renderer extends UUID implements IDisplayable {
             return;
 
         addTextureChannel(
-                GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture(name), name),
+                glResources.addElementOrReturnIfPresent(Texture.class, new Texture(resources, name), name),
                 nameOfUniform, channelNumber);
     }
 

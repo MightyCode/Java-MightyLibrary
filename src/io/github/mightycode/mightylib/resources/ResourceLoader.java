@@ -9,7 +9,29 @@ public abstract class ResourceLoader {
             "batchs"
     };
 
+    // The Resources registering the data of this loader, set by Resources.init (a loader serves one Resources)
+    private volatile Resources owner;
+
     public ResourceLoader(){
+    }
+
+    final void attachTo(Resources resources) {
+        if (owner == resources)
+            return;
+
+        if (owner != null)
+            throw new IllegalStateException("The loader " + getResourceNameType() + " already serves another Resources");
+
+        owner = resources;
+    }
+
+    // The Resources this loader serves: fails until Resources.init attached it
+    protected final Resources resources() {
+        Resources resources = owner;
+        if (resources == null)
+            throw new IllegalStateException("The loader " + getResourceNameType() + " is not attached to a Resources");
+
+        return resources;
     }
 
     public abstract Class<? extends DataType> getType();

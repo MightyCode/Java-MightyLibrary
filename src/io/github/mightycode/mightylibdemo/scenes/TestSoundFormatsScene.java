@@ -69,7 +69,7 @@ public class TestSoundFormatsScene extends Scene {
 
     // Same test as BackgroundlessButton: the box of the text with a margin, in the coordinates of the 2D camera
     private int lineUnderMouse() {
-        Vector2f mouse = ShaderManager.getInstance().getMainCamera2D().transformPosition(mainContext.getMouseManager().pos());
+        Vector2f mouse = main2DCamera.transformPosition(mainContext.getMouseManager().pos());
 
         for (int i = 0; i < lines.size(); ++i) {
             Vector2f position = lines.get(i).leftUpPosition();
@@ -88,7 +88,7 @@ public class TestSoundFormatsScene extends Scene {
         info.name = SOUNDS[index];
         info.gainNode = "noise";
         info.gain = 0.2f;
-        SoundManager.getInstance().createSoundSource(info);
+        engine().soundManager().createSoundSource(info);
 
         lastPlayed = index;
     }

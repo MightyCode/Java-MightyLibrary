@@ -20,10 +20,10 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - **Jar léger** : dépendances (LWJGL et natives, JOML, org.json, JBox2D…) déclarées dans le pom, pas embarquées.
 - **Distribution** : `mvn install`, puis JitPack ou GitHub Packages. **Versions** sémantiques par release.
 - **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
-- **API publique** : **à discuter avant toute décision** (périmètre, changements cassants comme les singletons avant une 1.0).
+- **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0).
 
 ### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading` et les singletons modifiés de partout.
+- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading`.
 - **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
 - **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
 
