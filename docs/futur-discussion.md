@@ -18,7 +18,6 @@ Déjà dans le moteur (ne pas reproposer) : A*, Dijkstra, tweens, son positionn�
 - **Journal fichier et rapports de plantage**.
 - **CI** (GitHub Actions) : compiler, tester, publier le jar.
 - **Documentation de la bibliothèque** : démarrage rapide, exemples, Javadoc de l'API publique.
-- **Licences et crédits** (dépendances, assets ; sac à dos Sketchfab du paquet de démo).
 
 ## Qualité
 - **Aucune allocation par frame** (pools, réutilisation) comme règle générale, pas seulement pour les particules.

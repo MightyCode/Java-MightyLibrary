@@ -1,6 +1,6 @@
 # Licences de la bibliothèque
 
-État au 2026-11-08, pour la branche `sound-decoding`. Vérifié dans les `pom.xml` des dépendances (dépôt Maven local), les dépôts officiels et les fichiers du projet. **Ce document n'est pas un avis juridique** : les points marqués « à vérifier » le sont réellement.
+État au 2026-11-08. Vérifié dans les `pom.xml` des dépendances (dépôt Maven local), les dépôts officiels et les fichiers du projet. **Ce document n'est pas un avis juridique** : les points marqués « à vérifier » le sont réellement.
 
 ## Contexte : projet gratuit, usage payant éventuel plus tard
 

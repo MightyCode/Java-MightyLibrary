@@ -102,7 +102,6 @@ Pas fixe découplé : chaque itération fait **soit** un tick (`update()` + `pos
 
 ## Pièges connus (non corrigés)
 - Une `TileMap` relue perd les changements faits par le code (`setTileType`).
-- `Resources.getInstance()` crée silencieusement une instance avant `createInstance`.
 - 2D sans batching : chaque `Shape2DRenderer`/`Animation2DRenderer`/`Text` a VAO/VBO/EBO et draw call, avec `glUseProgram`, uniforms et depth test à chaque dessin.
 - `Shape.updateVbo` réutilise le buffer à taille égale (`glBufferSubData`), sinon réalloue ; les `calculate*()` allouent un `float[]` à chaque appel.
 - `TileMapRenderer` : une animation de tuile ne réécrit que ses UV, mais toute modification de carte (`hasBeenUpdated()`) reconstruit tout.
