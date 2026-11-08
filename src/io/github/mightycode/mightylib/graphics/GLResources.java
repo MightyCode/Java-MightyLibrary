@@ -83,6 +83,9 @@ public class GLResources {
         while (reloadsToTry > 0 && (!stepDone || System.nanoTime() < deadline)) {
             --reloadsToTry;
             GLElement element = elementToReload.poll();
+            // A step can release other elements (a model replacing its textures): the queue may be shorter than counted
+            if (element == null)
+                break;
 
             long remainingNanos = Math.max(0, deadline - System.nanoTime());
             if (!element.reloadByResource((int) (remainingNanos / NANO_IN_MILLISECOND)))
