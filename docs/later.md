@@ -11,7 +11,7 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - `TestGamma` : dégradés, fondus alpha, éclairage, activé/désactivé côte à côte.
 
 ## Tests de non-régression
-En place : JUnit 5 (`test/`), `Resources*Test` (`ResourcesTestBase`, `FakeData`, `Resources.createForTests`). À étendre : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
+À étendre (base JUnit 5 : `architecture.md`, liste dans `CLAUDE.md`) : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
@@ -28,7 +28,7 @@ En place : JUnit 5 (`test/`), `Resources*Test` (`ResourcesTestBase`, `FakeData`,
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
-- **Identifiants à espace de noms** (`jeu:slime`) pour ressources, commandes, scènes, actions : aujourd'hui noms de ressources globaux et IDs d'action `int` statiques (`InputManager.getAndIncrementId`) → collisions.
+- **Identifiants à espace de noms** (`jeu:slime`) pour ressources, commandes, scènes, actions : aujourd'hui noms de ressources globaux → collisions (IDs d'action : `current.md`).
 - La liste des scènes du menu de la démo (`MenuScene.createSceneEntries`) devra venir du registre de scènes par nom, pas d'une liste écrite en dur.
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
 - **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
@@ -105,22 +105,22 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
 - **Langues** (à la Flutter) : `resources/lang/<langue>.json` chargé comme `DataType` ; paramètres `{nom}`, pluriels simples ; langue de repli, log des clés manquantes ; script `tools/` générant des constantes typées ; `Text` liable à une clé, mis à jour au changement de langue ; clés à espace de noms.
 - **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
 - **Tailles automatiques** : unité relative à la résolution virtuelle, ancres et pourcentages, recalcul au redimensionnement.
-- **Padding du texte** : reprendre `dev` `40f4d8a` (`Text.setPadding(left, up, right, down)`, scène `TestGUI`). À corriger : le commentaire dit « gauche, droite, haut, bas », le code fait « gauche, haut, droite, bas » ; Left/Up font `-= padding` en supposant `textReference` à 0, à vérifier.
+- **Padding du texte** : reprendre `40f4d8a` (branche `archive-dev-2025`) (`Text.setPadding(left, up, right, down)`, scène `TestGUI`). À corriger : le commentaire dit « gauche, droite, haut, bas », le code fait « gauche, haut, droite, bas » ; Left/Up font `-= padding` en supposant `textReference` à 0, à vérifier.
 
 ## Rendu 2D : formes manquantes et regroupement des dessins
 - Existant : rectangle, ellipse, hexagone, polygone (`renderer/_2D/shape`), renderers de debug (graphes, nœuds, matrices).
 - À ajouter : segments/polylignes épais, contours de toutes les formes, cercle, triangle, rectangle arrondi, arc/secteur, points, flèches, grille ; API de dessin immédiat pour le debug (ligne de A à B cette frame).
-- **Point de départ sur `dev`** (absent de `master`) :
+- **Point de départ sur `archive-dev-2025`** (absent de `dev`) :
   - `437b7ea` : `StrokeModule` (activation, couleur, taille du contour par valeurs de shader), contour dans le shader de l'ellipse, `Renderer.getShaderValue`/`hasShaderValue`, `Boolean`/`String` dans `ShaderValue`. Défauts : Java envoie `strokeSize` mais le shader lit `strokeSizePercent` (`in`, pas `uniform`) → contour probablement cassé ; `getSizePercent` lit la mauvaise clé ; faute `geEnabled` ; contour en % du rayon inégal sur une ellipse aplatie → épaisseur en pixels.
   - `983c18c` (« Temporary ») : `AdvancedRectangle`, rectangle arrondi par SDF avec rotation et anticrénelage (`fwidth` + `smoothstep`), contour commenté. Le SDF peut servir de base aux contours, cercles, rectangles arrondis. Ne pas reprendre ses changements de `Shader.java` (vérification des uniforms désactivée, log à supprimer).
-  - Ensuite supprimer `dev` et `devShader` (local et `origin`) ; `devShader` (`b50dd27`) est déjà couvert par `master`.
+  - Ensuite supprimer `archive-dev-2025` et `devShader` (local et `origin`) ; `devShader` (`b50dd27`) est déjà couvert par `dev`.
 - **Regroupement des dessins** (un appel par texture + shader ; complète `TextureDataAtlas`). Comparer sur mesures (`stats` : `drawCallsPerFrame`, temps CPU) :
   - **Batch** (`SpriteBatch`) : sommets transformés sur CPU dans un VBO dynamique ; texte et formes variées.
   - **Instancing** (quad + attributs par instance, `glVertexAttribDivisor`, `glDrawElementsInstanced`) : sprites et particules.
   - Remplissage par frame efficace (`glMapBufferRange`, `glBufferSubData`).
 
 ## Rendu SVG
-Après le rendu 2D et la reprise de `dev` (contours épais et anticrénelage communs).
+Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et anticrénelage communs).
 - Viser le noyau des profils légers (SVG Tiny/Native, NanoSVG) : chemins (segments, Bézier) remplis ou tracés ; texte converti en chemins à l'export.
 - Sous-ensemble : chemins et formes de base, remplissage et contour unis, opacité, transformations, `viewBox` ; plus tard dégradés. Hors champ : texte, CSS, filtres, masques, SMIL.
 - Approche (à confirmer) : `SVGData` (`DataType`, workers, NanoSVG de LWJGL) aplatit et triangule remplissages et contours (épaisseur, jointures, extrémités) ; `SVGRenderer extends Renderer` + shader `svg` ; un appel par SVG ; anticrénelage MSAA ou bande de fondu. Plus tard si besoin : courbes dans le fragment shader (Loop-Blinn, SDF).
@@ -138,7 +138,7 @@ Après le rendu 2D et la reprise de `dev` (contours épais et anticrénelage com
   - Vibrations, gyroscope : absents de GLFW (SDL ou XInput si besoin).
   - Icônes de boutons selon le modèle (Xbox, PlayStation, Switch) d'après nom/GUID.
 
-## Son : formats
+## Son : streaming
 Streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
