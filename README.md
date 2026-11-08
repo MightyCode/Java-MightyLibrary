@@ -8,7 +8,8 @@ A library to create a game.
 - Chargement et déchargement de ressources par bloc. ✅
 - Support des fichiers pratiques comme json, csv. ✅
 - Chargement de fichiers atlas et de fichiers map (format tiled). ✅
-- Chargment threadé des ressources + parrallélisation. ❌
+- Chargement threadé des ressources + parallélisation. ✅
+- Rechargement à chaud des ressources, placeholders en cas d'erreur, préchargement de la scène suivante. ✅
 
 **Graphiques :**
 - Support shaders. ✅
@@ -39,18 +40,18 @@ A library to create a game.
 
 **Entrées :**
 - Interface clavier / souris complète ✅
-- Interface manette ❌
+- Interface manette ✅
 - Chargement des inputs utilisées par l'app via fichier ❌
 - Prefab scene pour changer les touches ❌
 
 **Son :**
-- Chargement fichier wav ✅
+- Chargement fichier ogg ✅ (le WAV n'est plus chargé, voir `docs/later.md`)
 - Gestion simple des sources 2D et 3D ✅
 - Arbre de gain + chargement via fichier ✅
 
 **Utilitaires :**
 - Support toute résolution ✅
 - Fonctions tweenings ✅
-- Scènes threadés pour un pré-chargement de resources ✅
+- Chargement des ressources par workers et préchargement de la scène suivante ✅
 - Système de detection de collision basique ✅
 - Intégration de box2D pour une utilisation potentielle ✅
