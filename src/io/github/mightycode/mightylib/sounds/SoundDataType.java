@@ -86,7 +86,12 @@ public class SoundDataType {
         if (Files.isReadable(path)) {
             try (SeekableByteChannel fc = Files.newByteChannel(path)) {
                 buffer = createByteBuffer((int) fc.size() + 1);
-                while (fc.read(buffer) != -1) ;
+                // Stops at the end of the file, or once the buffer is full: a file growing meanwhile (being written)
+                // would otherwise make read return 0 forever
+                int read;
+                do {
+                    read = fc.read(buffer);
+                } while (read != -1 && buffer.hasRemaining());
             }
         } else {
             // Neither a readable file nor in the classpath: a clear error rather than a NullPointerException
