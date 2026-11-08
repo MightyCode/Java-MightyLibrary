@@ -98,17 +98,24 @@ public final class Screenshot {
         width = widthBuffer.get(0);
         height = heightBuffer.get(0);
 
-        ByteBuffer pixels = BufferUtils.createByteBuffer(width * height * 4);
-        glReadBuffer(GL_BACK);
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
-        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
         List<Request> capturedRequests = new ArrayList<>();
         for (Request request : requests) {
             if (request.windowId == windowId)
                 capturedRequests.add(request);
         }
         requests.removeAll(capturedRequests);
+
+        // A minimized window has no image
+        if (width <= 0 || height <= 0) {
+            for (Request request : capturedRequests)
+                request.result.completeExceptionally(new IOException("The window is minimized, it has no image"));
+            return;
+        }
+
+        ByteBuffer pixels = BufferUtils.createByteBuffer(width * height * 4);
+        glReadBuffer(GL_BACK);
+        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 
         // Encoding a PNG is slow, it must not slow down the game
         Thread encoder = new Thread(() -> {
