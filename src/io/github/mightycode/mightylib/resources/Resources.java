@@ -298,7 +298,7 @@ public class Resources {
         if (data.reloadOf != null)
             return data.reloadOf.reloadCopy == data && isWanted(data.reloadOf);
 
-        return !shuttingDown && !data.deleteWanted && !data.notReferenced();
+        return !shuttingDown && !data.deleteWanted && data.isReferenced();
     }
 
     void update(DataType data) {

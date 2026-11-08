@@ -116,7 +116,7 @@ abstract class ResourcesTestBase {
         for (FakeData data : all) {
             String name = data.getDataName();
             assertEquals(0, data.errors.get(), name + ": inconsistencies, see the error output");
-            assertEquals(!data.notReferenced(), data.isLoaded(), name + ": loaded must match referenced");
+            assertEquals(data.isReferenced(), data.isLoaded(), name + ": loaded must match referenced");
 
             int live = data.loads.get() - data.unloads.get();
             assertEquals(data.isLoaded() ? 1 : 0, live, name + ": loads - unloads");

@@ -51,9 +51,9 @@ public class B2Utils {
         String nameB = (String)contact.getFixtureB().getUserData();
 
         if (objA.getClass().equals(type) && (fixtureName == null || nameA.equals(fixtureName))) {
-            return (T)objA;
+            return type.cast(objA);
         } else if (objB.getClass().equals(type) && (fixtureName == null || nameB.equals(fixtureName))) {
-            return (T)objB;
+            return type.cast(objB);
         } else {
             return null;
         }

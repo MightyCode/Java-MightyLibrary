@@ -50,6 +50,7 @@ public final class ResourceWatcher {
     private volatile Set<Path> folders = Collections.emptySet();
     // Detector thread only: data changed, reloaded once nothing changed for GROUP_MS
     private final Map<DataType, Long> waiting = new LinkedHashMap<>();
+    // Written by the detector thread only, volatile for the readers (commands, tests)
     private volatile int reloadCount;
 
     ResourceWatcher(Resources resources) {
@@ -213,6 +214,7 @@ public final class ResourceWatcher {
             DataType data = entry.getKey();
             System.out.println("--Watch: source of " + data.getClass().getSimpleName() + " " + data.getDataName()
                     + " changed, reloading");
+            //noinspection NonAtomicOperationOnVolatileField
             ++reloadCount;
             resources.reload(data);
         }

@@ -31,7 +31,7 @@ public class WaveFunctionCollapseGrid {
 
         map.setInformation(mapSize, layers, null, null);
 
-        availableTiles = new ArrayList[mapSize.y][mapSize.x];
+        availableTiles = newTileLists(mapSize.y, mapSize.x);
         for (int y = 0; y < mapSize.y; ++y) {
             for (int x = 0; x < mapSize.x; ++x) {
                 availableTiles[y][x] = new ArrayList<>();
@@ -194,6 +194,12 @@ public class WaveFunctionCollapseGrid {
         }
 
         finished = true;
+    }
+
+    // Generic arrays can't be created directly
+    @SuppressWarnings("unchecked")
+    private static List<Integer>[][] newTileLists(int height, int width) {
+        return new ArrayList[height][width];
     }
 
     // Do n step of wave function algorithm
