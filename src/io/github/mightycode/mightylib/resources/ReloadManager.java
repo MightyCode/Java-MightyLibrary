@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.resources;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,6 +18,52 @@ class ReloadManager {
 
     ReloadManager(Resources resources) {
         this.resources = resources;
+    }
+
+    // Reload copies alive (old and new version in memory): bounded, the other reloads wait for a free place
+    private int maxCopies = 32;
+    private int activeCopies;
+    private final Set<DataType> deferred = new LinkedHashSet<>();
+
+    void setMaxCopies(int maxCopies) {
+        this.maxCopies = Math.max(1, maxCopies);
+    }
+
+    // True (and the data is queued) when no place is free for its copy; the data keeps being used meanwhile
+    boolean mustWait(DataType data) {
+        if (data.reloadCopy != null || activeCopies < maxCopies)
+            return false;
+
+        deferred.add(data);
+        return true;
+    }
+
+    // The data no longer has a copy (committed, failed or abandoned): the place goes to the oldest waiting reload
+    void copyEnded() {
+        --activeCopies;
+        wakeDeferred();
+    }
+
+    // Wakes as many waiting reloads as there are free places. One that does not take a place (no longer loaded, no copy
+    // for its type) calls this again, so a free place is never left unused. Too many woken is harmless: they wait again
+    void wakeDeferred() {
+        int free = maxCopies - activeCopies;
+        Iterator<DataType> next = deferred.iterator();
+        List<DataType> woken = new ArrayList<>();
+        while (free-- > 0 && next.hasNext()) {
+            woken.add(next.next());
+            next.remove();
+        }
+
+        for (DataType data : woken) {
+            data.reloadWanted = true;
+            resources.requestUpdate(data);
+        }
+    }
+
+    // The data is no longer wanted: it does not wait for a place anymore
+    void forget(DataType data) {
+        deferred.remove(data);
     }
 
     // Request to read again a data: apart if it is loaded (see Resources.update), in place otherwise
@@ -50,6 +98,8 @@ class ReloadManager {
         data.reloadCopy = copy;
         if (abandoned != null)
             resources.requestUpdate(abandoned);
+        else
+            ++activeCopies;
         resources.requestUpdate(copy);
         return true;
     }
@@ -79,6 +129,7 @@ class ReloadManager {
 
         resources.dependencies().wakeWaiters(data);
         contentChanged(data);
+        copyEnded();
     }
 
     // The loaded data using this one computed their content with the previous version: they are read again
@@ -117,5 +168,6 @@ class ReloadManager {
         data.reloadCopy = null;
         System.err.println("--" + message + ", the previous version is kept");
         resources.dependencies().wakeWaiters(data);
+        copyEnded();
     }
 }

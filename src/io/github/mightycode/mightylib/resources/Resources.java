@@ -122,6 +122,11 @@ public class Resources {
         this.strict = strict;
     }
 
+    // Reloads reading their new version at the same time (both versions stay in memory); the others wait
+    public void setMaxReloadCopies(int maxReloadCopies) {
+        reloads.setMaxCopies(maxReloadCopies);
+    }
+
     public void init() {
         if (initialized)
             return;
@@ -297,7 +302,9 @@ public class Resources {
             if (copy != null) {
                 data.reloadCopy = null;
                 update(copy);
+                reloads.copyEnded();
             }
+            reloads.forget(data);
 
             if (data.deleteWanted) {
                 Map<String, DataType> map = resources.get(data.getClass());
@@ -308,6 +315,10 @@ public class Resources {
         }
 
         if (data.reloadWanted) {
+            // Too many copies alive: waits for a place (still loaded and usable)
+            if (data.isLoaded() && data.reloadOf == null && reloads.mustWait(data))
+                return;
+
             data.reloadWanted = false;
 
             // Loaded: the new version is read apart, the data stays usable meanwhile
@@ -318,6 +329,7 @@ public class Resources {
             dependencies.stopWaiting(data);
             dependencies.release(data);
             data.discard();
+            reloads.wakeDeferred();
         }
 
         if (data.failed || data.isLoaded())
