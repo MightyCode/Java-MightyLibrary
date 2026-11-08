@@ -5,6 +5,8 @@ import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.ActionId;
+import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 
@@ -32,6 +34,10 @@ public class LoadingSceneImplementation extends TemplateSceneLoading {
     @Override
     public void update() {
         super.update();
+
+        // The scene being loaded is left (unloaded or released) when the menu is set
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
     }
 
     @Override
