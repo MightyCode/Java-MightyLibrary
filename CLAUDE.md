@@ -11,6 +11,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - `docs/decisions.md` : décisions de conception durables (pas de Lombok, package `network` conservé…).
 - `docs/architecture.md` : structure, démarrage, boucle, cycle de vie des scènes, ressources CPU/GPU, rendu, entrées, temps, pièges connus.
 - `docs/debug-tools.md` : commandes, serveur de debug, simulation d'entrées, traque des fuites, profilage (JFR, RenderDoc).
+- `docs/bonnes-pratiques.md` : points que le projet doit respecter, chacun avec sa vérification ; revue hebdomadaire à la demande de l'utilisateur (réponse point par point : respecté / dérive + preuve + action proposée).
 
 ## Priorités
 - **La 2D est prioritaire** (rendu 2D, tilemaps, texte, GUI, Camera2D, animations, physique 2D).
