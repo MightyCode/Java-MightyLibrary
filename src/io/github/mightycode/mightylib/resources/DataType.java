@@ -15,9 +15,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * workers only run initWithFile and internLoad on a data that Resources does not touch meanwhile.
  */
 public abstract class DataType extends UUID implements LoadingElement {
-    protected final Resources resources;
 
     protected final String dataName;
+
+    // The Resources managing this data, set when it registers it (see attachTo); null before.
+    // Volatile: owned resources are registered by worker threads
+    private volatile Resources owner;
 
     // Volatile: written by the main thread, read by any thread
     // Step where data are read from disk and dependencies are listed
@@ -72,7 +75,6 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     public DataType(TYPE_SET_UP typeSetUp, String dataName){
         super();
-        resources = Resources.getInstance();
 
         this.dataName = dataName;
         this.correctlyLoaded = false;
@@ -82,6 +84,28 @@ public abstract class DataType extends UUID implements LoadingElement {
         references = Collections.synchronizedList(new ArrayList<>());
         dependencies = new CopyOnWriteArrayList<>();
         manuallyCreated = true;
+    }
+
+    // Called by Resources when it registers this data (or creates it as a reload copy): a data has a single owner
+    final void attachTo(Resources resources) {
+        Resources current = owner;
+        if (current == resources)
+            return;
+        if (current != null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + dataName
+                    + " is already managed by another Resources");
+
+        owner = resources;
+    }
+
+    // The Resources managing this data; fails while the data is not registered (created but not added yet)
+    protected final Resources resources() {
+        Resources current = owner;
+        if (current == null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + dataName
+                    + " is not registered in a Resources");
+
+        return current;
     }
 
     final void setNotManuallyCreated(){
