@@ -53,6 +53,7 @@ public class EngineConfig {
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
     private int maxThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
     private int maxGLUploadMillisecondsPerFrame = -1;
+    private float inGameLoadingShare = 0.3f;
     private ETextureUpload textureUpload = ETextureUpload.DIRECT;
 
     // Called once, when the engine is ready
@@ -200,6 +201,19 @@ public class EngineConfig {
     }
 
     /**
+     * Share of a frame (0 to 1) that the loading (resources, GL elements) may use while the scene is displayed.
+     * Under a loading screen it uses all the time left in the frame. At least one step is done per frame either way.
+     * Default 0.3: a scene that streams resources keeps most of its frame.
+     */
+    public EngineConfig setInGameLoadingShare(float inGameLoadingShare) {
+        if (inGameLoadingShare < 0f || inGameLoadingShare > 1f)
+            throw new IllegalArgumentException("EngineConfig: the loading share must be between 0 and 1");
+
+        this.inGameLoadingShare = inGameLoadingShare;
+        return this;
+    }
+
+    /**
      * How the big textures are sent to the card. PBO is faster or not depending on the card and the driver:
      * measure with the command "textureupload bench". The system property ETextureUpload.PROPERTY
      * (-Dmightylib.texture.upload=pbo) overrides it.
@@ -278,4 +292,5 @@ public class EngineConfig {
     public Resources.LoadingMethod getResourcesLoadingMethod() { return resourcesLoadingMethod; }
     public int getMaxThreads() { return maxThreads; }
     public int getMaxGLUploadMillisecondsPerFrame() { return maxGLUploadMillisecondsPerFrame; }
+    public float getInGameLoadingShare() { return inGameLoadingShare; }
 }

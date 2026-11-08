@@ -34,6 +34,14 @@ public final class MainLoop {
     private static SceneManager sceneManager;
     private static DebugServer debugServer;
 
+    // Deadline of the loading queues: the frame deadline under a loading screen, a share of the frame from now otherwise
+    static long loadingDeadline(long now, long frameDeadline, double frameTime, float inGameShare, boolean loadingScreen) {
+        if (loadingScreen)
+            return frameDeadline;
+
+        return Math.min(frameDeadline, now + (long) (frameTime * inGameShare));
+    }
+
     private static double tickTime;
     private static double frameTime;
 
@@ -244,10 +252,15 @@ public final class MainLoop {
                 // No tick is due now (the tick branch would have run), at least one step is done anyway.
                 long nextTick = start + (long) (lastTick + tickTime);
                 long deadline = Math.min(nextTick, frameStart + (long) frameTime);
-                // One budget for the three queues; each does at least one step, so the loading always progresses
-                Resources.getInstance().processUntil(deadline);
+                // The loading uses the whole frame under a loading screen, a share of it while the scene is displayed.
+                // Every queue does at least one step, so the loading always progresses; the main thread tasks
+                // (posted by any code, not only the loading) keep the whole frame.
+                long loadingDeadline = loadingDeadline(System.nanoTime(), deadline, frameTime,
+                        config.getInGameLoadingShare(), sceneManager.isCurrentSceneLoading());
+
+                Resources.getInstance().processUntil(loadingDeadline);
                 MainThread.process(deadline);
-                glResources.process(deadline);
+                glResources.process(loadingDeadline);
 
                 // Measured before the buffer swap, which can wait for the GPU
                 long frameWork = System.nanoTime() - frameStart;
