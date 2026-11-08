@@ -28,7 +28,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public class MenuScene extends Scene {
     private static final SoundSourceCreationInfo CREATION_INFO_SELECT = new SoundSourceCreationInfo();
     static {
-        CREATION_INFO_SELECT.name = "select";
+        CREATION_INFO_SELECT.name = "selectogg";
         CREATION_INFO_SELECT.gainNode = "noise";
         CREATION_INFO_SELECT.gain = 0.2f;
     }

@@ -7,6 +7,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - `docs/later.md` : feuille de route globale, gros points suivants dans l'ordre (gamma, tests, bibliothèque réutilisable avec modèle d'extension et modding, effets 2D, physique 2D, entités et scripts Lua, thème, rendu 2D, SVG, entrées, son, console, plateformes).
 - `docs/techniquegraphique.md` : suite de `later.md`, techniques de rendu 2D/3D de LearnOpenGL (Blinn-Phong, skybox, culling, ombres, normal mapping, animation squelettique, HDR/bloom…).
 - `docs/futur-discussion.md` : sujets à discuter un jour, sans ordre (l'utilisateur décide quand).
+- `licence.md` : licences de toutes les dépendances, des bibliothèques natives et des ressources, ce qu'elles impliquent, à faire avant distribution (à mettre à jour à chaque nouvelle dépendance ou ressource).
 - `docs/decisions.md` : décisions de conception durables (pas de Lombok, package `network` conservé…).
 - `docs/architecture.md` : structure, démarrage, boucle, cycle de vie des scènes, ressources CPU/GPU, rendu, entrées, temps, pièges connus.
 - `docs/debug-tools.md` : commandes, serveur de debug, simulation d'entrées, traque des fuites, profilage (JFR, RenderDoc).

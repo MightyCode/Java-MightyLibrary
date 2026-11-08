@@ -3,7 +3,6 @@
 **Ce fichier ne contient que ce qui reste à faire, jamais l'historique.** Quand un objectif est atteint (même en partie) : supprimer sa ligne, ou la réécrire pour ne garder que le reste. Aucun « fait », « déjà », « aujourd'hui fait X » : l'état actuel est décrit dans `architecture.md`, l'historique est dans git. Fichier vide → **discuter** avec l'utilisateur du point en tête de `later.md`, puis l'écrire ici. Propositions **à valider avec l'utilisateur avant d'appliquer** ; changements cassants maintenant, avant toute version publiée. (U) = le plus urgent.
 
 - (U) **Pipeline de `Resources`** (voir `architecture.md`). Reste :
-  - **sons** : lecture et décodage dans un seul appel (`SoundDataType.readVorbis`), donc pas de `checkCancelled()` ; à découper si de gros fichiers l'exigent ;
   - **shaders** : `GL_KHR_parallel_shader_compile` (lancer toutes les compilations, puis interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes ; une étape = un `glCompileShader` bloquant), seulement si les mesures l'exigent (pic de frame de ~58 ms au chargement, jugé acceptable) ;
   - **précharger les éléments GL** (aujourd'hui seules les ressources CPU le sont : les `GLElement` n'existent qu'après le `launch` de la scène) ;
   - **priorité plus fine** que courant/préchargement (rechargement à chaud, ressources du premier affichage) si un vrai jeu le demande ; une donnée garde sa priorité urgente si la référence urgente est retirée avant la préchargée ;

@@ -32,6 +32,10 @@ public class SoundData extends SingleSourceDataType {
     }
 
     public void setSoundLoadInfo(SoundLoadInfo info) {
+        // Read again before being loaded: the previous samples are not used
+        if (tempInfo != null && tempInfo != info)
+            tempInfo.release();
+
         tempInfo = info;
     }
 
@@ -43,6 +47,8 @@ public class SoundData extends SingleSourceDataType {
 
         this.bufferId = alGenBuffers();
         alBufferData(bufferId, tempInfo.Channel == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, tempInfo.Buffer, tempInfo.SampleRate);
+        // OpenAL has its own copy
+        tempInfo.release();
         tempInfo = null;
 
         int error = alGetError();
@@ -55,6 +61,17 @@ public class SoundData extends SingleSourceDataType {
         return false;
     }
 
+
+    // Preloaded then no longer wanted (or failed to load): the decoded samples are freed
+    @Override
+    protected void internCancelPreload() {
+        if (tempInfo != null) {
+            tempInfo.release();
+            tempInfo = null;
+        }
+
+        internUnload();
+    }
 
     public int getBufferId(){
         return bufferId;
