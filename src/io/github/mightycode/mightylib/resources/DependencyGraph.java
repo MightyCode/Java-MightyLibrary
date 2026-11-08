@@ -11,15 +11,26 @@ import java.util.Set;
  */
 class DependencyGraph {
     private final Resources resources;
-    // Data waiting for their dependencies (counted for finishedCurrentLoading)
-    private int waitingCount;
+    // Data waiting for their dependencies (the urgent ones are counted for finishedCurrentLoading)
+    private final Set<DataType> waiting = java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<>());
 
     DependencyGraph(Resources resources) {
         this.resources = resources;
     }
 
     int waitingCount() {
-        return waitingCount;
+        return waiting.size();
+    }
+
+    // Waiting data wanted now: those only preloaded do not hold a loading screen
+    int waitingUrgentCount() {
+        int count = 0;
+        for (DataType data : waiting) {
+            if (resources.isUrgent(data))
+                ++count;
+        }
+
+        return count;
     }
 
     // Loaded (or replaced by its fallback) and not reading a new version: computed once, with the latest one
@@ -84,6 +95,8 @@ class DependencyGraph {
                 data.acquiredDependencies.add(dependency);
                 addDependent(dependency, data);
                 resources.addReferenceAndUpdate(dependency, data.dependencyReference());
+                if (data.urgent || (data.reloadOf != null && data.reloadOf.urgent))
+                    resources.makeUrgent(dependency);
             }
         }
     }
@@ -109,7 +122,7 @@ class DependencyGraph {
     void waitFor(DataType data) {
         if (!data.waitingDependencies) {
             data.waitingDependencies = true;
-            ++waitingCount;
+            waiting.add(data);
         }
 
         for (DataType dependency : data.getDependencies()) {
@@ -121,7 +134,7 @@ class DependencyGraph {
     void stopWaiting(DataType data) {
         if (data.waitingDependencies) {
             data.waitingDependencies = false;
-            --waitingCount;
+            waiting.remove(data);
         }
     }
 

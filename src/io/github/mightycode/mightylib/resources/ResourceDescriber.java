@@ -24,8 +24,10 @@ class ResourceDescriber {
      */
     JSONObject describe() {
         JSONObject types = new JSONObject();
+        long totalCpu = 0, totalGpu = 0;
         for (Map.Entry<Class<? extends DataType>, Map<String, DataType>> ofType : resources.registry().entrySet()) {
             int loaded = 0, preloaded = 0, referenced = 0;
+            long cpuBytes = 0, gpuBytes = 0;
             JSONArray loadedNotReferenced = new JSONArray();
             JSONArray referencedNotLoaded = new JSONArray();
             JSONArray onlyAsDependency = new JSONArray();
@@ -36,7 +38,11 @@ class ResourceDescriber {
                 boolean isReferenced = !data.notReferenced();
                 if (data.reloadCopy != null)
                     reloading.put(data.getDataName());
-                if (data.isLoaded()) ++loaded;
+                if (data.isLoaded()) {
+                    ++loaded;
+                    cpuBytes += data.estimatedCpuBytes();
+                    gpuBytes += data.estimatedGpuBytes();
+                }
                 if (data.isPreLoaded()) ++preloaded;
                 if (isReferenced) ++referenced;
                 if (isReferenced && onlyReferencedAsDependency(data))
@@ -57,6 +63,11 @@ class ResourceDescriber {
             type.put("loaded", loaded);
             type.put("preloaded", preloaded);
             type.put("referenced", referenced);
+            // Estimates (DataType.estimatedCpuBytes/estimatedGpuBytes) of the loaded data
+            type.put("cpuBytes", cpuBytes);
+            type.put("gpuBytes", gpuBytes);
+            totalCpu += cpuBytes;
+            totalGpu += gpuBytes;
             if (!loadedNotReferenced.isEmpty())
                 type.put("loadedNotReferenced", loadedNotReferenced);
             if (!referencedNotLoaded.isEmpty())
@@ -76,6 +87,8 @@ class ResourceDescriber {
 
         JSONObject result = new JSONObject();
         result.put("types", types);
+        result.put("totalCpuBytes", totalCpu);
+        result.put("totalGpuBytes", totalGpu);
         result.put("pipeline", resources.describePipeline());
         return result;
     }

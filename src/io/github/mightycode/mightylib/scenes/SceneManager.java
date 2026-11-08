@@ -114,6 +114,9 @@ public class SceneManager {
         for (String batch : currentScene.getInvolvedBatch())
             Resources.getInstance().loadBatch(batch);
 
+        // After loadBatch: what the new scene shares with the preloaded one is never unloaded in between
+        sceneInterface.cancelPreload();
+
         currentScene.initByManager(sceneInterface.getChangeArgs());
 
         sceneInterface.reset();

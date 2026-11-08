@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.scenes;
 
+import io.github.mightycode.mightylib.resources.Resources;
+
 import java.util.function.Supplier;
 
 public class SceneManagerInterface {
@@ -7,6 +9,9 @@ public class SceneManagerInterface {
     private Scene newScene;
 
     private final Supplier<TemplateSceneLoading> defaultLoadingScene;
+
+    // Scene whose batches are loaded in advance (preloadScene)
+    private Scene preloadedScene;
 
     boolean WantQuit;
     int ExitStatus;
@@ -28,6 +33,31 @@ public class SceneManagerInterface {
     public void setNewScene(Scene scene, String[] args){
         this.newScene = scene;
         this.changeArgs = args;
+    }
+
+    /**
+     * Load in advance the batches of a scene that will probably be set next (setNewScene with the same instance):
+     * they load after what the current scene wants, and a loading screen does not wait for them. When the scene is
+     * set they are already loaded. Any scene change, or a new call, ends the preload of the previous one.
+     * Only the resources are loaded (the batches of getInvolvedBatch), init and launch run when the scene is set.
+     */
+    public void preloadScene(Scene scene) {
+        cancelPreload();
+
+        preloadedScene = scene;
+        for (String batch : scene.getInvolvedBatch())
+            Resources.getInstance().preloadBatch(batch);
+    }
+
+    // What the preload loaded stays only if something else wants it (the batches of the scene set since)
+    public void cancelPreload() {
+        if (preloadedScene == null)
+            return;
+
+        for (String batch : preloadedScene.getInvolvedBatch())
+            Resources.getInstance().cancelPreloadBatch(batch);
+
+        preloadedScene = null;
     }
 
     public void reset(){

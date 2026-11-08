@@ -146,6 +146,31 @@ public class TextureData extends SingleSourceDataType {
         return null;
     }
 
+    // Decoded pixels (RGBA) once the file is read, 0 before
+    private long decodedPixelBytes() {
+        if (decodedPixels != null)
+            return (long) decodedWidth * decodedHeight * 4;
+        if (byteBuffer != null)
+            return byteBuffer.capacity();
+        if (tempBufferedImage != null)
+            return (long) tempBufferedImage.getWidth() * tempBufferedImage.getHeight() * 4;
+
+        return 0;
+    }
+
+    // The pixels once read; before, a guess: a compressed file is about four times smaller than its pixels
+    @Override
+    public long estimatedCpuBytes() {
+        long decoded = decodedPixelBytes();
+        return decoded > 0 ? decoded : super.estimatedCpuBytes() * 4;
+    }
+
+    // Without mipmaps
+    @Override
+    public long estimatedGpuBytes() {
+        return estimatedCpuBytes();
+    }
+
     public ByteBuffer getData() {
         return byteBuffer;
     }

@@ -43,6 +43,8 @@ public abstract class DataType extends UUID implements LoadingElement {
     boolean reloadWanted;
     boolean deleteWanted;
     boolean waitingDependencies;
+    // Wanted now (by a scene, the code, a batch loaded normally), not only preloaded: its steps go first (see Resources.isUrgent)
+    boolean urgent;
     // Added by addPreLoadedResource: no file to read again on reload
     boolean preloadedByCode;
     // Data waiting for this one to be loaded
@@ -194,6 +196,26 @@ public abstract class DataType extends UUID implements LoadingElement {
     // Files this data is read from (watched for hot reload); empty when it has no file
     public List<String> sourcePaths() {
         return Collections.emptyList();
+    }
+
+    /**
+     * Memory (bytes) this data takes once loaded on the CPU side. Until it is loaded, a guess from its files:
+     * the size of the sources. Types that expand (textures) or compress override it.
+     */
+    public long estimatedCpuBytes() {
+        long total = 0;
+        for (String path : sourcePaths()) {
+            long length = new java.io.File(path).length();
+            if (length > 0)
+                total += length;
+        }
+
+        return total;
+    }
+
+    // Memory (bytes) of the card this data takes once its GL element is loaded, 0 for the data that are not sent to it
+    public long estimatedGpuBytes() {
+        return 0;
     }
 
     public final int getVersion() {

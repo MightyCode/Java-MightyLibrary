@@ -5,21 +5,86 @@ import io.github.mightycode.mightylib.main.Workers;
 import org.json.JSONObject;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * The queues of the loading pipeline: what other threads post to the main thread, the data to update, the steps run
  * on the main thread and the steps run by the workers (at most maxNumberOfWorkers at once).
+ * The steps of the data wanted now (urgent) go before those of the data only preloaded (see Resources.preloadBatch).
  * Everything is main thread only, except post and runOnMainThread (any thread).
  */
 class ResourceScheduler {
-    private static class WorkerStep {
+    private static class Step {
         final DataType data;
         final Runnable run;
 
-        WorkerStep(DataType data, Runnable run) {
+        Step(DataType data, Runnable run) {
             this.data = data;
             this.run = run;
+        }
+    }
+
+    /**
+     * Steps in two levels: the urgent ones in arrival order, then the preload ones in arrival order.
+     * A preload step is promoted in O(1) when its data becomes urgent (a data has at most one step queued).
+     */
+    private static class StepQueue {
+        private final ArrayDeque<Step> urgent = new ArrayDeque<>();
+        private final Map<DataType, Step> background = new LinkedHashMap<>();
+
+        void add(Step step, boolean isUrgent) {
+            if (isUrgent)
+                urgent.add(step);
+            else
+                background.put(step.data, step);
+        }
+
+        // The next step to run, the urgent ones first
+        Step poll() {
+            Step step = urgent.poll();
+            if (step != null)
+                return step;
+
+            return pollBackground();
+        }
+
+        Step pollUrgent() {
+            return urgent.poll();
+        }
+
+        Step pollBackground() {
+            if (background.isEmpty())
+                return null;
+
+            DataType first = background.keySet().iterator().next();
+            return background.remove(first);
+        }
+
+        void promote(DataType data) {
+            Step step = background.remove(data);
+            if (step != null)
+                urgent.add(step);
+        }
+
+        boolean hasUrgent() {
+            return !urgent.isEmpty();
+        }
+
+        boolean isEmpty() {
+            return urgent.isEmpty() && background.isEmpty();
+        }
+
+        int size() {
+            return urgent.size() + background.size();
+        }
+
+        int backgroundSize() {
+            return background.size();
         }
     }
 
@@ -31,9 +96,13 @@ class ResourceScheduler {
 
     // Main thread only
     private final ArrayDeque<DataType> toUpdate = new ArrayDeque<>();
-    private final ArrayDeque<Runnable> mainContextSteps = new ArrayDeque<>();
-    private final ArrayDeque<WorkerStep> workerSteps = new ArrayDeque<>();
+    private final StepQueue mainContextSteps = new StepQueue();
+    private final StepQueue workerSteps = new StepQueue();
+    // Data whose step runs on a worker
+    private final Set<DataType> runningData = Collections.newSetFromMap(new IdentityHashMap<>());
     private int runningWorkerSteps;
+    // Started as preload steps: they never take the last worker, an urgent step always finds one
+    private int runningBackgroundSteps;
     // Queued steps dropped before starting because their result was no longer needed (see stepStillNeeded)
     private int skippedSteps;
 
@@ -52,6 +121,12 @@ class ResourceScheduler {
 
     void enqueueUpdate(DataType data) {
         toUpdate.add(data);
+    }
+
+    // The data is wanted now: its queued step goes before the preload ones
+    void promote(DataType data) {
+        mainContextSteps.promote(data);
+        workerSteps.promote(data);
     }
 
     /**
@@ -91,16 +166,32 @@ class ResourceScheduler {
             if (System.nanoTime() >= deadlineNanos)
                 return;
 
-            Runnable step = mainContextSteps.poll();
+            Step step = mainContextSteps.poll();
             if (step == null)
                 return;
 
-            step.run();
+            step.run.run();
         }
     }
 
-    // True when nothing is queued or running
+    /**
+     * True when nothing wanted now is queued or running. What is only preloaded may go on: a loading screen must not
+     * wait for the scene that is loaded in the background. What the inbox and the updates hold is short lived.
+     */
     boolean isIdle() {
+        if (!inbox.isEmpty() || !toUpdate.isEmpty() || mainContextSteps.hasUrgent() || workerSteps.hasUrgent())
+            return false;
+
+        for (DataType data : runningData) {
+            if (resources.isUrgent(data))
+                return false;
+        }
+
+        return true;
+    }
+
+    // True when nothing at all is queued or running, preloads included
+    boolean isCompletelyIdle() {
         return inbox.isEmpty() && toUpdate.isEmpty() && mainContextSteps.isEmpty() && workerSteps.isEmpty()
                 && runningWorkerSteps == 0;
     }
@@ -109,18 +200,22 @@ class ResourceScheduler {
         pipeline.put("runningWorkerSteps", runningWorkerSteps);
         pipeline.put("waitingWorkerSteps", workerSteps.size());
         pipeline.put("mainContextSteps", mainContextSteps.size());
+        pipeline.put("preloadWorkerSteps", workerSteps.backgroundSize());
+        pipeline.put("preloadMainContextSteps", mainContextSteps.backgroundSize());
         pipeline.put("skippedSteps", skippedSteps);
     }
 
     // Run the step of the data (work then end) where its type wants it
     void submit(DataType data, Runnable work, Runnable end) {
+        boolean urgent = resources.isUrgent(data);
+
         switch (data.getTypeSetUp()) {
             case IMMEDIATELY_IN_CURRENT_CONTEXT:
                 work.run();
                 end.run();
                 break;
             case MAIN_CONTEXT:
-                mainContextSteps.add(() -> {
+                mainContextSteps.add(new Step(data, () -> {
                     if (!stepStillNeeded(data)) {
                         skipStep(data);
                         return;
@@ -128,16 +223,17 @@ class ResourceScheduler {
 
                     work.run();
                     end.run();
-                });
+                }), urgent);
                 break;
             case THREAD_CONTEXT:
-                workerSteps.add(new WorkerStep(data, () -> {
+                workerSteps.add(new Step(data, () -> {
                     work.run();
                     inbox.add(() -> {
                         --runningWorkerSteps;
+                        runningData.remove(data);
                         end.run();
                     });
-                }));
+                }), urgent);
                 startWorkerSteps();
                 break;
         }
@@ -165,15 +261,41 @@ class ResourceScheduler {
     }
 
     private void startWorkerSteps() {
-        WorkerStep step;
-        while (runningWorkerSteps < maxNumberOfWorkers && (step = workerSteps.poll()) != null) {
+        // One worker stays free for the urgent steps (with a single worker, the preloads wait for it to be free)
+        int backgroundLimit = Math.max(1, maxNumberOfWorkers - 1);
+
+        while (runningWorkerSteps < maxNumberOfWorkers) {
+            Step step = workerSteps.pollUrgent();
+            boolean background = false;
+
+            if (step == null) {
+                if (runningBackgroundSteps >= backgroundLimit)
+                    return;
+
+                step = workerSteps.pollBackground();
+                background = true;
+            }
+
+            if (step == null)
+                return;
+
             if (!stepStillNeeded(step.data)) {
                 skipStep(step.data);
                 continue;
             }
 
             ++runningWorkerSteps;
-            Workers.execute(step.run);
+            runningData.add(step.data);
+            Runnable run = step.run;
+            if (background) {
+                ++runningBackgroundSteps;
+                Workers.execute(() -> {
+                    run.run();
+                    inbox.add(() -> --runningBackgroundSteps);
+                });
+            } else {
+                Workers.execute(run);
+            }
         }
     }
 }
