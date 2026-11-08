@@ -73,21 +73,20 @@ public final class MainLoop {
 
         long start = System.nanoTime();
 
-        Context mainContext = engine.contexts().getMainContext();
+        WindowContext mainContext = engine.contexts().getMainWindow();
 
         Window window = mainContext.getWindow();
         GLResources glResources = engine.glResources();
         Resources resources = engine.resources();
 
-        while (!window.wantExit() && !sceneManager.isExitRequested()) {
+        while (!engine.isStopRequested() && !sceneManager.isExitRequested()) {
             long now = System.nanoTime() - start;
             if (now - lastTick >= tickTime) {
                 TickEvent tickEvent = new TickEvent();
                 tickEvent.begin();
                 long tickStart = System.nanoTime();
                 GameTime.update();
-                sceneManager.update();
-                sceneManager.postUpdate();
+                engine.update();
                 long tickWork = System.nanoTime() - tickStart;
                 tickNanos += tickWork;
                 EngineStats.endTick(tickWork);
@@ -100,7 +99,10 @@ public final class MainLoop {
                 FrameEvent frameEvent = new FrameEvent();
                 frameEvent.begin();
                 long frameStart = System.nanoTime();
-                sceneManager.display();
+                engine.displayWindows();
+
+                // What follows (loading queues, main thread tasks, screenshots) works in the main window
+                window.bindWindow();
 
                 // GL elements are sent with the time left in this frame, before the next tick or frame.
                 // No tick is due now (the tick branch would have run), at least one step is done anyway.
@@ -110,7 +112,7 @@ public final class MainLoop {
                 // Every queue does at least one step, so the loading always progresses; the main thread tasks
                 // (posted by any code, not only the loading) keep the whole frame.
                 long loadingDeadline = loadingDeadline(System.nanoTime(), deadline, frameTime,
-                        config.getInGameLoadingShare(), sceneManager.isCurrentSceneLoading());
+                        config.getInGameLoadingShare(), engine.isAnySceneLoading());
 
                 resources.processUntil(loadingDeadline);
                 MainThread.process(deadline);
@@ -124,7 +126,7 @@ public final class MainLoop {
 
                 Screenshot.captureIfRequested(window.getInfo().getWindowId());
                 long swapStart = System.nanoTime();
-                window.swapBuffersAndPollEvents();
+                engine.swapWindows();
                 EngineStats.endSwap(System.nanoTime() - swapStart);
                 ++frames;
                 while (now - lastFrame >= frameTime)

@@ -140,6 +140,13 @@ public class KeyboardManager {
         return (!state[keyID] && oldState[keyID]);
     }
 
+    // A blocked keyboard (the window waits for a modal window) sees no key and no text
+    private boolean blocked;
+
+    public void setBlocked(boolean blocked) { this.blocked = blocked; }
+
+    public boolean isBlocked() { return blocked; }
+
     public void postUpdate(){
         boolean mainKeyChanged = false;
         numberKeyPressed = 0;
@@ -147,13 +154,13 @@ public class KeyboardManager {
         // Text typed since the last postUpdate, then the simulated one
         incomingText.append(pendingSimulatedText);
         pendingSimulatedText.setLength(0);
-        typedText = incomingText.toString();
+        typedText = blocked ? "" : incomingText.toString();
         incomingText.setLength(0);
 
         keySimulation.update();
         for(int key = BEGIN_KEYS; key < state.length; ++key){
             oldState[key] = state[key];
-            state[key] = testState(key) || keySimulation.getState(key);
+            state[key] = !blocked && (testState(key) || keySimulation.getState(key));
 
             if (state[key]){
                 numberKeyPressed += 1;

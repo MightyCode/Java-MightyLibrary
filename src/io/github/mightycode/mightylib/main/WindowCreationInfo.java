@@ -12,4 +12,6 @@ final class WindowCreationInfo {
     // Screen of the window, null for the primary one
     public MonitorInfo Monitor;
     public KeyboardLanguage KeyboardLanguage;
+    // Window this one belongs to (owner, centered on it), 0 for none
+    public long ParentWindowId;
 }

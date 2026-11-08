@@ -17,7 +17,7 @@ import io.github.mightycode.mightylib.inputs.inputType.InputGamepadAxis;
 import io.github.mightycode.mightylib.inputs.inputType.InputGamepadButton;
 import io.github.mightycode.mightylib.inputs.inputType.InputOr;
 import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
-import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
@@ -38,7 +38,7 @@ class ProjectLoading implements IProjectLoading {
     }
 
     @Override
-    public void contextLoading(Context context){
+    public void contextLoading(WindowContext context){
         InputManager inputManager = context.getInputManager();
 
         ActionInput[] configurations = {

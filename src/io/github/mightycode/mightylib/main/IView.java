@@ -12,7 +12,7 @@ public interface IView {
     Engine engine();
 
     // Window and inputs of the view
-    Context context();
+    WindowContext context();
 
     // Throw when the view has no camera yet (the engine itself, a scene before its launch)
     Camera2D camera2D();

@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.inputs.EInputState;
-import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -21,7 +21,7 @@ import java.util.List;
 public class ScrollList {
     private static final float SCROLLBAR_WIDTH = 6f;
 
-    private final Context context;
+    private final WindowContext context;
     private final Camera2D camera;
 
     private final float x, y, width, height;
@@ -39,7 +39,7 @@ public class ScrollList {
     private boolean needRefill = true;
 
     /** @param x, y, width, height area in virtual pixels (x, y = top left) */
-    public ScrollList(Context context, float x, float y, float width, float height,
+    public ScrollList(WindowContext context, float x, float y, float width, float height,
                       float rowHeight, String fontName, float fontSize) {
         this.context = context;
         this.camera = Views.current().camera2D();

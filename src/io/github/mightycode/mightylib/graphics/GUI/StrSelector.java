@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputManager;
-import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -26,7 +26,7 @@ public class StrSelector {
 
     private int clickActionId;
 
-    public StrSelector(String[] values, Context context){
+    public StrSelector(String[] values, WindowContext context){
         this.values = values;
         this.inputManager = context.getInputManager();
         Vector2i windowSize = context.getWindow().getInfo().getVirtualSizeCopy();

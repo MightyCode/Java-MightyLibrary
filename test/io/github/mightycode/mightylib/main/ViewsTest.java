@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class ViewsTest {
     private static final class FakeView implements IView {
         @Override public Engine engine() { return null; }
-        @Override public Context context() { return null; }
+        @Override public WindowContext context() { return null; }
         @Override public Camera2D camera2D() { return null; }
         @Override public Camera3D camera3D() { return null; }
     }
