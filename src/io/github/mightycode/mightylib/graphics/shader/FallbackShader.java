@@ -31,7 +31,7 @@ public class FallbackShader extends Shader {
     }
 
     @Override
-    protected boolean internLoad() {
+    protected void prepareSources() {
         String header = modernGLSL ? "#version 330 core\nlayout (location = 0) " : "#version 140\n";
 
         setShaderContent(0, header + "in vec4 aPos;\n"
@@ -41,9 +41,10 @@ public class FallbackShader extends Shader {
                 + "out vec4 fragColor;\n"
                 + "void main() { fragColor = vec4(1.0, 0.0, 1.0, 1.0); }\n");
 
-        if (!super.internLoad())
-            return false;
+    }
 
+    @Override
+    protected void afterLink() {
         FloatBuffer identity = new Matrix4f().get(BufferUtils.createFloatBuffer(16));
         use();
         for (String matrix : MATRICES) {
@@ -52,7 +53,5 @@ public class FallbackShader extends Shader {
                 glUniformMatrix4fv(link, false, identity);
         }
         Logger.CheckOpenGLError("Fallback shader matrices");
-
-        return true;
     }
 }

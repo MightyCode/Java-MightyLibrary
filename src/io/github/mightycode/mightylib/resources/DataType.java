@@ -63,7 +63,9 @@ public abstract class DataType extends UUID implements LoadingElement {
     public enum TYPE_SET_UP {
         IMMEDIATELY_IN_CURRENT_CONTEXT,
         MAIN_CONTEXT,
-        THREAD_CONTEXT
+        THREAD_CONTEXT,
+        // Read by a worker (preload), computed on the main thread (load): GL data that read files (shaders)
+        THREAD_PRELOAD_MAIN_LOAD
     }
 
     public DataType(TYPE_SET_UP typeSetUp, String dataName){
@@ -171,6 +173,16 @@ public abstract class DataType extends UUID implements LoadingElement {
     }
 
     protected abstract boolean internLoad();
+
+    /**
+     * For a load done in several steps (shader compilation): true after an internLoad that returned true but left work.
+     * Resources then runs internLoad again as a new step, so other steps can go between. The data is loaded
+     * when internLoad returns true and this is false. Left unfinished (data no longer wanted), the data is released
+     * by internCancelPreload.
+     */
+    protected boolean loadContinues() {
+        return false;
+    }
 
     // Load step run by Resources (maybe on a worker): the state is set afterward by loadDone, on the main thread
     final boolean runLoad() {

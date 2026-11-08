@@ -7,7 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -17,7 +17,7 @@ public class ShaderLoader extends ResourceLoader {
 
     /*
      * Shader library
-     * The shader library is a HashMap that contains the shader utility file name as key and the shader content as value.
+     * The shader library is a map (read by the workers) that contains the shader utility file name as key and the shader content as value.
      */
     private Map<String, String> shaderLibrary;
 
@@ -28,7 +28,7 @@ public class ShaderLoader extends ResourceLoader {
     }
 
     public ShaderLoader() {
-        shaderLibrary = new HashMap<>();
+        shaderLibrary = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -116,12 +116,16 @@ public class ShaderLoader extends ResourceLoader {
             geometryShaderPath = SHADER_INFO_PATH + shaderManager.getVersion() + "/" + shader.getSourcePath(2);
         }
 
-        // A missing file or a compilation error makes the preload fail: the fallback replaces the shader
+        // Worker thread: files and preprocessing only, the compilation is made by the load (main thread, in steps).
+        // A missing file makes the preload fail: the fallback replaces the shader
         shader.setShaderContent(0, completeWithLibraryFile(readSource(vertexShaderPath)));
+        shader.checkCancelled();
         shader.setShaderContent(1, completeWithLibraryFile(readSource(fragmentShaderPath)));
 
-        if (useGeometryShader)
+        if (useGeometryShader) {
+            shader.checkCancelled();
             shader.setShaderContent(2, completeWithLibraryFile(readSource(geometryShaderPath)));
+        }
     }
 
     private static String readSource(String path) {

@@ -36,6 +36,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Toute ressource GL créée dans une scène est libérée dans `unload()` (ce que `launch` a créé) ou `release()` (ce que `init` a créé : `unload` n'est pas appelé si la scène est quittée pendant son chargement) ; vérifier l'état CPU des ressources avec la commande `resources` ; vérifier les fuites avec l'étape `leakcheck <Scène>` de `scenario.py` (voir `docs/debug-tools.md`).
 - Fins de ligne normalisées par `.gitattributes` (LF dans le dépôt) : `git add` normal. Ne pas réécrire de fichier source avec `sed` (utiliser Edit).
 - Git : travailler sur une branche, un commit par changement logique, avec la ligne `Co-Authored-By` demandée par le système. Ne pas modifier/commiter `target/` ni `.idea/workspace.xml`.
+- **Fin de chaque objectif : nettoyer les docs dans le même commit.** `current.md`/`later.md` = ce qui reste, jamais l'historique : supprimer la ligne de l'objectif atteint (ou la réduire à son reste), sans « fait ». Décrire le nouvel état dans `architecture.md` (au présent, sans historique). Relire le fichier après modification : plus aucune trace de ce qui est fini.
 - Avant de commencer un gros point (passage de `later.md` à `current.md`), en discuter avec l'utilisateur pour s'assurer que tout est prévu.
 - Décrire comment vérifier manuellement ce qui n'a pas pu l'être (quelle scène, quoi observer).
 
