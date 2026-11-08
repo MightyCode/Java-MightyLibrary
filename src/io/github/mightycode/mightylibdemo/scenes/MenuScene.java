@@ -3,8 +3,8 @@ package io.github.mightycode.mightylibdemo.scenes;
 import io.github.mightycode.mightylib.graphics.GUI.BackgroundlessButton;
 import io.github.mightycode.mightylib.graphics.GUI.GUIList;
 import io.github.mightycode.mightylib.graphics.GUI.ScrollList;
-import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
+import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.scenes.DefaultLoadingScene;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -47,7 +47,7 @@ public class MenuScene extends Scene {
 
     private FloatTweening rotation;
 
-    private RectangleRenderer test;
+    private Text title;
 
     @Override
     protected TemplateSceneLoading createLoadingScene(String[] args) {
@@ -101,10 +101,13 @@ public class MenuScene extends Scene {
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
 
-        test = new RectangleRenderer("texture2D");
-        test.setMainTextureChannel("error");
-        test.setSizePix(100, 100);
-        test.setPosition(new Vector2f(500, 10));
+        title = new Text();
+        title.setFont("bahnschrift")
+                .setAlignment(ETextAlignment.Center)
+                .setReference(EDirection.None)
+                .setFontSize(80)
+                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.12f))
+                .setText("MightyLibrary");
     }
 
     private static class SceneEntry {
@@ -222,10 +225,9 @@ public class MenuScene extends Scene {
         clear();
         super.display();
 
-        test.display();
+        title.display();
         guiList.display();
         sceneList.display();
-        test.display();
 
         super.setAndDisplayRealScene();
     }
@@ -240,7 +242,7 @@ public class MenuScene extends Scene {
         if (sceneList != null)
             sceneList.unload();
 
-        if (test != null)
-            test.unload();
+        if (title != null)
+            title.unload();
     }
 }
