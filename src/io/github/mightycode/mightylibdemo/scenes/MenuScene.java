@@ -140,6 +140,7 @@ public class MenuScene extends Scene {
         list.add(new SceneEntry("TestFallbackScene", TestFallbackScene::new));
         list.add(new SceneEntry("DocumentationScene", DocumentationScene::new));
         list.add(new SceneEntry("TestMultiWindowScene", TestMultiWindowScene::new));
+        list.add(new SceneEntry("TestDisplayModesScene", TestDisplayModesScene::new));
         return list;
     }
 

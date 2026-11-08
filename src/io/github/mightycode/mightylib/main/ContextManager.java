@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
+import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +69,12 @@ public final class ContextManager {
     // Null when the window can't be created. The inputs of the project are bound by the engine afterward.
     WindowContext createWindowContext(Context owner, String name, boolean closesEngine, WindowView view,
                                       WindowConfig config, long parentWindowId) {
-        Window window = new Window(config.toCreationInfo(parentWindowId));
+        DisplaySettings display = config.getDisplay();
+        if (display.getMonitor() == null)
+            display.setMonitor(defaultMonitor(parentWindowId));
+        display = allowedDisplay(null, config.getTitle(), display);
+
+        Window window = new Window(config.toCreationInfo(parentWindowId, display));
         window.createNewWindow(rootGLContext());
         if (!window.getInfo().isWindowCreated())
             return null;
@@ -82,6 +88,48 @@ public final class ContextManager {
         inputManager.init(new ActionInput[]{});
 
         return new WindowContext(++lastWindowId, owner, name, closesEngine, view, window, inputManager, keyboardManager, mouseManager);
+    }
+
+    // Screen of a window created without one: the one of its parent, else the one of the main window (null: primary)
+    private MonitorInfo defaultMonitor(long parentWindowId) {
+        for (Context context : contexts) {
+            for (WindowContext window : context.getWindows()) {
+                if (parentWindowId != 0 && window.getWindow().getInfo().getWindowId() == parentWindowId)
+                    return window.getWindow().getInfo().getMonitor();
+            }
+        }
+
+        WindowContext main = getMainWindow();
+        return main == null ? null : main.getWindow().getInfo().getMonitor();
+    }
+
+    /**
+     * A screen shows one exclusive fullscreen window at most: two would fight for its video mode. A window asking
+     * for a screen already taken by another one becomes borderless instead.
+     *
+     * @param self the window being changed, null for a window being created
+     */
+    DisplaySettings allowedDisplay(Window self, String title, DisplaySettings wanted) {
+        if (wanted.getMode() != EWindowMode.FULLSCREEN)
+            return wanted;
+
+        long screen = Window.ScreenHandle(wanted);
+        for (Context context : contexts) {
+            for (WindowContext other : context.getWindows()) {
+                Window window = other.getWindow();
+                if (window == self || !window.getInfo().isWindowCreated()
+                        || window.getInfo().getWindowMode() != EWindowMode.FULLSCREEN)
+                    continue;
+
+                if (Window.ScreenHandle(window.getDisplay()) == screen) {
+                    System.err.println("--Window \"" + title + "\" : its screen already shows \"" + other.getName()
+                            + "\" in exclusive fullscreen, borderless instead");
+                    return wanted.copy().setMode(EWindowMode.BORDERLESS);
+                }
+            }
+        }
+
+        return wanted;
     }
 
     // ---- Access ----

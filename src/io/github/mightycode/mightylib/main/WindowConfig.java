@@ -9,17 +9,10 @@ import org.joml.Vector2i;
  * (Context.openWindow). Every setter returns the configuration.
  */
 public final class WindowConfig {
-    // Size of a window without a given size
-    public static final int DEFAULT_WIDTH = 800, DEFAULT_HEIGHT = 600;
-
     private String title = "";
-    // Null: the size of the screen in fullscreen, DEFAULT_WIDTH x DEFAULT_HEIGHT in a window
-    private Vector2i size;
-    // Null: the size of the window
+    private DisplaySettings display = new DisplaySettings();
+    // Null: the size of the window when it is created
     private Vector2i virtualSize;
-    private boolean fullscreen;
-    // Null: the primary screen
-    private MonitorInfo monitor;
     // Null: the one of the engine
     private KeyboardLanguage keyboardLanguage;
 
@@ -43,11 +36,27 @@ public final class WindowConfig {
         return this;
     }
 
-    public WindowConfig setSize(int width, int height) {
-        if (width <= 0 || height <= 0)
-            throw new IllegalArgumentException("The size of a window must be positive: " + width + "x" + height);
+    /** Mode and fine settings of the display (a copy is kept). */
+    public WindowConfig setDisplay(DisplaySettings display) {
+        this.display = display.copy();
+        return this;
+    }
 
-        this.size = new Vector2i(width, height);
+    // Shortcut of DisplaySettings.setMode
+    public WindowConfig setWindowMode(EWindowMode mode) {
+        display.setMode(mode);
+        return this;
+    }
+
+    // Shortcut of DisplaySettings.setWindowedSize: the size in WINDOWED mode
+    public WindowConfig setSize(int width, int height) {
+        display.setWindowedSize(width, height);
+        return this;
+    }
+
+    // Shortcut of DisplaySettings.setMonitor, null for the primary screen
+    public WindowConfig setMonitor(MonitorInfo monitor) {
+        display.setMonitor(monitor);
         return this;
     }
 
@@ -56,16 +65,6 @@ public final class WindowConfig {
             throw new IllegalArgumentException("The virtual size of a window must be positive: " + width + "x" + height);
 
         this.virtualSize = new Vector2i(width, height);
-        return this;
-    }
-
-    public WindowConfig setFullscreen(boolean fullscreen) {
-        this.fullscreen = fullscreen;
-        return this;
-    }
-
-    public WindowConfig setMonitor(MonitorInfo monitor) {
-        this.monitor = monitor;
         return this;
     }
 
@@ -106,15 +105,11 @@ public final class WindowConfig {
 
     public String getTitle() { return title; }
 
-    // Null when not given: resolved when the window is created (see size)
-    public Vector2i getSize() { return size != null ? new Vector2i(size) : null; }
+    // A copy
+    public DisplaySettings getDisplay() { return display.copy(); }
 
-    // Null when not given: the size of the window
-    public Vector2i getVirtualSize() { return virtualSize != null ? new Vector2i(virtualSize) : getSize(); }
-
-    public boolean isFullscreen() { return fullscreen; }
-
-    public MonitorInfo getMonitor() { return monitor; }
+    // Null when not given: the size of the window when it is created
+    public Vector2i getVirtualSize() { return virtualSize != null ? new Vector2i(virtualSize) : null; }
 
     public KeyboardLanguage getKeyboardLanguage() { return keyboardLanguage; }
 
@@ -128,13 +123,12 @@ public final class WindowConfig {
 
     public boolean hasProjectInputs() { return projectInputs; }
 
-    WindowCreationInfo toCreationInfo(long parentWindowId) {
+    // The display may differ from the asked one (ContextManager.allowedDisplay)
+    WindowCreationInfo toCreationInfo(long parentWindowId, DisplaySettings display) {
         WindowCreationInfo info = new WindowCreationInfo();
-        info.Size = getSize();
+        info.Display = display.copy();
         info.VirtualSize = getVirtualSize();
         info.WindowName = title;
-        info.Fullscreen = fullscreen;
-        info.Monitor = monitor;
         info.KeyboardLanguage = keyboardLanguage;
         info.ParentWindowId = parentWindowId;
         return info;

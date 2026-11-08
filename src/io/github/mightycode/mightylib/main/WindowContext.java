@@ -62,6 +62,26 @@ public class WindowContext {
 
     public Window getWindow() { return window; }
 
+    // A copy of the display applied to the window
+    public DisplaySettings getDisplay() { return window.getDisplay(); }
+
+    /**
+     * Show the window as the settings say, at once (its OpenGL context, objects and inputs stay). Without a screen,
+     * the window stays on its own. A second exclusive fullscreen window on a screen becomes borderless.
+     */
+    public void setDisplay(DisplaySettings display) {
+        DisplaySettings wanted = display.copy();
+        if (wanted.getMonitor() == null)
+            wanted.setMonitor(window.getInfo().getMonitor());
+
+        window.applyDisplay(owner.engine().contexts().allowedDisplay(window, name, wanted));
+    }
+
+    // Only the mode changes, the other settings of the window stay
+    public void setWindowMode(EWindowMode mode) {
+        setDisplay(window.getDisplay().setMode(mode));
+    }
+
     public InputManager getInputManager() { return inputManager; }
     public KeyboardManager getKeyboardManager() { return keyboardManager; }
     public MouseManager getMouseManager() { return mouseManager; }

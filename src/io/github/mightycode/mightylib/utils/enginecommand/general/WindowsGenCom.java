@@ -71,6 +71,8 @@ public class WindowsGenCom extends BaseCommand {
 
         long glfwId = window.getWindow().getInfo().getWindowId();
         json.put("focused", glfwId != 0 && glfwGetWindowAttrib(glfwId, GLFW_FOCUSED) == 1);
+        json.put("mode", window.getWindow().getInfo().getWindowMode().name().toLowerCase());
+        json.put("display", window.getDisplay().toString());
         json.put("size", window.getWindow().getInfo().getSizeRef().x + "x" + window.getWindow().getInfo().getSizeRef().y);
         json.put("virtualSize", window.getWindow().getInfo().getVirtualSizeRef().x + "x"
                 + window.getWindow().getInfo().getVirtualSizeRef().y);
@@ -92,7 +94,7 @@ public class WindowsGenCom extends BaseCommand {
     public String help() {
         return super.help() +
                 "\nwindows : contexts (a scene and its windows) and windows with id, title, parent, modal, blocked"
-                + " (waits for a modal window), focus, sizes and the OpenGL objects owned by the window's context."
+                + " (waits for a modal window), focus, display mode and settings, sizes and the OpenGL objects owned by the window's context."
                 + " The window marked target is the one that input, screenshot, monitors, scene and camera work on"
                 + " (see the window command)";
     }
