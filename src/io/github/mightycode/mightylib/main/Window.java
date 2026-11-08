@@ -36,6 +36,9 @@ public final class Window {
 
     private GLContext glContext;
 
+    // Window this one belongs to, 0 for none
+    private long parentWindowId;
+
     public WindowInfo getInfo() { return info; }
 
     Window() {
@@ -61,6 +64,7 @@ public final class Window {
         info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
 
         info.windowName = wci.WindowName;
+        parentWindowId = wci.ParentWindowId;
         info.fullscreen = wci.Fullscreen;
         info.monitor = wci.Monitor;
     }
@@ -108,7 +112,19 @@ public final class Window {
             IntBuffer areaWidth = stack.mallocInt(1), areaHeight = stack.mallocInt(1);
             glfwGetMonitorWorkarea(monitorHandle, areaX, areaY, areaWidth, areaHeight);
 
-            if (!info.fullscreen) {
+            if (!info.fullscreen && parentWindowId != 0) {
+                // Centered on its parent window
+                IntBuffer parentX = stack.mallocInt(1), parentY = stack.mallocInt(1);
+                IntBuffer parentWidth = stack.mallocInt(1), parentHeight = stack.mallocInt(1);
+                glfwGetWindowPos(parentWindowId, parentX, parentY);
+                glfwGetWindowSize(parentWindowId, parentWidth, parentHeight);
+
+                glfwSetWindowPos(
+                        info.windowId,
+                        parentX.get(0) + (parentWidth.get(0) - pWidth.get(0)) / 2,
+                        parentY.get(0) + (parentHeight.get(0) - pHeight.get(0)) / 2
+                );
+            } else if (!info.fullscreen) {
                 glfwSetWindowPos(
                         info.windowId,
                         areaX.get(0) + Math.max(0, (areaWidth.get(0) - pWidth.get(0)) / 2),
@@ -117,6 +133,10 @@ public final class Window {
             }
             // the stack frame is popped automatically
         }
+
+        // Above its parent, not in the task bar
+        if (parentWindowId != 0)
+            NativeWindowOwner.set(info.windowId, parentWindowId);
 
         // Make the OpenGL context current, with the default state of the engine's contexts
         glContext = GLContext.ofWindow(info.windowName, info.windowId);
@@ -132,6 +152,11 @@ public final class Window {
         return glfwWindowShouldClose(info.windowId) && info.isWindowCreated();
     }
 
+
+    // The OpenGL context of the window must be current; the events are polled once for all the windows (glfwPollEvents)
+    public void swapBuffers(){
+        glfwSwapBuffers(info.windowId);
+    }
 
     public void swapBuffersAndPollEvents(){
         glfwSwapBuffers(info.windowId);

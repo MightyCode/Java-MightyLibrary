@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
@@ -12,6 +13,7 @@ import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
+import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
@@ -22,16 +24,17 @@ import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11C.*;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
 
 /**
- * The services shared by everything the engine shows: resources, GL elements, shaders, sounds, windows and scenes.
- * One per process (GLFW and the sound device are), created and driven by MainLoop. Code that runs for a view
- * reaches it by Views.engine(); the engine is itself the view of the code that runs outside any scene
- * (start, commands, loading), with the main window.
+ * The services shared by everything the engine shows: resources, GL elements, shaders, sounds, and the contexts
+ * (a scene and its windows). One per process (GLFW and the sound device are), created and driven by MainLoop.
+ * Code that runs for a view reaches it by Views.engine(); the engine is itself the view of the code that runs
+ * outside any scene (start, commands, loading), with the main window.
  */
 public final class Engine implements IView {
     private final EngineConfig config;
@@ -45,6 +48,8 @@ public final class Engine implements IView {
     private DebugServer debugServer;
 
     private boolean glfwStarted;
+    // A window that stops the engine was closed
+    private boolean stopRequested;
 
     Engine(EngineConfig config) {
         this.config = config;
@@ -62,6 +67,7 @@ public final class Engine implements IView {
 
     public SoundManager soundManager() { return soundManager; }
 
+    // The scenes of the main context
     public SceneManager sceneManager() { return sceneManager; }
 
     // ---- IView: the code outside any scene runs for the main window, without cameras ----
@@ -70,7 +76,7 @@ public final class Engine implements IView {
     public Engine engine() { return this; }
 
     @Override
-    public Context context() { return contexts.getMainContext(); }
+    public WindowContext context() { return contexts.getMainWindow(); }
 
     @Override
     public Camera2D camera2D() {
@@ -136,23 +142,19 @@ public final class Engine implements IView {
 
         System.out.println("--Create main context.");
 
-        WindowCreationInfo wci = new WindowCreationInfo();
-        wci.Size = config.getWindowSize();
-        wci.VirtualSize = config.getVirtualSize();
-
-        wci.WindowName = config.getProjectName();
-        wci.Fullscreen = config.isFullscreen();
-        wci.Monitor = chooseMonitor();
-        wci.KeyboardLanguage = config.getKeyboardLanguage();
-
-        contexts.createDefaultContext(wci);
-
-        Context context = contexts.getContext("Main");
-        Window window = context.getWindow();
+        WindowConfig windowConfig = new WindowConfig(config.getProjectName())
+                .setSize(config.getWindowSize().x, config.getWindowSize().y)
+                .setVirtualSize(config.getVirtualSize().x, config.getVirtualSize().y)
+                .setFullscreen(config.isFullscreen())
+                .setMonitor(chooseMonitor())
+                .setKeyboardLanguage(config.getKeyboardLanguage());
 
         // Checked before any GL call: there is no GL context without a window
-        if (!window.getInfo().isWindowCreated())
+        Context mainContext = contexts.createMainContext(this, windowConfig);
+        if (mainContext == null)
             return ListError.WINDOW_CREATION_FAIL;
+
+        WindowContext mainWindow = mainContext.getMainWindow();
 
         System.out.println("\n" + Version.getVersion());
         System.out.println(glfwGetVersionString());
@@ -190,12 +192,13 @@ public final class Engine implements IView {
         }
 
         System.out.println("--Create SceneManager");
-        sceneManager = new SceneManager(this, config.getLoadingScene());
+        sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
+        mainContext.setSceneManager(sceneManager);
 
         IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {
             projectLoading.init(resources);
-            projectLoading.contextLoading(context);
+            projectLoading.contextLoading(mainWindow);
         }
 
         // Create all resources dependencies
@@ -222,10 +225,97 @@ public final class Engine implements IView {
             Icon icon = resources.isExistingResource(Icon.class, config.getIconName())
                     ? resources.getResource(Icon.class, config.getIconName()) : null;
             if (icon != null && icon.isLoaded())
-                context.getWindow().setIcon(icon);
+                mainWindow.getWindow().setIcon(icon);
         }
 
         return ListError.NO_ERROR;
+    }
+
+    // ---- Contexts and windows ----
+
+    /**
+     * Open another context while the engine runs: a window with its own scene, scene changes and loading screen,
+     * sharing the resources. Closing its main window (or its scene asking to exit) closes only this context.
+     * The scene is created with the new context as its view.
+     *
+     * @throws IllegalStateException when the window can't be created
+     */
+    public Context openContext(String name, WindowConfig windowConfig, Supplier<Scene> startScene) {
+        if (sceneManager == null)
+            throw new IllegalStateException("The engine is not started");
+
+        GLContext previous = GLContext.currentOrNull();
+
+        Context context = contexts.createContext(this, name, false, windowConfig);
+        if (context == null)
+            throw new IllegalStateException("The window of the context " + name + " can't be created");
+
+        initWindowInputs(context.getMainWindow(), windowConfig);
+
+        SceneManager manager = new SceneManager(this, context, false, config.getLoadingScene());
+        context.setSceneManager(manager);
+
+        try (Views.Scope ignored = Views.enter(context)) {
+            context.getMainWindow().getWindow().bindWindow();
+            manager.init(startScene.get(), new String[]{"start"});
+        }
+
+        if (previous != null && !previous.isDestroyed())
+            previous.makeCurrent();
+        else
+            contexts.getMainWindow().getWindow().bindWindow();
+        return context;
+    }
+
+    // The inputs of the project (IProjectLoading.contextLoading) are bound to each window that asks for them
+    void initWindowInputs(WindowContext window, WindowConfig windowConfig) {
+        IProjectLoading projectLoading = config.getProjectLoading();
+        if (projectLoading != null && windowConfig.hasProjectInputs())
+            projectLoading.contextLoading(window);
+    }
+
+
+    // ---- Run by the loop ----
+
+    boolean isStopRequested() { return stopRequested; }
+
+    // A scene of any context is loading: the loading queues use the whole frame
+    boolean isAnySceneLoading() {
+        for (Context context : contexts.getContexts()) {
+            if (context.getSceneManager() != null && context.getSceneManager().isCurrentSceneLoading())
+                return true;
+        }
+
+        return false;
+    }
+
+    // One tick of every context, then the inputs of every window
+    void update() {
+        for (Context context : contexts.getContexts())
+            context.update();
+
+        soundManager.lateUpdate();
+        contexts.postUpdate();
+
+        for (Context context : contexts.getContexts())
+            context.postUpdate();
+    }
+
+    // Each window shows its view
+    void displayWindows() {
+        for (Context context : contexts.getContexts())
+            context.displayWindows();
+    }
+
+    // The buffers of all the windows are swapped, then the events of all of them are read
+    void swapWindows() {
+        for (Context context : contexts.getContexts())
+            context.swapWindows();
+
+        glfwPollEvents();
+
+        if (contexts.processClosures())
+            stopRequested = true;
     }
 
     // ---- Stop ----
@@ -240,16 +330,17 @@ public final class Engine implements IView {
         if (soundManager != null)
             soundManager.unloadSoundSource();
 
-        if (sceneManager != null) {
-            sceneManager.unload();
-            sceneManager = null;
-        } else {
-            // The start failed before the scenes
-            if (resources != null)
-                resources.unload();
-            if (glResources != null)
-                glResources.unload();
-        }
+        // What every window shows, then the resources, while the OpenGL contexts exist
+        contexts.unloadViews();
+
+        WindowContext mainWindow = contexts.getMainWindow();
+        if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated())
+            mainWindow.getWindow().bindWindow();
+
+        if (resources != null)
+            resources.unload();
+        if (glResources != null)
+            glResources.unload();
 
         // Tasks still waiting can free GL objects: run them while the context exists
         MainThread.processAll();

@@ -219,9 +219,20 @@ public class MouseManager {
 
     public Vector2f oldPos() { return new Vector2f(oldPos);}
 
+    // A blocked mouse (the window waits for a modal window) has no button, no scroll and its cursor is nowhere
+    private boolean blocked;
+
+    public void setBlocked(boolean blocked) { this.blocked = blocked; }
+
+    public boolean isBlocked() { return blocked; }
+
     public void postUpdate(){
         oldPos.set(pos);
         mouseUpdate();
+        if (blocked) {
+            pos.set(-1_000_000f);
+            delta.set(0);
+        }
 
         relativePos.x = posX() / windowInfo.getSizeRef().x;
         relativePos.y = posY() / windowInfo.getSizeRef().y;
@@ -229,11 +240,14 @@ public class MouseManager {
         buttonSimulation.update();
         for(int key = 0; key < state.length; ++key){
             oldState[key] = state[key];
-            state[key] = getState(key) || buttonSimulation.getState(key);
+            state[key] = !blocked && (getState(key) || buttonSimulation.getState(key));
         }
 
         // Real scroll events of the next tick are added by the callback
-        mouseScroll.set(pendingScroll);
+        if (blocked)
+            mouseScroll.set(0);
+        else
+            mouseScroll.set(pendingScroll);
         pendingScroll.set(0);
     }
 

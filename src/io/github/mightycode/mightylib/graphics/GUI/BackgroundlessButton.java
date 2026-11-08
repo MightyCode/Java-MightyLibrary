@@ -1,18 +1,18 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.WindowContext;
 import org.joml.Vector2f;
 
 public class BackgroundlessButton extends GUI {
-    private final Context context;
+    private final WindowContext context;
     public final Text Text, OverlapsText;
 
-    public BackgroundlessButton(Context context){
+    public BackgroundlessButton(WindowContext context){
         this(context, null);
     }
 
-    public BackgroundlessButton(Context context, Text text){
+    public BackgroundlessButton(WindowContext context, Text text){
         super();
         this.context = context;
 

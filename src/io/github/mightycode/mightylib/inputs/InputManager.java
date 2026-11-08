@@ -96,7 +96,21 @@ public class InputManager {
     private final Map<Integer, Float> simulatedAxisValues;
 
     // Value of the axis for this tick, 0 if unknown
+    // A blocked manager (its window waits for a modal window) answers nothing pressed, no value, no axis
+    private boolean blocked;
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+        keyManager.setBlocked(blocked);
+        mouseManager.setBlocked(blocked);
+    }
+
+    public boolean isBlocked() { return blocked; }
+
     public float getAxis(int axisId){
+        if (blocked)
+            return 0;
+
         AxisInput axisInput = axisConfigurations.get(axisId);
         if (axisInput == null)
             return 0;
@@ -139,6 +153,9 @@ public class InputManager {
     }
 
     public boolean getState(int inputID){
+        if (blocked)
+            return false;
+
         ActionInput actionInput = actionConfigurations.get(inputID);
         if (actionInput == null)
             return false;
@@ -152,6 +169,9 @@ public class InputManager {
      * progressive for a gamepad axis. For a speed, a movement : value * maxSpeed.
      */
     public float getValue(int inputID){
+        if (blocked)
+            return 0;
+
         ActionInput actionInput = actionConfigurations.get(inputID);
         if (actionInput == null)
             return 0;
@@ -161,6 +181,9 @@ public class InputManager {
 
 
     public boolean inputPressed(int inputId){
+        if (blocked)
+            return false;
+
         ActionInput actionInput = actionConfigurations.get(inputId);
         if (actionInput == null)
             return false;
@@ -170,6 +193,9 @@ public class InputManager {
 
 
     public boolean inputReleased(int inputID){
+        if (blocked)
+            return false;
+
         ActionInput actionInput = actionConfigurations.get(inputID);
         if (actionInput == null)
             return false;

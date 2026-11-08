@@ -8,7 +8,9 @@ import io.github.mightycode.mightylib.main.utils.*;
 import io.github.mightycode.mightylib.graphics.surface.BasicBindableObject;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
-import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.WindowConfig;
+import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.main.WindowView;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
@@ -33,7 +35,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     protected final Resources resources;
     protected final GLResources glResources;
 
-    protected final Context mainContext;
+    protected final WindowContext mainContext;
     protected Camera3D main3DCamera;
     protected Camera2D main2DCamera;
     protected SceneManagerInterface sceneManagerInterface;
@@ -85,13 +87,21 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         this(null);
     }
 
+    /**
+     * Open a window drawn by the view, belonging to this scene: closed when the scene is left unless the
+     * configuration makes it persistent. By default its parent is the window of the scene.
+     */
+    protected final WindowContext openWindow(WindowConfig config, WindowView view, String... args) {
+        return mainContext.getContext().openWindow(config, view, args);
+    }
+
     // ---- IView ----
 
     @Override
     public final Engine engine() { return engine; }
 
     @Override
-    public final Context context() { return mainContext; }
+    public final WindowContext context() { return mainContext; }
 
     @Override
     public final Camera2D camera2D() {
@@ -169,6 +179,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     final void initByManager(String[] args) {
         try (Views.Scope ignored = Views.enter(this)) {
+            // The code of the scene draws in its window: its OpenGL context is the current one
+            mainContext.getWindow().bindWindow();
             this.args = args;
             isWaitingForLoading = true;
             launched = false;
@@ -186,6 +198,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     final void launchByManager(String[] args) {
         try (Views.Scope ignored = Views.enter(this)) {
+            // The code of the scene draws in its window: its OpenGL context is the current one
+            mainContext.getWindow().bindWindow();
             this.args = args;
             initGlobalParameters();
 
@@ -232,6 +246,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     final void updateByManager(){
         try (Views.Scope ignored = Views.enter(this)) {
+            // The code of the scene draws in its window: its OpenGL context is the current one
+            mainContext.getWindow().bindWindow();
             if (isWaitingForLoading) {
                 if (loadingScene != null)
                     loadingScene.updateByManager();
@@ -249,6 +265,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     void postUpdateByManager(){
         try (Views.Scope ignored = Views.enter(this)) {
+            // The code of the scene draws in its window: its OpenGL context is the current one
+            mainContext.getWindow().bindWindow();
             if (isWaitingForLoading) {
                 if (loadingScene != null)
                     loadingScene.postUpdateByManager();
@@ -272,6 +290,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
      */
     final void displayByManager() {
         try (Views.Scope ignored = Views.enter(this)) {
+            // The code of the scene draws in its window: its OpenGL context is the current one
+            mainContext.getWindow().bindWindow();
             display0();
         }
     }
@@ -387,6 +407,12 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     final void unloadByManager() {
         try (Views.Scope ignored = Views.enter(this)) {
+            // The code of the scene draws in its window: its OpenGL context is the current one
+            mainContext.getWindow().bindWindow();
+            // The windows this scene opened go with it
+            mainContext.getContext().closeWindowsOpenedBy(this);
+            mainContext.getWindow().bindWindow();
+
             if (loadingScene != null) {
                 loadingScene.unload();
                 loadingScene = null;

@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.MainLoop;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
@@ -17,6 +18,8 @@ public class SceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
 
+    private final Context context;
+    // Null for the contexts other than the main one: the console and the debug server serve the main one
     private final Commands commands;
     private final Engine engine;
     private final SoundManager soundManager;
@@ -25,11 +28,12 @@ public class SceneManager {
     private String scenesPackage;
 
     // defaultLoadingScene: displayed while a scene loads, unless the scene overrides createLoadingScene
-    public SceneManager(Engine engine, Supplier<TemplateSceneLoading> defaultLoadingScene) {
+    public SceneManager(Engine engine, Context context, boolean withCommands, Supplier<TemplateSceneLoading> defaultLoadingScene) {
+        this.context = context;
         this.engine = engine;
         sceneInterface = new SceneManagerInterface(engine.resources(), defaultLoadingScene);
 
-        commands = new Commands(this);
+        commands = withCommands ? new Commands(this) : null;
         soundManager = engine.soundManager();
     }
 
@@ -46,7 +50,7 @@ public class SceneManager {
 
     public void update() {
         // Command
-        if (MainLoop.isDebug()) {
+        if (MainLoop.isDebug() && commands != null) {
             updateMain();
         }
 
@@ -58,13 +62,12 @@ public class SceneManager {
             return;
 
         currentScene.updateByManager();
-        soundManager.lateUpdate();
     }
 
 
     private void updateMain() {
-        Context mainContext = engine.contexts().getMainContext();
-        InputManager mainInputManager = mainContext.getInputManager();
+        WindowContext mainWindow = context.getMainWindow();
+        InputManager mainInputManager = mainWindow.getInputManager();
 
         // Commands come from the console thread or the debug server, never block here
         commands.processPendingCommands();
@@ -82,12 +85,12 @@ public class SceneManager {
 
 
     public void postUpdate() {
-        engine.contexts().postUpdate();
         currentScene.postUpdateByManager();
     }
 
     private void changeScene() {
-        commands.removeSceneCommands();
+        if (commands != null)
+            commands.removeSceneCommands();
 
         Scene previousScene = currentScene;
         if (previousScene != null) {
@@ -160,6 +163,12 @@ public class SceneManager {
     public void requestExit(int status) {
         sceneInterface.exit(status);
     }
+    // The context of this scene manager: its windows and its engine
+    public Context getContext() {
+        return context;
+    }
+
+    // The current scene is unloaded; the resources are freed by the engine at its end
     public void unload(){
         System.out.println("--Unload SceneManager");
 
@@ -167,8 +176,16 @@ public class SceneManager {
             System.out.println("--Unload scene" + currentScene.getClass().getName());
             currentScene.unloadByManager();
         }
+    }
 
-        engine.resources().unload();
-        engine.glResources().unload();
+    // The context is closed while the engine goes on: what its scene loaded must not stay loaded
+    public void releaseSceneResources() {
+        if (currentScene == null)
+            return;
+
+        for (String batch : currentScene.getInvolvedBatch())
+            engine.resources().unloadBatch(batch);
+
+        currentScene = null;
     }
 }

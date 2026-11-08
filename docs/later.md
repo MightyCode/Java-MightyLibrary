@@ -152,6 +152,12 @@ Streaming des musiques longues (tout est décodé en mémoire).
 ## Console et GUI en jeu
 Console en jeu (base `graphics/GUI/Terminal` et `guicommand`, à unifier avec `Commands` ; lire le texte par `KeyboardManager.getTypedText()`, pas `KeyboardLanguage`) et overlay de debug (stats, scène, entrées). S'appuie sur thème, tailles et langues.
 
+## Fenêtres
+- **Sous-fenêtres natives hors Windows** : propriétaire de fenêtre sous Linux (X11 `XSetTransientForHint`, Wayland `xdg_toplevel.set_parent`) et macOS (`addChildWindow`) à la place du simple `GLFW_FLOATING` de `NativeWindowOwner`.
+- **Fenêtres redimensionnables** (`WindowConfig.setResizable`, recalcul de la surface virtuelle), icône par fenêtre, renvoi du focus au dialogue modal quand on clique sur la fenêtre parente, manettes bloquées par un dialogue modal.
+- **`EngineStats` par fenêtre** (compteurs de frames et de swaps) et `Screenshot` par fenêtre dans la boucle.
+- **Vsync** par fenêtre (`swapInterval` est à 0 partout).
+
 ## Intégrations plateformes
 - **Discord** : présence enrichie (SDK Discord, bindings Java à évaluer).
 - **Steam** : Steamworks (succès, overlay, statistiques), bindings Java à évaluer.
