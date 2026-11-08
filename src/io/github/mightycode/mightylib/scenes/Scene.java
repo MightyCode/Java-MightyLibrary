@@ -146,8 +146,11 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         launched = false;
 
         loadingScene = createLoadingScene(args);
-        if (loadingScene != null)
+        if (loadingScene != null) {
+            // Lets the loading scene leave the loading (a key to go back to the menu...)
+            loadingScene.setSceneManagerInterface(sceneManagerInterface);
             loadingScene.launchByManager(args);
+        }
 
         init(args);
     }
