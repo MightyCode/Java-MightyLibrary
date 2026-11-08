@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2f;
@@ -218,6 +219,8 @@ public final class Window {
      * Destroy the current window and its OpenGL context.
      */
     public void destroyWindow(){
+        Screenshot.cancelRequests(info.windowId);
+
         if (glContext != null) {
             glContext.destroy();
             glContext = null;

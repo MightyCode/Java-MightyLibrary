@@ -275,6 +275,59 @@ public final class Engine implements IView {
     }
 
 
+    // ---- Window targeted by the commands ----
+
+    // Null: the main window of the main context
+    private WindowContext commandWindow;
+
+    /** The window the debug commands (input, screenshot, monitors, scene, camera...) work on. */
+    public WindowContext commandWindow() {
+        // A closed window gives the target back to the main window
+        if (commandWindow != null && !commandWindow.getContext().getWindows().contains(commandWindow)
+                || commandWindow != null && !contexts.getContexts().contains(commandWindow.getContext()))
+            commandWindow = null;
+
+        return commandWindow != null ? commandWindow : contexts.getMainWindow();
+    }
+
+    public Context commandContext() {
+        return commandWindow().getContext();
+    }
+
+    // Null to come back to the main window
+    public void setCommandWindow(WindowContext window) {
+        commandWindow = window;
+    }
+
+    /**
+     * A window by its number, its title (case insensitive), or the name of a context (its main window); null if none.
+     */
+    public WindowContext findWindow(String reference) {
+        try {
+            int id = Integer.parseInt(reference);
+            for (Context context : contexts.getContexts()) {
+                for (WindowContext window : context.getWindows()) {
+                    if (window.getId() == id)
+                        return window;
+                }
+            }
+
+            return null;
+        } catch (NumberFormatException ignored) {
+            // Not a number: a title or a context
+        }
+
+        for (Context context : contexts.getContexts()) {
+            for (WindowContext window : context.getWindows()) {
+                if (window.getName().equalsIgnoreCase(reference))
+                    return window;
+            }
+        }
+
+        Context context = contexts.getContext(reference);
+        return context == null ? null : context.getMainWindow();
+    }
+
     // ---- Run by the loop ----
 
     boolean isStopRequested() { return stopRequested; }

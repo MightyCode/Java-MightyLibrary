@@ -164,6 +164,11 @@ public class SceneManager {
         sceneInterface.exit(status);
     }
     // The context of this scene manager: its windows and its engine
+    // The scenes of the context targeted by the commands (see Engine.commandWindow): this one by default
+    public SceneManager commandTarget() {
+        return engine.commandContext().getSceneManager();
+    }
+
     public Context getContext() {
         return context;
     }

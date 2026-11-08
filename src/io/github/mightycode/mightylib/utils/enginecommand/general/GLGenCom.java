@@ -2,7 +2,8 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.main.Views;
 
-import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.GLContext;
+import org.json.JSONArray;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
@@ -24,6 +25,19 @@ public class GLGenCom extends BaseCommand {
             glObjects.put(type.name(), GenDeleteResources.Count(type));
 
         data.put("glObjects", glObjects);
+
+        // What each OpenGL context owns (vertex arrays and framebuffers are not shared between windows)
+        JSONArray glContexts = new JSONArray();
+        for (GLContext context : GLContext.live()) {
+            JSONObject json = new JSONObject();
+            json.put("name", context.getName());
+            json.put("VertexArrayBuffer", context.vertexArrays().size());
+            json.put("FramebufferObject", context.framebuffers().size());
+            json.put("RenderBufferObject", context.renderbuffers().size());
+            json.put("pendingDeletions", context.pendingDeletions());
+            glContexts.put(json);
+        }
+        data.put("glContexts", glContexts);
         JSONObject shared = Views.engine().glResources().describe();
 
         if (args.length > 1 && args[1].equals("summary")) {

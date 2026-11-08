@@ -30,7 +30,7 @@ public class CameraGenCom extends BaseCommand {
         if (checkArgumentHelp(args))
             return CommandResult.ok(help());
 
-        Scene scene = sceneManager.getCurrentScene();
+        Scene scene = sceneManager.commandTarget().getCurrentScene();
         if (scene == null)
             return CommandResult.error("No current scene");
 

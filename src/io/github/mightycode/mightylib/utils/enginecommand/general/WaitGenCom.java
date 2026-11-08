@@ -78,11 +78,11 @@ public class WaitGenCom extends BaseCommand {
             if (future.isDone())
                 return true;
 
-            if (commands.getTick() < startTick + 2 || sceneManager.isSceneChangePending()
-                    || sceneManager.isCurrentSceneLoading())
+            if (commands.getTick() < startTick + 2 || sceneManager.commandTarget().isSceneChangePending()
+                    || sceneManager.commandTarget().isCurrentSceneLoading())
                 return false;
 
-            future.complete(CommandResult.ok(sceneManager.getCurrentScene().getClass().getName() + " loaded"));
+            future.complete(CommandResult.ok(sceneManager.commandTarget().getCurrentScene().getClass().getName() + " loaded"));
             return true;
         });
 

@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
-import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.main.utils.FrameEvent;
 import io.github.mightycode.mightylib.main.utils.GameTime;
@@ -124,7 +123,6 @@ public final class MainLoop {
                 EngineStats.endFrame(frameStart, frameWork);
                 frameEvent.commit();
 
-                Screenshot.captureIfRequested(window.getInfo().getWindowId());
                 long swapStart = System.nanoTime();
                 engine.swapWindows();
                 EngineStats.endSwap(System.nanoTime() - swapStart);

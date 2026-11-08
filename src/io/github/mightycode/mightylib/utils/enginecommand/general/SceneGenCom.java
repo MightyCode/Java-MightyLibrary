@@ -25,7 +25,7 @@ public class SceneGenCom extends BaseCommand {
         Class<?> sceneClass = findSceneClass(args[1]);
         if (sceneClass == null)
             return CommandResult.error("Unknown scene ->" + args[1] + "<-, give its class name relative to "
-                    + sceneManager.getScenesPackage() + " or its full name");
+                    + sceneManager.commandTarget().getScenesPackage() + " or its full name");
 
         if (!Scene.class.isAssignableFrom(sceneClass))
             return CommandResult.error(sceneClass.getName() + " is not a scene");
@@ -38,7 +38,7 @@ public class SceneGenCom extends BaseCommand {
         }
 
         String[] sceneArgs = args.length > 2 ? Arrays.copyOfRange(args, 2, args.length) : new String[]{""};
-        sceneManager.requestSceneChange(scene, sceneArgs);
+        sceneManager.commandTarget().requestSceneChange(scene, sceneArgs);
 
         return CommandResult.ok("Changing scene to " + sceneClass.getName()
                 + ", use -> scene <- to know when it is loaded");
@@ -46,16 +46,16 @@ public class SceneGenCom extends BaseCommand {
 
     private CommandResult currentScene() {
         JSONObject data = new JSONObject();
-        Scene scene = sceneManager.getCurrentScene();
+        Scene scene = sceneManager.commandTarget().getCurrentScene();
 
         data.put("scene", scene == null ? JSONObject.NULL : scene.getClass().getName());
-        data.put("loading", sceneManager.isCurrentSceneLoading());
+        data.put("loading", sceneManager.commandTarget().isCurrentSceneLoading());
 
         return CommandResult.ok("Current scene", data);
     }
 
     private Class<?> findSceneClass(String name) {
-        String[] candidates = { sceneManager.getScenesPackage() + "." + name, name };
+        String[] candidates = { sceneManager.commandTarget().getScenesPackage() + "." + name, name };
 
         for (String candidate : candidates) {
             try {
