@@ -25,7 +25,11 @@ public class EngineConfig {
     private Supplier<Scene> startScene;
     private Supplier<TemplateSceneLoading> loadingScene = DefaultLoadingScene::new;
 
-    private final Vector2i windowSize = new Vector2i(1280, 720);
+    // Size of the window without a given size, when not in fullscreen
+    public static final int DEFAULT_WINDOW_WIDTH = 1280, DEFAULT_WINDOW_HEIGHT = 720;
+
+    // Null: the size of the screen in fullscreen, DEFAULT_WINDOW_WIDTH x DEFAULT_WINDOW_HEIGHT in a window
+    private Vector2i windowSize;
     // Null: same as the window size
     private Vector2i virtualSize;
 
@@ -69,7 +73,7 @@ public class EngineConfig {
     }
 
     public EngineConfig setWindowSize(int width, int height) {
-        windowSize.set(width, height);
+        windowSize = new Vector2i(width, height);
         return this;
     }
 
@@ -234,8 +238,14 @@ public class EngineConfig {
 
     public Supplier<Scene> getStartScene() { return startScene; }
     public Supplier<TemplateSceneLoading> getLoadingScene() { return loadingScene; }
-    public Vector2i getWindowSize() { return new Vector2i(windowSize); }
-    public Vector2i getVirtualSize() { return new Vector2i(virtualSize != null ? virtualSize : windowSize); }
+    // Null in fullscreen without a given size: the size of the screen, known when the window is created
+    public Vector2i getWindowSize() {
+        if (windowSize != null)
+            return new Vector2i(windowSize);
+        return fullscreen ? null : new Vector2i(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
+    }
+    // Null when the window size is null: the size of the window
+    public Vector2i getVirtualSize() { return virtualSize != null ? new Vector2i(virtualSize) : getWindowSize(); }
     public String getProjectName() { return projectName; }
     public int getFps() { return fps; }
     public int getTps() { return tps; }

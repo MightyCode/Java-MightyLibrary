@@ -9,8 +9,12 @@ import org.joml.Vector2i;
  * (Context.openWindow). Every setter returns the configuration.
  */
 public final class WindowConfig {
+    // Size of a window without a given size
+    public static final int DEFAULT_WIDTH = 800, DEFAULT_HEIGHT = 600;
+
     private String title = "";
-    private Vector2i size = new Vector2i(800, 600);
+    // Null: the size of the screen in fullscreen, DEFAULT_WIDTH x DEFAULT_HEIGHT in a window
+    private Vector2i size;
     // Null: the size of the window
     private Vector2i virtualSize;
     private boolean fullscreen;
@@ -102,9 +106,11 @@ public final class WindowConfig {
 
     public String getTitle() { return title; }
 
-    public Vector2i getSize() { return new Vector2i(size); }
+    // Null when not given: resolved when the window is created (see size)
+    public Vector2i getSize() { return size != null ? new Vector2i(size) : null; }
 
-    public Vector2i getVirtualSize() { return new Vector2i(virtualSize != null ? virtualSize : size); }
+    // Null when not given: the size of the window
+    public Vector2i getVirtualSize() { return virtualSize != null ? new Vector2i(virtualSize) : getSize(); }
 
     public boolean isFullscreen() { return fullscreen; }
 
