@@ -41,7 +41,6 @@ public class KeyboardManager {
     // Text typed during the tick, given by the system (keyboard layout, dead keys and IME already applied)
     private final StringBuilder incomingText;
     private String typedText;
-    private final GLFWCharCallback charCallback;
 
     // Simulated keys and text (commands, scripts, later replays), applied at the next postUpdate like real inputs
     private final InputSimulation keySimulation;
@@ -68,7 +67,8 @@ public class KeyboardManager {
         keySimulation = new InputSimulation();
         pendingSimulatedText = new StringBuilder();
 
-        glfwSetCharCallback(info.getWindowId(), charCallback = new GLFWCharCallback() {
+        // Freed with the window (Window.destroyWindow)
+        glfwSetCharCallback(info.getWindowId(), new GLFWCharCallback() {
             @Override
             public void invoke(long window, int codepoint) {
                 incomingText.appendCodePoint(codepoint);
