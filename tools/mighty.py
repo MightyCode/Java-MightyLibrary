@@ -3,7 +3,7 @@
 
 Usage:
     python tools/mighty.py stats
-    python tools/mighty.py scene Platformer2D.Test2DPlatformerBox2D
+    python tools/mighty.py scene Platformer2D.PlatformerBox2D
     python tools/mighty.py --wait 60 help        # wait until the program accepts connections
     python tools/mighty.py --json stats          # raw JSON answer
     python tools/mighty.py                       # interactive mode, one command per line

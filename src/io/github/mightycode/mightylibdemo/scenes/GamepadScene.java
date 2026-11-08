@@ -20,7 +20,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * bigger, A turns it white. The text lists the connected gamepads with their buttons and axes.
  * BACK (or ESCAPE) returns to the menu. Several players with one real gamepad : the gamepad connect command.
  */
-public class TestGamepadScene extends Scene {
+public class GamepadScene extends Scene {
     private static final int PLAYERS = 4;
     private static final float SPEED = 400;
     private static final float SIZE = 60;

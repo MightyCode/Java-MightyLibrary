@@ -27,7 +27,7 @@ import java.util.ArrayList;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class Test2DRopeSimulation extends Scene {
+public class RopeSimulation2D extends Scene {
 
     static class Point implements IUpdatableDisplayable {
         private final RectangleRenderer renderer;

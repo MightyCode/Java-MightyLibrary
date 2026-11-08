@@ -18,9 +18,9 @@ import java.util.List;
 /**
  * Loads the same sound in each supported format (ogg, wav, mp3, flac) through the batch "soundformats".
  * Each line shows the state of a sound and plays it when the mouse enters it (ENTER plays the next one), ESCAPE goes back to the menu.
- * Check without a window: python tools/scenario.py "scene TestSoundFormatsScene" wait-loaded "?resources SoundData"
+ * Check without a window: python tools/scenario.py "scene SoundFormatsScene" wait-loaded "?resources SoundData"
  */
-public class TestSoundFormatsScene extends Scene {
+public class SoundFormatsScene extends Scene {
     private static final String[] SOUNDS = {"selectogg", "selectwav", "selectmp3", "selectflac"};
     private static final String[] FORMATS = {"ogg", "wav", "mp3", "flac"};
 

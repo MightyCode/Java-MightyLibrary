@@ -23,7 +23,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Test3DScene2 extends Scene {
+public class Scene3DBis extends Scene {
     private FreeCamera3DComponent cameraComponent;
 
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
@@ -39,7 +39,7 @@ public class Test3DScene2 extends Scene {
 
     private CubeRenderer[] lightPoints;
 
-    public Test3DScene2(){
+    public Scene3DBis(){
         super(SCENE_CCI);
     }
 

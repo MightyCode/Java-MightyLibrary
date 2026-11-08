@@ -16,7 +16,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 
 ## Priorités
 - **La 2D est prioritaire** (rendu 2D, tilemaps, texte, GUI, Camera2D, animations, physique 2D).
-- **La 3D est secondaire** : ne pas l'étendre ni la refactorer sans demande, mais ne pas la casser (`Shape`/`Renderer`/`Shader` sont communs ; les scènes `Test3D*` doivent rester fonctionnelles).
+- **La 3D est secondaire** : ne pas l'étendre ni la refactorer sans demande, mais ne pas la casser (`Shape`/`Renderer`/`Shader` sont communs ; les scènes 3D `Scene3D`, `Scene3DBis`, `Game3D2D` et `TerrainGeneration3D` doivent rester fonctionnelles).
 
 ## Build et vérification
 - Maven avec `sourceDirectory` = `src`, tests JUnit 5 dans `test/` (mêmes packages que le code testé, pour accéder au package-private). Compiler après chaque modification :
@@ -28,7 +28,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
   - Tests : même commande avec `test` au lieu de `compile` (quelques secondes, sans fenêtre ni GL).
   - `scenario.py` choisit ces chemins selon l'OS (surchargeables par `MIGHTY_JAVA`, `MIGHTY_MVN`, `MIGHTY_MAVEN_JDK`). Sur une nouvelle machine, lancer une fois `mvn -q compile` (sans `-o`) pour télécharger les dépendances.
 - **Tests automatisés, à chaque modification** : se demander si elle touche du code couvert par les tests (aujourd'hui : `resources/`, `graphics/GLResources`, `graphics/text/FontFile`, `TileMapRenderer.setTexturePosition`, `main/MainThread`, `main/Views`, `main/WindowTree`, `main/Workers`, `main/MainLoop.loadingDeadline`, `main/DisplaySettings`, `inputs/GamepadManager`/`Gamepad`, `graphics/GUI/GUI`/`GUIList`) ; si oui, relancer `mvn -o -q test` avant de commiter. Se demander aussi si elle entre dans ce que les tests peuvent couvrir (logique sans GL : états, références, files, parsing, maths…) ; si oui, ajouter ou compléter le test, et pour un bug corrigé, un test qui le reproduit. Un bug connu non corrigé reste en test `@Disabled` avec sa raison, pas supprimé.
-- Vérifier en jeu avec **un seul appel** : `python tools/scenario.py "scene Test2DScene" wait-loaded "?gl summary" "input ENTER"` (compile, lance le jeu, enchaîne les commandes, résume en texte, ferme le jeu ; une fenêtre s'ouvre chez l'utilisateur : le prévenir). Détails : `python tools/scenario.py --help` et `docs/debug-tools.md`.
+- Vérifier en jeu avec **un seul appel** : `python tools/scenario.py "scene Scene2D" wait-loaded "?gl summary" "input ENTER"` (compile, lance le jeu, enchaîne les commandes, résume en texte, ferme le jeu ; une fenêtre s'ouvre chez l'utilisateur : le prévenir). Détails : `python tools/scenario.py --help` et `docs/debug-tools.md`.
 - Répertoire de travail = racine du dépôt (ressources lues depuis `resources/`). Point d'entrée : `io.github.mightycode.mightylibdemo.main.Main`.
 
 ## Règles pour Claude
@@ -49,4 +49,4 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Enums préfixées `E`, interfaces préfixées `I` ; utilitaires statiques souvent en PascalCase (`GenDeleteResources.GenBuffers`, `Logger.CheckOpenGLError`).
 - Appel GL sensible suivi de `Logger.CheckOpenGLError("message")` ; dans le code appelé à chaque dessin, l'entourer de `if (Logger.DO_CHECK)`.
 - Logs moteur : `System.out/err.println` avec préfixe `--`. Exception inattendue mais gérée : `Logger.LogException(message, e)` (jamais `printStackTrace()`) ; échec attendu d'une ressource : `ResourceException` (une ligne). `InterruptedException` : remettre le drapeau (`Thread.currentThread().interrupt()`) et s'arrêter.
-- Pour tester une fonctionnalité, ajouter une scène `Test*` plutôt que modifier une existante.
+- Pour tester une fonctionnalité, ajouter une scène de démo plutôt que modifier une existante. Nom sans préfixe `Test`, dimension en fin de nom (un nom Java ne commence pas par un chiffre) : `DisplayModesScene`, `RopeSimulation2D` ; l'inscrire dans `MenuScene`.

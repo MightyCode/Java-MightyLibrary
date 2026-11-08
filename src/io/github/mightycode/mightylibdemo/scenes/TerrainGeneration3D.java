@@ -19,7 +19,7 @@ import io.github.mightycode.mightylibdemo.main.AxisId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
-public class Test3DSceneTerrainGeneration extends Scene {
+public class TerrainGeneration3D extends Scene {
     private FreeCamera3DComponent cameraComponent;
 
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
@@ -33,7 +33,7 @@ public class Test3DSceneTerrainGeneration extends Scene {
 
     private Text originLabel;
 
-    public Test3DSceneTerrainGeneration(){
+    public TerrainGeneration3D(){
         super(SCENE_CCI);
     }
 

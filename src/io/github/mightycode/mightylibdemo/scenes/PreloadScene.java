@@ -11,14 +11,14 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 
 /**
- * Preload of the next scene: Test2DScene is loaded in advance while this scene runs, ENTER sets it (its resources
+ * Preload of the next scene: Scene2D is loaded in advance while this scene runs, ENTER sets it (its resources
  * are already loaded: the loading screen is short), ESCAPE goes back to the menu.
- * Check with: scene TestPreloadScene, resources, resources batch anim, input ENTER, resources.
+ * Check with: scene PreloadScene, resources, resources batch anim, input ENTER, resources.
  */
-public class TestPreloadScene extends Scene {
+public class PreloadScene extends Scene {
     private static final int REFRESH_TICKS = 20;
 
-    private Test2DScene next;
+    private Scene2D next;
     private Text text;
     private int ticks;
 
@@ -38,7 +38,7 @@ public class TestPreloadScene extends Scene {
         addDisplayable(text);
 
         // The scene is only built: its batches are loaded, not its objects
-        next = new Test2DScene();
+        next = new Scene2D();
         sceneManagerInterface.preloadScene(next);
     }
 
@@ -47,7 +47,7 @@ public class TestPreloadScene extends Scene {
         super.update();
 
         if (++ticks % REFRESH_TICKS == 0)
-            text.setText(describePreload() + " | ENTER: Test2DScene, ESCAPE: menu");
+            text.setText(describePreload() + " | ENTER: Scene2D, ESCAPE: menu");
 
         if (mainContext.getInputManager().inputPressed(ActionId.ENTER))
             sceneManagerInterface.setNewScene(next, new String[]{});
@@ -71,7 +71,7 @@ public class TestPreloadScene extends Scene {
             gpu += preview.getLong("gpuBytes");
         }
 
-        return "Test2DScene preloaded: " + loaded + "/" + total + " data, " + (cpu >> 10) + " KiB CPU, "
+        return "Scene2D preloaded: " + loaded + "/" + total + " data, " + (cpu >> 10) + " KiB CPU, "
                 + (gpu >> 10) + " KiB GPU";
     }
 

@@ -22,7 +22,7 @@ import org.joml.Vector3f;
 
 import java.util.ArrayList;
 
-public class TestBox2D extends Scene {
+public class Box2D extends Scene {
     public static class Box implements IUpdatableDisplayable {
         RectangleRenderer renderer;
         Body box;

@@ -21,7 +21,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * W opens a second window with the same keys: a second exclusive fullscreen on a screen becomes borderless.
  * Escape goes back to the menu (closes the second window in it).
  */
-public class TestDisplayModesScene extends Scene {
+public class DisplayModesScene extends Scene {
     private static final int VIRTUAL_WIDTH = 1280;
     private static final int VIRTUAL_HEIGHT = 720;
 

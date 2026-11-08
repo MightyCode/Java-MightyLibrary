@@ -19,7 +19,7 @@ import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.type.FloatTweening;
 import io.github.mightycode.mightylibdemo.main.ActionId;
-import io.github.mightycode.mightylibdemo.scenes.Platformer2D.Test2DPlatformerBox2D;
+import io.github.mightycode.mightylibdemo.scenes.Platformer2D.PlatformerBox2D;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -71,9 +71,9 @@ public class MenuScene extends Scene {
         Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeCopy();
 
         // Left : shortcuts to the main test scenes
-        BackgroundlessButton button2DScene = createButton("Test2DScene", windowSize.x * 0.25f, windowSize.y * 0.4f, null);
-        BackgroundlessButton button3DScene = createButton("Test3DScene", windowSize.x * 0.25f, windowSize.y * 0.52f, button2DScene);
-        BackgroundlessButton button3D_2Scene = createButton("Test3DScene-2", windowSize.x * 0.25f, windowSize.y * 0.64f, button2DScene);
+        BackgroundlessButton button2DScene = createButton("Scene2D", windowSize.x * 0.25f, windowSize.y * 0.4f, null);
+        BackgroundlessButton button3DScene = createButton("Scene3D", windowSize.x * 0.25f, windowSize.y * 0.52f, button2DScene);
+        BackgroundlessButton button3D_2Scene = createButton("Scene3DBis", windowSize.x * 0.25f, windowSize.y * 0.64f, button2DScene);
         buttonQuit = createButton("Quit", windowSize.x * 0.5f, windowSize.y * 0.9f, button2DScene);
 
         guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
@@ -123,24 +123,24 @@ public class MenuScene extends Scene {
     // Every scene reachable from the menu (add new test scenes here)
     private static List<SceneEntry> createSceneEntries() {
         List<SceneEntry> list = new ArrayList<>();
-        list.add(new SceneEntry("Test2DScene", Test2DScene::new));
-        list.add(new SceneEntry("Test2DWaveFunctionCollapse", Test2DWaveFunctionCollapseScene::new));
-        list.add(new SceneEntry("Test2DRopeSimulation", Test2DRopeSimulation::new));
-        list.add(new SceneEntry("Test2DPlatformerBox2D", Test2DPlatformerBox2D::new));
-        list.add(new SceneEntry("TestBox2D", TestBox2D::new));
-        list.add(new SceneEntry("TestCollisionSystem", TestCollisionSystem::new));
-        list.add(new SceneEntry("Test3DScene", Test3DScene::new));
-        list.add(new SceneEntry("Test3DScene-2", Test3DScene2::new));
-        list.add(new SceneEntry("Test3DSceneTerrainGeneration", Test3DSceneTerrainGeneration::new));
-        list.add(new SceneEntry("Test3D2DGame", Test3D2DGame::new));
-        list.add(new SceneEntry("TestSoundFormatsScene", TestSoundFormatsScene::new));
-        list.add(new SceneEntry("TestGamepadScene", TestGamepadScene::new));
-        list.add(new SceneEntry("TestPreloadScene", TestPreloadScene::new));
-        list.add(new SceneEntry("TestGLLoading", TestGLLoading::new));
-        list.add(new SceneEntry("TestFallbackScene", TestFallbackScene::new));
+        list.add(new SceneEntry("Scene2D", Scene2D::new));
+        list.add(new SceneEntry("WaveFunctionCollapse2D", WaveFunctionCollapse2D::new));
+        list.add(new SceneEntry("RopeSimulation2D", RopeSimulation2D::new));
+        list.add(new SceneEntry("PlatformerBox2D", PlatformerBox2D::new));
+        list.add(new SceneEntry("Box2D", Box2D::new));
+        list.add(new SceneEntry("CollisionSystem", CollisionSystem::new));
+        list.add(new SceneEntry("Scene3D", Scene3D::new));
+        list.add(new SceneEntry("Scene3DBis", Scene3DBis::new));
+        list.add(new SceneEntry("TerrainGeneration3D", TerrainGeneration3D::new));
+        list.add(new SceneEntry("Game3D2D", Game3D2D::new));
+        list.add(new SceneEntry("SoundFormatsScene", SoundFormatsScene::new));
+        list.add(new SceneEntry("GamepadScene", GamepadScene::new));
+        list.add(new SceneEntry("PreloadScene", PreloadScene::new));
+        list.add(new SceneEntry("GLLoading", GLLoading::new));
+        list.add(new SceneEntry("FallbackScene", FallbackScene::new));
         list.add(new SceneEntry("DocumentationScene", DocumentationScene::new));
-        list.add(new SceneEntry("TestMultiWindowScene", TestMultiWindowScene::new));
-        list.add(new SceneEntry("TestDisplayModesScene", TestDisplayModesScene::new));
+        list.add(new SceneEntry("MultiWindowScene", MultiWindowScene::new));
+        list.add(new SceneEntry("DisplayModesScene", DisplayModesScene::new));
         return list;
     }
 
@@ -179,13 +179,13 @@ public class MenuScene extends Scene {
         } else if (id != null) {
             switch (id) {
                 case 0:
-                    sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
+                    sceneManagerInterface.setNewScene(new Scene2D(), new String[]{""});
                     break;
                 case 1:
-                    sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
+                    sceneManagerInterface.setNewScene(new Scene3D(), new String[]{""});
                     break;
                 case 2:
-                    sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
+                    sceneManagerInterface.setNewScene(new Scene3DBis(), new String[]{""});
                     break;
                 case 3:
                     sceneManagerInterface.exit(0);
@@ -209,15 +209,15 @@ public class MenuScene extends Scene {
 
         if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
                 inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F2) )
-            sceneManagerInterface.setNewScene(new Test2DRopeSimulation(), new String[]{""});
+            sceneManagerInterface.setNewScene(new RopeSimulation2D(), new String[]{""});
 
         if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
                 inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F3) )
-            sceneManagerInterface.setNewScene(new Test3DSceneTerrainGeneration(), new String[]{""});
+            sceneManagerInterface.setNewScene(new TerrainGeneration3D(), new String[]{""});
 
         if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
                 inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F4) )
-            sceneManagerInterface.setNewScene(new Test2DPlatformerBox2D(), new String[]{""});
+            sceneManagerInterface.setNewScene(new PlatformerBox2D(), new String[]{""});
 
     }
 

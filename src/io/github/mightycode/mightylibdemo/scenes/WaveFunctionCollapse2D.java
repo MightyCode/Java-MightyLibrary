@@ -20,7 +20,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
-public class Test2DWaveFunctionCollapseScene extends Scene {
+public class WaveFunctionCollapse2D extends Scene {
     private TileMap map;
     private LayersTileMapRenderer mapRenderer;
     private Vector2i mapSize;

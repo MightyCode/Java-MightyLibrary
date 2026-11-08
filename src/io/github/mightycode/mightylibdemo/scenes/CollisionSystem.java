@@ -18,7 +18,7 @@ import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
-public class TestCollisionSystem extends Scene {
+public class CollisionSystem extends Scene {
     private RectangleRenderer renderer;
     private CollisionRectangle rectangle;
     private CollisionBoundedVolume2D boundedVolume2D;

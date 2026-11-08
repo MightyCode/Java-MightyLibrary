@@ -8,7 +8,7 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - Règle : `Color4f` et textures du projet sont en sRGB.
 - Activation : option `EngineConfig` + par scène, désactivée par défaut, activée par défaut en 3D éclairée. Active : textures de couleur en `GL_SRGB8_ALPHA8` (pas les cartes de données : normales, spéculaire, hauteurs), couleurs uniformes converties en linéaire, `GL_FRAMEBUFFER_SRGB` ou conversion dans la passe finale si framebuffer intermédiaire (`VirtualSceneRenderer`).
 - Réglage joueur : gamma/luminosité dans une passe finale (`pow(c, 1/gamma)`), modifiable à l'exécution, sauvegardé.
-- `TestGamma` : dégradés, fondus alpha, éclairage, activé/désactivé côte à côte.
+- `GammaScene` : dégradés, fondus alpha, éclairage, activé/désactivé côte à côte.
 
 ## Tests de non-régression
 À étendre (base JUnit 5 : `architecture.md`, liste dans `CLAUDE.md`) : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
@@ -53,13 +53,13 @@ D'après LearnOpenGL « 2D Game » (Breakout).
 - **Particules** (absentes) : émetteurs (position, forme, débit, rafales) ; durée de vie, vitesse, forces, couleur/taille/rotation/opacité dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; pool sans allocation par frame ; émetteurs en JSON (`DataType`), injectables ; espace monde ou local.
 - **Rendu** : simple d'abord, instancing une fois le regroupement des dessins fait (Rendu 2D).
 - **Post-traitement** sur framebuffer (base `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables, par scène. Inclut la passe finale du gamma.
-- `TestParticles` : plusieurs émetteurs, compteur et temps dans `stats`.
+- `ParticlesScene` : plusieurs émetteurs, compteur et temps dans `stats`.
 
 ## Physique 2D : remplacer JBox2D
 Exigences : 2D au pixel près, cas complexes compris ; 3D compatible plus tard. Une boîte poussée **reste collée** au joueur (aucun écart, aucun tremblement). Un projet C++ précédent a échoué sur le test ci-dessous.
-- Constat : JBox2D 2.2.1.1 non maintenu (seulement `physics/B2Utils`, `TestBox2D`, `Platformer2D`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`, `CollisionVisualisation`), base de la physique arcade.
+- Constat : JBox2D 2.2.1.1 non maintenu (seulement `physics/B2Utils`, `Box2D`, `Platformer2D`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`, `CollisionVisualisation`), base de la physique arcade.
 
-### Test d'acceptation : `TestPhysicsCrates`
+### Test d'acceptation : `PhysicsCratesScene`
 Trois caisses empilées sur une plateforme mobile (horizontale et verticale) ; pousser celle du bas (la pile suit), puis celle du haut (elle seule bouge et tombe du bord) ; une caisse écrasée contre un mur. Aucun écart d'un pixel, aucun retard d'une frame, aucun tremblement.
 
 ### Physique arcade maison (principale)
@@ -73,9 +73,9 @@ Modèle solids/actors/riders (Celeste, TowerFall) étendu aux poussables empilé
 
 ### Corps rigides (bibliothèque derrière `IPhysicsWorld2D`)
 Pour rotation, empilement libre, articulations (ponts, cordes, ragdolls).
-- Candidats : **box2d-jni** (fabmax, Box2D v3 natif, Maven Central, Windows/Linux/macOS ; Java 11 et activité à vérifier), **gdx-box2d** (libGDX, Box2D v3.1), **dyn4j** (pur Java, BSD-3, 5.0.2 de mars 2024, Java 1.6+). Trancher en refaisant `TestBox2D` avec chacun.
+- Candidats : **box2d-jni** (fabmax, Box2D v3 natif, Maven Central, Windows/Linux/macOS ; Java 11 et activité à vérifier), **gdx-box2d** (libGDX, Box2D v3.1), **dyn4j** (pur Java, BSD-3, 5.0.2 de mars 2024, Java 1.6+). Trancher en refaisant `Box2D` avec chacun.
 - Coexistence avec l'arcade (joueur arcade poussant des caisses simulées) : à prototyper.
-- Au début du point : prototype de `TestPhysicsCrates` avec Box2D v3 pour comparer.
+- Au début du point : prototype de `PhysicsCratesScene` avec Box2D v3 pour comparer.
 
 ### Compatibilité 3D
 Interfaces (monde, corps, requêtes, événements) prêtes pour un monde 3D (ex. Jolt) sans changer l'API des entités et scripts ; rien en 3D maintenant.
@@ -106,14 +106,14 @@ Le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour fa
 - Erreur de script → log fichier:ligne, entité désactivée, le jeu continue.
 - Documentation de l'API générée depuis les fonctions enregistrées.
 - À décider : état Lua par scène (environnement isolé par script) ou par entité ; coût Java ↔ Lua mesuré dans `stats`.
-- `TestLuaPlatformer` : joueur, ennemi scripté, levier et porte, rechargement à chaud.
+- `LuaPlatformer2D` : joueur, ennemi scripté, levier et porte, rechargement à chaud.
 
 ## Thème, tailles automatiques et langues
 Dépend du point d'injection (thèmes et langues fournis par le projet et les mods). Dès maintenant, ne pas figer d'API `Text`/GUI qui empêcherait clés de langue et thème.
 - **Langues** (à la Flutter) : `resources/lang/<langue>.json` chargé comme `DataType` ; paramètres `{nom}`, pluriels simples ; langue de repli, log des clés manquantes ; script `tools/` générant des constantes typées ; `Text` liable à une clé, mis à jour au changement de langue ; clés à espace de noms.
 - **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
 - **Tailles automatiques** : unité relative à la résolution virtuelle, ancres et pourcentages, recalcul au redimensionnement.
-- **Padding du texte** : reprendre `40f4d8a` (branche `archive-dev-2025`) (`Text.setPadding(left, up, right, down)`, scène `TestGUI`). À corriger : le commentaire dit « gauche, droite, haut, bas », le code fait « gauche, haut, droite, bas » ; Left/Up font `-= padding` en supposant `textReference` à 0, à vérifier.
+- **Padding du texte** : reprendre `40f4d8a` (branche `archive-dev-2025`) (`Text.setPadding(left, up, right, down)`, scène `GUIScene`). À corriger : le commentaire dit « gauche, droite, haut, bas », le code fait « gauche, haut, droite, bas » ; Left/Up font `-= padding` en supposant `textReference` à 0, à vérifier.
 
 ## Rendu 2D : formes manquantes et regroupement des dessins
 - Existant : rectangle, ellipse, hexagone, polygone (`renderer/_2D/shape`), renderers de debug (graphes, nœuds, matrices).
@@ -132,7 +132,7 @@ Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et antic
 - Viser le noyau des profils légers (SVG Tiny/Native, NanoSVG) : chemins (segments, Bézier) remplis ou tracés ; texte converti en chemins à l'export.
 - Sous-ensemble : chemins et formes de base, remplissage et contour unis, opacité, transformations, `viewBox` ; plus tard dégradés. Hors champ : texte, CSS, filtres, masques, SMIL.
 - Approche (à confirmer) : `SVGData` (`DataType`, workers, NanoSVG de LWJGL) aplatit et triangule remplissages et contours (épaisseur, jointures, extrémités) ; `SVGRenderer extends Renderer` + shader `svg` ; un appel par SVG ; anticrénelage MSAA ou bande de fondu. Plus tard si besoin : courbes dans le fragment shader (Loop-Blinn, SDF).
-- `TestSVG` : icônes à plusieurs échelles.
+- `SVGScene` : icônes à plusieurs échelles.
 
 ## Entrées : remappage et manettes
 - Touches modifiables à l'exécution, sauvegardées/chargées depuis un fichier ; scène prefab de changement des touches.

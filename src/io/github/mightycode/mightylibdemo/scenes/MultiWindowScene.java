@@ -18,7 +18,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * main window (T), and a second context with its own scene (C). Escape closes the window it is pressed in;
  * in the main window it goes back to the menu, which closes the windows this scene opened.
  */
-public class TestMultiWindowScene extends Scene {
+public class MultiWindowScene extends Scene {
     private static final int VIRTUAL_WIDTH = 1280;
     private static final int VIRTUAL_HEIGHT = 720;
 
@@ -71,20 +71,20 @@ public class TestMultiWindowScene extends Scene {
         if (keyboard.keyPressed(GLFW_KEY_D) && !isOpen(dialog)) {
             dialog = openWindow(new WindowConfig("Dialog").setSize(640, 360).setVirtualSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
                     .setModal(true), new MessageView("Modal dialog", new Vector2f(0.35f, 0.12f)));
-            System.out.println("--TestMultiWindowScene: dialog opened");
+            System.out.println("--MultiWindowScene: dialog opened");
         }
 
         if (keyboard.keyPressed(GLFW_KEY_T) && !isOpen(tools)) {
             tools = openWindow(new WindowConfig("Tools").setSize(480, 270).setVirtualSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT),
                     new SharedSquareView(square));
-            System.out.println("--TestMultiWindowScene: tool window opened");
+            System.out.println("--MultiWindowScene: tool window opened");
         }
 
         if (keyboard.keyPressed(GLFW_KEY_C)) {
             engine().openContext("second-" + (++contexts),
                     new WindowConfig("Second context").setSize(640, 360).setVirtualSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT),
-                    Test2DScene::new);
-            System.out.println("--TestMultiWindowScene: context opened");
+                    Scene2D::new);
+            System.out.println("--MultiWindowScene: context opened");
         }
     }
 
@@ -145,7 +145,7 @@ public class TestMultiWindowScene extends Scene {
             super.update();
 
             if (window().getKeyboardManager().keyPressed(GLFW_KEY_ESCAPE)) {
-                System.out.println("--TestMultiWindowScene: " + message + " closed by its key");
+                System.out.println("--MultiWindowScene: " + message + " closed by its key");
                 close();
             }
         }

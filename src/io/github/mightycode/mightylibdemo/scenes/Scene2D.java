@@ -35,7 +35,7 @@ import io.github.mightycode.mightylib.utils.math.geometry.Polygon;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.*;
 
-public class Test2DScene extends Scene {
+public class Scene2D extends Scene {
     private Animation2DRenderer slimeRenderer;
     private Vector2fTweening slimeTextureTweening;
     private Text text;
