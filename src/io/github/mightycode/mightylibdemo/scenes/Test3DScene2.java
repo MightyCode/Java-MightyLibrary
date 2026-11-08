@@ -46,7 +46,7 @@ public class Test3DScene2 extends Scene {
     @Override
     protected String[] getInvolvedBatch() {
         return new String[]{
-                "elements3d"
+                "litcrates3d"
         };
     }
 
