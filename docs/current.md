@@ -5,8 +5,8 @@ Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisate
 - (U) **Pipeline de `Resources`** (propriétaire unique, réconciliation, dépendances, rechargement à chaud : faits, voir `architecture.md`). Reste :
   - rechargement à chaud :
     - observateur de fichiers (fait, opt-in) : reste les **ressources des mods**, la **création** de fichiers nouveaux non référencés, et le regroupement des événements d'un même enregistrement (fichier de description + sources) ;
-    - relecture abandonnée (nouveau `reload` pendant la lecture) : son étape en cours va au bout (CPU/I/O gaspillés, deux copies en mémoire un moment) → interruption coopérative (drapeau lu par les loaders longs) avec l'item **annulation** ci-dessous ; l'observateur de fichiers devra regrouper les événements d'un même enregistrement ;
-  - **priorités** (scène courante avant préchargement de la suivante) et **annulation** des lectures inutiles : étapes encore en file sautées (fait, `skippedSteps`) ; l'interruption des étapes déjà commencées est volontairement laissée de côté (rare, gain faible : le chargement prime) (drapeau `cancelled` + `checkCancelled()` aux points naturels des loaders longs, `try/finally` pour la mémoire native ; lecture du fichier par blocs séparée du décodage) ;
+    - l'observateur de fichiers devra regrouper les événements d'un même enregistrement (relecture abandonnée : voir annulation, faite) ;
+  - **priorités** (scène courante avant préchargement de la suivante) ; **annulation** faite (étapes en file sautées, `skippedSteps` ; étape commencée : `DataType.checkCancelled()`), reste à placer `checkCancelled()` dans les autres loaders longs aux frontières de phases (aujourd'hui : décodage des textures seulement ; modèles, sons : un seul appel natif) ;
   - fusionner les files (`inbox` et étapes `MAIN_CONTEXT` de `Resources`, `MainThread`, `GLResources`) sous un même budget de frame ;
   - **voir à l'avance** ce qu'un batch charge (dépendances comprises) et son **poids** (taille estimée par `DataType`, mémoire CPU/GPU, totaux par batch et dans `resources`) ;
   - `DataType` lit `Resources.getInstance()` dans son constructeur (cf. singletons).

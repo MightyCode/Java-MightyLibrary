@@ -233,6 +233,34 @@ class ResourcesLifecycleTest {
         return data.stream().mapToInt(count).sum();
     }
 
+    // Scene left while a read runs: the loader stops at its next checkCancelled instead of going on
+    @Test
+    void leavingDuringARunningReadStopsIt() throws Exception {
+        FakeData slow = fake(THREAD_CONTEXT, "slow");
+        slow.preloadMilliseconds = 300;
+        FakeData dependency = fake(THREAD_CONTEXT, "dependency");
+        slow.dependencyToAdd = dependency;
+        batch("level", "slow");
+        start();
+
+        resources.loadBatch("level");
+        long end = System.currentTimeMillis() + 5000;
+        while (slow.preloads.get() == 0 && System.currentTimeMillis() < end)
+            frame();
+        resources.unloadBatch("level");
+        frame();
+        long unloadedAt = System.currentTimeMillis();
+        pump();
+
+        assertTrue(System.currentTimeMillis() - unloadedAt < 290, "the read must not wait for its end");
+        assertFalse(slow.isPreLoaded());
+        assertTrue(dependency.getDependencies().isEmpty() && !dependency.isLoaded());
+        assertEquals(0, slow.getDependencies().size(), "stopped before it added its dependency");
+        assertEquals(0, slow.loads.get());
+        assertTrue(skippedSteps() >= 1);
+        assertConsistent();
+    }
+
     // Scene left during its loading: the reads still queued are never started
     @Test
     void leavingDuringLoadingSkipsTheQueuedReads() throws Exception {
