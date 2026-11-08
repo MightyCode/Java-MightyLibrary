@@ -42,6 +42,12 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - **Chargement GL** : PBO ou contexte partagé (fenêtre cachée + `glFenceSync`). `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.
 - **Préchargement GL des modèles 3D** : `MeshUpload` est propre à chaque `ModelRenderer` (créé dans `launch`, exige le modèle chargé) ; le rendre partageable par modèle pour qu'un batch l'envoie pendant le chargement comme les textures (`DataType.createGLElement`).
 
+## Budget mémoire et chargement en continu (quand un vrai jeu l'exige)
+
+Les estimations de `DataType.estimatedCpuBytes`/`estimatedGpuBytes` ne servent aujourd'hui qu'au debug (`resources`, `resources batch`) ; aucune décision du moteur ne s'en sert.
+- **Budget** : vérifier qu'un lot tient en mémoire (carte comprise), choisir quoi décharger pendant un chargement en continu, prévenir quand un mod est trop gros.
+- **Manifeste généré à la compilation** (prérequis) : pour chaque ressource, ses dépendances et sa taille décodée, sans lire le fichier. Aujourd'hui les dépendances d'une donnée non lue ne sont connues qu'après sa lecture (`dependenciesKnown` dans `describeBatch`) et les estimations avant lecture sont des ratios par format (pansements).
+
 ## Effets 2D : particules et post-traitement
 D'après LearnOpenGL « 2D Game » (Breakout).
 - **Particules** (absentes) : émetteurs (position, forme, débit, rafales) ; durée de vie, vitesse, forces, couleur/taille/rotation/opacité dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; pool sans allocation par frame ; émetteurs en JSON (`DataType`), injectables ; espace monde ou local.

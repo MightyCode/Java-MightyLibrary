@@ -28,6 +28,16 @@ public class ModelMesh {
         this.shininess = shininess;
     }
 
+    // Memory of the vertex and index arrays
+    public long byteSize() {
+        long floats = Length(positions) + Length(normals) + Length(textureCoordinates);
+        return (floats + (indices == null ? 0 : indices.length)) * 4L;
+    }
+
+    private static long Length(float[] array) {
+        return array == null ? 0 : array.length;
+    }
+
     public String getName() {
         return name;
     }
