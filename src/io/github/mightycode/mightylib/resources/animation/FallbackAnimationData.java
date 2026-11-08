@@ -19,7 +19,8 @@ public class FallbackAnimationData extends AnimationData {
     protected boolean internLoad() {
         FrameData frame = new FrameData();
         // x, y, width, height, hot point x, hot point y, frame time
-        frame.init("0,0," + FallbackTextureData.SIZE + "," + FallbackTextureData.SIZE + ",0,0,1");
+        frame.init("0,0," + FallbackTextureData.SIZE + "," + FallbackTextureData.SIZE + ",0,0,1",
+                "fallback animation", 1);
 
         setTexture(Resources.FALLBACK_NAME);
         setFramesData(new FrameData[]{ frame });

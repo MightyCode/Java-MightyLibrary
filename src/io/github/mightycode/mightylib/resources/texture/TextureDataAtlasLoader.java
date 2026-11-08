@@ -49,7 +49,9 @@ public class TextureDataAtlasLoader extends ResourceLoader {
         String[] parts = data.split("\n");
 
         for (String part : parts) {
-            atlas.addTexture(part);
+            // Blank lines (trailing newline, CRLF leftovers) are not texture names
+            if (!part.trim().isEmpty())
+                atlas.addTexture(part.trim());
         }
     }
 }

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.animation;
 
+import io.github.mightycode.mightylib.resources.TextFormat;
 import org.joml.Vector2i;
 import org.joml.Vector4i;
 
@@ -18,23 +19,22 @@ public class FrameData {
     }
 
     // String data is composed of : x, y, width, height, hotPointX, hotPointY, frameTime
-    public void init(String data){
+    // Throws a ResourceException (with path and line) when the frame is malformed
+    public void init(String data, String path, int line){
         String[] parts = data.split(",");
-        if (parts.length != PART_NUMBER) {
-            System.err.println("Error when trying to initEntity Frame Data");
-            System.err.println("-> : " + data);
-            return;
-        }
+        if (parts.length != PART_NUMBER)
+            throw TextFormat.error(path, line, "a frame needs " + PART_NUMBER
+                    + " comma-separated values, got " + parts.length + " ('" + data + "')");
 
-        framePosition.x = Integer.parseInt(parts[0].trim());
-        framePosition.y = Integer.parseInt(parts[1].trim());
-        framePosition.z = Integer.parseInt(parts[2].trim());
-        framePosition.w = Integer.parseInt(parts[3].trim());
+        framePosition.x = TextFormat.integer(parts, 0, path, line, "frame x");
+        framePosition.y = TextFormat.integer(parts, 1, path, line, "frame y");
+        framePosition.z = TextFormat.integer(parts, 2, path, line, "frame width");
+        framePosition.w = TextFormat.integer(parts, 3, path, line, "frame height");
 
-        hotPoint.x = Integer.parseInt(parts[4].trim());
-        hotPoint.y = Integer.parseInt(parts[5].trim());
+        hotPoint.x = TextFormat.integer(parts, 4, path, line, "hot point x");
+        hotPoint.y = TextFormat.integer(parts, 5, path, line, "hot point y");
 
-        frameTime = Float.parseFloat(parts[6].trim());
+        frameTime = TextFormat.decimal(parts, 6, path, line, "frame time");
     }
 
 

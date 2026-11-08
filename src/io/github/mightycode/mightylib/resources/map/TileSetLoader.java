@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources.map;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.TextFormat;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import org.joml.Vector2i;
@@ -50,7 +51,8 @@ public class TileSetLoader extends ResourceLoader {
 
         TileSet tileset = (TileSet) dataType;
 
-        String data = FileMethods.readFileAsString(tileset.path());
+        String path = tileset.path();
+        String data = FileMethods.readFileAsString(path);
         String[] parts = data.split("\n");
 
         String texture = null;
@@ -63,35 +65,43 @@ public class TileSetLoader extends ResourceLoader {
         while (lineIndex < parts.length) {
             String line = parts[lineIndex].trim();
             String[] lineParts = line.split(" ");
+            int lineNumber = lineIndex + 1;
 
             if (lineParts[0].equals("texture")) {
-                texture = lineParts[1];
+                texture = TextFormat.word(lineParts, 1, path, lineNumber, "texture name");
             } else if (lineParts[0].equals("tilesize")) {
-                tileSize = new Vector2i(Integer.parseInt(lineParts[1]), Integer.parseInt(lineParts[2]));
+                tileSize = new Vector2i(
+                        TextFormat.integer(lineParts, 1, path, lineNumber, "tile width"),
+                        TextFormat.integer(lineParts, 2, path, lineNumber, "tile height"));
             } else if (lineParts[0].equals("animation")) {
-                int numberAnimation = Integer.parseInt(lineParts[1]);
+                int numberAnimation = TextFormat.integer(lineParts, 1, path, lineNumber, "number of animations");
 
                 for (int i = 0; i < numberAnimation; ++i){
                     lineIndex += 1;
+                    if (lineIndex >= parts.length)
+                        throw TextFormat.error(path, parts.length, "expected " + numberAnimation
+                                + " animations, found " + i);
+                    lineNumber = lineIndex + 1;
                     lineParts = parts[lineIndex].trim().split(" ");
 
-                    // Each information is tileId, duration
+                    // Each information is tileId, then pairs of (tileId, duration)
+                    if ((lineParts.length - 1) % 2 != 0)
+                        throw TextFormat.error(path, lineNumber, "an animation is a tile id then (tile id, duration) pairs");
+
                     TileSet.TileAnimation tileAnimation = new TileSet.TileAnimation(
-                            Integer.parseInt(lineParts[0]),
+                            TextFormat.integer(lineParts, 0, path, lineNumber, "animated tile id"),
                             (lineParts.length - 1) / 2
                     );
 
                     for (int j = 1; j < lineParts.length; j += 2){
-                        tileAnimation.ids[j / 2] = Integer.parseInt(lineParts[j]);
-                        tileAnimation.times[j / 2] = Float.parseFloat(lineParts[j + 1]);
-
-                        /*System.out.println((j / 2) + " TileId: " + tileAnimation.ids[j / 2]
-                                + " Time: " + tileAnimation.times[j / 2]);*/
+                        tileAnimation.ids[j / 2] = TextFormat.integer(lineParts, j, path, lineNumber, "frame tile id");
+                        tileAnimation.times[j / 2] = TextFormat.decimal(lineParts, j + 1, path, lineNumber, "frame duration");
                     }
 
                     tileset.addAnimation(tileAnimation.refId, tileAnimation);
                 }
             } else if (lineParts[0].equals("parameter")){
+                TextFormat.word(lineParts, 2, path, lineNumber, "rotation and flip flags");
                 parameterRotation = Boolean.parseBoolean(lineParts[1]);
                 parameterFlip = Boolean.parseBoolean(lineParts[2]);
             }
