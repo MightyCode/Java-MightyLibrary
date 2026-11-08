@@ -12,6 +12,7 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 
 ## Tests de non-régression
 À étendre (base JUnit 5 : `architecture.md`, liste dans `CLAUDE.md`) : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
+- **Analyse statique automatisable** : Claude ne peut pas obtenir lui-même les warnings d'IntelliJ (export manuel depuis l'IDE ; `inspect.bat` plante, voir le skill `/analyse-intellij`). Brancher un outil lançable en ligne de commande (SpotBugs ou Error Prone via un profil Maven, ou équivalent) couvrant au moins les catégories à risque de `bonnes-pratiques.md` (point 11), avec un résumé texte par script ; puis adapter le point 11, `collect.py` et le skill.
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
