@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.Callbacks;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLCapabilities;
@@ -39,6 +40,8 @@ public final class Window {
 
     // Window this one belongs to, 0 for none
     private long parentWindowId;
+    // Created without a given size: it follows the screen in fullscreen (see SizeWithoutGivenSize)
+    private boolean sizeFromScreen;
 
     public WindowInfo getInfo() { return info; }
 
@@ -59,15 +62,42 @@ public final class Window {
         info = new WindowInfo();
         info.windowId = 0;
 
-        info.size = new Vector2i(wci.Size);
-        info.ratio = (float) info.size.x / (float) info.size.y;
-        info.virtualSize = new Vector2i(wci.VirtualSize);
-        info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
-
         info.windowName = wci.WindowName;
         parentWindowId = wci.ParentWindowId;
         info.fullscreen = wci.Fullscreen;
         info.monitor = wci.Monitor;
+
+        sizeFromScreen = wci.Size == null;
+        info.size = sizeFromScreen ? SizeWithoutGivenSize(info.fullscreen, ScreenSize(monitorHandle()))
+                : new Vector2i(wci.Size);
+        info.ratio = (float) info.size.x / (float) info.size.y;
+        info.virtualSize = wci.VirtualSize != null ? new Vector2i(wci.VirtualSize) : new Vector2i(info.size);
+        info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
+    }
+
+    /**
+     * Size of a window created without a given size: the one of its screen in fullscreen, the default one in a
+     * window (or when the size of the screen is unknown).
+     */
+    static Vector2i SizeWithoutGivenSize(boolean fullscreen, Vector2i screenSize) {
+        if (fullscreen && screenSize != null && screenSize.x > 0 && screenSize.y > 0)
+            return new Vector2i(screenSize);
+
+        return new Vector2i(WindowConfig.DEFAULT_WIDTH, WindowConfig.DEFAULT_HEIGHT);
+    }
+
+    // Current video mode of the screen, null if unknown
+    private static Vector2i ScreenSize(long monitorHandle) {
+        if (monitorHandle == NULL)
+            return null;
+
+        GLFWVidMode mode = glfwGetVideoMode(monitorHandle);
+        return mode == null ? null : new Vector2i(mode.width(), mode.height());
+    }
+
+    // Screen of the window: the chosen one, else the primary one
+    private long monitorHandle() {
+        return info.monitor != null ? info.monitor.getHandle() : glfwGetPrimaryMonitor();
     }
 
     /**
@@ -85,8 +115,8 @@ public final class Window {
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        long monitorHandle = info.monitor != null ? info.monitor.getHandle() : glfwGetPrimaryMonitor();
-        long share = shareWith != null ? shareWith.getWindowHandle() : NULL;
+        long monitorHandle = monitorHandle();
+        long share =shareWith != null ? shareWith.getWindowHandle() : NULL;
 
         if (info.fullscreen)
             info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, monitorHandle, share);
@@ -184,7 +214,12 @@ public final class Window {
         if (!info.isWindowCreated())
             return;
 
-        long monitorHandle = info.monitor != null ? info.monitor.getHandle() : glfwGetPrimaryMonitor();
+        long monitorHandle = monitorHandle();
+        if (sizeFromScreen) {
+            info.size = SizeWithoutGivenSize(fullscreen, ScreenSize(monitorHandle));
+            info.ratio = (float) info.size.x / (float) info.size.y;
+        }
+
         if (fullscreen) {
             glfwSetWindowMonitor(info.windowId, monitorHandle, 0, 0, info.size.x, info.size.y, GLFW_DONT_CARE);
         } else {

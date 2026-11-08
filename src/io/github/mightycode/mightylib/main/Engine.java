@@ -20,6 +20,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
+import org.joml.Vector2i;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
@@ -143,11 +144,15 @@ public final class Engine implements IView {
         System.out.println("--Create main context.");
 
         WindowConfig windowConfig = new WindowConfig(config.getProjectName())
-                .setSize(config.getWindowSize().x, config.getWindowSize().y)
-                .setVirtualSize(config.getVirtualSize().x, config.getVirtualSize().y)
                 .setFullscreen(config.isFullscreen())
                 .setMonitor(chooseMonitor())
                 .setKeyboardLanguage(config.getKeyboardLanguage());
+        // Null sizes: the size of the screen in fullscreen, resolved by the window
+        Vector2i windowSize = config.getWindowSize(), virtualSize = config.getVirtualSize();
+        if (windowSize != null)
+            windowConfig.setSize(windowSize.x, windowSize.y);
+        if (virtualSize != null)
+            windowConfig.setVirtualSize(virtualSize.x, virtualSize.y);
 
         // Checked before any GL call: there is no GL context without a window
         Context mainContext = contexts.createMainContext(this, windowConfig);
