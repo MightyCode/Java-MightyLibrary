@@ -87,7 +87,10 @@ public final class ContextManager {
         InputManager inputManager = new InputManager(keyboardManager, mouseManager, getGamepadManager());
         inputManager.init(new ActionInput[]{});
 
-        return new WindowContext(++lastWindowId, owner, name, closesEngine, view, window, inputManager, keyboardManager, mouseManager);
+        WindowContext windowContext = new WindowContext(++lastWindowId, owner, name, closesEngine, view, window,
+                inputManager, keyboardManager, mouseManager);
+        window.setRedrawAction(() -> owner.redrawWindow(windowContext));
+        return windowContext;
     }
 
     // Screen of a window created without one: the one of its parent, else the one of the main window (null: primary)
