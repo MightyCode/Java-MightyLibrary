@@ -55,15 +55,26 @@ public class AnimationDataLoader extends ResourceLoader {
 
         AnimationData animationData = (AnimationData)dataType;
 
-        String data = FileMethods.readFileAsString(animationData.path());
+        String path = animationData.path();
+        String data = FileMethods.readFileAsString(path);
         String[] parts = data.split("\n");
 
-        int numberFrames = Integer.parseInt(parts[SIZE_FRAME_POS].trim());
+        if (parts.length <= SIZE_FRAME_POS)
+            throw TextFormat.error(path, parts.length, "expected the texture name then the number of frames");
+
+        int numberFrames = TextFormat.integer(new String[]{parts[SIZE_FRAME_POS].trim()}, 0,
+                path, SIZE_FRAME_POS + 1, "number of frames");
+        if (numberFrames < 0)
+            throw TextFormat.error(path, SIZE_FRAME_POS + 1, "number of frames can't be negative");
+        if (parts.length < FRAME_ENUM_START_POS + numberFrames)
+            throw TextFormat.error(path, parts.length, "expected " + numberFrames + " frames, found "
+                    + Math.max(0, parts.length - FRAME_ENUM_START_POS));
+
         FrameData[] framesData = new FrameData[numberFrames];
 
         for (int i = 0; i < numberFrames; ++i){
             framesData[i] = new FrameData();
-            framesData[i].init(parts[FRAME_ENUM_START_POS + i].trim());
+            framesData[i].init(parts[FRAME_ENUM_START_POS + i].trim(), path, FRAME_ENUM_START_POS + i + 1);
         }
 
         animationData.setTexture(parts[TEXTURE_POS].trim()).setFramesData(framesData);
