@@ -7,6 +7,8 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.ActionId;
+import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 import org.jbox2d.callbacks.ContactImpulse;
 import org.jbox2d.callbacks.ContactListener;
 import org.jbox2d.collision.Manifold;
@@ -56,6 +58,9 @@ public class Test2DPlatformerBox2D extends Scene {
         world.step(GameTime.FixedDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
         player.update();
+
+        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
     }
 
 
