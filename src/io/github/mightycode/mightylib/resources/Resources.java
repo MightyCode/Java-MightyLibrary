@@ -456,7 +456,7 @@ public class Resources {
 
         Runnable end = () -> endStep(data, preload, result);
 
-        scheduler.submit(data, work, end);
+        scheduler.submit(data, preload, work, end);
     }
 
     private static class StepResult {
@@ -479,7 +479,9 @@ public class Resources {
         } else if (preload) {
             data.setPreloaded();
         } else if (result.success) {
-            if (data.reloadOf != null && isWanted(data)) {
+            if (data.loadContinues()) {
+                // Part of the load done: the update below queues the next step
+            } else if (data.reloadOf != null && isWanted(data)) {
                 reloads.commit(data);
             } else {
                 data.loadDone(true);

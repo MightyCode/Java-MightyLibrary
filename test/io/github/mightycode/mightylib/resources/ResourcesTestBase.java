@@ -60,7 +60,7 @@ abstract class ResourcesTestBase {
 
     protected FakeData fake(DataType.TYPE_SET_UP typeSetUp, String name) {
         FakeData data = new FakeData(typeSetUp, name);
-        if (typeSetUp == MAIN_CONTEXT)
+        if (typeSetUp != DataType.TYPE_SET_UP.THREAD_CONTEXT)
             data.expectMainThread(Thread.currentThread());
 
         fakeLoader.add(data);
