@@ -27,7 +27,7 @@ Présenter trois listes à l'utilisateur et attendre son accord :
 - **Ne pas faire** : orthographe (`SpellCheckingInspection`, Grazie), `PackageName` (renommer des packages), méthodes/classes publiques « inutilisées » de `mightylib` (API de la bibliothèque), `BusyWait` volontaires, `CanBeFinal` sur des champs publics, cosmétique (`IfCanBeSwitch`, Javadoc, tableaux Markdown), 3D au-delà du strictement mécanique, faux positifs connus (format construit dynamiquement, buffers Assimp bornés par leurs compteurs).
 
 ## 4. Corriger
-- Branche dédiée (jamais master), un commit par thème, `Co-Authored-By` demandé par le système.
+- Branche dédiée depuis `dev` (jamais dev ni master), un commit par thème, `Co-Authored-By` demandé par le système.
 - Les numéros de ligne de l'export sont ceux d'avant les modifications : éditer par contenu (Edit), et supprimer les lignes d'un même fichier du bas vers le haut.
 - Après chaque thème : compiler, `mvn -o -q test`, et `tools/scenario.py` sur les scènes touchées (prévenir l'utilisateur qu'une fenêtre s'ouvre).
 - Un bug existant découvert mais hors sujet : le noter dans `docs/later.md` ou `docs/futur-discussion.md`, pas le corriger en douce.

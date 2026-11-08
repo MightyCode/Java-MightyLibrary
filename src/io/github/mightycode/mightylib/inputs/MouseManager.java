@@ -48,6 +48,17 @@ public class MouseManager {
     private float lastWindowX = Float.NaN, lastWindowY = Float.NaN;
     private boolean lastWindowSimulated;
 
+    /** For the tests only : a mouse without window, whose positions a subclass provides. */
+    protected MouseManager() {
+        windowInfo = null;
+        pos = new Vector2f(0);
+        oldPos = new Vector2f(0);
+        relativePos = new Vector2f(0);
+        mouseScroll = new Vector2f();
+        buttonSimulation = new InputSimulation();
+        pendingScroll = new Vector2f();
+    }
+
     /**
      * Mouse manager class.
      * Instance the class

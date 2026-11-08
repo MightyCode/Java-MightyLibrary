@@ -1,6 +1,6 @@
 ---
 name: livrer
-description: Termine l'objectif en cours et le livre — compilation, tests, vérification en jeu, nettoyage des docs, commits, fusion --no-ff dans master, push, suppression de la branche. Seulement sur demande explicite de l'utilisateur (/livrer ; argument « sans push » pour s'arrêter après la fusion, « sans fusion » pour s'arrêter aux commits).
+description: Termine l'objectif en cours et le livre — compilation, tests, vérification en jeu, nettoyage des docs, commits, fusion --no-ff dans dev, push, suppression de la branche. Seulement sur demande explicite de l'utilisateur (/livrer ; argument « sans push » pour s'arrêter après la fusion, « sans fusion » pour s'arrêter aux commits).
 disable-model-invocation: true
 ---
 
@@ -9,8 +9,8 @@ disable-model-invocation: true
 L'appel de `/livrer` vaut accord pour fusionner et pousser, sauf argument contraire. S'arrêter et demander à la moindre anomalie : tests rouges, problème dans le journal du jeu, modifications sans rapport avec l'objectif, conflit de fusion.
 
 ## 1. État
-- `git branch --show-current`, `git status --short`, `git log --oneline master..HEAD`.
-- Sur master avec des modifications : créer une branche nommée d'après l'objectif (jamais de commit direct sur master).
+- `git branch --show-current`, `git status --short`, `git log --oneline dev..HEAD`.
+- Sur dev ou master avec des modifications : créer une branche de sujet depuis `dev`, nommée d'après l'objectif (jamais de commit direct sur dev ni master).
 - Des modifications sans rapport avec l'objectif : demander quoi en faire, ne pas les embarquer.
 
 ## 2. Vérifier
@@ -28,9 +28,12 @@ L'appel de `/livrer` vaut accord pour fusionner et pousser, sauf argument contra
 Un commit par changement logique, message en anglais au style des précédents (`git log --oneline -10`), terminé par la ligne `Co-Authored-By` demandée par le système.
 
 ## 5. Fusionner et pousser
-- `git checkout master`, puis `git merge --no-ff <branche>` avec le message `Merge branch '<branche>'` suivi de la ligne `Co-Authored-By`.
-- `mvn -o -q test` sur master.
-- `git push origin master` (sauf « sans push »), puis `git branch -d <branche>`.
+- `git checkout dev`, puis `git merge --no-ff <branche>` avec le message `Merge branch '<branche>'` suivi de la ligne `Co-Authored-By`.
+- `mvn -o -q test` sur dev.
+- `git push origin dev` (sauf « sans push »), puis `git branch -d <branche>`.
 
 ## 6. Compte rendu
-Les commits livrés, ce qui a été vérifié (tests, scènes), ce qui ne l'a pas été et comment le vérifier à la main (quelle scène, quoi observer), l'état de master par rapport à origin.
+Les commits livrés, ce qui a été vérifié (tests, scènes), ce qui ne l'a pas été et comment le vérifier à la main (quelle scène, quoi observer), l'état de dev par rapport à origin (et de dev par rapport à master).
+
+## Version
+La fusion de `dev` dans `master` (`git merge --no-ff dev`, tests, push) se fait seulement sur demande explicite de l'utilisateur : c'est une nouvelle version.
