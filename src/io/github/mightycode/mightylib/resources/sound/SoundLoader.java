@@ -68,18 +68,20 @@ public class SoundLoader extends ResourceLoader {
         if (path.indexOf("ogg", lastIndex) == -1)
             throw new ResourceException("unsupported sound format (only ogg): " + path);
 
-        loadOgg(path, info);
+        loadOgg(path, info, sound::checkCancelled);
         sound.setSoundLoadInfo(info);
     }
 
 
     // Throws a ResourceException when the file is missing or not a valid ogg vorbis file
-    public void loadOgg(String path, SoundLoadInfo sInfo) {
+    // checkCancelled is called between the steps of the decoding (DataType.checkCancelled)
+    public void loadOgg(String path, SoundLoadInfo sInfo, Runnable checkCancelled) {
         try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-            sInfo.Buffer = SoundDataType.readVorbis(path, 32 * 1024, info);
+            sInfo.Buffer = SoundDataType.readVorbis(path, 32 * 1024, info, checkCancelled, SoundDataType.DECODE_CHUNK_SAMPLES);
+            sInfo.nativeBuffer = true;
             sInfo.Channel = info.channels();
             sInfo.SampleRate = info.sample_rate();
-        } catch (ResourceException e) {
+        } catch (ResourceException | java.util.concurrent.CancellationException e) {
             throw e;
         } catch (Exception e) {
             throw new ResourceException("can't read the sound file " + path, e);
