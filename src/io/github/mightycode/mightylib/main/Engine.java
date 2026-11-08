@@ -51,6 +51,8 @@ public final class Engine implements IView {
     private boolean glfwStarted;
     // A window that stops the engine was closed
     private boolean stopRequested;
+    // Inside glfwPollEvents, see isPollingEvents
+    private boolean pollingEvents;
 
     Engine(EngineConfig config) {
         this.config = config;
@@ -357,6 +359,9 @@ public final class Engine implements IView {
             context.postUpdate();
     }
 
+    // The frame is drawn and swapped, the events are read: a window can be drawn again from a callback
+    boolean isPollingEvents() { return pollingEvents; }
+
     // Each window shows its view
     void displayWindows() {
         for (Context context : contexts.getContexts())
@@ -368,7 +373,12 @@ public final class Engine implements IView {
         for (Context context : contexts.getContexts())
             context.swapWindows();
 
-        glfwPollEvents();
+        pollingEvents = true;
+        try {
+            glfwPollEvents();
+        } finally {
+            pollingEvents = false;
+        }
 
         if (contexts.processClosures())
             stopRequested = true;

@@ -33,6 +33,8 @@ public final class Window {
     private Vector2i windowedPosition;
     // The display was changed while the window was minimized: placed when it is restored
     private boolean displayWaitsRestore;
+    // Draws the window again from its refresh callback (Context.redrawWindow), null before it joins a context
+    private Runnable redrawAction;
 
     public WindowInfo getInfo() { return info; }
 
@@ -137,6 +139,11 @@ public final class Window {
         // is read again, the one given can be older than a change made meanwhile (nested resizing)
         glfwSetFramebufferSizeCallback(info.windowId, (window, width, height) -> readFramebufferSize());
         glfwSetWindowIconifyCallback(info.windowId, (window, iconified) -> onIconified(iconified));
+        // The system asks for a new image (resizing, uncovering) while the loop may be waiting
+        glfwSetWindowRefreshCallback(info.windowId, window -> {
+            if (redrawAction != null)
+                redrawAction.run();
+        });
 
         // Make the OpenGL context current, with the default state of the engine's contexts
         glContext = GLContext.ofWindow(info.windowName, info.windowId);
@@ -292,6 +299,10 @@ public final class Window {
     }
 
     // ---- Frame ----
+
+    void setRedrawAction(Runnable redrawAction) {
+        this.redrawAction = redrawAction;
+    }
 
     public boolean wantExit(){
         return glfwWindowShouldClose(info.windowId) && info.isWindowCreated();

@@ -155,7 +155,7 @@ Console en jeu (base `graphics/GUI/Terminal` et `guicommand`, à unifier avec `C
 ## Fenêtres
 - **Sous-fenêtres natives hors Windows** : propriétaire de fenêtre sous Linux (X11 `XSetTransientForHint`, Wayland `xdg_toplevel.set_parent`) et macOS (`addChildWindow`) à la place du simple `GLFW_FLOATING` de `NativeWindowOwner`.
 - **Réglages d'affichage du joueur** : `DisplaySettings` ↔ JSON dans `DataFolder`, menu d'options (modes, résolutions de `MonitorInfo.getVideoModes`, écran), position fenêtrée réglable ; écrans branchés/débranchés en cours de jeu (`glfwSetMonitorCallback` : une fenêtre dont l'écran disparaît revient sur le principal, aujourd'hui son `MonitorInfo` garde un handle invalide).
-- **Fenêtre redimensionnée** : recalcul optionnel de la surface virtuelle (elle reste fixe, avec bandes noires), icône par fenêtre, renvoi du focus au dialogue modal quand on clique sur la fenêtre parente, manettes bloquées par un dialogue modal.
+- **Fenêtre redimensionnée** : recalcul optionnel de la surface virtuelle (elle reste fixe, avec bandes noires) ; le jeu se fige pendant qu'on tire un bord ou déplace la fenêtre sous Windows (boucle modale dans `glfwPollEvents`, seule l'image est redessinée) : la cible durable est une boucle de jeu et de rendu sur un thread à elle, le thread principal ne lisant que les événements (change la règle « tout le GL sur le thread principal », à discuter). Icône par fenêtre, renvoi du focus au dialogue modal quand on clique sur la fenêtre parente, manettes bloquées par un dialogue modal.
 - **`EngineStats` par fenêtre** (compteurs de frames et de swaps) et `Screenshot` par fenêtre dans la boucle.
 - **Vsync** par fenêtre (`swapInterval` est à 0 partout).
 

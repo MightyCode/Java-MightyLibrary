@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
+import io.github.mightycode.mightylib.utils.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -221,6 +222,31 @@ public final class Context implements IView {
                 sceneManager.display();
             else
                 window.getView().displayByContext();
+        }
+    }
+
+    /**
+     * Draw the window again outside the loop, when the system asks for it while the events are read (refresh
+     * callback). On Windows the loop waits inside glfwPollEvents as long as a border is dragged: the image follows
+     * the size, the ticks wait for the mouse to be released.
+     */
+    void redrawWindow(WindowContext window) {
+        if (!engine.isPollingEvents() || windows.find(window) == null || !window.getWindow().getInfo().isWindowCreated())
+            return;
+
+        GLContext previous = GLContext.currentOrNull();
+        try {
+            window.getWindow().bindWindow();
+            if (window.isMain())
+                sceneManager.display();
+            else
+                window.getView().displayByContext();
+
+            window.getWindow().swapBuffers();        } catch (RuntimeException e) {
+            // Thrown into a GLFW callback, it would stop the reading of the events
+            Logger.LogException("--Redraw of window " + window.getName() + " failed", e);
+        } finally {
+            restore(previous);
         }
     }
 
