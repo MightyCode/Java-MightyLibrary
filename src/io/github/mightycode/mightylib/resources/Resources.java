@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.texture.IconLoader;
 import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -298,7 +299,7 @@ public class Resources {
         if (data.reloadOf != null)
             return data.reloadOf.reloadCopy == data && isWanted(data.reloadOf);
 
-        return !shuttingDown && !data.deleteWanted && !data.notReferenced();
+        return !shuttingDown && !data.deleteWanted && data.isReferenced();
     }
 
     void update(DataType data) {
@@ -474,7 +475,7 @@ public class Resources {
             // Expected (the data is wrong, not the code): one line, no stack trace
             fail(data, result.error.getMessage());
         } else if (result.error != null) {
-            result.error.printStackTrace();
+            Logger.LogException("Unexpected error while loading " + data.getDataName(), result.error);
             fail(data, (preload ? "preload" : "load") + " threw " + result.error);
         } else if (preload) {
             data.setPreloaded();

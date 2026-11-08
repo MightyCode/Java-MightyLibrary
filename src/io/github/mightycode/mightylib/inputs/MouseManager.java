@@ -28,13 +28,11 @@ public class MouseManager {
     private final Vector2f oldPos;
 
     private final Vector2f relativePos;
-    private Vector2f relativeOldPos;
 
     private boolean displayCursor;
 
 
     private final Vector2f mouseScroll;
-    private final GLFWScrollCallback scrollCallback;
 
     // Simulated mouse (commands, scripts, later replays), applied at the next postUpdate like real inputs
     private final InputSimulation buttonSimulation;
@@ -58,7 +56,6 @@ public class MouseManager {
         pos = new Vector2f(0);
         oldPos = new Vector2f(0);
         relativePos = new Vector2f(0);
-        relativeOldPos = new Vector2f(0);
 
         this.windowInfo = windowInfo;
 
@@ -73,7 +70,8 @@ public class MouseManager {
         lastRealCursorX = Double.NaN;
         lastRealCursorY = Double.NaN;
 
-        glfwSetScrollCallback(windowInfo.getWindowId(), scrollCallback = new GLFWScrollCallback() {
+        // Freed with the window (Window.destroyWindow)
+        glfwSetScrollCallback(windowInfo.getWindowId(), new GLFWScrollCallback() {
             @Override
             public void invoke(final long window, final double xOffset, final double yOffset) {
                 // Several scroll events can happen during one tick
@@ -214,7 +212,6 @@ public class MouseManager {
         oldPos.set(pos);
         mouseUpdate();
 
-        relativeOldPos = new Vector2f(relativePos);
         relativePos.x = posX() / windowInfo.getSizeRef().x;
         relativePos.y = posY() / windowInfo.getSizeRef().y;
 

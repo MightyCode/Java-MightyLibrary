@@ -63,7 +63,7 @@ public class Text extends Renderer implements Cloneable {
     }
 
     private boolean shouldNotDrawText(){
-        return font == null || text == null || text.trim().equals("");
+        return font == null || text == null || text.trim().isEmpty();
     }
 
     public void display(){
@@ -107,7 +107,7 @@ public class Text extends Renderer implements Cloneable {
         String clean = (removeEscapeChars) ? text.replace("\n", "") : text;
 
         String result = "";
-        String temp = "";
+        String temp;
 
         Vector2f sizeTaken = new Vector2f();
 
@@ -253,7 +253,7 @@ public class Text extends Renderer implements Cloneable {
 
         for (int j = 0; j < lines.length; ++j) {
             for (int i = 0; i < lines[j].length(); i++) {
-                currentCharOffset.x += usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize;
+                currentCharOffset.x += (float) (usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
                 ++charCount;
             }
 
@@ -357,13 +357,13 @@ public class Text extends Renderer implements Cloneable {
                 texturePosition[charCount * SIZE_COORDINATES + 6] = temp.y;
                 texturePosition[charCount * SIZE_COORDINATES + 7] = temp.z;
 
-                currentCharOffset.x += fontChar.getxAdvance() * fontSize;
+                currentCharOffset.x += (float) (fontChar.getxAdvance() * fontSize);
 
                 ++charCount;
             }
 
             currentCharOffset.x = 0;
-            currentCharOffset.y += usedFont().getFontFile().getLineHeight() * fontSize;
+            currentCharOffset.y += (float) (usedFont().getFontFile().getLineHeight() * fontSize);
         }
 
         shape.setEbo(indices);

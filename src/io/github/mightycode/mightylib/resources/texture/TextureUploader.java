@@ -7,7 +7,6 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 
-import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL21.GL_PIXEL_UNPACK_BUFFER;
 import static org.lwjgl.opengl.GL30.GL_MAP_INVALIDATE_BUFFER_BIT;

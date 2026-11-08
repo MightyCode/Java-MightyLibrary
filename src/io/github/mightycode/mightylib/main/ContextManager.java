@@ -30,7 +30,8 @@ public class ContextManager {
     }
 
 
-    public void createDefaultContext(WindowCreationInfo wci){
+    // The window settings come from EngineConfig (MainLoop): WindowCreationInfo stays internal
+    void createDefaultContext(WindowCreationInfo wci){
         createNewContext("Main", wci);
     }
 
@@ -39,7 +40,7 @@ public class ContextManager {
         return createNewContext(context, null);
     }
 
-    public boolean createNewContext(String context, WindowCreationInfo wci){
+    boolean createNewContext(String context, WindowCreationInfo wci){
         Window window;
         if (wci == null) window = new Window();
         else window = new Window(wci);

@@ -14,8 +14,6 @@ import java.nio.FloatBuffer;
 import java.util.ArrayList;
 
 import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
-import static org.lwjgl.opengl.GL11.GL_LINE_LOOP;
-import static org.lwjgl.opengl.GL15.*;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL40.GL_PATCHES;
 
@@ -39,8 +37,6 @@ public class Shape {
     protected int vboCount;
     protected int indicesSize;
 
-    protected int[] info;
-
     protected boolean useEbo;
     protected int verticesToDraw;
 
@@ -60,7 +56,6 @@ public class Shape {
         setDimensionTo2D(this.shader.isDimension2DShader());
 
         verticesToDraw = 0;
-        info = new int[0];
         indicesSize = 0;
 
         vao = GenDeleteResources.GenVertexArrays();

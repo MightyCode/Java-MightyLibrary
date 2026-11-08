@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.algorithms.graph;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * Class that can only have intersection nodes

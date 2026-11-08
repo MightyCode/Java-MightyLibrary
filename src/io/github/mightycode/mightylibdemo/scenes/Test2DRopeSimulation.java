@@ -196,7 +196,7 @@ public class Test2DRopeSimulation extends Scene {
     private boolean isDrawingStick, isDrawingPoint;
     private boolean controlWind;
     private ClickingMode clickingMode = ClickingMode.ADD_POINT;
-    private int numberIteraction = 1;
+    private final int numberIteraction = 1;
 
     private Point selectedPoint;
     private Vector2f windForce;

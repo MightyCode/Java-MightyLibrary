@@ -53,11 +53,6 @@ public class ZoomingCameraComponent implements IUpdatable {
             else
                 zoom(new Vector2f(1 + mouseManager.getMouseScroll().y * 0.1f));
         }
-
-       /* if (inputManager.inputPressed(ActionId.SHIFT)) {
-            mapCamera.setZoomReference(EDirection.None);
-            zoom(new Vector2f(1.01f));
-        }*/
     }
 
     @Override

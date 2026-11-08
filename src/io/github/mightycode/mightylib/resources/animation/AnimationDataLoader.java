@@ -1,9 +1,7 @@
 package io.github.mightycode.mightylib.resources.animation;
 
 import io.github.mightycode.mightylib.resources.*;
-import io.github.mightycode.mightylib.resources.models.Model;
 
-import java.io.File;
 import java.util.Map;
 import java.util.Objects;
 

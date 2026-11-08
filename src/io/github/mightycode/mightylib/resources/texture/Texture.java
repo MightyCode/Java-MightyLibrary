@@ -280,8 +280,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
             return finishLoad();
         } catch (Exception e) {
-            System.err.println("Fail to create texture " + data.path() + " :");
-            e.printStackTrace();
+            Logger.LogException("Can't create the texture " + data.path(), e);
             GenDeleteResources.DeleteTexture(textureId);
             textureId = -1;
 

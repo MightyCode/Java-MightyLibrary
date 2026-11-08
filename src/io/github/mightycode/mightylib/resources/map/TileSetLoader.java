@@ -5,12 +5,9 @@ import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.TextFormat;
 import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import org.joml.Vector2i;
 
-import java.io.File;
 import java.util.Map;
-import java.util.Objects;
 
 public class TileSetLoader extends ResourceLoader {
 

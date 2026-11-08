@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ResourceSchedulerTest {
@@ -26,7 +27,7 @@ class ResourceSchedulerTest {
         // Deadline already passed: one task is still done, so the loading progresses
         scheduler.processUntil(0);
         assertEquals(1, done.get());
-        assertTrue(!scheduler.isIdle());
+        assertFalse(scheduler.isIdle());
 
         scheduler.processUntil(Long.MAX_VALUE);
         assertEquals(5, done.get());

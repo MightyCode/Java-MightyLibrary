@@ -5,8 +5,6 @@ import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.lwjgl.opengl.GL11.glGetString;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;

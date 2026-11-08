@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.algorithms.wavefunctioncollapse;
 
 import io.github.mightycode.mightylib.resources.DataType;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.data.JSONFile;
 import org.joml.Vector2i;
 import org.json.JSONArray;

@@ -1,7 +1,5 @@
 package io.github.mightycode.mightylib.utils;
 
-import static org.lwjgl.opengl.GL11.glGetError;
-import static org.lwjgl.opengl.GL11.GL_NO_ERROR;
 import static org.lwjgl.opengl.GL20.*;
 
 public class Logger {
@@ -9,6 +7,15 @@ public class Logger {
 
     public static String getCurrentStackTrace() {
         return Thread.currentThread().getStackTrace()[2].toString();
+    }
+
+    /**
+     * Unexpected exception that is handled (the engine goes on): one "--" line saying what failed, then the stack trace.
+     * Expected failures (wrong data, missing file reported to the user) print one line without stack trace instead.
+     */
+    public static void LogException(String message, Throwable error) {
+        System.err.println("--" + message + ": " + error);
+        error.printStackTrace(System.err);
     }
 
     public static void CheckOpenGLError(String message) {

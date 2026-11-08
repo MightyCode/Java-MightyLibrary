@@ -52,7 +52,8 @@ public class TestGLLoading extends Scene {
             renderers[i] = new RectangleRenderer("texture2D");
             renderers[i].setMainTextureChannel(textureName(i));
             renderers[i].setSizePix(cellSize - 10, cellSize - 10);
-            renderers[i].setPosition(new Vector2f((i % 3) * cellSize + 5, (i / 3) * cellSize + 5));
+            int column = i % 3, row = i / 3;
+            renderers[i].setPosition(new Vector2f(column * cellSize + 5, row * cellSize + 5));
         }
     }
 

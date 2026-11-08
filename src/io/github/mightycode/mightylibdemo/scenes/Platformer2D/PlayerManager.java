@@ -14,8 +14,6 @@ public class PlayerManager extends Box2DActor{
     private final Camera2D camera;
     private final Vector2i windowSize;
 
-    private int groundCount;
-
     // Camera follow smoothness
     private final float cameraFollowLerp = 0.1f;
 
@@ -36,39 +34,6 @@ public class PlayerManager extends Box2DActor{
 
         // === RENDERER ===
         this.renderer = new PlayerRenderer(values);
-    }
-
-    @Override
-    public void initializePhysics(World world) {
-        super.initializePhysics(world);
-
-       /* FixtureDef bottomSensor = new FixtureDef();
-        FixtureDef rightSensor = new FixtureDef();
-        FixtureDef leftSensor = new FixtureDef();
-
-        bottomSensor.isSensor = true;
-        rightSensor.isSensor = true;
-        leftSensor.isSensor = true;
-
-        PolygonShape sensorShape = new PolygonShape();
-
-        // bottom fixture
-        sensorShape.setAsBox((getWidth() - 8)/200, getHeight()/200, new Vector2(0, -20/200f), 0);
-        bottomSensor.shape = sensorShape;
-        Fixture bottomFixture = body.createFixture(bottomSensor);
-        bottomFixture.setUserData("bottom");
-
-        // right fixture
-        sensorShape.setAsBox(getWidth()/200, (getHeight() - 8)/200, new Vector2(20/200f, 0), 0);
-        rightSensor.shape = sensorShape;
-        Fixture rightFixture = body.createFixture(rightSensor);
-        rightFixture.setUserData("right");
-
-        // left fixture
-        sensorShape.setAsBox(getWidth()/200, (getHeight() - 8)/200, new Vector2(-20/200f, 0), 0);
-        leftSensor.shape = sensorShape;
-        Fixture leftFixture = body.createFixture(leftSensor);
-        leftFixture.setUserData("left");*/
     }
 
     /** Update player state (no argument version) */
@@ -108,10 +73,6 @@ public class PlayerManager extends Box2DActor{
 
     public PlayerValues getValues() {
         return values;
-    }
-
-    public Body getBody() {
-        return body;
     }
 
     /** Free rendering resources */

@@ -42,7 +42,7 @@ class SoundDecodingTest {
     }
 
     @Test
-    void checksTheCancellationBetweenChunks() throws Exception {
+    void checksTheCancellationBetweenChunks() {
         AtomicInteger checks = new AtomicInteger();
         int[] channels = new int[1];
 
@@ -76,5 +76,12 @@ class SoundDecodingTest {
         info.Buffer = org.lwjgl.BufferUtils.createShortBuffer(16);
         info.release();
         assertNull(info.Buffer);
+    }
+
+    @Test
+    void aMissingFileGivesAClearError() {
+        java.io.FileNotFoundException error = assertThrows(java.io.FileNotFoundException.class,
+                () -> SoundDataType.ioResourceToByteBuffer("resources/sounds/missing.ogg", 1024));
+        assertTrue(error.getMessage().contains("missing.ogg"));
     }
 }

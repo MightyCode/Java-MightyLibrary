@@ -116,7 +116,7 @@ abstract class ResourcesTestBase {
         for (FakeData data : all) {
             String name = data.getDataName();
             assertEquals(0, data.errors.get(), name + ": inconsistencies, see the error output");
-            assertEquals(!data.notReferenced(), data.isLoaded(), name + ": loaded must match referenced");
+            assertEquals(data.isReferenced(), data.isLoaded(), name + ": loaded must match referenced");
 
             int live = data.loads.get() - data.unloads.get();
             assertEquals(data.isLoaded() ? 1 : 0, live, name + ": loads - unloads");
@@ -129,14 +129,14 @@ abstract class ResourcesTestBase {
     protected String loadCapturingErrors(String batchName) throws Exception {
         PrintStream previous = System.err;
         ByteArrayOutputStream captured = new ByteArrayOutputStream();
-        System.setErr(new PrintStream(captured, true, "UTF-8"));
+        System.setErr(new PrintStream(captured, true, StandardCharsets.UTF_8));
         try {
             resources.loadBatch(batchName);
             pump();
         } finally {
             System.setErr(previous);
         }
-        return captured.toString("UTF-8");
+        return captured.toString(StandardCharsets.UTF_8);
     }
 
     protected FakeData withFallback() {

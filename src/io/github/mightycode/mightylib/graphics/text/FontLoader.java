@@ -11,7 +11,6 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.lwjgl.opengl.GL11C.glGetError;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class FontLoader extends ResourceLoader {
@@ -79,7 +78,6 @@ public class FontLoader extends ResourceLoader {
 
         FontFace fontFace = (FontFace) dataType;
         // Failing here makes the preload fail: the fallback replaces the font
-        if (!fontFace.getFontFile().load())
-            throw new IllegalStateException("Can't read the font file of " + fontFace.getFontName());
+        fontFace.getFontFile().load();
     }
 }

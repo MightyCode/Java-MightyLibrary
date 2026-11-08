@@ -3,12 +3,14 @@ package io.github.mightycode.mightylib.resources.texture;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
@@ -134,13 +136,10 @@ public class TextureData extends SingleSourceDataType {
     }
 
     public BufferedImage loadBufferedImage(){
-        try {
-            return ImageIO.read(new FileInputStream(path()));
-
-        } catch (Exception e) {
-            System.err.println("Can't find the path for :");
-            System.err.println(path() + "\n");
-            e.printStackTrace();
+        try (FileInputStream input = new FileInputStream(path())) {
+            return ImageIO.read(input);
+        } catch (IOException e) {
+            Logger.LogException("Can't read the image " + path(), e);
         }
 
         return null;

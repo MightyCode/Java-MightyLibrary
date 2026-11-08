@@ -6,7 +6,7 @@ import org.joml.Vector2f;
 
 public class B2Utils {
 
-    private static Vector2f b2ToEngineVector = new Vector2f(1);
+    private static final Vector2f b2ToEngineVector = new Vector2f(1);
     public static Vector2f getB2ToEngineVector(){ return new Vector2f(b2ToEngineVector);}
 
     public static void setB2ToEngineVector(float newB2ToEngineValue){
@@ -51,9 +51,9 @@ public class B2Utils {
         String nameB = (String)contact.getFixtureB().getUserData();
 
         if (objA.getClass().equals(type) && (fixtureName == null || nameA.equals(fixtureName))) {
-            return (T)objA;
+            return type.cast(objA);
         } else if (objB.getClass().equals(type) && (fixtureName == null || nameB.equals(fixtureName))) {
-            return (T)objB;
+            return type.cast(objB);
         } else {
             return null;
         }

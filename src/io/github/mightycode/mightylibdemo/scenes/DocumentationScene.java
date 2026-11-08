@@ -201,11 +201,6 @@ public class DocumentationScene extends Scene {
      * Called at the end of each tick, after update: the engine uses it to reset the "pressed" and "released"
      * states of the inputs. Override it only for logic that must run after every update, and call super.
      */
-    @Override
-    public void postUpdate() {
-        super.postUpdate();
-    }
-
     /*
      * Called at each frame (EngineConfig.setFps), independently of the ticks: only drawing, no game logic.
      * The scene is drawn on a virtual framebuffer of the virtual size (1280x720 in the demo),

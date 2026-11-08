@@ -57,7 +57,8 @@ public abstract class DataType extends UUID implements LoadingElement {
     DataType reloadCopy;
     DataType reloadOf;
 
-    // Increased each time the content changes (load, reload): users compare it to the version they used
+    // Increased each time the content changes (load, reload): users compare it to the version they used.
+    // Written by the main thread only (nextVersion), volatile for the readers on other threads
     private volatile int version;
 
     public enum TYPE_SET_UP {
@@ -159,8 +160,8 @@ public abstract class DataType extends UUID implements LoadingElement {
         return failed;
     }
 
-    public final boolean notReferenced() {
-        return references.isEmpty();
+    public final boolean isReferenced() {
+        return !references.isEmpty();
     }
 
     public final String getDataName(){
@@ -196,7 +197,7 @@ public abstract class DataType extends UUID implements LoadingElement {
     final void loadDone(boolean success) {
         if (success) {
             correctlyLoaded = true;
-            ++version;
+            nextVersion();
         }
     }
 
@@ -234,6 +235,12 @@ public abstract class DataType extends UUID implements LoadingElement {
         return version;
     }
 
+    // One writer (the main thread): the increment needs no atomic operation
+    @SuppressWarnings("NonAtomicOperationOnVolatileField")
+    private void nextVersion() {
+        ++version;
+    }
+
     /**
      * Hot reload: a new data of the same type, name and source, read and loaded apart while this one stays usable,
      * then given to swapContent. Null (default) when the type does not support it: the data is emptied then read again.
@@ -252,7 +259,7 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     // A data managed by its owner outside Resources changed its content (see TextureDataAtlas.replaceContentWith)
     protected final void markContentChanged() {
-        ++version;
+        nextVersion();
     }
 
     // Main thread (Resources): the loaded copy becomes the content of this data, its dependencies with it
@@ -265,7 +272,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         copy.dependencies.clear();
         copy.dependencies.addAll(previous);
 
-        ++version;
+        nextVersion();
     }
 
     // Back to the initial state, whether the data was loaded or only preloaded
@@ -289,7 +296,7 @@ public abstract class DataType extends UUID implements LoadingElement {
 
         if (internLoad()) {
             correctlyLoaded = true;
-            ++version;
+            nextVersion();
         } else {
             // Back to the initial state: an unload would otherwise wait forever for a loading that failed
             correctlyPreLoaded = false;
@@ -308,7 +315,6 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     protected abstract void internUnload();
 
-    @Override
     public final boolean isPreLoaded() {
         return correctlyPreLoaded;
     }

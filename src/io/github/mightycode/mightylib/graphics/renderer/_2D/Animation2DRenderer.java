@@ -113,10 +113,6 @@ public class Animation2DRenderer extends Renderer {
 
     public void setShiftRotation(EDirection direction){
         switch (direction){
-            default:
-            case None:
-                setShiftRotation(new Vector2f(0.5f, 0.5f));
-                break;
             case RightUp:
                 setShiftRotation(new Vector2f(0, 0));
                 break;
@@ -140,6 +136,10 @@ public class Animation2DRenderer extends Renderer {
                 break;
             case Right:
                 setShiftRotation(new Vector2f(0, 0.5f));
+                break;
+            case None:
+            default:
+                setShiftRotation(new Vector2f(0.5f, 0.5f));
                 break;
         }
     }

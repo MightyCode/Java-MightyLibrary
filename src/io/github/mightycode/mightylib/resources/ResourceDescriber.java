@@ -35,7 +35,7 @@ class ResourceDescriber {
             JSONArray reloading = new JSONArray();
 
             for (DataType data : ofType.getValue().values()) {
-                boolean isReferenced = !data.notReferenced();
+                boolean isReferenced = data.isReferenced();
                 if (data.reloadCopy != null)
                     reloading.put(data.getDataName());
                 if (data.isLoaded()) {

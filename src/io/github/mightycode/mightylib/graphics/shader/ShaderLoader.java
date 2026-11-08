@@ -19,7 +19,7 @@ public class ShaderLoader extends ResourceLoader {
      * Shader library
      * The shader library is a map (read by the workers) that contains the shader utility file name as key and the shader content as value.
      */
-    private Map<String, String> shaderLibrary;
+    private final Map<String, String> shaderLibrary;
 
     private final ShaderManager shaderManager = ShaderManager.getInstance();
     @Override

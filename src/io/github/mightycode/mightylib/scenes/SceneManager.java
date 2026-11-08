@@ -17,9 +17,6 @@ public class SceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
 
-    private final GLResources glResources;
-    private final Resources resources;
-
     private final Commands commands;
     private final SoundManager soundManager;
 
@@ -28,9 +25,6 @@ public class SceneManager {
 
     // defaultLoadingScene: displayed while a scene loads, unless the scene overrides createLoadingScene
     public SceneManager(Supplier<TemplateSceneLoading> defaultLoadingScene) {
-        glResources = GLResources.getInstance();
-        resources = Resources.getInstance();
-
         sceneInterface = new SceneManagerInterface(defaultLoadingScene);
 
         commands = new Commands(this);

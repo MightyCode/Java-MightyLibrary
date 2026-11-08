@@ -223,7 +223,7 @@ final class FlacStream {
 
             readResiduals(out, blockSize, order);
             for (int i = order; i < blockSize; ++i)
-                out[i] += fixedPrediction(out, i, order);
+                out[i] += (int) fixedPrediction(out, i, order); // computed in long, the sample fits its bit depth
         } else if (type >= 32) {
             int order = (type & 31) + 1;
             for (int i = 0; i < order; ++i)

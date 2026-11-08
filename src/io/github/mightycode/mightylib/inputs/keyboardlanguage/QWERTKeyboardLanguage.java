@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.inputs.keyboardlanguage;
 import io.github.mightycode.mightylib.inputs.CharInputEntry;
 
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_0;
 
 public class QWERTKeyboardLanguage extends KeyboardLanguage {
     private static final KeyboardLanguage instance = new QWERTKeyboardLanguage();

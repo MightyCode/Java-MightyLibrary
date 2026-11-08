@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
 public abstract class ListGeneralCommand {
     public static void addCommands(Commands commands, SceneManager sceneManager){
-        if (commands.getCommands().size() != 0) {
+        if (!commands.getCommands().isEmpty()) {
             System.err.println("Error, commands list is not empty.\n It must be empty to add general commands");
             return;
         }

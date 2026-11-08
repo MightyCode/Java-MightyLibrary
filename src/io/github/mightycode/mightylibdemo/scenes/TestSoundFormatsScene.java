@@ -37,9 +37,6 @@ public class TestSoundFormatsScene extends Scene {
     }
 
     @Override
-    public void init(String[] args) {}
-
-    @Override
     public void launch(String[] args) {
         setClearColor(0.2f, 0.2f, 0.2f);
         Vector2f windowSize = new Vector2f(mainContext.getWindow().getInfo().getVirtualSizeRef());

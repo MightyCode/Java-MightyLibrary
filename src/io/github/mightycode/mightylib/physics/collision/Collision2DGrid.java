@@ -43,9 +43,15 @@ public class Collision2DGrid {
         construct();
     }
 
+    // Generic arrays can't be created directly
+    @SuppressWarnings("unchecked")
+    private static Set<Collision2D>[][] newCells(int height, int width) {
+        return new HashSet[height][width];
+    }
+
     private void construct(){
         this.returnGrid.clear();
-        this.constructedArea = new HashSet[cellsNumber.y][cellsNumber.x];
+        this.constructedArea = newCells(cellsNumber.y, cellsNumber.x);
 
         Vector2f cellSize = new Vector2f();
         CollisionRectangle tmp = new CollisionRectangle(0, 0, 0, 0);
@@ -83,7 +89,7 @@ public class Collision2DGrid {
 
     public void clear(){
         allCollisions.clear();
-        constructedArea = new HashSet[0][0];
+        constructedArea = newCells(0, 0);
     }
 
     public Set<Collision2D> getCollisionNear(Collision2D a){

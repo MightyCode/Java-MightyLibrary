@@ -10,7 +10,6 @@ import org.joml.Vector2f;
 /**
  * Abstract slider which can be used to create all customs slider.
  */
-@SuppressWarnings("SuspiciousNameCombination")
 public abstract class Slider {
     private static final int MAX_DIGIT_PRECISION = 9;
 

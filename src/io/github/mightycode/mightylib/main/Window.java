@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
-import org.lwjgl.glfw.*;
+import org.lwjgl.glfw.Callbacks;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLCapabilities;
@@ -15,14 +15,12 @@ import org.lwjgl.system.MemoryStack;
 
 
 import java.nio.IntBuffer;
-import java.util.Objects;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL32C.GL_PROGRAM_POINT_SIZE;
-import static org.lwjgl.opengl.GL43C.GL_DEBUG_OUTPUT;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -218,6 +216,8 @@ public final class Window {
         }
 
         if (info.isWindowCreated()) {
+            // Input callbacks (text, scroll) set on this window by the managers: their native part is freed with it
+            Callbacks.glfwFreeCallbacks(info.windowId);
             glfwDestroyWindow(info.windowId);
             System.out.println("Window with id : " + info.windowId + " deleted");
             info.windowId = 0;

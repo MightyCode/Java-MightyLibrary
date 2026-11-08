@@ -16,14 +16,10 @@ public class DataFolder {
         if (!checkDataFolderExists())
             return false;
 
-        try {
-            FileWriter myWriter = new FileWriter(DATA_FOLDER_PATH + localPath);
-            myWriter.write(content);
-            myWriter.close();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-
+        try (FileWriter writer = new FileWriter(DATA_FOLDER_PATH + localPath)) {
+            writer.write(content);
+        } catch (IOException e) {
+            Logger.LogException("Can't save the data file " + localPath, e);
             return false;
         }
 
@@ -41,19 +37,15 @@ public class DataFolder {
         if (!fileExists(localPath))
             return null;
 
-        try {
-            File myObj = new File(DATA_FOLDER_PATH + localPath);
-            Scanner myReader = new Scanner(myObj);
+        try (Scanner reader = new Scanner(new File(DATA_FOLDER_PATH + localPath))) {
             StringBuilder result = new StringBuilder();
-            while (myReader.hasNextLine()) {
-                result.append(myReader.nextLine());
+            while (reader.hasNextLine()) {
+                result.append(reader.nextLine());
             }
-            myReader.close();
 
             return result.toString();
         } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+            Logger.LogException("Can't read the data file " + localPath, e);
         }
 
         return null;
@@ -66,8 +58,7 @@ public class DataFolder {
         try {
             return new BufferedReader(new FileReader(DATA_FOLDER_PATH + localPath));
         } catch (FileNotFoundException e) {
-            System.out.println("An error occurred.");
-            e.printStackTrace();
+            Logger.LogException("Can't open the data file " + localPath, e);
         }
 
         return null;

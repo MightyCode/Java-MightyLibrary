@@ -6,7 +6,7 @@ public abstract class CommandMethods {
         boolean stop = true;
         char current;
 
-        if (command.length() > 0){
+        if (!command.isEmpty()){
             stop = false;
             i = 0;
         }

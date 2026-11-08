@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,6 +50,7 @@ public final class ResourceWatcher {
     private volatile Set<Path> folders = Collections.emptySet();
     // Detector thread only: data changed, reloaded once nothing changed for GROUP_MS
     private final Map<DataType, Long> waiting = new LinkedHashMap<>();
+    // Written by the detector thread only, volatile for the readers (commands, tests)
     private volatile int reloadCount;
 
     ResourceWatcher(Resources resources) {
@@ -149,7 +149,7 @@ public final class ResourceWatcher {
 
         // The folders too: a file created in one is a new data (see filesChanged)
         Set<Path> watched = new HashSet<>(byPath.keySet());
-        Set<Path> directories = selections.isEmpty() ? Collections.<Path>emptySet() : listFolders();
+        Set<Path> directories = selections.isEmpty() ? Collections.emptySet() : listFolders();
         watched.addAll(directories);
         folders = directories;
         return watched;
@@ -158,7 +158,7 @@ public final class ResourceWatcher {
     private Set<Path> listFolders() {
         Set<Path> directories = new HashSet<>();
         try {
-            Files.walkFileTree(Paths.get(Resources.FOLDER).toAbsolutePath().normalize(), new SimpleFileVisitor<Path>() {
+            Files.walkFileTree(Paths.get(Resources.FOLDER).toAbsolutePath().normalize(), new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
                     directories.add(directory);
@@ -214,6 +214,7 @@ public final class ResourceWatcher {
             DataType data = entry.getKey();
             System.out.println("--Watch: source of " + data.getClass().getSimpleName() + " " + data.getDataName()
                     + " changed, reloading");
+            //noinspection NonAtomicOperationOnVolatileField
             ++reloadCount;
             resources.reload(data);
         }

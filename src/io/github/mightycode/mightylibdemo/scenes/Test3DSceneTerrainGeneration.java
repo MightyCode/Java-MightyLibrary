@@ -2,8 +2,6 @@ package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.algorithms.TerrainGeneration;
 import io.github.mightycode.mightylib.graphics.lightning.materials.BasicMaterial;
-import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapColorFunctions;
-import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._3D.terrain.TerrainRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
