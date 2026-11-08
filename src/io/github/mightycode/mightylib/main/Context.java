@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
@@ -73,7 +74,7 @@ public final class Context implements IView {
         return all;
     }
 
-    boolean isCloseRequested() { return closeRequested; }
+    public boolean isCloseRequested() { return closeRequested; }
 
     /** Ask to close the context (its windows and its scene) at the end of the frame. */
     public void requestClose() { closeRequested = true; }
@@ -226,6 +227,8 @@ public final class Context implements IView {
     void swapWindows() {
         for (WindowContext window : getWindows()) {
             window.getWindow().bindWindow();
+            // The image asked for this window is read from its back buffer, before the swap
+            Screenshot.captureIfRequested(window.getWindow().getInfo().getWindowId());
             window.getWindow().swapBuffers();
         }
     }

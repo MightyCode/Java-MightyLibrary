@@ -22,6 +22,7 @@ public final class ContextManager {
     private final List<Context> contexts = new CopyOnWriteArrayList<>();
     private Context mainContext;
     private GamepadManager gamepadManager;
+    private int lastWindowId;
     // Hidden context that every window shares its objects with, created with the first window
     private GLContext rootGLContext;
 
@@ -80,7 +81,7 @@ public final class ContextManager {
         InputManager inputManager = new InputManager(keyboardManager, mouseManager, getGamepadManager());
         inputManager.init(new ActionInput[]{});
 
-        return new WindowContext(owner, name, closesEngine, view, window, inputManager, keyboardManager, mouseManager);
+        return new WindowContext(++lastWindowId, owner, name, closesEngine, view, window, inputManager, keyboardManager, mouseManager);
     }
 
     // ---- Access ----

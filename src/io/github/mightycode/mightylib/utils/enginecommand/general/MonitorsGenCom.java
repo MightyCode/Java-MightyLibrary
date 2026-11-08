@@ -45,7 +45,7 @@ public class MonitorsGenCom extends BaseCommand {
         JSONObject data = new JSONObject();
         data.put("monitors", list);
 
-        WindowInfo window = Views.engine().contexts().getMainWindow().getWindow().getInfo();
+        WindowInfo window = Views.engine().commandWindow().getWindow().getInfo();
         MonitorInfo current = Monitors.OfWindow(window.getWindowId(), monitors);
         data.put("windowMonitor", current == null ? JSONObject.NULL : current.getIndex());
 

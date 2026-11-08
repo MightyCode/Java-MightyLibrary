@@ -16,7 +16,7 @@ public class ExitGenCom extends BaseCommand {
 
     @Override
     public CommandResult execute(String[] args) {
-        sceneManager.requestExit(ListError.NO_ERROR);
+        sceneManager.commandTarget().requestExit(ListError.NO_ERROR);
 
         return CommandResult.ok("Exiting the program");
     }

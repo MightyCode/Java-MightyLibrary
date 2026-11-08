@@ -11,6 +11,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
  * The main window of a context is drawn by the scene of the context, the others by a WindowView.
  */
 public class WindowContext {
+    private final int id;
     private final Context owner;
     private final String name;
     private final Window window;
@@ -28,7 +29,8 @@ public class WindowContext {
 
     private boolean closeRequested;
 
-    WindowContext(Context owner,
+    WindowContext(int id,
+                  Context owner,
                   String name,
                   boolean closesEngine,
                   WindowView view,
@@ -37,6 +39,7 @@ public class WindowContext {
                   KeyboardManager keyboardManager,
                   MouseManager mouseManager){
 
+        this.id = id;
         this.owner = owner;
         this.name = name;
         this.closesEngine = closesEngine;
@@ -51,6 +54,9 @@ public class WindowContext {
 
     // The context (scene and windows) this window belongs to
     public Context getContext() { return owner; }
+
+    // Number of the window in the engine, never reused: what the commands call it
+    public int getId() { return id; }
 
     public String getName() { return name; }
 

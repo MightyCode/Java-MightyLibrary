@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.graphics.utils.Screenshot;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import org.json.JSONObject;
@@ -79,7 +80,7 @@ public class ScreenshotGenCom extends BaseCommand {
 
         // Answered once the image is written, after the next frame
         final int[] requestedRegion = region;
-        return CommandResult.later(Screenshot.request(file, region, scale).thenApply(written -> {
+        return CommandResult.later(Screenshot.request(file, region, scale, Views.engine().commandWindow().getWindow().getInfo().getWindowId()).thenApply(written -> {
             JSONObject data = new JSONObject();
             data.put("path", written.getAbsolutePath());
             if (requestedRegion != null)
