@@ -31,6 +31,8 @@ public class Resources {
     private static final String ALL_REFERENCE = "all";
     // Prefix of the references a data adds to its dependencies
     static final String DEPENDENCY_REFERENCE_PREFIX = "dependency:";
+    // Reference of a batch loaded in advance (preloadBatch): its data are loaded after those wanted now
+    static final String PRELOAD_REFERENCE_PREFIX = "preload:";
     // Name of the fallback of each type (ResourceLoader.createFallback), and the reference keeping it loaded
     public static final String FALLBACK_NAME = "error";
 
@@ -237,7 +239,8 @@ public class Resources {
 
     // Main thread: true when no data is being loaded or unloaded
     public boolean finishedCurrentLoading() {
-        return scheduler.isIdle() && dependencies.waitingCount() == 0;
+        // What is only preloaded does not count: a loading screen does not wait for the next scene
+        return scheduler.isIdle() && dependencies.waitingUrgentCount() == 0;
     }
 
     // Main thread: see ResourceDescriber
@@ -308,6 +311,7 @@ public class Resources {
             dependencies.release(data);
             data.failed = false;
             data.reloadWanted = false;
+            data.urgent = false;
             data.discard();
 
             // The new version being read is not needed either
@@ -503,7 +507,28 @@ public class Resources {
 
     void addReferenceAndUpdate(DataType data, String reference) {
         data.addReference(reference);
+        // A dependency reference is urgent as its dependent is (DependencyGraph.acquire)
+        if (!reference.startsWith(PRELOAD_REFERENCE_PREFIX) && !reference.startsWith(DEPENDENCY_REFERENCE_PREFIX))
+            makeUrgent(data);
+
         requestUpdate(data);
+    }
+
+    // True when the steps of the data go before the preload ones: wanted now, or not wanted any more (skipped quickly)
+    boolean isUrgent(DataType data) {
+        DataType original = data.reloadOf != null ? data.reloadOf : data;
+        return data.urgent || original.urgent || !isWanted(data);
+    }
+
+    // The data and what it depends on are wanted now: their queued steps are promoted, the next ones go first
+    void makeUrgent(DataType data) {
+        if (data.urgent)
+            return;
+
+        data.urgent = true;
+        scheduler.promote(data);
+        for (DataType dependency : data.getDependencies())
+            makeUrgent(dependency);
     }
 
     void removeReferenceAndUpdate(DataType data, String reference) {
@@ -555,6 +580,33 @@ public class Resources {
         }
 
         batches.load(batchName);
+    }
+
+    /**
+     * Load a batch in advance (the next scene): its data are read and loaded after everything wanted now, and a
+     * loading screen does not wait for them. Loading the batch for real (loadBatch) makes them urgent, and costs
+     * nothing for what is already loaded. Cancel with cancelPreloadBatch once the batch is loaded or no longer wanted.
+     */
+    public void preloadBatch(String batchName) {
+        if (!(loadingMethod instanceof BatchResourcesMethod)) {
+            System.err.println("Can't preload batch: " + batchName + " when loading method is not BatchResources");
+            return;
+        }
+
+        batches.preload(batchName);
+    }
+
+    // Release the reference of one preloadBatch: what nothing else wants is unloaded
+    public void cancelPreloadBatch(String batchName) {
+        if (!(loadingMethod instanceof BatchResourcesMethod))
+            return;
+
+        batches.cancelPreload(batchName);
+    }
+
+    // What a batch loads: data by type, loaded ones, estimated memory (see BatchManager.preview)
+    public JSONObject describeBatch(String batchName) {
+        return batches.preview(batchName);
     }
 
     public void unloadBatch(String batchName) {
