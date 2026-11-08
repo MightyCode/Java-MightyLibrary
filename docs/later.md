@@ -30,6 +30,7 @@ En place : JUnit 5 (`test/`), `ResourcesLifecycleTest` (`FakeData`, `Resources.c
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
 - **Identifiants à espace de noms** (`jeu:slime`) pour ressources, commandes, scènes, actions : aujourd'hui noms de ressources globaux et IDs d'action `int` statiques (`InputManager.getAndIncrementId`) → collisions.
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
+- **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
 - Mods de données (JSON/ressources) et mods de code (jars, sans sandbox : de confiance seulement).
 
 ## Effets 2D : particules et post-traitement

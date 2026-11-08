@@ -616,6 +616,47 @@ public class Resources {
         return watcher;
     }
 
+    /**
+     * Any thread (the resource watcher): looks for the files created since the start, and registers the data of those
+     * the filter accepts, so they can be loaded by name or by a batch pattern. Existing data are left untouched.
+     */
+    void discoverNewFiles(java.util.function.BiPredicate<Class<? extends DataType>, DataType> accepted) {
+        Map<Class<? extends DataType>, Map<String, DataType>> found = new LinkedHashMap<>();
+        for (ResourceLoader loader : new ArrayList<>(Loaders)) {
+            Map<String, DataType> map = new HashMap<>();
+            try {
+                loader.discover(map);
+            } catch (RuntimeException e) {
+                System.err.println("--Watch: can't look for new " + loader.getResourceNameType() + " files: "
+                        + e.getMessage());
+                continue;
+            }
+            found.put(loader.getType(), map);
+        }
+
+        runOnMainThread(() -> {
+            int added = 0;
+            for (Map.Entry<Class<? extends DataType>, Map<String, DataType>> ofType : found.entrySet()) {
+                Map<String, DataType> registered = resources.get(ofType.getKey());
+                if (registered == null)
+                    continue;
+
+                for (Map.Entry<String, DataType> entry : ofType.getValue().entrySet()) {
+                    if (registered.containsKey(entry.getKey()) || !accepted.test(ofType.getKey(), entry.getValue()))
+                        continue;
+
+                    registered.put(entry.getKey(), entry.getValue());
+                    ++added;
+                    System.out.println("--Watch: new " + ofType.getKey().getSimpleName() + " " + entry.getKey());
+                }
+            }
+
+            // A batch described by a pattern may list the new data
+            if (added > 0)
+                batches.refreshLoaded();
+        });
+    }
+
     // Any thread: every registered data with its registered type (weakly consistent snapshot)
     void forEachRegistered(java.util.function.BiConsumer<Class<? extends DataType>, DataType> action) {
         for (Map.Entry<Class<? extends DataType>, Map<String, DataType>> ofType : resources.entrySet()) {

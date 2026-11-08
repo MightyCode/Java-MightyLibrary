@@ -1,11 +1,19 @@
 package io.github.mightycode.mightylib.resources;
 
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +39,8 @@ public final class ResourceWatcher {
     public static final long DEFAULT_INTERVAL_MS = 1000;
     private static final long DEBOUNCE_MS = 200;
     private static final long REFRESH_MS = 1000;
+    // The changes of one data (description file + sources, written one after the other) make a single reload
+    private static final long GROUP_MS = 300;
 
     private final Resources resources;
     private final List<ResourceSelection> selections = new CopyOnWriteArrayList<>();
@@ -38,6 +48,9 @@ public final class ResourceWatcher {
     private long intervalMs = DEFAULT_INTERVAL_MS;
     private FileChangeDetector detector;
     private volatile Map<Path, List<DataType>> dataByPath = Collections.emptyMap();
+    private volatile Set<Path> folders = Collections.emptySet();
+    // Detector thread only: data changed, reloaded once nothing changed for GROUP_MS
+    private final Map<DataType, Long> waiting = new LinkedHashMap<>();
     private volatile int reloadCount;
 
     ResourceWatcher(Resources resources) {
@@ -133,7 +146,34 @@ public final class ResourceWatcher {
         });
 
         dataByPath = byPath;
-        return byPath.keySet();
+
+        // The folders too: a file created in one is a new data (see filesChanged)
+        Set<Path> watched = new HashSet<>(byPath.keySet());
+        Set<Path> directories = selections.isEmpty() ? Collections.<Path>emptySet() : listFolders();
+        watched.addAll(directories);
+        folders = directories;
+        return watched;
+    }
+
+    private Set<Path> listFolders() {
+        Set<Path> directories = new HashSet<>();
+        try {
+            Files.walkFileTree(Paths.get(Resources.FOLDER).toAbsolutePath().normalize(), new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
+                    directories.add(directory);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException e) {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException | InvalidPathException e) {
+            System.err.println("--Watch: can't list the resource folders (" + e + ")");
+        }
+        return directories;
     }
 
     private boolean matches(Class<? extends DataType> type, DataType data) {
@@ -144,21 +184,41 @@ public final class ResourceWatcher {
         return false;
     }
 
-    // Watcher thread: Resources.reload hands over to the main thread
+    // Watcher thread, at every check (changes may be empty): Resources.reload hands over to the main thread
     private void filesChanged(List<Path> files) {
+        long now = System.currentTimeMillis();
         Map<Path, List<DataType>> byPath = dataByPath;
-        Set<DataType> toReload = new LinkedHashSet<>();
+        Set<Path> directories = folders;
+        boolean foldersChanged = false;
+
         for (Path file : files) {
+            if (directories.contains(file)) {
+                foldersChanged = true;
+                continue;
+            }
+
             List<DataType> data = byPath.get(file);
-            if (data != null)
-                toReload.addAll(data);
+            if (data != null) {
+                for (DataType changed : data)
+                    waiting.put(changed, now);
+            }
         }
 
-        for (DataType data : toReload) {
+        Iterator<Map.Entry<DataType, Long>> entries = waiting.entrySet().iterator();
+        while (entries.hasNext()) {
+            Map.Entry<DataType, Long> entry = entries.next();
+            if (now - entry.getValue() < GROUP_MS)
+                continue;
+
+            entries.remove();
+            DataType data = entry.getKey();
             System.out.println("--Watch: source of " + data.getClass().getSimpleName() + " " + data.getDataName()
                     + " changed, reloading");
             ++reloadCount;
             resources.reload(data);
         }
+
+        if (foldersChanged)
+            resources.discoverNewFiles(this::matches);
     }
 }

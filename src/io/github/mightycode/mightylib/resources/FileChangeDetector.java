@@ -31,7 +31,8 @@ import java.util.function.Supplier;
  *   cannot be registered falls back to polling for its files.</li>
  * </ul>
  * A change is reported once the file stayed the same for the debounce time, because editors write in several steps.
- * A deleted file is ignored (the previous version is kept); a file created or restored is a change.
+ * A deleted file is ignored (the previous version is kept); a file created or restored is a change. A tracked
+ * directory is reported when files are created or removed in it.
  */
 final class FileChangeDetector {
     enum Mode { POLLING, WATCH_SERVICE }
@@ -167,9 +168,8 @@ final class FileChangeDetector {
             }
 
             try {
-                List<Path> changed = tick(System.currentTimeMillis(), events);
-                if (!changed.isEmpty())
-                    onChanged.accept(changed);
+                // Called at every check, even with nothing changed: the receiver groups the changes over time
+                onChanged.accept(tick(System.currentTimeMillis(), events));
             } catch (RuntimeException e) {
                 System.err.println("--Watch: error while checking files: " + e);
             }
@@ -223,6 +223,10 @@ final class FileChangeDetector {
             for (Path event : events) {
                 if (tracked.contains(event))
                     toCheck.add(event);
+                // A file created or removed in a tracked directory changes the directory
+                Path parent = event.getParent();
+                if (parent != null && tracked.contains(parent))
+                    toCheck.add(parent);
             }
         }
 
@@ -287,6 +291,9 @@ final class FileChangeDetector {
             Path parent = path.getParent();
             if (parent != null)
                 directories.add(parent);
+            // A tracked directory is watched itself, to know when something is created inside
+            if (Files.isDirectory(path))
+                directories.add(path);
         }
 
         for (Path directory : directories) {
@@ -323,6 +330,9 @@ final class FileChangeDetector {
     private static Stat stat(Path path) {
         try {
             BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class);
+            // A directory changes when a file is created, removed or renamed inside (not when one is modified)
+            if (attributes.isDirectory())
+                return new Stat(attributes.lastModifiedTime().toMillis(), 0);
             if (!attributes.isRegularFile())
                 return MISSING;
 

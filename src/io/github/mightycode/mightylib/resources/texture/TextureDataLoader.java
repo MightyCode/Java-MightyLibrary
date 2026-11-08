@@ -21,13 +21,20 @@ import java.nio.IntBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class TextureDataLoader extends ResourceLoader {
     private final static String LIST_TEXTURES = Resources.FOLDER + "textures/textures.json";
+    private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList("png", "jpg", "jpeg", "bmp", "tga", "gif"));
 
     @Override
     public Class<? extends DataType> getType() {
@@ -43,6 +50,47 @@ public class TextureDataLoader extends ResourceLoader {
     public void create(Map<String, DataType> data){
         JSONObject obj = new JSONObject(FileMethods.readFileAsString(LIST_TEXTURES));
         create(data, obj, "");
+    }
+
+    /**
+     * The textures of textures.json, plus the images of the textures folder it does not list: named after their file,
+     * with the default parameters of TextureData (realistic, 2D) and a warning, so a file dropped in the folder can be
+     * used (and reloaded) without editing the list.
+     */
+    @Override
+    public void discover(Map<String, DataType> data) {
+        create(data);
+
+        Set<Path> listed = new HashSet<>();
+        for (DataType texture : data.values())
+            listed.add(Paths.get(((TextureData) texture).path()).toAbsolutePath().normalize());
+
+        Path folder = Paths.get(Resources.FOLDER + "textures");
+        if (!Files.isDirectory(folder))
+            return;
+
+        try (Stream<Path> files = Files.walk(folder)) {
+            files.filter(Files::isRegularFile).forEach(file -> {
+                String fileName = file.getFileName().toString();
+                int dot = fileName.lastIndexOf('.');
+                if (dot <= 0 || !IMAGE_EXTENSIONS.contains(fileName.substring(dot + 1).toLowerCase()))
+                    return;
+                if (listed.contains(file.toAbsolutePath().normalize()))
+                    return;
+
+                String name = fileName.substring(0, dot);
+                if (data.containsKey(name)) {
+                    System.err.println("--Texture " + file + " is not in textures.json and its name '" + name
+                            + "' is already used: ignored");
+                    return;
+                }
+
+                System.err.println("--Texture " + file + " is not in textures.json: default parameters (realistic, 2D)");
+                data.put(name, new TextureData(name, file.toString().replace('\\', '/')));
+            });
+        } catch (IOException e) {
+            throw new ResourceException("can't list " + folder, e);
+        }
     }
 
     @Override
