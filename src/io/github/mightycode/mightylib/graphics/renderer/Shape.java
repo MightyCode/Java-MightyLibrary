@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
@@ -29,7 +30,29 @@ public class Shape {
 
     protected int eboStorage;
 
-    protected int vao, ebo;
+    protected int ebo;
+
+    // A vertex array of one OpenGL context, set up for the layout of the given version
+    private static final class VaoEntry {
+        final GLContext context;
+        final int id;
+        int version = -1;
+
+        VaoEntry(GLContext context, int id) {
+            this.context = context;
+            this.id = id;
+        }
+    }
+
+    // One vertex array per context that draws this shape, created when it first does
+    private final ArrayList<VaoEntry> vaoEntries = new ArrayList<>(1);
+    private VaoEntry lastEntry;
+    // Changes with each change of the buffers and attributes: a vertex array of another version is rebuilt
+    private int layoutVersion;
+    // Size and kind of each attribute, to set a new vertex array up
+    protected ArrayList<Integer> vbosVertexSize;
+    protected ArrayList<Boolean> vbosInteger;
+
     protected ArrayList<Integer> vbos;
     protected ArrayList<Integer> vbosStorage;
     // Number of elements currently allocated for each vbo, to update without reallocating when it doesn't change
@@ -61,15 +84,16 @@ public class Shape {
         verticesToDraw = 0;
         indicesSize = 0;
 
-        vao = GenDeleteResources.GenVertexArrays();
-        bind();
         vbos = new ArrayList<>();
         vbosStorage = new ArrayList<>();
         vbosSize = new ArrayList<>();
         vbosEnable = new ArrayList<>();
+        vbosVertexSize = new ArrayList<>();
+        vbosInteger = new ArrayList<>();
         vboCount = 0;
         ebo = 0;
         eboStorage = STATIC_STORE;
+        bind();
         setUseEbo(useEbo);
     }
 
@@ -90,7 +114,7 @@ public class Shape {
         glVertexAttribPointer(vboCount, vertexSize, GL_FLOAT, false, 0, 0);
         Logger.CheckOpenGLError("Vbo attrib pointer : " + vbo);
 
-        return endAddVbo(vbo, vertices.length, vertexSize, storage);
+        return endAddVbo(vbo, vertices.length, vertexSize, storage, false);
     }
 
     public int addVboInt(int[] vertices, int vertexSize, int storage){
@@ -101,10 +125,10 @@ public class Shape {
         glBufferData(GL_ARRAY_BUFFER, vertices, storage);
         glVertexAttribIPointer(vboCount, vertexSize, GL_INT,0, 0);
 
-        return endAddVbo(vbo, vertices.length, vertexSize, storage);
+        return endAddVbo(vbo, vertices.length, vertexSize, storage, true);
     }
 
-    private int endAddVbo(int vbo, int arrayLength, int vertexSize, int storage){
+    private int endAddVbo(int vbo, int arrayLength, int vertexSize, int storage, boolean integer){
         vbosEnable.add(false);
         enableVbo(vboCount);
 
@@ -112,7 +136,10 @@ public class Shape {
         vbos.add(vbo);
         vbosStorage.add(storage);
         vbosSize.add(arrayLength);
+        vbosVertexSize.add(vertexSize);
+        vbosInteger.add(integer);
         ++vboCount;
+        layoutChanged();
 
         return vbos.size() - 1;
     }
@@ -168,6 +195,7 @@ public class Shape {
             bind();
             glDisableVertexAttribArray(pos);
             vbosEnable.set(pos, false);
+            layoutChanged();
         }
     }
 
@@ -179,6 +207,7 @@ public class Shape {
             glEnableVertexAttribArray(pos);
             Logger.CheckOpenGLError("Vbo enable attrib : " + pos);
             vbosEnable.set(pos, true);
+            layoutChanged();
         }
     }
 
@@ -216,6 +245,8 @@ public class Shape {
 
         if (this.useEbo)
             ebo = GenDeleteResources.GenBuffersEBO();
+
+        layoutChanged();
     }
 
 
@@ -263,12 +294,75 @@ public class Shape {
     }
 
 
+    /**
+     * Bind the vertex array of the current OpenGL context. Vertex arrays are not shared between contexts: each
+     * context has its own, created at the first bind and rebuilt from the layout (buffers, attributes, element
+     * buffer) when it changed. The buffers themselves are shared.
+     */
     public void bind(){
-        glBindVertexArray(vao);
+        GLContext context = GLContext.current();
+        VaoEntry entry = lastEntry;
+        if (entry == null || entry.context != context)
+            entry = entryFor(context);
+
+        lastEntry = entry;
+        if (entry.version != layoutVersion)
+            rebuild(entry);
+        else
+            glBindVertexArray(entry.id);
 
         // Called for each draw: avoid building the message when checks are disabled
         if (Logger.DO_CHECK)
-            Logger.CheckOpenGLError("Bind vao buffer : " + vao);
+            Logger.CheckOpenGLError("Bind vao buffer : " + entry.id);
+    }
+
+    private VaoEntry entryFor(GLContext context) {
+        // A destroyed context took its vertex arrays with it
+        vaoEntries.removeIf(entry -> entry.context.isDestroyed());
+
+        for (VaoEntry entry : vaoEntries) {
+            if (entry.context == context)
+                return entry;
+        }
+
+        // Generated in the current context, which is the one asked for
+        VaoEntry entry = new VaoEntry(context, GenDeleteResources.GenVertexArrays());
+        vaoEntries.add(entry);
+        return entry;
+    }
+
+    // Bind the vertex array and set it up like the first one
+    private void rebuild(VaoEntry entry) {
+        glBindVertexArray(entry.id);
+
+        for (int i = 0; i < vbos.size(); ++i) {
+            glBindBuffer(GL_ARRAY_BUFFER, vbos.get(i));
+
+            if (vbosInteger.get(i))
+                glVertexAttribIPointer(i, vbosVertexSize.get(i), GL_INT, 0, 0);
+            else
+                glVertexAttribPointer(i, vbosVertexSize.get(i), GL_FLOAT, false, 0, 0);
+
+            if (vbosEnable.get(i))
+                glEnableVertexAttribArray(i);
+            else
+                glDisableVertexAttribArray(i);
+        }
+
+        if (useEbo && ebo != 0)
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+        entry.version = layoutVersion;
+        Logger.CheckOpenGLError("Rebuild vao : " + entry.id);
+    }
+
+    // Called after the layout changed through the vertex array of the current context: the others are rebuilt at their next bind
+    private void layoutChanged() {
+        ++layoutVersion;
+
+        GLContext context = GLContext.current();
+        if (lastEntry != null && lastEntry.context == context)
+            lastEntry.version = layoutVersion;
     }
 
 
@@ -305,7 +399,7 @@ public class Shape {
 
 
     public void printStatus(){
-        System.out.println("ebo" +  ebo + " vao  " + vao + " size " + indicesSize);
+        System.out.println("ebo" +  ebo + " vaos  " + vaoEntries.size() + " size " + indicesSize);
     }
 
 
@@ -372,13 +466,20 @@ public class Shape {
         vbosEnable.clear();
         vbosStorage.clear();
         vbosSize.clear();
+        vbosVertexSize.clear();
+        vbosInteger.clear();
         vboCount = 0;
+        layoutChanged();
     }
 
     public void unload(){
         unloadVBO();
 
-        GenDeleteResources.DeleteVertexArrays(vao);
+        // Each vertex array is deleted in its own context
+        for (VaoEntry entry : vaoEntries)
+            GenDeleteResources.DeleteVertexArrays(entry.context, entry.id);
+        vaoEntries.clear();
+        lastEntry = null;
 
         if (useEbo)
             GenDeleteResources.DeleteBuffersEBO(ebo);

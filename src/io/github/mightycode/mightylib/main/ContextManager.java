@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
@@ -16,12 +17,21 @@ public class ContextManager {
     private String mainContext;
     private final Map<String, Context> contexts;
     private GamepadManager gamepadManager;
+    // Hidden context that every window shares its objects with, created with the first window
+    private GLContext rootGLContext;
 
     ContextManager(){
         contexts = new HashMap<>();
         mainContext = "Main";
     }
 
+
+    GLContext rootGLContext() {
+        if (rootGLContext == null)
+            rootGLContext = GLContext.createRoot();
+
+        return rootGLContext;
+    }
 
     // The window settings come from EngineConfig (MainLoop): WindowCreationInfo stays internal
     void createDefaultContext(WindowCreationInfo wci){
@@ -38,7 +48,7 @@ public class ContextManager {
         if (wci == null) window = new Window();
         else window = new Window(wci);
 
-        window.createNewWindow();
+        window.createNewWindow(rootGLContext());
 
         KeyboardLanguage keyboardLanguage = (wci != null && wci.KeyboardLanguage != null) ?
                 wci.KeyboardLanguage : QWERTKeyboardLanguage.getInstance();
@@ -105,6 +115,12 @@ public class ContextManager {
     public void unload(){
         for (Context context : contexts.values()){
             context.unload();
+        }
+
+        // After the windows: the shared objects live as long as the root context
+        if (rootGLContext != null) {
+            rootGLContext.destroyRoot();
+            rootGLContext = null;
         }
 
         if (gamepadManager != null) {

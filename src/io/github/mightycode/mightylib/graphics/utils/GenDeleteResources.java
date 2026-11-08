@@ -1,25 +1,25 @@
 package io.github.mightycode.mightylib.graphics.utils;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.main.MainThread;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.valueDebug.TableDebug;
 import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 import static org.lwjgl.opengl.GL30.*;
 
 public abstract class GenDeleteResources {
     private static boolean Initialized = false;
-    private static ArrayList<Integer> VAOs;
     private static ArrayList<Integer> VBOs;
     private static ArrayList<Integer> EBOs;
     private static ArrayList<Integer> PBOs;
 
     private static ArrayList<Integer> Textures;
 
-    private static ArrayList<Integer> FBOs;
-    private static ArrayList<Integer> RBOs;
 
     private GenDeleteResources(){}
 
@@ -37,15 +37,12 @@ public abstract class GenDeleteResources {
         if (Initialized)
             return;
 
-        VAOs = new ArrayList<>();
         VBOs = new ArrayList<>();
         EBOs = new ArrayList<>();
         PBOs = new ArrayList<>();
 
         Textures = new ArrayList<>();
 
-        FBOs = new ArrayList<>();
-        RBOs = new ArrayList<>();
 
         Initialized = true;
     }
@@ -57,19 +54,34 @@ public abstract class GenDeleteResources {
                     + ", GL calls must run on the main thread (MainThread.execute)");
     }
 
+    // Vertex arrays, framebuffers and renderbuffers belong to the context that created them (the current one)
     public static int GenVertexArrays() {
         CheckMainThread("GenVertexArrays");
         int vao = GL30.glGenVertexArrays();
 
-        VAOs.add(vao);
+        GLContext.current().addVertexArray(vao);
 
         return vao;
     }
 
-    public static void DeleteVertexArrays(Integer vao) {
+    // Deleted at once when the owner is the current context, at its next makeCurrent otherwise
+    public static void DeleteVertexArrays(GLContext owner, Integer vao) {
         CheckMainThread("DeleteVertexArrays");
-        VAOs.remove(vao);
-        GL30.glDeleteVertexArrays(vao);
+        DeleteInOwner(owner, () -> {
+            owner.removeVertexArray(vao);
+            GL30.glDeleteVertexArrays(vao);
+        });
+    }
+
+    private static void DeleteInOwner(GLContext owner, Runnable deletion) {
+        // Destroyed with its window: the driver freed its objects
+        if (owner.isDestroyed())
+            return;
+
+        if (owner == GLContext.currentOrNull())
+            deletion.run();
+        else
+            owner.deleteLater(deletion);
     }
 
     public static int GenBuffers() {
@@ -128,34 +140,47 @@ public abstract class GenDeleteResources {
     public static int GenFramebuffers() {
         CheckMainThread("GenFramebuffers");
         int fbo = glGenFramebuffers();
-        FBOs.add(fbo);
+        GLContext.current().addFramebuffer(fbo);
         return fbo;
     }
 
-    public static void DeleteFramebuffers(Integer fbo) {
+    public static void DeleteFramebuffers(GLContext owner, Integer fbo) {
         CheckMainThread("DeleteFramebuffers");
-        FBOs.remove(fbo);
-        glDeleteFramebuffers(fbo);
+        DeleteInOwner(owner, () -> {
+            owner.removeFramebuffer(fbo);
+            glDeleteFramebuffers(fbo);
+        });
     }
 
     public static int GenRenderBuffers() {
         CheckMainThread("GenRenderBuffers");
         int rbo = glGenRenderbuffers();
-        RBOs.add(rbo);
+        GLContext.current().addRenderbuffer(rbo);
         return rbo;
     }
 
-    public static void DeleteRenderBuffers(Integer rbo) {
+    public static void DeleteRenderBuffers(GLContext owner, Integer rbo) {
         CheckMainThread("DeleteRenderBuffers");
-        RBOs.remove(rbo);
-        glDeleteRenderbuffers(rbo);
+        DeleteInOwner(owner, () -> {
+            owner.removeRenderbuffer(rbo);
+            glDeleteRenderbuffers(rbo);
+        });
+    }
+
+    // What the contexts alive own, of one kind (ids of different contexts can be equal)
+    private static ArrayList<Integer> PerContext(Function<GLContext, List<Integer>> owned) {
+        ArrayList<Integer> all = new ArrayList<>();
+        for (GLContext context : GLContext.live())
+            all.addAll(owned.apply(context));
+
+        return all;
     }
 
     public static void PrintList(EGraphicResources graphicResources) {
         switch (graphicResources) {
             case VertexArrayBuffer:
                 System.out.print("VertexArrayObjects (VAOs): ");
-                TableDebug.printi(VAOs);
+                TableDebug.printi(PerContext(GLContext::vertexArrays));
                 break;
             case VertexBufferObject:
                 System.out.print("VertexBufferObjects (VBOs): ");
@@ -175,11 +200,11 @@ public abstract class GenDeleteResources {
                 break;
             case FramebufferObject:
                 System.out.print("FramebufferObjects (FBOs): ");
-                TableDebug.printi(FBOs);
+                TableDebug.printi(PerContext(GLContext::framebuffers));
                 break;
             case RenderBufferObject:
                 System.out.print("RenderBufferObjects (RBOs): ");
-                TableDebug.printi(RBOs);
+                TableDebug.printi(PerContext(GLContext::renderbuffers));
                 break;
             default:
                 System.out.print("Unknown resource type.");
@@ -191,7 +216,7 @@ public abstract class GenDeleteResources {
     public static int Count(EGraphicResources graphicResources) {
         switch (graphicResources) {
             case VertexArrayBuffer:
-                return VAOs.size();
+                return PerContext(GLContext::vertexArrays).size();
             case VertexBufferObject:
                 return VBOs.size();
             case ElementBufferObject:
@@ -201,9 +226,9 @@ public abstract class GenDeleteResources {
             case Texture:
                 return Textures.size();
             case FramebufferObject:
-                return FBOs.size();
+                return PerContext(GLContext::framebuffers).size();
             case RenderBufferObject:
-                return RBOs.size();
+                return PerContext(GLContext::renderbuffers).size();
             default:
                 return 0;
         }
