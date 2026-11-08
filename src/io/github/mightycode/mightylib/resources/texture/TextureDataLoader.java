@@ -7,10 +7,20 @@ import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.Resources;
 import org.json.JSONObject;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.stb.STBImage;
+import org.lwjgl.system.MemoryStack;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -91,8 +101,26 @@ public class TextureDataLoader extends ResourceLoader {
         TextureData textureData = (TextureData) dataType;
 
         // Failing here makes the preload fail: the fallback replaces the texture
+        ByteBuffer file = readFile(textureData);
+
+        // stb_image decodes straight to RGBA; ImageIO (slower) reads what it does not know
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer width = stack.mallocInt(1);
+            IntBuffer height = stack.mallocInt(1);
+            IntBuffer channels = stack.mallocInt(1);
+
+            ByteBuffer pixels = STBImage.stbi_load_from_memory(file, width, height, channels, 4);
+            if (pixels != null) {
+                textureData.setDecodedPixels(pixels, width.get(0), height.get(0));
+                return;
+            }
+
+            System.err.println("--Texture " + textureData.getDataName() + ": stb can't read it ("
+                    + STBImage.stbi_failure_reason() + "), ImageIO is used");
+        }
+
         BufferedImage image;
-        try (FileInputStream input = new FileInputStream(textureData.path())) {
+        try (InputStream input = new ByteArrayInputStream(toArray(file))) {
             image = ImageIO.read(input);
         } catch (Exception e) {
             throw new ResourceException("can't read the texture file " + textureData.path(), e);
@@ -102,5 +130,30 @@ public class TextureDataLoader extends ResourceLoader {
             throw new ResourceException("unknown image format: " + textureData.path());
 
         textureData.setBufferedImage(image);
+    }
+
+    private static ByteBuffer readFile(TextureData textureData) {
+        try (FileChannel channel = FileChannel.open(Paths.get(textureData.path()), StandardOpenOption.READ)) {
+            long size = channel.size();
+            if (size <= 0 || size > Integer.MAX_VALUE)
+                throw new ResourceException("can't read the texture file " + textureData.path() + " (size " + size + ")");
+
+            ByteBuffer file = BufferUtils.createByteBuffer((int) size);
+            while (file.hasRemaining()) {
+                if (channel.read(file) < 0)
+                    break;
+            }
+
+            file.flip();
+            return file;
+        } catch (IOException e) {
+            throw new ResourceException("can't read the texture file " + textureData.path(), e);
+        }
+    }
+
+    private static byte[] toArray(ByteBuffer buffer) {
+        byte[] bytes = new byte[buffer.remaining()];
+        buffer.duplicate().get(bytes);
+        return bytes;
     }
 }

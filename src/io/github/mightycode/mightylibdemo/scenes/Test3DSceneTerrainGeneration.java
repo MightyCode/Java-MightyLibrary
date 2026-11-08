@@ -42,7 +42,7 @@ public class Test3DSceneTerrainGeneration extends Scene {
     @Override
     protected String[] getInvolvedBatch() {
         return new String[]{
-                "elements3d"
+                "crates3d"
         };
     }
 

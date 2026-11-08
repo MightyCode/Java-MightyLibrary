@@ -15,6 +15,7 @@ import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.TickEvent;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Icon;
+import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -147,6 +148,7 @@ public final class MainLoop {
         }
 
         GLResources.createInstance(config.getMaxGLUploadMillisecondsPerFrame());
+        TextureUploader.setMode(config.getTextureUpload());
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(config.getLoadingScene());

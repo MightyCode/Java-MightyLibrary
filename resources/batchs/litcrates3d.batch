@@ -1,0 +1,9 @@
+{
+    "batchs" : [
+        {
+            "type" : "TextureData",
+            "files" : ["container2", "container2_specular"],
+            "regex" : []
+        }
+    ]
+}

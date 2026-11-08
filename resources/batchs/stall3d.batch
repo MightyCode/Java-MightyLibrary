@@ -1,0 +1,13 @@
+{
+    "batchs" : [
+        {
+            "type" : "Model",
+            "files" : ["stall"],
+            "regex" : []
+        }, {
+            "type" : "TextureData",
+            "files" : ["stall"],
+            "regex" : []
+        }
+    ]
+}

@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.texture.ETextureUpload;
 import io.github.mightycode.mightylib.scenes.DefaultLoadingScene;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
@@ -52,6 +53,7 @@ public class EngineConfig {
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
     private int maxThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
     private int maxGLUploadMillisecondsPerFrame = -1;
+    private ETextureUpload textureUpload = ETextureUpload.DIRECT;
 
     // Called once, when the engine is ready
     public EngineConfig setStartScene(Supplier<Scene> startScene) {
@@ -197,6 +199,16 @@ public class EngineConfig {
         return this;
     }
 
+    /**
+     * How the big textures are sent to the card. PBO is faster or not depending on the card and the driver:
+     * measure with the command "textureupload bench". The system property ETextureUpload.PROPERTY
+     * (-Dmightylib.texture.upload=pbo) overrides it.
+     */
+    public EngineConfig setTextureUpload(ETextureUpload textureUpload) {
+        this.textureUpload = textureUpload == null ? ETextureUpload.DIRECT : textureUpload;
+        return this;
+    }
+
     void validate() {
         if (startScene == null)
             throw new IllegalStateException("EngineConfig: no start scene, call setStartScene");
@@ -219,6 +231,11 @@ public class EngineConfig {
     public KeyboardLanguage getKeyboardLanguage() { return keyboardLanguage; }
     public String getGainTreePath() { return gainTreePath; }
     public EEngineMode getMode() { return mode; }
+
+    public ETextureUpload getTextureUpload() {
+        ETextureUpload fromProperty = ETextureUpload.parse(System.getProperty(ETextureUpload.PROPERTY));
+        return fromProperty != null ? fromProperty : textureUpload;
+    }
 
     // Strict only in debug mode, the system property wins over the configuration
     public boolean isStrictResources() {
