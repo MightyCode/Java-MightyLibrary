@@ -2,7 +2,7 @@
 """Run a scenario on the game in one call: compile, launch, send commands, summarize, exit.
 
 Usage:
-    python tools/scenario.py "scene Test2DScene" wait-loaded gl "input ENTER" stats
+    python tools/scenario.py "scene Scene2D" wait-loaded gl "input ENTER" stats
     python tools/scenario.py --attach "stats"          # use an already running game
     python tools/scenario.py --no-compile "scene" ...  # skip compilation
 
@@ -244,7 +244,7 @@ def run_steps(port, steps, timeout, log_path=None):
                 continue
 
             if len(words) >= 2 and words[0] == "scene":
-                # Class name relative to the scenes package, for example Platformer2D.Test2DPlatformerBox2D
+                # Class name relative to the scenes package, for example Platformer2D.PlatformerBox2D
                 expected_scene = words[1]
 
             if step == "wait-loaded":

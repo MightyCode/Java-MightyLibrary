@@ -17,7 +17,7 @@ import org.jbox2d.dynamics.*;
 import org.jbox2d.dynamics.contacts.Contact;
 import java.util.ArrayList;
 
-public class Test2DPlatformerBox2D extends Scene {
+public class PlatformerBox2D extends Scene {
     private World world;
     private PlayerManager player;
 

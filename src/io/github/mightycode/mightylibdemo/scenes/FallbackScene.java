@@ -22,7 +22,7 @@ import org.joml.Vector2f;
  * (plain magenta), an unknown animation; below, a text with an unknown font (boxes). ENTER plays an unknown
  * sound (strident beep). Check: the resources command lists brokenTexture and brokenShader in usingFallback.
  */
-public class TestFallbackScene extends Scene {
+public class FallbackScene extends Scene {
     private static final String BROKEN_TEXTURE = "brokenTexture";
     private static final String BROKEN_SHADER = "brokenShader";
     private static final SoundSourceCreationInfo UNKNOWN_SOUND = new SoundSourceCreationInfo();

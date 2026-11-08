@@ -1,6 +1,6 @@
 # Techniques graphiques
 
-LearnOpenGL (Advanced OpenGL, Advanced Lighting, PBR, articles invités), **après `later.md`**. 2D et 3D ; aucune n'existe encore. Ordre par groupe seulement ; une technique faite est retirée, une technique devenue actuelle passe dans `current.md` après discussion. Chacune a sa scène `Test*`.
+LearnOpenGL (Advanced OpenGL, Advanced Lighting, PBR, articles invités), **après `later.md`**. 2D et 3D ; aucune n'existe encore. Ordre par groupe seulement ; une technique faite est retirée, une technique devenue actuelle passe dans `current.md` après discussion. Chacune a sa scène de démo.
 
 ## 1. Simples et utiles
 - **Blinn-Phong** : corrige le Phong actuel (reflets aux angles rasants).

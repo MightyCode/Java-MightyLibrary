@@ -36,7 +36,7 @@ import org.joml.Vector4f;
 
 import java.util.ArrayList;
 
-public class Test3DScene extends Scene {
+public class Scene3D extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
     private Renderer sBlock;
     private Renderer sphere;
@@ -70,7 +70,7 @@ public class Test3DScene extends Scene {
 
     private FreeCamera3DComponent cameraComponent;
 
-    public Test3DScene(){
+    public Scene3D(){
         super(SCENE_CCI);
     }
 
@@ -219,7 +219,7 @@ public class Test3DScene extends Scene {
         Model data = resources.getResource(Model.class, BACKPACK_MODEL);
         if (data == null || !data.isLoaded()) {
             String message = "Model '" + BACKPACK_MODEL + "' missing: copy the demonstration package into resources/models/backpack/";
-            System.err.println("--Test3DScene : " + message);
+            System.err.println("--Scene3D : " + message);
 
             missingBackpackLabel = new Text();
             missingBackpackLabel.setFont("arial").setFontSize(20).setText(message);

@@ -73,6 +73,6 @@ public class SceneGenCom extends BaseCommand {
         return super.help() +
                 "\nscene : name of the current scene and whether it is still loading" +
                 "\nscene [name] [args...] : change the scene, name is the class name relative to the package of" +
-                " the first scene (for example Platformer2D.Test2DPlatformerBox2D) or the full class name";
+                " the first scene (for example Platformer2D.PlatformerBox2D) or the full class name";
     }
 }

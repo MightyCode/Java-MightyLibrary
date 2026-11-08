@@ -22,7 +22,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
-public class Test3D2DGame extends Scene {
+public class Game3D2D extends Scene {
     private FreeCamera3DComponent cameraComponent;
 
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
@@ -38,7 +38,7 @@ public class Test3D2DGame extends Scene {
     private RectangleRenderer debugView;
     private CubeRenderer gameRenderer;
 
-    public Test3D2DGame(){
+    public Game3D2D(){
         super(SCENE_CCI);
     }
 

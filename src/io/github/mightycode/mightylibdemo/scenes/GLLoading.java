@@ -11,9 +11,9 @@ import java.awt.image.BufferedImage;
 
 /**
  * Loads several big generated textures, sent by strips with the time left in each frame.
- * Check with: stats reset, scene TestGLLoading, wait-loaded, stats (maxFrameIntervalMsSinceReset).
+ * Check with: stats reset, scene GLLoading, wait-loaded, stats (maxFrameIntervalMsSinceReset).
  */
-public class TestGLLoading extends Scene {
+public class GLLoading extends Scene {
     private static final int TEXTURE_COUNT = 6;
     private static final int TEXTURE_SIZE = 2048;
 

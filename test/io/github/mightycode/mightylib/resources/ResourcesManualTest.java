@@ -63,7 +63,7 @@ class ResourcesManualTest extends ResourcesTestBase {
         assertEquals(1, manual.unloads.get());
     }
 
-    // TestGLLoading: data deleted and created again with the same name in the same frame
+    // GLLoading: data deleted and created again with the same name in the same frame
     @Test
     void deleteThenAddSameNameKeepsTheNewOne() throws Exception {
         start();
