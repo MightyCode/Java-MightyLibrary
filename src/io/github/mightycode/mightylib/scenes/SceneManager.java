@@ -61,8 +61,6 @@ public class SceneManager {
         if (sceneInterface.WantQuit)
             return;
 
-        resources.process(15);
-
         currentScene.updateByManager();
         soundManager.lateUpdate();
     }

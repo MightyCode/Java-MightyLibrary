@@ -4,7 +4,7 @@ Retirer chaque objectif atteint ; fichier vide → **discuter** avec l'utilisate
 
 - (U) **Pipeline de `Resources`** (propriétaire unique, réconciliation, dépendances, rechargement à chaud : faits, voir `architecture.md`). Reste :
   - **priorités** (scène courante avant préchargement de la suivante) ; **annulation** faite (étapes en file sautées, `skippedSteps` ; étape commencée : `DataType.checkCancelled()`), reste à placer `checkCancelled()` dans les autres loaders longs aux frontières de phases (aujourd'hui : décodage des textures seulement ; modèles, sons : un seul appel natif) ;
-  - fusionner les files (`inbox` et étapes `MAIN_CONTEXT` de `Resources`, `MainThread`, `GLResources`) sous un même budget de frame ;
+  - files sous un même budget de frame : fait (`Resources.processUntil`, `MainThread` et `GLResources` reçoivent la même échéance dans `MainLoop`). Reste : part du budget réservée au chargement pendant le jeu (plus large sous un écran de chargement), réglable dans `EngineConfig` ; le pic de ~80 ms du tick de changement de scène (création de l'écran de chargement, déchargement) n'est pas dû aux files : à profiler (JFR) ;
   - **voir à l'avance** ce qu'un batch charge (dépendances comprises) et son **poids** (taille estimée par `DataType`, mémoire CPU/GPU, totaux par batch et dans `resources`) ;
   - `DataType` lit `Resources.getInstance()` dans son constructeur (cf. singletons).
 - **Chargement GL** (bandes dans le reste de la frame : fait, `TestGLLoading`) : PBO ou contexte partagé (fenêtre cachée + `glFenceSync`) seulement si les mesures l'exigent. `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.
