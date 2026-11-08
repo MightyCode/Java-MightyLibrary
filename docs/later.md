@@ -132,7 +132,7 @@ Après le rendu 2D et la reprise de `dev` (contours épais et anticrénelage com
   - Icônes de boutons selon le modèle (Xbox, PlayStation, Switch) d'après nom/GUID.
 
 ## Son : formats
-`SoundLoader.filterFile` n'accepte que `.ogg` (STB Vorbis) : **le WAV n'est plus chargé** malgré le README. Rétablir le WAV, autres formats, streaming des musiques longues (tout est décodé en mémoire).
+Streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
 Console en jeu (base `graphics/GUI/Terminal` et `guicommand`, à unifier avec `Commands` ; lire le texte par `KeyboardManager.getTypedText()`, pas `KeyboardLanguage`) et overlay de debug (stats, scène, entrées). S'appuie sur thème, tailles et langues.

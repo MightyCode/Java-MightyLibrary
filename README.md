@@ -45,7 +45,7 @@ A library to create a game.
 - Prefab scene pour changer les touches ❌
 
 **Son :**
-- Chargement fichier ogg ✅ (le WAV n'est plus chargé, voir `docs/later.md`)
+- Chargement fichier ogg, wav, mp3, flac ✅ (un format de plus : un `SoundDecoder` ajouté par `SoundLoader.addDecoder`)
 - Gestion simple des sources 2D et 3D ✅
 - Arbre de gain + chargement via fichier ✅
 

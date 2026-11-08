@@ -5,17 +5,48 @@ import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.sounds.SoundDataType;
+import io.github.mightycode.mightylib.resources.sound.decoder.*;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import io.github.mightycode.mightylib.utils.math.KeyTree;
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
 import org.json.JSONObject;
-import org.lwjgl.stb.STBVorbisInfo;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class SoundLoader extends ResourceLoader {
+    // The file formats supported (SoundDecoder), a decoder added later replaces the one of the same extension
+    private final List<SoundDecoder> decoders = new ArrayList<>();
+
+    public SoundLoader() {
+        addDecoder(new OggDecoder());
+        addDecoder(new WavDecoder());
+        addDecoder(new Mp3Decoder());
+        addDecoder(new FlacDecoder());
+    }
+
+    public void addDecoder(SoundDecoder decoder) {
+        decoders.add(0, decoder);
+    }
+
+    private SoundDecoder findDecoder(String path) {
+        String extension = getFileExtension(path);
+        if (extension == null)
+            return null;
+
+        extension = extension.toLowerCase(Locale.ROOT);
+        for (SoundDecoder decoder : decoders) {
+            for (String supported : decoder.extensions()) {
+                if (supported.equals(extension))
+                    return decoder;
+            }
+        }
+
+        return null;
+    }
 
     @Override
     public Class<? extends DataType> getType() {
@@ -40,15 +71,14 @@ public class SoundLoader extends ResourceLoader {
 
     @Override
     public String filterFile(String path) {
-        String ending = getFileExtension(path);
-
-        if (ending != null && ending.equals(".ogg")) return getFileName(path);
-
-        return null;
+        return findDecoder(path) != null ? getFileName(path) : null;
     }
 
     @Override
     public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+        if (data.containsKey(name))
+            System.err.println("--Sound name " + name + " used by several files, " + currentPath + " replaces the other");
+
         data.put(name, new SoundData(name, currentPath));
     }
 
@@ -60,32 +90,20 @@ public class SoundLoader extends ResourceLoader {
         SoundData sound = (SoundData) dataType;
 
         String path = sound.path();
-        int lastIndex = path.lastIndexOf('.');
-
-        SoundLoadInfo info = new SoundLoadInfo();
 
         // Failing here makes the preload fail: the fallback replaces the sound
-        if (path.indexOf("ogg", lastIndex) == -1)
-            throw new ResourceException("unsupported sound format (only ogg): " + path);
+        SoundDecoder decoder = findDecoder(path);
+        if (decoder == null)
+            throw new ResourceException("unsupported sound format: " + path);
 
-        loadOgg(path, info, sound::checkCancelled);
-        sound.setSoundLoadInfo(info);
-    }
-
-
-    // Throws a ResourceException when the file is missing or not a valid ogg vorbis file
-    // checkCancelled is called between the steps of the decoding (DataType.checkCancelled)
-    public void loadOgg(String path, SoundLoadInfo sInfo, Runnable checkCancelled) {
-        try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-            sInfo.Buffer = SoundDataType.readVorbis(path, 32 * 1024, info, checkCancelled, SoundDataType.DECODE_CHUNK_SAMPLES);
-            sInfo.nativeBuffer = true;
-            sInfo.Channel = info.channels();
-            sInfo.SampleRate = info.sample_rate();
-        } catch (ResourceException | java.util.concurrent.CancellationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ResourceException("can't read the sound file " + path, e);
+        SoundLoadInfo info = decoder.decode(path, sound::checkCancelled);
+        if (info.Channel != 1 && info.Channel != 2) {
+            int channels = info.Channel;
+            info.release();
+            throw new ResourceException("sound with " + channels + " channels (mono or stereo only): " + path);
         }
+
+        sound.setSoundLoadInfo(info);
     }
 
 

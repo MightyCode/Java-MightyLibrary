@@ -1,0 +1,15 @@
+{
+    "batchs" : [
+        {
+            "type" : "SoundData",
+            "files" : [
+                "selectogg",
+                "selectwav",
+                "selectmp3",
+                "selectflac"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}

@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Decoding of ogg files by chunks (no OpenAL needed): same samples whatever the chunk, stopped between two chunks.
  */
 class SoundDecodingTest {
-    private static final String FILE = "resources/sounds/select.ogg";
+    private static final String FILE = "resources/sounds/selectogg.ogg";
 
     private static ShortBuffer decode(int chunkSamples, Runnable checkCancelled, int[] channels) throws Exception {
         try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
