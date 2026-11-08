@@ -91,12 +91,15 @@ public class ModelLoader extends ResourceLoader {
         }
 
         try {
+            // The import is the costly part; the materials register owned textures, so stop before them too
+            model.checkCancelled();
+
             String folder = new File(model.path()).getParent();
             String[][] materialsTextures = readMaterials(model, scene, folder);
             float[] materialsShininess = readShininess(scene);
 
             List<ModelMesh> meshes = new ArrayList<>();
-            readNode(scene, scene.mRootNode(), new Matrix4f(), materialsTextures, materialsShininess, meshes);
+            readNode(model, scene, scene.mRootNode(), new Matrix4f(), materialsTextures, materialsShininess, meshes);
             model.setMeshes(meshes);
         } finally {
             aiReleaseImport(scene);
@@ -195,13 +198,15 @@ public class ModelLoader extends ResourceLoader {
         return texture.getDataName();
     }
 
-    private void readNode(AIScene scene, AINode node, Matrix4f parentTransform,
+    private void readNode(Model model, AIScene scene, AINode node, Matrix4f parentTransform,
                           String[][] materialsTextures, float[] materialsShininess, List<ModelMesh> meshes) {
         Matrix4f transform = new Matrix4f(parentTransform).mul(toMatrix(node.mTransformation()));
 
         IntBuffer meshIndices = node.mMeshes();
         PointerBuffer sceneMeshes = scene.mMeshes();
         for (int i = 0; i < node.mNumMeshes(); ++i) {
+            // A mesh copy is the costly unit of a big model
+            model.checkCancelled();
             AIMesh mesh = AIMesh.create(sceneMeshes.get(meshIndices.get(i)));
             ModelMesh modelMesh = readMesh(mesh, transform, materialsTextures, materialsShininess);
             if (modelMesh != null)
@@ -210,7 +215,7 @@ public class ModelLoader extends ResourceLoader {
 
         PointerBuffer children = node.mChildren();
         for (int i = 0; i < node.mNumChildren(); ++i)
-            readNode(scene, AINode.create(children.get(i)), transform, materialsTextures, materialsShininess, meshes);
+            readNode(model, scene, AINode.create(children.get(i)), transform, materialsTextures, materialsShininess, meshes);
     }
 
     private ModelMesh readMesh(AIMesh mesh, Matrix4f transform, String[][] materialsTextures, float[] materialsShininess) {
