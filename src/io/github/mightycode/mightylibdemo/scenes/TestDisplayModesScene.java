@@ -66,7 +66,6 @@ public class TestDisplayModesScene extends Scene {
         }
 
         ChangeDisplay(mainContext);
-        status.setText(Describe(mainContext));
     }
 
     // A closed window is not in the list of the context any more
@@ -101,6 +100,9 @@ public class TestDisplayModesScene extends Scene {
 
     @Override
     public void display() {
+        // Here and not in update: while a border is dragged only the image is drawn (Context.redrawWindow)
+        status.setText(Describe(mainContext));
+
         setVirtualScene();
         clear();
 
@@ -138,11 +140,12 @@ public class TestDisplayModesScene extends Scene {
             }
 
             ChangeDisplay(window());
-            status.setText(Describe(window()));
         }
 
         @Override
         public void display() {
+            status.setText(Describe(window()));
+
             setVirtualScene();
             clear();
             status.display();
