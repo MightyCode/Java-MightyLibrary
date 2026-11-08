@@ -2,88 +2,54 @@ package io.github.mightycode.mightylib.resources.sound.decoder;
 
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
-import org.jflac.FLACDecoder;
-import org.jflac.PCMProcessor;
-import org.jflac.frame.Frame;
-import org.jflac.metadata.StreamInfo;
-import org.jflac.util.ByteData;
 
-import java.io.BufferedInputStream;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.CancellationException;
 
-/** Flac (8, 16 or 24 bits), decoded frame by frame with jFLAC, converted to 16 bit. */
+/** Flac (4 to 24 bits), decoded frame by frame by FlacStream and converted to 16 bit. */
 public class FlacDecoder implements SoundDecoder {
     @Override
     public String[] extensions() {
         return new String[]{".flac"};
     }
 
-    private static class Collector implements PCMProcessor {
-        final PcmBuilder builder;
-        int channels, rate, bits;
-        short[] samples = new short[0];
-
-        Collector(PcmBuilder builder) {
-            this.builder = builder;
-        }
-
-        @Override
-        public void processStreamInfo(StreamInfo info) {
-            channels = info.getChannels();
-            rate = info.getSampleRate();
-            bits = info.getBitsPerSample();
-        }
-
-        @Override
-        public void processPCM(ByteData pcm) {
-            int bytesPerSample = bits / 8;
-            int count = pcm.getLen() / bytesPerSample;
-            if (samples.length < count)
-                samples = new short[count];
-
-            byte[] data = pcm.getData();
-            for (int i = 0; i < count; ++i) {
-                int at = i * bytesPerSample;
-                if (bytesPerSample == 1) {
-                    // 8 bit samples are unsigned
-                    samples[i] = (short) (((data[at] & 0xFF) - 128) << 8);
-                } else {
-                    // Little endian: the 16 high bits are kept
-                    samples[i] = (short) ((data[at + bytesPerSample - 2] & 0xFF) | (data[at + bytesPerSample - 1] << 8));
-                }
-            }
-
-            builder.append(samples, 0, count);
-        }
-    }
-
     @Override
     public SoundLoadInfo decode(String path, Runnable checkCancelled) {
         PcmBuilder builder = null;
 
-        try (InputStream input = new BufferedInputStream(Files.newInputStream(Paths.get(path)))) {
-            FLACDecoder decoder = new FLACDecoder(input);
-            builder = new PcmBuilder(0);
-            Collector collector = new Collector(builder);
+        try {
+            FlacStream stream = new FlacStream(Files.readAllBytes(Paths.get(path)));
+            int estimate = stream.totalSamples > 0 && stream.totalSamples < Integer.MAX_VALUE / 4
+                    ? (int) stream.totalSamples * stream.channels : 0;
+            builder = new PcmBuilder(estimate);
 
-            decoder.readMetadata();
-            collector.processStreamInfo(decoder.getStreamInfo());
-            if (collector.bits != 8 && collector.bits != 16 && collector.bits != 24)
-                throw new ResourceException("unsupported flac sample size (" + collector.bits + " bits): " + path);
+            int channels = stream.channels;
+            int[][] frame = stream.createBuffers();
+            short[] interleaved = new short[0];
 
-            // One frame per step (readFrame fails on this library version: readNextFrame then decodeFrame work)
-            Frame frame;
-            while ((frame = decoder.readNextFrame()) != null) {
+            // To 16 bit: the missing bits are zero, the extra bits are dropped
+            int shift = stream.bitsPerSample - 16;
+
+            int size;
+            while ((size = stream.nextFrame(frame)) > 0) {
                 checkCancelled.run();
-                collector.processPCM(decoder.decodeFrame(frame, null));
+
+                if (interleaved.length < size * channels)
+                    interleaved = new short[size * channels];
+
+                for (int channel = 0; channel < channels; ++channel) {
+                    int[] samples = frame[channel];
+                    for (int i = 0; i < size; ++i)
+                        interleaved[i * channels + channel] = (short) (shift >= 0 ? samples[i] >> shift : samples[i] << -shift);
+                }
+
+                builder.append(interleaved, 0, size * channels);
             }
 
             SoundLoadInfo info = new SoundLoadInfo();
-            info.Channel = collector.channels;
-            info.SampleRate = collector.rate;
+            info.Channel = channels;
+            info.SampleRate = stream.sampleRate;
             info.Buffer = builder.finish();
             info.nativeBuffer = true;
             return info;
