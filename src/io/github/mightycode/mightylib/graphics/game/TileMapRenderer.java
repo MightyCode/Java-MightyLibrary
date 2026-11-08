@@ -376,8 +376,10 @@ public class TileMapRenderer extends Renderer {
         );
     }
 
-    private void setTexturePosition(float[] texturePosition, int index, Vector4f originalPosition,
-                                    int rotation, int flip) {
+    // Texture coordinates of the 4 corners of a tile (8 floats from index). flip: 1 horizontal, 2 vertical, 3 both
+    // (originalPosition is flipped in place); rotation: quarter turns, 0 to 3
+    static void setTexturePosition(float[] texturePosition, int index, Vector4f originalPosition,
+                                   int rotation, int flip) {
         float temp;
 
         if (flip == 1 || flip == 3){
@@ -392,62 +394,13 @@ public class TileMapRenderer extends Renderer {
             originalPosition.w = temp;
         }
 
-        switch (rotation) {
-            default:
-            case 0 :
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.z;
-
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.w;
-
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.w;
-
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.z;
-            break;
-
-            case 1:
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.w;
-
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.w;
-
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.z;
-
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.z;
-            break;
-
-            case 2:
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.w;
-
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.z;
-
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.z;
-
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.w;
-            break;
-
-            case 3:
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.z;
-
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.z;
-
-                texturePosition[index++] = originalPosition.x;
-                texturePosition[index++] = originalPosition.w;
-
-                texturePosition[index++] = originalPosition.y;
-                texturePosition[index++] = originalPosition.w;
+        // Corners in drawing order: (x, z), (x, w), (y, w), (y, z); each quarter turn starts one corner later.
+        // Any other rotation value is drawn without rotation
+        int first = rotation >= 1 && rotation <= 3 ? rotation : 0;
+        for (int corner = 0; corner < 4; ++corner) {
+            int source = (first + corner) % 4;
+            texturePosition[index + 2 * corner] = source < 2 ? originalPosition.x : originalPosition.y;
+            texturePosition[index + 2 * corner + 1] = source == 0 || source == 3 ? originalPosition.z : originalPosition.w;
         }
     }
 

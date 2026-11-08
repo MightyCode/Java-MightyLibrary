@@ -77,13 +77,13 @@ public class FontFace extends SingleSourceDataType {
                 currentCharOffset.x = 0;
                 ++numberLine;
             } else {
-                currentCharOffset.x += getFontFile().getCharacter(chr).getxAdvance() * fontSize;
+                currentCharOffset.x += (float) (getFontFile().getCharacter(chr).getxAdvance() * fontSize);
             }
         }
 
         result.x = Math.max(result.x, currentCharOffset.x);
 
-        result.y += getFontFile().getLineHeight() * fontSize * numberLine;
+        result.y += (float) (getFontFile().getLineHeight() * fontSize * numberLine);
 
         return result;
     }

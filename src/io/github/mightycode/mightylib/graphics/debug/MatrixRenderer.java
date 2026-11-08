@@ -69,10 +69,11 @@ public class MatrixRenderer {
      */
     public Color4f valueToColor(float value){
         switch (colorMode){
-            case HeatMap: default:
-                return new Color4f(Math.min(2 * value, 1.0f), Math.min(2 * value - 1, 1.0f), 0, 1f);
             case ColorInterval:
                 return lowValue.blend(highValue, value);
+            case HeatMap:
+            default:
+                return new Color4f(Math.min(2 * value, 1.0f), Math.min(2 * value - 1, 1.0f), 0, 1f);
         }
     }
 
