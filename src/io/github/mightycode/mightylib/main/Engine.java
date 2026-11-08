@@ -19,6 +19,7 @@ import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
 import org.lwjgl.Version;
+import org.lwjgl.glfw.GLFWErrorCallback;
 
 import java.util.List;
 
@@ -84,6 +85,9 @@ public final class Engine implements IView {
     // ---- Start ----
 
     private int loadLibraries() {
+        // GLFW errors (window or context creation...) are written with the program errors
+        GLFWErrorCallback.createPrint(System.err).set();
+
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit()) {
             System.err.println("GLFW fail to initialize");
@@ -255,8 +259,12 @@ public final class Engine implements IView {
         Workers.stop();
 
         // Terminate GLFW and free the error callback
-        if (glfwStarted)
+        if (glfwStarted) {
             glfwTerminate();
+            GLFWErrorCallback callback = glfwSetErrorCallback(null);
+            if (callback != null)
+                callback.free();
+        }
         if (soundManager != null)
             soundManager.unload();
 

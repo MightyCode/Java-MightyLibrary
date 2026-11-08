@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.MultiSourceDataType;
@@ -29,8 +30,8 @@ public class Shader extends MultiSourceDataType {
     private String geometryContent;
     private boolean isUsingGeometryShader;
 
-    // Program currently bound, to skip redundant glUseProgram (GL calls only happen on the main thread)
-    private static int currentProgram = -1;
+    // The program bound is a state of each OpenGL context (GLContext.currentProgram): the program itself is shared
+
     // Reused to send matrices without allocating a direct buffer for each uniform
     private static final FloatBuffer MATRIX_BUFFER = BufferUtils.createFloatBuffer(16);
 
@@ -229,11 +230,12 @@ public class Shader extends MultiSourceDataType {
     }
 
     public void use() {
-        if (currentProgram == shaderProgram)
+        GLContext context = GLContext.current();
+        if (context.currentProgram() == shaderProgram)
             return;
 
         glUseProgram(shaderProgram);
-        currentProgram = shaderProgram;
+        context.setCurrentProgram(shaderProgram);
         EngineStats.countProgramBind();
 
         if (Logger.DO_CHECK)
@@ -242,7 +244,7 @@ public class Shader extends MultiSourceDataType {
 
     public void use(String message) {
         glUseProgram(shaderProgram);
-        currentProgram = shaderProgram;
+        GLContext.current().setCurrentProgram(shaderProgram);
         Logger.CheckOpenGLError(message);
     }
 
@@ -319,8 +321,7 @@ public class Shader extends MultiSourceDataType {
         System.out.println("Unloading shader : " + shaderProgram);
         if (shaderProgram != -1) {
             // The id can be reused by a new program, it must not be considered bound anymore
-            if (currentProgram == shaderProgram)
-                currentProgram = -1;
+            GLContext.forgetProgram(shaderProgram);
 
             glDeleteProgram(shaderProgram);
             Logger.CheckOpenGLError("Delete program shader (id : " + shaderProgram + ")");

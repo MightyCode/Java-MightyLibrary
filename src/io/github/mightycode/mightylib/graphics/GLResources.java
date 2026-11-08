@@ -8,6 +8,8 @@ import io.github.mightycode.mightylib.resources.texture.TexturePlaceholders;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import org.json.JSONObject;
 
+import static org.lwjgl.opengl.GL11.glFlush;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,6 +79,10 @@ public class GLResources implements IGLElementSink {
         // Nothing left to send: the pixel buffers are not kept
         if (urgentToLoad.isEmpty() && preloadToLoad.isEmpty() && elementToReload.isEmpty())
             TextureUploader.releaseBuffers();
+
+        // What was sent here is shared with the other windows: their contexts only see it once the commands are issued
+        if (stepDone && GLContext.hasSeveralWindows())
+            glFlush();
     }
 
     // Each waiting element of the set is tried at most once: unfinished ones go back at its end

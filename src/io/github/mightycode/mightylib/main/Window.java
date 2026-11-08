@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2f;
@@ -33,8 +34,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 public final class Window {
     private final WindowInfo info;
 
-    // Only set when OpenGL error checks are enabled
-    private Callback debugMessageCallback;
+    private GLContext glContext;
 
     public WindowInfo getInfo() { return info; }
 
@@ -65,38 +65,35 @@ public final class Window {
         info.monitor = wci.Monitor;
     }
 
-    public void createNewWindow(){
+    /**
+     * Create the window and its OpenGL context, shared with the given one (the engine's hidden root context)
+     * so that textures, buffers and programs are usable here too. On failure the window stays not created.
+     */
+    public void createNewWindow(GLContext shareWith){
         if (info.windowId != 0)
             destroyWindow();
 
         // Configure GLFW for this window
-        glfwDefaultWindowHints(); // optional, the current window hints are already the default
-
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
+        GLContext.applyWindowHints();
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        // A debug context lets the driver report OpenGL errors itself, with a readable message
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, Logger.DO_CHECK ? GLFW_TRUE : GLFW_FALSE);
-
         long monitorHandle = info.monitor != null ? info.monitor.getHandle() : glfwGetPrimaryMonitor();
+        long share = shareWith != null ? shareWith.getWindowHandle() : NULL;
 
         if (info.fullscreen)
-            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, monitorHandle, NULL);
+            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, monitorHandle, share);
         else
-            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
-
-        System.out.println("\nWindow with id : " + info.windowId + " created");
+            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, share);
 
         if (info.windowId == NULL) {
-            System.out.println("Window won't created");
+            System.err.println("--Window \"" + info.windowName + "\" can't be created (see the GLFW error above)");
+            return;
         }
+
+        System.out.println("\nWindow with id : " + info.windowId + " created");
 
         // Get the thread stack and push a new frame
         try (MemoryStack stack = stackPush()) {
@@ -119,38 +116,15 @@ public final class Window {
                 );
             }
             // the stack frame is popped automatically
-        } catch (Error e){
-            info.windowId = 0;
         }
 
-        /*new GLFWImage.Buffer();*/
-
-        //glfwSetWindowIcon(info.windowId, );
-
-        // Make the OpenGL context current
-        bindWindow();
+        // Make the OpenGL context current, with the default state of the engine's contexts
+        glContext = GLContext.ofWindow(info.windowName, info.windowId);
 
         // Make the window visible
         glfwShowWindow(info.windowId);
-        GLCapabilities capabilities = GL.createCapabilities();
-        if (Logger.DO_CHECK)
-            setupDebugMessages(capabilities);
-
-        glfwSwapInterval(0);
 
         setViewPort(info.size.x, info.size.y);
-
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
-
-        // Enable antiAliasing
-        glEnable(GL_MULTISAMPLE);
-
-        glEnable(GL_PROGRAM_POINT_SIZE);
-
-        wantExit();
     }
 
 
@@ -172,47 +146,56 @@ public final class Window {
         }
     }
 
+    /**
+     * Switch between fullscreen and window on the same window: its OpenGL context, its objects and its input
+     * callbacks stay (recreating the window would lose them all).
+     */
     public void setFullscreen(boolean fullscreen){
-        if (info.isWindowCreated()) {
-            if (info.fullscreen != fullscreen){
-                destroyWindow();
-            }
-        }
+        if (info.fullscreen == fullscreen)
+            return;
 
         info.fullscreen = fullscreen;
-        if (info.isWindowCreated()) createNewWindow();
+        if (!info.isWindowCreated())
+            return;
+
+        long monitorHandle = info.monitor != null ? info.monitor.getHandle() : glfwGetPrimaryMonitor();
+        if (fullscreen) {
+            glfwSetWindowMonitor(info.windowId, monitorHandle, 0, 0, info.size.x, info.size.y, GLFW_DONT_CARE);
+        } else {
+            // Back to a window centered in the work area of its screen
+            try (MemoryStack stack = stackPush()) {
+                IntBuffer areaX = stack.mallocInt(1), areaY = stack.mallocInt(1);
+                IntBuffer areaWidth = stack.mallocInt(1), areaHeight = stack.mallocInt(1);
+                glfwGetMonitorWorkarea(monitorHandle, areaX, areaY, areaWidth, areaHeight);
+
+                glfwSetWindowMonitor(info.windowId, NULL,
+                        areaX.get(0) + Math.max(0, (areaWidth.get(0) - info.size.x) / 2),
+                        areaY.get(0) + Math.max(0, (areaHeight.get(0) - info.size.y) / 2),
+                        info.size.x, info.size.y, GLFW_DONT_CARE);
+            }
+        }
     }
 
     public void setIcon(Icon icon){
         glfwSetWindowIcon(info.windowId, icon.getBuffer());
     }
 
+    // The OpenGL context of this window, where the objects that are not shared (vertex arrays, framebuffers) live
+    public GLContext getGLContext() { return glContext; }
+
+    // Make the OpenGL context of this window the current one
     public void bindWindow() {
-        glfwMakeContextCurrent(info.windowId);
+        glContext.makeCurrent();
     }
 
 
     /**
-     * Destroy the current window.
+     * Destroy the current window and its OpenGL context.
      */
-    private void setupDebugMessages(GLCapabilities capabilities) {
-        debugMessageCallback = GLUtil.setupDebugMessageCallback(System.err);
-        if (debugMessageCallback == null) {
-            System.err.println("OpenGL debug messages are not supported by this driver");
-            return;
-        }
-
-        // Notifications are very frequent and not errors: only keep low, medium and high severity messages
-        if (capabilities.OpenGL43)
-            GL43.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL43.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
-        else if (capabilities.GL_KHR_debug)
-            KHRDebug.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, KHRDebug.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
-    }
-
     public void destroyWindow(){
-        if (debugMessageCallback != null) {
-            debugMessageCallback.free();
-            debugMessageCallback = null;
+        if (glContext != null) {
+            glContext.destroy();
+            glContext = null;
         }
 
         if (info.isWindowCreated()) {
