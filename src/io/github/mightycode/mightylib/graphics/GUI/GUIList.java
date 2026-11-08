@@ -114,57 +114,41 @@ public class GUIList {
         GUIs.get(id).forceSelect(true);
     }
 
+    // Nearest id before the selected one; with ShouldLoop, from the first to the last
     private Integer selectUp(){
         if (this.id == null)
             return selectMinimum();
 
-        Integer maxId = null, minId = null;
+        Integer previous = null, last = null;
 
-        for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()) {
-            if (minId == null || minId > pair.getKey())
-                minId = pair.getKey();
+        for (Integer key : GUIs.keySet()) {
+            if (last == null || last < key)
+                last = key;
 
-            if (pair.getKey() < id){
-                if (maxId == null || maxId < pair.getKey()){
-                    maxId = pair.getKey();
-                }
-            }
+            if (key < id && (previous == null || previous < key))
+                previous = key;
         }
 
-        if (maxId == null){
-            if (minId != null && ShouldLoop) {
-               return minId;
-            }
-        }
-
-        return maxId;
+        return previous != null || !ShouldLoop ? previous : last;
     }
 
 
+    // Nearest id after the selected one; with ShouldLoop, from the last to the first
     private Integer selectDown(){
         if (this.id == null)
             return selectMinimum();
 
-        Integer maxId = null, minId = null;
+        Integer next = null, first = null;
 
-        for (Map.Entry<Integer, GUI> pair : GUIs.entrySet()) {
-            if (maxId == null || maxId < pair.getKey())
-                maxId = pair.getKey();
+        for (Integer key : GUIs.keySet()) {
+            if (first == null || first > key)
+                first = key;
 
-            if (pair.getKey() > id) {
-                if (minId == null || minId > pair.getKey()) {
-                    minId = pair.getKey();
-                }
-            }
+            if (key > id && (next == null || next > key))
+                next = key;
         }
 
-        if (minId == null){
-            if (maxId != null && ShouldLoop) {
-                return maxId;
-            }
-        }
-
-        return minId;
+        return next != null || !ShouldLoop ? next : first;
     }
 
     private Integer selectMinimum(){
