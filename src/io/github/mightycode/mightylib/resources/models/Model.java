@@ -77,6 +77,22 @@ public class Model extends SingleSourceDataType {
         return count;
     }
 
+    /**
+     * The vertex and index arrays once read (the textures are counted as dependencies); before, the size of the
+     * file. Nothing on the card: the renderers send the meshes themselves (no GL element shared by the batches).
+     */
+    @Override
+    public long estimatedCpuBytes() {
+        if (meshes.isEmpty())
+            return super.estimatedCpuBytes();
+
+        long total = 0;
+        for (ModelMesh mesh : meshes)
+            total += mesh.byteSize();
+
+        return total;
+    }
+
     @Override
     public boolean internLoad() {
         if (meshes.isEmpty()) {

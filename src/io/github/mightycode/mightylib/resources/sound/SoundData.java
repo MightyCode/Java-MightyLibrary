@@ -10,6 +10,8 @@ import static org.lwjgl.openal.AL10.*;
 public class SoundData extends SingleSourceDataType {
     private int bufferId;
     private SoundLoadInfo tempInfo;
+    // Size of the samples once decoded (kept by OpenAL after the loading), 0 until the file is read
+    private long decodedBytes;
 
     public SoundData(String dataName, String path) {
         super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
@@ -29,6 +31,35 @@ public class SoundData extends SingleSourceDataType {
         int otherBuffer = other.bufferId;
         other.bufferId = bufferId;
         bufferId = otherBuffer;
+
+        long otherDecoded = other.decodedBytes;
+        other.decodedBytes = decodedBytes;
+        decodedBytes = otherDecoded;
+    }
+
+    /**
+     * The decoded samples (16 bits) once read; before, a guess from the file: a WAV is already raw,
+     * a FLAC (lossless) about twice smaller, an OGG or MP3 about ten times smaller.
+     */
+    @Override
+    public long estimatedCpuBytes() {
+        if (decodedBytes > 0)
+            return decodedBytes;
+
+        return super.estimatedCpuBytes() * CompressionRatio(path);
+    }
+
+    static long CompressionRatio(String path) {
+        if (path == null)
+            return 1;
+
+        String lower = path.toLowerCase();
+        if (lower.endsWith(".ogg") || lower.endsWith(".mp3"))
+            return 10;
+        if (lower.endsWith(".flac"))
+            return 2;
+
+        return 1;
     }
 
     public void setSoundLoadInfo(SoundLoadInfo info) {
@@ -37,6 +68,8 @@ public class SoundData extends SingleSourceDataType {
             tempInfo.release();
 
         tempInfo = info;
+        if (info != null && info.Buffer != null)
+            decodedBytes = (long) info.Buffer.capacity() * Short.BYTES;
     }
 
     @Override
