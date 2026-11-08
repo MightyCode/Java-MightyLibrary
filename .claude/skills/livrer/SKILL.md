@@ -36,4 +36,4 @@ Un commit par changement logique, message en anglais au style des précédents (
 Les commits livrés, ce qui a été vérifié (tests, scènes), ce qui ne l'a pas été et comment le vérifier à la main (quelle scène, quoi observer), l'état de dev par rapport à origin (et de dev par rapport à master).
 
 ## Version
-La fusion de `dev` dans `master` (`git merge --no-ff dev`, tests, push) se fait seulement sur demande explicite de l'utilisateur : c'est une nouvelle version.
+`master` ne reçoit que des versions finies. La fusion de `dev` dans `master` se fait seulement quand l'utilisateur demande explicitement une nouvelle version, et toujours après lui avoir demandé son numéro (voir le dernier tag : `git tag --sort=-creatordate | head -1`) : tests, `git merge --no-ff dev -m "Merge branch 'dev' for version X.Y.Z"`, `git tag -a vX.Y.Z -m "Version X.Y.Z"` sur cette fusion, `git push origin master --follow-tags`.
