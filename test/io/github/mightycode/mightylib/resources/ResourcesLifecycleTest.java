@@ -462,6 +462,48 @@ class ResourcesLifecycleTest {
         assertConsistent();
     }
 
+    // Reloading many data at once keeps a bounded number of copies in memory, and still reloads them all
+    @Test
+    void reloadCopiesAreBounded() throws Exception {
+        List<FakeData> data = new ArrayList<>();
+        String[] names = new String[8];
+        for (int i = 0; i < names.length; ++i) {
+            names[i] = "data" + i;
+            FakeData fake = fake(i % 2 == 0 ? THREAD_CONTEXT : MAIN_CONTEXT, names[i]);
+            fake.preloadMilliseconds = 5;
+            data.add(fake);
+        }
+        batch("level", names);
+        start();
+        resources.setMaxReloadCopies(2);
+
+        resources.loadBatch("level");
+        pump();
+        resources.reloadAllOfType(FakeData.class);
+
+        int maxCopies = 0;
+        long end = System.currentTimeMillis() + 10000;
+        while (!resources.finishedCurrentLoading() || data.stream().anyMatch(d -> d.reloadCopy != null)) {
+            assertTrue(System.currentTimeMillis() < end, "reload still running");
+            frame();
+            int copies = 0;
+            for (FakeData d : data) {
+                if (d.reloadCopy != null)
+                    ++copies;
+            }
+            maxCopies = Math.max(maxCopies, copies);
+            Thread.sleep(1);
+        }
+        pump();
+
+        assertTrue(maxCopies <= 2, "copies alive: " + maxCopies);
+        for (FakeData d : data) {
+            assertTrue(d.isLoaded(), d.getDataName());
+            assertEquals(2, d.preloads.get(), d.getDataName());
+        }
+        assertConsistent();
+    }
+
     // Reload asked while the first preload runs: read once more once it ends
     @Test
     void reloadDuringPreloadReadsAgain() throws Exception {
