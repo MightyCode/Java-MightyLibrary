@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.stb.STBImage;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -19,7 +20,12 @@ public class TextureData extends SingleSourceDataType {
     private int[] pixelCache = null;
 
     private BufferedImage tempBufferedImage;
+    // Decoded by stb_image (native memory, freed by freeNativePixels), waiting for internLoad
+    private ByteBuffer decodedPixels;
+    private int decodedWidth, decodedHeight;
     ByteBuffer byteBuffer;
+    // byteBuffer is owned by stb_image: it must be freed, not left to the garbage collector
+    private boolean nativePixels;
 
     int defaultAspectTexture;
     int defaultTextureType;
@@ -69,6 +75,10 @@ public class TextureData extends SingleSourceDataType {
         other.byteBuffer = byteBuffer;
         byteBuffer = otherBuffer;
 
+        boolean otherNative = other.nativePixels;
+        other.nativePixels = nativePixels;
+        nativePixels = otherNative;
+
         int[] otherCache = other.pixelCache;
         other.pixelCache = pixelCache;
         pixelCache = otherCache;
@@ -78,8 +88,26 @@ public class TextureData extends SingleSourceDataType {
         tempBufferedImage = img;
     }
 
+    // RGBA pixels decoded by stb_image (native memory), taken over by this data: freed when it is unloaded
+    void setDecodedPixels(ByteBuffer pixels, int width, int height) {
+        freeDecodedPixels();
+        decodedPixels = pixels;
+        decodedWidth = width;
+        decodedHeight = height;
+    }
+
     @Override
     protected boolean internLoad() {
+        if (decodedPixels != null) {
+            freeNativePixels();
+            byteBuffer = decodedPixels;
+            nativePixels = true;
+            width = decodedWidth;
+            height = decodedHeight;
+            decodedPixels = null;
+            return true;
+        }
+
         int[] pixels = new int[tempBufferedImage.getHeight() * tempBufferedImage.getWidth()];
 
         tempBufferedImage.getRGB(0, 0, tempBufferedImage.getWidth(), tempBufferedImage.getHeight(), pixels, 0, tempBufferedImage.getWidth());
@@ -141,11 +169,27 @@ public class TextureData extends SingleSourceDataType {
     @Override
     protected void internCancelPreload() {
         tempBufferedImage = null;
+        freeDecodedPixels();
+    }
+
+    private void freeDecodedPixels() {
+        if (decodedPixels != null) {
+            STBImage.stbi_image_free(decodedPixels);
+            decodedPixels = null;
+        }
+    }
+
+    private void freeNativePixels() {
+        if (nativePixels && byteBuffer != null)
+            STBImage.stbi_image_free(byteBuffer);
+
+        nativePixels = false;
+        byteBuffer = null;
     }
 
     @Override
     public void internUnload() {
-        byteBuffer = null;
+        freeNativePixels();
         pixelCache = null;
         width = -1;
         height = -1;
