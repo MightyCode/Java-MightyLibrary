@@ -95,9 +95,12 @@ public class FakeData extends DataType {
         if (settings.preloadThrows != null)
             throw settings.preloadThrows;
 
-        if (settings.preloadMilliseconds > 0) {
+        // A long read with a checkpoint every few milliseconds
+        long end = System.currentTimeMillis() + settings.preloadMilliseconds;
+        while (System.currentTimeMillis() < end) {
+            checkCancelled();
             try {
-                Thread.sleep(settings.preloadMilliseconds);
+                Thread.sleep(2);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }

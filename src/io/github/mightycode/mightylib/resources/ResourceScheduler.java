@@ -143,6 +143,11 @@ class ResourceScheduler {
         resources.requestUpdate(data);
     }
 
+    // A running step stopped itself (DataType.checkCancelled): counted with the skipped ones
+    void stepCancelled() {
+        ++skippedSteps;
+    }
+
     private void startWorkerSteps() {
         WorkerStep step;
         while (runningWorkerSteps < maxNumberOfWorkers && (step = workerSteps.poll()) != null) {

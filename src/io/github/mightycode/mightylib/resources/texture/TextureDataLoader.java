@@ -103,6 +103,9 @@ public class TextureDataLoader extends ResourceLoader {
         // Failing here makes the preload fail: the fallback replaces the texture
         ByteBuffer file = readFile(textureData);
 
+        // The decoding is the costly part
+        textureData.checkCancelled();
+
         // stb_image decodes straight to RGBA; ImageIO (slower) reads what it does not know
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer width = stack.mallocInt(1);

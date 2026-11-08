@@ -37,6 +37,8 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     // Pipeline state, main thread only (see Resources)
     boolean jobRunning;
+    // Set while a step runs and its result is no longer wanted: read by the loaders (checkCancelled)
+    private volatile boolean cancelled;
     boolean failed;
     boolean reloadWanted;
     boolean deleteWanted;
@@ -94,6 +96,20 @@ public abstract class DataType extends UUID implements LoadingElement {
 
     final List<DataType> getDependencies(){
         return dependencies;
+    }
+
+    void setCancelled(boolean cancelled) {
+        this.cancelled = cancelled;
+    }
+
+    /**
+     * For the long steps of a loader (worker thread), called between two phases, before the costly one: stops the step
+     * when its result would be thrown away (data no longer wanted, or read again from the start). Whatever the step
+     * allocated must be released by try/finally, as for any exception.
+     */
+    public final void checkCancelled() {
+        if (cancelled)
+            throw new java.util.concurrent.CancellationException();
     }
 
     // A dependency is referenced by this data while it is wanted: it does not have to be listed by a batch

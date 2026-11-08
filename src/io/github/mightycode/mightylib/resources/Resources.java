@@ -10,6 +10,7 @@ import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
 import org.json.JSONObject;
 
 import java.util.*;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -287,8 +288,12 @@ public class Resources {
     }
 
     void update(DataType data) {
-        if (data.jobRunning)
+        if (data.jobRunning) {
+            // The running step is useless: the loader may stop it (DataType.checkCancelled)
+            if (!isWanted(data) || data.reloadWanted)
+                data.setCancelled(true);
             return;
+        }
 
         if (!isWanted(data)) {
             dependencies.stopWaiting(data);
@@ -419,6 +424,7 @@ public class Resources {
         }
 
         data.jobRunning = true;
+        data.setCancelled(false);
         StepResult result = new StepResult();
         ResourceLoader stepLoader = loader;
 
@@ -446,7 +452,10 @@ public class Resources {
     private void endStep(DataType data, boolean preload, StepResult result) {
         data.jobRunning = false;
 
-        if (result.error instanceof ResourceException) {
+        if (result.error instanceof CancellationException) {
+            // Stopped by the loader: nothing to keep, update discards the data or starts it again
+            scheduler.stepCancelled();
+        } else if (result.error instanceof ResourceException) {
             // Expected (the data is wrong, not the code): one line, no stack trace
             fail(data, result.error.getMessage());
         } else if (result.error != null) {
