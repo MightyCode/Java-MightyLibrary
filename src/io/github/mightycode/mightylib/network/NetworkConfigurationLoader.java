@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.network;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.utils.Logger;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -64,7 +65,7 @@ public class NetworkConfigurationLoader extends ResourceLoader {
 
             reader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.LogException("Can't read the network configuration " + ((NetworkConfiguration) dataType).path(), e);
         }
 
         String address = values[0];

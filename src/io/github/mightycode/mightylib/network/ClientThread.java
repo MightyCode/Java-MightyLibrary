@@ -97,7 +97,8 @@ public final class ClientThread extends CommunicationThread {
                 }
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            // Asked to stop: keep the interrupted state for the thread owner
+            Thread.currentThread().interrupt();
         }
 
         System.out.println("End of thread client");

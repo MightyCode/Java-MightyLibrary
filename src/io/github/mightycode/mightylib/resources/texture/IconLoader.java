@@ -1,11 +1,13 @@
 package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Map;
 
 public class IconLoader extends ResourceLoader {
@@ -46,14 +48,17 @@ public class IconLoader extends ResourceLoader {
 
         Icon icon = (Icon) dataType;
 
-        try {
-            BufferedImage image = ImageIO.read(new FileInputStream(icon.path()));
-            icon.setBufferedImage(image);
-
-        } catch (Exception e) {
-            System.err.println("Can't find the path for :");
-            System.err.println(icon.path() + "\n");
-            e.printStackTrace();
+        BufferedImage image;
+        try (FileInputStream input = new FileInputStream(icon.path())) {
+            image = ImageIO.read(input);
+        } catch (IOException e) {
+            throw new ResourceException("can't read the icon " + icon.path(), e);
         }
+
+        // No reader for this format
+        if (image == null)
+            throw new ResourceException("unsupported image format: " + icon.path());
+
+        icon.setBufferedImage(image);
     }
 }

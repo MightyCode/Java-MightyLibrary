@@ -78,7 +78,6 @@ public class FontLoader extends ResourceLoader {
 
         FontFace fontFace = (FontFace) dataType;
         // Failing here makes the preload fail: the fallback replaces the font
-        if (!fontFace.getFontFile().load())
-            throw new IllegalStateException("Can't read the font file of " + fontFace.getFontName());
+        fontFace.getFontFile().load();
     }
 }

@@ -9,6 +9,15 @@ public class Logger {
         return Thread.currentThread().getStackTrace()[2].toString();
     }
 
+    /**
+     * Unexpected exception that is handled (the engine goes on): one "--" line saying what failed, then the stack trace.
+     * Expected failures (wrong data, missing file reported to the user) print one line without stack trace instead.
+     */
+    public static void LogException(String message, Throwable error) {
+        System.err.println("--" + message + ": " + error);
+        error.printStackTrace(System.err);
+    }
+
     public static void CheckOpenGLError(String message) {
         if (!DO_CHECK)
             return;

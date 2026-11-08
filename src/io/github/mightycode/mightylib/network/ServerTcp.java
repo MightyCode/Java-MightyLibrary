@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.network;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -25,8 +27,7 @@ public class ServerTcp {
             serverSocket = new ServerSocket(configuration.getPort());
         } catch (IOException e) {
             serverSocket = null;
-            e.printStackTrace();
-            System.out.println("Can't create socket with port : " + configuration.getPort());
+            Logger.LogException("Network server can't open the port " + configuration.getPort(), e);
         }
     }
 
@@ -49,7 +50,9 @@ public class ServerTcp {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // Asked to stop waiting: keep the interrupted state for the caller
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
@@ -119,8 +122,7 @@ public class ServerTcp {
             serverSocket.close();
         } catch (IOException e) {
             client = null;
-            System.out.println("Error while closing connection\n");
-            e.printStackTrace();
+            Logger.LogException("Network server can't close the connection", e);
         }
     }
 

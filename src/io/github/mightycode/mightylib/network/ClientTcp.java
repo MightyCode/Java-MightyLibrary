@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.network;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -57,7 +59,7 @@ public class ClientTcp {
                 System.out.println("Unable to send message: Socket is not connected or is closed.");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.LogException("Network client can't send a message", e);
         }
     }
 
@@ -103,7 +105,7 @@ public class ClientTcp {
             closeConnection();
             return "Connection lost with the server.";
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.LogException("Network client can't read a message", e);
         }
 
         return message;
@@ -119,7 +121,9 @@ public class ClientTcp {
             try {
                 Thread.sleep(HEARTBEAT_INTERVAL_MS);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                // Asked to stop: keep the interrupted state for the thread owner
+                Thread.currentThread().interrupt();
+                return;
             }
         }
     }
@@ -132,7 +136,7 @@ public class ClientTcp {
             startDaemon(this::heartbeatLoop, "MightyLibrary-Network-Heartbeat");
             startReading();
         } catch (IOException e) {
-            e.printStackTrace();
+            Logger.LogException("Network client can't connect to " + configuration.getAddress() + ":" + configuration.getPort(), e);
         }
     }
 
@@ -157,8 +161,7 @@ public class ClientTcp {
                 System.out.println("Socket was already closed.");
             } else {
                 socket = null;
-                System.out.println("Error while closing connection\n");
-                e.printStackTrace();
+                Logger.LogException("Network client can't close the connection", e);
             }
         }
     }

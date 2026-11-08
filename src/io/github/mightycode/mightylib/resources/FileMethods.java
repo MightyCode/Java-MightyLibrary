@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -18,8 +19,8 @@ public abstract class FileMethods {
                 destinationFile.write(buffer, 0, nbLecture);
             }
         } catch (IOException e){
-            e.printStackTrace();
-            return false; // Error
+            Logger.LogException("Can't copy " + source + " to " + dest, e);
+            return false;
         }
 
         return true; // Result OK

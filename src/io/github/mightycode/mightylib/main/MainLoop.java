@@ -187,8 +187,11 @@ public final class MainLoop {
         }
 
         if (config.getIconName() != null) {
-            if (resource.isExistingResource(Icon.class, config.getIconName()))
-                context.getWindow().setIcon(resource.getResource(Icon.class, config.getIconName()));
+            // An icon that failed to load (already reported) keeps the default one
+            Icon icon = resource.isExistingResource(Icon.class, config.getIconName())
+                    ? resource.getResource(Icon.class, config.getIconName()) : null;
+            if (icon != null && icon.isLoaded())
+                context.getWindow().setIcon(icon);
         }
 
         return ListError.NO_ERROR;
@@ -295,7 +298,8 @@ public final class MainLoop {
                 try {
                     Thread.sleep((long)remaining);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    // Nothing interrupts the main thread on purpose: the loop goes on with the next frame
+                    System.err.println("--Main loop sleep interrupted");
                 }
             }
         }

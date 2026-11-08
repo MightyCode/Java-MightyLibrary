@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
@@ -75,8 +77,7 @@ public final class MainThread {
             try {
                 task.run();
             } catch (Throwable e) {
-                System.err.println("--Main thread task failed:");
-                e.printStackTrace();
+                Logger.LogException("Main thread task failed", e);
             }
         }
     }

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.text;
 
+import io.github.mightycode.mightylib.resources.ResourceException;
 import org.joml.Vector4i;
 
 import java.io.*;
@@ -48,9 +49,9 @@ public class FontFile {
         return file;
     }
 
-    public boolean load(){
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
+    // A missing or unreadable file is a failure of the data (ResourceException): the fallback font replaces it
+    public void load(){
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(path))) {
 
             String line;
             Map<String, String> values = new HashMap<>();
@@ -112,14 +113,8 @@ public class FontFile {
                 characters.put(id, fontChar);
             }
 
-            bufferedReader.close();
-
-            return true;
-
         } catch (IOException e) {
-            e.printStackTrace();
-
-            return false;
+            throw new ResourceException("can't read the font file " + path, e);
         }
     }
 
