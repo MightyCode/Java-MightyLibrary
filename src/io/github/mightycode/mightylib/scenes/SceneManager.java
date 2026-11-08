@@ -87,14 +87,10 @@ public class SceneManager {
     private void changeScene() {
         commands.removeSceneCommands();
 
-        if(currentScene != null) {
-            System.out.println("--Unload scene" + currentScene.getClass().getName());
-            currentScene.unloadByManager();
-
-            for (String batch : currentScene.getInvolvedBatch())
-                Resources.getInstance().unloadBatch(batch);
-
-            GenDeleteResources.PrintAll();
+        Scene previousScene = currentScene;
+        if (previousScene != null) {
+            System.out.println("--Unload scene" + previousScene.getClass().getName());
+            previousScene.unloadByManager();
         }
 
         SoundManager.getInstance().clearAwaitedSong();
@@ -108,7 +104,15 @@ public class SceneManager {
         for (String batch : currentScene.getInvolvedBatch())
             Resources.getInstance().loadBatch(batch);
 
-        // After loadBatch: what the new scene shares with the preloaded one is never unloaded in between
+        // After loadBatch: what the new scene shares with the previous or the preloaded one is never unloaded in
+        // between (the GL elements of the batches, released at once, would be sent to the card again)
+        if (previousScene != null) {
+            for (String batch : previousScene.getInvolvedBatch())
+                Resources.getInstance().unloadBatch(batch);
+
+            GenDeleteResources.PrintAll();
+        }
+
         sceneInterface.cancelPreload();
 
         currentScene.initByManager(sceneInterface.getChangeArgs());

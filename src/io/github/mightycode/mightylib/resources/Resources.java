@@ -126,6 +126,17 @@ public class Resources {
         this.strict = strict;
     }
 
+    // Where the batches hold the GL elements of their data (GLResources); null: nothing is sent to the card
+    private IGLElementSink glElementSink;
+
+    public void setGLElementSink(IGLElementSink glElementSink) {
+        this.glElementSink = glElementSink;
+    }
+
+    IGLElementSink glElementSink() {
+        return glElementSink;
+    }
+
     // Reloads reading their new version at the same time (both versions stay in memory); the others wait
     public void setMaxReloadCopies(int maxReloadCopies) {
         reloads.setMaxCopies(maxReloadCopies);

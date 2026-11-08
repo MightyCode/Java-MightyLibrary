@@ -20,7 +20,9 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -334,11 +336,17 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         if (scRenderer != null)
             scRenderer.unload();
 
-        for (IUpdatable updatable : updatables)
-            updatable.unload();
+        // An object added as updatable and displayable is unloaded once (it would release its GL elements twice)
+        Set<Object> unloaded = Collections.newSetFromMap(new IdentityHashMap<>());
+        for (IUpdatable updatable : updatables) {
+            if (unloaded.add(updatable))
+                updatable.unload();
+        }
 
-        for (IDisplayable displayable : displayables)
-            displayable.unload();
+        for (IDisplayable displayable : displayables) {
+            if (unloaded.add(displayable))
+                displayable.unload();
+        }
     }
 
     /**

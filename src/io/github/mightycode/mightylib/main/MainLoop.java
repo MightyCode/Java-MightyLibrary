@@ -155,7 +155,8 @@ public final class MainLoop {
             resource.watcher().watchAll();
         }
 
-        GLResources.createInstance(config.getMaxGLUploadMillisecondsPerFrame());
+        // The batches send the GL elements of their data (textures) during the loading
+        resource.setGLElementSink(GLResources.createInstance(config.getMaxGLUploadMillisecondsPerFrame()));
         TextureUploader.setMode(config.getTextureUpload());
 
         System.out.println("--Create SceneManager");

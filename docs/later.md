@@ -39,6 +39,7 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - **Shaders** : `GL_KHR_parallel_shader_compile` (lancer toutes les compilations, puis interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes ; une étape = un `glCompileShader` bloquant) ; pic de frame de ~58 ms au chargement, jugé acceptable.
 - **Priorité plus fine** que courant/préchargement (rechargement à chaud, ressources du premier affichage) ; une donnée garde sa priorité urgente si la référence urgente est retirée avant la préchargée.
 - **Chargement GL** : PBO ou contexte partagé (fenêtre cachée + `glFenceSync`). `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.
+- **Préchargement GL des modèles 3D** : `MeshUpload` est propre à chaque `ModelRenderer` (créé dans `launch`, exige le modèle chargé) ; le rendre partageable par modèle pour qu'un batch l'envoie pendant le chargement comme les textures (`DataType.createGLElement`).
 
 ## Effets 2D : particules et post-traitement
 D'après LearnOpenGL « 2D Game » (Breakout).

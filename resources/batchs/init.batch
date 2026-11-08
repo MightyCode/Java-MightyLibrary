@@ -7,13 +7,21 @@
                 "bahnschrift",
                 "whitePixel",
                 "slime",
-                "tileset",
-                "waveCollapseTest",
                 "painting",
                 "hexagon"
             ],
             "regex" : [
             ]
+        },
+        {
+            "type" : "TextureData",
+            "files" : [
+                "tileset",
+                "waveCollapseTest"
+            ],
+            "regex" : [
+            ],
+            "gpu" : false
         },
         {
             "type" : "FontFace",

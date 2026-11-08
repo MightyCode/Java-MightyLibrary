@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
@@ -168,6 +169,17 @@ public class TextureData extends SingleSourceDataType {
     @Override
     public long estimatedGpuBytes() {
         return estimatedCpuBytes();
+    }
+
+    // The texture the renderers share under the name of the data
+    @Override
+    public Class<? extends GLElement> glElementType() {
+        return Texture.class;
+    }
+
+    @Override
+    public GLElement createGLElement() {
+        return new Texture(this);
     }
 
     public ByteBuffer getData() {
