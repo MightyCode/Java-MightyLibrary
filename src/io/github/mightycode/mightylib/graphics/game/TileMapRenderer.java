@@ -106,7 +106,6 @@ public class TileMapRenderer extends Renderer {
     int[] tilesIndices = null;
     float[] tilesTexturePosition = null;
     float[] tilesPosition = null;
-    int[] tilesCount = null;
 
     public TileMapRenderer(String shaderName, boolean willChange, String layerCategory) {
         super(shaderName, true);
@@ -213,7 +212,6 @@ public class TileMapRenderer extends Renderer {
         int tileCount = 0;
 
         tilesIndices = new int[tileNumber * 6];
-        tilesCount = new int[tileNumber];
         tilesTexturePosition = new float[tileNumber * 8];
         tilesPosition = new float[tileNumber * 8];
 

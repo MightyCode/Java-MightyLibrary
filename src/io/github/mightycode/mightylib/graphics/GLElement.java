@@ -9,7 +9,6 @@ public abstract class GLElement implements LoadingElement {
     private String name;
     private boolean loaded;
     private boolean loadStarted;
-    private boolean preLoaded;
 
     public String getName() {
         return name;
@@ -49,11 +48,6 @@ public abstract class GLElement implements LoadingElement {
     }
 
     public abstract boolean load(int remainingMilliseconds);
-
-    @Override
-    public boolean isPreLoaded(){
-        return preLoaded;
-    }
 
     @Override
     public boolean isLoaded(){

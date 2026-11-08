@@ -21,7 +21,6 @@ public class Terminal {
     private static final float CURSOR_PERIOD_TIME = 0.5f;
 
     private final TerminalActions actions;
-    private final Vector2f referencePosition;
     private final Vector2f maxSize;
 
     private final Text resultText;
@@ -42,7 +41,6 @@ public class Terminal {
 
     public Terminal(TerminalActions actions, Vector2f referencePosition, Vector2f maxSize){
         this.actions = actions;
-        this.referencePosition = referencePosition;
         this.maxSize = maxSize;
 
         commandTextCpy = new StringBuilder("/");

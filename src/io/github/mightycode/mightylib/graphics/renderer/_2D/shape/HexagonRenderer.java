@@ -1,22 +1,19 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
-import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
-import org.joml.Vector4f;
 
 public class HexagonRenderer extends Shape2DRenderer {
     public static final float STRETCH_RATIO = (float)Math.sqrt(3.f) / 2;
-    protected Vector4f texturePosition;
+
     public HexagonRenderer(String shaderName) {
         this(shaderName, true);
     }
     public HexagonRenderer(String shaderName, boolean useStretchRatio){
         super(shaderName, true);
 
-        texturePosition = RectangularFace.BasicTexturePosition();
         if (useStretchRatio)
             setScale(new Vector3f(1f, STRETCH_RATIO, 1f));
 

@@ -171,8 +171,8 @@ class ResourcesBatchTest extends ResourcesTestBase {
 
     @Test
     void batchPreviewCountsTheDataAndTheMemoryStillToLoad() throws Exception {
-        FakeData a = fake(THREAD_CONTEXT, "a");
-        FakeData b = fake(THREAD_CONTEXT, "b");
+        fake(THREAD_CONTEXT, "a");
+        fake(THREAD_CONTEXT, "b");
         batch("level", "a", "b");
         start();
 
@@ -195,7 +195,7 @@ class ResourcesBatchTest extends ResourcesTestBase {
     void wantedProgressCountsWhatIsWantedNowAndLoaded() throws Exception {
         FakeData a = fake(THREAD_CONTEXT, "a");
         FakeData b = fake(THREAD_CONTEXT, "b");
-        FakeData next = fake(THREAD_CONTEXT, "next");
+        fake(THREAD_CONTEXT, "next");
         batch("level", "a", "b");
         batch("later", "next");
         start();

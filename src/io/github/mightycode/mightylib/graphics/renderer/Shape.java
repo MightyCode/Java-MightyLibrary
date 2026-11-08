@@ -37,8 +37,6 @@ public class Shape {
     protected int vboCount;
     protected int indicesSize;
 
-    protected int[] info;
-
     protected boolean useEbo;
     protected int verticesToDraw;
 
@@ -58,7 +56,6 @@ public class Shape {
         setDimensionTo2D(this.shader.isDimension2DShader());
 
         verticesToDraw = 0;
-        info = new int[0];
         indicesSize = 0;
 
         vao = GenDeleteResources.GenVertexArrays();

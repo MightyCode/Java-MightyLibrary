@@ -209,7 +209,7 @@ final class FileChangeDetector {
      */
     synchronized List<Path> tick(long now, Set<Path> events) {
         if (!refreshed || now - lastRefresh >= refreshMs) {
-            refresh(now);
+            refresh();
             refreshed = true;
             lastRefresh = now;
         }
@@ -268,7 +268,7 @@ final class FileChangeDetector {
         }
     }
 
-    private void refresh(long now) {
+    private void refresh() {
         Set<Path> wanted = new HashSet<>(pathSupplier.get());
 
         for (Path path : wanted) {

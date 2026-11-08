@@ -50,7 +50,6 @@ public class CSVLoader extends ResourceLoader {
 
         String line;
         String csvSplitBy = ",";
-        String csvHandleData = "\"";
 
         String[] columnsName = null;
         boolean header = true, lineHeader = true;
@@ -92,6 +91,7 @@ public class CSVLoader extends ResourceLoader {
     }
 
     private String[] parseCsvLine(String line, String delimiter) {
+        char separator = delimiter.charAt(0);
         List<String> fields = new ArrayList<>();
         boolean inQuotes = false;
         StringBuilder fieldBuilder = new StringBuilder();
@@ -99,7 +99,7 @@ public class CSVLoader extends ResourceLoader {
         for (char c : line.toCharArray()) {
             if (c == '"') {
                 inQuotes = !inQuotes;
-            } else if (c == ',' && !inQuotes) {
+            } else if (c == separator && !inQuotes) {
                 fields.add(fieldBuilder.toString());
                 fieldBuilder.setLength(0);
             } else {
