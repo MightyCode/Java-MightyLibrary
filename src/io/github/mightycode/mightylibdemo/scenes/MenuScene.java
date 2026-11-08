@@ -2,6 +2,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.GUI.BackgroundlessButton;
 import io.github.mightycode.mightylib.graphics.GUI.GUIList;
+import io.github.mightycode.mightylib.graphics.GUI.ScrollList;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.inputs.InputManager;
@@ -23,6 +24,10 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
+
 import static org.lwjgl.glfw.GLFW.*;
 
 public class MenuScene extends Scene {
@@ -34,6 +39,9 @@ public class MenuScene extends Scene {
     }
 
     private GUIList guiList;
+
+    private ScrollList sceneList;
+    private List<SceneEntry> sceneEntries;
 
     private BackgroundlessButton buttonQuit;
 
@@ -62,87 +70,29 @@ public class MenuScene extends Scene {
 
         Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeCopy();
 
-        BackgroundlessButton button2DScene = new BackgroundlessButton(mainContext);
-        button2DScene.Text.setFont("bahnschrift")
-                .setAlignment(ETextAlignment.Center)
-                .setReference(EDirection.None)
-                .setPosition(new Vector2f(windowSize.x * 0.25f, windowSize.y * 0.4f))
-                .setFontSize(40)
-                .setText("Test2DScene");
-
-        button2DScene.Text.copyTo(button2DScene.OverlapsText);
-        button2DScene.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->Test2DScene<-");
-
-        BackgroundlessButton Test2DWaveFunctionCollapse = button2DScene.copy();
-        Test2DWaveFunctionCollapse.Text.setPosition(new Vector2f(windowSize.x * 0.75f, windowSize.y * 0.4f))
-                .setText("Test2DWaveFunctionCollapse");
-
-        Test2DWaveFunctionCollapse.Text.copyTo(Test2DWaveFunctionCollapse.OverlapsText);
-        Test2DWaveFunctionCollapse.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->Test2DWaveFunctionCollapse<-");
-
-        BackgroundlessButton button3DScene = button2DScene.copy();
-        button3DScene.Text.setPosition(new Vector2f(windowSize.x * 0.25f, windowSize.y * 0.52f))
-                        .setText("Test3DScene");
-
-        button3DScene.Text.copyTo(button3DScene.OverlapsText);
-        button3DScene.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->Test3DScene<-");
-
-        BackgroundlessButton button3D_2Scene = button2DScene.copy();
-        button3D_2Scene.Text.setPosition(new Vector2f(windowSize.x * 0.75f, windowSize.y * 0.52f))
-                .setText("Test3DScene-2");
-
-        button3D_2Scene.Text.copyTo(button3D_2Scene.OverlapsText);
-        button3D_2Scene.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->Test3DScene-2<-");
-
-
-        BackgroundlessButton buttonCollisionTest = button2DScene.copy();
-        buttonCollisionTest.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.64f))
-                .setText("TestCollisionScene");
-
-        buttonCollisionTest.Text.copyTo(buttonCollisionTest.OverlapsText);
-        buttonCollisionTest.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->TestCollisionScene<-");
-
-
-        BackgroundlessButton button3D2DGame = button2DScene.copy();
-        button3D2DGame.Text.setPosition(new Vector2f(windowSize.x * 0.25f, windowSize.y * 0.8f))
-                .setText("Test 3D 2D game");
-
-        button3D2DGame.Text.copyTo(button3D2DGame.OverlapsText);
-        button3D2DGame.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->Test 3D 2D game<-");
-
-        BackgroundlessButton buttonTestBox2D = button2DScene.copy();
-        buttonTestBox2D.Text.setPosition(new Vector2f(windowSize.x * 0.75f, windowSize.y * 0.8f))
-                .setText("Test box 2D");
-
-        buttonTestBox2D.Text.copyTo(buttonTestBox2D.OverlapsText);
-        buttonTestBox2D.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->Test box 2D<-");
-
-        buttonQuit = button2DScene.copy();
-        buttonQuit.Text.setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.9f))
-                .setText("Quit");
-
-        buttonQuit.Text.copyTo(buttonQuit.OverlapsText);
-        buttonQuit.OverlapsText.setColor(new Color4f(0.3f))
-                .setText("->Quit<-");
+        // Left : shortcuts to the main test scenes
+        BackgroundlessButton button2DScene = createButton("Test2DScene", windowSize.x * 0.25f, windowSize.y * 0.4f, null);
+        BackgroundlessButton button3DScene = createButton("Test3DScene", windowSize.x * 0.25f, windowSize.y * 0.52f, button2DScene);
+        BackgroundlessButton button3D_2Scene = createButton("Test3DScene-2", windowSize.x * 0.25f, windowSize.y * 0.64f, button2DScene);
+        buttonQuit = createButton("Quit", windowSize.x * 0.5f, windowSize.y * 0.9f, button2DScene);
 
         guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
         guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
         guiList.GUIs.put(0, button2DScene);
-        guiList.GUIs.put(1, Test2DWaveFunctionCollapse);
-        guiList.GUIs.put(2, button3DScene);
-        guiList.GUIs.put(3, button3D_2Scene);
-        guiList.GUIs.put(4, buttonCollisionTest);
-        guiList.GUIs.put(5, button3D2DGame);
-        guiList.GUIs.put(6, buttonTestBox2D);
-        guiList.GUIs.put(7, buttonQuit);
+        guiList.GUIs.put(1, button3DScene);
+        guiList.GUIs.put(2, button3D_2Scene);
+        guiList.GUIs.put(3, buttonQuit);
         guiList.ShouldLoop = false;
+
+        // Right : every scene of the demo, scrollable
+        sceneEntries = createSceneEntries();
+        List<String> names = new ArrayList<>();
+        for (SceneEntry entry : sceneEntries)
+            names.add(entry.name);
+
+        sceneList = new ScrollList(mainContext, windowSize.x * 0.55f, windowSize.y * 0.25f,
+                windowSize.x * 0.4f, windowSize.y * 0.56f, windowSize.y * 0.08f, "bahnschrift", 30);
+        sceneList.setItems(names);
 
         rotation = new FloatTweening();
         rotation.setTweeningOption(ETweeningOption.LoopReversed)
@@ -155,40 +105,84 @@ public class MenuScene extends Scene {
         test.setPosition(new Vector2f(500, 10));
     }
 
+    private static class SceneEntry {
+        final String name;
+        final Supplier<Scene> factory;
+
+        SceneEntry(String name, Supplier<Scene> factory) {
+            this.name = name;
+            this.factory = factory;
+        }
+    }
+
+    // Every scene reachable from the menu (add new test scenes here)
+    private static List<SceneEntry> createSceneEntries() {
+        List<SceneEntry> list = new ArrayList<>();
+        list.add(new SceneEntry("Test2DScene", Test2DScene::new));
+        list.add(new SceneEntry("Test2DWaveFunctionCollapse", Test2DWaveFunctionCollapseScene::new));
+        list.add(new SceneEntry("Test2DRopeSimulation", Test2DRopeSimulation::new));
+        list.add(new SceneEntry("Test2DPlatformerBox2D", Test2DPlatformerBox2D::new));
+        list.add(new SceneEntry("TestBox2D", TestBox2D::new));
+        list.add(new SceneEntry("TestCollisionSystem", TestCollisionSystem::new));
+        list.add(new SceneEntry("Test3DScene", Test3DScene::new));
+        list.add(new SceneEntry("Test3DScene-2", Test3DScene2::new));
+        list.add(new SceneEntry("Test3DSceneTerrainGeneration", Test3DSceneTerrainGeneration::new));
+        list.add(new SceneEntry("Test3D2DGame", Test3D2DGame::new));
+        list.add(new SceneEntry("TestSoundFormatsScene", TestSoundFormatsScene::new));
+        list.add(new SceneEntry("TestGamepadScene", TestGamepadScene::new));
+        list.add(new SceneEntry("TestPreloadScene", TestPreloadScene::new));
+        list.add(new SceneEntry("TestGLLoading", TestGLLoading::new));
+        list.add(new SceneEntry("TestFallbackScene", TestFallbackScene::new));
+        list.add(new SceneEntry("DocumentationScene", DocumentationScene::new));
+        return list;
+    }
+
+    private BackgroundlessButton createButton(String label, float x, float y, BackgroundlessButton model) {
+        BackgroundlessButton button;
+        if (model == null) {
+            button = new BackgroundlessButton(mainContext);
+            button.Text.setFont("bahnschrift")
+                    .setAlignment(ETextAlignment.Center)
+                    .setReference(EDirection.None)
+                    .setFontSize(40);
+        } else {
+            button = model.copy();
+        }
+
+        button.Text.setPosition(new Vector2f(x, y)).setText(label);
+        button.Text.copyTo(button.OverlapsText);
+        button.OverlapsText.setColor(new Color4f(0.3f)).setText("->" + label + "<-");
+
+        return button;
+    }
+
     @Override
     public void update() {
         super.update();
 
         guiList.update();
 
+        sceneList.update();
+
         if (mainContext.getInputManager().inputPressed(ActionId.ENTER)
                 || mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)) {
+            Integer hovered = sceneList.getHovered();
             Integer id = guiList.getSelected();
 
-            if (id != null) {
+            if (hovered != null && mainContext.getInputManager().inputPressed(ActionId.LEFT_CLICK)) {
+                sceneManagerInterface.setNewScene(sceneEntries.get(hovered).factory.get(), new String[]{""});
+            } else if (id != null) {
                 switch (id) {
                     case 0:
                         sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
                         break;
                     case 1:
-                        sceneManagerInterface.setNewScene(new Test2DWaveFunctionCollapseScene(), new String[]{""});
-                        break;
-                    case 2:
                         sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
                         break;
-                    case 3:
+                    case 2:
                         sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
                         break;
-                    case 4:
-                        sceneManagerInterface.setNewScene(new TestCollisionSystem(), new String[]{""});
-                        break;
-                    case 5:
-                        sceneManagerInterface.setNewScene(new Test3D2DGame(), new String[]{""});
-                        break;
-                    case 6:
-                        sceneManagerInterface.setNewScene(new TestBox2D(), new String[]{""});
-                        break;
-                    case 7:
+                    case 3:
                         sceneManagerInterface.exit(0);
                         break;
                 }
@@ -231,6 +225,7 @@ public class MenuScene extends Scene {
 
         test.display();
         guiList.display();
+        sceneList.display();
         test.display();
 
         super.setAndDisplayRealScene();
@@ -242,6 +237,9 @@ public class MenuScene extends Scene {
 
         if (guiList != null)
             guiList.unload();
+
+        if (sceneList != null)
+            sceneList.unload();
 
         if (test != null)
             test.unload();
