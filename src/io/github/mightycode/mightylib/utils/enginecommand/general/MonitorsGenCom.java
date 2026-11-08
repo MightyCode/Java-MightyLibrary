@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.main.ContextManager;
 import io.github.mightycode.mightylib.main.WindowInfo;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import io.github.mightycode.mightylib.main.monitors.Monitors;
+import io.github.mightycode.mightylib.main.monitors.VideoMode;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import org.json.JSONArray;
@@ -30,6 +31,8 @@ public class MonitorsGenCom extends BaseCommand {
 
         // Short by default: work area and refresh rate only with "monitors full"
         boolean full = args.length > 1 && args[1].equals("full");
+        // The video modes are long: only with "monitors modes"
+        boolean modes = args.length > 1 && args[1].equals("modes");
 
         List<MonitorInfo> monitors = Monitors.List();
         JSONArray list = new JSONArray();
@@ -38,6 +41,12 @@ public class MonitorsGenCom extends BaseCommand {
             if (!full) {
                 json.remove("workArea");
                 json.remove("refreshRate");
+            }
+            if (modes) {
+                JSONArray videoModes = new JSONArray();
+                for (VideoMode mode : monitor.getVideoModes())
+                    videoModes.put(mode.toString());
+                json.put("videoModes", videoModes);
             }
             list.put(json);
         }
@@ -56,6 +65,7 @@ public class MonitorsGenCom extends BaseCommand {
     public String help() {
         return super.help() +
                 "\nmonitors full : also the work area (without the task bar) and the refresh rate" +
+                "\nmonitors modes : also the video modes of each screen (WIDTHxHEIGHT@HZ, for a fullscreen resolution)" +
                 "\nmonitors : connected screens (index, name, resolution, position) and the index of the one"
                 + " showing the window. The screen is chosen at start by EngineConfig.setMonitorSelector or"
                 + " -Dmightylib.window.monitor=primary|secondary|largest|index|part of a name";

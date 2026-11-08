@@ -144,13 +144,11 @@ public final class Engine implements IView {
         System.out.println("--Create main context.");
 
         WindowConfig windowConfig = new WindowConfig(config.getProjectName())
-                .setFullscreen(config.isFullscreen())
+                .setDisplay(config.getDisplay())
                 .setMonitor(chooseMonitor())
                 .setKeyboardLanguage(config.getKeyboardLanguage());
-        // Null sizes: the size of the screen in fullscreen, resolved by the window
-        Vector2i windowSize = config.getWindowSize(), virtualSize = config.getVirtualSize();
-        if (windowSize != null)
-            windowConfig.setSize(windowSize.x, windowSize.y);
+        // Null: the size of the window when it is created
+        Vector2i virtualSize = config.getVirtualSize();
         if (virtualSize != null)
             windowConfig.setVirtualSize(virtualSize.x, virtualSize.y);
 

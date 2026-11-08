@@ -25,19 +25,15 @@ public class EngineConfig {
     private Supplier<Scene> startScene;
     private Supplier<TemplateSceneLoading> loadingScene = DefaultLoadingScene::new;
 
-    // Size of the window without a given size, when not in fullscreen
-    public static final int DEFAULT_WINDOW_WIDTH = 1280, DEFAULT_WINDOW_HEIGHT = 720;
-
-    // Null: the size of the screen in fullscreen, DEFAULT_WINDOW_WIDTH x DEFAULT_WINDOW_HEIGHT in a window
-    private Vector2i windowSize;
-    // Null: same as the window size
+    // Display of the main window; its screen is the one of the monitor selector
+    private DisplaySettings display = new DisplaySettings();
+    // Null: the size of the window when it is created
     private Vector2i virtualSize;
 
     private String projectName = "MightyLibrary";
     private int fps = 60;
     private int tps = 60;
     private String iconName;
-    private boolean fullscreen;
     private IMonitorSelector monitorSelector = MonitorSelectors.Primary();
     private KeyboardLanguage keyboardLanguage = QWERTKeyboardLanguage.getInstance();
 
@@ -72,8 +68,21 @@ public class EngineConfig {
         return this;
     }
 
+    /** Mode and fine settings of the display of the main window (a copy is kept). */
+    public EngineConfig setDisplay(DisplaySettings display) {
+        this.display = display.copy();
+        return this;
+    }
+
+    // Shortcut of DisplaySettings.setMode
+    public EngineConfig setWindowMode(EWindowMode mode) {
+        display.setMode(mode);
+        return this;
+    }
+
+    // Shortcut of DisplaySettings.setWindowedSize: the size in WINDOWED mode
     public EngineConfig setWindowSize(int width, int height) {
-        windowSize = new Vector2i(width, height);
+        display.setWindowedSize(width, height);
         return this;
     }
 
@@ -103,13 +112,9 @@ public class EngineConfig {
         return this;
     }
 
-    public EngineConfig setFullscreen(boolean fullscreen) {
-        this.fullscreen = fullscreen;
-        return this;
-    }
-
     /**
      * Screen on which the window opens, decided before its creation (MonitorSelectors: Primary, Secondary, Index...).
+     * It replaces the screen of the display settings.
      * The system property MonitorSelectors.PROPERTY (-Dmightylib.window.monitor=secondary) overrides it.
      */
     public EngineConfig setMonitorSelector(IMonitorSelector monitorSelector) {
@@ -238,19 +243,14 @@ public class EngineConfig {
 
     public Supplier<Scene> getStartScene() { return startScene; }
     public Supplier<TemplateSceneLoading> getLoadingScene() { return loadingScene; }
-    // Null in fullscreen without a given size: the size of the screen, known when the window is created
-    public Vector2i getWindowSize() {
-        if (windowSize != null)
-            return new Vector2i(windowSize);
-        return fullscreen ? null : new Vector2i(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-    }
-    // Null when the window size is null: the size of the window
-    public Vector2i getVirtualSize() { return virtualSize != null ? new Vector2i(virtualSize) : getWindowSize(); }
+    // A copy
+    public DisplaySettings getDisplay() { return display.copy(); }
+    // Null when not given: the size of the window when it is created
+    public Vector2i getVirtualSize() { return virtualSize != null ? new Vector2i(virtualSize) : null; }
     public String getProjectName() { return projectName; }
     public int getFps() { return fps; }
     public int getTps() { return tps; }
     public String getIconName() { return iconName; }
-    public boolean isFullscreen() { return fullscreen; }
     public IMonitorSelector getMonitorSelector() { return monitorSelector; }
     public KeyboardLanguage getKeyboardLanguage() { return keyboardLanguage; }
     public String getGainTreePath() { return gainTreePath; }
