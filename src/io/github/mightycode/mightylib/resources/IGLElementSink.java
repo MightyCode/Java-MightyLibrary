@@ -13,4 +13,7 @@ public interface IGLElementSink {
 
     // Give back a reference added by acquire, with the same urgency
     void release(GLElement element, boolean urgent);
+
+    // The first loading is done, the fallback data exist: the sink creates what it needs from them (error texture)
+    default void fallbackDataLoaded() {}
 }

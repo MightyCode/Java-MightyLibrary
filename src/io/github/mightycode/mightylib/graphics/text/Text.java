@@ -85,7 +85,7 @@ public class Text extends Renderer implements Cloneable {
         }
 
         // Unknown name: the fallback font
-        this.font = Resources.getInstance().getResourceOrFallback(FontFace.class, fontName);
+        this.font = resources.getResourceOrFallback(FontFace.class, fontName);
 
         computeRightUpPosition();
 
@@ -210,7 +210,7 @@ public class Text extends Renderer implements Cloneable {
 
     // The font if loaded, otherwise the fallback one (failed or still loading)
     private FontFace usedFont() {
-        return Resources.getInstance().usable(FontFace.class, font);
+        return resources.usable(FontFace.class, font);
     }
 
     private void computeRightUpPosition() {

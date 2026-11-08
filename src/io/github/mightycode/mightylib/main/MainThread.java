@@ -31,9 +31,20 @@ public final class MainThread {
         return main == null || main == Thread.currentThread();
     }
 
-    // Run the task at a next frame, on the main thread (also when called from it)
+    // Run the task at a next frame, on the main thread (also when called from it).
+    // The task runs with the view that was current when it was posted (none from a worker thread).
     public static void execute(Runnable task) {
-        TASKS.add(task);
+        IView view = Views.currentOrNull();
+        if (view == null) {
+            TASKS.add(task);
+            return;
+        }
+
+        TASKS.add(() -> {
+            try (Views.Scope ignored = Views.enter(view)) {
+                task.run();
+            }
+        });
     }
 
     public static CompletableFuture<Void> run(Runnable task) {

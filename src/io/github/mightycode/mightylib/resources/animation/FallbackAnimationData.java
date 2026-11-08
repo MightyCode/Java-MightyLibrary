@@ -9,10 +9,10 @@ import io.github.mightycode.mightylib.resources.texture.TextureData;
  * Played in place of an animation that failed, is still loading or has an unknown name.
  */
 public class FallbackAnimationData extends AnimationData {
-    public FallbackAnimationData() {
+    public FallbackAnimationData(Resources resources) {
         super(Resources.FALLBACK_NAME, null);
         // The fallback texture: a dependency, so this animation is loaded after it
-        addDependency(Resources.getInstance().getFallback(TextureData.class));
+        addDependency(resources.getFallback(TextureData.class));
     }
 
     @Override

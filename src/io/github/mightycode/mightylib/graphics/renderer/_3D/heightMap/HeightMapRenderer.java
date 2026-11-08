@@ -41,7 +41,7 @@ public class HeightMapRenderer extends Renderer {
     private final TextureData heightMapTexture;
     public HeightMapRenderer(String heightMapName, boolean willUpdateFrequently) {
         super("multiColoredLightning3D", true);
-        this.heightMapTexture = Resources.getInstance().getResource(TextureData.class, heightMapName);
+        this.heightMapTexture = resources.getResource(TextureData.class, heightMapName);
         heightMapTexture.computeCache();
 
         this.willUpdateFrequently = willUpdateFrequently;

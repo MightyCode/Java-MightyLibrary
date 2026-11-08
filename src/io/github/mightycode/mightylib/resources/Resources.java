@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.texture.IconLoader;
-import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.IntConsumer;
 
 /**
  * Registry and loading pipeline of the data read from the disk.
@@ -46,30 +47,6 @@ public class Resources {
         }
     }
 
-    private static Resources singletonInstance = null;
-
-    public static Resources createInstance(LoadingMethod loadingMethod, int maxNumberOfWorkers){
-        if (singletonInstance == null) {
-            singletonInstance = new Resources(loadingMethod, maxNumberOfWorkers);
-        }
-
-        return singletonInstance;
-    }
-
-    public static Resources getInstance(){
-        if (singletonInstance == null){
-            singletonInstance = new Resources(new AllResourcesMethod(), 1);
-        }
-
-        return singletonInstance;
-    }
-
-    // Tests only: replace the singleton by a fresh instance using only the given loaders (no GL loader)
-    static Resources createForTests(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
-        singletonInstance = new Resources(loadingMethod, maxNumberOfWorkers, loaders);
-        return singletonInstance;
-    }
-
     public final List<ResourceLoader> Loaders;
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
@@ -91,12 +68,18 @@ public class Resources {
     private boolean initialized;
     private boolean firstLoadDone;
 
-    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers) {
-        this(loadingMethod, maxNumberOfWorkers, null);
+    // The mandatory loaders are created; the shaders come from the shader manager (GLSL version and list)
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ShaderManager shaderManager) {
+        this(loadingMethod, maxNumberOfWorkers, null, shaderManager);
     }
 
-    // Without given loaders, the mandatory ones are used
-    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
+    // Only the given loaders are used (no GL loader): tests
+    Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
+        this(loadingMethod, maxNumberOfWorkers, loaders, null);
+    }
+
+    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders,
+                      ShaderManager shaderManager) {
         this.loadingMethod = loadingMethod;
         resources = new ConcurrentHashMap<>();
         Loaders = new ArrayList<>();
@@ -107,7 +90,7 @@ public class Resources {
             Loaders.addAll(loaders);
         } else {
             // Mandatory loaders
-            Loaders.add(new ShaderLoader());
+            Loaders.add(new ShaderLoader(shaderManager));
             Loaders.add(new IconLoader());
             Loaders.add(new TextureDataLoader());
             Loaders.add(new AnimationDataLoader());
@@ -137,6 +120,19 @@ public class Resources {
         return glElementSink;
     }
 
+    // Where a sound buffer is detached from the sources holding it, before it is deleted (SoundManager); none in tests
+    private IntConsumer soundBufferDetacher;
+
+    public void setSoundBufferDetacher(IntConsumer soundBufferDetacher) {
+        this.soundBufferDetacher = soundBufferDetacher;
+    }
+
+    // Before deleting a sound buffer: the sources still holding it let it go
+    public void detachSoundBuffer(int bufferId) {
+        if (soundBufferDetacher != null)
+            soundBufferDetacher.accept(bufferId);
+    }
+
     // Reloads reading their new version at the same time (both versions stay in memory); the others wait
     public void setMaxReloadCopies(int maxReloadCopies) {
         reloads.setMaxCopies(maxReloadCopies);
@@ -148,6 +144,7 @@ public class Resources {
 
         // Init all loaders
         for (ResourceLoader loader : Loaders){
+            loader.attachTo(this);
             Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
             for (DataType data : map.values())
@@ -228,7 +225,8 @@ public class Resources {
 
 
     private void finishLoading() {
-        Texture.CreateErrorTexture();
+        if (glElementSink != null)
+            glElementSink.fallbackDataLoaded();
         firstLoadDone = true;
     }
 
@@ -557,8 +555,8 @@ public class Resources {
 
     // ---- Registry ----
 
-    public static Class<? extends DataType> getClassFromName(String name) {
-        for (ResourceLoader resourceLoader : singletonInstance.Loaders) {
+    public Class<? extends DataType> getClassFromName(String name) {
+        for (ResourceLoader resourceLoader : Loaders) {
             if (resourceLoader.getResourceNameType().equals(name))
                 return resourceLoader.getType();
         }

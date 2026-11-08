@@ -91,7 +91,7 @@ public class TextureDataAtlas extends TextureData {
     }
 
     public void addTexture(String name) {
-        TextureData texture = Resources.getInstance().getResource(TextureData.class, name);
+        TextureData texture = resourcesOrCurrent().getResource(TextureData.class, name);
 
         addDependency(texture);
         addTexture(texture);
@@ -113,7 +113,7 @@ public class TextureDataAtlas extends TextureData {
 
     // A failed texture is replaced by the fallback (its sizes and pixels)
     private TextureData usable(TextureData texture) {
-        return Resources.getInstance().usable(TextureData.class, texture);
+        return resourcesOrCurrent().usable(TextureData.class, texture);
     }
 
     private boolean createAtlas() {

@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -14,7 +14,7 @@ public abstract class GUI {
     }
 
     public GUI(){
-        this(ShaderManager.getInstance().getMainCamera2D());
+        this(Views.current().camera2D());
     }
 
     public void forceSelect(boolean state){

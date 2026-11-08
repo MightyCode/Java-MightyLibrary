@@ -18,6 +18,30 @@ public abstract class GLElement implements LoadingElement {
         this.name = name;
     }
 
+    // The GLResources holding this element, set when it registers it: an element has a single owner
+    private volatile GLResources owner;
+
+    final void attachTo(GLResources glResources) {
+        if (owner == glResources)
+            return;
+
+        if (owner != null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + name
+                    + " is already managed by another GLResources");
+
+        owner = glResources;
+    }
+
+    // The GLResources holding this element; fails while it is not registered
+    protected final GLResources glResources() {
+        GLResources current = owner;
+        if (current == null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + name
+                    + " is not registered in a GLResources");
+
+        return current;
+    }
+
     private int reference;
     // References wanting the element now (renderers, loaded batches), the others only preload it
     private int urgentReference;
@@ -124,7 +148,7 @@ public abstract class GLElement implements LoadingElement {
             return;
 
         reloadQueued = true;
-        GLResources.getInstance().queueReload(this);
+        glResources().queueReload(this);
     }
 
     /**

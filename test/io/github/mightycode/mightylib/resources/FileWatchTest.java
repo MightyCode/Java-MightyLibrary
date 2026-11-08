@@ -210,7 +210,7 @@ class FileWatchTest {
         Resources.FOLDER = folder.toString().replace('\\', '/') + "/";
         Files.createDirectories(folder.resolve("batchs"));
         JSONLoader jsonLoader = new JSONLoader();
-        return Resources.createForTests(new Resources.BatchResourcesMethod("unused"), 2,
+        return new Resources(new Resources.BatchResourcesMethod("unused"), 2,
                 Arrays.asList(fakeLoader, jsonLoader, new BatchLoader(jsonLoader)));
     }
 

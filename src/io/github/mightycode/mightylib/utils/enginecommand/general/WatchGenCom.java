@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.ResourceSelection;
@@ -15,7 +17,7 @@ public class WatchGenCom extends BaseCommand {
 
     @Override
     public CommandResult execute(String[] args) {
-        ResourceWatcher watcher = Resources.getInstance().watcher();
+        ResourceWatcher watcher = Views.engine().resources().watcher();
 
         if (args.length < 2 || args[1].equalsIgnoreCase("status"))
             return CommandResult.ok(watcher.status());
@@ -30,7 +32,7 @@ public class WatchGenCom extends BaseCommand {
 
         ResourceSelection selection;
         try {
-            selection = ResourceSelection.parse(args, 1);
+            selection = ResourceSelection.parse(Views.engine().resources(), args, 1);
         } catch (IllegalArgumentException e) {
             return CommandResult.error(e.getMessage());
         }

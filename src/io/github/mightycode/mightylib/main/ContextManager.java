@@ -13,18 +13,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ContextManager {
-    private static ContextManager singletonInstance = null;
-    public static ContextManager getInstance(){
-        if (singletonInstance == null) singletonInstance = new ContextManager();
-
-        return singletonInstance;
-    }
-
     private String mainContext;
     private final Map<String, Context> contexts;
     private GamepadManager gamepadManager;
 
-    private ContextManager(){
+    ContextManager(){
         contexts = new HashMap<>();
         mainContext = "Main";
     }

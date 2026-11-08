@@ -49,6 +49,6 @@ public class WaveCollapseRulesLoader extends ResourceLoader {
             return;
 
         WaveCollapseRules rules = (WaveCollapseRules) dataType;
-        rules.setData(Resources.getInstance().getResource(JSONFile.class, rules.getDataName() + ".wavecollapse"));
+        rules.setData(resources().getResource(JSONFile.class, rules.getDataName() + ".wavecollapse"));
     }
 }

@@ -14,7 +14,7 @@ import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.THRE
  */
 class ResourcesRandomTest extends ResourcesTestBase {
     private void randomCycles(int seed) throws Exception {
-        resources = Resources.createForTests(new Resources.BatchResourcesMethod("unused"), WORKERS,
+        resources = new Resources(new Resources.BatchResourcesMethod("unused"), WORKERS,
                 Arrays.asList(fakeLoader = new FakeLoader(), new JSONLoader(), new BatchLoader(new JSONLoader())));
         all.clear();
 

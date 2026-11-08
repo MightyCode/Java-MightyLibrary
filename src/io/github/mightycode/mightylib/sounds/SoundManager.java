@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.sounds;
 
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.sound.SoundLoader;
 import io.github.mightycode.mightylib.utils.math.KeyTree;
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
@@ -17,20 +18,6 @@ import static org.lwjgl.openal.AL10.*;
 import static org.lwjgl.openal.ALC10.*;
 
 public class SoundManager {
-    private static SoundManager instance;
-
-    public static void initSoundManager(String gainTree){
-        instance = new SoundManager(gainTree);
-    }
-
-    public static SoundManager getInstance() {
-        if (instance == null) {
-            throw new RuntimeException("Sound Manager not initialized");
-        }
-
-        return instance;
-    }
-
     private long device;
     private long context;
 
@@ -47,7 +34,12 @@ public class SoundManager {
 
     private final KeyTree<String, Float> gainTree;
 
-    private SoundManager (String gainPath){
+    // The sounds are data of this Resources
+    private final Resources resources;
+
+    public SoundManager(Resources resources, String gainPath){
+        this.resources = resources;
+        resources.setSoundBufferDetacher(this::detachBuffer);
         listener = new SoundListener();
 
         awaitedNewSounds = new ArrayList<>();
@@ -81,7 +73,7 @@ public class SoundManager {
 
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
         SoundSourceCreationInfo safeInfo = creationInfo.copy();
-        SoundSource source = new SoundSource(safeInfo.gainNode);
+        SoundSource source = new SoundSource(resources, safeInfo.gainNode);
         safeInfo.startTimer();
 
         safeInfo.managerId = soundsSource.size();
@@ -182,11 +174,8 @@ public class SoundManager {
     }
 
     // Before deleting a buffer: the sources still holding it let it go
-    public static void DetachBuffer(int bufferId) {
-        if (instance == null)
-            return;
-
-        for (SoundSource source : instance.soundsSource)
+    private void detachBuffer(int bufferId) {
+        for (SoundSource source : soundsSource)
             source.detachBuffer(bufferId);
     }
 

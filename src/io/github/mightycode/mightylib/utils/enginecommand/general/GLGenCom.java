@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
@@ -22,7 +24,7 @@ public class GLGenCom extends BaseCommand {
             glObjects.put(type.name(), GenDeleteResources.Count(type));
 
         data.put("glObjects", glObjects);
-        JSONObject shared = GLResources.getInstance().describe();
+        JSONObject shared = Views.engine().glResources().describe();
 
         if (args.length > 1 && args[1].equals("summary")) {
             data.put("sharedElements", summarize(shared));

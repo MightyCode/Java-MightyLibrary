@@ -1,13 +1,14 @@
 package io.github.mightycode.mightylib.scenes;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.main.Engine;
+import io.github.mightycode.mightylib.main.IView;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.*;
 import io.github.mightycode.mightylib.graphics.surface.BasicBindableObject;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.main.Context;
-import io.github.mightycode.mightylib.main.ContextManager;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
@@ -27,11 +28,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 
-public abstract class Scene extends UUID implements IUpdatableDisplayable {
+public abstract class Scene extends UUID implements IUpdatableDisplayable, IView {
+    private final Engine engine;
     protected final Resources resources;
     protected final GLResources glResources;
 
-    protected final ShaderManager shaderManager;
     protected final Context mainContext;
     protected Camera3D main3DCamera;
     protected Camera2D main2DCamera;
@@ -61,12 +62,13 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     // Cameras reachable by the camera command
     private final List<Camera> cameras = new CopyOnWriteArrayList<>();
 
+    // A scene belongs to the engine and the window of the view that creates it
     public Scene(Camera3DCreationInfo info) {
-        resources = Resources.getInstance();
-        glResources = GLResources.getInstance();
-
-        shaderManager = ShaderManager.getInstance();
-        mainContext = ContextManager.getInstance().getMainContext();
+        IView creator = Views.current();
+        engine = creator.engine();
+        resources = engine.resources();
+        glResources = engine.glResources();
+        mainContext = creator.context();
 
         if (info == null) {
             cameraParameters = new Camera3DCreationInfo();
@@ -83,10 +85,33 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
         this(null);
     }
 
+    // ---- IView ----
+
+    @Override
+    public final Engine engine() { return engine; }
+
+    @Override
+    public final Context context() { return mainContext; }
+
+    @Override
+    public final Camera2D camera2D() {
+        if (main2DCamera == null)
+            throw new IllegalStateException("The cameras of " + getClass().getSimpleName() + " exist from launch() on");
+
+        return main2DCamera;
+    }
+
+    @Override
+    public final Camera3D camera3D() {
+        if (main3DCamera == null)
+            throw new IllegalStateException("The cameras of " + getClass().getSimpleName() + " exist from launch() on");
+
+        return main3DCamera;
+    }
+
     private void initGlobalParameters(){
         main3DCamera = mainContext.createCamera(cameraParameters);
         main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
-        shaderManager.setCameras(main2DCamera, main3DCamera);
 
         cameras.clear();
         registerCamera(main3DCamera, "main3D");
@@ -143,27 +168,31 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     }
 
     final void initByManager(String[] args) {
-        this.args = args;
-        isWaitingForLoading = true;
-        launched = false;
+        try (Views.Scope ignored = Views.enter(this)) {
+            this.args = args;
+            isWaitingForLoading = true;
+            launched = false;
 
-        loadingScene = createLoadingScene(args);
-        if (loadingScene != null) {
-            // Lets the loading scene leave the loading (a key to go back to the menu...)
-            loadingScene.setSceneManagerInterface(sceneManagerInterface);
-            loadingScene.launchByManager(args);
+            loadingScene = createLoadingScene(args);
+            if (loadingScene != null) {
+                // Lets the loading scene leave the loading (a key to go back to the menu...)
+                loadingScene.setSceneManagerInterface(sceneManagerInterface);
+                loadingScene.launchByManager(args);
+            }
+
+            init(args);
         }
-
-        init(args);
     }
 
     final void launchByManager(String[] args) {
-        this.args = args;
-        initGlobalParameters();
+        try (Views.Scope ignored = Views.enter(this)) {
+            this.args = args;
+            initGlobalParameters();
 
-        scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), createVirtualSceneBindable());
+            scRenderer = new VirtualSceneRenderer(mainContext.getWindow().getInfo(), createVirtualSceneBindable());
 
-        launch(args);
+            launch(args);
+        }
     }
 
     public void addUpdatable(IUpdatable updatable){
@@ -202,11 +231,13 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     }
 
     final void updateByManager(){
-        if (isWaitingForLoading) {
-            if (loadingScene != null)
-                loadingScene.updateByManager();
-        } else {
-            update();
+        try (Views.Scope ignored = Views.enter(this)) {
+            if (isWaitingForLoading) {
+                if (loadingScene != null)
+                    loadingScene.updateByManager();
+            } else {
+                update();
+            }
         }
     }
 
@@ -217,11 +248,13 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     }
 
     void postUpdateByManager(){
-        if (isWaitingForLoading) {
-            if (loadingScene != null)
-                loadingScene.postUpdateByManager();
-        } else {
-            postUpdate();
+        try (Views.Scope ignored = Views.enter(this)) {
+            if (isWaitingForLoading) {
+                if (loadingScene != null)
+                    loadingScene.postUpdateByManager();
+            } else {
+                postUpdate();
+            }
         }
     }
 
@@ -238,11 +271,15 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
      *    then the scene is displayed and updated: its first frame is complete.
      */
     final void displayByManager() {
+        try (Views.Scope ignored = Views.enter(this)) {
+            display0();
+        }
+    }
+
+    private void display0() {
         if (isWaitingForLoading) {
-            if (loadingScene != null) {
-                loadingScene.useCameras();
+            if (loadingScene != null)
                 loadingScene.displayByManager();
-            }
 
             if (!launched) {
                 boolean resourcesLoaded = loadingScene != null ? loadingScene.isFinished() : resources.finishedCurrentLoading();
@@ -258,8 +295,6 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
                     loadingScene.unload();
                     loadingScene = null;
                 }
-
-                useCameras();
             } else {
                 warnIfGLLoadingIsLong();
             }
@@ -277,11 +312,6 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
             glLoadingWarned = true;
             System.err.println("--" + getClass().getSimpleName() + " still waits for GL elements : " + glResources.describeWaitingElements());
         }
-    }
-
-    // The shaders use the cameras of the scene being displayed
-    final void useCameras() {
-        shaderManager.setCameras(main2DCamera, main3DCamera);
     }
 
     public void display() {
@@ -356,14 +386,16 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable {
     public void release() {}
 
     final void unloadByManager() {
-        if (loadingScene != null) {
-            loadingScene.unload();
-            loadingScene = null;
+        try (Views.Scope ignored = Views.enter(this)) {
+            if (loadingScene != null) {
+                loadingScene.unload();
+                loadingScene = null;
+            }
+
+            if (launched)
+                unload();
+
+            release();
         }
-
-        if (launched)
-            unload();
-
-        release();
     }
 }

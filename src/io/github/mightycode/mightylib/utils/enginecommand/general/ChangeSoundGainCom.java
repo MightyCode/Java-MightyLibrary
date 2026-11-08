@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
@@ -17,7 +19,7 @@ public class ChangeSoundGainCom extends BaseCommand {
             return noEnoughArgumentError();
 
         if (args[1].equalsIgnoreCase("list")){
-            SoundManager.getInstance().printGainTree();
+            Views.engine().soundManager().printGainTree();
 
             return CommandResult.ok("Gain tree printed in the program console");
         }
@@ -33,7 +35,7 @@ public class ChangeSoundGainCom extends BaseCommand {
             return CommandResult.error("Should write a valid new gain value (float) !");
         }
 
-        if (!SoundManager.getInstance().changeGain(args[1], value))
+        if (!Views.engine().soundManager().changeGain(args[1], value))
             return CommandResult.error("Unknown node called " + args[1]);
 
         return CommandResult.ok("Update " + args[1] + " node to a new gain of " + value);

@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+
 import io.github.mightycode.mightylib.inputs.Gamepad;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
 import io.github.mightycode.mightylib.inputs.InputSimulation;
@@ -18,7 +20,7 @@ public class GamepadGenCom extends BaseCommand {
 
     @Override
     public CommandResult execute(String[] args) {
-        GamepadManager manager = ContextManager.getInstance().getGamepadManager();
+        GamepadManager manager = Views.engine().contexts().getGamepadManager();
 
         try {
             if (args.length == 1 || args[1].equalsIgnoreCase("list"))

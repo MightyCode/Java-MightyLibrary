@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+
 import io.github.mightycode.mightylib.main.ContextManager;
 import io.github.mightycode.mightylib.main.WindowInfo;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
@@ -43,7 +45,7 @@ public class MonitorsGenCom extends BaseCommand {
         JSONObject data = new JSONObject();
         data.put("monitors", list);
 
-        WindowInfo window = ContextManager.getInstance().getMainContext().getWindow().getInfo();
+        WindowInfo window = Views.engine().contexts().getMainContext().getWindow().getInfo();
         MonitorInfo current = Monitors.OfWindow(window.getWindowId(), monitors);
         data.put("windowMonitor", current == null ? JSONObject.NULL : current.getIndex());
 

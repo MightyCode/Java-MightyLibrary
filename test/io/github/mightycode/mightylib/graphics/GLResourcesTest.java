@@ -29,7 +29,7 @@ class GLResourcesTest {
 
     @Test
     void aReloadStepCanReleaseAnElementWaitingToBeReloaded() {
-        GLResources glResources = GLResources.createInstance(-1);
+        GLResources glResources = new GLResources(null, -1);
         FakeElement model = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "reload-model");
         FakeElement texture = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "reload-texture");
         glResources.process(Long.MAX_VALUE);
@@ -60,7 +60,7 @@ class GLResourcesTest {
 
     @Test
     void preloadedElementsDoNotKeepALoadingScreenWaiting() {
-        GLResources glResources = GLResources.createInstance(-1);
+        GLResources glResources = new GLResources(null, -1);
         WaitingElement preloaded = glResources.addElementOrReturnIfPresent(WaitingElement.class, new WaitingElement(),
                 "preload-only", false);
         glResources.process(Long.MAX_VALUE);
@@ -85,7 +85,7 @@ class GLResourcesTest {
     // A user unloaded twice (object added as updatable and displayable) must not delete what a batch still holds
     @Test
     void releasingMoreThanReferencedKeepsTheElement() {
-        GLResources glResources = GLResources.createInstance(-1);
+        GLResources glResources = new GLResources(null, -1);
         FakeElement held = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(),
                 "over-released", false);
         glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "over-released");
@@ -102,7 +102,7 @@ class GLResourcesTest {
 
     @Test
     void urgentElementsAreLoadedBeforePreloadedOnes() {
-        GLResources glResources = GLResources.createInstance(-1);
+        GLResources glResources = new GLResources(null, -1);
         FakeElement preloaded = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(),
                 "order-preloaded", false);
         FakeElement urgent = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "order-urgent");

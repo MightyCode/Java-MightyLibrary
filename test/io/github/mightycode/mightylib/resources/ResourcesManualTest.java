@@ -125,7 +125,7 @@ class ResourcesManualTest extends ResourcesTestBase {
         FakeData data = fake(MAIN_CONTEXT, "data");
         start();
 
-        Resources other = Resources.createForTests(new Resources.AllResourcesMethod(), 1,
+        Resources other = new Resources(new Resources.AllResourcesMethod(), 1,
                 java.util.Collections.singletonList(new FakeLoader()));
         assertThrows(IllegalStateException.class, () -> data.attachTo(other));
         assertSame(resources, data.resources());

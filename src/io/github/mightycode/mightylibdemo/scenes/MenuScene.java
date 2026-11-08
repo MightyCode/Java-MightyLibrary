@@ -195,7 +195,7 @@ public class MenuScene extends Scene {
         buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
         if (guiList.isStateChanged()){
-            SoundManager.getInstance().createSoundSource(CREATION_INFO_SELECT);
+            engine().soundManager().createSoundSource(CREATION_INFO_SELECT);
         }
 
         //main2DCamera.setX(rotation.value() * 50);

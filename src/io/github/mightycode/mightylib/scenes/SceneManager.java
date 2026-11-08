@@ -1,11 +1,11 @@
 package io.github.mightycode.mightylib.scenes;
 
-import io.github.mightycode.mightylib.graphics.GLResources;
+
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.MainLoop;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.Context;
-import io.github.mightycode.mightylib.main.ContextManager;
+import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.sounds.SoundManager;
@@ -18,17 +18,19 @@ public class SceneManager {
     private Scene currentScene;
 
     private final Commands commands;
+    private final Engine engine;
     private final SoundManager soundManager;
 
     // Package of the first scene, used to find scenes by their simple name
     private String scenesPackage;
 
     // defaultLoadingScene: displayed while a scene loads, unless the scene overrides createLoadingScene
-    public SceneManager(Supplier<TemplateSceneLoading> defaultLoadingScene) {
-        sceneInterface = new SceneManagerInterface(defaultLoadingScene);
+    public SceneManager(Engine engine, Supplier<TemplateSceneLoading> defaultLoadingScene) {
+        this.engine = engine;
+        sceneInterface = new SceneManagerInterface(engine.resources(), defaultLoadingScene);
 
         commands = new Commands(this);
-        soundManager = SoundManager.getInstance();
+        soundManager = engine.soundManager();
     }
 
 
@@ -61,7 +63,7 @@ public class SceneManager {
 
 
     private void updateMain() {
-        Context mainContext = ContextManager.getInstance().getMainContext();
+        Context mainContext = engine.contexts().getMainContext();
         InputManager mainInputManager = mainContext.getInputManager();
 
         // Commands come from the console thread or the debug server, never block here
@@ -71,7 +73,7 @@ public class SceneManager {
             System.out.println("Commands are read from the console without pausing the game, write -> help <- to list them");
 
         if (mainInputManager.inputPressed(InputManager.RELOAD_TEXTURE))
-            Resources.getInstance().reloadAllOfType(TextureData.class);
+            engine.resources().reloadAllOfType(TextureData.class);
     }
 
     public void display() {
@@ -80,7 +82,7 @@ public class SceneManager {
 
 
     public void postUpdate() {
-        ContextManager.getInstance().postUpdate();
+        engine.contexts().postUpdate();
         currentScene.postUpdateByManager();
     }
 
@@ -93,7 +95,7 @@ public class SceneManager {
             previousScene.unloadByManager();
         }
 
-        SoundManager.getInstance().clearAwaitedSong();
+        soundManager.clearAwaitedSong();
 
         // Assign the new scene
         currentScene = sceneInterface.getNewScene();
@@ -102,13 +104,13 @@ public class SceneManager {
         System.out.println("--Init scene" + currentScene.getClass().getName());
 
         for (String batch : currentScene.getInvolvedBatch())
-            Resources.getInstance().loadBatch(batch);
+            engine.resources().loadBatch(batch);
 
         // After loadBatch: what the new scene shares with the previous or the preloaded one is never unloaded in
         // between (the GL elements of the batches, released at once, would be sent to the card again)
         if (previousScene != null) {
             for (String batch : previousScene.getInvolvedBatch())
-                Resources.getInstance().unloadBatch(batch);
+                engine.resources().unloadBatch(batch);
 
             GenDeleteResources.PrintAll();
         }
@@ -166,7 +168,7 @@ public class SceneManager {
             currentScene.unloadByManager();
         }
 
-        Resources.getInstance().unload();
-        GLResources.getInstance().unload();
+        engine.resources().unload();
+        engine.glResources().unload();
     }
 }

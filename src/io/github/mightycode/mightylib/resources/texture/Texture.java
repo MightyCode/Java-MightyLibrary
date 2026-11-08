@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindab
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -27,10 +28,6 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
     // Measured upload speed, shared by all textures, starts with a cautious guess
     private static double bytesPerMillisecond = 1024 * 1024;
 
-    // Bound while a texture is not loaded yet: draws nothing instead of failing
-    private static int placeholderId = -1;
-    private static int fallbackRectangleId = -1;
-
     private final TextureData data;
     private int textureId;
     // Rows already sent, for a big texture sent by strips
@@ -48,67 +45,24 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     private int textureType;
 
-    public static void CreateErrorTexture() {
-        GLResources.getInstance().addElementOrReturnIfPresent(Texture.class, new Texture(Resources.FALLBACK_NAME), Resources.FALLBACK_NAME);
-    }
-
-    public static void DeletePlaceholder() {
-        if (placeholderId != -1) {
-            GenDeleteResources.DeleteTexture(placeholderId);
-            placeholderId = -1;
-        }
-
-        if (fallbackRectangleId != -1) {
-            GenDeleteResources.DeleteTexture(fallbackRectangleId);
-            fallbackRectangleId = -1;
-        }
-    }
-
-    // The fallback checkerboard as a rectangle texture, for the samplers of rectangle textures (fonts); -1 until ready
-    private static int getFallbackRectangleId() {
-        if (fallbackRectangleId == -1) {
-            TextureData fallback = Resources.getInstance().getFallback(TextureData.class);
-            if (fallback == null || !fallback.isLoaded())
-                return -1;
-
-            fallbackRectangleId = GenDeleteResources.GenTexture();
-            glBindTexture(GL_TEXTURE_RECTANGLE, fallbackRectangleId);
-            glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, fallback.getWidth(), fallback.getHeight(), 0,
-                    GL_RGBA, GL_UNSIGNED_BYTE, fallback.getData());
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            Logger.CheckOpenGLError("Create rectangle fallback texture");
-        }
-
-        return fallbackRectangleId;
-    }
-
-    private static int getPlaceholderId() {
-        if (placeholderId == -1) {
-            placeholderId = GenDeleteResources.GenTexture();
-            glBindTexture(GL_TEXTURE_2D, placeholderId);
-            ByteBuffer transparent = BufferUtils.createByteBuffer(4);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, transparent);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            Logger.CheckOpenGLError("Create placeholder texture");
-        }
-
-        return placeholderId;
-    }
+    // Belongs to the engine of the view that creates it (the explicit Resources constructors choose another)
+    private final Resources resources;
 
     public Texture(String name) {
-        this(findData(name));
+        this(Views.engine().resources(), name);
     }
 
     // A missing texture would wait forever to be loaded (and block a loading screen): the fallback replaces it
-    private static TextureData findData(String name) {
-        return Resources.getInstance().getResourceOrFallback(TextureData.class, name);
+    public Texture(Resources resources, String name) {
+        this(resources, resources.getResourceOrFallback(TextureData.class, name));
     }
 
     public Texture(TextureData data) {
+        this(Views.engine().resources(), data);
+    }
+
+    public Texture(Resources resources, TextureData data) {
+        this.resources = resources;
         this.data = data;
         if (data != null)
             resourceDependencies.add(data);
@@ -139,7 +93,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         // Failed or still loading: the fallback texture instead
         } else {
             // Same target as this texture: a rectangle sampler can't read a 2D texture
-            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? getFallbackRectangleId() : -1;
+            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? glResources().placeholders().fallbackRectangleId(resources) : -1;
             if (rectangleId != -1)
                 glBindTexture(GL_TEXTURE_RECTANGLE, rectangleId);
             else
@@ -211,16 +165,16 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
 
     // Texture of the fallback data (CreateErrorTexture), transparent until it is sent itself
     private int getFallbackId() {
-        Texture fallback = GLResources.getInstance().getResource(Texture.class, Resources.FALLBACK_NAME);
+        Texture fallback = glResources().getResource(Texture.class, Resources.FALLBACK_NAME);
         if (fallback != null && fallback != this && fallback.isLoaded())
             return fallback.textureId;
 
-        return getPlaceholderId();
+        return glResources().placeholders().placeholderId();
     }
 
     // Data giving the size: the fallback one while this one is not loaded
     private TextureData sizeData() {
-        return Resources.getInstance().usable(TextureData.class, data);
+        return resources.usable(TextureData.class, data);
     }
 
     private boolean isSentByStrips() {

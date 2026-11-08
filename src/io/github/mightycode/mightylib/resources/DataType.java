@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.utils.LoadingElement;
 import io.github.mightycode.mightylib.utils.math.UUID;
@@ -86,8 +87,9 @@ public abstract class DataType extends UUID implements LoadingElement {
         manuallyCreated = true;
     }
 
-    // Called by Resources when it registers this data (or creates it as a reload copy): a data has a single owner
-    final void attachTo(Resources resources) {
+    // Called by Resources when it registers this data (or creates it as a reload copy): a data has a single owner.
+    // Also by the data that builds another one outside the registry (a map building its atlas)
+    public final void attachTo(Resources resources) {
         Resources current = owner;
         if (current == resources)
             return;
@@ -106,6 +108,13 @@ public abstract class DataType extends UUID implements LoadingElement {
                     + " is not registered in a Resources");
 
         return current;
+    }
+
+    // The Resources managing this data, or those of the current view while it is not attached yet: for the data built
+    // by code, which reads other data before being added (an atlas listing textures by name)
+    protected final Resources resourcesOrCurrent() {
+        Resources current = owner;
+        return current != null ? current : Views.engine().resources();
     }
 
     final void setNotManuallyCreated(){

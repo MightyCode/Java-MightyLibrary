@@ -68,7 +68,7 @@ public class TileMapLoader extends ResourceLoader {
 
             if (linePart[0].equals("tileset")) {
                 String tilesetName = TextFormat.word(linePart, 1, path, lineNumber, "tileset name");
-                TileSet tileset = Resources.getInstance().getResource(TileSet.class, tilesetName);
+                TileSet tileset = resources().getResource(TileSet.class, tilesetName);
                 int startId = 0;
 
                 if (linePart.length >= 3)
