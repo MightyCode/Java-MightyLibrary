@@ -184,8 +184,8 @@
             <version>1.0.3</version>
         </dependency>
         <dependency>
-            <groupId>fr.delthas</groupId>
-            <artifactId>javamp3</artifactId>
+            <groupId>javazoom</groupId>
+            <artifactId>jlayer</artifactId>
             <version>1.0.1</version>
         </dependency>
         <dependency>

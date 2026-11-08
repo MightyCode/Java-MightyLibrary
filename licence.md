@@ -9,8 +9,8 @@ Le moteur et ses démos sont **gratuits** : tant que c'est le cas, rien de ce qu
 ## En bref
 
 - **Licence du code du projet : GPL v3** (fichier `LICENSE`). C'est le choix qui a le plus de conséquences, voir « Licence du projet ».
-- **Aucune dépendance copyleft forte.** Toutes les bibliothèques Java sont permissives (BSD, MIT, Apache 2.0, domaine public) : elles imposent de garder leur avis de copyright, rien d'autre. Elles sont compatibles avec la GPL v3 comme avec une licence propriétaire.
-- **Une seule composante LGPL, une bibliothèque native** : OpenAL Soft, livrée par LWJGL (`OpenAL.dll`). Elle reste remplaçable, voir plus bas.
+- **Deux composantes LGPL** : JLayer (bibliothèque Java, décodage mp3) et OpenAL Soft (bibliothèque native livrée par LWJGL, `OpenAL.dll`). Les autres bibliothèques Java sont permissives (BSD, MIT, Apache 2.0, domaine public) et imposent seulement de garder leur avis de copyright.
+- **La LGPL de JLayer** ne gêne pas un projet gratuit. Pour un projet payant, elle demande que l'utilisateur puisse remplacer le jar de JLayer par une version modifiée : voir « JLayer (LGPL) » plus bas.
 - **Pour un projet payant, le point le plus risqué n'est pas le code mais les ressources** : polices Microsoft (Arial, Bahnschrift) et modèles, textures et sons dont l'origine n'est pas écrite dans le dépôt.
 
 ## Dépendances Java (livrées dans le jar `jar-with-dependencies`)
@@ -22,9 +22,15 @@ Le moteur et ses démos sont **gratuits** : tant que c'est le cas, rien de ce qu
 | org.json | 20231013 | Domaine public (selon le `pom.xml`) | JSON | aucune ; pas la vieille licence « Good, not Evil » de json.org |
 | JBox2D (`jbox2d-library`) | 2.2.1.1 | BSD-2-Clause (Daniel Murphy) | physique 2D | garder l'avis |
 | opensimplex (`com.raylabz`) | 1.0.3 | Apache 2.0 | bruit | garder l'avis, le texte de la licence et un éventuel fichier `NOTICE` |
-| JavaMP3 (`fr.delthas`) | 1.0.1 | MIT | décodage mp3 | garder l'avis ; dépôt archivé |
+| JLayer (`javazoom:jlayer`) | 1.0.1 | **LGPL** | décodage mp3 | avis et texte de la LGPL ; l'utilisateur doit pouvoir remplacer le jar, voir ci-dessous |
 
-Code écrit pour le moteur, sans dépendance : décodeur FLAC (`FlacStream`), `SoundDecoder` et les autres décodeurs. Le wav utilise `javax.sound.sampled` (JDK). `SoundDataType.readVorbis` et `ioResourceToByteBuffer` ressemblent à l'exemple audio de LWJGL (BSD-3) : si elles en viennent, l'avis de LWJGL couvre ce cas, à vérifier si la provenance compte.
+Code écrit pour le moteur, sans dépendance : décodeur FLAC (`FlacStream`, contrôlé par le MD5 du fichier), `SoundDecoder` et les autres décodeurs. Le wav utilise `javax.sound.sampled` (JDK). `SoundDataType.readVorbis` et `ioResourceToByteBuffer` ressemblent à l'exemple audio de LWJGL (BSD-3) : si elles en viennent, l'avis de LWJGL couvre ce cas, à vérifier si la provenance compte.
+
+### JLayer (LGPL)
+JavaMP3 (MIT) avait été essayé à sa place : il plante sur un mp3 dont la dernière trame est coupée (le fichier de démo `selectmp3.mp3`), JLayer non. JLayer est donc gardé. Pour un projet payant, deux façons de respecter la LGPL :
+- livrer le jeu avec le jar de JLayer à côté (dossier `lib/`, classpath), pas fusionné dans un jar unique : l'utilisateur le remplace par son propre jar ;
+- ou, si le jeu est livré en un seul jar, fournir de quoi le refaire (jar du jeu non fusionné ou fichiers objets) avec une version modifiée de JLayer.
+Le plus simple : ne pas utiliser `jar-with-dependencies` pour un jeu payant, ou remplacer le décodeur mp3 (il suffit d'écrire un autre `SoundDecoder`).
 
 ### Remarque sur les versions
 Les `pom.xml` présents dans le dépôt Maven local pour LWJGL sont en 3.3.2 alors que le projet utilise la 3.3.6 : la licence (BSD-3-Clause) est la même d'une version à l'autre.
@@ -52,7 +58,7 @@ Les auteurs de commits du dépôt sont tous la même personne (plusieurs noms), 
 - **GPL v3 telle quelle** : tout jeu ou logiciel qui utilise la bibliothèque (liaison avec le jar) doit lui-même être publié sous GPL v3 avec ses sources. C'est incompatible avec un jeu fermé ou vendu sans sources, et avec les mods sous licence propriétaire.
 - **LGPL v3** : un jeu fermé peut utiliser la bibliothèque, à condition de laisser l'utilisateur la remplacer (bibliothèque en jar séparé, pas fusionnée dans un seul jar) et de publier les modifications de la bibliothèque elle-même.
 - **MIT ou Apache 2.0** : aucune contrainte pour les jeux, un avis de copyright à garder. Apache 2.0 ajoute une clause de brevet. C'est le plus simple pour « bibliothèque réutilisable, modding ».
-- Toutes les dépendances Java ci-dessus acceptent n'importe lequel de ces trois choix.
+- Toutes les dépendances Java ci-dessus acceptent n'importe lequel de ces choix ; JLayer et OpenAL Soft (LGPL) seulement à condition que l'utilisateur puisse les remplacer.
 - **La démo** (`mightylibdemo`) peut avoir une autre licence que la bibliothèque (`mightylib`) si on veut.
 
 Choix à faire par l'auteur au moment du projet payant, pas avant. Si le modèle de modding de `docs/later.md` doit accepter des mods propriétaires, MIT ou Apache 2.0 évitent de se limiter.
