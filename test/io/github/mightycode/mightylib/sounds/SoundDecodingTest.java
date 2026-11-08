@@ -77,4 +77,11 @@ class SoundDecodingTest {
         info.release();
         assertNull(info.Buffer);
     }
+
+    @Test
+    void aMissingFileGivesAClearError() {
+        java.io.FileNotFoundException error = assertThrows(java.io.FileNotFoundException.class,
+                () -> SoundDataType.ioResourceToByteBuffer("resources/sounds/missing.ogg", 1024));
+        assertTrue(error.getMessage().contains("missing.ogg"));
+    }
 }

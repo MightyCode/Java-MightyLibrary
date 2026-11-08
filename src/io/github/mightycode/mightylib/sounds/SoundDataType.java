@@ -5,6 +5,7 @@ import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
@@ -17,8 +18,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import static java.sql.Types.NULL;
 import static org.lwjgl.BufferUtils.createByteBuffer;
+import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.stb.STBVorbis.*;
 
 public class SoundDataType {
@@ -88,9 +89,12 @@ public class SoundDataType {
                 while (fc.read(buffer) != -1) ;
             }
         } else {
-            try (
-                    InputStream source = SoundSource.class.getResourceAsStream(resource);
-                    ReadableByteChannel rbc = Channels.newChannel(source)) {
+            // Neither a readable file nor in the classpath: a clear error rather than a NullPointerException
+            InputStream source = SoundSource.class.getResourceAsStream(resource);
+            if (source == null)
+                throw new FileNotFoundException("sound file not found: " + resource);
+
+            try (ReadableByteChannel rbc = Channels.newChannel(source)) {
                 buffer = createByteBuffer(bufferSize);
 
                 while (true) {
