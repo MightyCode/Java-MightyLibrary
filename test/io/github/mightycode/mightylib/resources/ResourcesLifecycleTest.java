@@ -1386,4 +1386,27 @@ class ResourcesLifecycleTest {
         assertEquals(0, after.getLong("cpuBytesToLoad"));
         assertTrue(resources.describeBatch("unknown").has("error"));
     }
+
+    @Test
+    void wantedProgressCountsWhatIsWantedNowAndLoaded() throws Exception {
+        FakeData a = fake(THREAD_CONTEXT, "a");
+        FakeData b = fake(THREAD_CONTEXT, "b");
+        FakeData next = fake(THREAD_CONTEXT, "next");
+        batch("level", "a", "b");
+        batch("later", "next");
+        start();
+
+        int[] before = resources.wantedProgress();
+        resources.loadBatch("level");
+        resources.preloadBatch("later");
+        int[] asked = resources.wantedProgress();
+        // The preloaded data is not wanted now
+        assertEquals(before[1] + 2, asked[1]);
+
+        pump();
+        int[] done = resources.wantedProgress();
+        assertEquals(done[1], done[0]);
+        assertEquals(before[1] + 2, done[1]);
+        assertTrue(a.isLoaded() && b.isLoaded());
+    }
 }
