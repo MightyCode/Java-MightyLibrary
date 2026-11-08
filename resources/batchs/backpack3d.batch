@@ -1,0 +1,9 @@
+{
+    "batchs" : [
+        {
+            "type" : "Model",
+            "files" : [],
+            "regex" : ["backpack"]
+        }
+    ]
+}

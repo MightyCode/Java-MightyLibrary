@@ -1,0 +1,9 @@
+{
+    "batchs" : [
+        {
+            "type" : "TextureData",
+            "files" : ["container", "dispMap1"],
+            "regex" : []
+        }
+    ]
+}

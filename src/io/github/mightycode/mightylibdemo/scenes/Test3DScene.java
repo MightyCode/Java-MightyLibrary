@@ -77,7 +77,7 @@ public class Test3DScene extends Scene {
     @Override
     protected String[] getInvolvedBatch() {
         return new String[]{
-                "elements3d"
+                "crates3d", "litcrates3d", "stall3d", "backpack3d"
         };
     }
 
