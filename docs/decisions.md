@@ -4,4 +4,5 @@
 - **Mode `DEBUG`/`RELEASE`** (`EEngineMode`) plutôt qu'un état « admin ».
 - **Package `network` conservé** malgré `ServerThread.run()` vide.
 - **Pas de Lombok** : peu d'accesseurs triviaux, méthodes générées introuvables dans le source, processeur d'annotations à configurer, API publique implicite.
+- **Envoi des textures : `DIRECT` par défaut, `PBO` en option** (`ETextureUpload`). Mesuré sur RTX 4080 SUPER (pilote 610.88), 4096x4096 : direct 8 ms au total ; PBO 3 ms dans les appels mais 36 ms jusqu'à la fin du transfert. Sur Test3DScene l'envoi entier (128 Mo) ne coûte que ~15 ms, rien à gagner là. Le résultat dépend de la carte : `textureupload bench` le mesure chez l'utilisateur.
 - **Packages `io.github.mightycode.mightylib` / `…mightylibdemo`** (compte GitHub `MightyCode`, accepté par Maven Central). Passer à `fr.<domaine>.mightylib` avec une entreprise et un produit fini, avant toute publication sur Maven Central.

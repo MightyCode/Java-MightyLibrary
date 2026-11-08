@@ -17,6 +17,7 @@ public abstract class GenDeleteResources {
     private static ArrayList<Integer> VAOs;
     private static ArrayList<Integer> VBOs;
     private static ArrayList<Integer> EBOs;
+    private static ArrayList<Integer> PBOs;
 
     private static ArrayList<Integer> Textures;
 
@@ -29,6 +30,7 @@ public abstract class GenDeleteResources {
         VertexArrayBuffer,
         VertexBufferObject,
         ElementBufferObject,
+        PixelBufferObject,
         Texture,
         FramebufferObject,
         RenderBufferObject
@@ -41,6 +43,7 @@ public abstract class GenDeleteResources {
         VAOs = new ArrayList<>();
         VBOs = new ArrayList<>();
         EBOs = new ArrayList<>();
+        PBOs = new ArrayList<>();
 
         Textures = new ArrayList<>();
 
@@ -98,6 +101,20 @@ public abstract class GenDeleteResources {
         glDeleteBuffers(ebo);
     }
 
+    // Buffer used to send pixels to a texture (GL_PIXEL_UNPACK_BUFFER)
+    public static int GenPixelBuffer() {
+        CheckMainThread("GenPixelBuffer");
+        int pbo = glGenBuffers();
+        PBOs.add(pbo);
+        return pbo;
+    }
+
+    public static void DeletePixelBuffer(Integer pbo) {
+        CheckMainThread("DeletePixelBuffer");
+        PBOs.remove(pbo);
+        glDeleteBuffers(pbo);
+    }
+
     public static int GenTexture() {
         CheckMainThread("GenTexture");
         int texture = glGenTextures();
@@ -151,6 +168,10 @@ public abstract class GenDeleteResources {
                 System.out.print("ElementBufferObjects (EBOs): ");
                 TableDebug.printi(EBOs);
                 break;
+            case PixelBufferObject:
+                System.out.print("PixelBufferObjects (PBOs): ");
+                TableDebug.printi(PBOs);
+                break;
             case Texture:
                 System.out.print("Textures: ");
                 TableDebug.printi(Textures);
@@ -178,6 +199,8 @@ public abstract class GenDeleteResources {
                 return VBOs.size();
             case ElementBufferObject:
                 return EBOs.size();
+            case PixelBufferObject:
+                return PBOs.size();
             case Texture:
                 return Textures.size();
             case FramebufferObject:

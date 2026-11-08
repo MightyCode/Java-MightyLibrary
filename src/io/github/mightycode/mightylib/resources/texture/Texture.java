@@ -307,7 +307,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             strip.limit((sentRows + rows) * rowBytes);
 
             long stripStart = System.nanoTime();
-            glTexSubImage2D(textureType, 0, 0, sentRows, width, rows, GL_RGBA, GL_UNSIGNED_BYTE, strip);
+            TextureUploader.uploadRows(textureType, sentRows, width, rows, strip);
             Logger.CheckOpenGLError("Send texture strip : " + data.getDataName());
             sentRows += rows;
 

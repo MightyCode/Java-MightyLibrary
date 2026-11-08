@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import org.json.JSONObject;
 
 import java.util.ArrayDeque;
@@ -88,6 +89,10 @@ public class GLResources {
                 elementToReload.add(element);
             stepDone = true;
         }
+
+        // Nothing left to send: the pixel buffers are not kept
+        if (elementToLoad.isEmpty() && elementToReload.isEmpty())
+            TextureUploader.releaseBuffers();
     }
 
     // Called by GLElement.requestReload
@@ -193,6 +198,7 @@ public class GLResources {
         }
 
         elementToReload.clear();
+        TextureUploader.releaseBuffers();
         Texture.DeletePlaceholder();
     }
 }
