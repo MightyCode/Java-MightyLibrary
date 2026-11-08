@@ -59,21 +59,37 @@ class ResourceScheduler {
      * until the time is spent (at least one step), or until nothing is left with -1.
      */
     void process(int allowedMilliseconds) {
-        long startTime = System.currentTimeMillis();
+        processUntil(allowedMilliseconds < 0 ? Long.MAX_VALUE : System.nanoTime() + allowedMilliseconds * 1_000_000L);
+    }
+
+    /**
+     * Same, until the deadline (System.nanoTime), Long.MAX_VALUE for no limit. The inbox and the updates
+     * stop at the deadline too (what is left waits for the next call), after at least one of each.
+     */
+    void processUntil(long deadlineNanos) {
         boolean first = true;
 
-        while (first || allowedMilliseconds == -1 || System.currentTimeMillis() - startTime < allowedMilliseconds) {
+        while (first || System.nanoTime() < deadlineNanos) {
             first = false;
 
             Runnable fromInbox;
-            while ((fromInbox = inbox.poll()) != null)
+            while ((fromInbox = inbox.poll()) != null) {
                 fromInbox.run();
+                if (System.nanoTime() >= deadlineNanos)
+                    break;
+            }
 
             DataType data;
-            while ((data = toUpdate.poll()) != null)
+            while ((data = toUpdate.poll()) != null) {
                 resources.update(data);
+                if (System.nanoTime() >= deadlineNanos)
+                    break;
+            }
 
             startWorkerSteps();
+
+            if (System.nanoTime() >= deadlineNanos)
+                return;
 
             Runnable step = mainContextSteps.poll();
             if (step == null)

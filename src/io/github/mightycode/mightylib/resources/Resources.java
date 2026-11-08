@@ -227,6 +227,14 @@ public class Resources {
         scheduler.process(allowedMilliseconds);
     }
 
+    // Main thread: same, until the deadline (System.nanoTime), at least one step. Called by MainLoop with the frame budget.
+    public void processUntil(long deadlineNanos) {
+        if (!initialized)
+            throw new RuntimeException("Resources not initialized");
+
+        scheduler.processUntil(deadlineNanos);
+    }
+
     // Main thread: true when no data is being loaded or unloaded
     public boolean finishedCurrentLoading() {
         return scheduler.isIdle() && dependencies.waitingCount() == 0;

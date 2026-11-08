@@ -244,6 +244,8 @@ public final class MainLoop {
                 // No tick is due now (the tick branch would have run), at least one step is done anyway.
                 long nextTick = start + (long) (lastTick + tickTime);
                 long deadline = Math.min(nextTick, frameStart + (long) frameTime);
+                // One budget for the three queues; each does at least one step, so the loading always progresses
+                Resources.getInstance().processUntil(deadline);
                 MainThread.process(deadline);
                 glResources.process(deadline);
 
