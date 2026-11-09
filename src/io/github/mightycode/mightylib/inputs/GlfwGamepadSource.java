@@ -18,18 +18,14 @@ class GlfwGamepadSource implements IGamepadSource {
 
     @Override
     public void setConnectionCallback(IConnectionCallback connectionCallback) {
-        if (callback != null) {
-            callback.free();
-            callback = null;
-        }
-
-        if (connectionCallback == null) {
-            glfwSetJoystickCallback(null);
-            return;
-        }
-
-        callback = GLFWJoystickCallback.create((jid, event) -> connectionCallback.changed(jid, event == GLFW_CONNECTED));
+        // Detach from GLFW before freeing: glfwSetJoystickCallback looks up the previous closure by its address
+        GLFWJoystickCallback previous = callback;
+        callback = connectionCallback == null ? null
+                : GLFWJoystickCallback.create((jid, event) -> connectionCallback.changed(jid, event == GLFW_CONNECTED));
         glfwSetJoystickCallback(callback);
+
+        if (previous != null)
+            previous.free();
     }
 
     @Override
