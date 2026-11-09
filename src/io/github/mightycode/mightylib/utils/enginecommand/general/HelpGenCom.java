@@ -41,9 +41,7 @@ public class HelpGenCom extends BaseCommand {
 
         StringBuilder result = new StringBuilder("Available commands :");
         for (BaseCommand command : commands.getCommands()) {
-            result.append("\n- ").append(command.getName());
-            if (commands.isSceneCommand(command))
-                result.append(" (scene)");
+            result.append("\n- ").append(command.getName()).append(" (").append(command.getOwner()).append(')');
         }
 
         result.append("\nWrite -> [command] help <- to know how to use a command");

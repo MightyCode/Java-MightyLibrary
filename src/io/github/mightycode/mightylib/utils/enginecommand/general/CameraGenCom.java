@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
@@ -24,17 +23,14 @@ import java.util.List;
  */
 public class CameraGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "camera";
-    private final SceneManager sceneManager;
-
-    public CameraGenCom(SceneManager sceneManager) {
+    public CameraGenCom() {
         super(COMMAND_NAME);
-        this.sceneManager = sceneManager;
     }
 
     @Override
     public Collection<String> completeArgument(String[] args) {
-        Scene scene = sceneManager.commandTarget().getCurrentScene();
-        if (scene == null)
+        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
+        if (scene == null || !scene.isLaunched())
             return Collections.emptyList();
 
         if (args.length == 2) {
@@ -60,9 +56,10 @@ public class CameraGenCom extends BaseCommand {
         if (checkArgumentHelp(args))
             return CommandResult.ok(help());
 
-        Scene scene = sceneManager.commandTarget().getCurrentScene();
+        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
         if (scene == null)
             return CommandResult.error("No current scene");
+        requireLaunched(scene);
 
         if (args.length < 2)
             return list(scene);

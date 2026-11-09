@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.Collection;
@@ -12,11 +11,8 @@ import java.util.Arrays;
 
 public class SceneGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "scene";
-    private final SceneManager sceneManager;
-
-    public SceneGenCom(SceneManager sceneManager) {
+    public SceneGenCom() {
         super(COMMAND_NAME);
-        this.sceneManager = sceneManager;
     }
 
     @Override
@@ -24,7 +20,7 @@ public class SceneGenCom extends BaseCommand {
         if (args.length != 2)
             return Collections.emptyList();
 
-        return SceneClasses.Find(sceneManager.commandTarget().getScenesPackage());
+        return SceneClasses.Find(ListGeneralCommand.targetScenes().getScenesPackage());
     }
 
     @Override
@@ -35,7 +31,7 @@ public class SceneGenCom extends BaseCommand {
         Class<?> sceneClass = findSceneClass(args[1]);
         if (sceneClass == null)
             return CommandResult.error("Unknown scene ->" + args[1] + "<-, give its class name relative to "
-                    + sceneManager.commandTarget().getScenesPackage() + " or its full name");
+                    + ListGeneralCommand.targetScenes().getScenesPackage() + " or its full name");
 
         if (!Scene.class.isAssignableFrom(sceneClass))
             return CommandResult.error(sceneClass.getName() + " is not a scene");
@@ -48,7 +44,7 @@ public class SceneGenCom extends BaseCommand {
         }
 
         String[] sceneArgs = args.length > 2 ? Arrays.copyOfRange(args, 2, args.length) : new String[]{""};
-        sceneManager.commandTarget().requestSceneChange(scene, sceneArgs);
+        ListGeneralCommand.targetScenes().requestSceneChange(scene, sceneArgs);
 
         return CommandResult.ok("Changing scene to " + sceneClass.getName()
                 + ", use -> scene <- to know when it is loaded");
@@ -56,16 +52,16 @@ public class SceneGenCom extends BaseCommand {
 
     private CommandResult currentScene() {
         JSONObject data = new JSONObject();
-        Scene scene = sceneManager.commandTarget().getCurrentScene();
+        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
 
         data.put("scene", scene == null ? JSONObject.NULL : scene.getClass().getName());
-        data.put("loading", sceneManager.commandTarget().isCurrentSceneLoading());
+        data.put("loading", ListGeneralCommand.targetScenes().isCurrentSceneLoading());
 
         return CommandResult.ok("Current scene", data);
     }
 
     private Class<?> findSceneClass(String name) {
-        String[] candidates = { sceneManager.commandTarget().getScenesPackage() + "." + name, name };
+        String[] candidates = { ListGeneralCommand.targetScenes().getScenesPackage() + "." + name, name };
 
         for (String candidate : candidates) {
             try {

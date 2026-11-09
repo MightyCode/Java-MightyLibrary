@@ -23,6 +23,8 @@ import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
+import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
@@ -50,6 +52,7 @@ public final class Engine implements IView {
     private GLResources glResources;
     private SoundManager soundManager;
     private SceneManager sceneManager;
+    private Commands commands;
     private DebugServer debugServer;
     // Program output and commands: null without console nor debug mode
     private ConsoleLog consoleLog;
@@ -79,6 +82,9 @@ public final class Engine implements IView {
 
     // The scenes of the main context
     public SceneManager sceneManager() { return sceneManager; }
+
+    // The commands of the engine, the game and the views, created by setup
+    public Commands commands() { return commands; }
 
     // The in-game console, null when disabled (EngineConfig.setConsole)
     public Console console() { return console; }
@@ -218,18 +224,22 @@ public final class Engine implements IView {
             return ListError.LIBRARIES_LOAD_FAIL;
         }
 
+        // Before the scenes and the game: they add their commands to it
+        commands = new Commands();
+        if (consoleLog != null)
+            commands.addListener(new CommandEcho(consoleLog));
+
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
 
-        if (consoleLog != null)
-            sceneManager.getCommands().addListener(new CommandEcho(consoleLog));
         if (config.isConsoleEnabled())
-            console = new Console(this, consoleLog, sceneManager.getCommands(), config.getConsoleFont());
+            console = new Console(this, consoleLog, commands, config.getConsoleFont());
 
         IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {
             projectLoading.init(resources);
+            projectLoading.registerCommands(commands.registryFor(CommandOwner.GAME));
             projectLoading.contextLoading(mainWindow);
         }
 
@@ -240,13 +250,13 @@ public final class Engine implements IView {
         resources.load();
         sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
-        // Commands are only processed in debug mode
+        // The standard input and the debug server only exist in debug mode
         if (MainLoop.isDebug()) {
-            sceneManager.getCommands().startConsole();
+            commands.startConsole();
 
             int debugServerPort = config.getDebugServerPort();
             if (debugServerPort > 0) {
-                debugServer = new DebugServer(sceneManager.getCommands(), debugServerPort, consoleLog);
+                debugServer = new DebugServer(commands, debugServerPort, consoleLog);
                 if (!debugServer.start())
                     debugServer = null;
             }

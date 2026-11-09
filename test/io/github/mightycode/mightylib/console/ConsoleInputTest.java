@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.inputs.KeyEvent;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
+import io.github.mightycode.mightylib.utils.enginecommand.TestCommands;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,9 +42,9 @@ class ConsoleInputTest {
     @BeforeEach
     void setUp() {
         // General commands keep a null scene manager, enough without GL
-        Commands commands = new Commands(null);
-        commands.addCommand(new Command("zzone"));
-        commands.addCommand(new Command("zztwo"));
+        Commands commands = new Commands();
+        TestCommands.add(commands, new Command("zzone"));
+        TestCommands.add(commands, new Command("zztwo"));
 
         editor = new CommandLineEditor();
         printed = new ArrayList<>();

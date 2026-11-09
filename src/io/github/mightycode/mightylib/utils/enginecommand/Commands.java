@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.console.LogCapture;
-import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
 
 import java.io.BufferedReader;
@@ -10,6 +9,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -43,7 +44,6 @@ public class Commands {
     }
 
     private final ArrayList<BaseCommand> commands;
-    private final int endGeneralCommand;
 
     private final ConcurrentLinkedQueue<CommandRequest> pendingRequests;
     private final ArrayList<BooleanSupplier> tickTasks;
@@ -55,16 +55,14 @@ public class Commands {
     // Source of the submitted command being executed (main thread), null outside
     private ICommandSource currentSource;
 
-    public Commands(SceneManager sceneManager) {
+    // One per engine (Engine.commands), with the general commands
+    public Commands() {
         pendingRequests = new ConcurrentLinkedQueue<>();
         tickTasks = new ArrayList<>();
         listeners = new CopyOnWriteArrayList<>();
 
-        // Add commands -> General
         commands = new ArrayList<>();
-        ListGeneralCommand.addCommands(this, sceneManager);
-        // Size
-        endGeneralCommand = commands.size();
+        ListGeneralCommand.addCommands(registryFor(CommandOwner.ENGINE), this);
     }
 
     /**
@@ -186,7 +184,7 @@ public class Commands {
             BaseCommand command = findCommand(words[0]);
             if (command != null) {
                 try {
-                    values.addAll(command.completeArgument(words));
+                    values.addAll(command.getOwner().run(() -> command.completeArgument(words)));
                 } catch (RuntimeException e) {
                     // A completion never stops the typing: no value
                 }
@@ -244,7 +242,9 @@ public class Commands {
             return CommandResult.ok(command.help());
 
         try {
-            return command.execute(args);
+            return command.getOwner().run(() -> command.execute(args));
+        } catch (CommandException e) {
+            return CommandResult.error(e.getMessage());
         } catch (RuntimeException e) {
             return CommandResult.error("Command " + command.getName() + " failed : " + e);
         }
@@ -300,29 +300,32 @@ public class Commands {
         return null;
     }
 
-    public ArrayList<BaseCommand> getCommands(){
-        return commands;
+    // In registration order, read only
+    public List<BaseCommand> getCommands(){
+        return Collections.unmodifiableList(commands);
     }
 
-
     /**
-     * Commands added after the general ones belong to the current scene and are removed when it changes.
-     * @throws IllegalArgumentException if a command with the same name already exists
+     * Main thread. The command belongs to the owner: removed with removeOwnedBy, run under its view.
+     * @throws IllegalArgumentException if a command with the same name already exists, or the command is registered
      */
-    public void addCommand(BaseCommand command){
+    public void register(BaseCommand command, CommandOwner owner) {
+        if (owner == null)
+            throw new IllegalArgumentException("A command needs an owner");
         if (findCommand(command.getName()) != null)
             throw new IllegalArgumentException("A command named ->" + command.getName() + "<- already exists");
 
+        command.setOwner(owner);
         commands.add(command);
     }
 
-    public boolean isSceneCommand(BaseCommand command) {
-        return commands.indexOf(command) >= endGeneralCommand;
+    // The registry of an owner: what it registers belongs to it
+    public CommandRegistry registryFor(CommandOwner owner) {
+        return command -> register(command, owner);
     }
 
-    public void removeSceneCommands(){
-        if (commands.size() > endGeneralCommand) {
-            commands.subList(endGeneralCommand, commands.size()).clear();
-        }
+    // Main thread. A scene, a window view... removes its commands when it is left
+    public void removeOwnedBy(CommandOwner owner) {
+        commands.removeIf(command -> command.getOwner().equals(owner));
     }
 }

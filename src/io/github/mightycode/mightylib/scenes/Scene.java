@@ -17,6 +17,8 @@ import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
+import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.math.UUID;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2f;
@@ -240,6 +242,20 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         return isWaitingForLoading;
     }
 
+    // launch() was called: the cameras, renderers and objects of the scene exist
+    public final boolean isLaunched() {
+        return launched;
+    }
+
+    /**
+     * A command of this scene, run under it (its view and the OpenGL context of its window), removed when the
+     * scene is left, even during its loading. It can be typed while the scene loads: BaseCommand.requireLaunched.
+     * @throws IllegalArgumentException if a command with the same name already exists
+     */
+    protected final void addCommand(BaseCommand command) {
+        engine.commands().register(command, CommandOwner.Of(this, "scene"));
+    }
+
     public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface) {
         this.sceneManagerInterface = sceneManagerInterface;
     }
@@ -409,7 +425,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         try (Views.Scope ignored = Views.enter(this)) {
             // The code of the scene draws in its window: its OpenGL context is the current one
             mainContext.getWindow().bindWindow();
-            // The windows this scene opened go with it
+            // The windows and the commands of this scene go with it
+            engine.commands().removeOwnedBy(CommandOwner.Of(this, "scene"));
             mainContext.getContext().closeWindowsOpenedBy(this);
             mainContext.getWindow().bindWindow();
 

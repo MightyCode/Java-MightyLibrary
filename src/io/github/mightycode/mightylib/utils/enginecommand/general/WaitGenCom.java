@@ -17,12 +17,10 @@ public class WaitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "wait";
 
     private final Commands commands;
-    private final SceneManager sceneManager;
 
-    public WaitGenCom(Commands commands, SceneManager sceneManager) {
+    public WaitGenCom(Commands commands) {
         super(COMMAND_NAME);
         this.commands = commands;
-        this.sceneManager = sceneManager;
     }
 
     @Override
@@ -74,9 +72,8 @@ public class WaitGenCom extends BaseCommand {
     }
 
     private CommandResult waitLoaded(long timeout) {
-        if (sceneManager == null)
-            return CommandResult.error("No scene manager");
-
+        // Of the window targeted when the wait starts
+        SceneManager sceneManager = ListGeneralCommand.targetScenes();
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
         // A simulated input of this tick is seen by the next tick, whose scene can then ask a change,
         // done at the beginning of the tick after: start checking two ticks later
@@ -85,11 +82,11 @@ public class WaitGenCom extends BaseCommand {
             if (future.isDone())
                 return true;
 
-            if (commands.getTick() < startTick + 2 || sceneManager.commandTarget().isSceneChangePending()
-                    || sceneManager.commandTarget().isCurrentSceneLoading())
+            if (commands.getTick() < startTick + 2 || sceneManager.isSceneChangePending()
+                    || sceneManager.isCurrentSceneLoading())
                 return false;
 
-            future.complete(CommandResult.ok(sceneManager.commandTarget().getCurrentScene().getClass().getName() + " loaded"));
+            future.complete(CommandResult.ok(sceneManager.getCurrentScene().getClass().getName() + " loaded"));
             return true;
         });
 

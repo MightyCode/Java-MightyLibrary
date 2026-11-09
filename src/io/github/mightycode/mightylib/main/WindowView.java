@@ -10,6 +10,8 @@ import io.github.mightycode.mightylib.main.utils.IUpdatableDisplayable;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
+import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.math.UUID;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2f;
@@ -129,6 +131,15 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
         }
     }
 
+    /**
+     * A command of this view, run under it (its view and the OpenGL context of its window), removed when the
+     * window closes. From launch() on.
+     * @throws IllegalArgumentException if a command with the same name already exists
+     */
+    protected final void addCommand(BaseCommand command) {
+        engine().commands().register(command, CommandOwner.Of(this, "window"));
+    }
+
     public void addUpdatable(IUpdatable updatable) {
         updatables.add(updatable);
     }
@@ -227,6 +238,7 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
 
     final void unloadByContext() {
         try (Views.Scope ignored = Views.enter(this)) {
+            engine.commands().removeOwnedBy(CommandOwner.Of(this, "window"));
             unload();
         }
     }

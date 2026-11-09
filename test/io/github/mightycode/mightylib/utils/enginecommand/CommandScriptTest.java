@@ -32,8 +32,8 @@ class CommandScriptTest {
     }
 
     private static Commands commandsWith(RecordCommand record) {
-        Commands commands = new Commands(null);
-        commands.addCommand(record);
+        Commands commands = new Commands();
+        TestCommands.add(commands, record);
         return commands;
     }
 
@@ -48,7 +48,7 @@ class CommandScriptTest {
 
     @Test
     void waitAnswersAfterTheGivenTicks() throws Exception {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
 
         CompletableFuture<CommandResult> future = commands.submit("wait 3");
         commands.processPendingCommands();
@@ -78,7 +78,7 @@ class CommandScriptTest {
 
     @Test
     void waitRejectsBadArguments() {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
 
         assertFalse(commands.execute("wait 0").isSuccess());
         assertFalse(commands.execute("wait abc").isSuccess());
@@ -127,7 +127,7 @@ class CommandScriptTest {
 
     @Test
     void scriptStopsOnAnUnknownCommand() throws Exception {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
         CommandScript script = new CommandScript(commands, "test", Arrays.asList("unknownCommand"));
 
         assertTrue(script.step());
@@ -149,7 +149,7 @@ class CommandScriptTest {
 
     @Test
     void execRefusesAScriptRunningItself(@TempDir Path folder) throws Exception {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
         Path file = folder.resolve("loop.txt");
         Files.write(file, Arrays.asList("exec \"" + file + "\""), StandardCharsets.UTF_8);
 
@@ -164,7 +164,7 @@ class CommandScriptTest {
 
     @Test
     void execReportsAMissingFile(@TempDir Path folder) {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
 
         CommandResult result = commands.execute("exec \"" + folder.resolve("missing.txt") + "\"");
 
@@ -174,8 +174,8 @@ class CommandScriptTest {
 
     @Test
     void deferredResultBecomesAnErrorAfterItsTimeout() throws Exception {
-        Commands commands = new Commands(null);
-        commands.addCommand(new BaseCommand("never") {
+        Commands commands = new Commands();
+        TestCommands.add(commands, new BaseCommand("never") {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.later(new CompletableFuture<>(), 1);

@@ -1,5 +1,11 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import io.github.mightycode.mightylib.main.Engine;
+import io.github.mightycode.mightylib.main.IView;
+import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.scenes.camera.Camera2D;
+import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
@@ -32,9 +38,24 @@ class CommandsTest {
         }
     }
 
-    // General commands only keep a reference to the scene manager, null is enough without GL
+    // The general commands only reach the engine when executed: no GL needed
     private static Commands newCommands() {
-        return new Commands(null);
+        return new Commands();
+    }
+
+    // A view without window: its commands run under it, without OpenGL context to bind
+    private static class FakeView implements IView {
+        @Override
+        public Engine engine() { return null; }
+
+        @Override
+        public WindowContext context() { return null; }
+
+        @Override
+        public Camera2D camera2D() { return null; }
+
+        @Override
+        public Camera3D camera3D() { return null; }
     }
 
     @Test
@@ -68,7 +89,7 @@ class CommandsTest {
     void executeGivesQuotedWordsToTheCommand() {
         Commands commands = newCommands();
         EchoCommand echo = new EchoCommand("echo");
-        commands.addCommand(echo);
+        TestCommands.add(commands, echo);
 
         assertTrue(commands.execute("echo \"a b\" c").isSuccess());
         assertArrayEquals(new String[]{"echo", "a b", "c"}, echo.lastArgs);
@@ -87,7 +108,7 @@ class CommandsTest {
     void helpArgumentAnswersTheCommandHelp() {
         Commands commands = newCommands();
         EchoCommand echo = new EchoCommand("echo");
-        commands.addCommand(echo);
+        TestCommands.add(commands, echo);
 
         CommandResult result = commands.execute("echo help");
         assertTrue(result.isSuccess());
@@ -95,13 +116,14 @@ class CommandsTest {
         assertNull(echo.lastArgs);
 
         assertEquals("echo help", commands.execute("help echo").getMessage());
-        assertTrue(commands.execute("help").getMessage().contains("- echo (scene)"));
+        assertTrue(commands.execute("help").getMessage().contains("- echo (game)"));
+        assertTrue(commands.execute("help").getMessage().contains("- help (engine)"));
     }
 
     @Test
     void exceptionOfACommandBecomesAnError() {
         Commands commands = newCommands();
-        commands.addCommand(new BaseCommand("boom") {
+        TestCommands.add(commands, new BaseCommand("boom") {
             @Override
             public CommandResult execute(String[] args) {
                 throw new IllegalStateException("broken");
@@ -116,10 +138,10 @@ class CommandsTest {
     @Test
     void duplicateNameIsRefused() {
         Commands commands = newCommands();
-        commands.addCommand(new EchoCommand("echo"));
+        TestCommands.add(commands, new EchoCommand("echo"));
 
-        assertThrows(IllegalArgumentException.class, () -> commands.addCommand(new EchoCommand("echo")));
-        assertThrows(IllegalArgumentException.class, () -> commands.addCommand(new EchoCommand("help")));
+        assertThrows(IllegalArgumentException.class, () -> TestCommands.add(commands, new EchoCommand("echo")));
+        assertThrows(IllegalArgumentException.class, () -> TestCommands.add(commands, new EchoCommand("help")));
     }
 
     @Test
@@ -130,30 +152,109 @@ class CommandsTest {
     }
 
     @Test
-    void sceneCommandsAreRemovedButNotGeneralOnes() {
+    void commandsAreRemovedByOwner() {
         Commands commands = newCommands();
         int generalCount = commands.getCommands().size();
-        BaseCommand help = commands.findCommand("help");
-        EchoCommand echo = new EchoCommand("echo");
-        commands.addCommand(echo);
+        CommandOwner scene = CommandOwner.Of(new FakeView(), "scene");
+        commands.register(new EchoCommand("echo"), scene);
 
-        assertFalse(commands.isSceneCommand(help));
-        assertTrue(commands.isSceneCommand(echo));
+        assertSame(CommandOwner.ENGINE, commands.findCommand("help").getOwner());
+        assertEquals(scene, commands.findCommand("echo").getOwner());
 
-        commands.removeSceneCommands();
+        // Another owner object for the same view and kind: the same owner
+        commands.removeOwnedBy(CommandOwner.Of(scene.view(), "scene"));
 
         assertEquals(generalCount, commands.getCommands().size());
         assertNull(commands.findCommand("echo"));
         assertNotNull(commands.findCommand("help"));
 
         // The name can be used again by the next scene
-        commands.addCommand(new EchoCommand("echo"));
+        commands.register(new EchoCommand("echo"), CommandOwner.Of(new FakeView(), "scene"));
+    }
+
+    // Regression: the commands added by the game were removed at the first scene change
+    @Test
+    void gameCommandsSurviveTheScenes() {
+        Commands commands = newCommands();
+        commands.registryFor(CommandOwner.GAME).register(new EchoCommand("gamecommand"));
+
+        // A scene comes and goes, then the next one
+        for (int i = 0; i < 2; ++i) {
+            CommandOwner scene = CommandOwner.Of(new FakeView(), "scene");
+            commands.register(new EchoCommand("scenecommand"), scene);
+            commands.removeOwnedBy(scene);
+        }
+
+        assertTrue(commands.execute("gamecommand").isSuccess());
+        assertNull(commands.findCommand("scenecommand"));
+    }
+
+    @Test
+    void ownersDoNotRemoveTheCommandsOfEachOther() {
+        Commands commands = newCommands();
+        FakeView view = new FakeView();
+        CommandOwner first = CommandOwner.Of(new FakeView(), "scene");
+        CommandOwner second = CommandOwner.Of(new FakeView(), "scene");
+        commands.register(new EchoCommand("first"), first);
+        commands.register(new EchoCommand("second"), second);
+        // Same view, another kind of owner
+        commands.register(new EchoCommand("ofwindow"), CommandOwner.Of(view, "window"));
+
+        commands.removeOwnedBy(first);
+        commands.removeOwnedBy(CommandOwner.Of(view, "scene"));
+
+        assertNull(commands.findCommand("first"));
+        assertNotNull(commands.findCommand("second"));
+        assertNotNull(commands.findCommand("ofwindow"));
+    }
+
+    @Test
+    void commandOfAViewRunsUnderIt() {
+        Commands commands = newCommands();
+        FakeView view = new FakeView();
+        IView[] seen = new IView[1];
+        commands.register(new BaseCommand("where") {
+            @Override
+            public CommandResult execute(String[] args) {
+                seen[0] = Views.current();
+                return CommandResult.ok("");
+            }
+        }, CommandOwner.Of(view, "scene"));
+
+        assertTrue(commands.execute("where").isSuccess());
+        assertSame(view, seen[0]);
+    }
+
+    @Test
+    void aCommandIsRegisteredOnce() {
+        Commands commands = newCommands();
+        EchoCommand echo = new EchoCommand("echo");
+        TestCommands.add(commands, echo);
+        commands.removeOwnedBy(CommandOwner.GAME);
+
+        assertThrows(IllegalArgumentException.class, () -> TestCommands.add(commands, echo));
+    }
+
+    @Test
+    void commandExceptionIsTheAnswer() {
+        Commands commands = newCommands();
+        TestCommands.add(commands, new BaseCommand("loading") {
+            @Override
+            public CommandResult execute(String[] args) {
+                requireLaunched(null);
+                return CommandResult.ok("launched");
+            }
+        });
+
+        CommandResult result = commands.execute("loading");
+        assertFalse(result.isSuccess());
+        assertEquals("Scene still loading", result.getMessage());
     }
 
     @Test
     void submittedCommandsRunOnProcess() throws Exception {
         Commands commands = newCommands();
-        commands.addCommand(new EchoCommand("echo"));
+        TestCommands.add(commands, new EchoCommand("echo"));
 
         CompletableFuture<CommandResult> future = commands.submit("echo x");
         assertFalse(future.isDone());
@@ -167,7 +268,7 @@ class CommandsTest {
     void deferredResultCompletesTheSubmittedFuture() throws Exception {
         Commands commands = newCommands();
         CompletableFuture<CommandResult> later = new CompletableFuture<>();
-        commands.addCommand(new BaseCommand("later") {
+        TestCommands.add(commands, new BaseCommand("later") {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.later(later);
@@ -223,8 +324,8 @@ class CommandsTest {
     @Test
     void completeCommandNames() {
         Commands commands = newCommands();
-        commands.addCommand(new ChoiceCommand("zzfirst"));
-        commands.addCommand(new ChoiceCommand("zzfoo"));
+        TestCommands.add(commands, new ChoiceCommand("zzfirst"));
+        TestCommands.add(commands, new ChoiceCommand("zzfoo"));
 
         CommandCompletion completion = commands.complete("zz");
         assertEquals(List.of("zzfirst", "zzfoo"), completion.getCandidates());
@@ -242,7 +343,7 @@ class CommandsTest {
     @Test
     void completeArgumentsIgnoresCaseAddsHelpAndQuotes() {
         Commands commands = newCommands();
-        commands.addCommand(new ChoiceCommand("zzchoice"));
+        TestCommands.add(commands, new ChoiceCommand("zzchoice"));
 
         CommandCompletion completion = commands.complete("zzchoice sce");
         assertEquals(List.of("Scene2D", "Scene3D", "scene3DBis"), completion.getCandidates());
@@ -267,7 +368,7 @@ class CommandsTest {
     @Test
     void listenersSeeTheSourceTheCommandAndItsResult() throws Exception {
         Commands commands = newCommands();
-        commands.addCommand(new BaseCommand("source") {
+        TestCommands.add(commands, new BaseCommand("source") {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.ok(commands.getCurrentSource().name());

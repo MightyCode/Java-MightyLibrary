@@ -1,10 +1,14 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import io.github.mightycode.mightylib.scenes.Scene;
+
 import java.util.Collection;
 import java.util.Collections;
 
 public abstract class BaseCommand {
     private final String commandName;
+    // Set once registered
+    private CommandOwner owner;
 
     public BaseCommand(String commandName) {
         if (commandName == null || commandName.isEmpty() || !commandName.equals(commandName.trim()) || commandName.contains("\""))
@@ -21,6 +25,18 @@ public abstract class BaseCommand {
 
     public String getName() {
         return commandName;
+    }
+
+    // Null until registered
+    public CommandOwner getOwner() {
+        return owner;
+    }
+
+    void setOwner(CommandOwner owner) {
+        if (this.owner != null)
+            throw new IllegalArgumentException("The command ->" + commandName + "<- is already registered");
+
+        this.owner = owner;
     }
 
     public boolean isCommand(String commandName){
@@ -48,6 +64,15 @@ public abstract class BaseCommand {
 
     public CommandResult noEnoughArgumentError(){
         return CommandResult.error("No argument !\nWrite -> " + commandName  + " help<- if you don't know what are/is argument(s)");
+    }
+
+    /**
+     * Stop the command with "Scene still loading" until the scene is launched: its cameras, renderers and objects
+     * only exist from launch() on. A command of a scene can be typed while the scene loads.
+     */
+    protected static void requireLaunched(Scene scene) {
+        if (scene == null || !scene.isLaunched())
+            throw new CommandException("Scene still loading");
     }
 
     public CommandResult unknownArgumentError(String command){
