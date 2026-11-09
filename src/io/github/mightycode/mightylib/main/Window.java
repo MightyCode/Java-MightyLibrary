@@ -125,8 +125,8 @@ public final class Window {
 
         System.out.println("\nWindow with id : " + info.windowId + " created (" + display + ")");
 
-        // Placed while still hidden
-        if (!fullscreen) {
+        // Placed while still hidden (on Wayland the compositor places it)
+        if (!fullscreen && WindowPlatform.CanPlaceWindows()) {
             Vector2i position = position(monitorHandle);
             glfwSetWindowPos(info.windowId, position.x, position.y);
         }
@@ -227,7 +227,7 @@ public final class Window {
         // Where the window was, to come back there (a minimized one has no real position); a new screen centers it
         if (ScreenHandle(previous) != monitorHandle)
             windowedPosition = null;
-        else if (previous.getMode() == EWindowMode.WINDOWED && !minimized)
+        else if (previous.getMode() == EWindowMode.WINDOWED && !minimized && WindowPlatform.CanPlaceWindows())
             windowedPosition = currentPosition();
 
         if (minimized) {
@@ -252,7 +252,8 @@ public final class Window {
         if (display.getMode() == EWindowMode.FULLSCREEN) {
             glfwSetWindowMonitor(info.windowId, monitorHandle, 0, 0, info.size.x, info.size.y, refreshRate(monitorHandle));
         } else {
-            Vector2i position = position(monitorHandle);
+            // Wayland ignores the position, the parent is not read there
+            Vector2i position = WindowPlatform.CanPlaceWindows() ? position(monitorHandle) : new Vector2i();
             glfwSetWindowMonitor(info.windowId, NULL, position.x, position.y, info.size.x, info.size.y, GLFW_DONT_CARE);
         }
 
@@ -328,6 +329,9 @@ public final class Window {
     }
 
     public void setIcon(Icon icon){
+        // Wayland takes the icon from the .desktop file of the application
+        if (!WindowPlatform.CanSetWindowIcon())
+            return;
         glfwSetWindowIcon(info.windowId, icon.getBuffer());
     }
 

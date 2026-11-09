@@ -97,6 +97,8 @@ public final class Engine implements IView {
         // GLFW errors (window or context creation...) are written with the program errors
         GLFWErrorCallback.createPrint(System.err).set();
 
+        WindowPlatform.applyInitHint();
+
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit()) {
             System.err.println("GLFW fail to initialize");
@@ -104,6 +106,7 @@ public final class Engine implements IView {
         }
 
         glfwStarted = true;
+        WindowPlatform.readPlatform();
         return 0;
     }
 
