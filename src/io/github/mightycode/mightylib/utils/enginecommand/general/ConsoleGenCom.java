@@ -145,6 +145,7 @@ public class ConsoleGenCom extends BaseCommand {
             array.put(new JSONObject()
                     .put("id", line.getId())
                     .put("type", line.getType().name())
+                    .put("level", line.getLevel().name())
                     .put("source", line.getSource() == null ? JSONObject.NULL : line.getSource())
                     .put("text", line.getText()));
         }

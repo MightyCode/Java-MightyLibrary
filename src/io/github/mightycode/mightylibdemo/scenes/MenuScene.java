@@ -141,6 +141,7 @@ public class MenuScene extends Scene {
         list.add(new SceneEntry("DocumentationScene", DocumentationScene::new));
         list.add(new SceneEntry("MultiWindowScene", MultiWindowScene::new));
         list.add(new SceneEntry("DisplayModesScene", DisplayModesScene::new));
+        list.add(new SceneEntry("CommandsScene2D", CommandsScene2D::new));
         return list;
     }
 
