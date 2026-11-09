@@ -12,7 +12,8 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - `docs/architecture.md` : structure, démarrage, boucle, cycle de vie des scènes, ressources CPU/GPU, rendu, entrées, temps, pièges connus.
 - `docs/debug-tools.md` : commandes, serveur de debug, simulation d'entrées, traque des fuites, profilage (JFR, RenderDoc).
 - `docs/bonnes-pratiques.md` : points que le projet doit respecter, chacun avec sa vérification ; revue hebdomadaire à la demande de l'utilisateur (skill `/revue-pratiques`).
-- Skills du projet (`.claude/skills/`) : `/revue-pratiques`, `/analyse-intellij` (warnings exportés d'IntelliJ), `/livrer` (vérifier, docs, commits, fusion, push).
+- `docs/plan/` : plans des gros points en cours d'implémentation (un fichier par sujet, écrit par `/planifier`, supprimé à la fusion de la PR qui le réalise).
+- Skills du projet (`.claude/skills/`) : `/revue-pratiques`, `/analyse-intellij` (warnings exportés d'IntelliJ), `/livrer` (vérifier, docs, commits, fusion, push), `/planifier <sujet>` (discussion en questions-réponses, plan dans `docs/plan/`, prompts des discussions d'implémentation et de PR).
 
 ## Priorités
 - **La 2D est prioritaire** (rendu 2D, tilemaps, texte, GUI, Camera2D, animations, physique 2D).
@@ -40,7 +41,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Fins de ligne normalisées par `.gitattributes` (LF dans le dépôt) : `git add` normal. Ne pas réécrire de fichier source avec `sed` (utiliser Edit).
 - Git : `dev` est la branche de travail, `master` ne reçoit que des versions finies. Une branche de sujet depuis `dev`, fusion `--no-ff` dans `dev` ; `dev` → `master` seulement quand l'utilisateur demande explicitement une nouvelle version (« commite », « livre », « pousse » ne suffisent pas), et toujours en lui demandant d'abord son numéro : `git merge --no-ff dev -m "Merge branch 'dev' for version X.Y.Z"` puis tag annoté `git tag -a vX.Y.Z -m "Version X.Y.Z"` sur cette fusion (pousser avec `--follow-tags`). Un commit par changement logique, avec la ligne `Co-Authored-By` demandée par le système. Ne pas modifier/commiter `target/` ni `.idea/workspace.xml`.
 - **Fin de chaque objectif : nettoyer les docs dans le même commit.** `current.md`/`later.md` = ce qui reste, jamais l'historique : supprimer la ligne de l'objectif atteint (ou la réduire à son reste), sans « fait ». Décrire le nouvel état dans `architecture.md` (au présent, sans historique). Relire le fichier après modification : plus aucune trace de ce qui est fini.
-- Avant de commencer un gros point (passage de `later.md` à `current.md`), en discuter avec l'utilisateur pour s'assurer que tout est prévu.
+- Avant de commencer un gros point (passage de `later.md` à `current.md`), en discuter avec l'utilisateur pour s'assurer que tout est prévu (`/planifier`).
 - **Point hebdomadaire** : une revue des bonnes pratiques (`/revue-pratiques`) par semaine. Dernière revue : **2026-11-08**. Au début de toute nouvelle discussion, si la dernière revue date de 7 jours ou plus, le rappeler à l'utilisateur (une ligne) avant de commencer. Après chaque revue, mettre à jour cette date.
 - Décrire comment vérifier manuellement ce qui n'a pas pu l'être (quelle scène, quoi observer).
 
