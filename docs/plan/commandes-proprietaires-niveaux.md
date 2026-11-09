@@ -185,3 +185,33 @@ Registre figé `register(EngineRegistry)`, chargement de mods, Lua, permissions 
 - Dernier commit : supprimer ce plan (et `docs/plan/` s'il est vide) ; vérifier que les docs ne gardent aucune trace de ce qui est fini.
 - Pousser, ouvrir une PR vers `dev` (pas `master`) dont la description reprend le Bilan et la liste des vérifications manuelles.
 - Attendre le feu vert de l'utilisateur, puis fusionner par un commit de fusion (pas de squash), mettre `dev` à jour en local, supprimer la branche en local et sur GitHub.
+
+## Bilan (discussion A)
+
+### Fait
+- Question restante : travail traité **à part, avant** `current.md` (réponse de l'utilisateur) : `current.md` inchangé.
+- Avant la branche, sur `dev` (demande de l'utilisateur) : commit de `CLAUDE.md` + skill `/planifier`, commit de `Main.java` (fenêtre redimensionnable).
+- Branche `command-registry` : plan, puis un commit par étape (1 à 4) et un commit pour `scenario.py -D`.
+- Étape 1 : `Engine.commands()`, `CommandOwner` (`ENGINE`, `GAME`, vue `scene`/`window`), `register`/`registryFor`/`removeOwnedBy`, `CommandRegistry`, `IProjectLoading.registerCommands`, `Scene.addCommand`/`WindowView.addCommand` (retrait dans `unloadByManager`/`unloadByContext`), exécution et complétion sous la vue du propriétaire avec son contexte GL, `Scene.isLaunched()`, `help` affiche le propriétaire.
+- Étape 2 : `BaseCommand(Identifier, ECommandLevel)`, commandes générales dans `mightylib`, résolution chemin seul / identifiant complet, ambiguïté refusée avec la liste, complétion.
+- Étape 3 : `ECommandLevel`, `ICommandSource.level()`, refus silencieux (help, complétion, message identique, ambiguïté sur les visibles), `requireLevel`/`hasLevel`/`currentLevel`, scripts au niveau de leur source, `EngineConfig.setCommandAccess`/`setMaxCommandAccess`/`setCheatCommand` + `-Dmightylib.commands.access` (remplacent `setConsole`), `Commands.setSessionLevel`, `cheats on|off`, journal par niveau (`data` en `DEV`), `ConsolePanel` filtré, touche `²` (`TOGGLE_PLAYER_CONSOLE`), F1 en `DEV` seulement.
+- Étape 4 : `demo:menu` (jeu), `CommandsScene2D` + `demo:spawn` (`CHEAT`, argument `slow` pour un chargement de 3 s), `setCheatCommand(true)` dans la démo, options `-Ddemo.release=true` et `-Ddemo.commands.max=…`, documents.
+
+### Écarts au plan et raisons
+- `requireLevel(niveau, mot)` prend le mot tapé : il faut le nommer pour donner exactement l'erreur d'un argument inconnu (`null` : erreur d'argument manquant).
+- `requireLaunched(scène)` est une aide statique de `BaseCommand` qui lève une `CommandException` (nouvelle : sa réponse est le message seul) ; `Scene` n'expose que `isLaunched()`.
+- `cheats on|off` en session `DEV` répond une erreur sans rien changer : sinon `cheats off` ferait perdre le mode développeur sans retour possible (pas de commande pour revenir en `DEV`).
+- Les commandes en attente sont traitées à chaque tick, plus seulement en debug ou avec console : un jeu publié sans console peut soumettre par l'`api`.
+- Complétion : les identifiants des chemins ambigus n'apparaissent qu'avec un mot vide ou une fois `espace:` tapé (les choix sont filtrés par préfixe).
+- Ajouts non prévus, utiles à la vérification et au jeu : `Console.print(texte[, niveau])` et type `MESSAGE` (messages du jeu, cités par le plan), champ `level` dans `console log`, option `-D clé=valeur` de `scenario.py`.
+- `wait loaded` mémorise la cible au début de l'attente (au lieu de la relire à chaque tick).
+
+### Vérifié et comment
+- `mvn -o -q test` : 300 tests, tous verts (nouveaux : `CommandsTest` propriétaires/identifiants, `CommandLevelsTest`, `main/CommandAccessTest`).
+- `scenario.py` (debug) : `demo:menu` avant et après `scene Scene2D` ; `demo:spawn` dans `CommandsScene2D`, absente après `scene MenuScene`, « Scene still loading » pendant `scene CommandsScene2D slow` puis absente après l'avoir quittée pendant son chargement ; `leakcheck CommandsScene2D` : no leak ; `gl summary` identique au menu avant et après 3 formes créées ; scènes 3D chargées sans problème.
+- Niveau joueur, automatisé en debug avec `-D mightylib.commands.access=user -D demo.commands.max=cheat` (console en jeu au niveau `USER`, serveur `DEV`, saisie par `input text` + `input key ENTER`) : F1 n'ouvre pas, `²` ouvre ; `help` liste `help`, `stats`, `screenshot`, `console`, `cheats`, `demo:menu` ; `exec a.txt` → « No command with its name ->exec<- » ; `demo:spawn square` inconnue puis disponible après `cheats on` ; lignes `--` et `data` au niveau `DEV` (champ `level` de `console log`). Avec `demo.commands.max=user` : `cheats` absente de `help`.
+
+### À vérifier à la main par l'utilisateur
+- **Vraie release** (le serveur de debug n'existe pas en release, donc pas automatisable) : lancer `Main` avec l'option VM `-Ddemo.release=true`. Attendu : `²` ouvre la console, F1 non ; `help` ne montre que les commandes `USER` (dont `cheats`, `demo:menu`) ; `exec a.txt` répond comme une commande inconnue ; aucune ligne `--` du moteur dans la console ; dans `CommandsScene2D`, `demo:spawn square` est inconnue, puis crée une forme après `cheats on`. Avec en plus `-Ddemo.commands.max=user` : `cheats` est inconnue.
+- **Debug** : F1 et `²` ouvrent tous deux la console ; dans `CommandsScene2D` (menu), `demo:spawn square|wide|tall` dessine des formes colorées et le compteur du titre suit ; Tab complète `demo:spawn` et ses formes.
+- Disposition : sur AZERTY, `²` ferme la console, ce caractère ne peut donc pas être tapé dedans (comme la touche ` en QWERTY).
