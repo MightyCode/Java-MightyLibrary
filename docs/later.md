@@ -23,13 +23,13 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0).
 
 ### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading`.
+- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading`. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
 - **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
 - **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
-- **Identifiants à espace de noms** (`jeu:slime`) pour ressources, commandes, scènes, actions : aujourd'hui noms de ressources globaux → collisions (IDs d'action : `current.md`).
+- **Identifiants à espace de noms** (`jeu:slime`, classe `registry/Identifier`, déjà utilisée par les actions et axes) pour ressources, commandes, scènes : aujourd'hui noms globaux → collisions.
 - La liste des scènes du menu de la démo (`MenuScene.createSceneEntries`) devra venir du registre de scènes par nom, pas d'une liste écrite en dur.
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
 - **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
