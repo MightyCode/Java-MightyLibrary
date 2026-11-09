@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
+import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
@@ -87,15 +88,63 @@ public class InputManager {
 
     public void setBlocked(boolean blocked) {
         this.blocked = blocked;
-        keyManager.setBlocked(blocked);
-        mouseManager.setBlocked(blocked);
+        if (keyManager != null)
+            keyManager.setBlocked(blocked);
+        if (mouseManager != null)
+            mouseManager.setBlocked(blocked);
     }
 
     public boolean isBlocked() { return blocked; }
 
+    /*
+     * A captured manager (the console is typing in its window) hides the keyboard, the mouse and every action from
+     * the game, except the actions of the engine (namespace mightylib: open the console...). Read at each query, so
+     * it applies at once; the owner of the capture reads the raw values (getRawKeyEvents, getRawTypedText...).
+     */
+    private boolean captured;
+
+    public void setCaptured(boolean captured) {
+        this.captured = captured;
+        if (keyManager != null)
+            keyManager.setCaptured(captured);
+        if (mouseManager != null)
+            mouseManager.setCaptured(captured);
+    }
+
+    public boolean isCaptured() { return captured; }
+
+    private static boolean isEngineAction(InputAction action) {
+        return Identifier.ENGINE_NAMESPACE.equals(action.identifier().namespace());
+    }
+
+    // The action is not seen at all
+    private boolean hides(InputAction action) {
+        return blocked || (captured && !isEngineAction(action));
+    }
+
+    // An engine action read while captured: the keyboard and the mouse answer for it
+    private boolean beginRead(InputAction action) {
+        boolean raw = captured && isEngineAction(action);
+        if (raw)
+            setRawRead(true);
+        return raw;
+    }
+
+    private void endRead(boolean raw) {
+        if (raw)
+            setRawRead(false);
+    }
+
+    private void setRawRead(boolean rawRead) {
+        if (keyManager != null)
+            keyManager.setRawRead(rawRead);
+        if (mouseManager != null)
+            mouseManager.setCaptured(!rawRead);
+    }
+
     // Value of the axis for this tick, 0 if not bound
     public float getAxis(InputAxis axis){
-        if (blocked)
+        if (blocked || captured)
             return 0;
 
         AxisInput axisInput = axisConfigurations.get(axis);
@@ -143,14 +192,19 @@ public class InputManager {
     }
 
     public boolean getState(InputAction action){
-        if (blocked)
+        if (hides(action))
             return false;
 
         ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return false;
 
-        return actionInput.getState(this) || simulation.getState(action.index());
+        boolean raw = beginRead(action);
+        try {
+            return actionInput.getState(this) || simulation.getState(action.index());
+        } finally {
+            endRead(raw);
+        }
     }
 
 
@@ -159,38 +213,53 @@ public class InputManager {
      * progressive for a gamepad axis. For a speed, a movement : value * maxSpeed.
      */
     public float getValue(InputAction action){
-        if (blocked)
+        if (hides(action))
             return 0;
 
         ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return 0;
 
-        return simulation.getState(action.index()) ? 1 : actionInput.getValue(this);
+        boolean raw = beginRead(action);
+        try {
+            return simulation.getState(action.index()) ? 1 : actionInput.getValue(this);
+        } finally {
+            endRead(raw);
+        }
     }
 
 
     public boolean inputPressed(InputAction action){
-        if (blocked)
+        if (hides(action))
             return false;
 
         ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return false;
 
-        return actionInput.actionPressed(this) || simulation.pressed(action.index());
+        boolean raw = beginRead(action);
+        try {
+            return actionInput.actionPressed(this) || simulation.pressed(action.index());
+        } finally {
+            endRead(raw);
+        }
     }
 
 
     public boolean inputReleased(InputAction action){
-        if (blocked)
+        if (hides(action))
             return false;
 
         ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return false;
 
-        return actionInput.actionReleased(this) || simulation.released(action.index());
+        boolean raw = beginRead(action);
+        try {
+            return actionInput.actionReleased(this) || simulation.released(action.index());
+        } finally {
+            endRead(raw);
+        }
     }
 
     /** Same as getState (Press, Release) or inputPressed/inputReleased (Pressed, Released), chosen by the enum. */
@@ -271,8 +340,11 @@ public class InputManager {
 
 
     private void initLibraryInputs(){
-        actionConfigurations.put(EngineActions.OPEN_COMMAND,
-                new ActionInput(EngineActions.OPEN_COMMAND, new InputSimple(GLFW_KEY_F1, EInputType.Keyboard)));
+        actionConfigurations.put(EngineActions.TOGGLE_CONSOLE,
+                new ActionInput(EngineActions.TOGGLE_CONSOLE, new InputSimple(GLFW_KEY_F1, EInputType.Keyboard)));
+
+        actionConfigurations.put(EngineActions.DETACH_CONSOLE,
+                new ActionInput(EngineActions.DETACH_CONSOLE, new InputSimple(GLFW_KEY_F2, EInputType.Keyboard)));
 
         actionConfigurations.put(EngineActions.RELOAD_TEXTURE,
                 new ActionInput(EngineActions.RELOAD_TEXTURE, new InputSimple(GLFW_KEY_F5, EInputType.Keyboard)));

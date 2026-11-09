@@ -73,9 +73,6 @@ public class SceneManager {
         // Commands come from the console thread or the debug server, never block here
         commands.processPendingCommands();
 
-        if (mainInputManager.inputPressed(EngineActions.OPEN_COMMAND))
-            System.out.println("Commands are read from the console without pausing the game, write -> help <- to list them");
-
         if (mainInputManager.inputPressed(EngineActions.RELOAD_TEXTURE))
             engine.resources().reloadAllOfType(TextureData.class);
     }

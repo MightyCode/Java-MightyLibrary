@@ -39,7 +39,8 @@ class InputRegistryTest {
 
     @Test
     void engineActionsAreRegistered() {
-        assertSame(EngineActions.OPEN_COMMAND, InputRegistry.findAction("mightylib:open_command"));
+        assertSame(EngineActions.TOGGLE_CONSOLE, InputRegistry.findAction("mightylib:toggle_console"));
+        assertSame(EngineActions.DETACH_CONSOLE, InputRegistry.findAction("mightylib:detach_console"));
         assertEquals("mightylib:reload_texture", EngineActions.RELOAD_TEXTURE.toString());
     }
 }
