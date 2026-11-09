@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.scenes.camera.cameraComponents;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
@@ -8,29 +9,29 @@ import org.joml.Vector2f;
 
 public class MovingCameraComponent implements IUpdatable {
     public static class Inputs {
-        public int MoveLeft, MoveRight, MoveUp, MoveDown, QuickSpeed;
+        public InputAction MoveLeft, MoveRight, MoveUp, MoveDown, QuickSpeed;
 
-        public Inputs setMoveLeft(int moveLeft) {
+        public Inputs setMoveLeft(InputAction moveLeft) {
             MoveLeft = moveLeft;
             return this;
         }
 
-        public Inputs setMoveRight(int moveRight) {
+        public Inputs setMoveRight(InputAction moveRight) {
             MoveRight = moveRight;
             return this;
         }
 
-        public Inputs setMoveUp(int moveUp) {
+        public Inputs setMoveUp(InputAction moveUp) {
             MoveUp = moveUp;
             return this;
         }
 
-        public Inputs setMoveDown(int moveDown) {
+        public Inputs setMoveDown(InputAction moveDown) {
             MoveDown = moveDown;
             return this;
         }
 
-        public Inputs setQuickSpeed(int quickSpeed) {
+        public Inputs setQuickSpeed(InputAction quickSpeed) {
             QuickSpeed = quickSpeed;
             return this;
         }

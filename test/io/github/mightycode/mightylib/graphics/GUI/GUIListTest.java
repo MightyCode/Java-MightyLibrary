@@ -1,7 +1,9 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.inputs.EInputState;
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.inputType.IAction;
@@ -13,9 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // Selection and activation of GUIList and GUI, without window nor GL (fake mouse, fake actions, fake elements)
 class GUIListTest {
-    private static final int UP = 10;
-    private static final int DOWN = 11;
-    private static final int VALIDATE = 12;
+    // The registry is shared by the whole JVM : identifiers unique to this class
+    private static final InputAction UP = InputRegistry.action("test_gui_list:up");
+    private static final InputAction DOWN = InputRegistry.action("test_gui_list:down");
+    private static final InputAction VALIDATE = InputRegistry.action("test_gui_list:validate");
+    private static final InputAction NOT_BOUND = InputRegistry.action("test_gui_list:not_bound");
 
     // An action whose state is set by the test
     private static class FakeAction implements IAction {
@@ -105,9 +109,9 @@ class GUIListTest {
         validate = new FakeAction();
         inputManager = new InputManager(null, null, null);
         inputManager.init(new ActionInput[]{
-                new ActionInput(UP, "UP", up),
-                new ActionInput(DOWN, "DOWN", down),
-                new ActionInput(VALIDATE, "VALIDATE", validate),
+                new ActionInput(UP, up),
+                new ActionInput(DOWN, down),
+                new ActionInput(VALIDATE, validate),
         });
 
         mouse = new FakeMouse();
@@ -192,7 +196,7 @@ class GUIListTest {
     void anUnknownOrMissingActionNeverActivates() {
         first.forceSelect(true);
 
-        assertFalse(first.isActivated(inputManager, 999));
+        assertFalse(first.isActivated(inputManager, NOT_BOUND));
         assertFalse(first.isActivated(inputManager));
     }
 

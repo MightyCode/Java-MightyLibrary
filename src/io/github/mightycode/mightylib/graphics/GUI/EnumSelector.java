@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -26,7 +27,7 @@ public class EnumSelector<T extends Enum<?>> {
 
     private final InputManager inputManager;
 
-    private int clickActionId;
+    private InputAction clickActionId;
 
     public EnumSelector(T[] values, WindowContext context){
         this.values = values;
@@ -69,7 +70,7 @@ public class EnumSelector<T extends Enum<?>> {
         setSelected(0);
     }
 
-    public void init(int clickActionId){
+    public void init(InputAction clickActionId){
         this.clickActionId = clickActionId;
     }
 

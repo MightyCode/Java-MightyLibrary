@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.inputs.EInputState;
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 
@@ -52,11 +53,11 @@ public abstract class GUI {
     }
 
     /** True at the tick one of the actions is in the trigger state while the element is selected. */
-    public boolean isActivated(InputManager inputManager, int... actionIds) {
+    public boolean isActivated(InputManager inputManager, InputAction... actionIds) {
         if (!isSelectedNow())
             return false;
 
-        for (int actionId : actionIds) {
+        for (InputAction actionId : actionIds) {
             if (inputManager.isInput(actionId, trigger))
                 return true;
         }

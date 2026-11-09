@@ -1,16 +1,19 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
+
+// Actions read by a Terminal ; null : not used
 public class TerminalActions {
-    public int Paste;
-    public int DeleteRight;
-    public int DeleteLeft;
-    public int GoWordAtRight;
-    public int GoWordAtLeft;
+    public InputAction Paste;
+    public InputAction DeleteRight;
+    public InputAction DeleteLeft;
+    public InputAction GoWordAtRight;
+    public InputAction GoWordAtLeft;
 
-    public int MoveCursorRight;
-    public int MoveCursorLeft;
+    public InputAction MoveCursorRight;
+    public InputAction MoveCursorLeft;
 
-    public int SetPreviousCommand;
-    public int SetNextCommand;
-    public int EnterCommand;
+    public InputAction SetPreviousCommand;
+    public InputAction SetNextCommand;
+    public InputAction EnterCommand;
 }

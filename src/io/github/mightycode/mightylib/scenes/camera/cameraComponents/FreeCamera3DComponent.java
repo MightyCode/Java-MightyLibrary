@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.scenes.camera.cameraComponents;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
+import io.github.mightycode.mightylib.inputs.InputAxis;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
@@ -16,26 +18,26 @@ import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 public class FreeCamera3DComponent implements IUpdatable {
     public static final float DEFAULT_QUICK_FACTOR = 3;
 
-    // Ids of axes, except QuickSpeed (an action) ; -1 : not used
+    // Axes, except QuickSpeed (an action) ; null : not used
     public static class Inputs {
-        public int MoveRight = -1, MoveForward = -1, MoveUp = -1;
-        public int LookRight = -1, LookUp = -1;
-        public int QuickSpeed = -1;
+        public InputAxis MoveRight, MoveForward, MoveUp;
+        public InputAxis LookRight, LookUp;
+        public InputAction QuickSpeed;
 
-        public Inputs setMove(int moveRight, int moveForward, int moveUp) {
+        public Inputs setMove(InputAxis moveRight, InputAxis moveForward, InputAxis moveUp) {
             MoveRight = moveRight;
             MoveForward = moveForward;
             MoveUp = moveUp;
             return this;
         }
 
-        public Inputs setLook(int lookRight, int lookUp) {
+        public Inputs setLook(InputAxis lookRight, InputAxis lookUp) {
             LookRight = lookRight;
             LookUp = lookUp;
             return this;
         }
 
-        public Inputs setQuickSpeed(int quickSpeed) {
+        public Inputs setQuickSpeed(InputAction quickSpeed) {
             QuickSpeed = quickSpeed;
             return this;
         }
@@ -69,7 +71,7 @@ public class FreeCamera3DComponent implements IUpdatable {
         float up = axis(inputs.MoveUp);
 
         float factor = GameTime.DeltaTime();
-        if (inputs.QuickSpeed != -1 && inputManager.getState(inputs.QuickSpeed))
+        if (inputManager.getState(inputs.QuickSpeed))
             factor *= quickFactor;
 
         // speedAngX : positive to the left, speedAngZ : positive backward
@@ -85,8 +87,8 @@ public class FreeCamera3DComponent implements IUpdatable {
         camera.updateView();
     }
 
-    private float axis(int axisId) {
-        return axisId == -1 ? 0 : inputManager.getAxis(axisId);
+    private float axis(InputAxis axis) {
+        return axis == null ? 0 : inputManager.getAxis(axis);
     }
 
     public boolean isLookLocked() { return lookLocked; }

@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.inputs.EInputState;
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -34,7 +35,7 @@ public class ScrollList {
     private final List<String> items = new ArrayList<>();
     private int firstItem;
     private int hovered = -1;
-    private int[] activationActions = new int[0];
+    private InputAction[] activationActions = new InputAction[0];
 
     private boolean needRefill = true;
 
@@ -91,7 +92,7 @@ public class ScrollList {
         return hovered < 0 ? null : hovered;
     }
 
-    public void setupActivationActions(int... actionIds) {
+    public void setupActivationActions(InputAction... actionIds) {
         this.activationActions = actionIds;
     }
 

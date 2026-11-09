@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.main.Views;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
+import io.github.mightycode.mightylib.inputs.InputAxis;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.InputSimulation;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
@@ -17,6 +19,8 @@ import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class InputGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "input";
@@ -165,61 +169,74 @@ public class InputGenCom extends BaseCommand {
         if (args.length < 4)
             return CommandResult.error("Usage : input axis AXIS VALUE [ticks] | input axis AXIS hold VALUE | input axis AXIS release");
 
-        AxisInput axis = inputManager.findAxis(args[2]);
-        if (axis == null)
-            return CommandResult.error("Unknown axis ->" + args[2] + "<-, write -> input list <- to list them");
+        List<AxisInput> matches = inputManager.matchAxes(args[2]);
+        if (matches.size() != 1)
+            return notFound("axis", args[2], matches.stream().map(axis -> axis.axis().toString()).collect(Collectors.toList()));
+        InputAxis axis = matches.get(0).axis();
 
         String mode = args[3].toLowerCase();
         if (mode.equals("release")) {
-            inputManager.simulateAxisRelease(axis.axisId());
-            return CommandResult.ok(axis.axisName() + " released from the next tick");
+            inputManager.simulateAxisRelease(axis);
+            return CommandResult.ok(axis + " released from the next tick");
         }
 
         if (mode.equals("hold")) {
             if (args.length != 5)
                 return CommandResult.error("Usage : input axis AXIS hold VALUE");
-            inputManager.simulateAxis(axis.axisId(), parseFloat(args[4]), InputSimulation.UNTIL_RELEASE);
-            return CommandResult.ok(axis.axisName() + " held at " + args[4] + " from the next tick");
+            inputManager.simulateAxis(axis, parseFloat(args[4]), InputSimulation.UNTIL_RELEASE);
+            return CommandResult.ok(axis + " held at " + args[4] + " from the next tick");
         }
 
         int ticks = args.length > 4 ? parseTicks(args[4]) : 1;
-        inputManager.simulateAxis(axis.axisId(), parseFloat(args[3]), ticks);
-        return CommandResult.ok(axis.axisName() + " at " + args[3] + " from the next tick during " + ticks + " tick(s)");
+        inputManager.simulateAxis(axis, parseFloat(args[3]), ticks);
+        return CommandResult.ok(axis + " at " + args[3] + " from the next tick during " + ticks + " tick(s)");
     }
 
     private CommandResult press(InputManager inputManager, String actionName, String ticksText) {
-        ActionInput action = inputManager.findAction(actionName);
-        if (action == null)
-            return CommandResult.error("Unknown action ->" + actionName + "<-, write -> input list <- to list them");
+        List<ActionInput> matches = inputManager.matchActions(actionName);
+        if (matches.size() != 1)
+            return notFound("action", actionName, matches.stream().map(action -> action.action().toString()).collect(Collectors.toList()));
+        InputAction action = matches.get(0).action();
 
         int ticks = ticksText == null ? InputSimulation.UNTIL_RELEASE : parseTicks(ticksText);
-        inputManager.getSimulation().press(action.actionId(), ticks);
+        inputManager.simulatePress(action, ticks);
 
-        return CommandResult.ok(action.actionName() + " pressed from the next tick"
-                + (ticks == InputSimulation.UNTIL_RELEASE ? " until -> input release " + action.actionName() + " <-" : " during " + ticks + " tick(s)"));
+        return CommandResult.ok(action + " pressed from the next tick"
+                + (ticks == InputSimulation.UNTIL_RELEASE ? " until -> input release " + action + " <-" : " during " + ticks + " tick(s)"));
     }
 
     private CommandResult release(InputManager inputManager, String actionName) {
-        ActionInput action = inputManager.findAction(actionName);
-        if (action == null)
-            return CommandResult.error("Unknown action ->" + actionName + "<-, write -> input list <- to list them");
+        List<ActionInput> matches = inputManager.matchActions(actionName);
+        if (matches.size() != 1)
+            return notFound("action", actionName, matches.stream().map(action -> action.action().toString()).collect(Collectors.toList()));
+        InputAction action = matches.get(0).action();
 
-        inputManager.getSimulation().release(action.actionId());
+        inputManager.simulateRelease(action);
 
-        return CommandResult.ok(action.actionName() + " released from the next tick");
+        return CommandResult.ok(action + " released from the next tick");
     }
 
+    // Unknown name, or a path shared by several namespaces
+    private static CommandResult notFound(String kind, String name, List<String> candidates) {
+        if (candidates.isEmpty())
+            return CommandResult.error("Unknown " + kind + " ->" + name + "<-, write -> input list <- to list them");
+
+        return CommandResult.error("Ambiguous " + kind + " ->" + name + "<-, write the full identifier : " + String.join(", ", candidates));
+    }
+
+    // Identifiers of the bound actions and axes, sorted
     private CommandResult list(InputManager inputManager) {
         JSONObject data = new JSONObject();
-        for (ActionInput action : inputManager.getActions())
-            data.put(action.actionName(), action.actionId());
 
-        JSONObject axes = new JSONObject();
-        for (AxisInput axis : inputManager.getAxes())
-            axes.put(axis.axisName(), axis.axisId());
+        JSONArray actions = new JSONArray();
+        inputManager.getActions().stream().map(action -> action.action().toString()).sorted().forEach(actions::put);
+        data.put("actions", actions);
+
+        JSONArray axes = new JSONArray();
+        inputManager.getAxes().stream().map(axis -> axis.axis().toString()).sorted().forEach(axes::put);
         data.put("axes", axes);
 
-        return CommandResult.ok("Actions with their id, then the axes", data);
+        return CommandResult.ok("Bound actions and axes (full identifier, or path alone when unique)", data);
     }
 
     // Inputs seen by the current tick
@@ -254,16 +271,16 @@ public class InputGenCom extends BaseCommand {
 
         JSONArray actions = new JSONArray();
         for (ActionInput action : inputManager.getActions()) {
-            if (inputManager.getState(action.actionId()))
-                actions.put(action.actionName());
+            if (inputManager.getState(action.action()))
+                actions.put(action.action().toString());
         }
         data.put("actions", actions);
 
         JSONObject axes = new JSONObject();
         for (AxisInput axis : inputManager.getAxes()) {
-            float value = inputManager.getAxis(axis.axisId());
+            float value = inputManager.getAxis(axis.axis());
             if (value != 0)
-                axes.put(axis.axisName(), value);
+                axes.put(axis.axis().toString(), value);
         }
         data.put("axes", axes);
 

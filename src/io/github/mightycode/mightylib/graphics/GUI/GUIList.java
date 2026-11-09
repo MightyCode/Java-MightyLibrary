@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 
@@ -17,10 +18,11 @@ public class GUIList {
 
     public final Map<Integer, GUI> GUIs;
 
-    private int actionUpValue = -1,
-            actionDownValue = -1;
+    // null : no navigation by actions
+    private InputAction actionUpValue,
+            actionDownValue;
 
-    private int[] activationActions = new int[0];
+    private InputAction[] activationActions = new InputAction[0];
 
     public boolean ShouldLoop = true;
 
@@ -41,13 +43,13 @@ public class GUIList {
 
     public boolean isMouseSelecting(){ return selectedByMouse; }
 
-    public void setupActionInputValues(int actionUpValue, int actionDownValue){
+    public void setupActionInputValues(InputAction actionUpValue, InputAction actionDownValue){
         this.actionUpValue = actionUpValue;
         this.actionDownValue = actionDownValue;
     }
 
     /** Actions (Enter, left click...) that activate the selected element, each on its own trigger. */
-    public void setupActivationActions(int... actionIds) {
+    public void setupActivationActions(InputAction... actionIds) {
         this.activationActions = actionIds;
     }
 
@@ -91,9 +93,9 @@ public class GUIList {
         }
 
         Integer id = null;
-        if (actionUpValue != -1 && inputManager.inputPressed(actionUpValue)) {
+        if (actionUpValue != null && inputManager.inputPressed(actionUpValue)) {
             id = selectUp();
-        } else if (actionDownValue != -1 && inputManager.inputPressed(actionDownValue)) {
+        } else if (actionDownValue != null && inputManager.inputPressed(actionDownValue)) {
             id = selectDown();
         }
 
