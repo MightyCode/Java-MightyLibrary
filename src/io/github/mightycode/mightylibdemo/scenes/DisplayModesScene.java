@@ -16,7 +16,7 @@ import org.joml.Vector2i;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
- * The display modes, in the window that has the focus: F1 windowed, F2 exclusive fullscreen, F3 borderless,
+ * The display modes, in the window that has the focus: 1 windowed, 2 exclusive fullscreen, 3 borderless,
  * B border and Z resizing (windowed), L a 1280x720 fullscreen resolution instead of the one of the screen.
  * W opens a second window with the same keys: a second exclusive fullscreen on a screen becomes borderless.
  * Escape goes back to the menu (closes the second window in it).
@@ -34,7 +34,7 @@ public class DisplayModesScene extends Scene {
         setClearColor(0.1f, 0.16f, 0.22f);
 
         help = text(28, new Vector2f(VIRTUAL_WIDTH / 2f, 40));
-        help.setText("F1 windowed   F2 fullscreen   F3 borderless   B border   Z resizable\n"
+        help.setText("1 windowed   2 fullscreen   3 borderless   B border   Z resizable\n"
                 + "L fullscreen 1280x720 / screen   W second window   ESC menu");
 
         status = text(32, new Vector2f(VIRTUAL_WIDTH / 2f, 300));
@@ -77,11 +77,12 @@ public class DisplayModesScene extends Scene {
     static void ChangeDisplay(WindowContext window) {
         KeyboardManager keyboard = window.getKeyboardManager();
 
-        if (keyboard.keyPressed(GLFW_KEY_F1))
+        // Not F1/F2: they open and detach the console
+        if (keyboard.keyPressed(GLFW_KEY_1))
             window.setWindowMode(EWindowMode.WINDOWED);
-        if (keyboard.keyPressed(GLFW_KEY_F2))
+        if (keyboard.keyPressed(GLFW_KEY_2))
             window.setWindowMode(EWindowMode.FULLSCREEN);
-        if (keyboard.keyPressed(GLFW_KEY_F3))
+        if (keyboard.keyPressed(GLFW_KEY_3))
             window.setWindowMode(EWindowMode.BORDERLESS);
 
         DisplaySettings display = window.getDisplay();
