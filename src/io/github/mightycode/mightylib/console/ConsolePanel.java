@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -23,6 +24,8 @@ final class ConsolePanel {
     private static final float PADDING = 6;
     private static final String PROMPT = "> ";
     private static final long CURSOR_BLINK_NANOSECONDS = 530_000_000L;
+    private static final long FLASH_NANOSECONDS = 150_000_000L;
+    private static final Color4f FLASH_COLOR = new Color4f(0.45f, 0.45f, 0.45f, 0.8f);
 
     private static final Color4f OUT_COLOR = new Color4f(0.85f, 0.85f, 0.85f, 1f);
     private static final Color4f ERR_COLOR = new Color4f(1f, 0.45f, 0.45f, 1f);
@@ -37,6 +40,10 @@ final class ConsolePanel {
 
     private final RectangleRenderer background;
     private final RectangleRenderer inputBackground;
+    private final Color4f inputBackgroundColor;
+    private final ShaderValue inputBackgroundValue;
+    // The command line is lit until then (System.nanoTime), 0: not lit
+    private long flashEnd;
     private final RectangleRenderer cursor;
     private final Text inputText;
     private final List<Text> rows;
@@ -69,7 +76,8 @@ final class ConsolePanel {
         background = new RectangleRenderer("colorShape2D");
         background.setColorMode(backgroundColor);
         inputBackground = new RectangleRenderer("colorShape2D");
-        inputBackground.setColorMode(inputBackgroundColor);
+        this.inputBackgroundColor = inputBackgroundColor;
+        inputBackgroundValue = inputBackground.setColorMode(inputBackgroundColor);
         cursor = new RectangleRenderer("colorShape2D");
         cursor.setColorMode(new Color4f(1f, 1f, 1f, 0.85f));
 
@@ -101,6 +109,11 @@ final class ConsolePanel {
         scrollOffset = 0;
     }
 
+    // Visual bell: the command line is lit a moment (a Tab with nothing new to show)
+    void flash() {
+        flashEnd = System.nanoTime() + FLASH_NANOSECONDS;
+    }
+
     // The window's OpenGL context is current, the console view entered
     void display(float x, float y, float width, float height, boolean showCursor) {
         view.pixelCamera().refresh();
@@ -121,6 +134,10 @@ final class ConsolePanel {
         background.setPosition(new Vector2f(x, y));
         background.display();
 
+        boolean flashing = flashEnd != 0 && System.nanoTime() < flashEnd;
+        if (!flashing)
+            flashEnd = 0;
+        inputBackgroundValue.setObject(flashing ? FLASH_COLOR : inputBackgroundColor);
         inputBackground.setSizePix(width, lineHeight + PADDING);
         inputBackground.setPosition(new Vector2f(x, inputTop - PADDING * 0.5f));
         inputBackground.display();

@@ -69,8 +69,14 @@ public final class Console {
         this.commands = commands;
         this.fontName = fontName;
         this.editor = new CommandLineEditor();
-        this.input = new ConsoleInput(editor, commands::complete,
-                choices -> log.add(ConsoleLog.EType.RESULT, null, choices));
+        this.input = new ConsoleInput(editor, commands::complete, new CompletionListing(log, this::bell));
+    }
+
+    // A Tab was received but changes nothing: the command line of the shown console flashes
+    private void bell() {
+        ConsolePanel panel = mode == EMode.DETACHED && windowView != null ? windowView.getPanel() : overlay;
+        if (panel != null)
+            panel.flash();
     }
 
     public ConsoleLog getLog() { return log; }
