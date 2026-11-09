@@ -1,5 +1,9 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.console.CommandEcho;
+import io.github.mightycode.mightylib.console.Console;
+import io.github.mightycode.mightylib.console.ConsoleLog;
+import io.github.mightycode.mightylib.console.LogCapture;
 import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
@@ -47,6 +51,9 @@ public final class Engine implements IView {
     private SoundManager soundManager;
     private SceneManager sceneManager;
     private DebugServer debugServer;
+    // Program output and commands: null without console nor debug mode
+    private ConsoleLog consoleLog;
+    private Console console;
 
     private boolean glfwStarted;
     // A window that stops the engine was closed
@@ -72,6 +79,12 @@ public final class Engine implements IView {
 
     // The scenes of the main context
     public SceneManager sceneManager() { return sceneManager; }
+
+    // The in-game console, null when disabled (EngineConfig.setConsole)
+    public Console console() { return console; }
+
+    // What the console shows: program output and commands of every source; null without console nor debug mode
+    public ConsoleLog consoleLog() { return consoleLog; }
 
     // ---- IView: the code outside any scene runs for the main window, without cameras ----
 
@@ -138,6 +151,12 @@ public final class Engine implements IView {
         MainLoop.setMode(config.getMode());
         Logger.DO_CHECK = config.isOpenGLErrorCheck();
 
+        // From the first line: the console and the debug server clients see the whole output
+        if (config.isConsoleEnabled() || config.getMode() == EEngineMode.DEBUG) {
+            consoleLog = new ConsoleLog(config.getConsoleLogCapacity());
+            LogCapture.install(consoleLog);
+        }
+
         System.out.println("--Start program.");
         System.out.println("--Load libraries.");
 
@@ -203,6 +222,11 @@ public final class Engine implements IView {
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
 
+        if (consoleLog != null)
+            sceneManager.getCommands().addListener(new CommandEcho(consoleLog));
+        if (config.isConsoleEnabled())
+            console = new Console(this, consoleLog, sceneManager.getCommands(), config.getConsoleFont());
+
         IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {
             projectLoading.init(resources);
@@ -222,7 +246,7 @@ public final class Engine implements IView {
 
             int debugServerPort = config.getDebugServerPort();
             if (debugServerPort > 0) {
-                debugServer = new DebugServer(sceneManager.getCommands(), debugServerPort);
+                debugServer = new DebugServer(sceneManager.getCommands(), debugServerPort, consoleLog);
                 if (!debugServer.start())
                     debugServer = null;
             }
@@ -352,6 +376,10 @@ public final class Engine implements IView {
 
     // One tick of every context, then the inputs of every window
     void update() {
+        // Before the scenes: the console captures the inputs and runs what is typed in this tick
+        if (console != null)
+            console.update();
+
         for (Context context : contexts.getContexts())
             context.update();
 
@@ -364,6 +392,12 @@ public final class Engine implements IView {
 
     // The frame is drawn and swapped, the events are read: a window can be drawn again from a callback
     boolean isPollingEvents() { return pollingEvents; }
+
+    // The console over the main window, once its scene is drawn
+    void displayConsoleOverlay() {
+        if (console != null)
+            console.displayOverlay();
+    }
 
     // Each window shows its view
     void displayWindows() {
@@ -403,8 +437,11 @@ public final class Engine implements IView {
         contexts.unloadViews();
 
         WindowContext mainWindow = contexts.getMainWindow();
-        if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated())
+        if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated()) {
             mainWindow.getWindow().bindWindow();
+            if (console != null)
+                console.unload();
+        }
 
         if (resources != null)
             resources.unload();
@@ -432,6 +469,8 @@ public final class Engine implements IView {
             System.err.println("Exit with error " + status);
         else
             System.out.println("Exit without error");
+
+        LogCapture.uninstall();
 
         return status;
     }

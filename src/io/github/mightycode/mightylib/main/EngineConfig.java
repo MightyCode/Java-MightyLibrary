@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.console.ConsoleLog;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
@@ -46,6 +47,10 @@ public class EngineConfig {
     private long watchResourcesInterval = ResourceWatcher.DEFAULT_INTERVAL_MS;
     private boolean openGLErrorCheck;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
+    // Null: enabled in debug mode only
+    private Boolean console;
+    private String consoleFont = "bahnschrift";
+    private int consoleLogCapacity = ConsoleLog.DEFAULT_CAPACITY;
 
     private IProjectLoading projectLoading;
 
@@ -181,6 +186,27 @@ public class EngineConfig {
         return this;
     }
 
+    /**
+     * In-game console (F1, F2 to put it in a window of its own): enabled by default in debug mode only.
+     * A released game can keep it (commands for cheats or administration) without the debug server.
+     */
+    public EngineConfig setConsole(boolean console) {
+        this.console = console;
+        return this;
+    }
+
+    // Font of the console, among the fonts loaded at start (the fallback font otherwise)
+    public EngineConfig setConsoleFont(String consoleFont) {
+        this.consoleFont = consoleFont;
+        return this;
+    }
+
+    // Lines kept by the console (program output and commands), the oldest are forgotten
+    public EngineConfig setConsoleLogCapacity(int consoleLogCapacity) {
+        this.consoleLogCapacity = consoleLogCapacity;
+        return this;
+    }
+
     public EngineConfig setProjectLoading(IProjectLoading projectLoading) {
         this.projectLoading = projectLoading;
         return this;
@@ -237,6 +263,8 @@ public class EngineConfig {
             throw new IllegalStateException("EngineConfig: no start scene, call setStartScene");
         if (loadingScene == null)
             throw new IllegalStateException("EngineConfig: no loading scene, keep the default one or call setLoadingScene");
+        if (consoleLogCapacity < 1)
+            throw new IllegalStateException("EngineConfig: the console log capacity must be positive");
         if (fps <= 0 || tps <= 0)
             throw new IllegalStateException("EngineConfig: fps and tps must be positive");
     }
@@ -297,6 +325,9 @@ public class EngineConfig {
     }
     public boolean isOpenGLErrorCheck() { return openGLErrorCheck; }
     public int getDebugServerPort() { return debugServerPort; }
+    public boolean isConsoleEnabled() { return console != null ? console : mode == EEngineMode.DEBUG; }
+    public String getConsoleFont() { return consoleFont; }
+    public int getConsoleLogCapacity() { return consoleLogCapacity; }
     public IProjectLoading getProjectLoading() { return projectLoading; }
     public int getShaderVersion() { return shaderVersion; }
     public Resources.LoadingMethod getResourcesLoadingMethod() { return resourcesLoadingMethod; }

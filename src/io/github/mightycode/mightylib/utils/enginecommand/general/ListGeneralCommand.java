@@ -29,5 +29,6 @@ public abstract class ListGeneralCommand {
         commands.addCommand(new WindowGenCom());
         commands.addCommand(new WaitGenCom(commands, sceneManager));
         commands.addCommand(new ExecGenCom(commands));
+        commands.addCommand(new ConsoleGenCom(commands));
     }
 }

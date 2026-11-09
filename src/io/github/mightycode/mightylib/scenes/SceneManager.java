@@ -50,8 +50,8 @@ public class SceneManager {
 
 
     public void update() {
-        // Command
-        if (MainLoop.isDebug() && commands != null) {
+        // Commands: debug mode, or a game keeping its console
+        if (commands != null && (MainLoop.isDebug() || engine.console() != null)) {
             updateMain();
         }
 
@@ -73,7 +73,7 @@ public class SceneManager {
         // Commands come from the console thread or the debug server, never block here
         commands.processPendingCommands();
 
-        if (mainInputManager.inputPressed(EngineActions.RELOAD_TEXTURE))
+        if (MainLoop.isDebug() && mainInputManager.inputPressed(EngineActions.RELOAD_TEXTURE))
             engine.resources().reloadAllOfType(TextureData.class);
     }
 
