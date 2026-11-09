@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.inputs.GamepadManager;
 import io.github.mightycode.mightylib.inputs.InputSimulation;
 import io.github.mightycode.mightylib.main.ContextManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -21,7 +22,7 @@ public class GamepadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "gamepad";
 
     public GamepadGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

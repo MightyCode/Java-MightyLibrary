@@ -26,6 +26,7 @@ import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -86,7 +87,7 @@ public final class Engine implements IView {
     // The commands of the engine, the game and the views, created by setup
     public Commands commands() { return commands; }
 
-    // The in-game console, null when disabled (EngineConfig.setConsole)
+    // The in-game console, null without access to the commands (EngineConfig.setCommandAccess)
     public Console console() { return console; }
 
     // What the console shows: program output and commands of every source; null without console nor debug mode
@@ -224,8 +225,11 @@ public final class Engine implements IView {
             return ListError.LIBRARIES_LOAD_FAIL;
         }
 
-        // Before the scenes and the game: they add their commands to it
-        commands = new Commands();
+        // Before the scenes and the game: they add their commands to it. Without access, the player has no console:
+        // only the game (api) and, in debug mode, the standard input and the debug server send commands.
+        ECommandLevel access = config.getCommandAccess();
+        commands = new Commands(config.getMaxCommandAccess(), access == null ? ECommandLevel.USER : access,
+                config.isCheatCommand());
         if (consoleLog != null)
             commands.addListener(new CommandEcho(consoleLog));
 

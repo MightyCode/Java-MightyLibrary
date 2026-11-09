@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.main.Context;
 import java.util.ArrayList;
@@ -21,7 +22,7 @@ public class WindowGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "window";
 
     public WindowGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

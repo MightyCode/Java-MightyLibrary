@@ -23,7 +23,11 @@ class CommandsTest {
         String[] lastArgs;
 
         EchoCommand(String name) {
-            super(TestCommands.Id(name));
+            this(name, ECommandLevel.USER);
+        }
+
+        EchoCommand(String name, ECommandLevel level) {
+            super(TestCommands.Id(name), level);
         }
 
         @Override
@@ -123,7 +127,7 @@ class CommandsTest {
     @Test
     void exceptionOfACommandBecomesAnError() {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("boom")) {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("boom"), ECommandLevel.USER) {
             @Override
             public CommandResult execute(String[] args) {
                 throw new IllegalStateException("broken");
@@ -260,7 +264,7 @@ class CommandsTest {
         Commands commands = newCommands();
         FakeView view = new FakeView();
         IView[] seen = new IView[1];
-        commands.register(new BaseCommand(TestCommands.Id("where")) {
+        commands.register(new BaseCommand(TestCommands.Id("where"), ECommandLevel.USER) {
             @Override
             public CommandResult execute(String[] args) {
                 seen[0] = Views.current();
@@ -285,7 +289,7 @@ class CommandsTest {
     @Test
     void commandExceptionIsTheAnswer() {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("loading")) {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("loading"), ECommandLevel.USER) {
             @Override
             public CommandResult execute(String[] args) {
                 requireLaunched(null);
@@ -315,7 +319,7 @@ class CommandsTest {
     void deferredResultCompletesTheSubmittedFuture() throws Exception {
         Commands commands = newCommands();
         CompletableFuture<CommandResult> later = new CompletableFuture<>();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("later")) {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("later"), ECommandLevel.USER) {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.later(later);
@@ -333,7 +337,7 @@ class CommandsTest {
     // Completes its first argument with fixed values
     private static class ChoiceCommand extends BaseCommand {
         ChoiceCommand(String name) {
-            super(TestCommands.Id(name));
+            super(TestCommands.Id(name), ECommandLevel.USER);
         }
 
         @Override
@@ -415,7 +419,7 @@ class CommandsTest {
     @Test
     void listenersSeeTheSourceTheCommandAndItsResult() throws Exception {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("source")) {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("source"), ECommandLevel.USER) {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.ok(commands.getCurrentSource().name());
@@ -435,7 +439,7 @@ class CommandsTest {
             }
         });
 
-        CompletableFuture<CommandResult> future = commands.submit("source", ICommandSource.Named("server"));
+        CompletableFuture<CommandResult> future = commands.submit("source", ICommandSource.Named("server", ECommandLevel.DEV));
         commands.processPendingCommands();
 
         assertEquals("server", future.get(1, TimeUnit.SECONDS).getMessage());

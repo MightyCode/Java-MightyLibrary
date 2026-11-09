@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 
 /**
  * Registry of the commands.
@@ -35,7 +36,8 @@ public class Commands {
     // Default time given to a deferred result before it becomes an error
     public static final long COMMAND_TIMEOUT_SECONDS = 30;
 
-    private static final ICommandSource STDIN = ICommandSource.Named("stdin");
+    // Only read in debug mode
+    private static final ICommandSource STDIN = ICommandSource.Named("stdin", ECommandLevel.DEV);
 
     private static class CommandRequest {
         private final String line;
@@ -61,14 +63,83 @@ public class Commands {
     // Source of the submitted command being executed (main thread), null outside
     private ICommandSource currentSource;
 
-    // One per engine (Engine.commands), with the general commands
+    // The level of the session never goes above the one of the build
+    private final ECommandLevel maxLevel;
+    private volatile ECommandLevel sessionLevel;
+
+    // Everything allowed, without the cheats command: the tests, a tool
     public Commands() {
+        this(ECommandLevel.DEV, ECommandLevel.DEV, false);
+    }
+
+    /**
+     * One per engine (Engine.commands), with the general commands.
+     * @param maxLevel     the highest level of the build (EngineConfig.setMaxCommandAccess)
+     * @param sessionLevel level of the player at the start, bounded by maxLevel (EngineConfig.setCommandAccess)
+     * @param cheatCommand adds the command "cheats on|off" when maxLevel allows the cheats
+     */
+    public Commands(ECommandLevel maxLevel, ECommandLevel sessionLevel, boolean cheatCommand) {
         pendingRequests = new ConcurrentLinkedQueue<>();
         tickTasks = new ArrayList<>();
         listeners = new CopyOnWriteArrayList<>();
 
+        this.maxLevel = maxLevel;
+        this.sessionLevel = ECommandLevel.Min(sessionLevel, maxLevel);
+
         commands = new ArrayList<>();
-        ListGeneralCommand.addCommands(registryFor(CommandOwner.ENGINE), this);
+        ListGeneralCommand.addCommands(registryFor(CommandOwner.ENGINE), this,
+                cheatCommand && maxLevel.includes(ECommandLevel.CHEAT));
+    }
+
+    // ---- Levels ----
+
+    public ECommandLevel getMaxLevel() {
+        return maxLevel;
+    }
+
+    // Level of the player (the in-game console): what it sees and what the console shows
+    public ECommandLevel getSessionLevel() {
+        return sessionLevel;
+    }
+
+    /**
+     * Main thread. Change the level of the player during the game (cheats allowed or not), bounded by the level of
+     * the build.
+     * @return the level set
+     */
+    public ECommandLevel setSessionLevel(ECommandLevel level) {
+        sessionLevel = ECommandLevel.Min(level, maxLevel);
+        return sessionLevel;
+    }
+
+    // Level of the source of the command being run or completed, DEV for a direct call (api)
+    public ECommandLevel getCurrentLevel() {
+        return getCurrentSource().level();
+    }
+
+    public boolean isVisible(BaseCommand command) {
+        return getCurrentLevel().includes(command.getLevel());
+    }
+
+    // The commands the current source sees, in registration order
+    public List<BaseCommand> getVisibleCommands() {
+        List<BaseCommand> visible = new ArrayList<>();
+        for (BaseCommand command : commands) {
+            if (isVisible(command))
+                visible.add(command);
+        }
+        return visible;
+    }
+
+    // Main thread. The code runs as if the source had sent a command (its level, its name)
+    private <T> T runAs(ICommandSource source, Supplier<T> code) {
+        ICommandSource previous = currentSource;
+        currentSource = source;
+        try {
+            return code.get();
+        } finally {
+            currentSource = previous;
+        }
     }
 
     /**
@@ -135,13 +206,7 @@ public class Commands {
             for (ICommandListener listener : listeners)
                 listener.executed(request.source, request.line);
 
-            CommandResult result;
-            currentSource = request.source;
-            try {
-                result = execute(request.line);
-            } finally {
-                currentSource = null;
-            }
+            CommandResult result = execute(request.line, request.source);
 
             CommandRequest answered = request;
             if (result.isDeferred()) {
@@ -174,10 +239,19 @@ public class Commands {
     }
 
     /**
-     * Completion of the word being typed (main thread).
+     * Completion of the word being typed (main thread), with the commands of the current source.
      * @param beginning the text of the line before the cursor
      */
     public CommandCompletion complete(String beginning) {
+        return complete(beginning, getCurrentSource());
+    }
+
+    // Completion of the word being typed (main thread), with what the source sees
+    public CommandCompletion complete(String beginning, ICommandSource source) {
+        return runAs(source, () -> completeNow(beginning));
+    }
+
+    private CommandCompletion completeNow(String beginning) {
         CommandLine.Partial partial = CommandLine.SplitPartial(beginning);
         String[] words = partial.getWords();
         String typed = partial.getLast();
@@ -215,11 +289,19 @@ public class Commands {
     }
 
     /**
-     * Main thread only.
+     * Main thread only, as the current source (api outside a command): a command run by another one keeps its level.
      * A deferred result is completed with an error after its timeout, so it always ends.
      */
     public CommandResult execute(String line) {
-        CommandResult result = executeNow(line);
+        return execute(line, getCurrentSource());
+    }
+
+    /**
+     * Main thread only, as the source (its level, its name): scripts run their lines as the source that started them.
+     * Unlike submit, the listeners are not told.
+     */
+    public CommandResult execute(String line, ICommandSource source) {
+        CommandResult result = runAs(source, () -> executeNow(line));
 
         if (result.isDeferred())
             result.getDeferred().orTimeout(result.getTimeoutSeconds(), TimeUnit.SECONDS);
@@ -299,14 +381,15 @@ public class Commands {
     }
 
     /**
-     * The commands a typed name gives: the one with this identifier (namespace:path), or those with this path.
-     * Case insensitive.
+     * The commands a typed name gives among the ones the current source sees: the one with this identifier
+     * (namespace:path), or those with this path. Case insensitive.
      */
     public List<BaseCommand> matchCommands(String name) {
         List<BaseCommand> result = new ArrayList<>();
         if (name == null)
             return result;
 
+        List<BaseCommand> visible = getVisibleCommands();
         if (name.indexOf(':') >= 0) {
             Identifier id;
             try {
@@ -316,14 +399,14 @@ public class Commands {
                 return result;
             }
 
-            for (BaseCommand command : commands) {
+            for (BaseCommand command : visible) {
                 if (command.getId().equals(id))
                     result.add(command);
             }
             return result;
         }
 
-        for (BaseCommand command : commands) {
+        for (BaseCommand command : visible) {
             if (command.getName().equalsIgnoreCase(name))
                 result.add(command);
         }
@@ -338,17 +421,18 @@ public class Commands {
 
     /**
      * What can be typed to name a command, for the completion: the paths, and the identifiers of the paths several
-     * commands share. All the identifiers once the namespace is being typed.
+     * commands share. All the identifiers once the namespace is being typed. Only the commands the source sees.
      */
     public Collection<String> commandNames(String typed) {
         boolean withNamespace = typed != null && typed.indexOf(':') >= 0;
+        List<BaseCommand> visible = getVisibleCommands();
 
         Map<String, Integer> pathCount = new HashMap<>();
-        for (BaseCommand command : commands)
+        for (BaseCommand command : visible)
             pathCount.merge(command.getName(), 1, Integer::sum);
 
         Set<String> names = new LinkedHashSet<>();
-        for (BaseCommand command : commands) {
+        for (BaseCommand command : visible) {
             if (!withNamespace)
                 names.add(command.getName());
             if (withNamespace || pathCount.get(command.getName()) > 1)
@@ -385,7 +469,7 @@ public class Commands {
                 throw new IllegalArgumentException("A command ->" + command.getId() + "<- already exists");
         }
 
-        command.setOwner(owner);
+        command.setRegistration(this, owner);
         commands.add(command);
     }
 

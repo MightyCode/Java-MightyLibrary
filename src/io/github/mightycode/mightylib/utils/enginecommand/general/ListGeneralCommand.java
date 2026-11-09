@@ -7,8 +7,11 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
 public abstract class ListGeneralCommand {
-    // The general commands, owned by the engine
-    public static void addCommands(CommandRegistry registry, Commands commands){
+    /**
+     * The general commands, owned by the engine.
+     * @param cheatCommand the command "cheats on|off" (the build allows the cheats and the game wants the command)
+     */
+    public static void addCommands(CommandRegistry registry, Commands commands, boolean cheatCommand){
         registry.register(new ReloadGenCom());
         registry.register(new WatchGenCom());
         registry.register(new HelpGenCom(commands));
@@ -29,6 +32,9 @@ public abstract class ListGeneralCommand {
         registry.register(new WaitGenCom(commands));
         registry.register(new ExecGenCom(commands));
         registry.register(new ConsoleGenCom(commands));
+
+        if (cheatCommand)
+            registry.register(new CheatsGenCom(commands));
     }
 
     // Identifier of a general command

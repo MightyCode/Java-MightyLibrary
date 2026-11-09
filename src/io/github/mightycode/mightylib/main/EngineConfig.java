@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -47,8 +48,12 @@ public class EngineConfig {
     private long watchResourcesInterval = ResourceWatcher.DEFAULT_INTERVAL_MS;
     private boolean openGLErrorCheck;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
-    // Null: enabled in debug mode only
-    private Boolean console;
+    // Commands of the player: unset (null) gives DEV in debug mode, none in release
+    private boolean commandAccessSet;
+    private ECommandLevel commandAccess;
+    // Null: DEV in debug mode, USER in release
+    private ECommandLevel maxCommandAccess;
+    private boolean cheatCommand;
     private String consoleFont = "bahnschrift";
     private int consoleLogCapacity = ConsoleLog.DEFAULT_CAPACITY;
 
@@ -172,6 +177,8 @@ public class EngineConfig {
 
     public static final String WATCH_RESOURCES_PROPERTY = "mightylib.resources.watch";
     public static final String WATCH_INTERVAL_PROPERTY = "mightylib.resources.watch.interval";
+    // none, user, cheat or dev: the access to the commands at the start (see setCommandAccess)
+    public static final String COMMAND_ACCESS_PROPERTY = "mightylib.commands.access";
 
     // Check OpenGL errors after each call (glGetError): helps to locate an error, but slows down rendering
     public EngineConfig setOpenGLErrorCheck(boolean openGLErrorCheck) {
@@ -187,11 +194,37 @@ public class EngineConfig {
     }
 
     /**
-     * In-game console (F1, F2 to put it in a window of its own): enabled by default in debug mode only.
-     * A released game can keep it (commands for cheats or administration) without the debug server.
+     * Level of the player at the start, bounded by setMaxCommandAccess; null: no access, no in-game console.
+     * By default DEV in debug mode, none in release: a released game opens the access itself (USER for a chat or
+     * the options, CHEAT...). The console opens with ² (and F1 in DEV), F2 puts it in a window of its own.
+     * The option -Dmightylib.commands.access=none|user|cheat|dev overrides it (a developer mode for the modders),
+     * still bounded by the maximum.
      */
-    public EngineConfig setConsole(boolean console) {
-        this.console = console;
+    public EngineConfig setCommandAccess(ECommandLevel level) {
+        this.commandAccessSet = true;
+        this.commandAccess = level;
+        return this;
+    }
+
+    /**
+     * Highest level of the build: the session never goes above it (Commands.setSessionLevel). By default DEV in debug
+     * mode, USER in release: a game raises it to CHEAT for cheats, to DEV for a developer mode; a competitive game
+     * keeps USER.
+     */
+    public EngineConfig setMaxCommandAccess(ECommandLevel level) {
+        if (level == null)
+            throw new IllegalArgumentException("The maximum command access is a level");
+
+        this.maxCommandAccess = level;
+        return this;
+    }
+
+    /**
+     * Add the command "cheats on|off" (level USER) letting the player switch between USER and CHEAT. Not added when
+     * the maximum is below CHEAT. Off by default: a game can also call Commands.setSessionLevel from its own settings.
+     */
+    public EngineConfig setCheatCommand(boolean cheatCommand) {
+        this.cheatCommand = cheatCommand;
         return this;
     }
 
@@ -325,7 +358,44 @@ public class EngineConfig {
     }
     public boolean isOpenGLErrorCheck() { return openGLErrorCheck; }
     public int getDebugServerPort() { return debugServerPort; }
-    public boolean isConsoleEnabled() { return console != null ? console : mode == EEngineMode.DEBUG; }
+    public ECommandLevel getMaxCommandAccess() {
+        if (maxCommandAccess != null)
+            return maxCommandAccess;
+
+        return mode == EEngineMode.DEBUG ? ECommandLevel.DEV : ECommandLevel.USER;
+    }
+
+    // Level of the player at the start, bounded by the maximum; null: no access (no console)
+    public ECommandLevel getCommandAccess() {
+        ECommandLevel access;
+        String property = System.getProperty(COMMAND_ACCESS_PROPERTY);
+        if (property != null && property.trim().equalsIgnoreCase("none")) {
+            access = null;
+        } else if (property != null) {
+            try {
+                access = ECommandLevel.Parse(property);
+            } catch (IllegalArgumentException e) {
+                System.err.println("--" + COMMAND_ACCESS_PROPERTY + " : " + e.getMessage());
+                access = defaultCommandAccess();
+            }
+        } else {
+            access = defaultCommandAccess();
+        }
+
+        return access == null ? null : ECommandLevel.Min(access, getMaxCommandAccess());
+    }
+
+    private ECommandLevel defaultCommandAccess() {
+        if (commandAccessSet)
+            return commandAccess;
+
+        return mode == EEngineMode.DEBUG ? ECommandLevel.DEV : null;
+    }
+
+    // The in-game console exists when the player has an access to the commands
+    public boolean isConsoleEnabled() { return getCommandAccess() != null; }
+
+    public boolean isCheatCommand() { return cheatCommand; }
     public String getConsoleFont() { return consoleFont; }
     public int getConsoleLogCapacity() { return consoleLogCapacity; }
     public IProjectLoading getProjectLoading() { return projectLoading; }

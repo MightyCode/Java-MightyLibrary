@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,7 +29,7 @@ public class ExecGenCom extends BaseCommand {
     private final Set<Path> running;
 
     public ExecGenCom(Commands commands) {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
         this.commands = commands;
         this.running = ConcurrentHashMap.newKeySet();
     }

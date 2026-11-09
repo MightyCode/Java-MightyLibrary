@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.resources.texture.ETextureUpload;
 import io.github.mightycode.mightylib.resources.texture.TextureUploadBench;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.Arrays;
 import java.util.Collection;
@@ -13,7 +14,7 @@ public class TextureUploadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "textureupload";
 
     public TextureUploadGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.graphics.GLContext;
 import org.json.JSONArray;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,7 +16,7 @@ public class GLGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "gl";
 
     public GLGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

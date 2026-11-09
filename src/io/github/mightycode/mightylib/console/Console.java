@@ -11,6 +11,7 @@ import io.github.mightycode.mightylib.main.WindowConfig;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2i;
@@ -20,9 +21,10 @@ import java.util.List;
 import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
 
 /**
- * The in-game console, owned by the engine and independent of the scenes: F1 opens it over the main window
- * (semi-transparent, the game sees no input meanwhile), F2 moves it to a window of its own and back.
- * It shows the console log (program output, commands of every source) and runs what is typed as commands.
+ * The in-game console, owned by the engine and independent of the scenes: ² (F1 too in DEV) opens it over the main
+ * window (semi-transparent, the game sees no input meanwhile), F2 moves it to a window of its own and back.
+ * It shows the console log lines the level of the session sees (in DEV the program output, the commands of every
+ * source) and runs what is typed as commands at that level.
  * Main thread only: update() at the beginning of each tick, displayOverlay() after the scene of the main window.
  */
 public final class Console {
@@ -30,7 +32,6 @@ public final class Console {
         CLOSED, OVERLAY, DETACHED
     }
 
-    private static final ICommandSource GAME = ICommandSource.Named("game");
     private static final float OVERLAY_HEIGHT = 0.45f;
     private static final Color4f OVERLAY_BACKGROUND = new Color4f(0f, 0f, 0f, 0.55f);
     private static final Color4f OVERLAY_INPUT_BACKGROUND = new Color4f(0f, 0f, 0f, 0.35f);
@@ -42,6 +43,8 @@ public final class Console {
     private final Engine engine;
     private final ConsoleLog log;
     private final Commands commands;
+    // What is typed in the console: the level of the session (the player)
+    private final ICommandSource source;
     private final String fontName;
     private final CommandLineEditor editor;
     private final ConsoleInput input;
@@ -67,9 +70,26 @@ public final class Console {
         this.engine = engine;
         this.log = log;
         this.commands = commands;
+        this.source = ICommandSource.Named("game", commands::getSessionLevel);
         this.fontName = fontName;
         this.editor = new CommandLineEditor();
-        this.input = new ConsoleInput(editor, commands::complete, new CompletionListing(log, this::bell));
+        this.input = new ConsoleInput(editor, line -> commands.complete(line, source),
+                new CompletionListing(log, this::bell));
+    }
+
+    // Level of the lines shown: the one of the session
+    ECommandLevel getViewerLevel() {
+        return commands.getSessionLevel();
+    }
+
+    /** Write a message of the game for the player, seen from USER on. Any thread. */
+    public void print(String text) {
+        print(text, ECommandLevel.USER);
+    }
+
+    /** Write a message of the game, seen from the level on (CHEAT: only when the cheats are on). Any thread. */
+    public void print(String text, ECommandLevel level) {
+        log.add(ConsoleLog.EType.MESSAGE, null, text, level);
     }
 
     // A Tab was received but changes nothing: the command line of the shown console flashes
@@ -216,14 +236,15 @@ public final class Console {
 
         WindowContext main = engine.contexts().getMainWindow();
         InputManager mainInputs = main.getInputManager();
+        boolean toggle = isTogglePressed(mainInputs);
 
         switch (mode) {
             case CLOSED:
-                if (mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE))
+                if (toggle)
                     open();
                 break;
             case OVERLAY:
-                if (mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE))
+                if (toggle)
                     close();
                 else if (mainInputs.inputPressed(EngineActions.DETACH_CONSOLE))
                     detach();
@@ -231,7 +252,7 @@ public final class Console {
                     type(main, overlay);
                 break;
             case DETACHED:
-                if (mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE))
+                if (toggle)
                     focus(window);
 
                 if (window != null && window.getInputManager().inputPressed(EngineActions.DETACH_CONSOLE))
@@ -240,6 +261,14 @@ public final class Console {
                     type(window, windowView.getPanel());
                 break;
         }
+    }
+
+    // The key of the player (²) opens the console at every level, the one of the developer (F1) in DEV only
+    private boolean isTogglePressed(InputManager inputs) {
+        if (inputs.inputPressed(EngineActions.TOGGLE_PLAYER_CONSOLE))
+            return true;
+
+        return commands.getSessionLevel() == ECommandLevel.DEV && inputs.inputPressed(EngineActions.TOGGLE_CONSOLE);
     }
 
     private void type(WindowContext target, ConsolePanel panel) {
@@ -255,7 +284,7 @@ public final class Console {
         for (ConsoleInput.Request request : requests) {
             switch (request.getType()) {
                 case SUBMIT:
-                    commands.submit(request.getLine(), GAME);
+                    commands.submit(request.getLine(), source);
                     break;
                 case CLOSE:
                     // Escape closes the overlay; the window is closed by F2 or its own button
@@ -287,7 +316,8 @@ public final class Console {
             if (overlay == null) {
                 overlayView = new ConsoleView(engine, main);
                 try (Views.Scope ignored = Views.enter(overlayView)) {
-                    overlay = new ConsolePanel(overlayView, log, editor, fontName, OVERLAY_BACKGROUND, OVERLAY_INPUT_BACKGROUND);
+                    overlay = new ConsolePanel(overlayView, log, this::getViewerLevel, editor, fontName,
+                            OVERLAY_BACKGROUND, OVERLAY_INPUT_BACKGROUND);
                 }
             }
 

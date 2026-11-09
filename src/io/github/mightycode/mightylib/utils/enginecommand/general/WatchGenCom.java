@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.ResourceSelection;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.Arrays;
 import java.util.Collection;
@@ -15,7 +16,7 @@ public class WatchGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "watch";
 
     public WatchGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

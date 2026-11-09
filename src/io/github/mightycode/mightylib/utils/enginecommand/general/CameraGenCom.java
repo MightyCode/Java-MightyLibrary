@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.JsonSelect;
 import org.joml.Vector2f;
@@ -24,7 +25,7 @@ import java.util.List;
 public class CameraGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "camera";
     public CameraGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

@@ -8,8 +8,11 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.lwjgl.opengl.GL11.glViewport;
 
@@ -56,8 +59,12 @@ final class ConsolePanel {
     // First character of the command line shown, when it is wider than the panel
     private int inputScroll;
 
+    private final Supplier<ECommandLevel> viewer;
+    private ECommandLevel shownLevel;
+
     // What the rows were built for
     private long builtVersion = -1;
+    private ECommandLevel builtLevel;
     private int builtScroll = -1;
     private float builtWidth = -1;
     private float builtHeight = -1;
@@ -66,10 +73,12 @@ final class ConsolePanel {
     private float builtFontSize = -1;
     private int visibleRows;
 
-    ConsolePanel(ConsoleView view, ConsoleLog log, CommandLineEditor editor, String fontName,
-                 Color4f backgroundColor, Color4f inputBackgroundColor) {
+    // viewer: the level of the player, only the lines it sees are shown
+    ConsolePanel(ConsoleView view, ConsoleLog log, Supplier<ECommandLevel> viewer, CommandLineEditor editor,
+                 String fontName, Color4f backgroundColor, Color4f inputBackgroundColor) {
         this.view = view;
         this.log = log;
+        this.viewer = viewer;
         this.editor = editor;
         this.fontName = fontName;
 
@@ -126,7 +135,8 @@ final class ConsolePanel {
         if (rowCount != visibleRows)
             resizeRows(rowCount);
 
-        if (log.version() != builtVersion || scrollOffset != builtScroll || width != builtWidth
+        shownLevel = viewer.get();
+        if (log.version() != builtVersion || shownLevel != builtLevel || scrollOffset != builtScroll || width != builtWidth
                 || height != builtHeight || x != builtX || y != builtY || fontSize != builtFontSize)
             buildRows(x, y, width, height, inputTop);
 
@@ -195,6 +205,7 @@ final class ConsolePanel {
         }
 
         builtVersion = log.version();
+        builtLevel = shownLevel;
         builtScroll = scrollOffset;
         builtWidth = width;
         builtHeight = height;
@@ -219,7 +230,7 @@ final class ConsolePanel {
      */
     private List<RowText> lastRows(float textWidth) {
         int needed = scrollOffset + visibleRows;
-        List<ConsoleLog.Line> lines = log.last(needed);
+        List<ConsoleLog.Line> lines = log.last(needed, shownLevel);
 
         // Rows from the newest, reversed at the end
         List<RowText> fromNewest = new ArrayList<>();
@@ -269,6 +280,7 @@ final class ConsolePanel {
             case COMMAND:
                 return COMMAND_COLOR;
             case RESULT:
+            case MESSAGE:
                 return RESULT_COLOR;
             default:
                 return OUT_COLOR;

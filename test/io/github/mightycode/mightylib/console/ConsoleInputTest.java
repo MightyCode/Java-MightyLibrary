@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.inputs.KeyEvent;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.TestCommands;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,7 +26,7 @@ class ConsoleInputTest {
 
     private static class Command extends BaseCommand {
         Command(String name) {
-            super(TestCommands.Id(name));
+            super(TestCommands.Id(name), ECommandLevel.USER);
         }
 
         @Override

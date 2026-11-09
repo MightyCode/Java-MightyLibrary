@@ -21,7 +21,7 @@ class CommandScriptTest {
         final List<String> calls = new ArrayList<>();
 
         RecordCommand() {
-            super(TestCommands.Id("record"));
+            super(TestCommands.Id("record"), ECommandLevel.USER);
         }
 
         @Override
@@ -175,7 +175,7 @@ class CommandScriptTest {
     @Test
     void deferredResultBecomesAnErrorAfterItsTimeout() throws Exception {
         Commands commands = new Commands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("never")) {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("never"), ECommandLevel.USER) {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.later(new CompletableFuture<>(), 1);

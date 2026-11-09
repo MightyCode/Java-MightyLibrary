@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
@@ -13,7 +14,7 @@ public class HelpGenCom extends BaseCommand {
     private final Commands commands;
 
     public HelpGenCom(Commands commands) {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER);
         this.commands = commands;
     }
 
@@ -39,12 +40,13 @@ public class HelpGenCom extends BaseCommand {
         }
 
         StringBuilder result = new StringBuilder("Available commands :");
-        for (BaseCommand command : commands.getCommands())
+        for (BaseCommand command : commands.getVisibleCommands())
             result.append("\n- ").append(command.getId()).append(" (").append(command.getOwner()).append(')');
 
         result.append("\nWrite a command by its name alone (help) unless another command has it (mightylib:help)");
         result.append("\nWrite -> [command] help <- to know how to use a command");
-        result.append("\nWrite a word with spaces between double quotes : screenshot \"my folder/a.png\"");
+        if (hasLevel(ECommandLevel.DEV))
+            result.append("\nWrite a word with spaces between double quotes : screenshot \"my folder/a.png\"");
 
         return CommandResult.ok(result.toString());
     }

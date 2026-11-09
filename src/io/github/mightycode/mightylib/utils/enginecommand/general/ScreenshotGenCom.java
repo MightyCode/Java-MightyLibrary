@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import org.json.JSONObject;
 
@@ -20,7 +21,7 @@ public class ScreenshotGenCom extends BaseCommand {
     private static final String SCALE = "scale";
 
     public ScreenshotGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER);
     }
 
     @Override
@@ -31,6 +32,8 @@ public class ScreenshotGenCom extends BaseCommand {
         int index = 1;
         File file;
         if (args.length > index && !isOptionKeyword(args[index])) {
+            // The player only writes in the default folder
+            requireLevel(ECommandLevel.DEV, args[index]);
             file = new File(args[index]);
             ++index;
         } else {

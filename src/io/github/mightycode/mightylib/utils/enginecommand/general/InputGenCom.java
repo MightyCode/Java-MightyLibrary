@@ -12,6 +12,7 @@ import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
 import io.github.mightycode.mightylib.main.ContextManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,7 +33,7 @@ public class InputGenCom extends BaseCommand {
     private static final String KEY_PREFIX = "GLFW_KEY_";
 
     public InputGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

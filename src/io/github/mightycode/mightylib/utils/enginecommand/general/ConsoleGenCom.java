@@ -5,11 +5,13 @@ import io.github.mightycode.mightylib.console.ConsoleLog;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,19 +25,29 @@ public class ConsoleGenCom extends BaseCommand {
     private static final int DEFAULT_LOG_LINES = 20;
 
     private static final List<String> MODES = Arrays.asList(
-            "open", "close", "toggle", "detach", "attach", "clear", "log", "follow");
+            "open", "close", "toggle", "detach", "attach", "clear");
+    // The whole log (program output included) is for the developer
+    private static final List<String> DEV_MODES = Arrays.asList("log", "follow");
 
     private final Commands commands;
 
     public ConsoleGenCom(Commands commands) {
-        super(ListGeneralCommand.Id(COMMAND_NAME));
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER);
         this.commands = commands;
     }
 
     @Override
     public Collection<String> completeArgument(String[] args) {
-        if (args.length == 2)
-            return MODES;
+        if (args.length == 2) {
+            if (!hasLevel(ECommandLevel.DEV))
+                return MODES;
+
+            List<String> modes = new ArrayList<>(MODES);
+            modes.addAll(DEV_MODES);
+            return modes;
+        }
+        if (!hasLevel(ECommandLevel.DEV))
+            return Collections.emptyList();
         if (args.length == 3 && args[1].equalsIgnoreCase("follow"))
             return Arrays.asList("on", "off");
         if (args.length == 3 && args[1].equalsIgnoreCase("log"))
@@ -45,13 +57,16 @@ public class ConsoleGenCom extends BaseCommand {
 
     @Override
     public CommandResult execute(String[] args) {
+        String mode = args.length > 1 ? args[1].toLowerCase() : "";
+        if (DEV_MODES.contains(mode))
+            requireLevel(ECommandLevel.DEV, args[1]);
+
         Engine engine = Views.engine();
         Console console = engine.console();
 
         if (args.length == 1)
             return status(console);
 
-        String mode = args[1].toLowerCase();
         switch (mode) {
             case "log":
                 return log(engine.consoleLog(), args);
@@ -77,7 +92,7 @@ public class ConsoleGenCom extends BaseCommand {
         }
 
         if (console == null)
-            return CommandResult.error("The console is disabled (EngineConfig.setConsole)");
+            return CommandResult.error("The console is disabled (EngineConfig.setCommandAccess)");
 
         switch (mode) {
             case "open":
@@ -104,7 +119,7 @@ public class ConsoleGenCom extends BaseCommand {
 
     private static CommandResult status(Console console) {
         if (console == null)
-            return CommandResult.error("The console is disabled (EngineConfig.setConsole)");
+            return CommandResult.error("The console is disabled (EngineConfig.setCommandAccess)");
 
         return CommandResult.ok("Console " + console.getMode().name().toLowerCase(),
                 new JSONObject().put("mode", console.getMode().name()));
