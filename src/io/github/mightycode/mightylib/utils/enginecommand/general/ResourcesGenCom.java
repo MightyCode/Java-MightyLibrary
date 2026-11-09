@@ -15,7 +15,7 @@ public class ResourcesGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "resources";
 
     public ResourcesGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

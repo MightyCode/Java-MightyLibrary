@@ -8,7 +8,7 @@ public class ExitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "exit";
 
     public ExitGenCom(){
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

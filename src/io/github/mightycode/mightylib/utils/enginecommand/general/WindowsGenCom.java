@@ -21,7 +21,7 @@ public class WindowsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "windows";
 
     public WindowsGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

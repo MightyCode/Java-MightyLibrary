@@ -25,7 +25,7 @@ class ConsoleInputTest {
 
     private static class Command extends BaseCommand {
         Command(String name) {
-            super(name);
+            super(TestCommands.Id(name));
         }
 
         @Override

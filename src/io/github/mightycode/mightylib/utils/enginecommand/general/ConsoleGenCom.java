@@ -28,7 +28,7 @@ public class ConsoleGenCom extends BaseCommand {
     private final Commands commands;
 
     public ConsoleGenCom(Commands commands) {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
         this.commands = commands;
     }
 

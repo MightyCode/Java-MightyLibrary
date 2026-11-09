@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
@@ -28,6 +29,11 @@ public abstract class ListGeneralCommand {
         registry.register(new WaitGenCom(commands));
         registry.register(new ExecGenCom(commands));
         registry.register(new ConsoleGenCom(commands));
+    }
+
+    // Identifier of a general command
+    static Identifier Id(String path) {
+        return Identifier.of(Identifier.ENGINE_NAMESPACE, path);
     }
 
     // The scenes of the context targeted by the commands (see Engine.commandWindow)

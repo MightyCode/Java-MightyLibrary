@@ -16,7 +16,7 @@ public class StatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "stats";
 
     public StatsGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

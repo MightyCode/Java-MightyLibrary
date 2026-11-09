@@ -28,7 +28,7 @@ public class ExecGenCom extends BaseCommand {
     private final Set<Path> running;
 
     public ExecGenCom(Commands commands) {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
         this.commands = commands;
         this.running = ConcurrentHashMap.newKeySet();
     }

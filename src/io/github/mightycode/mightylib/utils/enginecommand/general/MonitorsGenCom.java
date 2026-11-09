@@ -24,7 +24,7 @@ public class MonitorsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "monitors";
 
     public MonitorsGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

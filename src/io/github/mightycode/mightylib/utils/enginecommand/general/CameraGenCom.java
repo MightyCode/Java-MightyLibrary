@@ -24,7 +24,7 @@ import java.util.List;
 public class CameraGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "camera";
     public CameraGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

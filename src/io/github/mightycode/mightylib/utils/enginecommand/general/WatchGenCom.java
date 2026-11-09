@@ -15,7 +15,7 @@ public class WatchGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "watch";
 
     public WatchGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

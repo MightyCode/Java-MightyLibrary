@@ -13,7 +13,7 @@ public class TextureUploadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "textureupload";
 
     public TextureUploadGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

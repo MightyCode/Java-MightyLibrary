@@ -32,7 +32,7 @@ public class InputGenCom extends BaseCommand {
     private static final String KEY_PREFIX = "GLFW_KEY_";
 
     public InputGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

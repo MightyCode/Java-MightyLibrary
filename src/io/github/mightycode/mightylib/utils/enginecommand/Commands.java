@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.console.LogCapture;
+import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
 
 import java.io.BufferedReader;
@@ -10,7 +11,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -178,8 +184,7 @@ public class Commands {
 
         Collection<String> values = new ArrayList<>();
         if (words.length == 1) {
-            for (BaseCommand command : commands)
-                values.add(command.getName());
+            values.addAll(commandNames(typed));
         } else {
             BaseCommand command = findCommand(words[0]);
             if (command != null) {
@@ -233,11 +238,13 @@ public class Commands {
         if (args.length == 0)
             return CommandResult.error("Empty command");
 
-        BaseCommand command = findCommand(args[0]);
-
-        if (command == null)
+        List<BaseCommand> matching = matchCommands(args[0]);
+        if (matching.isEmpty())
             return CommandResult.error("No command with its name ->" + args[0] + "<-");
+        if (matching.size() > 1)
+            return CommandResult.error("Ambiguous command ->" + args[0] + "<-, write one of : " + identifiers(matching));
 
+        BaseCommand command = matching.get(0);
         if (command.checkArgumentHelp(args))
             return CommandResult.ok(command.help());
 
@@ -291,13 +298,73 @@ public class Commands {
         consoleThread.start();
     }
 
-    public BaseCommand findCommand(String name) {
-        for (BaseCommand command : commands) {
-            if (command.isCommand(name))
-                return command;
+    /**
+     * The commands a typed name gives: the one with this identifier (namespace:path), or those with this path.
+     * Case insensitive.
+     */
+    public List<BaseCommand> matchCommands(String name) {
+        List<BaseCommand> result = new ArrayList<>();
+        if (name == null)
+            return result;
+
+        if (name.indexOf(':') >= 0) {
+            Identifier id;
+            try {
+                id = Identifier.parse(name.toLowerCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                // Not a valid identifier: nothing matches
+                return result;
+            }
+
+            for (BaseCommand command : commands) {
+                if (command.getId().equals(id))
+                    result.add(command);
+            }
+            return result;
         }
 
-        return null;
+        for (BaseCommand command : commands) {
+            if (command.getName().equalsIgnoreCase(name))
+                result.add(command);
+        }
+        return result;
+    }
+
+    // The only command a typed name gives, null if unknown or ambiguous
+    public BaseCommand findCommand(String name) {
+        List<BaseCommand> matching = matchCommands(name);
+        return matching.size() == 1 ? matching.get(0) : null;
+    }
+
+    /**
+     * What can be typed to name a command, for the completion: the paths, and the identifiers of the paths several
+     * commands share. All the identifiers once the namespace is being typed.
+     */
+    public Collection<String> commandNames(String typed) {
+        boolean withNamespace = typed != null && typed.indexOf(':') >= 0;
+
+        Map<String, Integer> pathCount = new HashMap<>();
+        for (BaseCommand command : commands)
+            pathCount.merge(command.getName(), 1, Integer::sum);
+
+        Set<String> names = new LinkedHashSet<>();
+        for (BaseCommand command : commands) {
+            if (!withNamespace)
+                names.add(command.getName());
+            if (withNamespace || pathCount.get(command.getName()) > 1)
+                names.add(command.getId().toString());
+        }
+
+        return names;
+    }
+
+    private static String identifiers(List<BaseCommand> commands) {
+        List<String> ids = new ArrayList<>();
+        for (BaseCommand command : commands)
+            ids.add(command.getId().toString());
+        Collections.sort(ids);
+
+        return String.join(", ", ids);
     }
 
     // In registration order, read only
@@ -307,13 +374,16 @@ public class Commands {
 
     /**
      * Main thread. The command belongs to the owner: removed with removeOwnedBy, run under its view.
-     * @throws IllegalArgumentException if a command with the same name already exists, or the command is registered
+     * @throws IllegalArgumentException if a command with the same identifier already exists, or the command is
+     *                                  registered
      */
     public void register(BaseCommand command, CommandOwner owner) {
         if (owner == null)
             throw new IllegalArgumentException("A command needs an owner");
-        if (findCommand(command.getName()) != null)
-            throw new IllegalArgumentException("A command named ->" + command.getName() + "<- already exists");
+        for (BaseCommand existing : commands) {
+            if (existing.getId().equals(command.getId()))
+                throw new IllegalArgumentException("A command ->" + command.getId() + "<- already exists");
+        }
 
         command.setOwner(owner);
         commands.add(command);

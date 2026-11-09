@@ -21,7 +21,7 @@ public class GamepadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "gamepad";
 
     public GamepadGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

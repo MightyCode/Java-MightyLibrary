@@ -19,7 +19,7 @@ public class WaitGenCom extends BaseCommand {
     private final Commands commands;
 
     public WaitGenCom(Commands commands) {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
         this.commands = commands;
     }
 

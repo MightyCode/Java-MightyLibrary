@@ -12,7 +12,7 @@ import java.util.Arrays;
 public class SceneGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "scene";
     public SceneGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME));
     }
 
     @Override

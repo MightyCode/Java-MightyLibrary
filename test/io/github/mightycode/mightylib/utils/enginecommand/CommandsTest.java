@@ -23,7 +23,7 @@ class CommandsTest {
         String[] lastArgs;
 
         EchoCommand(String name) {
-            super(name);
+            super(TestCommands.Id(name));
         }
 
         @Override
@@ -116,14 +116,14 @@ class CommandsTest {
         assertNull(echo.lastArgs);
 
         assertEquals("echo help", commands.execute("help echo").getMessage());
-        assertTrue(commands.execute("help").getMessage().contains("- echo (game)"));
-        assertTrue(commands.execute("help").getMessage().contains("- help (engine)"));
+        assertTrue(commands.execute("help").getMessage().contains("- test:echo (game)"));
+        assertTrue(commands.execute("help").getMessage().contains("- mightylib:help (engine)"));
     }
 
     @Test
     void exceptionOfACommandBecomesAnError() {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand("boom") {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("boom")) {
             @Override
             public CommandResult execute(String[] args) {
                 throw new IllegalStateException("broken");
@@ -136,12 +136,13 @@ class CommandsTest {
     }
 
     @Test
-    void duplicateNameIsRefused() {
+    void duplicateIdentifierIsRefused() {
         Commands commands = newCommands();
         TestCommands.add(commands, new EchoCommand("echo"));
 
         assertThrows(IllegalArgumentException.class, () -> TestCommands.add(commands, new EchoCommand("echo")));
-        assertThrows(IllegalArgumentException.class, () -> TestCommands.add(commands, new EchoCommand("help")));
+        // Same path, another namespace: accepted
+        TestCommands.add(commands, new EchoCommand("help"));
     }
 
     @Test
@@ -149,6 +150,52 @@ class CommandsTest {
         assertThrows(IllegalArgumentException.class, () -> new EchoCommand(""));
         assertThrows(IllegalArgumentException.class, () -> new EchoCommand(" echo"));
         assertThrows(IllegalArgumentException.class, () -> new EchoCommand("a\"b"));
+        assertThrows(IllegalArgumentException.class, () -> new EchoCommand("Echo"));
+    }
+
+    @Test
+    void commandIsFoundByItsPathOrItsIdentifier() {
+        Commands commands = newCommands();
+        TestCommands.add(commands, new EchoCommand("echo"));
+
+        assertEquals("echo", commands.execute("echo").getMessage());
+        assertEquals("ECHO", commands.execute("ECHO").getMessage());
+        assertEquals("test:echo", commands.execute("test:echo").getMessage());
+        assertEquals("Test:Echo", commands.execute("Test:Echo").getMessage());
+        assertFalse(commands.execute("other:echo").isSuccess());
+        assertFalse(commands.execute("test:").isSuccess());
+        assertTrue(commands.execute("mightylib:help").isSuccess());
+    }
+
+    @Test
+    void ambiguousPathIsRefusedWithTheIdentifiers() {
+        Commands commands = newCommands();
+        TestCommands.add(commands, new EchoCommand("help"));
+
+        CommandResult result = commands.execute("help");
+        assertFalse(result.isSuccess());
+        assertEquals("Ambiguous command ->help<-, write one of : mightylib:help, test:help", result.getMessage());
+        assertNull(commands.findCommand("help"));
+
+        assertEquals("test:help", commands.execute("test:help").getMessage());
+        assertTrue(commands.execute("mightylib:help").getMessage().startsWith("Available commands"));
+        assertTrue(commands.execute("mightylib:help test:help").isSuccess());
+    }
+
+    @Test
+    void completionAddsTheIdentifiersOfAmbiguousPaths() {
+        Commands commands = newCommands();
+        TestCommands.add(commands, new EchoCommand("zzunique"));
+        TestCommands.add(commands, new EchoCommand("help"));
+
+        assertEquals(List.of("zzunique"), commands.complete("zz").getCandidates());
+        // Typed by its path, an ambiguous command is refused: the identifiers are proposed with the paths
+        List<String> all = commands.complete("").getCandidates();
+        assertTrue(all.containsAll(List.of("help", "mightylib:help", "test:help", "zzunique")));
+        assertFalse(all.contains("test:zzunique"));
+        assertFalse(all.contains("mightylib:stats"));
+        assertEquals(List.of("test:help", "test:zzunique"), commands.complete("test:").getCandidates());
+        assertTrue(commands.complete("mightylib:help ").getCandidates().contains("help"));
     }
 
     @Test
@@ -213,7 +260,7 @@ class CommandsTest {
         Commands commands = newCommands();
         FakeView view = new FakeView();
         IView[] seen = new IView[1];
-        commands.register(new BaseCommand("where") {
+        commands.register(new BaseCommand(TestCommands.Id("where")) {
             @Override
             public CommandResult execute(String[] args) {
                 seen[0] = Views.current();
@@ -238,7 +285,7 @@ class CommandsTest {
     @Test
     void commandExceptionIsTheAnswer() {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand("loading") {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("loading")) {
             @Override
             public CommandResult execute(String[] args) {
                 requireLaunched(null);
@@ -268,7 +315,7 @@ class CommandsTest {
     void deferredResultCompletesTheSubmittedFuture() throws Exception {
         Commands commands = newCommands();
         CompletableFuture<CommandResult> later = new CompletableFuture<>();
-        TestCommands.add(commands, new BaseCommand("later") {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("later")) {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.later(later);
@@ -286,7 +333,7 @@ class CommandsTest {
     // Completes its first argument with fixed values
     private static class ChoiceCommand extends BaseCommand {
         ChoiceCommand(String name) {
-            super(name);
+            super(TestCommands.Id(name));
         }
 
         @Override
@@ -368,7 +415,7 @@ class CommandsTest {
     @Test
     void listenersSeeTheSourceTheCommandAndItsResult() throws Exception {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand("source") {
+        TestCommands.add(commands, new BaseCommand(TestCommands.Id("source")) {
             @Override
             public CommandResult execute(String[] args) {
                 return CommandResult.ok(commands.getCurrentSource().name());
