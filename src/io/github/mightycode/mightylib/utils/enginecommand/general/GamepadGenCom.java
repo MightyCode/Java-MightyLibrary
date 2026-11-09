@@ -11,11 +11,69 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 public class GamepadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "gamepad";
 
     public GamepadGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        GamepadManager manager = Views.engine().contexts().getGamepadManager();
+
+        if (args.length == 2) {
+            List<String> values = new ArrayList<>(Arrays.asList(
+                    "list", "connect", "disconnect", "assign", "unassign", "autoassign", "mapping"));
+            values.addAll(connectedIds(manager));
+            return values;
+        }
+
+        String mode = args[1].toLowerCase();
+        if (args.length == 3) {
+            switch (mode) {
+                case "disconnect":
+                case "assign":
+                case "unassign":
+                    return connectedIds(manager);
+                case "autoassign":
+                    return Arrays.asList("on", "off");
+                default:
+                    // gamepad ID ...
+                    return Arrays.asList("button", "hold", "release", "axis");
+            }
+        }
+
+        if (args.length == 4) {
+            switch (args[2].toLowerCase()) {
+                case "button":
+                case "hold":
+                case "release":
+                    return Gamepad.buttonNames();
+                case "axis":
+                    return Gamepad.axisNames();
+                default:
+                    return Collections.emptyList();
+            }
+        }
+
+        if (args.length == 5 && args[2].equalsIgnoreCase("axis"))
+            return Arrays.asList("hold", "release");
+
+        return Collections.emptyList();
+    }
+
+    private static List<String> connectedIds(GamepadManager manager) {
+        List<String> ids = new ArrayList<>();
+        for (Gamepad gamepad : manager.getConnectedGamepads())
+            ids.add(String.valueOf(gamepad.getId()));
+        return ids;
     }
 
     @Override

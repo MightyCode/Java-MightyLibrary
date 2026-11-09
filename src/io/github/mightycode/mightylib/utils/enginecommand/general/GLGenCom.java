@@ -7,6 +7,8 @@ import org.json.JSONArray;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Collection;
+import java.util.Collections;
 import org.json.JSONObject;
 
 public class GLGenCom extends BaseCommand {
@@ -14,6 +16,11 @@ public class GLGenCom extends BaseCommand {
 
     public GLGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        return args.length == 2 ? Collections.singletonList("summary") : Collections.emptyList();
     }
 
     @Override

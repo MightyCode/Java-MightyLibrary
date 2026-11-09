@@ -13,6 +13,12 @@ import org.joml.Vector3f;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Inspect and drive the cameras registered in the current scene (Scene.registerCamera), by id or name.
  */
@@ -23,6 +29,30 @@ public class CameraGenCom extends BaseCommand {
     public CameraGenCom(SceneManager sceneManager) {
         super(COMMAND_NAME);
         this.sceneManager = sceneManager;
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        Scene scene = sceneManager.commandTarget().getCurrentScene();
+        if (scene == null)
+            return Collections.emptyList();
+
+        if (args.length == 2) {
+            List<String> names = new ArrayList<>();
+            for (Camera camera : scene.getCameras())
+                names.add(camera.getName());
+            return names;
+        }
+
+        if (args.length == 3) {
+            Camera camera = scene.findCamera(args[1]);
+            if (camera instanceof Camera3D)
+                return Arrays.asList("move", "lookat");
+            if (camera instanceof Camera2D)
+                return Arrays.asList("move", "zoom", "rotation");
+        }
+
+        return Collections.emptyList();
     }
 
     @Override

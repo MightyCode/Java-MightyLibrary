@@ -2,8 +2,10 @@ package io.github.mightycode.mightylib.inputs;
 
 import org.joml.Vector2f;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -42,6 +44,17 @@ public class Gamepad {
 
     public static String axisName(int axis) {
         return AXIS_NAMES[checkAxis(axis)];
+    }
+
+    // Every name accepted by parseButton
+    public static List<String> buttonNames() {
+        List<String> names = new ArrayList<>(Arrays.asList(BUTTON_NAMES));
+        names.addAll(Arrays.asList(PLAYSTATION_BUTTON_NAMES));
+        return names;
+    }
+
+    public static List<String> axisNames() {
+        return Arrays.asList(AXIS_NAMES);
     }
 
     // Name of buttonName (case insensitive), CROSS/CIRCLE/SQUARE/TRIANGLE, or the id

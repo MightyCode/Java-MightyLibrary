@@ -19,6 +19,10 @@ import org.lwjgl.glfw.GLFW;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -342,6 +346,77 @@ public class InputGenCom extends BaseCommand {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Unknown key ->" + text + "<-, use the end of a GLFW_KEY_ name (ENTER, A, LEFT_SHIFT...) or a number");
         }
+    }
+
+    private static final List<String> MODES = Arrays.asList(
+            "list", "state", "press", "hold", "release", "mouse", "click", "scroll", "key", "axis", "text");
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        InputManager inputManager = Views.engine().commandWindow().getInputManager();
+
+        if (args.length == 2) {
+            List<String> values = new ArrayList<>(MODES);
+            values.addAll(actionNames(inputManager));
+            return values;
+        }
+
+        String mode = args[1].toLowerCase();
+        switch (mode) {
+            case "press":
+            case "hold":
+            case "release":
+                return args.length == 3 ? actionNames(inputManager) : Collections.emptyList();
+            case "click":
+            case "mouse":
+                if (args.length == 3)
+                    return mode.equals("click") ? Arrays.asList("left", "right", "middle") : Arrays.asList("hold", "release");
+                // input mouse hold|release [button] ; the other words are coordinates
+                boolean buttonExpected = mode.equals("mouse") && args.length == 4
+                        && (args[2].equalsIgnoreCase("hold") || args[2].equalsIgnoreCase("release"));
+                return buttonExpected ? Arrays.asList("left", "right", "middle") : Collections.emptyList();
+            case "key":
+                if (args.length == 3) {
+                    List<String> values = new ArrayList<>(keyNames());
+                    values.add("hold");
+                    values.add("release");
+                    return values;
+                }
+                return args.length == 4 && (args[2].equalsIgnoreCase("hold") || args[2].equalsIgnoreCase("release"))
+                        ? keyNames() : Collections.emptyList();
+            case "axis":
+                if (args.length == 3) {
+                    List<String> values = new ArrayList<>();
+                    for (AxisInput axis : inputManager.getAxes()) {
+                        values.add(axis.axis().toString());
+                        values.add(axis.axis().identifier().path());
+                    }
+                    return values;
+                }
+                return args.length == 4 ? Arrays.asList("hold", "release") : Collections.emptyList();
+            default:
+                return Collections.emptyList();
+        }
+    }
+
+    // Full identifiers and their paths alone (accepted when unique)
+    private static List<String> actionNames(InputManager inputManager) {
+        List<String> names = new ArrayList<>();
+        for (ActionInput action : inputManager.getActions()) {
+            names.add(action.action().toString());
+            names.add(action.action().identifier().path());
+        }
+        return names;
+    }
+
+    // Names accepted by parseKey
+    static List<String> keyNames() {
+        List<String> names = new ArrayList<>();
+        for (Field field : GLFW.class.getFields()) {
+            if (field.getName().startsWith(KEY_PREFIX) && !field.getName().equals("GLFW_KEY_LAST") && field.getType() == int.class)
+                names.add(field.getName().substring(KEY_PREFIX.length()));
+        }
+        return names;
     }
 
     static String keyName(int key) {

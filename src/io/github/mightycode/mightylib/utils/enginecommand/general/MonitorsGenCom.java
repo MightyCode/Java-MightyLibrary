@@ -9,6 +9,9 @@ import io.github.mightycode.mightylib.main.monitors.Monitors;
 import io.github.mightycode.mightylib.main.monitors.VideoMode;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -22,6 +25,11 @@ public class MonitorsGenCom extends BaseCommand {
 
     public MonitorsGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        return args.length == 2 ? Arrays.asList("full", "modes") : Collections.emptyList();
     }
 
     @Override

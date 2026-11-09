@@ -4,6 +4,9 @@ import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import io.github.mightycode.mightylib.utils.enginecommand.JsonSelect;
 import org.json.JSONObject;
 
@@ -14,6 +17,16 @@ public class StatsGenCom extends BaseCommand {
 
     public StatsGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        // stats reset, or fields of the statistics (the first level, deeper ones are written with dots)
+        List<String> values = new ArrayList<>(EngineStats.toJson().keySet());
+        values.add("glObjects");
+        if (args.length == 2)
+            values.add("reset");
+        return values;
     }
 
     @Override

@@ -7,12 +7,24 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.ResourceSelection;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 public class WatchGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "watch";
 
     public WatchGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        if (args.length == 2)
+            return Arrays.asList("status", "off", "mode");
+        if (args.length == 3 && args[1].equalsIgnoreCase("mode"))
+            return Arrays.asList("poll", "service");
+        return Collections.emptyList();
     }
 
     @Override

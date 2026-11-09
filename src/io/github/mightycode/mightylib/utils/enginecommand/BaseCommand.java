@@ -1,5 +1,8 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import java.util.Collection;
+import java.util.Collections;
+
 public abstract class BaseCommand {
     private final String commandName;
 
@@ -27,6 +30,16 @@ public abstract class BaseCommand {
     // Help to know how use the command
     public String help(){
         return "Help for " + commandName + " command";
+    }
+
+    /**
+     * Values the word being typed can take, for the completion (Tab in the console). Main thread.
+     * Unfiltered values are fine: they are filtered by what is typed.
+     * @param args Words typed, args[0] is the name of the command and the last one is the word being completed
+     *             (unfinished, possibly empty)
+     */
+    public Collection<String> completeArgument(String[] args) {
+        return Collections.emptyList();
     }
 
     public boolean checkArgumentHelp(String[] commands){

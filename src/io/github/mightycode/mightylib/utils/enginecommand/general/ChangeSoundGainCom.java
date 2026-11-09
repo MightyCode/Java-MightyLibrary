@@ -5,12 +5,19 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Collection;
+import java.util.Collections;
 
 public class ChangeSoundGainCom extends BaseCommand {
     public static final String COMMAND_NAME = "changegain";
 
     public ChangeSoundGainCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        return args.length == 2 ? Collections.singletonList("list") : Collections.emptyList();
     }
 
     @Override

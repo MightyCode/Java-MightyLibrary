@@ -279,6 +279,12 @@ public class Resources {
         return resources;
     }
 
+    // Names of the declared data of a type (loaded or not), empty for an unknown type
+    public List<String> getResourceNames(Class<? extends DataType> type) {
+        Map<String, DataType> ofType = resources.get(type);
+        return ofType == null ? new ArrayList<>() : new ArrayList<>(ofType.keySet());
+    }
+
     // ---- Reconciliation, main thread only ----
 
     void runOnMainThread(Runnable task) {
