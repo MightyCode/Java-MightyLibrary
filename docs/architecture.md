@@ -8,12 +8,13 @@ src/io/github/mightycode/
     scenes/        # Scene, SceneManager, SceneManagerInterface, TemplateSceneLoading, caméras 2D/3D
     resources/     # Resources (pipeline, une instance par Engine), DataType, ResourceLoader, batchs
     graphics/      # GLResources, GLElement, renderer/ (Shape, Renderer, _2D, _3D), shader/, text/, GUI/, lightning/
-    inputs/        # InputManager (actions), KeyboardManager, MouseManager, dispositions clavier
+    inputs/        # InputRegistry (actions et axes), InputManager (liaisons), KeyboardManager, MouseManager, dispositions clavier
+    registry/      # Identifier (namespace:path)
     sounds/        # SoundManager (OpenAL, une instance par Engine), arbre de gains
     physics/       # collisions maison, tweenings, B2Utils (JBox2D)
     algorithms/    # A*, Dijkstra, graphes, Wave Function Collapse
     utils/         # commandes, JSON, maths, Logger
-  mightylibdemo/   # démo : Main, ProjectLoading, ActionId, scènes de démo
+  mightylibdemo/   # démo : Main, ProjectLoading, ActionId, AxisId, scènes de démo
 resources/         # assets ; batchs/*.batch = groupes de ressources
 ```
 
@@ -110,14 +111,14 @@ Pas fixe découplé : chaque itération fait **soit** un tick (`Engine.update` :
 - 2D/3D décidé par le shader (`isDimension2DShader`), qui bascule le depth test à chaque dessin.
 
 ## Entrées
-- IDs d'action `int` statiques (`InputManager.getAndIncrementId()`, 0 et 1 réservés : `COMMAND`, `RELOAD_TEXTURE`). Projet : `ActionId` + liaisons dans `ProjectLoading.contextLoading`. Disposition clavier : `EngineConfig.setKeyboardLanguage()` (QWERTY par défaut, et pour un contexte créé sans `WindowCreationInfo`).
+- **Actions et axes enregistrés** : `InputRegistry.action("demo:move_right")` / `axis(...)` renvoie une poignée typée (`InputAction` / `InputAxis`) portant un `Identifier` unique `namespace:path` (`registry/`, minuscules `[a-z0-9_.-]`, `/` permis dans le chemin) ; un identifiant déjà pris (action ou axe) est refusé. Registre statique, global à toutes les fenêtres, rempli à l'initialisation des classes de constantes (pas de phase ni de gel : cf. `later.md`). Moteur : `EngineActions.OPEN_COMMAND` (F1) et `RELOAD_TEXTURE` (F5), espace `mightylib`, liées dans tout `InputManager`. Projet : `ActionId`/`AxisId` + liaisons `ActionInput(action, IAction)` dans `ProjectLoading.contextLoading`. Toute l'API (`getState`, `getValue`, `isInput`, `getAxis`, GUI, composants caméra) prend les poignées ; `null` = pas d'action. Recherche par texte (`findAction`/`findAxis`, commandes) : identifiant complet, ou chemin seul sans casse s'il est unique ; l'`index()` interne n'est valable que pendant le lancement. Disposition clavier : `EngineConfig.setKeyboardLanguage()` (QWERTY par défaut, et pour un contexte créé sans `WindowCreationInfo`).
 - **Manettes** : un `GamepadManager` commun (`Engine.contexts().getGamepadManager()`, ou `InputManager.getGamepadManager()`), mis à jour par `ContextManager.postUpdate` avant les entrées des fenêtres (chaque fenêtre a son `InputManager`) ; GLFW (`glfwGetGamepadState`, disposition Xbox, SDL_GameControllerDB intégrée, `addMappings`) derrière `IGamepadSource` (fausse source en tests).
   - Emplacements 0–15 = joysticks GLFW, 16+ = 8 virtuelles. Connexions appliquées dans `postUpdate` (ensemble stable par tick ; `connectedThisTick()`/`disconnectedThisTick()` durent un tick).
   - Joueurs : plus petit libre, repris à la reconnexion s'il est libre ; `setAutoAssign(false)` + `assignPlayer` pour « appuyez pour rejoindre ». Sans mapping : connectée sans joueur.
   - `Gamepad` : ids GLFW ; sticks -1..1 (y vers le bas), zone morte radiale remise à l'échelle ; gâchettes 0..1.
   - Actions : `InputGamepadButton(bouton[, joueur])`, `InputGamepadAxis(axe, POSITIVE|NEGATIVE[, seuil, joueur])`, `InputSimple(bouton, EInputType.Controller)` ; sans joueur = `ANY_PLAYER`.
 - **Valeur** : `InputManager.getValue(action)` 0..1 (1 pour touche/bouton/simulé, progressive pour `InputGamepadAxis` sans seuil ; `InputOr` = max, `InputAnd` = min). Déplacement : `getValue(droite) - getValue(gauche)`, longueur limitée à 1 (cf. `MovingCameraComponent`).
-- **Axes** (`AxisInput(id, nom, IAxis)`, `inputManager.init(actions, axes)`, `getAxis(id)`) : valeur signée non bornée, sens donné par la liaison ; ids du même compteur (cf. `AxisId`).
+- **Axes** (`AxisInput(axe, IAxis)`, `inputManager.init(actions, axes)`, `getAxis(axe)`) : valeur signée non bornée, sens donné par la liaison (cf. `AxisId`).
   - Liaisons : `AxisGamepad(axe[, joueur])`, `AxisMouse(X|Y|SCROLL_X|SCROLL_Y)` (pixels de fenêtre pendant le tick, `MouseManager.deltaX/Y`, indépendant de la taille virtuelle), `AxisButtons(nég, pos)` (sans double comptage via `InputOr`), `AxisSum(...)`.
   - Réglages, dans l'ordre : `curve(exposant)` (signe gardé ; 2 = précis près du centre), `scale(facteur)` (négatif = inversion), `perSecond()` (× durée du tick : vitesse → déplacement). `scale` sur `AxisSum` = sensibilité commune : regard de la démo = `AxisSum(souris px, stick × 3000 px/s).scale(0.05 °/px)`.
 - **Caméra 3D** : `Camera3D` ne lit pas les entrées (`rotate(dYaw, dPitch)` en degrés, droite et haut positifs, tangage ±89°). `FreeCamera3DComponent` (`addUpdatable`) la pilote par axes (déplacement -1..1 × `camera.getSpeed()`, regard en degrés, × `quickFactor` avec `QuickSpeed`) et met la vue à jour avant le code de la scène ; `setLookLocked` bloque le regard.

@@ -5,30 +5,21 @@ import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
 import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
- * This class is the input manager.
+ * Inputs of a window : the bindings of the registered actions and axes (InputRegistry), read by handle.
  *
  * @author MightyCode
  * @version 1.0
  */
 public class InputManager {
-
-    private static final int NUMBER_LIBRARY_INPUTS = 2;
-
-    public static final int COMMAND = 0;
-    public static final int RELOAD_TEXTURE = 1;
-
-    private static int CURRENT_ID = NUMBER_LIBRARY_INPUTS;
-
-    public static int getAndIncrementId(){
-        return CURRENT_ID++;
-    }
 
     private final KeyboardManager keyManager;
 
@@ -41,11 +32,10 @@ public class InputManager {
     private final GamepadManager gamepadManager;
     public GamepadManager getGamepadManager() { return gamepadManager; }
 
-    private final Map<Integer, ActionInput> actionConfigurations;
+    private final Map<InputAction, ActionInput> actionConfigurations;
 
-    // Simulated actions (commands, scripts), combined with the real inputs
+    // Simulated actions (commands, scripts), combined with the real inputs, by InputAction.index()
     private final InputSimulation simulation;
-    public InputSimulation getSimulation() { return simulation; }
 
 
     /**
@@ -76,26 +66,22 @@ public class InputManager {
         initLibraryInputs();
 
         for (ActionInput actionInput : actionInputs) {
-            this.actionConfigurations.put(actionInput.actionId(), actionInput);
+            this.actionConfigurations.put(actionInput.action(), actionInput);
         }
 
         for (AxisInput axisInput : axisInputs) {
-            if (actionConfigurations.containsKey(axisInput.axisId()))
-                throw new IllegalArgumentException("Id " + axisInput.axisId() + " of the axis " + axisInput.axisName() + " is already an action");
-
-            this.axisConfigurations.put(axisInput.axisId(), axisInput);
+            this.axisConfigurations.put(axisInput.axis(), axisInput);
         }
     }
 
     /// Axes : signed values, not bounded, their meaning is given by their bindings (AxisBinding)
 
-    private final Map<Integer, AxisInput> axisConfigurations;
-    // Simulated axes (commands, scripts) : the value replaces the real one while it is held
+    private final Map<InputAxis, AxisInput> axisConfigurations;
+    // Simulated axes (commands, scripts) : the value replaces the real one while it is held, by InputAxis.index()
     private final InputSimulation axisSimulation;
     private final Map<Integer, Float> pendingAxisValues;
     private final Map<Integer, Float> simulatedAxisValues;
 
-    // Value of the axis for this tick, 0 if unknown
     // A blocked manager (its window waits for a modal window) answers nothing pressed, no value, no axis
     private boolean blocked;
 
@@ -107,60 +93,64 @@ public class InputManager {
 
     public boolean isBlocked() { return blocked; }
 
-    public float getAxis(int axisId){
+    // Value of the axis for this tick, 0 if not bound
+    public float getAxis(InputAxis axis){
         if (blocked)
             return 0;
 
-        AxisInput axisInput = axisConfigurations.get(axisId);
+        AxisInput axisInput = axisConfigurations.get(axis);
         if (axisInput == null)
             return 0;
 
-        if (axisSimulation.getState(axisId))
-            return simulatedAxisValues.getOrDefault(axisId, 0f);
+        if (axisSimulation.getState(axis.index()))
+            return simulatedAxisValues.getOrDefault(axis.index(), 0f);
 
-        return axisInput.axis().getAxis(this);
+        return axisInput.axisBinding().getAxis(this);
     }
 
     // Set the axis to a value during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
-    public void simulateAxis(int axisId, float value, int ticks){
-        if (!axisConfigurations.containsKey(axisId))
-            throw new IllegalArgumentException("Unknown axis " + axisId);
+    public void simulateAxis(InputAxis axis, float value, int ticks){
+        if (!axisConfigurations.containsKey(axis))
+            throw new IllegalArgumentException("Axis " + axis + " is not bound");
 
-        axisSimulation.press(axisId, ticks);
-        pendingAxisValues.put(axisId, value);
+        axisSimulation.press(axis.index(), ticks);
+        pendingAxisValues.put(axis.index(), value);
     }
 
-    public void simulateAxisRelease(int axisId){
-        axisSimulation.release(axisId);
+    public void simulateAxisRelease(InputAxis axis){
+        axisSimulation.release(axis.index());
     }
 
-    // Find a configured axis by its name (case insensitive) or its numeric id, null if unknown
-    public AxisInput findAxis(String nameOrId) {
-        for (AxisInput axisInput : axisConfigurations.values()) {
-            if (axisInput.axisName().equalsIgnoreCase(nameOrId))
-                return axisInput;
+    // Bound axes matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    public List<AxisInput> matchAxes(String name) {
+        List<AxisInput> result = new ArrayList<>();
+        for (InputAxis axis : InputRegistry.matchAxes(name)) {
+            AxisInput axisInput = axisConfigurations.get(axis);
+            if (axisInput != null)
+                result.add(axisInput);
         }
+        return result;
+    }
 
-        try {
-            return axisConfigurations.get(Integer.parseInt(nameOrId));
-        } catch (NumberFormatException e) {
-            return null;
-        }
+    // The only bound axis matching the name, null if unknown or ambiguous
+    public AxisInput findAxis(String name) {
+        List<AxisInput> axes = matchAxes(name);
+        return axes.size() == 1 ? axes.get(0) : null;
     }
 
     public Collection<AxisInput> getAxes() {
         return axisConfigurations.values();
     }
 
-    public boolean getState(int inputID){
+    public boolean getState(InputAction action){
         if (blocked)
             return false;
 
-        ActionInput actionInput = actionConfigurations.get(inputID);
+        ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return false;
 
-        return actionInput.getState(this) || simulation.getState(inputID);
+        return actionInput.getState(this) || simulation.getState(action.index());
     }
 
 
@@ -168,77 +158,94 @@ public class InputManager {
      * Strength of the action, from 0 to 1 : 1 when a key or a button is held (or the action is simulated),
      * progressive for a gamepad axis. For a speed, a movement : value * maxSpeed.
      */
-    public float getValue(int inputID){
+    public float getValue(InputAction action){
         if (blocked)
             return 0;
 
-        ActionInput actionInput = actionConfigurations.get(inputID);
+        ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return 0;
 
-        return simulation.getState(inputID) ? 1 : actionInput.getValue(this);
+        return simulation.getState(action.index()) ? 1 : actionInput.getValue(this);
     }
 
 
-    public boolean inputPressed(int inputId){
+    public boolean inputPressed(InputAction action){
         if (blocked)
             return false;
 
-        ActionInput actionInput = actionConfigurations.get(inputId);
+        ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return false;
 
-        return actionInput.actionPressed(this) || simulation.pressed(inputId);
+        return actionInput.actionPressed(this) || simulation.pressed(action.index());
     }
 
 
-    public boolean inputReleased(int inputID){
+    public boolean inputReleased(InputAction action){
         if (blocked)
             return false;
 
-        ActionInput actionInput = actionConfigurations.get(inputID);
+        ActionInput actionInput = actionConfigurations.get(action);
         if (actionInput == null)
             return false;
 
-        return actionInput.actionReleased(this) || simulation.released(inputID);
+        return actionInput.actionReleased(this) || simulation.released(action.index());
     }
 
     /** Same as getState (Press, Release) or inputPressed/inputReleased (Pressed, Released), chosen by the enum. */
-    public boolean isInput(int inputID, EInputState state) {
-        // An unknown action is never in any state
-        if (!actionConfigurations.containsKey(inputID))
+    public boolean isInput(InputAction action, EInputState state) {
+        // An action not bound is never in any state
+        if (action == null || !actionConfigurations.containsKey(action))
             return false;
 
         switch (state) {
             case Press:
-                return getState(inputID);
+                return getState(action);
             case Release:
-                return !getState(inputID);
+                return !getState(action);
             case Pressed:
-                return inputPressed(inputID);
+                return inputPressed(action);
             case Released:
-                return inputReleased(inputID);
+                return inputReleased(action);
             default:
                 return false;
         }
     }
 
-    // Find a configured action by its name (case insensitive) or its numeric id, null if unknown
-    public ActionInput findAction(String nameOrId) {
-        for (ActionInput actionInput : actionConfigurations.values()) {
-            if (actionInput.actionName().equalsIgnoreCase(nameOrId))
-                return actionInput;
+    // Bound actions matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    public List<ActionInput> matchActions(String name) {
+        List<ActionInput> result = new ArrayList<>();
+        for (InputAction action : InputRegistry.matchActions(name)) {
+            ActionInput actionInput = actionConfigurations.get(action);
+            if (actionInput != null)
+                result.add(actionInput);
         }
+        return result;
+    }
 
-        try {
-            return actionConfigurations.get(Integer.parseInt(nameOrId));
-        } catch (NumberFormatException e) {
-            return null;
-        }
+    // The only bound action matching the name, null if unknown or ambiguous
+    public ActionInput findAction(String name) {
+        List<ActionInput> actions = matchActions(name);
+        return actions.size() == 1 ? actions.get(0) : null;
     }
 
     public Collection<ActionInput> getActions() {
         return actionConfigurations.values();
+    }
+
+    // Press the action during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
+    public void simulatePress(InputAction action, int ticks) {
+        simulation.press(action.index(), ticks);
+    }
+
+    // Release the simulated action from the next tick
+    public void simulateRelease(InputAction action) {
+        simulation.release(action.index());
+    }
+
+    public boolean isSimulated(InputAction action) {
+        return simulation.isHeld(action.index());
     }
 
 
@@ -257,16 +264,17 @@ public class InputManager {
         pendingAxisValues.clear();
     }
 
+    // Package-private for the tests (no keyboard nor mouse there)
+    void updateActionSimulation(){
+        simulation.update();
+    }
+
 
     private void initLibraryInputs(){
-        actionConfigurations.put(
-                COMMAND,
-                new ActionInput(COMMAND, "OPEN_COMMAND" ,new InputSimple(GLFW_KEY_F1, EInputType.Keyboard))
-        );
+        actionConfigurations.put(EngineActions.OPEN_COMMAND,
+                new ActionInput(EngineActions.OPEN_COMMAND, new InputSimple(GLFW_KEY_F1, EInputType.Keyboard)));
 
-        actionConfigurations.put(
-                RELOAD_TEXTURE,
-                new ActionInput(RELOAD_TEXTURE, "RELOAD_TEXTURE", new InputSimple(GLFW_KEY_F5, EInputType.Keyboard))
-        );
+        actionConfigurations.put(EngineActions.RELOAD_TEXTURE,
+                new ActionInput(EngineActions.RELOAD_TEXTURE, new InputSimple(GLFW_KEY_F5, EInputType.Keyboard)));
     }
 }
