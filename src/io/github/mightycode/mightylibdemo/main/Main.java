@@ -1,9 +1,7 @@
 package io.github.mightycode.mightylibdemo.main;
 
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
-import io.github.mightycode.mightylib.main.EEngineMode;
-import io.github.mightycode.mightylib.main.EngineConfig;
-import io.github.mightycode.mightylib.main.MainLoop;
+import io.github.mightycode.mightylib.main.*;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylibdemo.scenes.MenuScene;
@@ -28,10 +26,9 @@ public class Main {
         return new EngineConfig()
                 .setStartScene(MenuScene::new)
                 .setLoadingScene(LoadingSceneImplementation::new)
-                .setWindowSize(1280, 720)
                 // Screen of the window, tools/scenario.py overrides it to open the tests on another screen
                 .setMonitorSelector(MonitorSelectors.Primary())
-                .setVirtualSize(1280, 720)
+                .setDisplay(new DisplaySettings().setResizable(true))
                 .setProjectName("Java-MightyLibrary")
                 .setFps(70)
                 .setTps(70)
