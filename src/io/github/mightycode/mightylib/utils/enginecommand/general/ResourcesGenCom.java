@@ -6,12 +6,25 @@ import io.github.mightycode.mightylib.resources.ResourceSelection;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.resources.BatchResources;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 public class ResourcesGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "resources";
 
     public ResourcesGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        if (args.length == 2)
+            return Arrays.asList("batch", "preload", "unpreload");
+        if (args.length == 3 && Arrays.asList("batch", "preload", "unpreload").contains(args[1]))
+            return Views.engine().resources().getResourceNames(BatchResources.class);
+        return Collections.emptyList();
     }
 
     @Override

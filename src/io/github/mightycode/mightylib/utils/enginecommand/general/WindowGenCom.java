@@ -6,6 +6,12 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.main.Context;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import org.json.JSONObject;
 
 /**
@@ -16,6 +22,33 @@ public class WindowGenCom extends BaseCommand {
 
     public WindowGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        if (args.length == 2) {
+            List<String> values = new ArrayList<>(Arrays.asList("main", "mode", "close"));
+            values.addAll(windowReferences(Views.engine()));
+            return values;
+        }
+        if (args[1].equalsIgnoreCase("mode") && args.length == 3)
+            return Arrays.asList("windowed", "fullscreen", "borderless");
+        if ((args[1].equalsIgnoreCase("mode") && args.length == 4) || (args[1].equalsIgnoreCase("close") && args.length == 3))
+            return windowReferences(Views.engine());
+        return Collections.emptyList();
+    }
+
+    // Ids, titles and names of contexts, as accepted by Engine.findWindow
+    static List<String> windowReferences(Engine engine) {
+        List<String> references = new ArrayList<>();
+        for (Context context : engine.contexts().getContexts()) {
+            references.add(context.getName());
+            for (WindowContext window : context.getWindows()) {
+                references.add(String.valueOf(window.getId()));
+                references.add(window.getName());
+            }
+        }
+        return references;
     }
 
     @Override

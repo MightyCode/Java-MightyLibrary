@@ -208,6 +208,26 @@ public class Text extends Renderer implements Cloneable {
     }
 
 
+    // Horizontal advance of a character with the font used now and the font size (cutting long lines, cursors)
+    public float charAdvance(char c) {
+        return (float) (usedFont().getFontFile().getCharacter(c).getxAdvance() * fontSize);
+    }
+
+    // Width of one line (no line break) with the font used now, linear in its length
+    public float measureWidth(CharSequence line) {
+        FontFile file = usedFont().getFontFile();
+        double width = 0;
+        for (int i = 0; i < line.length(); ++i)
+            width += file.getCharacter(line.charAt(i)).getxAdvance();
+
+        return (float) (width * fontSize);
+    }
+
+    // Distance between two lines with the font used now
+    public float lineHeight() {
+        return (float) (usedFont().getFontFile().getLineHeight() * fontSize);
+    }
+
     // The font if loaded, otherwise the fallback one (failed or still loading)
     private FontFace usedFont() {
         return resources.usable(FontFace.class, font);

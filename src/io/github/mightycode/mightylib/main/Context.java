@@ -219,10 +219,17 @@ public final class Context implements IView {
 
             window.getWindow().bindWindow();
             if (window.isMain())
-                sceneManager.display();
+                displayMainWindow();
             else
                 window.getView().displayByContext();
         }
+    }
+
+    // The scene, then the console over the main window of the main context
+    private void displayMainWindow() {
+        sceneManager.display();
+        if (main)
+            engine.displayConsoleOverlay();
     }
 
     /**
@@ -238,7 +245,7 @@ public final class Context implements IView {
         try {
             window.getWindow().bindWindow();
             if (window.isMain())
-                sceneManager.display();
+                displayMainWindow();
             else
                 window.getView().displayByContext();
 

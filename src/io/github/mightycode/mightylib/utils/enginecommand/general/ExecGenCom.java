@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Collection;
+import java.util.Collections;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandScript;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
@@ -29,6 +31,11 @@ public class ExecGenCom extends BaseCommand {
         super(COMMAND_NAME);
         this.commands = commands;
         this.running = ConcurrentHashMap.newKeySet();
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        return args.length == 2 ? PathCompletion.Complete(args[1]) : Collections.emptyList();
     }
 
     @Override

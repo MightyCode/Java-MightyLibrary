@@ -1,0 +1,311 @@
+package io.github.mightycode.mightylib.console;
+
+import io.github.mightycode.mightylib.inputs.EngineActions;
+import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.KeyboardManager;
+import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.main.DisplaySettings;
+import io.github.mightycode.mightylib.main.Engine;
+import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.main.WindowConfig;
+import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.enginecommand.Commands;
+import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
+import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import org.joml.Vector2i;
+
+import java.util.List;
+
+import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
+
+/**
+ * The in-game console, owned by the engine and independent of the scenes: F1 opens it over the main window
+ * (semi-transparent, the game sees no input meanwhile), F2 moves it to a window of its own and back.
+ * It shows the console log (program output, commands of every source) and runs what is typed as commands.
+ * Main thread only: update() at the beginning of each tick, displayOverlay() after the scene of the main window.
+ */
+public final class Console {
+    public enum EMode {
+        CLOSED, OVERLAY, DETACHED
+    }
+
+    private static final ICommandSource GAME = ICommandSource.Named("game");
+    private static final float OVERLAY_HEIGHT = 0.45f;
+    private static final Color4f OVERLAY_BACKGROUND = new Color4f(0f, 0f, 0f, 0.55f);
+    private static final Color4f OVERLAY_INPUT_BACKGROUND = new Color4f(0f, 0f, 0f, 0.35f);
+    private static final int WINDOW_WIDTH = 900;
+    private static final int WINDOW_HEIGHT = 500;
+    // Rows scrolled by one notch of the mouse wheel
+    private static final int WHEEL_ROWS = 3;
+
+    private final Engine engine;
+    private final ConsoleLog log;
+    private final Commands commands;
+    private final String fontName;
+    private final CommandLineEditor editor;
+    private final ConsoleInput input;
+
+    private EMode mode = EMode.CLOSED;
+
+    // Overlay of the main window, created at its first display
+    private ConsoleView overlayView;
+    private ConsolePanel overlay;
+
+    private ConsoleWindowView windowView;
+    private WindowContext window;
+
+    // Window whose inputs the overlay captures
+    private WindowContext captured;
+    // The capture ends after the tick that closed the overlay: the key that closed it is not seen by the game
+    private boolean releaseCapture;
+    // Cursor shown by the overlay (a 3D scene may hide it), given back at the end
+    private boolean cursorShownBefore = true;
+    private boolean displayFailed;
+
+    public Console(Engine engine, ConsoleLog log, Commands commands, String fontName) {
+        this.engine = engine;
+        this.log = log;
+        this.commands = commands;
+        this.fontName = fontName;
+        this.editor = new CommandLineEditor();
+        this.input = new ConsoleInput(editor, commands::complete,
+                choices -> log.add(ConsoleLog.EType.RESULT, null, choices));
+    }
+
+    public ConsoleLog getLog() { return log; }
+
+    public EMode getMode() { return mode; }
+
+    CommandLineEditor getEditor() { return editor; }
+
+    String getFontName() { return fontName; }
+
+    // ---- Changes of mode (keys, command console) ----
+
+    public void open() {
+        if (mode == EMode.OVERLAY)
+            return;
+        if (mode == EMode.DETACHED) {
+            focus(window);
+            return;
+        }
+
+        mode = EMode.OVERLAY;
+        capture(engine.contexts().getMainWindow());
+    }
+
+    public void close() {
+        if (mode == EMode.CLOSED)
+            return;
+
+        if (mode == EMode.DETACHED)
+            closeWindow();
+
+        mode = EMode.CLOSED;
+        releaseCapture = true;
+    }
+
+    public void toggle() {
+        if (mode == EMode.CLOSED)
+            open();
+        else
+            close();
+    }
+
+    /** The console in a window of its own; stays on the main window if the window can't be created. */
+    public void detach() {
+        if (mode == EMode.DETACHED)
+            return;
+
+        ConsoleWindowView view = new ConsoleWindowView(this);
+        WindowConfig config = new WindowConfig("Console")
+                .setDisplay(new DisplaySettings().setResizable(true))
+                .setSize(WINDOW_WIDTH, WINDOW_HEIGHT)
+                .setPersistent(true)
+                .setProjectInputs(false);
+
+        try {
+            window = engine.contexts().getMainWindow().getContext().openWindow(config, view);
+        } catch (RuntimeException e) {
+            Logger.LogException("The console window can't be opened", e);
+            return;
+        }
+
+        windowView = view;
+        mode = EMode.DETACHED;
+        // The main window gets its inputs back after this tick
+        releaseCapture = true;
+        focus(window);
+    }
+
+    /** Back to the main window, open. */
+    public void attach() {
+        if (mode != EMode.DETACHED)
+            return;
+
+        closeWindow();
+        mode = EMode.OVERLAY;
+        releaseCapture = false;
+        WindowContext main = engine.contexts().getMainWindow();
+        capture(main);
+        focus(main);
+    }
+
+    private void closeWindow() {
+        WindowContext closing = window;
+        window = null;
+        windowView = null;
+        if (closing != null)
+            closing.getContext().closeWindow(closing);
+    }
+
+    // The window was closed (by the user, the engine stopping, or attach)
+    void onWindowClosed(ConsoleWindowView view) {
+        if (view != windowView)
+            return;
+
+        window = null;
+        windowView = null;
+        mode = EMode.CLOSED;
+    }
+
+    private void capture(WindowContext target) {
+        if (captured == target)
+            return;
+        releaseNow();
+
+        captured = target;
+        target.getInputManager().setCaptured(true);
+        MouseManager mouse = target.getMouseManager();
+        cursorShownBefore = mouse.getCursorState();
+        if (!cursorShownBefore)
+            mouse.setCursor(true);
+    }
+
+    private void releaseNow() {
+        if (captured == null)
+            return;
+
+        captured.getInputManager().setCaptured(false);
+        if (!cursorShownBefore)
+            captured.getMouseManager().setCursor(false);
+        captured = null;
+    }
+
+    private static void focus(WindowContext target) {
+        if (target != null)
+            glfwFocusWindow(target.getWindow().getInfo().getWindowId());
+    }
+
+    // ---- Run by the engine ----
+
+    /** Beginning of a tick, before the scenes: what is typed is run in this tick. */
+    public void update() {
+        if (releaseCapture) {
+            releaseCapture = false;
+            if (mode != EMode.OVERLAY)
+                releaseNow();
+        }
+
+        WindowContext main = engine.contexts().getMainWindow();
+        InputManager mainInputs = main.getInputManager();
+
+        switch (mode) {
+            case CLOSED:
+                if (mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE))
+                    open();
+                break;
+            case OVERLAY:
+                if (mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE))
+                    close();
+                else if (mainInputs.inputPressed(EngineActions.DETACH_CONSOLE))
+                    detach();
+                else
+                    type(main, overlay);
+                break;
+            case DETACHED:
+                if (mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE))
+                    focus(window);
+
+                if (window != null && window.getInputManager().inputPressed(EngineActions.DETACH_CONSOLE))
+                    attach();
+                else if (window != null)
+                    type(window, windowView.getPanel());
+                break;
+        }
+    }
+
+    private void type(WindowContext target, ConsolePanel panel) {
+        KeyboardManager keyboard = target.getKeyboardManager();
+        int pageRows = panel == null ? 10 : panel.getVisibleRows();
+        List<ConsoleInput.Request> requests = input.handle(keyboard.getRawTypedText(), keyboard.getRawKeyEvents(),
+                pageRows, () -> target.getSystemInfo().getClipboardContent());
+
+        float wheel = target.getMouseManager().getRawMouseScroll().y;
+        if (wheel != 0 && panel != null)
+            panel.scroll(Math.round(wheel * WHEEL_ROWS));
+
+        for (ConsoleInput.Request request : requests) {
+            switch (request.getType()) {
+                case SUBMIT:
+                    commands.submit(request.getLine(), GAME);
+                    break;
+                case CLOSE:
+                    // Escape closes the overlay; the window is closed by F2 or its own button
+                    if (mode == EMode.OVERLAY)
+                        close();
+                    break;
+                case CLEAR:
+                    log.clear();
+                    break;
+                case SCROLL:
+                    if (panel != null)
+                        panel.scroll(request.getAmount());
+                    break;
+                case SCROLL_END:
+                    if (panel != null)
+                        panel.scrollToEnd();
+                    break;
+            }
+        }
+    }
+
+    /** After the scene of the main window is drawn, with its OpenGL context current. */
+    public void displayOverlay() {
+        if (mode != EMode.OVERLAY || displayFailed)
+            return;
+
+        WindowContext main = engine.contexts().getMainWindow();
+        try {
+            if (overlay == null) {
+                overlayView = new ConsoleView(engine, main);
+                try (Views.Scope ignored = Views.enter(overlayView)) {
+                    overlay = new ConsolePanel(overlayView, log, editor, fontName, OVERLAY_BACKGROUND, OVERLAY_INPUT_BACKGROUND);
+                }
+            }
+
+            Vector2i size = main.getWindow().getInfo().getSizeRef();
+            float height = Math.max(1, Math.round(size.y * OVERLAY_HEIGHT));
+            try (Views.Scope ignored = Views.enter(overlayView)) {
+                overlay.display(0, size.y - height, size.x, height, true);
+            }
+        } catch (RuntimeException e) {
+            // A console that fails must not stop the game: it stays closed
+            displayFailed = true;
+            Logger.LogException("The console overlay failed, it is disabled", e);
+            close();
+        }
+    }
+
+    /** End of the engine, with the main window's OpenGL context current: what the overlay created is freed. */
+    public void unload() {
+        releaseNow();
+        if (overlay != null) {
+            try (Views.Scope ignored = Views.enter(overlayView)) {
+                overlay.unload();
+            }
+            overlay = null;
+        }
+    }
+}

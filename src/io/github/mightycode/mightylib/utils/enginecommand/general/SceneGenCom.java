@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Collection;
+import java.util.Collections;
 import org.json.JSONObject;
 
 import java.util.Arrays;
@@ -15,6 +17,14 @@ public class SceneGenCom extends BaseCommand {
     public SceneGenCom(SceneManager sceneManager) {
         super(COMMAND_NAME);
         this.sceneManager = sceneManager;
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        if (args.length != 2)
+            return Collections.emptyList();
+
+        return SceneClasses.Find(sceneManager.commandTarget().getScenesPackage());
     }
 
     @Override

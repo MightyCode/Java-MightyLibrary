@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import io.github.mightycode.mightylib.console.LogCapture;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
 
@@ -8,9 +9,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,12 +28,16 @@ public class Commands {
     // Default time given to a deferred result before it becomes an error
     public static final long COMMAND_TIMEOUT_SECONDS = 30;
 
+    private static final ICommandSource STDIN = ICommandSource.Named("stdin");
+
     private static class CommandRequest {
         private final String line;
+        private final ICommandSource source;
         private final CompletableFuture<CommandResult> result;
 
-        private CommandRequest(String line) {
+        private CommandRequest(String line, ICommandSource source) {
             this.line = line;
+            this.source = source;
             this.result = new CompletableFuture<>();
         }
     }
@@ -44,9 +51,14 @@ public class Commands {
     private long tick;
     private Thread consoleThread;
 
+    private final CopyOnWriteArrayList<ICommandListener> listeners;
+    // Source of the submitted command being executed (main thread), null outside
+    private ICommandSource currentSource;
+
     public Commands(SceneManager sceneManager) {
         pendingRequests = new ConcurrentLinkedQueue<>();
         tickTasks = new ArrayList<>();
+        listeners = new CopyOnWriteArrayList<>();
 
         // Add commands -> General
         commands = new ArrayList<>();
@@ -60,7 +72,15 @@ public class Commands {
      * @return Completed on the main thread once the command is executed
      */
     public CompletableFuture<CommandResult> submit(String line) {
-        CommandRequest request = new CommandRequest(line);
+        return submit(line, ICommandSource.API);
+    }
+
+    /**
+     * Can be called from any thread. The listeners are told of the command and of its result.
+     * @return Completed on the main thread once the command is executed
+     */
+    public CompletableFuture<CommandResult> submit(String line, ICommandSource source) {
+        CommandRequest request = new CommandRequest(line, source == null ? ICommandSource.API : source);
         pendingRequests.add(request);
 
         return request.result;
@@ -108,16 +128,75 @@ public class Commands {
 
         CommandRequest request;
         while ((request = pendingRequests.poll()) != null) {
-            CommandResult result = execute(request.line);
+            for (ICommandListener listener : listeners)
+                listener.executed(request.source, request.line);
 
+            CommandResult result;
+            currentSource = request.source;
+            try {
+                result = execute(request.line);
+            } finally {
+                currentSource = null;
+            }
+
+            CommandRequest answered = request;
             if (result.isDeferred()) {
-                CompletableFuture<CommandResult> target = request.result;
                 result.getDeferred().whenComplete((deferredResult, exception) ->
-                        target.complete(ResolveDeferred(result, deferredResult, exception)));
+                        answer(answered, ResolveDeferred(result, deferredResult, exception)));
             } else {
-                request.result.complete(result);
+                answer(answered, result);
             }
         }
+    }
+
+    private void answer(CommandRequest request, CommandResult result) {
+        for (ICommandListener listener : listeners)
+            listener.answered(request.source, request.line, result);
+
+        request.result.complete(result);
+    }
+
+    public void addListener(ICommandListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(ICommandListener listener) {
+        listeners.remove(listener);
+    }
+
+    /** Source of the submitted command being executed, ICommandSource.API when executed directly (main thread). */
+    public ICommandSource getCurrentSource() {
+        return currentSource == null ? ICommandSource.API : currentSource;
+    }
+
+    /**
+     * Completion of the word being typed (main thread).
+     * @param beginning the text of the line before the cursor
+     */
+    public CommandCompletion complete(String beginning) {
+        CommandLine.Partial partial = CommandLine.SplitPartial(beginning);
+        String[] words = partial.getWords();
+        String typed = partial.getLast();
+
+        Collection<String> values = new ArrayList<>();
+        if (words.length == 1) {
+            for (BaseCommand command : commands)
+                values.add(command.getName());
+        } else {
+            BaseCommand command = findCommand(words[0]);
+            if (command != null) {
+                try {
+                    values.addAll(command.completeArgument(words));
+                } catch (RuntimeException e) {
+                    // A completion never stops the typing: no value
+                }
+
+                if (words.length == 2)
+                    values.add("help");
+            }
+        }
+
+        return new CommandCompletion(partial.getLastStart(), typed, CommandCompletion.Filter(typed, values));
     }
 
     // Final result of a deferred command once its future is completed
@@ -190,15 +269,16 @@ public class Commands {
                     CommandResult result;
                     try {
                         // Always completed once executed: deferred results have their own timeout
-                        result = submit(line).get();
+                        result = submit(line, STDIN).get();
                     } catch (ExecutionException e) {
                         result = CommandResult.error(e.getCause().toString());
                     }
 
+                    // Already in the console log: written for the terminal only
                     if (result.isSuccess())
-                        System.out.println(result);
+                        LogCapture.rawOut().println(result);
                     else
-                        System.err.println(result);
+                        LogCapture.rawErr().println(result);
                 }
             } catch (IOException e) {
                 System.err.println("Console commands stopped : " + e);

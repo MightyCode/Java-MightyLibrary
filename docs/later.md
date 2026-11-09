@@ -150,7 +150,10 @@ Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et antic
 Streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
-Console en jeu (base `graphics/GUI/Terminal` et `guicommand`, à unifier avec `Commands` ; lire le texte par `KeyboardManager.getTypedText()`, pas `KeyboardLanguage`) et overlay de debug (stats, scène, entrées). S'appuie sur thème, tailles et langues.
+- **Overlay de debug** (stats, scène, entrées) à côté de la console. S'appuie sur thème, tailles et langues.
+- **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte) ; sélection et copie du journal ; suggestions affichées sous la saisie en plus du Tab bash ; complétion des commandes de scène existantes (`completeArgument` à écrire).
+- **Journal à grande échelle** : l'anneau de `ConsoleLog` oublie au-delà de sa capacité ; cible durable : journal fichier tournant (cf. `futur-discussion.md`) relu par la console, filtres par type/source, niveaux de log au lieu de `System.out` préfixé `--`.
+- **Texte de la console** : un `Text` (VAO/VBO, draw call) par ligne visible, sans découpe GL (`glScissor`) : à reprendre avec le batching 2D.
 
 ## Fenêtres
 - **Sous-fenêtres natives hors Windows** : propriétaire de fenêtre sous Linux (X11 `XSetTransientForHint`, Wayland `xdg_toplevel.set_parent`) et macOS (`addChildWindow`) à la place du simple `GLFW_FLOATING` de `NativeWindowOwner`.

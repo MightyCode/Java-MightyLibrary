@@ -5,12 +5,20 @@ import io.github.mightycode.mightylib.resources.texture.TextureUploadBench;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 
 public class TextureUploadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "textureupload";
 
     public TextureUploadGenCom() {
         super(COMMAND_NAME);
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        return args.length == 2 ? Arrays.asList("direct", "pbo", "bench") : Collections.emptyList();
     }
 
     @Override

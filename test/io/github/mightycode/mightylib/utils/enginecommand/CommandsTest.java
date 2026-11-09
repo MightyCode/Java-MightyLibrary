@@ -3,6 +3,9 @@ package io.github.mightycode.mightylib.utils.enginecommand;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -177,6 +180,120 @@ class CommandsTest {
 
         later.complete(CommandResult.ok("done"));
         assertEquals("done", future.get(1, TimeUnit.SECONDS).getMessage());
+    }
+
+    // Completes its first argument with fixed values
+    private static class ChoiceCommand extends BaseCommand {
+        ChoiceCommand(String name) {
+            super(name);
+        }
+
+        @Override
+        public CommandResult execute(String[] args) {
+            return CommandResult.ok("");
+        }
+
+        @Override
+        public Collection<String> completeArgument(String[] args) {
+            if (args.length == 2)
+                return List.of("Scene2D", "Scene3D", "scene3DBis", "Menu Scene");
+            throw new IllegalStateException("No completion here");
+        }
+    }
+
+    @Test
+    void splitPartialGivesTheUnfinishedWordAndItsStart() {
+        CommandLine.Partial partial = CommandLine.SplitPartial("scene  Sce");
+        assertArrayEquals(new String[]{"scene", "Sce"}, partial.getWords());
+        assertEquals(7, partial.getLastStart());
+
+        partial = CommandLine.SplitPartial("scene ");
+        assertArrayEquals(new String[]{"scene", ""}, partial.getWords());
+        assertEquals(6, partial.getLastStart());
+
+        partial = CommandLine.SplitPartial("screenshot \"a b");
+        assertArrayEquals(new String[]{"screenshot", "a b"}, partial.getWords());
+        assertEquals(11, partial.getLastStart());
+
+        partial = CommandLine.SplitPartial("");
+        assertArrayEquals(new String[]{""}, partial.getWords());
+        assertEquals(0, partial.getLastStart());
+    }
+
+    @Test
+    void completeCommandNames() {
+        Commands commands = newCommands();
+        commands.addCommand(new ChoiceCommand("zzfirst"));
+        commands.addCommand(new ChoiceCommand("zzfoo"));
+
+        CommandCompletion completion = commands.complete("zz");
+        assertEquals(List.of("zzfirst", "zzfoo"), completion.getCandidates());
+        assertEquals("zzf", completion.replacement());
+
+        completion = commands.complete("ZZFO");
+        assertTrue(completion.isUnique());
+        assertEquals("zzfoo ", completion.replacement());
+        assertEquals(0, completion.getStart());
+
+        assertTrue(commands.complete("unknownPrefix").isEmpty());
+        assertNull(commands.complete("unknownPrefix").replacement());
+    }
+
+    @Test
+    void completeArgumentsIgnoresCaseAddsHelpAndQuotes() {
+        Commands commands = newCommands();
+        commands.addCommand(new ChoiceCommand("zzchoice"));
+
+        CommandCompletion completion = commands.complete("zzchoice sce");
+        assertEquals(List.of("Scene2D", "Scene3D", "scene3DBis"), completion.getCandidates());
+        assertEquals("Scene", completion.replacement());
+        assertEquals(9, completion.getStart());
+
+        assertTrue(commands.complete("zzchoice ").getCandidates().contains("help"));
+        assertEquals("\"Menu Scene\" ", commands.complete("zzchoice Me").replacement());
+        assertEquals("\"Menu Scene\" ", commands.complete("zzchoice \"Me").replacement());
+
+        // A failing completion gives nothing instead of throwing
+        assertTrue(commands.complete("zzchoice a b").isEmpty());
+        assertTrue(commands.complete("unknown a").isEmpty());
+    }
+
+    @Test
+    void helpCompletesCommandNames() {
+        Commands commands = newCommands();
+        assertTrue(commands.complete("help sta").getCandidates().contains("stats"));
+    }
+
+    @Test
+    void listenersSeeTheSourceTheCommandAndItsResult() throws Exception {
+        Commands commands = newCommands();
+        commands.addCommand(new BaseCommand("source") {
+            @Override
+            public CommandResult execute(String[] args) {
+                return CommandResult.ok(commands.getCurrentSource().name());
+            }
+        });
+
+        List<String> seen = new ArrayList<>();
+        commands.addListener(new ICommandListener() {
+            @Override
+            public void executed(ICommandSource source, String line) {
+                seen.add(source.name() + ">" + line);
+            }
+
+            @Override
+            public void answered(ICommandSource source, String line, CommandResult result) {
+                seen.add(source.name() + "<" + result.getMessage());
+            }
+        });
+
+        CompletableFuture<CommandResult> future = commands.submit("source", ICommandSource.Named("server"));
+        commands.processPendingCommands();
+
+        assertEquals("server", future.get(1, TimeUnit.SECONDS).getMessage());
+        assertEquals(List.of("server>source", "server<server"), seen);
+        // Executed directly: no submitted source
+        assertEquals("api", commands.execute("source").getMessage());
     }
 
     @Test

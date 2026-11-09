@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import java.util.Collection;
+import java.util.Collections;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
 import java.util.concurrent.CompletableFuture;
@@ -21,6 +23,11 @@ public class WaitGenCom extends BaseCommand {
         super(COMMAND_NAME);
         this.commands = commands;
         this.sceneManager = sceneManager;
+    }
+
+    @Override
+    public Collection<String> completeArgument(String[] args) {
+        return args.length == 2 ? Collections.singletonList("loaded") : Collections.emptyList();
     }
 
     @Override
