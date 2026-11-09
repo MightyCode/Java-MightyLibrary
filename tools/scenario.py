@@ -55,9 +55,11 @@ CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
 PORT_FILE = os.path.join(ROOT, "target", f"scenario-{os.getpid()}.port")
 PORT_FILE_PROPERTY = "mightylib.debugServer.portFile"
 MONITOR_PROPERTY = "mightylib.window.monitor"
+PLATFORM_PROPERTY = "mightylib.glfw.platform"
 STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict"
 NO_CURSOR_CAPTURE_PROPERTY = "mightylib.input.noCursorCapture"
-PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:")
+PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:"
+                             r"|^\[LWJGL\] .*error|^\s+Description :")
 
 
 def run_maven(*goals):
@@ -79,7 +81,7 @@ def prepare(compile_sources):
         run_maven("dependency:build-classpath", "-Dmdep.outputFile=" + CLASSPATH_FILE)
 
 
-def launch(log_path, monitor, strict=False, capture_mouse=False):
+def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
         classpath = os.path.join(ROOT, "target", "classes") + os.pathsep + file.read().strip()
 
@@ -90,6 +92,8 @@ def launch(log_path, monitor, strict=False, capture_mouse=False):
     options = [f"-D{PORT_FILE_PROPERTY}={PORT_FILE}"]
     if monitor:
         options.append(f"-D{MONITOR_PROPERTY}={monitor}")
+    if platform:
+        options.append(f"-D{PLATFORM_PROPERTY}={platform}")
     if strict:
         options.append(f"-D{STRICT_RESOURCES_PROPERTY}=true")
     if not capture_mouse:
@@ -312,6 +316,9 @@ def main():
     parser.add_argument("--monitor", default="secondary",
                         help="screen of the game window: secondary (default, falls back to the primary one), primary,"
                              " largest, an index or a part of a name; empty to keep the choice of the project")
+    parser.add_argument("--platform", default=None,
+                        help="GLFW platform: x11, wayland (Linux; Wayland can't place windows), win32, cocoa;"
+                             " by default GLFW chooses")
     parser.add_argument("--no-compile", action="store_true", help="skip the compilation")
     parser.add_argument("--strict", action="store_true",
                         help="a resource that fails stops the game instead of using its fallback (debug mode only)")
@@ -329,7 +336,7 @@ def main():
         return 0 if run_steps(args.port, args.steps, args.timeout) else 1
 
     prepare(not args.no_compile)
-    process = launch(args.log, args.monitor, args.strict, args.capture_mouse)
+    process = launch(args.log, args.monitor, args.strict, args.capture_mouse, args.platform)
 
     # A blocked game (main thread stuck, no answer) must not block the caller forever
     def kill_blocked_game():

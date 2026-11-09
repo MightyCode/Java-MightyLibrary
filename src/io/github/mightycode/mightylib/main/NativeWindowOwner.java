@@ -23,7 +23,7 @@ final class NativeWindowOwner {
 
             // "Parent" of GWL_HWNDPARENT is the owner for a top-level window
             User32.SetWindowLongPtr(null, owned, User32.GWL_HWNDPARENT, owner);
-        } else {
+        } else if (WindowPlatform.CanFloatWindows()) {
             glfwSetWindowAttrib(ownedWindow, GLFW_FLOATING, GLFW_TRUE);
         }
     }

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main.monitors;
 
+import io.github.mightycode.mightylib.main.WindowPlatform;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
@@ -72,6 +73,16 @@ public final class Monitors {
     public static MonitorInfo OfWindow(long windowId, List<MonitorInfo> monitors) {
         if (windowId == NULL)
             return null;
+
+        // Wayland gives no window position: only the screen of a fullscreen window is known
+        if (!WindowPlatform.CanPlaceWindows()) {
+            long monitor = glfwGetWindowMonitor(windowId);
+            for (MonitorInfo info : monitors) {
+                if (info.getHandle() == monitor)
+                    return info;
+            }
+            return null;
+        }
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer x = stack.mallocInt(1), y = stack.mallocInt(1);
