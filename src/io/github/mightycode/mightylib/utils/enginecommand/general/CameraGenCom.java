@@ -7,17 +7,25 @@ import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
 import io.github.mightycode.mightylib.utils.enginecommand.JsonSelect;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.decimal;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.oneOf;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 /**
  * Inspect and drive the cameras registered in the current scene (Scene.registerCamera), by id or name.
@@ -25,68 +33,86 @@ import java.util.List;
 public class CameraGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "camera";
     public CameraGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "Inspect and drive the cameras of the current scene (id or name, main cameras : main2D, main3D)");
     }
 
-    @Override
-    public Collection<String> completeArgument(String[] args) {
-        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
+    // The current scene of the targeted window, null while there is none
+    private static Scene currentScene() {
+        return ListGeneralCommand.targetScenes().getCurrentScene();
+    }
+
+    // Ids and names of the cameras of the scene, once launched: its cameras only exist from launch() on
+    private static Collection<String> cameraReferences() {
+        Scene scene = currentScene();
+        List<String> references = new ArrayList<>();
         if (scene == null || !scene.isLaunched())
-            return Collections.emptyList();
+            return references;
 
-        if (args.length == 2) {
-            List<String> names = new ArrayList<>();
-            for (Camera camera : scene.getCameras())
-                names.add(camera.getName());
-            return names;
+        for (Camera camera : scene.getCameras()) {
+            references.add(camera.getName());
+            references.add(String.valueOf(camera.getCameraId()));
         }
-
-        if (args.length == 3) {
-            Camera camera = scene.findCamera(args[1]);
-            if (camera instanceof Camera3D)
-                return Arrays.asList("move", "lookat");
-            if (camera instanceof Camera2D)
-                return Arrays.asList("move", "zoom", "rotation");
-        }
-
-        return Collections.emptyList();
+        return references;
     }
 
     @Override
-    public CommandResult execute(String[] args) {
-        if (checkArgumentHelp(args))
-            return CommandResult.ok(help());
+    protected void syntax(CommandNode root) {
+        ArgumentType<String> cameras = oneOf(CameraGenCom::cameraReferences);
 
-        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
-        if (scene == null)
-            return CommandResult.error("No current scene");
-        requireLaunched(scene);
+        root.requires(CommandCondition.launched(CameraGenCom::currentScene))
+                .executes("Cameras of the current scene (id, name, position...)", context -> list(currentScene()))
+                .then(argument("camera", cameras, "Id or name of a camera")
+                        .executes("Details of a camera", context -> {
+                            Camera camera = find(context.get("camera"));
+                            return CommandResult.ok("Camera " + camera.getName(), describe(camera));
+                        })
+                        .then(literal("move", "Move to a position : x y for a 2D camera, x y z for a 3D camera")
+                                .then(argument("x", decimal()).then(argument("y", decimal())
+                                        .executes(context -> act(context, "move"))
+                                        .then(argument("z", decimal()).executes(context -> act(context, "move"))))))
+                        .then(literal("lookat", "3D camera, look at a point")
+                                .then(argument("x", decimal()).then(argument("y", decimal())
+                                        .then(argument("z", decimal()).executes(context -> act(context, "lookat"))))))
+                        .then(literal("zoom", "2D camera, set the zoom (clamped to its limits) : level, or levelX levelY")
+                                .then(argument("levelX", decimal())
+                                        .executes(context -> act(context, "zoom"))
+                                        .then(argument("levelY", decimal()).executes(context -> act(context, "zoom")))))
+                        .then(literal("rotation", "2D camera, set the rotation")
+                                .then(argument("degrees", decimal()).executes(context -> act(context, "rotation")))));
+    }
 
-        if (args.length < 2)
-            return list(scene);
-
-        Camera camera = scene.findCamera(args[1]);
+    private static Camera find(String reference) {
+        Scene scene = currentScene();
+        Camera camera = scene == null ? null : scene.findCamera(reference);
         if (camera == null)
-            return CommandResult.error("Unknown camera ->" + args[1] + "<-, write -> camera <- to list them");
+            throw new CommandException("Unknown camera ->" + reference + "<-, write -> camera <- to list them");
 
-        if (args.length < 3)
-            return CommandResult.ok("Camera " + camera.getName(), describe(camera));
+        return camera;
+    }
 
-        try {
-            float[] values = parseValues(args);
+    // The numbers given after the action, in the order of the line
+    private static CommandResult act(CommandContext context, String action) {
+        Camera camera = find(context.get("camera"));
 
-            if (camera instanceof Camera3D)
-                return execute3D((Camera3D) camera, args[2], values);
-            if (camera instanceof Camera2D)
-                return execute2D((Camera2D) camera, args[2], values);
-        } catch (NumberFormatException e) {
-            return CommandResult.error("Invalid number : " + e.getMessage());
+        List<Float> numbers = new ArrayList<>();
+        for (String name : new String[]{"x", "y", "z", "levelX", "levelY", "degrees"}) {
+            if (context.has(name))
+                numbers.add(context.<Double>get(name).floatValue());
         }
+        float[] values = new float[numbers.size()];
+        for (int i = 0; i < values.length; ++i)
+            values[i] = numbers.get(i);
+
+        if (camera instanceof Camera3D)
+            return execute3D((Camera3D) camera, action, values);
+        if (camera instanceof Camera2D)
+            return execute2D((Camera2D) camera, action, values);
 
         return CommandResult.error("Unsupported camera type " + camera.getClass().getSimpleName());
     }
 
-    private CommandResult execute3D(Camera3D camera, String action, float[] values) {
+    private static CommandResult execute3D(Camera3D camera, String action, float[] values) {
         String[] changed;
         switch (action) {
             case "move":
@@ -102,14 +128,14 @@ public class CameraGenCom extends BaseCommand {
                 changed = new String[]{ "front", "yaw", "pitch" };
                 break;
             default:
-                return unknownArgumentError(action + " (3D camera : move, lookat)");
+                return CommandResult.error("The camera " + camera.getName() + " is 3D : move, lookat");
         }
 
         // Only the changed fields: -> camera [camera] <- gives everything
         return CommandResult.ok("Camera " + camera.getName() + " updated", JsonSelect.Select(describe(camera), changed));
     }
 
-    private CommandResult execute2D(Camera2D camera, String action, float[] values) {
+    private static CommandResult execute2D(Camera2D camera, String action, float[] values) {
         String[] changed;
         switch (action) {
             case "move":
@@ -135,23 +161,14 @@ public class CameraGenCom extends BaseCommand {
                 changed = new String[]{ "rotationDegrees" };
                 break;
             default:
-                return unknownArgumentError(action + " (2D camera : move, zoom, rotation)");
+                return CommandResult.error("The camera " + camera.getName() + " is 2D : move, zoom, rotation");
         }
 
         // Only the changed fields: -> camera [camera] <- gives everything
         return CommandResult.ok("Camera " + camera.getName() + " updated", JsonSelect.Select(describe(camera), changed));
     }
 
-    // Numbers after the action: camera [camera] [action] [values...]
-    private static float[] parseValues(String[] args) {
-        float[] values = new float[args.length - 3];
-        for (int i = 0; i < values.length; ++i)
-            values[i] = Float.parseFloat(args[i + 3]);
-
-        return values;
-    }
-
-    private CommandResult list(Scene scene) {
+    private static CommandResult list(Scene scene) {
         JSONArray cameras = new JSONArray();
         for (Camera camera : scene.getCameras())
             cameras.put(describe(camera));
@@ -197,17 +214,5 @@ public class CameraGenCom extends BaseCommand {
 
     private static double round(float value) {
         return Math.round(value * 1000.0) / 1000.0;
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\ncamera : cameras of the current scene (id, name, position...)" +
-                "\ncamera [id or name] : details of a camera (main cameras : main2D, main3D)" +
-                "\ncamera [camera] move [x] [y] [z] : 3D camera, move to a position" +
-                "\ncamera [camera] lookat [x] [y] [z] : 3D camera, look at a point" +
-                "\ncamera [camera] move [x] [y] : 2D camera, move to a position" +
-                "\ncamera [camera] zoom [level] / zoom [levelX] [levelY] : 2D camera, set the zoom (clamped to its limits)" +
-                "\ncamera [camera] rotation [degrees] : 2D camera, set the rotation";
     }
 }
