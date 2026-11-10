@@ -9,7 +9,7 @@ description: Analyse l'export des inspections IntelliJ (XML dans target/analyse)
 L'inspecteur en ligne de commande (`inspect.bat`) d'IntelliJ 2024.2 plante au démarrage de la JVM (accès à `sun.nio.fs`) : ne pas le relancer. Demander l'export à l'utilisateur : *Code → Inspect Code…*, portée « Whole project », bouton *Export* de la fenêtre de résultats, format XML, dossier `target/analyse` (un fichier par inspection).
 
 ## 2. Résumer sans lire les XML
-- `python .claude/skills/analyse-intellij/summarize.py` : nombre de problèmes par inspection.
+- `python .claude/skills/analyse-intellij/summarize.py` : nombre de problèmes par inspection. **Attention** : un export ne réécrit pas les inspections tombées à zéro, leur XML reste d'un ancien export. Avant de trier, comparer les dates (`ls -l target/analyse`) et ignorer les fichiers plus anciens que les autres.
 - `… summarize.py --details Inspection1 Inspection2` : `fichier:ligne | élément | description`.
 - `… summarize.py --unused` : `unused.xml` groupé par nature et par zone (lib / demo / test), puis le détail de tout sauf les méthodes publiques inutilisées de la bibliothèque.
 

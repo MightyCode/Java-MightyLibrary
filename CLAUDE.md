@@ -48,6 +48,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 
 ## Conventions de code
 - Java 11 (pas de `record`, ni de `switch` expression). Accolades K&R, 4 espaces, commentaires en anglais, peu de Javadoc.
+- Avant de commiter, relire son diff comme le ferait l'analyseur d'IntelliJ : imports devenus inutiles, diamant, `isEmpty()`, redondances (`docs/bonnes-pratiques.md`, point 14).
 - Enums préfixées `E`, interfaces préfixées `I` ; utilitaires statiques souvent en PascalCase (`GenDeleteResources.GenBuffers`, `Logger.CheckOpenGLError`).
 - Appel GL sensible suivi de `Logger.CheckOpenGLError("message")` ; dans le code appelé à chaque dessin, l'entourer de `if (Logger.DO_CHECK)`.
 - Logs moteur : `System.out/err.println` avec préfixe `--`. Exception inattendue mais gérée : `Logger.LogException(message, e)` (jamais `printStackTrace()`) ; échec attendu d'une ressource : `ResourceException` (une ligne). `InterruptedException` : remettre le drapeau (`Thread.currentThread().interrupt()`) et s'arrêter.
