@@ -136,8 +136,9 @@ public class Commands {
         return getCurrentSource().level();
     }
 
+    // Its level and the hidden conditions of its root (CommandCondition.hidden) let the current source see it
     public boolean isVisible(BaseCommand command) {
-        return getCurrentLevel().includes(command.getLevel());
+        return getCurrentLevel().includes(command.getLevel()) && command.isAvailable();
     }
 
     // The commands the current source sees, in registration order
@@ -283,13 +284,10 @@ public class Commands {
             BaseCommand command = findCommand(words[0]);
             if (command != null) {
                 try {
-                    values.addAll(command.getOwner().run(() -> command.completeArgument(words)));
+                    values.addAll(command.getOwner().run(() -> command.completeSyntax(words)));
                 } catch (RuntimeException e) {
                     // A completion never stops the typing: no value
                 }
-
-                if (words.length == 2)
-                    values.add("help");
             }
         }
 
@@ -350,11 +348,9 @@ public class Commands {
             return CommandResult.error("Ambiguous command ->" + args[0] + "<-, write one of : " + identifiers(matching));
 
         BaseCommand command = matching.get(0);
-        if (command.checkArgumentHelp(args))
-            return CommandResult.ok(command.help());
-
         try {
-            return command.getOwner().run(() -> command.execute(args));
+            // A CommandException of a handler (CommandSyntaxException included) is the answer
+            return command.getOwner().run(() -> command.run(args));
         } catch (CommandException e) {
             return CommandResult.error(e.getMessage());
         } catch (RuntimeException e) {

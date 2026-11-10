@@ -6,14 +6,19 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.main.Context;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import org.json.JSONObject;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.enumOf;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.oneOf;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 /**
  * Chooses the window that the commands input, screenshot, monitors, scene, camera and exit work on.
@@ -22,21 +27,35 @@ public class WindowGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "window";
 
     public WindowGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "The window that the commands input, screenshot, monitors, scene, camera and exit work on");
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        if (args.length == 2) {
-            List<String> values = new ArrayList<>(Arrays.asList("main", "mode", "close"));
-            values.addAll(windowReferences(Views.engine()));
-            return values;
-        }
-        if (args[1].equalsIgnoreCase("mode") && args.length == 3)
-            return Arrays.asList("windowed", "fullscreen", "borderless");
-        if ((args[1].equalsIgnoreCase("mode") && args.length == 4) || (args[1].equalsIgnoreCase("close") && args.length == 3))
-            return windowReferences(Views.engine());
-        return Collections.emptyList();
+    protected void syntax(CommandNode root) {
+        ArgumentType<String> reference = oneOf(() -> windowReferences(Views.engine()));
+
+        root.executes("The target window", context -> describeTarget(Views.engine(), "Target window"))
+                .then(literal("main", "The target goes back to the main window").executes(context -> {
+                    Views.engine().setCommandWindow(null);
+                    return describeTarget(Views.engine(), "Target window is the main window again");
+                }))
+                .then(literal("close", "Close the window (the target by default) at the end of the frame")
+                        .executes(context -> close(Views.engine().commandWindow()))
+                        .then(argument("window", reference, "Id, title or name of a context (see windows)")
+                                .executes(context -> close(find(context.get("window"))))))
+                .then(literal("mode", "Change the display mode of the window (the target by default), its other"
+                        + " display settings stay; a second exclusive fullscreen window on a screen becomes borderless")
+                        .then(argument("mode", enumOf(EWindowMode.class), "Display mode")
+                                .executes(context -> changeMode(context.get("mode"), Views.engine().commandWindow()))
+                                .then(argument("window", reference, "Id, title or name of a context (see windows)")
+                                        .executes(context -> changeMode(context.get("mode"),
+                                                find(context.get("window")))))))
+                .then(argument("window", reference, "Id, title or name of a context (see windows)")
+                        .executes("The target window becomes this one (see windows)", context -> {
+                            Views.engine().setCommandWindow(find(context.get("window")));
+                            return describeTarget(Views.engine(), "Target window");
+                        }));
     }
 
     // Ids, titles and names of contexts, as accepted by Engine.findWindow
@@ -52,51 +71,21 @@ public class WindowGenCom extends BaseCommand {
         return references;
     }
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (checkArgumentHelp(args))
-            return CommandResult.ok(help());
-
-        Engine engine = Views.engine();
-
-        if (args.length == 1)
-            return describeTarget(engine, "Target window");
-
-        if (args[1].equalsIgnoreCase("main")) {
-            engine.setCommandWindow(null);
-            return describeTarget(engine, "Target window is the main window again");
-        }
-
-        if (args[1].equalsIgnoreCase("mode"))
-            return changeMode(engine, args);
-
-        boolean close = args[1].equalsIgnoreCase("close");
-        String reference = close ? (args.length > 2 ? args[2] : null) : args[1];
-
-        WindowContext window = reference == null ? engine.commandWindow() : engine.findWindow(reference);
+    // The window of a reference given by the completion: it exists unless it closed since
+    private static WindowContext find(String reference) {
+        WindowContext window = Views.engine().findWindow(reference);
         if (window == null)
-            return CommandResult.error("Unknown window ->" + reference + "<-, give its id, its title or the name of a context (windows)");
+            throw new CommandException("Unknown window ->" + reference + "<-, give its id, its title or the name of a context (windows)");
 
-        if (close) {
-            window.requestClose();
-            return CommandResult.ok("Window " + window.getId() + " (" + window.getName() + ") closes at the end of the frame");
-        }
-
-        engine.setCommandWindow(window);
-        return describeTarget(engine, "Target window");
+        return window;
     }
 
-    // window mode MODE [ID|TITLE|CONTEXT]
-    private static CommandResult changeMode(Engine engine, String[] args) {
-        EWindowMode mode = args.length > 2 ? EWindowMode.FromText(args[2]) : null;
-        if (mode == null)
-            return CommandResult.error("Give a mode : window mode windowed|fullscreen|borderless [ID|TITLE|CONTEXT]");
+    private static CommandResult close(WindowContext window) {
+        window.requestClose();
+        return CommandResult.ok("Window " + window.getId() + " (" + window.getName() + ") closes at the end of the frame");
+    }
 
-        String reference = args.length > 3 ? args[3] : null;
-        WindowContext window = reference == null ? engine.commandWindow() : engine.findWindow(reference);
-        if (window == null)
-            return CommandResult.error("Unknown window ->" + reference + "<-, give its id, its title or the name of a context (windows)");
-
+    private static CommandResult changeMode(EWindowMode mode, WindowContext window) {
         window.setWindowMode(mode);
 
         // The applied mode may differ: a screen shows one exclusive fullscreen window at most
@@ -118,19 +107,5 @@ public class WindowGenCom extends BaseCommand {
 
         return CommandResult.ok(message + " : " + window.getId() + " (" + window.getName() + ", context "
                 + window.getContext().getName() + ")", data);
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nwindow : the target window" +
-                "\nwindow ID|TITLE|CONTEXT : the target window becomes this one (see windows)" +
-                "\nwindow main : back to the main window" +
-                "\nwindow close [ID|TITLE|CONTEXT] : close the window (the target by default) at the end of the frame" +
-                "\nwindow mode windowed|fullscreen|borderless [ID|TITLE|CONTEXT] : change the display mode of the window"
-                + " (the target by default), its other display settings stay; a second exclusive fullscreen window on"
-                + " a screen becomes borderless" +
-                "\nThe target is where input, screenshot, monitors, scene, camera and exit work; it goes back to the"
-                + " main window when it is closed";
     }
 }

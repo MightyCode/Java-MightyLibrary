@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -22,14 +23,17 @@ public class WindowsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "windows";
 
     public WindowsGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "The contexts (a scene and its windows) and their windows: parent, modal, blocked, focus, display, sizes and OpenGL objects");
     }
 
     @Override
-    public CommandResult execute(String[] args) {
-        if (checkArgumentHelp(args))
-            return CommandResult.ok(help());
+    protected void syntax(CommandNode root) {
+        root.executes("The window marked target is the one that input, screenshot, monitors, scene and camera work on"
+                + " (see the window command)", context -> describe());
+    }
 
+    private static CommandResult describe() {
         Engine engine = Views.engine();
         WindowContext target = engine.commandWindow();
 
@@ -89,14 +93,5 @@ public class WindowsGenCom extends BaseCommand {
         }
 
         return json;
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nwindows : contexts (a scene and its windows) and windows with id, title, parent, modal, blocked"
-                + " (waits for a modal window), focus, display mode and settings, sizes and the OpenGL objects owned by the window's context."
-                + " The window marked target is the one that input, screenshot, monitors, scene and camera work on"
-                + " (see the window command)";
     }
 }

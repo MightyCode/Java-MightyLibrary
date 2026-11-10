@@ -32,11 +32,13 @@ Le plan **se lit seul** : une discussion neuve, sans cet historique, doit pouvoi
 7. **Documents à mettre à jour à la fin** : `architecture.md` (nouvel état, au présent), `debug-tools.md`, `decisions.md`, `later.md` (ce qui reste et ce qui est préparé pour la suite), `futur-discussion.md`, `CLAUDE.md` (tests couverts, nouvelle règle), `current.md`. Et : « supprimer ce plan ».
 8. **Hors périmètre** : ce qui est volontairement laissé à plus tard, avec l'endroit où c'est noté.
 9. **Questions restantes** à trancher au début de l'implémentation (idéalement une ou zéro).
-10. **Déroulé** : recopier le bloc ci-dessous en adaptant `<branche>` et la liste des vérifications manuelles. C'est lui qui pilote les deux discussions suivantes, dont les prompts tiennent en une ligne.
+10. **Modèles recommandés** : pour la discussion A, le modèle et l'effort (`low`/`medium`/`high`/`xhigh`/`max`) par groupe d'étapes, avec la raison en quelques mots (conception d'une API ou d'un modèle durable, logique délicate, gros fichier → modèle le plus capable et effort élevé ; migration mécanique, docs → modèle plus économique, effort moyen) ; pour la discussion B, un modèle et un effort (relire un gros diff au regard du plan demande un modèle capable). Utiliser les modèles les plus récents disponibles au moment du plan.
+11. **Déroulé** : recopier le bloc ci-dessous en adaptant `<branche>` et la liste des vérifications manuelles. C'est lui qui pilote les deux discussions suivantes, dont les prompts tiennent en une ligne.
 
 ```markdown
 ## Déroulé
 ### Discussion A — implémentation (« Implémente le fichier docs/plan/<sujet>.md »)
+- Commencer par donner à l'utilisateur, en une ou deux lignes, le modèle et l'effort recommandés (« Modèles recommandés ») pour les premières étapes ; si la discussion tourne sur un autre modèle ou un autre effort, le dire et attendre qu'il change ou confirme. Le rappeler en une ligne avant chaque groupe d'étapes dont la recommandation change.
 - Lire ce plan en entier, puis « Pour démarrer ». Poser les questions restantes et attendre les réponses.
 - Ce plan n'est pas commité : il n'existe que dans le dossier du dépôt principal. Dans un worktree, le copier depuis ce dossier.
 - Branche de sujet depuis `dev` : `<branche>`. Premier commit : ce plan tel quel.
@@ -47,6 +49,7 @@ Le plan **se lit seul** : une discussion neuve, sans cet historique, doit pouvoi
 - Pousser la branche. **Pas de PR** : c'est la discussion B. Donner le nom de la branche.
 
 ### Discussion B — PR, vérification, fusion (« Review la PR <branche> »)
+- Commencer par donner à l'utilisateur le modèle et l'effort recommandés pour cette discussion (« Modèles recommandés ») ; si la discussion tourne sur un autre, le dire et attendre qu'il change ou confirme.
 - Lire ce plan et son « Bilan ».
 - Relire le diff de la branche par rapport à `dev` au regard du plan et de `CLAUDE.md` ; signaler ce qui manque ou dévie avant d'aller plus loin.
 - Dernier commit : supprimer ce plan (et `docs/plan/` s'il est vide) ; vérifier que les docs ne gardent aucune trace de ce qui est fini.
@@ -69,7 +72,7 @@ Discussion B (PR, vérification, fusion) :
 Review la PR <branche>
 ```
 
-Rappeler en une ligne que la discussion B se lance une fois la branche poussée par la discussion A.
+Rappeler en une ligne que la discussion B se lance une fois la branche poussée par la discussion A, et donner le modèle et l'effort recommandés pour chacune (résumé de « Modèles recommandés »).
 
 ## Règles
 - Ce skill ne modifie que `docs/plan/<sujet>.md`. Pas de code, pas de commit, pas de changement des autres docs : ils sont listés dans le plan pour la fin de l'implémentation.

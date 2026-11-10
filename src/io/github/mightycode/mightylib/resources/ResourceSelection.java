@@ -47,35 +47,6 @@ public final class ResourceSelection {
         }
     }
 
-    /**
-     * Selection written as words, for the commands: all|TypeName, then any of "name1,name2" (names) and
-     * "re:regex" (no space in the regex), starting at args[from].
-     *
-     * @throws IllegalArgumentException unknown type, invalid regex, or nothing at args[from]
-     */
-    public static ResourceSelection parse(Resources resources, String[] args, int from) {
-        if (args.length <= from)
-            throw new IllegalArgumentException("Missing type: all or the name of a resource type");
-
-        ResourceSelection selection;
-        if (args[from].equalsIgnoreCase("all")) {
-            selection = all();
-        } else {
-            Class<? extends DataType> type = resources.getClassFromName(args[from]);
-            if (type == null)
-                throw new IllegalArgumentException("Unknown resource type ->" + args[from] + "<-");
-            selection = ofType(type);
-        }
-
-        for (int i = from + 1; i < args.length; ++i) {
-            if (args[i].startsWith("re:"))
-                selection = selection.withRegex(args[i].substring(3));
-            else
-                selection = selection.withNames(args[i].split(","));
-        }
-        return selection;
-    }
-
     public Class<? extends DataType> getType() {
         return type;
     }

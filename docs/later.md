@@ -155,9 +155,10 @@ Streaming des musiques longues (tout est décodé en mémoire).
 - **Overlay de debug** (stats, scène, entrées) à côté de la console. S'appuie sur thème, tailles et langues.
 - **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte) ; sélection et copie du journal ; suggestions affichées sous la saisie en plus du Tab bash.
 - **Commandes, suite** :
-  - arguments déclaratifs : un schéma d'arguments par commande qui produirait `help`, la complétion et les niveaux par sous-commande (aujourd'hui écrits à la main : `completeArgument`, `requireLevel`) ;
-  - condition de disponibilité par commande (`isAvailable()`, même refus silencieux que les niveaux) : commande réservée à l'hôte en multijoueur, ou valable dans un certain état de la partie ;
-  - traduction des messages et aides des commandes du joueur (système de langues).
+  - complétion dans `mighty.py` à partir du JSON de `help <cmd>`, et documentation des commandes générée depuis les schémas ;
+  - conditions de multijoueur (commande réservée à l'hôte) : le mécanisme `requires(CommandCondition.hidden|check)` existe, les conditions viendront avec le réseau (permissions par joueur, `futur-discussion.md`) ;
+  - commandes Lua : elles déclareront leur syntaxe par la même API (voir Entités et scripts Lua) ;
+  - traduction des messages et aides des commandes du joueur (système de langues) : les descriptions de la syntaxe deviendront des clés de langue.
 - **Journal à grande échelle** : l'anneau de `ConsoleLog` oublie au-delà de sa capacité ; cible durable : journal fichier tournant (cf. `futur-discussion.md`) relu par la console, filtres par type/source, niveaux de log au lieu de `System.out` préfixé `--`.
 - **Texte de la console** : un `Text` (VAO/VBO, draw call) par ligne visible, sans découpe GL (`glScissor`) : à reprendre avec le batching 2D.
 

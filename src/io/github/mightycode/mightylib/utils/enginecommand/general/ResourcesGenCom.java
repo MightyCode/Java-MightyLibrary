@@ -1,77 +1,55 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.main.Views;
-
-import io.github.mightycode.mightylib.resources.ResourceSelection;
-import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
-import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
-import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.resources.BatchResources;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import io.github.mightycode.mightylib.resources.ResourceArguments;
+import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 public class ResourcesGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "resources";
 
     public ResourcesGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "Resources by type and state of the loading pipeline");
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        if (args.length == 2)
-            return Arrays.asList("batch", "preload", "unpreload");
-        if (args.length == 3 && Arrays.asList("batch", "preload", "unpreload").contains(args[1]))
-            return Views.engine().resources().getResourceNames(BatchResources.class);
-        return Collections.emptyList();
-    }
+    protected void syntax(CommandNode root) {
+        ArgumentType<String> batches = suggest(() -> Views.engine().resources().getResourceNames(BatchResources.class));
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (args.length > 1 && args[1].equals("batch")) {
-            if (args.length < 3)
-                return CommandResult.error("resources batch <name>");
-
-            return CommandResult.ok("What the batch loads", Views.engine().resources().describeBatch(args[2]));
-        }
-
-        // For tests and debugging: load a batch in advance, then cancel it
-        if (args.length > 1 && (args[1].equals("preload") || args[1].equals("unpreload"))) {
-            if (args.length < 3)
-                return CommandResult.error("resources " + args[1] + " <batch>");
-
-            if (args[1].equals("preload"))
-                Views.engine().resources().preloadBatch(args[2]);
-            else
-                Views.engine().resources().cancelPreloadBatch(args[2]);
-
-            return CommandResult.ok(args[1] + " " + args[2]);
-        }
-
-        if (args.length > 1) {
-            ResourceSelection selection;
-            try {
-                selection = ResourceSelection.parse(Views.engine().resources(), args, 1);
-            } catch (IllegalArgumentException e) {
-                return CommandResult.error(e.getMessage());
-            }
-
-            return CommandResult.ok("Detail of the selected data", Views.engine().resources().describe(selection));
-        }
-
-        return CommandResult.ok("Resources by type and state of the loading pipeline", Views.engine().resources().describe());
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nresources : by type, number of loaded, preloaded and referenced data, names of the data loaded but not" +
-                "\nreferenced (leak) or referenced but not loaded (loading or failed), and state of the loading pipeline." +
-                "\nresources batch <name> : what the batch loads (known dependencies, loaded, estimated memory)." +
-                "\nresources preload|unpreload <batch> : load a batch in advance (after what is wanted now), or cancel it." +
-                "\nresources [type|all] [name1,name2] [re:regex] : detail of the selected data (state, version," +
-                "\nreferences, sources), 100 at most.";
+        root.executes("By type, number of loaded, preloaded and referenced data, names of the data loaded but not"
+                        + " referenced (leak) or referenced but not loaded (loading or failed), and state of the loading pipeline",
+                        context -> CommandResult.ok("Resources by type and state of the loading pipeline",
+                                Views.engine().resources().describe()))
+                .then(literal("batch", "What a batch loads (known dependencies, loaded, estimated memory)")
+                        .then(argument("name", batches, "Name of the batch")
+                                .executes(context -> CommandResult.ok("What the batch loads",
+                                        Views.engine().resources().describeBatch(context.get("name"))))))
+                // For tests and debugging: load a batch in advance, then cancel it
+                .then(literal("preload", "Load a batch in advance (after what is wanted now)")
+                        .then(argument("batch", batches, "Name of the batch").executes(context -> {
+                            String batch = context.get("batch");
+                            Views.engine().resources().preloadBatch(batch);
+                            return CommandResult.ok("preload " + batch);
+                        })))
+                .then(literal("unpreload", "Cancel the preload of a batch")
+                        .then(argument("batch", batches, "Name of the batch").executes(context -> {
+                            String batch = context.get("batch");
+                            Views.engine().resources().cancelPreloadBatch(batch);
+                            return CommandResult.ok("unpreload " + batch);
+                        })))
+                .then(ResourceArguments.selection(() -> Views.engine().resources(),
+                        "all or the name of a resource type: detail of the selected data (state, version, references,"
+                                + " sources), 100 at most",
+                        selection -> CommandResult.ok("Detail of the selected data",
+                                Views.engine().resources().describe(selection))));
     }
 }

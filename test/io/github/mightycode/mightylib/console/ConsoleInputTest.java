@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.TestCommands;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +17,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -26,17 +29,14 @@ class ConsoleInputTest {
 
     private static class Command extends BaseCommand {
         Command(String name) {
-            super(TestCommands.Id(name), ECommandLevel.USER);
+            super(TestCommands.Id(name), ECommandLevel.USER, "A command of the tests");
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            return CommandResult.ok("");
-        }
-
-        @Override
-        public Collection<String> completeArgument(String[] args) {
-            return args.length == 2 ? Arrays.asList("alpha", "alpine", "beta") : Collections.emptyList();
+        protected void syntax(CommandNode root) {
+            root.executes(context -> CommandResult.ok(""))
+                    .then(argument("word", suggest(() -> Arrays.asList("alpha", "alpine", "beta"))).optional()
+                            .executes(context -> CommandResult.ok("")));
         }
     }
 

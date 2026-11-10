@@ -249,7 +249,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     /**
      * A command of this scene, run under it (its view and the OpenGL context of its window), removed when the
-     * scene is left, even during its loading. It can be typed while the scene loads: BaseCommand.requireLaunched.
+     * scene is left, even during its loading. It can be typed while the scene loads: CommandCondition.launched on the root of its syntax.
      * The same scene shown in several windows has the command in each: the window targeted by the commands runs it.
      * @throws IllegalArgumentException if a command of the engine, the game or this scene has the same identifier
      */

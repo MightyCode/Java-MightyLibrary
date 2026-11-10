@@ -5,14 +5,17 @@ import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import io.github.mightycode.mightylib.utils.enginecommand.JsonSelect;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONObject;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 public class StatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "stats";
@@ -20,34 +23,47 @@ public class StatsGenCom extends BaseCommand {
     private static final String FPS = "fps";
 
     public StatsGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER,
+                "Timings and rendering counters of the last second, OpenGL objects alive and memory");
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        // The player only has the frames per second
-        if (!hasLevel(ECommandLevel.DEV))
-            return args.length == 2 ? Collections.singletonList(FPS) : Collections.emptyList();
+    protected void syntax(CommandNode root) {
+        // The fields of the statistics (the first level, deeper ones are written with dots)
+        ArgumentType<String> fields = suggest(() -> {
+            List<String> values = new ArrayList<>(EngineStats.toJson().keySet());
+            values.add("glObjects");
+            return values;
+        });
 
-        // stats reset, or fields of the statistics (the first level, deeper ones are written with dots)
-        List<String> values = new ArrayList<>(EngineStats.toJson().keySet());
-        values.add("glObjects");
-        if (args.length == 2)
-            values.add("reset");
-        return values;
+        root.then(literal(FPS, "Frames per second")
+                        .executes(context -> context.currentLevel().includes(ECommandLevel.DEV)
+                                ? fields(new String[]{FPS})
+                                : CommandResult.ok("FPS : " + EngineStats.toJson().opt(FPS)))
+                        .then(argument("fields", fields, "Other fields, dotted paths").variadic().level(ECommandLevel.DEV)
+                                .executes(context -> {
+                                    List<String> others = context.getList("fields");
+                                    List<String> all = new ArrayList<>();
+                                    all.add(FPS);
+                                    all.addAll(others);
+                                    return fields(all.toArray(new String[0]));
+                                })))
+                .then(literal("reset", "Reset the worst frame timings (maxFrameMsSinceReset,"
+                        + " maxFrameIntervalMsSinceReset)").level(ECommandLevel.DEV)
+                        .executes(context -> {
+                            EngineStats.resetMax();
+                            return CommandResult.ok("Worst frame timings reset");
+                        }))
+                .then(argument("fields", fields, "Only these fields (dotted paths, for example fps glObjects.Texture)")
+                        .variadic().optional().level(ECommandLevel.DEV)
+                        .executes("Every statistic, or only the given fields", context -> {
+                            List<String> names = context.getList("fields");
+                            return fields(names.toArray(new String[0]));
+                        }));
     }
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (args.length == 2 && args[1].equals(FPS) && !hasLevel(ECommandLevel.DEV))
-            return CommandResult.ok("FPS : " + EngineStats.toJson().opt(FPS));
-        requireLevel(ECommandLevel.DEV, args.length > 1 ? args[1] : null);
-
-        if (args.length > 1 && args[1].equals("reset")) {
-            EngineStats.resetMax();
-            return CommandResult.ok("Worst frame timings reset");
-        }
-
+    // The statistics, or only the given fields
+    private static CommandResult fields(String[] names) {
         JSONObject data = EngineStats.toJson();
 
         JSONObject glObjects = new JSONObject();
@@ -56,18 +72,9 @@ public class StatsGenCom extends BaseCommand {
 
         data.put("glObjects", glObjects);
 
-        // stats field1 field2... : only these fields (dotted paths, for example glObjects.Texture)
-        if (args.length > 1)
-            data = JsonSelect.Select(data, Arrays.copyOfRange(args, 1, args.length));
+        if (names.length > 0)
+            data = JsonSelect.Select(data, names);
 
         return CommandResult.ok("Statistics of the last second", data);
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nstats : timings and rendering counters of the last second, OpenGL objects alive and memory" +
-                "\nstats [field...] : only the given fields (dotted paths, for example fps glObjects.Texture)" +
-                "\nstats reset :reset the worst frame timings (maxFrameMsSinceReset, maxFrameIntervalMsSinceReset)";
     }
 }
