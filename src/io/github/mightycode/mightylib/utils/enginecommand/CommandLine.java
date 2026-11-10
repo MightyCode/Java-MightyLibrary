@@ -77,7 +77,8 @@ public final class CommandLine {
         for (int i = 0; i < beginning.length(); ++i) {
             char c = beginning.charAt(i);
 
-            if (!inWord && !(Character.isWhitespace(c) && !inQuotes))
+            // Outside a word, inQuotes is always false (an opening quote starts a word)
+            if (!inWord && !Character.isWhitespace(c))
                 wordStart = i;
 
             if (c == '"') {

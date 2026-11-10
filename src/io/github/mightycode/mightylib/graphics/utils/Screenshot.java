@@ -81,14 +81,13 @@ public final class Screenshot {
     public static void captureIfRequested(long windowId) {
         boolean requested = false;
         for (Request request : requests) {
-            if (request.windowId == windowId)
+            if (request.windowId == windowId) {
                 requested = true;
+                break;
+            }
         }
 
         if (!requested)
-            return;
-
-        if (requests.isEmpty())
             return;
 
         int width, height;
