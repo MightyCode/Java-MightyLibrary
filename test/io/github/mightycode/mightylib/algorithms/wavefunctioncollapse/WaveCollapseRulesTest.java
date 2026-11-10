@@ -38,7 +38,7 @@ class WaveCollapseRulesTest {
         assertEquals("new", current.getRecommendedTileset());
         assertEquals(3, current.getNumberRuledTiles());
         assertNotNull(current.getRule(2));
-        assertEquals(3, current.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAl_POS).size());
+        assertEquals(3, current.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAL_POS).size());
         assertEquals("old", newVersion.getRecommendedTileset(), "the copy gets the previous version");
     }
 

@@ -27,7 +27,7 @@ public abstract class ServerThread extends CommunicationThread{
     public void doStop() {
         this.running = false;
         if (server != null && server.hasClient()) {
-            server.closeConnexion();
+            server.closeConnection();
         }
     }
 }

@@ -35,7 +35,7 @@ public class ServerTcp {
         return client != null;
     }
 
-    public void acceptConnexion() {
+    public void acceptConnection() {
         try {
             client = serverSocket.accept();
             out = new BufferedWriter(new OutputStreamWriter(client.getOutputStream(), StandardCharsets.UTF_8));
@@ -109,7 +109,7 @@ public class ServerTcp {
 
         return message;
     }
-    public void closeConnexion() {
+    public void closeConnection() {
         if (client == null) {
             System.out.println("Can't close uncreated connection.");
             return;

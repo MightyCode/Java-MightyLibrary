@@ -13,7 +13,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - `docs/debug-tools.md` : commandes, serveur de debug, simulation d'entrées, traque des fuites, profilage (JFR, RenderDoc).
 - `docs/bonnes-pratiques.md` : points que le projet doit respecter, chacun avec sa vérification ; revue hebdomadaire à la demande de l'utilisateur (skill `/revue-pratiques`).
 - `docs/plan/` : plans des gros points en cours d'implémentation (un fichier par sujet, écrit par `/planification-ml`, supprimé à la fusion de la PR qui le réalise).
-- Skills du projet (`.claude/skills/`) : `/revue-pratiques`, `/analyse-intellij` (warnings exportés d'IntelliJ), `/pr-ml [branche]` (relecture du diff par rapport à `dev`, erreurs discutées puis corrigées, docs, PR GitHub fusionnée, retour sur `dev` à jour), `/planification-ml <sujet>` (discussion en questions-réponses, plan dans `docs/plan/`, commandes des discussions d'implémentation et de `/pr-ml`).
+- Skills du projet (`.claude/skills/`) : `/revue-pratiques`, `/analyse-intellij` (warnings exportés d'IntelliJ), `/implement-next-objective [objectif]` (implémente la prochaine ligne de `current.md` si elle est assez petite, sinon renvoie vers `/planification-ml` ; s'arrête avant la PR), `/pr-ml [branche]` (relecture du diff par rapport à `dev`, erreurs discutées puis corrigées, docs, PR GitHub fusionnée, retour sur `dev` à jour), `/planification-ml <sujet>` (discussion en questions-réponses, plan dans `docs/plan/`, commandes des discussions d'implémentation et de `/pr-ml`).
 
 ## Priorités
 - **La 2D est prioritaire** (rendu 2D, tilemaps, texte, GUI, Camera2D, animations, physique 2D).
