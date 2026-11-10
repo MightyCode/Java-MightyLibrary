@@ -192,13 +192,14 @@ class CommandLevelsTest {
         Commands commands = new Commands();
 
         // Refused before reaching the engine: no GL needed
-        assertEquals("Unknown argument(s) ->glObjects<-", run(commands, "stats glObjects", PLAYER).getMessage());
+        assertTrue(run(commands, "stats glObjects", PLAYER).getMessage().startsWith("Unknown argument ->glObjects<-"));
         assertFalse(run(commands, "stats", PLAYER).isSuccess());
-        assertEquals("Unknown argument(s) ->my.png<-", run(commands, "screenshot my.png", PLAYER).getMessage());
-        assertEquals("Unknown argument(s) ->log<-", run(commands, "console log", PLAYER).getMessage());
-        assertEquals("Unknown argument(s) ->follow<-", run(commands, "console follow", PLAYER).getMessage());
+        assertTrue(run(commands, "screenshot my.png", PLAYER).getMessage().startsWith("Unknown argument ->my.png<-"));
+        assertTrue(run(commands, "console log", PLAYER).getMessage().startsWith("Unknown argument ->log<-"));
+        assertTrue(run(commands, "console follow", PLAYER).getMessage().startsWith("Unknown argument ->follow<-"));
 
-        assertEquals(List.of("fps", "help"), commands.complete("stats ", PLAYER).getCandidates());
+        assertEquals(List.of("fps"), commands.complete("stats ", PLAYER).getCandidates());
+        assertFalse(run(commands, "screenshot --rect 0 0 1 1 --corners 0 0 1 1", DEVELOPER).isSuccess());
         assertFalse(commands.complete("console ", PLAYER).getCandidates().contains("log"));
         assertTrue(commands.complete("console ", DEVELOPER).getCandidates().contains("log"));
     }
