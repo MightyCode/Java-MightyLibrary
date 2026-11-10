@@ -103,3 +103,33 @@ Chaque étape compile, passe `mvn -o -q test` et laisse le jeu fonctionnel. Les 
 - Dernier commit : supprimer ce plan (et `docs/plan/` s'il est vide) ; vérifier que les docs ne gardent aucune trace de ce qui est fini.
 - Pousser, ouvrir une PR vers `dev` (pas `master`) dont la description reprend le Bilan et la liste des vérifications manuelles.
 - Attendre le feu vert de l'utilisateur, puis fusionner par un commit de fusion (pas de squash), mettre `dev` à jour en local, supprimer la branche en local et sur GitHub.
+
+## Bilan
+### Fait (étapes 1 à 13)
+- Noyau (`utils/enginecommand/syntax` : `CommandNode`, `ArgumentType`, `Arguments`, `Option`, `CommandContext`, `CommandParser`, `CommandSyntaxException`, `CommandCondition`, `CommandHelp`), niveaux et conditions par branche, complétion, aide et JSON générés, branchement dans `BaseCommand`/`Commands`, commandes `as` et `complete`.
+- Les 21 commandes générales et celles de la démo (`demo:spawn`, `demo:menu`) déclarent leur syntaxe ; `ResourceArguments` (type, noms, `--regex`) sert `reload`, `resources`, `watch` ; `ResourceSelection.parse` supprimé.
+- Ancien chemin supprimé : `execute(String[])`, `completeArgument`, `checkArgumentHelp`, `noEnoughArgumentError`, `unknownArgumentError`, `requireLevel`, `hasLevel`, `currentLevel()`, `requireLaunched`, `CommandMethods`, tout le code `Provisional` ; `syntax` est abstraite, une commande sans syntaxe est refusée à l'enregistrement. Plus aucun `args[` dans `enginecommand/general`.
+- Documents mis à jour (`CLAUDE.md`, `architecture.md`, `debug-tools.md`, `decisions.md`, `later.md`) ; `licence.md` inchangé.
+
+### Écarts au plan, et pourquoi
+- Étapes 1 à 5 : `Option.excludes(...)` (`--rect`/`--corners` : erreur d'analyse, retirés de la complétion), `executes(description, handler)`, section « Arguments » dans l'aide, `CommandContext.source()`/`commandName()`, `CommandCondition.launched(Supplier)` (la scène visée change avec la fenêtre), `ArgumentType.fixedValues()`/`isGreedy()` ; une condition `hidden` sur la racine rend la commande inexistante (couvre `isAvailable()`).
+- « `sound gain` » : la commande s'appelle `changegain` ; son nom est inchangé (`changegain list`, `changegain <nœud> <valeur>`).
+- `input click` : `input click [x y]` ou `input click left|right|middle [x y]`. Les arguments d'un même niveau sont essayés dans l'ordre sans retour en arrière : un bouton numérique serait lu comme `x`. Le bouton numérique reste accepté par `input mouse hold|release [bouton]`.
+- `camera` : les actions (`move`, `lookat`, `zoom`, `rotation`) sont proposées pour toute caméra (une condition ne lit pas les valeurs de la ligne) ; une action de l'autre dimension répond « The camera x is 2D : move, zoom, rotation ». Un nom ou id inconnu est maintenant une erreur de type (« Expected one of … ») au lieu de « Unknown camera ».
+- Messages d'erreur d'analyse (« Unknown argument ->x<- », « Expected … for <arg>, got ->x<- », « Incomplete command » suivis de l'usage) à la place des anciens « Unknown argument(s) ->x<- » / « No argument ! ». `stats` seul est « Incomplete command » pour le joueur.
+- `gamepad <id> axis … <valeur>` : valeur bornée à -1..1 (documenté, non vérifié avant) ; `scene <nom> args…` : un argument de scène qui commence par `--` est lu comme une option.
+- `demo:spawn` : ajout de `--shape square|wide|tall` (défaut `square`) pour garder les formes de l'ancienne commande ; `spawn clear` décharge les renderers créés.
+- `help` : type maison (`commandNames` pour la complétion) ; l'erreur d'une commande inconnue devient « Unknown command ->x<- ».
+- Tests : `CommandsTest`, `CommandLevelsTest`, `CommandScriptTest`, `ConsoleInputTest` migrés au schéma (commandes de test par `TestCommands.Syntax` ou classes qui surchargent `syntax`) ; test `commandWithoutSyntaxKeepsItsHelp` supprimé avec le code provisoire ; `ResourceSelectionTest` passe par `ResourceArguments`. Scripts locaux non versionnés `tools/scripts/*.txt` : `wait loaded 60` → `wait loaded --timeout 60`.
+
+### Vérifié, et comment
+- `mvn -o -q test` passe à chaque étape (dont `CommandLevelsTest.generalSubCommandsOfTheDeveloperAreHidden` adapté : `stats`/`screenshot`/`console` du joueur, `screenshot --rect … --corners …` refusé).
+- `scenario.py` à chaque étape : `help <cmd>`/`<cmd> --help`, `wait loaded --timeout`, `gl summary`, `monitors modes`, `textureupload`, `exec --help`, `scene`, `window mode`, `cheats` (étape 6) ; `resources TextureData`, `reload TextureData --regex .*`, `watch mode poll --interval 500`, `watch TextureData --regex tile.*`, types et regex invalides, complétion de `reload` (étape 7) ; `complete --as user "stats "` (`fps` seul), `as user help stats`, `as user screenshot target/x.png` (erreur d'argument inconnu), `as user console log`, `screenshot target/s.png --rect 0 0 200 100 --scale 0.5`, `--rect` avec `--corners` refusé (étape 8) ; `camera` dans `Scene2D` et `Scene3D`, `gamepad` complet avec une manette virtuelle (étape 9) ; `input` : action, `key`, `key hold|release`, `mouse`, `click` (3 formes), `scroll`, `text`, `state`, erreurs, complétion, dans `Scene3D` (étape 10) ; `spawn` (bornes, options, `--help`, `spawn list` masqué au joueur, `complete --as cheat`, `leakcheck CommandsScene2D` : pas de fuite) (étape 11).
+- Non refait en étape 6 : `python tools/mighty.py --wait 10 screenshot --help` sur un jeu lancé (le prédécesseur avait vérifié que `mighty.py` et `scenario.py` transmettent les `--`).
+
+### À vérifier à la main par l'utilisateur
+- Console de `CommandsScene2D` (`²` ou F1) : `cheats on` ; `spawn` + Tab (sous-commandes, `clear`) ; `spawn 5 --c` + Tab (`--color`, puis `blue green red`) ; `spawn 5 --color red --size 2 --at 300 200` ; `spawn --help` ; `spawn 500` (erreur de borne avec usage) ; `spawn clear`.
+- Console au niveau joueur avec `-Ddemo.release=true` : Tab sur `stats ` (seulement `fps`), `console ` (pas de `log`/`follow`), `screenshot ` ; `help stats` et `help` sans branches `DEV` ; `screenshot a.png` refusé comme argument inconnu ; `spawn list` absent.
+- Tab sur `reload `, `reload TextureData ` (noms des ressources), `watch mode `, `input key `, `window mode `, `gamepad ` en développeur ; `help <cmd>` d'une commande et `<cmd> --help`.
+- `camera` dans `Scene3D` : `camera`, `camera main3D lookat 1 2 3`, `camera main3D move 1 2 3` ; une action 2D sur la caméra 3D donne l'erreur lisible.
+- Une scène en chargement : `scene CommandsScene2D slow` puis `spawn 1` tout de suite : « Scene still loading ».
