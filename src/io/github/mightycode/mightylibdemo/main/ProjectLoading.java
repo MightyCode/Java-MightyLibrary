@@ -22,6 +22,7 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -48,16 +49,13 @@ class ProjectLoading implements IProjectLoading {
     // Commands of the game: kept for the whole run, whatever the scene
     @Override
     public void registerCommands(CommandRegistry registry) {
-        registry.register(new BaseCommand(Identifier.of("demo", "menu"), ECommandLevel.USER) {
+        registry.register(new BaseCommand(Identifier.of("demo", "menu"), ECommandLevel.USER, "Go back to the menu") {
             @Override
-            public CommandResult execute(String[] args) {
-                Views.engine().sceneManager().requestSceneChange(new MenuScene(), new String[]{});
-                return CommandResult.ok("Back to the menu");
-            }
-
-            @Override
-            public String help() {
-                return super.help() + "\ndemo:menu : go back to the menu";
+            protected void syntax(CommandNode root) {
+                root.executes(context -> {
+                    Views.engine().sceneManager().requestSceneChange(new MenuScene(), new String[]{});
+                    return CommandResult.ok("Back to the menu");
+                });
             }
         });
     }
