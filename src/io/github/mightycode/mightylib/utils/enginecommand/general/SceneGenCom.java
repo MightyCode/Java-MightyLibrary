@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -43,8 +44,9 @@ public class SceneGenCom extends BaseCommand {
         if (!Scene.class.isAssignableFrom(sceneClass))
             return CommandResult.error(sceneClass.getName() + " is not a scene");
 
+        // A scene belongs to the window of the view creating it: the targeted context, not the engine
         Scene scene;
-        try {
+        try (Views.Scope ignored = Views.enter(Views.engine().commandContext())) {
             scene = (Scene) sceneClass.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
             return CommandResult.error("Can't create " + sceneClass.getName() + " : " + e);
