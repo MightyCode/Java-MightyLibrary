@@ -36,7 +36,9 @@ class FakeGamepadSource implements IGamepadSource {
     @Override public boolean isGamepad(int id) { return mapped.getOrDefault(id, false); }
     @Override public String getName(int id) { return "Fake " + id; }
     @Override public String getGuid(int id) { return "guid" + id; }
-    @Override public boolean addMappings(String mappings) { return true; }
+    final java.util.List<String> addedMappings = new java.util.ArrayList<>();
+
+    @Override public boolean addMappings(String mappings) { addedMappings.add(mappings); return !mappings.isEmpty(); }
     @Override public void free() { callback = null; }
 
     @Override

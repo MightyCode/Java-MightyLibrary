@@ -10,6 +10,7 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -160,6 +161,7 @@ public final class ContextManager {
         if (gamepadManager == null) {
             gamepadManager = new GamepadManager();
             gamepadManager.init();
+            gamepadManager.loadMappingsFile(Paths.get(GamepadManager.MAPPINGS_FILE));
         }
 
         return gamepadManager;

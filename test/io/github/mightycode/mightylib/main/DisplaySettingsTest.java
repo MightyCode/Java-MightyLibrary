@@ -62,6 +62,16 @@ class DisplaySettingsTest {
     }
 
     @Test
+    void vsyncIsOffByDefaultAndKeptByCopyAndModeChanges() {
+        assertFalse(new DisplaySettings().isVsync());
+
+        DisplaySettings display = new DisplaySettings(EWindowMode.FULLSCREEN).setVsync(true);
+        assertTrue(display.copy().isVsync());
+        assertTrue(display.setMode(EWindowMode.WINDOWED).isVsync());
+        assertTrue(display.toString().endsWith(", vsync"));
+    }
+
+    @Test
     void copyIsIndependent() {
         DisplaySettings display = new DisplaySettings(EWindowMode.FULLSCREEN).setWindowedSize(800, 600);
         DisplaySettings copy = display.copy();

@@ -27,7 +27,10 @@ public class Text extends Renderer implements Cloneable {
     private String text;
 
     private final Vector2f leftUpPosition;
+    // Text and padding : what the reference and size() are about
     private final Vector2f rectangleSize;
+    // Space between the edges of the rectangle and the text : x left, y up, z right, w down
+    private final Vector4f padding;
 
     private EDirection reference;
     private ETextAlignment alignment;
@@ -51,6 +54,7 @@ public class Text extends Renderer implements Cloneable {
         this.alignment = ETextAlignment.Left;
 
         this.rectangleSize = new Vector2f(0, 0);
+        this.padding = new Vector4f(0, 0, 0, 0);
         this.leftUpPosition = new Vector2f(0, 0);
 
         // Dynamic: text content can change every frame (debug info, counters...)
@@ -75,7 +79,7 @@ public class Text extends Renderer implements Cloneable {
 
         if (charPositions != null && charPositions.length >= SIZE_COORDINATES)
             DrawnTexts.record(text, charPositions[0] + position.x, charPositions[1] + position.y,
-                    rectangleSize.x, rectangleSize.y, fontSize);
+                    rectangleSize.x - padding.x - padding.z, rectangleSize.y - padding.y - padding.w, fontSize);
 
         super.display();
     }
@@ -152,6 +156,28 @@ public class Text extends Renderer implements Cloneable {
         this.computeRightUpPosition();
 
         return this;
+    }
+
+    /**
+     * Space kept between the edges of the rectangle and the text. The rectangle (size(), leftUpPosition(), the
+     * reference and the position) includes it : a text with a padding is a bigger box, the text inside.
+     */
+    public Text setPadding(float left, float up, float right, float down) {
+        if (left < 0 || up < 0 || right < 0 || down < 0)
+            throw new IllegalArgumentException("A padding can't be negative : " + left + ", " + up + ", " + right + ", " + down);
+
+        if (padding.x == left && padding.y == up && padding.z == right && padding.w == down)
+            return this;
+
+        padding.set(left, up, right, down);
+        computeRightUpPosition();
+
+        return this;
+    }
+
+    // A copy : x left, y up, z right, w down
+    public Vector4f getPadding() {
+        return new Vector4f(padding);
     }
 
     public EDirection reference() {
@@ -273,6 +299,8 @@ public class Text extends Renderer implements Cloneable {
         float lineAlignmentOffset = 0;
 
         rectangleSize.set(usedFont().computeSize(text, fontSize));
+        float textWidth = rectangleSize.x;
+        rectangleSize.add(padding.x + padding.z, padding.y + padding.w);
 
         for (int j = 0; j < lines.length; ++j) {
             for (int i = 0; i < lines[j].length(); i++) {
@@ -319,10 +347,10 @@ public class Text extends Renderer implements Cloneable {
         for (int j = 0; j < lines.length; ++j) {
             switch(this.alignment){
                 case Center:
-                    lineAlignmentOffset = (rectangleSize.x - linesSize[j]) / 2;
+                    lineAlignmentOffset = (textWidth - linesSize[j]) / 2;
                     break;
                 case Right:
-                    lineAlignmentOffset = rectangleSize.x - linesSize[j];
+                    lineAlignmentOffset = textWidth - linesSize[j];
                     break;
             }
 
@@ -341,8 +369,8 @@ public class Text extends Renderer implements Cloneable {
                 sizeTemp.x = (float)((fontChar.getWidth()) * fontSize);
                 sizeTemp.y = (float)((fontChar.getHeight()) * fontSize);
 
-                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset;
-                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y;
+                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset + padding.x;
+                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y + padding.y;
 
                 temp.x = (posTemp.x);
                 temp.y = (sizeTemp.x + posTemp.x);
@@ -408,6 +436,7 @@ public class Text extends Renderer implements Cloneable {
         text.setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
+                .setPadding(padding.x, padding.y, padding.z, padding.w)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
@@ -423,6 +452,7 @@ public class Text extends Renderer implements Cloneable {
                 .setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
+                .setPadding(padding.x, padding.y, padding.z, padding.w)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)

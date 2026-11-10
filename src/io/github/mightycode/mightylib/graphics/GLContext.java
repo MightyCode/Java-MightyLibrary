@@ -100,6 +100,12 @@ public final class GLContext {
         return context;
     }
 
+    /** Frames wait for the screen refresh (swap interval 1) or not (0). The swap interval belongs to the current context. */
+    public void setVsync(boolean vsync) {
+        makeCurrent();
+        glfwSwapInterval(vsync ? 1 : 0);
+    }
+
     private void applyDefaultState() {
         glfwSwapInterval(0);
 
