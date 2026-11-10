@@ -8,7 +8,9 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -62,6 +64,13 @@ public class ConsoleGenCom extends BaseCommand {
                         .then(argument("count", integer(1, Integer.MAX_VALUE),
                                 "Number of lines (" + DEFAULT_LOG_LINES + " by default)")
                                 .executes(context -> log(Views.engine().consoleLog(), context.get("count"), null))))
+                .then(literal("copy", "Copy the last lines of the console to the clipboard, as shown"
+                        + " (the program output only when it is shown)")
+                        .option(Option.of("all", "Copy the program output too, even when the console hides it")
+                                .level(ECommandLevel.DEV))
+                        .executes("Copy every line of the console", context -> copy(context, 0))
+                        .then(argument("count", integer(1, Integer.MAX_VALUE), "Number of lines, the last ones")
+                                .executes(context -> copy(context, context.get("count")))))
                 // The program output is seen in DEV only
                 .then(literal("logs", "Show or hide the program output (stdout, stderr) in the console")
                         .level(ECommandLevel.DEV)
@@ -85,6 +94,20 @@ public class ConsoleGenCom extends BaseCommand {
             action.accept(console);
             return status(console);
         });
+    }
+
+    private static CommandResult copy(CommandContext context, int count) {
+        Console console = Views.engine().console();
+        if (console == null)
+            return status(null);
+
+        String text = console.copyLast(count, context.currentLevel(), context.has("all"));
+        if (text.isEmpty())
+            return CommandResult.ok("No line to copy", new JSONObject().put("lines", 0).put("chars", 0));
+
+        int lines = text.split("\n", -1).length;
+        return CommandResult.ok(lines + (lines == 1 ? " line copied" : " lines copied"),
+                new JSONObject().put("lines", lines).put("chars", text.length()));
     }
 
     // null: switch

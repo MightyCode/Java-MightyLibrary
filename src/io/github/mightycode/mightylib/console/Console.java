@@ -160,6 +160,20 @@ public final class Console {
         return !hiddenTypes.contains(ConsoleLog.EType.OUT) || !hiddenTypes.contains(ConsoleLog.EType.ERR);
     }
 
+    /**
+     * Copy the last lines of the console to the clipboard of the system, as Ctrl+C on a selection of them would: the
+     * lines the level sees, without the types hidden by "console logs off" (unless all). Main thread.
+     * @param count lines to copy, 0 or less: every line kept
+     * @return the copied text, empty (clipboard unchanged) when there is no line
+     */
+    public String copyLast(int count, ECommandLevel level, boolean all) {
+        Set<ConsoleLog.EType> hidden = all ? Collections.<ConsoleLog.EType>emptySet() : getHiddenTypes();
+        String text = LogSelection.LastLinesText(log, level, line -> !hidden.contains(line.getType()), count);
+        if (!text.isEmpty())
+            engine.contexts().getMainWindow().getSystemInfo().setClipboardContent(text);
+        return text;
+    }
+
     // The types of lines not shown (read by the panels at each display)
     Set<ConsoleLog.EType> getHiddenTypes() { return Collections.unmodifiableSet(hiddenTypes); }
 

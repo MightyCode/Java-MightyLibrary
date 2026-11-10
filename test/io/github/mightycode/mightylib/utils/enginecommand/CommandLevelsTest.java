@@ -214,6 +214,14 @@ class CommandLevelsTest {
         assertTrue(commands.complete("console ", DEVELOPER).getCandidates().contains("logs"));
         assertEquals(List.of("off", "on"), commands.complete("console logs ", DEVELOPER).getCandidates());
         assertTrue(run(commands, "console logs maybe", DEVELOPER).getMessage().contains("maybe"));
+
+        // The player copies what the console shows; --all (the program output too) is for the developer
+        assertTrue(commands.complete("console ", PLAYER).getCandidates().contains("copy"));
+        assertFalse(commands.complete("console copy --", PLAYER).getCandidates().contains("--all"));
+        assertTrue(commands.complete("console copy --", DEVELOPER).getCandidates().contains("--all"));
+        assertFalse(run(commands, "console copy --all", PLAYER).isSuccess());
+        assertTrue(run(commands, "console copy 0", DEVELOPER).getMessage().contains("0"));
+        assertTrue(run(commands, "console copy five", DEVELOPER).getMessage().contains("five"));
     }
 
     @Test

@@ -80,6 +80,21 @@ final class LogSelection {
         return text.toString();
     }
 
+    /**
+     * The last lines the viewer sees (and the filter shows), as copied like a selection: joined by line breaks.
+     * Empty when there is no line. The command "console copy".
+     * @param count lines to copy, 0 or less: every line kept
+     */
+    static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count) {
+        List<ConsoleLog.Line> lines = log.upTo(Long.MAX_VALUE, count > 0 ? count : Integer.MAX_VALUE, viewer, filter);
+        if (lines.isEmpty())
+            return "";
+
+        ConsoleLog.Line last = lines.get(lines.size() - 1);
+        return CopyText(log, viewer, filter, new LogPosition(lines.get(0).getId(), 0),
+                new LogPosition(last.getId(), ConsoleLayout.DisplayedText(last).length()));
+    }
+
     @Override
     public String toString() {
         return anchor + "-" + focus;
