@@ -144,15 +144,19 @@ public class MouseManager {
     public Vector2f getRawPos() { return new Vector2f(windowPos); }
 
     public boolean getRawButton(int buttonId) {
-        return buttonId >= 0 && buttonId < MOUSE_BUTTONS && state[buttonId];
+        return isButton(buttonId) && state[buttonId];
     }
 
     public boolean rawButtonPressed(int buttonId) {
-        return state[buttonId] && !oldState[buttonId];
+        return isButton(buttonId) && state[buttonId] && !oldState[buttonId];
     }
 
     public boolean rawButtonReleased(int buttonId) {
-        return !state[buttonId] && oldState[buttonId];
+        return isButton(buttonId) && !state[buttonId] && oldState[buttonId];
+    }
+
+    private static boolean isButton(int buttonId) {
+        return buttonId >= 0 && buttonId < MOUSE_BUTTONS;
     }
 
     public void mouseUpdate(){

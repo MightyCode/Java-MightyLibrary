@@ -4,6 +4,7 @@ import org.joml.Vector2f;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LAST;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 
 // The owner of the capture (the console) reads the mouse the game no longer sees, simulation included
@@ -55,6 +56,13 @@ class MouseRawTest {
         mouse.postUpdate();
         assertTrue(mouse.rawButtonReleased(GLFW_MOUSE_BUTTON_LEFT));
         assertFalse(mouse.buttonReleased(GLFW_MOUSE_BUTTON_LEFT));
+
+        // A button that does not exist is never pressed nor released (no exception)
+        for (int button : new int[]{-1, GLFW_MOUSE_BUTTON_LAST + 1}) {
+            assertFalse(mouse.getRawButton(button));
+            assertFalse(mouse.rawButtonPressed(button));
+            assertFalse(mouse.rawButtonReleased(button));
+        }
     }
 
     @Test
