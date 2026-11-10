@@ -27,6 +27,23 @@ class ConsoleLayoutTest {
         return layout.rows().stream().map(ConsoleLayout.Row::text).collect(Collectors.toList());
     }
 
+    // A panel that redraws its rows when the layout built them again since its last display
+    private static final class Panel {
+        private final ConsoleLayout layout;
+        private long drawn = -1;
+
+        Panel(ConsoleLayout layout) {
+            this.layout = layout;
+        }
+
+        boolean redraws() {
+            layout.refresh();
+            boolean changed = layout.buildCount() != drawn;
+            drawn = layout.buildCount();
+            return changed;
+        }
+    }
+
     private static long add(ConsoleLog log, String text) {
         return log.add(ConsoleLog.EType.RESULT, null, text, ECommandLevel.USER).get(0).getId();
     }
@@ -160,27 +177,50 @@ class ConsoleLayoutTest {
         assertNull(layout.anchor());
     }
 
-    // The panel redraws its rows only when refresh() says they changed: a scroll builds the rows itself
+    // The panel redraws its rows only when the layout built them again: a scroll builds the rows itself
     @Test
     void aScrollIsSeenByTheNextRefresh() {
         ConsoleLog log = new ConsoleLog(100);
         for (int i = 1; i <= 10; ++i)
             add(log, "l" + i);
         ConsoleLayout layout = layout(log, 3);
-        assertTrue(layout.refresh());
-        assertFalse(layout.refresh());
+        Panel panel = new Panel(layout);
+        assertTrue(panel.redraws());
+        assertFalse(panel.redraws());
 
         layout.scroll(1);
-        assertTrue(layout.refresh());
-        assertFalse(layout.refresh());
+        assertTrue(panel.redraws());
+        assertFalse(panel.redraws());
 
         layout.scrollToTop();
-        assertTrue(layout.refresh());
+        assertTrue(panel.redraws());
 
         layout.scrollToEnd();
-        assertTrue(layout.refresh());
+        assertTrue(panel.redraws());
         assertEquals(List.of("l8", "l9", "l10"), layout.rows().stream().map(ConsoleLayout.Row::text)
                 .collect(Collectors.toList()));
+    }
+
+    // Regression: a read that refreshes (the mouse, the indicator) between two displays hid a build from the panel
+    @Test
+    void aBuildIsSeenByThePanelWhateverRefreshedFirst() {
+        ConsoleLog log = new ConsoleLog(100);
+        for (int i = 1; i <= 10; ++i)
+            add(log, "l" + i);
+        ConsoleLayout layout = layout(log, 3);
+        Panel panel = new Panel(layout);
+        assertTrue(panel.redraws());
+
+        // A scroll then a read of the position under the mouse, before the display
+        layout.scroll(1);
+        layout.positionAt(0, 0);
+        assertTrue(panel.redraws());
+
+        // A line arriving, built by a read before the display
+        add(log, "l11");
+        layout.positionAt(0, 0);
+        assertTrue(panel.redraws());
+        assertFalse(panel.redraws());
     }
 
     @Test
@@ -190,12 +230,14 @@ class ConsoleLayoutTest {
         log.add(ConsoleLog.EType.OUT, null, "program output");
         ConsoleLayout layout = layout(log, 3);
         layout.setViewer(ECommandLevel.USER);
+        Panel panel = new Panel(layout);
 
         assertEquals(List.of("seen"), shown(layout));
+        assertTrue(panel.redraws());
         // A line the viewer doesn't see changes nothing
-        assertFalse(layout.refresh());
+        assertFalse(panel.redraws());
         log.add(ConsoleLog.EType.OUT, null, "more output");
-        assertFalse(layout.refresh());
+        assertFalse(panel.redraws());
     }
 
     @Test
@@ -222,10 +264,12 @@ class ConsoleLayoutTest {
         assertEquals(List.of("l3", "l5"), shown(layout));
         assertEquals(anchor, layout.anchor());
         // A hidden line arriving rebuilds nothing, a shown one does
+        Panel panel = new Panel(layout);
+        panel.redraws();
         log.add(ConsoleLog.EType.ERR, null, "err10");
-        assertFalse(layout.refresh());
+        assertFalse(panel.redraws());
         add(log, "l11");
-        assertTrue(layout.refresh());
+        assertTrue(panel.redraws());
         assertEquals(List.of("l3", "l5"), shown(layout));
 
         layout.setHiddenTypes(EnumSet.noneOf(ConsoleLog.EType.class));

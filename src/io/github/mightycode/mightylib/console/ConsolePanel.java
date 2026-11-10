@@ -65,6 +65,7 @@ final class ConsolePanel {
 
     // What the rows were built for
     private boolean rowsDirty = true;
+    private long builtLayout = -1;
     private float builtWidth = -1;
     private float builtHeight = -1;
     private float builtX = -1;
@@ -150,7 +151,9 @@ final class ConsolePanel {
         layout.setViewer(console.getViewerLevel());
         layout.setHiddenTypes(console.getHiddenTypes());
         // A line hidden from the viewer (program output for the player) rebuilds nothing
-        if (layout.refresh() || rowsDirty || width != builtWidth || height != builtHeight || x != builtX || y != builtY
+        layout.refresh();
+        // The layout also builds on a scroll or a mouse read between two displays
+        if (layout.buildCount() != builtLayout || rowsDirty || width != builtWidth || height != builtHeight || x != builtX || y != builtY
                 || fontSize != builtFontSize)
             buildRows(x, y, width, height, inputTop);
 
@@ -231,6 +234,7 @@ final class ConsolePanel {
         }
 
         rowsDirty = false;
+        builtLayout = layout.buildCount();
         builtWidth = width;
         builtHeight = height;
         builtX = x;

@@ -365,6 +365,8 @@ class ConsoleInputTest {
             addLine(log, "l" + i);
         ConsoleLayout layout = mouseLayout(log);
         layout.refresh();
+        // What the panel drew
+        long drawn = layout.buildCount();
 
         // The rows show l6 to l10; drag from l10 to above the log
         input.handleMouse(new ConsoleInput.MouseState(8, 90, true, true, false, 1, false, 0), layout);
@@ -375,6 +377,10 @@ class ConsoleInputTest {
 
         input.handleMouse(new ConsoleInput.MouseState(8, -10, false, true, false, 0, false, 60_000_000L), layout);
         assertEquals(5, input.getLogSelection().start().lineId());
+        // Regression: the read of the position after the scroll hid the new rows from the panel, which kept its old
+        // rows under the moved selection
+        layout.refresh();
+        assertNotEquals(drawn, layout.buildCount());
         input.handleMouse(new ConsoleInput.MouseState(8, -10, false, true, false, 0, false, 120_000_000L), layout);
         assertEquals(4, input.getLogSelection().start().lineId());
         assertEquals(new ConsoleLayout.Anchor(8, 0), layout.anchor());

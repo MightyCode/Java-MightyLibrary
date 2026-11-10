@@ -110,9 +110,12 @@ final class ConsoleLayout {
     private Anchor bottom;
     private boolean atEnd = true;
     private int linesBelow;
+    // Width of the indicator of the lines below, with its padding (0: not shown)
+    private float indicatorWidth;
     private boolean dirty = true;
-    // build() ran since the last refresh(): the panel draws the rows again
-    private boolean rebuilt;
+    // Number of build() calls: a reader compares it with the one it last drew (not reset by a read, so any number of
+    // readers can refresh without hiding a build from the others)
+    private long buildCount;
     private long builtVersion = -1;
 
     ConsoleLayout(ConsoleLog log, ICharAdvance advance) {
@@ -175,18 +178,17 @@ final class ConsoleLayout {
 
     // ---- Rows ----
 
-    /**
-     * Compute the rows again if the log (what the viewer sees), the scroll or the settings changed.
-     * @return the rows changed since the last call, rebuilt here or by a scroll (which builds to find what is shown)
-     */
-    boolean refresh() {
+    /** Compute the rows again if the log (what the viewer sees), the scroll or the settings changed. */
+    void refresh() {
         if (dirty || log.version(viewer, hiddenTypes) != builtVersion)
             build();
-
-        boolean changed = rebuilt;
-        rebuilt = false;
-        return changed;
     }
+
+    /**
+     * Changes each time the rows are computed again (by refresh, a scroll or a read that refreshes): the panel draws
+     * its rows again when it differs from the count it last drew.
+     */
+    long buildCount() { return buildCount; }
 
     // The rows shown, oldest first; fewer than the visible rows when the log is short (the panel puts them at the bottom)
     List<Row> rows() { return rows; }
@@ -220,13 +222,14 @@ final class ConsoleLayout {
 
     private void build() {
         dirty = false;
-        rebuilt = true;
+        ++buildCount;
         // Read before the lines: a line added meanwhile changes it, the next refresh builds again
         builtVersion = log.version(viewer, hiddenTypes);
         rows = Collections.emptyList();
         bottom = null;
         atEnd = true;
         linesBelow = 0;
+        indicatorWidth = 0;
         if (visibleRows <= 0)
             return;
 
@@ -319,10 +322,20 @@ final class ConsoleLayout {
         rows = Collections.unmodifiableList(result);
         Row last = result.get(result.size() - 1);
         bottom = new Anchor(last.line.getId(), last.parts - 1 - last.part);
-        int below = log.after(last.line.getId(), MAX_LINES_BELOW + 1, viewer, filter).size();
+        int below = log.countAfter(last.line.getId(), MAX_LINES_BELOW + 1, viewer, filter);
         // A line cut by the view counts as one line below
         linesBelow = Math.min(MAX_LINES_BELOW + 1, below + (last.isLastPart() ? 0 : 1));
         atEnd = linesBelow == 0;
+        indicatorWidth = measureIndicator();
+    }
+
+    // Width of the indicator for linesBelow, with its padding (0: not shown)
+    private float measureIndicator() {
+        String text = linesBelowText();
+        if (text == null)
+            return 0;
+
+        return 2 * INDICATOR_PADDING + width(text, 0, text.length());
     }
 
     private List<Row> rowsOf(ConsoleLog.Line line) {
@@ -480,17 +493,9 @@ final class ConsoleLayout {
     // Space kept around the text of the indicator of the lines below
     static final float INDICATOR_PADDING = 4;
 
-    // Width of the indicator of the lines below, with its padding (0: not shown)
+    // Width of the indicator of the lines below, with its padding (0: not shown), as of the last build (what is drawn)
     float indicatorWidth() {
-        refresh();
-        String text = linesBelowText();
-        if (text == null)
-            return 0;
-
-        float result = 2 * INDICATOR_PADDING;
-        for (int i = 0; i < text.length(); ++i)
-            result += advance.of(text.charAt(i));
-        return result;
+        return indicatorWidth;
     }
 
     // Left of the indicator in the panel: at the right of the last row

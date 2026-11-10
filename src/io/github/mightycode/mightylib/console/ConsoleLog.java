@@ -293,6 +293,19 @@ public final class ConsoleLog {
         return result;
     }
 
+    // Number of lines whose id is greater than the given one, counted up to max (after without the list)
+    public synchronized int countAfter(long id, int max, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        int count = 0;
+        for (int i = indexAfter(Math.max(id, cleared)); i < size && count < max; ++i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                ++count;
+        }
+
+        return count;
+    }
+
     // The lines whose id is between the two given ones (included), oldest first
     public synchronized List<Line> between(long fromId, long toId, ECommandLevel viewer, Predicate<Line> filter) {
         long cleared = clearedUpTo[viewer.ordinal()];
