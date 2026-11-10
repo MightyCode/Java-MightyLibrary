@@ -160,6 +160,29 @@ class ConsoleLayoutTest {
         assertNull(layout.anchor());
     }
 
+    // The panel redraws its rows only when refresh() says they changed: a scroll builds the rows itself
+    @Test
+    void aScrollIsSeenByTheNextRefresh() {
+        ConsoleLog log = new ConsoleLog(100);
+        for (int i = 1; i <= 10; ++i)
+            add(log, "l" + i);
+        ConsoleLayout layout = layout(log, 3);
+        assertTrue(layout.refresh());
+        assertFalse(layout.refresh());
+
+        layout.scroll(1);
+        assertTrue(layout.refresh());
+        assertFalse(layout.refresh());
+
+        layout.scrollToTop();
+        assertTrue(layout.refresh());
+
+        layout.scrollToEnd();
+        assertTrue(layout.refresh());
+        assertEquals(List.of("l8", "l9", "l10"), layout.rows().stream().map(ConsoleLayout.Row::text)
+                .collect(Collectors.toList()));
+    }
+
     @Test
     void linesHiddenFromTheViewerAreNotShown() {
         ConsoleLog log = new ConsoleLog(10);

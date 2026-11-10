@@ -111,6 +111,8 @@ final class ConsoleLayout {
     private boolean atEnd = true;
     private int linesBelow;
     private boolean dirty = true;
+    // build() ran since the last refresh(): the panel draws the rows again
+    private boolean rebuilt;
     private long builtVersion = -1;
 
     ConsoleLayout(ConsoleLog log, ICharAdvance advance) {
@@ -173,13 +175,17 @@ final class ConsoleLayout {
 
     // ---- Rows ----
 
-    /** Compute the rows again if the log (what the viewer sees), the scroll or the settings changed. */
+    /**
+     * Compute the rows again if the log (what the viewer sees), the scroll or the settings changed.
+     * @return the rows changed since the last call, rebuilt here or by a scroll (which builds to find what is shown)
+     */
     boolean refresh() {
-        if (!dirty && log.version(viewer, hiddenTypes) == builtVersion)
-            return false;
+        if (dirty || log.version(viewer, hiddenTypes) != builtVersion)
+            build();
 
-        build();
-        return true;
+        boolean changed = rebuilt;
+        rebuilt = false;
+        return changed;
     }
 
     // The rows shown, oldest first; fewer than the visible rows when the log is short (the panel puts them at the bottom)
@@ -214,6 +220,7 @@ final class ConsoleLayout {
 
     private void build() {
         dirty = false;
+        rebuilt = true;
         // Read before the lines: a line added meanwhile changes it, the next refresh builds again
         builtVersion = log.version(viewer, hiddenTypes);
         rows = Collections.emptyList();
