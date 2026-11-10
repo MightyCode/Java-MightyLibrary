@@ -86,8 +86,15 @@ Chaque étape compile, passe `mvn -o -q test` et laisse le jeu fonctionnel. Les 
 ## Questions restantes
 - Aucune.
 
+## Modèles recommandés
+- Discussion A, étapes 1 à 5 : **Opus 5.5, effort `high`** (API du schéma, règles d'analyse, branchement sans casser les commandes non migrées, `as` qui ne doit jamais élever le niveau).
+- Discussion A, étapes 6 à 9 et 11 à 13 : **Sonnet 5.5, effort `medium`** (migration mécanique, tests, docs).
+- Discussion A, étape 10 (`input`, 463 lignes) : **Opus 5.5, effort `high`** (commande touffue, un oubli casse `scenario.py`).
+- Discussion B : **Opus 5.5, effort `high`** (gros diff à relire au regard du plan).
+
 ## Déroulé
 ### Discussion A — implémentation (« Implémente le fichier docs/plan/syntaxe-commandes.md »)
+- Commencer par donner à l'utilisateur, en une ou deux lignes, le modèle et l'effort recommandés (« Modèles recommandés ») pour les premières étapes ; si la discussion tourne sur un autre modèle ou un autre effort, le dire et attendre qu'il change ou confirme. Le rappeler en une ligne avant chaque groupe d'étapes dont la recommandation change.
 - Lire ce plan en entier, puis « Pour démarrer ». Poser les questions restantes et attendre les réponses.
 - Ce plan n'est pas commité : il n'existe que dans le dossier du dépôt principal. Dans un worktree, le copier depuis ce dossier.
 - Branche de sujet depuis `dev` : `command-syntax`. Premier commit : ce plan tel quel.
@@ -98,6 +105,7 @@ Chaque étape compile, passe `mvn -o -q test` et laisse le jeu fonctionnel. Les 
 - Pousser la branche. **Pas de PR** : c'est la discussion B. Donner le nom de la branche.
 
 ### Discussion B — PR, vérification, fusion (« Review la PR command-syntax »)
+- Commencer par donner à l'utilisateur le modèle et l'effort recommandés pour cette discussion (« Modèles recommandés ») ; si la discussion tourne sur un autre, le dire et attendre qu'il change ou confirme.
 - Lire ce plan et son « Bilan ».
 - Relire le diff de la branche par rapport à `dev` au regard du plan et de `CLAUDE.md` ; signaler ce qui manque ou dévie avant d'aller plus loin.
 - Dernier commit : supprimer ce plan (et `docs/plan/` s'il est vide) ; vérifier que les docs ne gardent aucune trace de ce qui est fini.
