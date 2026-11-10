@@ -206,15 +206,15 @@ class ConsoleInputTest {
     }
 
     private static ConsoleInput.MouseState press(float x, float y, int clicks, boolean shift) {
-        return new ConsoleInput.MouseState(x, y, true, true, false, clicks, shift);
+        return new ConsoleInput.MouseState(x, y, true, true, false, clicks, shift, 0);
     }
 
     private static ConsoleInput.MouseState hold(float x, float y) {
-        return new ConsoleInput.MouseState(x, y, false, true, false, 0, false);
+        return new ConsoleInput.MouseState(x, y, false, true, false, 0, false, 0);
     }
 
     private static ConsoleInput.MouseState release(float x, float y) {
-        return new ConsoleInput.MouseState(x, y, false, false, true, 0, false);
+        return new ConsoleInput.MouseState(x, y, false, false, true, 0, false, 0);
     }
 
     @Test
@@ -233,7 +233,7 @@ class ConsoleInputTest {
         assertEquals("ats fps", editor.selectedText());
         input.handleMouse(release(500, 0), layout);
         // Released: moving changes nothing
-        input.handleMouse(new ConsoleInput.MouseState(20, INPUT_Y, false, false, false, 0, false), layout);
+        input.handleMouse(new ConsoleInput.MouseState(20, INPUT_Y, false, false, false, 0, false, 0), layout);
         assertEquals("ats fps", editor.selectedText());
 
         // Shift+click extends from the anchor
@@ -266,6 +266,118 @@ class ConsoleInputTest {
         editor.setText("abc");
         input.handleMouse(press(10, 50, 1, false), layout);
         assertEquals(3, editor.getCursor());
+    }
+
+    private List<String> handleWith(ConsoleLayout layout, String text, KeyEvent... keys) {
+        return input.handle(text, Arrays.asList(keys), 10, fakeClipboard, layout).stream()
+                .map(ConsoleInput.Request::toString).collect(Collectors.toList());
+    }
+
+    private static long addLine(ConsoleLog log, String text) {
+        return log.add(ConsoleLog.EType.RESULT, null, text, ECommandLevel.USER).get(0).getId();
+    }
+
+    @Test
+    void controlASecondTimeSelectsTheLogAndCopiesIt() {
+        ConsoleLog log = new ConsoleLog(10);
+        addLine(log, "first");
+        long second = addLine(log, "second line");
+        ConsoleLayout layout = mouseLayout(log);
+
+        handleWith(layout, "stats", control('a'));
+        assertTrue(editor.isAllSelected());
+        assertNull(input.getLogSelection());
+
+        handleWith(layout, "", control('a'), control('c'));
+        assertFalse(editor.hasSelection());
+        assertEquals(new LogPosition(second, 11), input.getLogSelection().end());
+        assertEquals("first\nsecond line", clipboard);
+
+        // Ctrl+X in the log copies, the command line is left as it is
+        clipboard = "";
+        handleWith(layout, "", control('x'));
+        assertEquals("first\nsecond line", clipboard);
+        assertEquals("stats", editor.getText());
+
+        // Typing removes the selection of the log
+        handleWith(layout, "!");
+        assertNull(input.getLogSelection());
+        // An empty command line: the first press selects the log
+        editor.setText("");
+        handleWith(layout, "", control('a'));
+        assertNotNull(input.getLogSelection());
+        handleWith(layout, "", key(GLFW_KEY_BACKSPACE));
+        assertNull(input.getLogSelection());
+    }
+
+    @Test
+    void oneSelectionAtATime() {
+        ConsoleLog log = new ConsoleLog(10);
+        long first = addLine(log, "alpha beta");
+        long second = addLine(log, "gamma");
+        ConsoleLayout layout = mouseLayout(log);
+        layout.refresh();
+
+        handleWith(layout, "stats fps", shift(GLFW_KEY_LEFT));
+        assertTrue(editor.hasSelection());
+
+        // Rows in the slots 3 and 4 (y from 60 to 100), the text from x = 6
+        input.handleMouse(press(12.4f, 61, 1, false), layout);
+        assertFalse(editor.hasSelection());
+        input.handleMouse(hold(8, 81), layout);
+        input.handleMouse(release(8, 81), layout);
+        LogSelection selection = input.getLogSelection();
+        assertEquals(new LogPosition(first, 6), selection.start());
+        assertEquals(new LogPosition(second, 2), selection.end());
+        handleWith(layout, "", control('c'));
+        assertEquals("beta\nga", clipboard);
+
+        // Shift+click extends it
+        input.handleMouse(press(100, 81, 1, true), layout);
+        input.handleMouse(release(100, 81), layout);
+        assertEquals(new LogPosition(second, 5), input.getLogSelection().end());
+
+        // Selecting in the command line removes the one of the log
+        handleWith(layout, "", shift(GLFW_KEY_LEFT));
+        assertNull(input.getLogSelection());
+        assertTrue(editor.hasSelection());
+
+        // A click in the log without move selects nothing
+        input.handleMouse(press(8, 81, 1, false), layout);
+        input.handleMouse(release(8, 81), layout);
+        assertNull(input.getLogSelection());
+
+        // Double click: a word; triple click: the whole log line
+        input.handleMouse(press(8, 61, 2, false), layout);
+        assertEquals("alpha", layout.copyText(input.getLogSelection().start(), input.getLogSelection().end()));
+        input.handleMouse(press(8, 61, 3, false), layout);
+        assertEquals(new LogPosition(first, 10), input.getLogSelection().end());
+
+        // A click in the command line removes it
+        input.handleMouse(press(20, INPUT_Y, 1, false), layout);
+        assertNull(input.getLogSelection());
+    }
+
+    @Test
+    void draggingOutOfTheLogScrollsAndExtends() {
+        ConsoleLog log = new ConsoleLog(20);
+        for (int i = 1; i <= 10; ++i)
+            addLine(log, "l" + i);
+        ConsoleLayout layout = mouseLayout(log);
+        layout.refresh();
+
+        // The rows show l6 to l10; drag from l10 to above the log
+        input.handleMouse(new ConsoleInput.MouseState(8, 90, true, true, false, 1, false, 0), layout);
+        input.handleMouse(new ConsoleInput.MouseState(8, -10, false, true, false, 0, false, 10_000_000L), layout);
+        // Too soon after the press: no scroll yet, the top row
+        assertNull(layout.anchor());
+        assertEquals(6, input.getLogSelection().start().lineId());
+
+        input.handleMouse(new ConsoleInput.MouseState(8, -10, false, true, false, 0, false, 60_000_000L), layout);
+        assertEquals(5, input.getLogSelection().start().lineId());
+        input.handleMouse(new ConsoleInput.MouseState(8, -10, false, true, false, 0, false, 120_000_000L), layout);
+        assertEquals(4, input.getLogSelection().start().lineId());
+        assertEquals(new ConsoleLayout.Anchor(8, 0), layout.anchor());
     }
 
     @Test

@@ -293,6 +293,21 @@ public final class ConsoleLog {
         return result;
     }
 
+    // The lines whose id is between the two given ones (included), oldest first
+    public synchronized List<Line> between(long fromId, long toId, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        List<Line> result = new ArrayList<>();
+        for (int i = indexAfter(Math.max(fromId - 1, cleared)); i < size; ++i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.id > toId)
+                break;
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                result.add(line);
+        }
+
+        return result;
+    }
+
     // Index (from the oldest kept line) of the first line whose id is greater than the given one, size if none
     private int indexAfter(long id) {
         int low = 0;

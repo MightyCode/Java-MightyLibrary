@@ -33,6 +33,8 @@ final class ConsolePanel {
     private static final Color4f RESULT_COLOR = new Color4f(1f, 1f, 1f, 1f);
     private static final Color4f INPUT_COLOR = new Color4f(1f, 1f, 1f, 1f);
     private static final Color4f SELECTION_COLOR = new Color4f(0.25f, 0.45f, 0.85f, 0.6f);
+    // Width shown selected after a line whose end is selected
+    private static final float SELECTION_LINE_END = 4;
 
     private final ConsoleView view;
     private final ConsoleLog log;
@@ -50,6 +52,8 @@ final class ConsolePanel {
     private final RectangleRenderer inputSelection;
     private final Text inputText;
     private final List<Text> rows;
+    // Behind the selected part of each row of the log, reused from a frame to the next (one per row at most)
+    private final List<RectangleRenderer> highlights = new ArrayList<>();
 
     private float fontSize;
     private float lineHeight;
@@ -163,6 +167,7 @@ final class ConsolePanel {
         inputBackground.setPosition(new Vector2f(x, inputTop - PADDING * 0.5f));
         inputBackground.display();
 
+        displayLogSelection(x + PADDING, inputTop);
         for (Text row : rows)
             row.display();
 
@@ -229,6 +234,44 @@ final class ConsolePanel {
         builtX = x;
         builtY = y;
         builtFontSize = fontSize;
+    }
+
+    // The selected part of each row shown, behind its text
+    private void displayLogSelection(float textLeft, float inputTop) {
+        LogSelection selection = console.getLogSelection();
+        if (selection == null)
+            return;
+
+        LogPosition start = selection.start();
+        LogPosition end = selection.end();
+        List<ConsoleLayout.Row> shown = layout.rows();
+        int used = 0;
+        for (int i = 0; i < shown.size(); ++i) {
+            ConsoleLayout.Row row = shown.get(i);
+            long id = row.line().getId();
+            if (id < start.lineId() || id > end.lineId())
+                continue;
+
+            int from = id == start.lineId() ? Math.max(row.start(), start.character()) : row.start();
+            int to = id == end.lineId() ? Math.min(row.end(), end.character()) : row.end();
+            float left = layout.xOf(row, from);
+            float right = layout.xOf(row, to);
+            // The end of a line inside the selection: a little more, an empty line is seen selected too
+            if (row.isLastPart() && id != end.lineId())
+                right += SELECTION_LINE_END;
+            if (right <= left)
+                continue;
+
+            if (used == highlights.size()) {
+                RectangleRenderer highlight = new RectangleRenderer("colorShape2D");
+                highlight.setColorMode(SELECTION_COLOR);
+                highlights.add(highlight);
+            }
+            RectangleRenderer highlight = highlights.get(used++);
+            highlight.setSizePix(right - left, lineHeight);
+            highlight.setPosition(new Vector2f(textLeft + left, rowTop(inputTop, layout.slotOf(i))));
+            highlight.display();
+        }
     }
 
     // Top of a slot of the panel (0: the top row)
@@ -307,5 +350,8 @@ final class ConsolePanel {
         for (Text row : rows)
             row.unload();
         rows.clear();
+        for (RectangleRenderer highlight : highlights)
+            highlight.unload();
+        highlights.clear();
     }
 }

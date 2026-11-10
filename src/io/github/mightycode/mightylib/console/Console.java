@@ -127,9 +127,15 @@ public final class Console {
         json.put("scroll", anchor == null ? "end"
                 : new JSONObject().put("id", anchor.lineId()).put("row", anchor.rowsBelow()));
 
-        json.put("selection", editor.hasSelection()
-                ? new JSONObject().put("in", "input").put("start", editor.selectionStart()).put("end", editor.selectionEnd())
-                : JSONObject.NULL);
+        LogSelection logSelection = input.getLogSelection();
+        if (logSelection != null)
+            json.put("selection", new JSONObject().put("in", "log")
+                    .put("from", positionJson(logSelection.start())).put("to", positionJson(logSelection.end())));
+        else if (editor.hasSelection())
+            json.put("selection", new JSONObject().put("in", "input")
+                    .put("start", editor.selectionStart()).put("end", editor.selectionEnd()));
+        else
+            json.put("selection", JSONObject.NULL);
 
         return json;
     }
@@ -323,7 +329,7 @@ public final class Console {
         KeyboardManager keyboard = target.getKeyboardManager();
         int pageRows = panel == null ? 10 : panel.getVisibleRows();
         List<ConsoleInput.Request> requests = input.handle(keyboard.getRawTypedText(), keyboard.getRawKeyEvents(),
-                pageRows, clipboardOf(target));
+                pageRows, clipboardOf(target), panel == null ? null : panel.getLayout());
 
         float wheel = target.getMouseManager().getRawMouseScroll().y;
         if (wheel != 0 && panel != null)
@@ -378,8 +384,15 @@ public final class Console {
             pressed = false;
 
         return new ConsoleInput.MouseState(x, y, pressed, mouse.getRawButton(GLFW_MOUSE_BUTTON_LEFT),
-                mouse.rawButtonReleased(GLFW_MOUSE_BUTTON_LEFT), clicks, shift);
+                mouse.rawButtonReleased(GLFW_MOUSE_BUTTON_LEFT), clicks, shift, System.nanoTime());
     }
+
+    private static JSONObject positionJson(LogPosition position) {
+        return new JSONObject().put("id", position.lineId()).put("char", position.character());
+    }
+
+    // The selection in the log, drawn by the panels; null if none
+    LogSelection getLogSelection() { return input.getLogSelection(); }
 
     // The clipboard of the system, through the window the console is typed in
     private static ConsoleInput.IClipboard clipboardOf(WindowContext target) {

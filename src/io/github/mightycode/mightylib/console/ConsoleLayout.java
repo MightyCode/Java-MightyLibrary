@@ -391,6 +391,42 @@ final class ConsoleLayout {
         anchor = atEnd ? null : bottom;
     }
 
+    // ---- The log as shown (viewer and filter applied), for the selection ----
+
+    // Beginning of the oldest line shown, null if none
+    LogPosition firstPosition() {
+        List<ConsoleLog.Line> oldest = log.after(0, 1, viewer, filter);
+        return oldest.isEmpty() ? null : new LogPosition(oldest.get(0).getId(), 0);
+    }
+
+    // End of the newest line shown, null if none
+    LogPosition lastPosition() {
+        List<ConsoleLog.Line> newest = log.upTo(Long.MAX_VALUE, 1, viewer, filter);
+        return newest.isEmpty() ? null
+                : new LogPosition(newest.get(0).getId(), DisplayedText(newest.get(0)).length());
+    }
+
+    // The lines before it are forgotten or cleared for the viewer
+    long oldestKeptId() {
+        return Math.max(log.oldestId(), log.clearedUpTo(viewer) + 1);
+    }
+
+    // Displayed text of a line shown, null if it is not
+    String displayedText(long lineId) {
+        for (Row row : rows) {
+            if (row.line.getId() == lineId)
+                return DisplayedText(row.line);
+        }
+
+        List<ConsoleLog.Line> found = log.between(lineId, lineId, viewer, filter);
+        return found.isEmpty() ? null : DisplayedText(found.get(0));
+    }
+
+    // What Ctrl+C copies between two places (see LogSelection.CopyText)
+    String copyText(LogPosition from, LogPosition to) {
+        return LogSelection.CopyText(log, viewer, filter, from, to);
+    }
+
     // ---- Geometry of the panel, in pixels from its top left (set by the panel at each display) ----
 
     private float textLeft;
