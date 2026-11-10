@@ -106,7 +106,7 @@ public final class LogCapture {
         }
 
         private void emit() {
-            String line = new String(pending.toByteArray(), charset);
+            String line = pending.toString(charset);
             pending.reset();
             log.add(type, null, line);
         }

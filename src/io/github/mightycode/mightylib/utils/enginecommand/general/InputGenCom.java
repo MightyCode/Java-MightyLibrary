@@ -67,7 +67,7 @@ public class InputGenCom extends BaseCommand {
 
     // The end of a GLFW_KEY_ name (ENTER, A, LEFT_SHIFT...) or the GLFW number of the key
     private static ArgumentType<Integer> keyType() {
-        return new ArgumentType<Integer>() {
+        return new ArgumentType<>() {
             @Override
             public Integer parse(String word, CommandContext context) {
                 try {
@@ -91,7 +91,7 @@ public class InputGenCom extends BaseCommand {
 
     // left, right, middle or the GLFW number of the button
     private static ArgumentType<Integer> mouseButtonType() {
-        return new ArgumentType<Integer>() {
+        return new ArgumentType<>() {
             @Override
             public Integer parse(String word, CommandContext context) {
                 try {

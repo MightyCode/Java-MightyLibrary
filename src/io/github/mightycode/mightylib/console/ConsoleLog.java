@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.console;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -165,14 +166,12 @@ public final class ConsoleLog {
 
     // Forget every line: for every viewer, the debug server clients included
     public synchronized void clear() {
-        for (int i = 0; i < lines.length; ++i)
-            lines[i] = null;
+        Arrays.fill(lines, null);
 
         start = 0;
         size = 0;
         // Every viewer cleared its lines: a position kept on one of them goes back to the end (clearedUpTo)
-        for (int i = 0; i < clearedUpTo.length; ++i)
-            clearedUpTo[i] = nextId - 1;
+        Arrays.fill(clearedUpTo, nextId - 1);
         ++version;
         for (ECommandLevel viewer : ECommandLevel.values())
             changedEveryType(viewer);
@@ -209,7 +208,7 @@ public final class ConsoleLog {
 
     // Changes only when what the viewer sees changes
     public synchronized long version(ECommandLevel viewer) {
-        return version(viewer, Collections.<EType>emptySet());
+        return version(viewer, Collections.emptySet());
     }
 
     // Changes only when what the viewer sees of the types not hidden changes (a sum of counters that only increase)

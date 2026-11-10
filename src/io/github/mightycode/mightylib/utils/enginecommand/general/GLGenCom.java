@@ -39,7 +39,7 @@ public class GLGenCom extends BaseCommand {
     }
 
     private static CommandResult drawnTexts(CommandContext context) {
-        String filter = context.has(CONTAINS) ? context.<String>get(CONTAINS) : null;
+        String filter = context.has(CONTAINS) ? context.get(CONTAINS) : null;
 
         JSONArray texts = new JSONArray();
         StringBuilder message = new StringBuilder();

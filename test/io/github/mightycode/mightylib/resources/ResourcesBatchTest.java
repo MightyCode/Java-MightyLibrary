@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.resources;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
+import java.util.List;
 
 import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.MAIN_CONTEXT;
 import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.THREAD_CONTEXT;
@@ -109,7 +109,7 @@ class ResourcesBatchTest extends ResourcesTestBase {
     @Test
     void allResourcesMethodLoadsEverything() throws Exception {
         fakeLoader = new FakeLoader();
-        resources = new Resources(new Resources.AllResourcesMethod(), WORKERS, Arrays.asList(fakeLoader));
+        resources = new Resources(new Resources.AllResourcesMethod(), WORKERS, List.of(fakeLoader));
         fake(THREAD_CONTEXT, "a");
         fake(MAIN_CONTEXT, "b");
         resources.init();

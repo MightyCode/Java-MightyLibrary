@@ -91,7 +91,7 @@ public class ServerTcp {
             return null;
         }
 
-        String message = null;
+        String message;
 
         try {
             int messageLength = readMessageLength(client.getInputStream());

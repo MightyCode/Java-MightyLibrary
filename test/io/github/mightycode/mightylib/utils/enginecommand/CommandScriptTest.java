@@ -79,7 +79,7 @@ class CommandScriptTest {
 
         commands.processPendingCommands();
 
-        assertEquals(Arrays.asList("b"), record.calls, "the line after -> wait 1 <- runs at the next tick");
+        assertEquals(List.of("b"), record.calls, "the line after -> wait 1 <- runs at the next tick");
         assertTrue(script.getResult().isDone());
     }
 
@@ -101,7 +101,7 @@ class CommandScriptTest {
                 Arrays.asList("# comment", "record a", "", "wait 2", "record b"));
 
         assertFalse(script.step());
-        assertEquals(Arrays.asList("a"), record.calls);
+        assertEquals(List.of("a"), record.calls);
 
         commands.addTickTask(script::step);
         for (int tick = 0; tick < 5 && !script.getResult().isDone(); ++tick)
@@ -135,7 +135,7 @@ class CommandScriptTest {
     @Test
     void scriptStopsOnAnUnknownCommand() throws Exception {
         Commands commands = new Commands();
-        CommandScript script = new CommandScript(commands, "test", Arrays.asList("unknownCommand"));
+        CommandScript script = new CommandScript(commands, "test", List.of("unknownCommand"));
 
         assertTrue(script.step());
         assertFalse(script.getResult().get(1, TimeUnit.SECONDS).isSuccess());
@@ -158,7 +158,7 @@ class CommandScriptTest {
     void execRefusesAScriptRunningItself(@TempDir Path folder) throws Exception {
         Commands commands = new Commands();
         Path file = folder.resolve("loop.txt");
-        Files.write(file, Arrays.asList("exec \"" + file + "\""), StandardCharsets.UTF_8);
+        Files.write(file, List.of("exec \"" + file + "\""), StandardCharsets.UTF_8);
 
         CommandResult result = run(commands, "exec \"" + file + "\"", 10);
 

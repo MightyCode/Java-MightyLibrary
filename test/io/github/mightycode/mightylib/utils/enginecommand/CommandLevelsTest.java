@@ -8,7 +8,6 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -75,7 +74,7 @@ class CommandLevelsTest {
         @Override
         protected void syntax(CommandNode root) {
             root.then(argument("lines", word(), "The lines").variadic().executes(context -> {
-                CommandScript script = new CommandScript(commands, "test", context.<String>getList("lines"));
+                CommandScript script = new CommandScript(commands, "test", context.getList("lines"));
                 commands.addTickTask(script::step);
                 return CommandResult.later(script.getResult());
             }));
@@ -306,7 +305,7 @@ class CommandLevelsTest {
         assertEquals(ECommandLevel.DEV, developer.get(developer.size() - 1).getLevel());
 
         // Only the visible lines count in the last ones
-        assertEquals(List.of("Readable"), Arrays.asList(log.last(1, ECommandLevel.USER).get(0).getText()));
+        assertEquals(List.of("Readable"), List.of(log.last(1, ECommandLevel.USER).get(0).getText()));
     }
 
     // Regression: "cheats off" and its answer were logged at CHEAT, the level before the command: the player, back to

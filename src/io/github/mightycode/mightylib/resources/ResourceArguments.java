@@ -34,7 +34,7 @@ public final class ResourceArguments {
 
     // "all" or the name of a resource type (the name of its loader, for example TextureData), case ignored
     public static ArgumentType<String> type(Supplier<Resources> resources) {
-        return new ArgumentType<String>() {
+        return new ArgumentType<>() {
             @Override
             public String parse(String word, CommandContext context) {
                 List<String> types = typeNames(resources.get());
@@ -64,7 +64,7 @@ public final class ResourceArguments {
 
     // Names of the data declared for the type read before (the argument "type"), proposed and free
     public static ArgumentType<String> names(Supplier<Resources> resources) {
-        return new ArgumentType<String>() {
+        return new ArgumentType<>() {
             @Override
             public String parse(String word, CommandContext context) {
                 return word;
@@ -92,7 +92,7 @@ public final class ResourceArguments {
 
     // A regular expression that must match the whole name
     public static ArgumentType<String> regex() {
-        return new ArgumentType<String>() {
+        return new ArgumentType<>() {
             @Override
             public String parse(String word, CommandContext context) {
                 try {

@@ -24,7 +24,7 @@ public class HelpGenCom extends BaseCommand {
 
     // The name or the identifier of a visible command, completed from the commands the source sees
     private ArgumentType<String> commandType() {
-        return new ArgumentType<String>() {
+        return new ArgumentType<>() {
             @Override
             public String parse(String word, CommandContext context) {
                 return word;
