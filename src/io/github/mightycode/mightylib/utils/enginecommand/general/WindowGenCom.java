@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONObject;
 
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.bool;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.enumOf;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.oneOf;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
@@ -50,6 +51,12 @@ public class WindowGenCom extends BaseCommand {
                                 .executes(context -> changeMode(context.get("mode"), Views.engine().commandWindow()))
                                 .then(argument("window", reference, "Id, title or name of a context (see windows)")
                                         .executes(context -> changeMode(context.get("mode"),
+                                                find(context.get("window")))))))
+                .then(literal("vsync", "Frames of the window (the target by default) wait for the screen refresh or not")
+                        .then(argument("enabled", bool(), "true to wait for the screen refresh, false not to")
+                                .executes(context -> changeVsync(context.get("enabled"), Views.engine().commandWindow()))
+                                .then(argument("window", reference, "Id, title or name of a context (see windows)")
+                                        .executes(context -> changeVsync(context.get("enabled"),
                                                 find(context.get("window")))))))
                 .then(argument("window", reference, "Id, title or name of a context (see windows)")
                         .executes("The target window becomes this one (see windows)", context -> {
@@ -95,6 +102,17 @@ public class WindowGenCom extends BaseCommand {
         data.put("size", window.getWindow().getInfo().getSizeRef().x + "x" + window.getWindow().getInfo().getSizeRef().y);
 
         return CommandResult.ok("Window " + window.getId() + " (" + window.getName() + ") : " + window.getDisplay(), data);
+    }
+
+    private static CommandResult changeVsync(boolean enabled, WindowContext window) {
+        window.setDisplay(window.getDisplay().setVsync(enabled));
+
+        JSONObject data = new JSONObject();
+        data.put("id", window.getId());
+        data.put("vsync", window.getDisplay().isVsync());
+
+        return CommandResult.ok("Window " + window.getId() + " (" + window.getName() + ") : vsync "
+                + (enabled ? "on" : "off"), data);
     }
 
     private static CommandResult describeTarget(Engine engine, String message) {

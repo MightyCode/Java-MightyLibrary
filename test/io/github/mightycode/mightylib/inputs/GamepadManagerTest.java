@@ -2,6 +2,12 @@ package io.github.mightycode.mightylib.inputs;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -15,6 +21,20 @@ class GamepadManagerTest {
     void setUp() {
         source = new FakeGamepadSource();
         manager = new GamepadManager(source);
+    }
+
+    @Test
+    void mappingsFileIsSentToTheSourceAndAMissingOneIsIgnored(@TempDir Path folder) throws IOException {
+        assertFalse(manager.loadMappingsFile(folder.resolve("missing.txt")));
+        assertTrue(source.addedMappings.isEmpty());
+
+        Path file = folder.resolve("gamecontrollerdb.txt");
+        Files.write(file, "guid,Pad,a:b0\n".getBytes(StandardCharsets.UTF_8));
+        assertTrue(manager.loadMappingsFile(file));
+        assertEquals("guid,Pad,a:b0\n", source.addedMappings.get(0));
+
+        Files.write(file, new byte[0]);
+        assertFalse(manager.loadMappingsFile(file), "An empty file holds no mapping");
     }
 
     @Test

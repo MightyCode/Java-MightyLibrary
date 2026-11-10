@@ -147,6 +147,7 @@ public final class Window {
 
         // Make the OpenGL context current, with the default state of the engine's contexts
         glContext = GLContext.ofWindow(info.windowName, info.windowId);
+        glContext.setVsync(display.isVsync());
 
         // Make the window visible
         glfwShowWindow(info.windowId);
@@ -221,6 +222,8 @@ public final class Window {
 
         if (!info.isWindowCreated())
             return;
+
+        glContext.setVsync(display.isVsync());
 
         boolean minimized = glfwGetWindowAttrib(info.windowId, GLFW_ICONIFIED) == GLFW_TRUE;
 

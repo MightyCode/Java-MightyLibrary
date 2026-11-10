@@ -32,6 +32,9 @@ public final class DisplaySettings {
     // FULLSCREEN. Minimized when another window takes the focus (GLFW_AUTO_ICONIFY)
     private boolean minimizeOnFocusLoss = true;
 
+    // All modes. Frames wait for the screen refresh (swap interval 1), off by default
+    private boolean vsync;
+
     public DisplaySettings() {}
 
     public DisplaySettings(EWindowMode mode) {
@@ -47,6 +50,7 @@ public final class DisplaySettings {
         copy.resolution = resolution == null ? null : new Vector2i(resolution);
         copy.refreshRate = refreshRate;
         copy.minimizeOnFocusLoss = minimizeOnFocusLoss;
+        copy.vsync = vsync;
         return copy;
     }
 
@@ -108,6 +112,11 @@ public final class DisplaySettings {
         return this;
     }
 
+    public DisplaySettings setVsync(boolean vsync) {
+        this.vsync = vsync;
+        return this;
+    }
+
     private static Vector2i checkedSize(int width, int height, String what) {
         if (width <= 0 || height <= 0)
             throw new IllegalArgumentException("The " + what + " must be positive: " + width + "x" + height);
@@ -125,6 +134,7 @@ public final class DisplaySettings {
     public Vector2i getResolution() { return resolution == null ? null : new Vector2i(resolution); }
     public int getRefreshRate() { return refreshRate; }
     public boolean minimizesOnFocusLoss() { return minimizeOnFocusLoss; }
+    public boolean isVsync() { return vsync; }
 
     /**
      * Size of the window in its mode, given the current resolution of its screen (null or empty if unknown):
@@ -149,6 +159,10 @@ public final class DisplaySettings {
 
     @Override
     public String toString() {
+        return describeMode() + (vsync ? ", vsync" : "");
+    }
+
+    private String describeMode() {
         switch (mode) {
             case FULLSCREEN:
                 return "fullscreen " + (resolution == null ? "screen resolution" : resolution.x + "x" + resolution.y)

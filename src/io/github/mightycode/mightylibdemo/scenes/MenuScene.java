@@ -134,6 +134,7 @@ public class MenuScene extends Scene {
         list.add(new SceneEntry("Game3D2D", Game3D2D::new));
         list.add(new SceneEntry("SoundFormatsScene", SoundFormatsScene::new));
         list.add(new SceneEntry("GamepadScene", GamepadScene::new));
+        list.add(new SceneEntry("TextPaddingScene", TextPaddingScene::new));
         list.add(new SceneEntry("PreloadScene", PreloadScene::new));
         list.add(new SceneEntry("GLLoading", GLLoading::new));
         list.add(new SceneEntry("FallbackScene", FallbackScene::new));

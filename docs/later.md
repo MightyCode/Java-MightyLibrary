@@ -115,7 +115,7 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
 - **Langues** (à la Flutter) : `resources/lang/<langue>.json` chargé comme `DataType` ; paramètres `{nom}`, pluriels simples ; langue de repli, log des clés manquantes ; script `tools/` générant des constantes typées ; `Text` liable à une clé, mis à jour au changement de langue ; clés à espace de noms.
 - **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
 - **Tailles automatiques** : unité relative à la résolution virtuelle, ancres et pourcentages, recalcul au redimensionnement.
-- **Padding du texte** : reprendre `40f4d8a` (branche `archive-dev-2025`) (`Text.setPadding(left, up, right, down)`, scène `GUIScene`). À corriger : le commentaire dit « gauche, droite, haut, bas », le code fait « gauche, haut, droite, bas » ; Left/Up font `-= padding` en supposant `textReference` à 0, à vérifier.
+- **Padding du texte** : utiliser `Text.setPadding` dans les composants GUI et l'exposer au thème.
 
 ## Rendu 2D : formes manquantes et regroupement des dessins
 - Existant : rectangle, ellipse, hexagone, polygone (`renderer/_2D/shape`), renderers de debug (graphes, nœuds, matrices).
@@ -143,9 +143,7 @@ Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et antic
   - **Actions par joueur** (multijoueur local) : aujourd'hui joueur fixe ou `ANY_PLAYER` ; cible `inputManager.getState(action, joueur)`, clavier/souris attribués à un joueur comme une manette.
   - **Ensembles d'actions activables** (« jeu », « menu » : un même stick déplace et navigue, `MOVE_*_2D` et `SELECT_UP/DOWN`) au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
   - Sensibilité du regard réglable (aujourd'hui `LOOK_SENSITIVITY` de `ProjectLoading`), séparable souris/manette, avec inversion verticale (`scale` négatif).
-  - `MovingCameraComponent` (2D) : passer aux axes comme `FreeCamera3DComponent`.
   - Remappage manette sauvegardé avec le clavier (`Gamepad.parseButton`/`buttonName`).
-  - Charger un `gamecontrollerdb.txt` du projet (`GamepadManager.addMappings`).
   - Vibrations, gyroscope : absents de GLFW (SDL ou XInput si besoin).
   - Icônes de boutons selon le modèle (Xbox, PlayStation, Switch) d'après nom/GUID.
 
@@ -168,7 +166,6 @@ Streaming des musiques longues (tout est décodé en mémoire).
 - **Réglages d'affichage du joueur** : `DisplaySettings` ↔ JSON dans `DataFolder`, menu d'options (modes, résolutions de `MonitorInfo.getVideoModes`, écran), position fenêtrée réglable ; écrans branchés/débranchés en cours de jeu (`glfwSetMonitorCallback` : une fenêtre dont l'écran disparaît revient sur le principal, aujourd'hui son `MonitorInfo` garde un handle invalide).
 - **Fenêtre redimensionnée** : recalcul optionnel de la surface virtuelle (elle reste fixe, avec bandes noires) ; le jeu se fige pendant qu'on tire un bord ou déplace la fenêtre sous Windows (boucle modale dans `glfwPollEvents`, seule l'image est redessinée) : la cible durable est une boucle de jeu et de rendu sur un thread à elle, le thread principal ne lisant que les événements (change la règle « tout le GL sur le thread principal », à discuter). Icône par fenêtre, renvoi du focus au dialogue modal quand on clique sur la fenêtre parente, manettes bloquées par un dialogue modal.
 - **`EngineStats` par fenêtre** (compteurs de frames et de swaps) et `Screenshot` par fenêtre dans la boucle.
-- **Vsync** par fenêtre (`swapInterval` est à 0 partout).
 
 ## Intégrations plateformes
 - **Discord** : présence enrichie (SDK Discord, bindings Java à évaluer).
