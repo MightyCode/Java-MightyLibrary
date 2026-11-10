@@ -54,18 +54,15 @@ final class ConsolePanel {
     private float fontSize;
     private float lineHeight;
 
-    // Rows hidden below the visible ones (0: the newest lines are shown)
-    private int scrollOffset;
+    // Lines cut to the width, rows shown and scroll
+    private final ConsoleLayout layout;
     // First character of the command line shown, when it is wider than the panel
     private int inputScroll;
 
     private final Supplier<ECommandLevel> viewer;
-    private ECommandLevel shownLevel;
 
     // What the rows were built for
-    private long builtVersion = -1;
-    private ECommandLevel builtLevel;
-    private int builtScroll = -1;
+    private boolean rowsDirty = true;
     private float builtWidth = -1;
     private float builtHeight = -1;
     private float builtX = -1;
@@ -93,6 +90,8 @@ final class ConsolePanel {
         inputText = createText();
         inputText.setColor(INPUT_COLOR);
         rows = new ArrayList<>();
+        // Measured with the font of the command line, at the size of the rows
+        layout = new ConsoleLayout(log, inputText::charAdvance);
     }
 
     private Text createText() {
@@ -109,13 +108,19 @@ final class ConsolePanel {
     // Rows shown at once: the scroll of Page Up / Page Down
     int getVisibleRows() { return Math.max(1, visibleRows); }
 
-    /** Toward the oldest lines (positive) or the newest (negative), clamped when drawn. */
+    ConsoleLayout getLayout() { return layout; }
+
+    /** Toward the oldest lines (positive) or the newest (negative), by rows. */
     void scroll(int rows) {
-        scrollOffset = Math.max(0, scrollOffset + rows);
+        layout.scroll(rows);
+    }
+
+    void scrollToTop() {
+        layout.scrollToTop();
     }
 
     void scrollToEnd() {
-        scrollOffset = 0;
+        layout.scrollToEnd();
     }
 
     // Visual bell: the command line is lit a moment (a Tab with nothing new to show)
@@ -135,10 +140,11 @@ final class ConsolePanel {
         if (rowCount != visibleRows)
             resizeRows(rowCount);
 
-        shownLevel = viewer.get();
+        layout.setGeometry(width - 2 * PADDING, rowCount, lineHeight);
+        layout.setViewer(viewer.get());
         // A line hidden from the viewer (program output for the player) rebuilds nothing
-        if (log.version(shownLevel) != builtVersion || shownLevel != builtLevel || scrollOffset != builtScroll || width != builtWidth
-                || height != builtHeight || x != builtX || y != builtY || fontSize != builtFontSize)
+        if (layout.refresh() || rowsDirty || width != builtWidth || height != builtHeight || x != builtX || y != builtY
+                || fontSize != builtFontSize)
             buildRows(x, y, width, height, inputTop);
 
         background.setSizePix(width, height);
@@ -168,6 +174,7 @@ final class ConsolePanel {
             fontSize = wanted;
             for (Text row : rows)
                 row.setFontSize(fontSize);
+            layout.invalidate();
         }
 
         inputText.setFontSize(fontSize);
@@ -181,33 +188,28 @@ final class ConsolePanel {
             rows.add(createText());
 
         visibleRows = count;
-        builtVersion = -1;
+        rowsDirty = true;
     }
 
-    // The newest lines at the bottom, just above the command line
+    // The rows of the layout, the newest at the bottom, just above the command line
     private void buildRows(float x, float y, float width, float height, float inputTop) {
-        float textWidth = width - 2 * PADDING;
-        List<RowText> wrapped = lastRows(textWidth);
-
-        int shown = wrapped.size();
+        List<ConsoleLayout.Row> shown = layout.rows();
         for (int i = 0; i < rows.size(); ++i) {
             Text row = rows.get(i);
-            int index = i - (rows.size() - shown);
-            if (index < 0) {
+            int index = i - layout.slotOf(0);
+            if (index < 0 || index >= shown.size()) {
                 row.setText("");
                 continue;
             }
 
-            RowText content = wrapped.get(index);
+            ConsoleLayout.Row content = shown.get(index);
             row.setFontSize(fontSize);
-            row.setColor(content.color);
-            row.setText(content.text);
-            row.setPosition(new Vector2f(x + PADDING, inputTop - PADDING - (rows.size() - i) * lineHeight));
+            row.setColor(colorOf(content.line().getType()));
+            row.setText(content.text());
+            row.setPosition(new Vector2f(x + PADDING, rowTop(inputTop, i)));
         }
 
-        builtVersion = log.version(shownLevel);
-        builtLevel = shownLevel;
-        builtScroll = scrollOffset;
+        rowsDirty = false;
         builtWidth = width;
         builtHeight = height;
         builtX = x;
@@ -215,62 +217,9 @@ final class ConsolePanel {
         builtFontSize = fontSize;
     }
 
-    private static final class RowText {
-        final String text;
-        final Color4f color;
-
-        RowText(String text, Color4f color) {
-            this.text = text;
-            this.color = color;
-        }
-    }
-
-    /*
-     * The rows to show, oldest first, the scroll clamped. Every log line gives at least one row, so the last
-     * (scroll + visible) lines are enough: the work grows with what is shown, not with the size of the log.
-     */
-    private List<RowText> lastRows(float textWidth) {
-        int needed = scrollOffset + visibleRows;
-        List<ConsoleLog.Line> lines = log.last(needed, shownLevel);
-
-        // Rows from the newest, reversed at the end
-        List<RowText> fromNewest = new ArrayList<>();
-        for (int i = lines.size() - 1; i >= 0 && fromNewest.size() < needed; --i) {
-            ConsoleLog.Line line = lines.get(i);
-            List<String> parts = wrap(line.toString().replace("\t", "    "), textWidth);
-            Color4f color = colorOf(line.getType());
-            for (int p = parts.size() - 1; p >= 0; --p)
-                fromNewest.add(new RowText(parts.get(p), color));
-        }
-
-        // Scrolled past the oldest line: show the oldest rows
-        scrollOffset = Math.max(0, Math.min(scrollOffset, fromNewest.size() - visibleRows));
-
-        List<RowText> result = new ArrayList<>();
-        int end = Math.min(fromNewest.size(), scrollOffset + visibleRows);
-        for (int i = end - 1; i >= scrollOffset; --i)
-            result.add(fromNewest.get(i));
-
-        return result;
-    }
-
-    // Cut a line on the characters that pass the width (at least one character per row)
-    private List<String> wrap(String line, float width) {
-        List<String> parts = new ArrayList<>();
-        int start = 0;
-        float used = 0;
-        for (int i = 0; i < line.length(); ++i) {
-            float advance = inputText.charAdvance(line.charAt(i));
-            if (used + advance > width && i > start) {
-                parts.add(line.substring(start, i));
-                start = i;
-                used = 0;
-            }
-            used += advance;
-        }
-
-        parts.add(line.substring(start));
-        return parts;
+    // Top of a slot of the panel (0: the top row)
+    private float rowTop(float inputTop, int slot) {
+        return inputTop - PADDING - (rows.size() - slot) * lineHeight;
     }
 
     private static Color4f colorOf(ConsoleLog.EType type) {

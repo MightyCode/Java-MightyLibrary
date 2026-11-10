@@ -17,7 +17,7 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public final class ConsoleInput {
     public enum ERequest {
-        SUBMIT, CLOSE, SCROLL, SCROLL_END, CLEAR
+        SUBMIT, CLOSE, SCROLL, SCROLL_TOP, SCROLL_END, CLEAR
     }
 
     public static final class Request {
@@ -34,7 +34,7 @@ public final class ConsoleInput {
         public ERequest getType() { return type; }
         // The line to run (SUBMIT)
         public String getLine() { return line; }
-        // Lines to scroll toward the oldest ones, negative toward the newest (SCROLL)
+        // Rows to scroll toward the oldest ones, negative toward the newest (SCROLL)
         public int getAmount() { return amount; }
 
         @Override
@@ -129,16 +129,30 @@ public final class ConsoleInput {
                     editor.right();
                 break;
             case GLFW_KEY_HOME:
-                editor.home();
+                // Ctrl: the top of the log, alone: the beginning of the command line
+                if (key.isControl())
+                    requests.add(new Request(ERequest.SCROLL_TOP, null, 0));
+                else
+                    editor.home();
                 break;
             case GLFW_KEY_END:
-                editor.end();
+                if (key.isControl())
+                    requests.add(new Request(ERequest.SCROLL_END, null, 0));
+                else
+                    editor.end();
                 break;
             case GLFW_KEY_UP:
-                editor.previous();
+                // Shift: one row of the log, alone: the history
+                if (key.isShift())
+                    requests.add(new Request(ERequest.SCROLL, null, 1));
+                else
+                    editor.previous();
                 break;
             case GLFW_KEY_DOWN:
-                editor.next();
+                if (key.isShift())
+                    requests.add(new Request(ERequest.SCROLL, null, -1));
+                else
+                    editor.next();
                 break;
             case GLFW_KEY_PAGE_UP:
                 requests.add(new Request(ERequest.SCROLL, null, pageLines));

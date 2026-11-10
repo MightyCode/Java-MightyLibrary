@@ -15,6 +15,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2i;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -94,9 +95,29 @@ public final class Console {
 
     // A Tab was received but changes nothing: the command line of the shown console flashes
     private void bell() {
-        ConsolePanel panel = mode == EMode.DETACHED && windowView != null ? windowView.getPanel() : overlay;
+        ConsolePanel panel = shownPanel();
         if (panel != null)
             panel.flash();
+    }
+
+    // The panel of the window the console is in (the overlay when closed), null before its first display
+    private ConsolePanel shownPanel() {
+        return mode == EMode.DETACHED && windowView != null ? windowView.getPanel() : overlay;
+    }
+
+    /**
+     * State of the console for the developer (command console): mode, scroll ("end", or the line at the bottom of the
+     * view and its rows hidden below).
+     */
+    public JSONObject stateJson() {
+        JSONObject json = new JSONObject().put("mode", mode.name());
+
+        ConsolePanel panel = shownPanel();
+        ConsoleLayout.Anchor anchor = panel == null ? null : panel.getLayout().anchor();
+        json.put("scroll", anchor == null ? "end"
+                : new JSONObject().put("id", anchor.lineId()).put("row", anchor.rowsBelow()));
+
+        return json;
     }
 
     public ConsoleLog getLog() { return log; }
@@ -290,6 +311,10 @@ public final class Console {
                 case SCROLL:
                     if (panel != null)
                         panel.scroll(request.getAmount());
+                    break;
+                case SCROLL_TOP:
+                    if (panel != null)
+                        panel.scrollToTop();
                     break;
                 case SCROLL_END:
                     if (panel != null)

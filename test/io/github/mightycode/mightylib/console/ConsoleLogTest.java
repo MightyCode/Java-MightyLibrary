@@ -111,6 +111,45 @@ class ConsoleLogTest {
     }
 
     @Test
+    void readsAroundALineForTheViewerAndTheFilter() {
+        ConsoleLog log = new ConsoleLog(6);
+        // Ids 1 to 8, the first two forgotten
+        for (int i = 1; i <= 8; ++i) {
+            ConsoleLog.EType type = i % 2 == 0 ? ConsoleLog.EType.OUT : ConsoleLog.EType.RESULT;
+            log.add(type, null, "l" + i);
+        }
+
+        assertEquals(3, log.oldestId());
+        assertEquals(List.of("l3", "l4", "l5"), texts(log.upTo(5, 10, ECommandLevel.DEV, null)));
+        assertEquals(List.of("l4", "l5"), texts(log.upTo(5, 2, ECommandLevel.DEV, null)));
+        assertEquals(List.of("l6", "l7"), texts(log.after(5, 2, ECommandLevel.DEV, null)));
+        // An id between two kept lines, before the oldest or after the newest
+        assertEquals(List.of("l3", "l4", "l5", "l6", "l7", "l8"), texts(log.after(0, 10, ECommandLevel.DEV, null)));
+        assertEquals(List.of(), texts(log.after(8, 10, ECommandLevel.DEV, null)));
+        assertEquals(List.of(), texts(log.upTo(2, 10, ECommandLevel.DEV, null)));
+        assertEquals(List.of("l8"), texts(log.upTo(Long.MAX_VALUE, 1, ECommandLevel.DEV, null)));
+
+        // The player doesn't see the program output (OUT, even ids); the filter hides lines too
+        assertEquals(List.of("l3", "l5"), texts(log.upTo(6, 10, ECommandLevel.USER, null)));
+        assertEquals(List.of("l7"), texts(log.after(5, 10, ECommandLevel.USER, null)));
+        assertEquals(List.of("l4", "l6"),
+                texts(log.upTo(7, 10, ECommandLevel.DEV, line -> line.getType() == ConsoleLog.EType.OUT)));
+
+        // Cleared for the player: nothing up to the newest line, the developer still reads them
+        log.clear(ECommandLevel.USER);
+        assertEquals(8, log.clearedUpTo(ECommandLevel.USER));
+        assertEquals(0, log.clearedUpTo(ECommandLevel.DEV));
+        assertEquals(List.of(), texts(log.upTo(8, 10, ECommandLevel.USER, null)));
+        assertEquals(List.of(), texts(log.after(0, 10, ECommandLevel.USER, null)));
+        assertEquals(6, log.upTo(8, 10, ECommandLevel.DEV, null).size());
+
+        // Everything forgotten: cleared for every level
+        log.clear();
+        assertEquals(8, log.clearedUpTo(ECommandLevel.DEV));
+        assertEquals(9, log.oldestId());
+    }
+
+    @Test
     void teeWritesThroughAndLogsCompleteLines() {
         ConsoleLog log = new ConsoleLog(10);
         ByteArrayOutputStream real = new ByteArrayOutputStream();

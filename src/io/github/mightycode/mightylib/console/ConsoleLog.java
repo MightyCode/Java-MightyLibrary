@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Lines shown by the console: the program output (stdout, stderr) and the commands of every source with their result.
@@ -167,6 +168,9 @@ public final class ConsoleLog {
 
         start = 0;
         size = 0;
+        // Every viewer cleared its lines: a position kept on one of them goes back to the end (clearedUpTo)
+        for (int i = 0; i < clearedUpTo.length; ++i)
+            clearedUpTo[i] = nextId - 1;
         ++version;
         for (int i = 0; i < levelVersions.length; ++i)
             ++levelVersions[i];
@@ -232,6 +236,66 @@ public final class ConsoleLog {
 
         Collections.reverse(fromNewest);
         return fromNewest;
+    }
+
+    /*
+     * Reads around a line, for a display that keeps its position on a line (ConsoleLayout). Only the lines the viewer
+     * sees, not cleared for it, accepted by the filter (null: every line). The work grows with the lines read, not
+     * with the size of the log (the ids are increasing: the line is found by dichotomy).
+     */
+
+    // The last count lines whose id is at most the given one, oldest first
+    public synchronized List<Line> upTo(long id, int count, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        List<Line> fromNewest = new ArrayList<>();
+        for (int i = indexAfter(id) - 1; i >= 0 && fromNewest.size() < count; --i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.id <= cleared)
+                break;
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                fromNewest.add(line);
+        }
+
+        Collections.reverse(fromNewest);
+        return fromNewest;
+    }
+
+    // The first count lines whose id is greater than the given one, oldest first
+    public synchronized List<Line> after(long id, int count, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        List<Line> result = new ArrayList<>();
+        for (int i = indexAfter(Math.max(id, cleared)); i < size && result.size() < count; ++i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                result.add(line);
+        }
+
+        return result;
+    }
+
+    // Index (from the oldest kept line) of the first line whose id is greater than the given one, size if none
+    private int indexAfter(long id) {
+        int low = 0;
+        int high = size;
+        while (low < high) {
+            int middle = (low + high) >>> 1;
+            if (lines[(start + middle) % lines.length].id <= id)
+                low = middle + 1;
+            else
+                high = middle;
+        }
+
+        return low;
+    }
+
+    // Id of the oldest line kept (the next id when the log is empty): an older line was forgotten
+    public synchronized long oldestId() {
+        return size == 0 ? nextId : lines[start].id;
+    }
+
+    // The lines up to this id were cleared for the viewer (Ctrl+L, console clear), 0 if none
+    public synchronized long clearedUpTo(ECommandLevel viewer) {
+        return clearedUpTo[viewer.ordinal()];
     }
 
     // The lines whose id is greater than the given one, oldest first (the forgotten ones are lost)

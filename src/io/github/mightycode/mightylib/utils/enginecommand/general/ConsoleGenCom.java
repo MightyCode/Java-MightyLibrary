@@ -95,8 +95,7 @@ public class ConsoleGenCom extends BaseCommand {
         if (console == null)
             return CommandResult.error("The console is disabled (EngineConfig.setCommandAccess)");
 
-        return CommandResult.ok("Console " + console.getMode().name().toLowerCase(),
-                new JSONObject().put("mode", console.getMode().name()));
+        return CommandResult.ok("Console " + console.getMode().name().toLowerCase(), console.stateJson());
     }
 
     // The last lines, or the lines after the id (when not null)

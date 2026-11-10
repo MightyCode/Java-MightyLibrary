@@ -61,6 +61,10 @@ class ConsoleInputTest {
         return new KeyEvent(key, 0, GLFW_MOD_CONTROL, false, (char) 0);
     }
 
+    private static KeyEvent shift(int key) {
+        return new KeyEvent(key, 0, GLFW_MOD_SHIFT, false, (char) 0);
+    }
+
     // Ctrl + the key that has this letter in a QWERTY layout
     private static KeyEvent control(char letter) {
         return new KeyEvent(GLFW_KEY_A + (Character.toUpperCase(letter) - 'A'), 0, GLFW_MOD_CONTROL, false, letter);
@@ -125,6 +129,9 @@ class ConsoleInputTest {
         assertEquals(List.of("CLOSE"), handle("", key(GLFW_KEY_ESCAPE)));
         assertEquals(List.of("CLEAR"), handle("", control('l')));
         assertEquals(List.of("SCROLL 10", "SCROLL -10"), handle("", key(GLFW_KEY_PAGE_UP), key(GLFW_KEY_PAGE_DOWN)));
+        // Shift+Up/Down: one row; Ctrl+Home/End: top and end of the log
+        assertEquals(List.of("SCROLL 1", "SCROLL -1"), handle("", shift(GLFW_KEY_UP), shift(GLFW_KEY_DOWN)));
+        assertEquals(List.of("SCROLL_TOP", "SCROLL_END"), handle("", control(GLFW_KEY_HOME), control(GLFW_KEY_END)));
         // F1, F2: actions of the console, not edits
         assertEquals(List.of(), handle("", key(GLFW_KEY_F1), key(GLFW_KEY_F2)));
         assertEquals("", editor.getText());
