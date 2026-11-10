@@ -4,34 +4,40 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import java.util.Collection;
-import java.util.Collections;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONObject;
 
-import java.util.Arrays;
+import java.util.List;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
 public class SceneGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "scene";
     public SceneGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "The current scene and whether it is still loading, or change the scene");
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        if (args.length != 2)
-            return Collections.emptyList();
-
-        return SceneClasses.Find(ListGeneralCommand.targetScenes().getScenesPackage());
+    protected void syntax(CommandNode root) {
+        root.executes("Name of the current scene and whether it is still loading", context -> currentScene())
+                .then(argument("name", suggest(() -> SceneClasses.Find(ListGeneralCommand.targetScenes().getScenesPackage())),
+                        "Class name relative to the package of the first scene (for example Platformer2D.PlatformerBox2D)"
+                                + " or the full class name")
+                        .executes("Change the scene", context -> changeScene(context.get("name"), new String[]{""}))
+                        .then(argument("args", word(), "Arguments given to the scene").variadic()
+                                .executes("Change the scene with arguments", context -> {
+                                    List<String> sceneArgs = context.getList("args");
+                                    return changeScene(context.get("name"), sceneArgs.toArray(new String[0]));
+                                })));
     }
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (args.length < 2)
-            return currentScene();
-
-        Class<?> sceneClass = findSceneClass(args[1]);
+    private CommandResult changeScene(String name, String[] sceneArgs) {
+        Class<?> sceneClass = findSceneClass(name);
         if (sceneClass == null)
-            return CommandResult.error("Unknown scene ->" + args[1] + "<-, give its class name relative to "
+            return CommandResult.error("Unknown scene ->" + name + "<-, give its class name relative to "
                     + ListGeneralCommand.targetScenes().getScenesPackage() + " or its full name");
 
         if (!Scene.class.isAssignableFrom(sceneClass))
@@ -44,7 +50,6 @@ public class SceneGenCom extends BaseCommand {
             return CommandResult.error("Can't create " + sceneClass.getName() + " : " + e);
         }
 
-        String[] sceneArgs = args.length > 2 ? Arrays.copyOfRange(args, 2, args.length) : new String[]{""};
         ListGeneralCommand.targetScenes().requestSceneChange(scene, sceneArgs);
 
         return CommandResult.ok("Changing scene to " + sceneClass.getName()
@@ -73,13 +78,5 @@ public class SceneGenCom extends BaseCommand {
         }
 
         return null;
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nscene : name of the current scene and whether it is still loading" +
-                "\nscene [name] [args...] : change the scene, name is the class name relative to the package of" +
-                " the first scene (for example Platformer2D.PlatformerBox2D) or the full class name";
     }
 }

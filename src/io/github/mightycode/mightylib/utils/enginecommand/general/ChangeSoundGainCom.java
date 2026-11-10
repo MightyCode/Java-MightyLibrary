@@ -6,55 +6,37 @@ import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import java.util.Collection;
-import java.util.Collections;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.decimal;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 public class ChangeSoundGainCom extends BaseCommand {
     public static final String COMMAND_NAME = "changegain";
 
     public ChangeSoundGainCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV, "Change the gain of a gain node");
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        return args.length == 2 ? Collections.singletonList("list") : Collections.emptyList();
-    }
+    protected void syntax(CommandNode root) {
+        root.then(literal("list", "List all of the gain nodes and their value").executes(context -> {
+                    Views.engine().soundManager().printGainTree();
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (args.length < 2)
-            return noEnoughArgumentError();
+                    return CommandResult.ok("Gain tree printed in the program console");
+                }))
+                .then(argument("node", word(), "Name of the gain node (see list)")
+                        .then(argument("value", decimal(), "New gain")
+                                .executes("Change the gain of a gain node by the written value", context -> {
+                                    String node = context.get("node");
+                                    double value = context.get("value");
 
-        if (args[1].equalsIgnoreCase("list")){
-            Views.engine().soundManager().printGainTree();
+                                    if (!Views.engine().soundManager().changeGain(node, (float) value))
+                                        return CommandResult.error("Unknown node called " + node);
 
-            return CommandResult.ok("Gain tree printed in the program console");
-        }
-
-        if (args.length < 3)
-            return CommandResult.error("Should precise new value of gain !");
-
-        float value;
-
-        try {
-            value = Float.parseFloat(args[2]);
-        } catch (NumberFormatException e){
-            return CommandResult.error("Should write a valid new gain value (float) !");
-        }
-
-        if (!Views.engine().soundManager().changeGain(args[1], value))
-            return CommandResult.error("Unknown node called " + args[1]);
-
-        return CommandResult.ok("Update " + args[1] + " node to a new gain of " + value);
-    }
-
-
-    public String help() {
-        return super.help() +
-                "\nChange gain of a gain node" +
-                "\nchangegain node value : change the gain of a gain node by the written value" +
-                "\nchangegain list : list all of the gain nodes and their value" +
-                "\nchangegain help : display tips about the command";
+                                    return CommandResult.ok("Update " + node + " node to a new gain of " + value);
+                                })));
     }
 }

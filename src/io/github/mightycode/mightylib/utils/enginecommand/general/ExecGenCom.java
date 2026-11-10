@@ -3,20 +3,22 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import java.util.Collection;
-import java.util.Collections;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandScript;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
-import io.github.mightycode.mightylib.utils.enginecommand.syntax.PathCompletion;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.longValue;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.path;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
 /**
  * Run the commands written in a file, one per line (see CommandScript).
@@ -30,34 +32,25 @@ public class ExecGenCom extends BaseCommand {
     private final Set<Path> running;
 
     public ExecGenCom(Commands commands) {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "Run the commands written in a file, one per line, path relative to the working directory");
         this.commands = commands;
         this.running = ConcurrentHashMap.newKeySet();
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        return args.length == 2 ? PathCompletion.Complete(args[1]) : Collections.emptyList();
+    protected void syntax(CommandNode root) {
+        root.option(Option.of("timeout", "Seconds before the script is stopped (" + DEFAULT_TIMEOUT_SECONDS
+                        + " by default)").value("seconds", longValue(1, Long.MAX_VALUE))
+                        .defaultValue(DEFAULT_TIMEOUT_SECONDS))
+                .then(argument("file", path(), "Lines run in the same tick until one answers later (wait, screenshot,"
+                        + " exec...), the next line waits for it. Blank lines and lines starting with # are ignored,"
+                        + " the script stops at the first failed line")
+                        .executes(context -> run(context.get("file"), context.get("timeout"))));
     }
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (args.length < 2 || args.length > 3)
-            return noEnoughArgumentError();
-
-        long timeout = DEFAULT_TIMEOUT_SECONDS;
-        if (args.length > 2) {
-            try {
-                timeout = Long.parseLong(args[2]);
-            } catch (NumberFormatException e) {
-                return CommandResult.error("Timeout must be a number of seconds : " + args[2]);
-            }
-
-            if (timeout <= 0)
-                return CommandResult.error("Timeout must be positive : " + timeout);
-        }
-
-        Path path = Paths.get(args[1]).toAbsolutePath().normalize();
+    private CommandResult run(Path file, long timeout) {
+        Path path = file.toAbsolutePath().normalize();
         List<String> lines;
         try {
             lines = Files.readAllLines(path, StandardCharsets.UTF_8);
@@ -76,15 +69,5 @@ public class ExecGenCom extends BaseCommand {
             commands.addTickTask(script::step);
 
         return CommandResult.later(script.getResult(), timeout);
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nexec [file] [timeout] : run the commands of a file, one per line, path relative to the working directory" +
-                "\nLines run in the same tick until one answers later (wait, screenshot, exec...), the next line waits for it." +
-                "\nBlank lines and lines starting with # are ignored, the script stops at the first failed line." +
-                "\nUse -> wait [ticks] <- and -> wait loaded <- to let the game run." +
-                "\ntimeout : seconds before the script is stopped (" + DEFAULT_TIMEOUT_SECONDS + " by default)";
     }
 }

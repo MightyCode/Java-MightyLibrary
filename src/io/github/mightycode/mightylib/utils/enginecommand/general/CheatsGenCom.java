@@ -4,11 +4,10 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONObject;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 /**
  * Let the player turn the cheats on and off: the level of the session goes from USER to CHEAT and back.
@@ -20,36 +19,28 @@ public class CheatsGenCom extends BaseCommand {
     private final Commands commands;
 
     public CheatsGenCom(Commands commands) {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER, "Turn the cheats on or off");
         this.commands = commands;
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        return args.length == 2 ? Arrays.asList("on", "off") : Collections.emptyList();
+    protected void syntax(CommandNode root) {
+        root.executes("Tell if the cheats are on", context -> state())
+                .then(literal("on", "Turn the cheats on").executes(context -> set(ECommandLevel.CHEAT)))
+                .then(literal("off", "Turn the cheats off").executes(context -> set(ECommandLevel.USER)));
     }
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (args.length > 1) {
-            if (commands.getSessionLevel() == ECommandLevel.DEV)
-                return CommandResult.error("Developer mode: the cheats are always on");
+    private CommandResult set(ECommandLevel level) {
+        if (commands.getSessionLevel() == ECommandLevel.DEV)
+            return CommandResult.error("Developer mode: the cheats are always on");
 
-            if (args[1].equalsIgnoreCase("on"))
-                commands.setSessionLevel(ECommandLevel.CHEAT);
-            else if (args[1].equalsIgnoreCase("off"))
-                commands.setSessionLevel(ECommandLevel.USER);
-            else
-                return unknownArgumentError(args[1]);
-        }
+        commands.setSessionLevel(level);
+        return state();
+    }
 
+    private CommandResult state() {
         boolean on = commands.getSessionLevel().includes(ECommandLevel.CHEAT);
         return CommandResult.ok(on ? "Cheats on" : "Cheats off",
                 new JSONObject().put("level", commands.getSessionLevel().name()));
-    }
-
-    @Override
-    public String help() {
-        return super.help() + "\ncheats : tell if the cheats are on\ncheats on|off : turn the cheats on or off";
     }
 }

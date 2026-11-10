@@ -10,13 +10,13 @@ import io.github.mightycode.mightylib.main.monitors.VideoMode;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 /**
  * Connected screens with their resolution, and the one showing the window.
@@ -25,24 +25,23 @@ public class MonitorsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "monitors";
 
     public MonitorsGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "Connected screens (index, name, resolution, position) and the index of the one showing the window");
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        return args.length == 2 ? Arrays.asList("full", "modes") : Collections.emptyList();
+    protected void syntax(CommandNode root) {
+        root.executes("The screen is chosen at start by EngineConfig.setMonitorSelector or"
+                        + " -Dmightylib.window.monitor=primary|secondary|largest|index|part of a name",
+                        context -> describe(false, false))
+                .then(literal("full", "Also the work area (without the task bar) and the refresh rate")
+                        .executes(context -> describe(true, false)))
+                .then(literal("modes", "Also the video modes of each screen (WIDTHxHEIGHT@HZ, for a fullscreen resolution)")
+                        .executes(context -> describe(false, true)));
     }
 
-    @Override
-    public CommandResult execute(String[] args) {
-        if (checkArgumentHelp(args))
-            return CommandResult.ok(help());
-
-        // Short by default: work area and refresh rate only with "monitors full"
-        boolean full = args.length > 1 && args[1].equals("full");
-        // The video modes are long: only with "monitors modes"
-        boolean modes = args.length > 1 && args[1].equals("modes");
-
+    // Short by default: work area and refresh rate only with full, the long video modes only with modes
+    private static CommandResult describe(boolean full, boolean modes) {
         List<MonitorInfo> monitors = Monitors.List();
         JSONArray list = new JSONArray();
         for (MonitorInfo monitor : monitors) {
@@ -68,15 +67,5 @@ public class MonitorsGenCom extends BaseCommand {
         data.put("windowMonitor", current == null ? JSONObject.NULL : current.getIndex());
 
         return CommandResult.ok(monitors.size() + " monitor(s)", data);
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nmonitors full : also the work area (without the task bar) and the refresh rate" +
-                "\nmonitors modes : also the video modes of each screen (WIDTHxHEIGHT@HZ, for a fullscreen resolution)" +
-                "\nmonitors : connected screens (index, name, resolution, position) and the index of the one"
-                + " showing the window. The screen is chosen at start by EngineConfig.setMonitorSelector or"
-                + " -Dmightylib.window.monitor=primary|secondary|largest|index|part of a name";
     }
 }

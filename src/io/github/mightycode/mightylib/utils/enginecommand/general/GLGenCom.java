@@ -8,24 +8,28 @@ import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import java.util.Collection;
-import java.util.Collections;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+
 import org.json.JSONObject;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
 public class GLGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "gl";
 
     public GLGenCom() {
-        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "Number of OpenGL objects alive by type, and elements shared by GLResources with their references");
     }
 
     @Override
-    public Collection<String> completeArgument(String[] args) {
-        return args.length == 2 ? Collections.singletonList("summary") : Collections.emptyList();
+    protected void syntax(CommandNode root) {
+        root.executes("Compare it before and after a scene change to find leaks", context -> describe(false))
+                .then(literal("summary", "The shared elements given by type as elements/references")
+                        .executes(context -> describe(true)));
     }
 
-    @Override
-    public CommandResult execute(String[] args) {
+    private static CommandResult describe(boolean summary) {
         JSONObject data = new JSONObject();
 
         JSONObject glObjects = new JSONObject();
@@ -48,7 +52,7 @@ public class GLGenCom extends BaseCommand {
         data.put("glContexts", glContexts);
         JSONObject shared = Views.engine().glResources().describe();
 
-        if (args.length > 1 && args[1].equals("summary")) {
+        if (summary) {
             data.put("sharedElements", summarize(shared));
             return CommandResult.ok("OpenGL objects alive, shared elements and references by type", data);
         }
@@ -77,13 +81,5 @@ public class GLGenCom extends BaseCommand {
         }
 
         return summary;
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\ngl : number of OpenGL objects alive by type, and elements shared by GLResources with their references." +
-                "\nCompare it before and after a scene change to find leaks." +
-                "\ngl summary : same, shared elements given by type as elements/references";
     }
 }
