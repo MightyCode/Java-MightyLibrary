@@ -197,7 +197,7 @@ public class EngineConfig {
     /**
      * Level of the player at the start, bounded by setMaxCommandAccess; null: no access, no in-game console.
      * By default DEV in debug mode, none in release: a released game opens the access itself (USER for a chat or
-     * the options, CHEAT...). The console opens with ² (and F1 in DEV), F2 puts it in a window of its own.
+     * the options, CHEAT...). The console opens with ², F2 puts it in a window of its own.
      * The option -Dmightylib.commands.access=none|user|cheat|dev overrides it (a developer mode for the modders),
      * still bounded by the maximum.
      */

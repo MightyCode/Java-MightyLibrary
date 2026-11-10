@@ -77,7 +77,7 @@ public class DisplayModesScene extends Scene {
     static void ChangeDisplay(WindowContext window) {
         KeyboardManager keyboard = window.getKeyboardManager();
 
-        // Not F1/F2: they open and detach the console
+        // Not F2: it detaches the console
         if (keyboard.keyPressed(GLFW_KEY_1))
             window.setWindowMode(EWindowMode.WINDOWED);
         if (keyboard.keyPressed(GLFW_KEY_2))

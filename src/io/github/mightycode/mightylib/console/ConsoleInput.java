@@ -155,7 +155,7 @@ public final class ConsoleInput {
                     requests.add(new Request(ERequest.CLEAR, null, 0));
                 break;
             default:
-                // Text comes from the typed text; other keys (F1, F2...) are actions read by the console
+                // Text comes from the typed text; other keys (², F2...) are actions read by the console
                 break;
         }
     }
