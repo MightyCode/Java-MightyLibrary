@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.text.DrawnTexts;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.main.utils.FrameEvent;
 import io.github.mightycode.mightylib.main.utils.GameTime;
@@ -98,6 +99,7 @@ public final class MainLoop {
                 FrameEvent frameEvent = new FrameEvent();
                 frameEvent.begin();
                 long frameStart = System.nanoTime();
+                DrawnTexts.beginFrame();
                 engine.displayWindows();
 
                 // What follows (loading queues, main thread tasks, screenshots) works in the main window

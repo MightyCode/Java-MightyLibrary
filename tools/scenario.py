@@ -12,6 +12,8 @@ Steps are game commands (see `help` in the game) plus:
     leakcheck SCENE [N] [VIA]       load SCENE, do N round trips (default 2) through VIA (default MenuScene),
                                     print "no leak" or only the OpenGL counters that changed
     log PATTERN [N]                 last N lines (default 10) of the game log matching the regex PATTERN
+    drag X1 Y1 X2 Y2 [--hold S]     press the left button at X1 Y1, move to X2 Y2 in steps during S seconds
+                                    (default 0.5, "1s" accepted), release; the cursor stays at X2 Y2
 
 Output is short: a successful step prints "ok" only (and the file of a screenshot); prefix a step with "?" to
 see its whole answer, for example "?gl summary". Failures always print the whole answer.
@@ -225,6 +227,49 @@ def log_lines(log_path, words):
     return True
 
 
+DRAG_STEPS = 5
+# The game reads the input once per tick: two commands in the same tick would be merged
+DRAG_PAUSE = 0.2
+
+
+def drag(connection, reader, words):
+    usage = "usage: drag X1 Y1 X2 Y2 [--hold SECONDS]"
+    args = words[1:]
+    hold = 0.5
+    if "--hold" in args:
+        index = args.index("--hold")
+        try:
+            hold = float(args[index + 1].rstrip("s"))
+        except (IndexError, ValueError):
+            print("> drag\n  ERR " + usage)
+            return False
+        del args[index:index + 2]
+    try:
+        x1, y1, x2, y2 = (float(value) for value in args)
+    except ValueError:
+        print("> drag\n  ERR " + usage)
+        return False
+
+    # (command, pause after it): the whole move lasts about the hold time
+    commands = [(f"input mouse {x1:g} {y1:g}", DRAG_PAUSE), ("input mouse hold", DRAG_PAUSE)]
+    for i in range(1, DRAG_STEPS + 1):
+        commands.append((f"input mouse {x1 + (x2 - x1) * i / DRAG_STEPS:g} {y1 + (y2 - y1) * i / DRAG_STEPS:g}",
+                         hold / DRAG_STEPS))
+    commands.append(("input mouse release", 0))
+
+    for command, pause in commands:
+        answer = mighty.send(connection, reader, command)
+        if not answer.get("success"):
+            # Never leave the button held
+            mighty.send(connection, reader, "input mouse release")
+            print(f"> drag\n  ERR {command}: {compact(answer)}")
+            return False
+        time.sleep(pause)
+
+    print(f"> drag {x1:g} {y1:g} {x2:g} {y2:g} --hold {hold:g}  ok")
+    return True
+
+
 def run_steps(port, steps, timeout, log_path=None):
     success = True
     expected_scene = None
@@ -246,6 +291,9 @@ def run_steps(port, steps, timeout, log_path=None):
                 continue
             if words and words[0] == "log":
                 success = log_lines(log_path, words) and success
+                continue
+            if words and words[0] == "drag":
+                success = drag(connection, reader, words) and success
                 continue
 
             if len(words) >= 2 and words[0] == "scene":
