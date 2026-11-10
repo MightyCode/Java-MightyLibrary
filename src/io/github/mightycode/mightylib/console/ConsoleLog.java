@@ -88,10 +88,10 @@ public final class ConsoleLog {
         add(type, source, text, type == EType.OUT || type == EType.ERR ? ECommandLevel.DEV : ECommandLevel.USER);
     }
 
-    /** Add one entry, split on the line breaks, seen from the level on. */
-    public void add(EType type, String source, String text, ECommandLevel level) {
+    /** Add one entry, split on the line breaks, seen from the level on. Gives the lines added. */
+    public List<Line> add(EType type, String source, String text, ECommandLevel level) {
         if (text == null)
-            return;
+            return Collections.emptyList();
 
         String[] split = text.split("\r?\n", -1);
         int count = split.length;
@@ -117,6 +117,37 @@ public final class ConsoleLog {
             for (Consumer<Line> listener : listeners)
                 listener.accept(line);
         }
+
+        return Collections.unmodifiableList(added);
+    }
+
+    /**
+     * Let lower levels see lines already written (the command that lowered the level of its source, cheats off, and
+     * its answer stay seen by the source). Never raises a level; the forgotten lines are ignored.
+     */
+    public synchronized void lower(List<Line> written, ECommandLevel level) {
+        boolean changed = false;
+        for (Line line : written) {
+            for (int i = size - 1; i >= 0; --i) {
+                int index = (start + i) % lines.length;
+                Line current = lines[index];
+                if (current.id != line.id)
+                    continue;
+
+                if (!level.includes(current.level)) {
+                    lines[index] = new Line(current.id, current.type, current.source, current.text, level);
+                    for (ECommandLevel viewer : ECommandLevel.values()) {
+                        if (viewer.includes(level) && !viewer.includes(current.level))
+                            ++levelVersions[viewer.ordinal()];
+                    }
+                    changed = true;
+                }
+                break;
+            }
+        }
+
+        if (changed)
+            ++version;
     }
 
     private void append(Line line) {

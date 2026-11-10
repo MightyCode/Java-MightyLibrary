@@ -48,8 +48,8 @@ public class Commands {
         private final String line;
         private final ICommandSource source;
         private final CompletableFuture<CommandResult> result;
-        // Level of the source when the command runs: the command and its answer are told with it, even when the
-        // command changes the level of its source (cheats off)
+        // Level of the source when the command runs, lowered with the source by the command (cheats off): its answer
+        // is told with it
         private ECommandLevel level;
 
         private CommandRequest(String line, ICommandSource source) {
@@ -228,6 +228,14 @@ public class Commands {
                 listener.executed(request.source, request.level, request.line);
 
             CommandResult result = execute(request.line, request.source);
+
+            // The command lowered the level of its source (cheats off): the source must still see it and its answer
+            ECommandLevel after = request.source.level();
+            if (!after.includes(request.level)) {
+                request.level = after;
+                for (ICommandListener listener : listeners)
+                    listener.lowered(request.source, request.level, request.line);
+            }
 
             CommandRequest answered = request;
             if (result.isDeferred()) {
