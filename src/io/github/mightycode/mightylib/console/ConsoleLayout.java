@@ -4,7 +4,10 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Layout of the console log in a panel, without GL: the lines cut to the width, the rows shown, the scroll and the
@@ -92,6 +95,9 @@ final class ConsoleLayout {
     private int visibleRows;
     private float rowHeight = 1;
     private ECommandLevel viewer = ECommandLevel.USER;
+    // Types of lines not shown (console logs off: the program output)
+    private final Set<ConsoleLog.EType> hiddenTypes = EnumSet.noneOf(ConsoleLog.EType.class);
+    private final Predicate<ConsoleLog.Line> filter = line -> !hiddenTypes.contains(line.getType());
 
     // null: follow the end of the log
     private Anchor anchor;
@@ -139,6 +145,19 @@ final class ConsoleLayout {
         dirty = true;
     }
 
+    /*
+     * The lines of these types are not shown. The anchor does not change: a view whose bottom line is hidden shows the
+     * nearest visible line before it, and comes back to the same place when the lines are shown again.
+     */
+    void setHiddenTypes(Set<ConsoleLog.EType> types) {
+        if (types.equals(hiddenTypes))
+            return;
+
+        hiddenTypes.clear();
+        hiddenTypes.addAll(types);
+        dirty = true;
+    }
+
     // The width of the characters changed (font size)
     void invalidate() {
         dirty = true;
@@ -152,7 +171,7 @@ final class ConsoleLayout {
 
     /** Compute the rows again if the log (what the viewer sees), the scroll or the settings changed. */
     boolean refresh() {
-        if (!dirty && log.version(viewer) == builtVersion)
+        if (!dirty && log.version(viewer, hiddenTypes) == builtVersion)
             return false;
 
         build();
@@ -179,7 +198,7 @@ final class ConsoleLayout {
     private void build() {
         dirty = false;
         // Read before the lines: a line added meanwhile changes it, the next refresh builds again
-        builtVersion = log.version(viewer);
+        builtVersion = log.version(viewer, hiddenTypes);
         rows = Collections.emptyList();
         bottom = null;
         atEnd = true;
@@ -196,14 +215,14 @@ final class ConsoleLayout {
         }
 
         if (anchor == null) {
-            List<ConsoleLog.Line> newest = log.upTo(Long.MAX_VALUE, 1, viewer, null);
+            List<ConsoleLog.Line> newest = log.upTo(Long.MAX_VALUE, 1, viewer, filter);
             if (newest.isEmpty())
                 return;
             bottomLine = newest.get(0);
             hidden = 0;
         } else if (anchor.lineId < log.oldestId()) {
             // The line was forgotten (ring buffer): the oldest line kept, at the top
-            List<ConsoleLog.Line> oldest = log.after(0, 1, viewer, null);
+            List<ConsoleLog.Line> oldest = log.after(0, 1, viewer, filter);
             if (oldest.isEmpty()) {
                 anchor = null;
                 return;
@@ -214,13 +233,13 @@ final class ConsoleLayout {
         } else {
             // The line itself, or the nearest visible line before it: the anchor does not change, showing the
             // hidden lines again comes back to the same place
-            List<ConsoleLog.Line> found = log.upTo(anchor.lineId, 1, viewer, null);
+            List<ConsoleLog.Line> found = log.upTo(anchor.lineId, 1, viewer, filter);
             if (!found.isEmpty()) {
                 bottomLine = found.get(0);
                 int parts = wrap(DisplayedText(bottomLine)).size();
                 hidden = bottomLine.getId() == anchor.lineId ? Math.min(anchor.rowsBelow, parts - 1) : 0;
             } else {
-                List<ConsoleLog.Line> next = log.after(anchor.lineId, 1, viewer, null);
+                List<ConsoleLog.Line> next = log.after(anchor.lineId, 1, viewer, filter);
                 if (next.isEmpty())
                     return;
                 bottomLine = next.get(0);
@@ -243,7 +262,7 @@ final class ConsoleLayout {
 
         if (fromNewest.size() < visibleRows) {
             // Every line gives at least one row: that many lines are enough
-            List<ConsoleLog.Line> before = log.upTo(bottomLine.getId() - 1, visibleRows - fromNewest.size(), viewer, null);
+            List<ConsoleLog.Line> before = log.upTo(bottomLine.getId() - 1, visibleRows - fromNewest.size(), viewer, filter);
             for (int i = before.size() - 1; i >= 0 && fromNewest.size() < visibleRows; --i) {
                 List<Row> parts = rowsOf(before.get(i));
                 for (int p = parts.size() - 1; p >= 0 && fromNewest.size() < visibleRows; --p)
@@ -261,7 +280,7 @@ final class ConsoleLayout {
                 result.add(bottomParts.get(p));
 
             if (result.size() < visibleRows) {
-                List<ConsoleLog.Line> after = log.after(bottomLine.getId(), visibleRows - result.size(), viewer, null);
+                List<ConsoleLog.Line> after = log.after(bottomLine.getId(), visibleRows - result.size(), viewer, filter);
                 for (ConsoleLog.Line line : after) {
                     for (Row row : rowsOf(line)) {
                         if (result.size() >= visibleRows)
@@ -275,7 +294,7 @@ final class ConsoleLayout {
         rows = Collections.unmodifiableList(result);
         Row last = result.get(result.size() - 1);
         bottom = new Anchor(last.line.getId(), last.parts - 1 - last.part);
-        atEnd = last.isLastPart() && log.after(last.line.getId(), 1, viewer, null).isEmpty();
+        atEnd = last.isLastPart() && log.after(last.line.getId(), 1, viewer, filter).isEmpty();
     }
 
     private List<Row> rowsOf(ConsoleLog.Line line) {
@@ -323,7 +342,7 @@ final class ConsoleLayout {
         if (amount > 0) {
             int parts = wrap(DisplayedText(line)).size();
             while (hidden >= parts) {
-                List<ConsoleLog.Line> previous = log.upTo(line.getId() - 1, 1, viewer, null);
+                List<ConsoleLog.Line> previous = log.upTo(line.getId() - 1, 1, viewer, filter);
                 if (previous.isEmpty()) {
                     // The top of the log: clamped by the layout
                     hidden = parts - 1;
@@ -335,7 +354,7 @@ final class ConsoleLayout {
             }
         } else {
             while (hidden < 0) {
-                List<ConsoleLog.Line> next = log.after(line.getId(), 1, viewer, null);
+                List<ConsoleLog.Line> next = log.after(line.getId(), 1, viewer, filter);
                 if (next.isEmpty()) {
                     scrollToEnd();
                     return;
@@ -350,7 +369,7 @@ final class ConsoleLayout {
 
     /** The oldest line kept at the top. */
     void scrollToTop() {
-        List<ConsoleLog.Line> oldest = log.after(0, 1, viewer, null);
+        List<ConsoleLog.Line> oldest = log.after(0, 1, viewer, filter);
         if (oldest.isEmpty())
             return;
 

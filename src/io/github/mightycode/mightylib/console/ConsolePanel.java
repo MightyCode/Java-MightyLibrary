@@ -8,11 +8,8 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 
-import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Supplier;
 
 import static org.lwjgl.opengl.GL11.glViewport;
 
@@ -59,7 +56,8 @@ final class ConsolePanel {
     // First character of the command line shown, when it is wider than the panel
     private int inputScroll;
 
-    private final Supplier<ECommandLevel> viewer;
+    // Level of the player (only the lines it sees are shown) and filter of the console
+    private final Console console;
 
     // What the rows were built for
     private boolean rowsDirty = true;
@@ -70,14 +68,12 @@ final class ConsolePanel {
     private float builtFontSize = -1;
     private int visibleRows;
 
-    // viewer: the level of the player, only the lines it sees are shown
-    ConsolePanel(ConsoleView view, ConsoleLog log, Supplier<ECommandLevel> viewer, CommandLineEditor editor,
-                 String fontName, Color4f backgroundColor, Color4f inputBackgroundColor) {
+    ConsolePanel(ConsoleView view, Console console, Color4f backgroundColor, Color4f inputBackgroundColor) {
         this.view = view;
-        this.log = log;
-        this.viewer = viewer;
-        this.editor = editor;
-        this.fontName = fontName;
+        this.console = console;
+        this.log = console.getLog();
+        this.editor = console.getEditor();
+        this.fontName = console.getFontName();
 
         background = new RectangleRenderer("colorShape2D");
         background.setColorMode(backgroundColor);
@@ -141,7 +137,8 @@ final class ConsolePanel {
             resizeRows(rowCount);
 
         layout.setGeometry(width - 2 * PADDING, rowCount, lineHeight);
-        layout.setViewer(viewer.get());
+        layout.setViewer(console.getViewerLevel());
+        layout.setHiddenTypes(console.getHiddenTypes());
         // A line hidden from the viewer (program output for the player) rebuilds nothing
         if (layout.refresh() || rowsDirty || width != builtWidth || height != builtHeight || x != builtX || y != builtY
                 || fontSize != builtFontSize)

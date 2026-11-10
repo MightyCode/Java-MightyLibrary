@@ -207,6 +207,13 @@ class CommandLevelsTest {
         assertFalse(run(commands, "screenshot --rect 0 0 1 1 --corners 0 0 1 1", DEVELOPER).isSuccess());
         assertFalse(commands.complete("console ", PLAYER).getCandidates().contains("log"));
         assertTrue(commands.complete("console ", DEVELOPER).getCandidates().contains("log"));
+
+        // The program output is for the developer: so is the command that shows or hides it
+        assertTrue(run(commands, "console logs off", PLAYER).getMessage().startsWith("Unknown argument ->logs<-"));
+        assertFalse(commands.complete("console ", PLAYER).getCandidates().contains("logs"));
+        assertTrue(commands.complete("console ", DEVELOPER).getCandidates().contains("logs"));
+        assertEquals(List.of("off", "on"), commands.complete("console logs ", DEVELOPER).getCandidates());
+        assertTrue(run(commands, "console logs maybe", DEVELOPER).getMessage().contains("maybe"));
     }
 
     @Test

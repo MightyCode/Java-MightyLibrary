@@ -3,7 +3,9 @@ package io.github.mightycode.mightylib.console;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.junit.jupiter.api.Test;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -171,6 +173,47 @@ class ConsoleLayoutTest {
         assertFalse(layout.refresh());
         log.add(ConsoleLog.EType.OUT, null, "more output");
         assertFalse(layout.refresh());
+    }
+
+    @Test
+    void anAnchorOnAHiddenLineComesBackWhenItIsShownAgain() {
+        ConsoleLog log = new ConsoleLog(20);
+        for (int i = 1; i <= 8; ++i) {
+            if (i % 2 == 0)
+                log.add(ConsoleLog.EType.OUT, null, "out" + i);
+            else
+                add(log, "l" + i);
+        }
+        add(log, "l9");
+        ConsoleLayout layout = layout(log, 2);
+
+        // The bottom of the view on out6
+        layout.scroll(3);
+        assertEquals(List.of("l5", "out6"), shown(layout));
+        ConsoleLayout.Anchor anchor = layout.anchor();
+        assertEquals(new ConsoleLayout.Anchor(6, 0), anchor);
+
+        // The output hidden: the nearest visible line before it, the anchor kept
+        Set<ConsoleLog.EType> output = EnumSet.of(ConsoleLog.EType.OUT, ConsoleLog.EType.ERR);
+        layout.setHiddenTypes(output);
+        assertEquals(List.of("l3", "l5"), shown(layout));
+        assertEquals(anchor, layout.anchor());
+        // A hidden line arriving rebuilds nothing, a shown one does
+        log.add(ConsoleLog.EType.ERR, null, "err10");
+        assertFalse(layout.refresh());
+        add(log, "l11");
+        assertTrue(layout.refresh());
+        assertEquals(List.of("l3", "l5"), shown(layout));
+
+        layout.setHiddenTypes(EnumSet.noneOf(ConsoleLog.EType.class));
+        assertEquals(List.of("l5", "out6"), shown(layout));
+        assertEquals(anchor, layout.anchor());
+
+        // Every line before the anchor hidden: the view starts at the top
+        layout.scrollToTop();
+        assertEquals(List.of("l1", "out2"), shown(layout));
+        layout.setHiddenTypes(EnumSet.of(ConsoleLog.EType.OUT, ConsoleLog.EType.RESULT));
+        assertEquals(List.of("err10"), shown(layout));
     }
 
     @Test

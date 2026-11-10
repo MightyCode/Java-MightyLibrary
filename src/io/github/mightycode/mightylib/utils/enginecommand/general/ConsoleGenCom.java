@@ -62,6 +62,12 @@ public class ConsoleGenCom extends BaseCommand {
                         .then(argument("count", integer(1, Integer.MAX_VALUE),
                                 "Number of lines (" + DEFAULT_LOG_LINES + " by default)")
                                 .executes(context -> log(Views.engine().consoleLog(), context.get("count"), null))))
+                // The program output is seen in DEV only
+                .then(literal("logs", "Show or hide the program output (stdout, stderr) in the console")
+                        .level(ECommandLevel.DEV)
+                        .executes(context -> logs(null))
+                        .then(argument("state", choice("on", "off"), "Show the program output or hide it")
+                                .executes(context -> logs(context.get("state").equals("on")))))
                 .then(literal("follow", "Receive every new line of the log (debug server, see DebugServer)")
                         .level(ECommandLevel.DEV)
                         .executes(context -> follow(true))
@@ -79,6 +85,17 @@ public class ConsoleGenCom extends BaseCommand {
             action.accept(console);
             return status(console);
         });
+    }
+
+    // null: switch
+    private static CommandResult logs(Boolean shown) {
+        Console console = Views.engine().console();
+        if (console == null)
+            return status(null);
+
+        console.setLogsShown(shown == null ? !console.areLogsShown() : shown);
+        return CommandResult.ok(console.areLogsShown() ? "Logs shown" : "Logs hidden",
+                new JSONObject().put("logsShown", console.areLogsShown()));
     }
 
     private CommandResult follow(boolean on) {

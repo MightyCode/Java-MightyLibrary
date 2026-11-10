@@ -17,7 +17,10 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2i;
 import org.json.JSONObject;
 
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
 
@@ -51,6 +54,8 @@ public final class Console {
     private final ConsoleInput input;
 
     private EMode mode = EMode.CLOSED;
+    // Types of log lines the console doesn't show (the log keeps them), shared by the overlay and the window
+    private final Set<ConsoleLog.EType> hiddenTypes = EnumSet.noneOf(ConsoleLog.EType.class);
 
     // Overlay of the main window, created at its first display
     private ConsoleView overlayView;
@@ -106,11 +111,11 @@ public final class Console {
     }
 
     /**
-     * State of the console for the developer (command console): mode, scroll ("end", or the line at the bottom of the
-     * view and its rows hidden below).
+     * State of the console for the developer (command console): mode, logs shown, scroll ("end", or the line at the
+     * bottom of the view and its rows hidden below).
      */
     public JSONObject stateJson() {
-        JSONObject json = new JSONObject().put("mode", mode.name());
+        JSONObject json = new JSONObject().put("mode", mode.name()).put("logsShown", areLogsShown());
 
         ConsolePanel panel = shownPanel();
         ConsoleLayout.Anchor anchor = panel == null ? null : panel.getLayout().anchor();
@@ -119,6 +124,27 @@ public final class Console {
 
         return json;
     }
+
+    /**
+     * Show or hide the program output (stdout, stderr) in the console; the log keeps it (console log, debug server).
+     * The view keeps its place: hiding then showing the lines comes back to the same one.
+     */
+    public void setLogsShown(boolean shown) {
+        if (shown) {
+            hiddenTypes.remove(ConsoleLog.EType.OUT);
+            hiddenTypes.remove(ConsoleLog.EType.ERR);
+        } else {
+            hiddenTypes.add(ConsoleLog.EType.OUT);
+            hiddenTypes.add(ConsoleLog.EType.ERR);
+        }
+    }
+
+    public boolean areLogsShown() {
+        return !hiddenTypes.contains(ConsoleLog.EType.OUT) || !hiddenTypes.contains(ConsoleLog.EType.ERR);
+    }
+
+    // The types of lines not shown (read by the panels at each display)
+    Set<ConsoleLog.EType> getHiddenTypes() { return Collections.unmodifiableSet(hiddenTypes); }
 
     public ConsoleLog getLog() { return log; }
 
@@ -334,8 +360,7 @@ public final class Console {
             if (overlay == null) {
                 overlayView = new ConsoleView(engine, main);
                 try (Views.Scope ignored = Views.enter(overlayView)) {
-                    overlay = new ConsolePanel(overlayView, log, this::getViewerLevel, editor, fontName,
-                            OVERLAY_BACKGROUND, OVERLAY_INPUT_BACKGROUND);
+                    overlay = new ConsolePanel(overlayView, this, OVERLAY_BACKGROUND, OVERLAY_INPUT_BACKGROUND);
                 }
             }
 

@@ -57,6 +57,7 @@ public class EngineConfig {
     private boolean cheatCommand;
     private String consoleFont = "bahnschrift";
     private int consoleLogCapacity = ConsoleLog.DEFAULT_CAPACITY;
+    private boolean consoleLogsShown = true;
 
     private IProjectLoading projectLoading;
 
@@ -180,6 +181,8 @@ public class EngineConfig {
     public static final String WATCH_INTERVAL_PROPERTY = "mightylib.resources.watch.interval";
     // none, user, cheat or dev: the access to the commands at the start (see setCommandAccess)
     public static final String COMMAND_ACCESS_PROPERTY = "mightylib.commands.access";
+    // shown or hidden: the program output in the console at the start (see setConsoleLogsShown)
+    public static final String CONSOLE_LOGS_PROPERTY = "mightylib.console.logs";
 
     // Check OpenGL errors after each call (glGetError): helps to locate an error, but slows down rendering
     public EngineConfig setOpenGLErrorCheck(boolean openGLErrorCheck) {
@@ -236,6 +239,15 @@ public class EngineConfig {
     // Lines kept by the console (program output and commands), the oldest are forgotten
     public EngineConfig setConsoleLogCapacity(int consoleLogCapacity) {
         this.consoleLogCapacity = consoleLogCapacity;
+        return this;
+    }
+
+    /**
+     * The program output (stdout, stderr) shown in the console at the start (true by default; seen in DEV only), the
+     * command "console logs on|off" changes it. The option -Dmightylib.console.logs=shown|hidden overrides it.
+     */
+    public EngineConfig setConsoleLogsShown(boolean consoleLogsShown) {
+        this.consoleLogsShown = consoleLogsShown;
         return this;
     }
 
@@ -401,6 +413,34 @@ public class EngineConfig {
     public boolean isCheatCommand() { return cheatCommand; }
     public String getConsoleFont() { return consoleFont; }
     public int getConsoleLogCapacity() { return consoleLogCapacity; }
+
+    // The launch option wins; an unknown value keeps the configuration, with a line in the log
+    public boolean isConsoleLogsShown() {
+        String property = System.getProperty(CONSOLE_LOGS_PROPERTY);
+        if (property == null)
+            return consoleLogsShown;
+
+        Boolean shown = ParseLogsShown(property);
+        if (shown == null) {
+            System.err.println("--" + CONSOLE_LOGS_PROPERTY + " : unknown value ->" + property
+                    + "<-, expected shown or hidden");
+            return consoleLogsShown;
+        }
+
+        return shown;
+    }
+
+    // shown: true, hidden: false, anything else: null
+    static Boolean ParseLogsShown(String value) {
+        switch (value.trim().toLowerCase()) {
+            case "shown":
+                return Boolean.TRUE;
+            case "hidden":
+                return Boolean.FALSE;
+            default:
+                return null;
+        }
+    }
     public IProjectLoading getProjectLoading() { return projectLoading; }
     public int getShaderVersion() { return shaderVersion; }
     public Resources.LoadingMethod getResourcesLoadingMethod() { return resourcesLoadingMethod; }

@@ -32,8 +32,7 @@ final class ConsoleWindowView extends WindowView {
     protected void launch(String[] args) {
         consoleView = new ConsoleView(engine(), window());
         try (Views.Scope ignored = Views.enter(consoleView)) {
-            panel = new ConsolePanel(consoleView, console.getLog(), console::getViewerLevel, console.getEditor(),
-                    console.getFontName(), BACKGROUND, INPUT_BACKGROUND);
+            panel = new ConsolePanel(consoleView, console, BACKGROUND, INPUT_BACKGROUND);
         }
     }
 

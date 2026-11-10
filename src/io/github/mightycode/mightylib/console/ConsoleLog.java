@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -64,8 +65,9 @@ public final class ConsoleLog {
     private long nextId;
     // Changes at each modification (added lines or clear): a display only rebuilds when it changed
     private long version;
-    // Per viewer level: changes only when what this level sees changes (a hidden line changes nothing)
-    private final long[] levelVersions = new long[ECommandLevel.values().length];
+    // Per viewer level and type of line: changes only when what this level sees of this type changes (a hidden line
+    // changes nothing, a type filtered out by the display neither)
+    private final long[][] typeVersions = new long[ECommandLevel.values().length][EType.values().length];
     // Per viewer level: the lines up to this id were cleared for it (clear by a level below DEV)
     private final long[] clearedUpTo = new long[ECommandLevel.values().length];
 
@@ -110,7 +112,7 @@ public final class ConsoleLog {
             ++version;
             for (ECommandLevel viewer : ECommandLevel.values()) {
                 if (viewer.includes(level))
-                    ++levelVersions[viewer.ordinal()];
+                    ++typeVersions[viewer.ordinal()][type.ordinal()];
             }
         }
 
@@ -139,7 +141,7 @@ public final class ConsoleLog {
                     lines[index] = new Line(current.id, current.type, current.source, current.text, level);
                     for (ECommandLevel viewer : ECommandLevel.values()) {
                         if (viewer.includes(level) && !viewer.includes(current.level))
-                            ++levelVersions[viewer.ordinal()];
+                            ++typeVersions[viewer.ordinal()][current.type.ordinal()];
                     }
                     changed = true;
                 }
@@ -172,8 +174,8 @@ public final class ConsoleLog {
         for (int i = 0; i < clearedUpTo.length; ++i)
             clearedUpTo[i] = nextId - 1;
         ++version;
-        for (int i = 0; i < levelVersions.length; ++i)
-            ++levelVersions[i];
+        for (ECommandLevel viewer : ECommandLevel.values())
+            changedEveryType(viewer);
     }
 
     /**
@@ -189,7 +191,7 @@ public final class ConsoleLog {
         for (ECommandLevel level : ECommandLevel.values()) {
             if (viewer.includes(level)) {
                 clearedUpTo[level.ordinal()] = nextId - 1;
-                ++levelVersions[level.ordinal()];
+                changedEveryType(level);
             }
         }
         ++version;
@@ -199,9 +201,27 @@ public final class ConsoleLog {
         return version;
     }
 
+    private void changedEveryType(ECommandLevel viewer) {
+        long[] versions = typeVersions[viewer.ordinal()];
+        for (int i = 0; i < versions.length; ++i)
+            ++versions[i];
+    }
+
     // Changes only when what the viewer sees changes
     public synchronized long version(ECommandLevel viewer) {
-        return levelVersions[viewer.ordinal()];
+        return version(viewer, Collections.<EType>emptySet());
+    }
+
+    // Changes only when what the viewer sees of the types not hidden changes (a sum of counters that only increase)
+    public synchronized long version(ECommandLevel viewer, Set<EType> hiddenTypes) {
+        long[] versions = typeVersions[viewer.ordinal()];
+        long sum = 0;
+        for (EType type : EType.values()) {
+            if (!hiddenTypes.contains(type))
+                sum += versions[type.ordinal()];
+        }
+
+        return sum;
     }
 
     public synchronized int size() {
