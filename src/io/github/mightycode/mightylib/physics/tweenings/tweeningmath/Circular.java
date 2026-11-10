@@ -2,17 +2,17 @@ package io.github.mightycode.mightylib.physics.tweenings.tweeningmath;
 
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 
-public class Cicular {
+public class Circular {
 
     public static float Evaluate(ETweeningBehaviour behaviour,
                                  float t, float b, float c, float d){
         switch(behaviour){
             case In:
-                return Cicular.In(t, b, c, d);
+                return Circular.In(t, b, c, d);
             case Out:
-                return Cicular.Out(t, b, c, d);
+                return Circular.Out(t, b, c, d);
             case InOut:
-                return Cicular.InOut(t, b, c, d);
+                return Circular.InOut(t, b, c, d);
             default:
                 return 0.f;
         }

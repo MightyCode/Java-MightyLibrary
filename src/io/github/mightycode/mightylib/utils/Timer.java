@@ -93,11 +93,11 @@ public class Timer {
     public float getAimedTime(){ return aimedTime; }
 
 
-    public void forceTime(float newElaspedTime){
+    public void forceTime(float newElapsedTime){
         if (this.elapsedTimeCapped && elapsedTime > aimedTime){
             elapsedTime = aimedTime;
         } else {
-            elapsedTime = newElaspedTime;
+            elapsedTime = newElapsedTime;
         }
     }
 

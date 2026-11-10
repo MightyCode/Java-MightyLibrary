@@ -170,7 +170,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         dependencies.remove(dependency);
     }
 
-    public final boolean canBeLoad(){
+    public final boolean canBeLoaded(){
         for (DataType dependency : dependencies){
             if (!dependency.isLoaded()){
                 return false;

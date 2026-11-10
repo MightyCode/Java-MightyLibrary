@@ -50,23 +50,23 @@
 			],
 			"tags" : ["3D"]
 		},
-		"colorLightning3D": {
+		"colorLighting3D": {
 			"files": [
-				"3D/complex/colorLightning3DV.glsl",
-				"3D/complex/colorLightning3DF.glsl"
+				"3D/complex/colorLighting3DV.glsl",
+				"3D/complex/colorLighting3DF.glsl"
 			],
 			"tags" : ["3D"]
 		},
-		"multiColoredLightning3D": {
+		"multiColoredLighting3D": {
 			"files": [
-				"3D/complex/multiColoredLightning3DV.glsl",
-				"3D/complex/multiColoredLightning3DF.glsl"
+				"3D/complex/multiColoredLighting3DV.glsl",
+				"3D/complex/multiColoredLighting3DF.glsl"
 			],
 			"tags" : ["3D"]
 		},
 		"colorMaterial3D": {
 			"files": [
-				"3D/complex/colorLightning3DV.glsl",
+				"3D/complex/colorLighting3DV.glsl",
 				"3D/complex/colorMaterial3DF.glsl"
 			],
 			"tags" : ["3D"]

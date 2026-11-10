@@ -106,7 +106,7 @@ public class Scene2D extends Scene {
 
         slimeTextureTweening.setTweeningValues(ETweeningType.Back, ETweeningBehaviour.InOut)
                 .initTwoValue(1, new Vector2f(400, 400), new Vector2f(400 + 150, 400 - 150))
-                .setTweeningOption(ETweeningOption.LoopReversed).setAdditionnalArguments(3f,  null);
+                .setTweeningOption(ETweeningOption.LoopReversed).setAdditionalArguments(3f,  null);
 
 
         text = new Text();
