@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,10 +27,14 @@ public final class CommandNode {
     private final List<CommandNode> children;
     private final List<Option> options;
 
+    private final List<CommandCondition> conditions;
+
     private boolean optional;
     private boolean variadic;
     private ICommandHandler handler;
     private String branchDescription;
+    // Null: the one of its parent
+    private ECommandLevel level;
 
     private CommandNode(Kind kind, String name, String description, ArgumentType<?> type) {
         this.kind = kind;
@@ -37,6 +43,7 @@ public final class CommandNode {
         this.type = type;
         this.children = new ArrayList<>();
         this.options = new ArrayList<>();
+        this.conditions = new ArrayList<>();
     }
 
     // The root of a command, given to BaseCommand.syntax
@@ -122,6 +129,29 @@ public final class CommandNode {
         return this;
     }
 
+    /**
+     * Reserved to a level and above, with its subtree: for the lower levels it does not exist (no completion, no help,
+     * no JSON, the error of an unknown word). The level of the command itself is given to its constructor.
+     */
+    public CommandNode level(ECommandLevel level) {
+        if (kind == Kind.ROOT)
+            throw new IllegalStateException("The level of a command is given to its constructor");
+        if (level == null)
+            throw new IllegalArgumentException("Null level of ->" + name + "<-");
+
+        this.level = level;
+        return this;
+    }
+
+    // Asked at each execution and completion, see CommandCondition. On the root: the whole command
+    public CommandNode requires(CommandCondition condition) {
+        if (condition == null)
+            throw new IllegalArgumentException("Null condition of ->" + name + "<-");
+
+        conditions.add(condition);
+        return this;
+    }
+
     private void requireArgument(String what) {
         if (kind != Kind.ARGUMENT)
             throw new IllegalStateException("Only an argument can be " + what + " : ->" + name + "<-");
@@ -144,6 +174,17 @@ public final class CommandNode {
     boolean isArgument() { return kind == Kind.ARGUMENT; }
     boolean isGreedy() { return type != null && type.isGreedy(); }
     ICommandHandler handler() { return handler; }
+    ECommandLevel getLevel() { return level; }
+
+    // Its level and hidden conditions let the source see it (not its parents)
+    boolean isVisible(CommandContext context) {
+        return CommandCondition.Visible(level, conditions, context);
+    }
+
+    // Stops with the message of a checked condition that is false
+    void check(CommandContext context) {
+        CommandCondition.Check(conditions, context);
+    }
 
     // The description of the branch ending here
     String branchDescription() {

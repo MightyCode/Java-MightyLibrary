@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 
 import io.github.mightycode.mightylib.registry.Identifier;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandLine;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -291,6 +292,95 @@ class CommandParserTest {
         assertTrue(Parse(root, "5 --HELP").isHelp());
         assertTrue(Parse(root, "500 --help").isHelp());
         assertNull(Parse(root, "--help").getHandler());
+    }
+
+    // ---- Levels and conditions ----
+
+    private static String ErrorAs(CommandNode root, String line, ECommandLevel level) {
+        return assertThrows(CommandSyntaxException.class, () -> new CommandParser(root)
+                .parse(CommandLine.Split(line), new CommandContext("cmd", level, ICommandSource.API))).getMessage();
+    }
+
+    private static String RunAs(CommandNode root, String line, ECommandLevel level) {
+        CommandParser.Parsed parsed = new CommandParser(root)
+                .parse(CommandLine.Split(line), new CommandContext("cmd", level, ICommandSource.API));
+        return parsed.getHandler().run(parsed.getContext()).getMessage();
+    }
+
+    private static CommandNode Console() {
+        return Root()
+                .then(literal("open").executes(Branch("open")))
+                .then(literal("log").level(ECommandLevel.DEV)
+                        .then(argument("count", integer(1, 100)).optional().executes(Branch("log"))))
+                .option(Option.of("detail", "Details").level(ECommandLevel.DEV));
+    }
+
+    @Test
+    void reservedBranchDoesNotExistBelowItsLevel() {
+        CommandNode root = Console();
+
+        assertEquals("log", RunAs(root, "log 5", ECommandLevel.DEV));
+        // The error of an unknown word, without the branch in the usage
+        String hidden = ErrorAs(root, "log 5", ECommandLevel.USER);
+        assertEquals(ErrorAs(root, "zzz 5", ECommandLevel.USER).replace("zzz", "log"), hidden);
+        assertFalse(hidden.contains("log <"));
+        assertTrue(ErrorAs(root, "zzz", ECommandLevel.DEV).contains("cmd log [<count>]"));
+    }
+
+    @Test
+    void reservedOptionDoesNotExistBelowItsLevel() {
+        CommandNode root = Console();
+
+        assertEquals("open", RunAs(root, "open --detail", ECommandLevel.DEV));
+        String hidden = ErrorAs(root, "open --detail", ECommandLevel.CHEAT);
+        assertEquals(ErrorAs(root, "open --zzzzzz", ECommandLevel.CHEAT).replace("zzzzzz", "detail"), hidden);
+        assertFalse(hidden.contains("[--detail]"));
+    }
+
+    @Test
+    void hiddenConditionRemovesTheBranch() {
+        boolean[] host = {false};
+        CommandNode root = Root()
+                .then(literal("kick").requires(CommandCondition.hidden(context -> host[0])).executes(Branch("kick")))
+                .then(literal("say").executes(Branch("say")));
+
+        String hidden = ErrorAs(root, "kick", ECommandLevel.DEV);
+        assertTrue(hidden.startsWith("Unknown argument ->kick<-"));
+        assertFalse(hidden.contains("cmd kick"));
+
+        host[0] = true;
+        assertEquals("kick", RunAs(root, "kick", ECommandLevel.DEV));
+
+        // On the root: the whole command
+        CommandNode unavailable = Root().requires(CommandCondition.hidden(context -> host[0])).executes(Branch("x"));
+        assertTrue(new CommandParser(unavailable).isAvailable(Context()));
+        host[0] = false;
+        assertFalse(new CommandParser(unavailable).isAvailable(Context()));
+    }
+
+    @Test
+    void checkedConditionRefusesWithItsMessage() {
+        boolean[] launched = {false};
+        CommandNode root = Root().requires(CommandCondition.check(context -> launched[0], "Scene still loading"))
+                .then(literal("move").then(argument("x", integer()).executes(Branch("move"))))
+                .option(Option.of("fast", "Fast").requires(CommandCondition.check(context -> false, "Too fast")));
+
+        // Before the words: no usage, the message alone
+        CommandException refused = assertThrows(CommandException.class, () -> Parse(root, "move abc"));
+        assertFalse(refused instanceof CommandSyntaxException);
+        assertEquals("Scene still loading", refused.getMessage());
+        // The help is still given
+        assertTrue(Parse(root, "move --help").isHelp());
+
+        launched[0] = true;
+        assertEquals("move", Run(root, "move 1"));
+        assertEquals("Too fast", assertThrows(CommandException.class, () -> Parse(root, "move 1 --fast")).getMessage());
+
+        // Visible: in the usage
+        assertTrue(Error(root, "jump").contains("cmd move <x> [--fast]"));
+
+        CommandNode scene = Root().requires(CommandCondition.launched(() -> null)).executes(Branch("x"));
+        assertEquals("Scene still loading", assertThrows(CommandException.class, () -> Parse(scene, "")).getMessage());
     }
 
     @Test

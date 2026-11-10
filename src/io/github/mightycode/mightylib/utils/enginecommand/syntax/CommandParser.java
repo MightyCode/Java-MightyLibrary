@@ -71,6 +71,7 @@ public final class CommandParser {
     public Parsed parse(String[] words, CommandContext context) {
         Walk walk = new Walk(context, false);
         try {
+            walk.start();
             while (walk.index < words.length && !walk.help)
                 walk.read(words);
 
@@ -86,9 +87,17 @@ public final class CommandParser {
             if (!(e instanceof CommandSyntaxException))
                 throw e;
 
-            throw new CommandSyntaxException(e.getMessage() + "\n"
-                    + CommandHelp.UsageBlock(commandName, CommandHelp.Branches(walk.path, node -> true), option -> true));
+            throw new CommandSyntaxException(e.getMessage() + "\n" + CommandHelp.UsageBlock(commandName,
+                    CommandHelp.Branches(walk.path, node -> node.isVisible(context)), option -> option.isVisible(context)));
         }
+    }
+
+    /**
+     * False when a hidden condition of the root is false: the command does not exist for the source, like a command
+     * above its level.
+     */
+    public boolean isAvailable(CommandContext context) {
+        return root.isVisible(context);
     }
 
     private static boolean HelpAfter(String[] words, int from) {
@@ -143,10 +152,17 @@ public final class CommandParser {
             this.path = new ArrayList<>();
             this.active = new ArrayList<>();
             this.given = new ArrayList<>();
+        }
+
+        private void start() {
             enter(root);
         }
 
+        // Its checked conditions are asked on the way, before the words that depend on them (cameras of a scene)
         private void enter(CommandNode next) {
+            if (!completing)
+                next.check(context);
+
             node = next;
             path.add(next);
             for (Option option : next.options()) {
@@ -196,6 +212,8 @@ public final class CommandParser {
                             + " can't be given together");
             }
 
+            if (!completing)
+                option.check(context);
             given.add(option);
             ++index;
 
@@ -230,7 +248,7 @@ public final class CommandParser {
 
         private Option findActive(String name) {
             for (Option option : active) {
-                if (option.getName().equals(name))
+                if (option.getName().equals(name) && option.isVisible(context))
                     return option;
             }
             return null;
@@ -247,7 +265,7 @@ public final class CommandParser {
             }
 
             for (CommandNode child : node.children()) {
-                if (child.isLiteral() && child.name().equalsIgnoreCase(word)) {
+                if (child.isLiteral() && child.name().equalsIgnoreCase(word) && child.isVisible(context)) {
                     enter(child);
                     ++index;
                     return;
@@ -256,7 +274,7 @@ public final class CommandParser {
 
             CommandSyntaxException refused = null;
             for (CommandNode child : node.children()) {
-                if (!child.isArgument())
+                if (!child.isArgument() || !child.isVisible(context))
                     continue;
 
                 if (child.isGreedy()) {
@@ -300,7 +318,7 @@ public final class CommandParser {
             while (node.handler() == null) {
                 CommandNode skipped = null;
                 for (CommandNode child : node.children()) {
-                    if (child.isArgument() && child.isOptional()) {
+                    if (child.isArgument() && child.isOptional() && child.isVisible(context)) {
                         skipped = child;
                         break;
                     }

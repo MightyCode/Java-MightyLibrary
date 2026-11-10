@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -28,6 +30,9 @@ public final class Option {
     private boolean hasDefault;
     private boolean repeatable;
     private final Set<String> excluded;
+    private final List<CommandCondition> conditions;
+    // Null: the one of its node
+    private ECommandLevel level;
 
     private Option(String name, String description) {
         this.name = name;
@@ -35,6 +40,7 @@ public final class Option {
         this.valueNames = new ArrayList<>();
         this.valueTypes = new ArrayList<>();
         this.excluded = new LinkedHashSet<>();
+        this.conditions = new ArrayList<>();
     }
 
     /**
@@ -72,6 +78,24 @@ public final class Option {
     // Can be given several times: CommandContext.getList(name) gives each use
     public Option repeatable() {
         repeatable = true;
+        return this;
+    }
+
+    // Reserved to a level and above: for the lower levels it does not exist (no completion, no help, unknown option)
+    public Option level(ECommandLevel level) {
+        if (level == null)
+            throw new IllegalArgumentException("Null level of the option --" + name);
+
+        this.level = level;
+        return this;
+    }
+
+    // Asked at each execution and completion, see CommandCondition
+    public Option requires(CommandCondition condition) {
+        if (condition == null)
+            throw new IllegalArgumentException("Null condition of the option --" + name);
+
+        conditions.add(condition);
         return this;
     }
 
@@ -117,6 +141,18 @@ public final class Option {
     // Both ways: one option excluding the other is enough
     boolean conflictsWith(Option other) {
         return excluded.contains(other.name) || other.excluded.contains(name);
+    }
+
+    ECommandLevel getLevel() {
+        return level;
+    }
+
+    boolean isVisible(CommandContext context) {
+        return CommandCondition.Visible(level, conditions, context);
+    }
+
+    void check(CommandContext context) {
+        CommandCondition.Check(conditions, context);
     }
 
     Set<String> getExcluded() {
