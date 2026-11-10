@@ -82,6 +82,9 @@ public class TextPaddingScene extends Scene {
     public void unload() {
         super.unload();
 
+        if (texts == null)
+            return;
+
         for (int i = 0; i < texts.length; ++i) {
             boxes[i].unload();
             texts[i].unload();
