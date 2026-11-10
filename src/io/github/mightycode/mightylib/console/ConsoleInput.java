@@ -121,8 +121,9 @@ public final class ConsoleInput {
         boolean wasTab = listOnNextTab;
         listOnNextTab = false;
 
-        // Shortcuts follow the letter of the layout of the system, not the position of the key
-        if (key.isControl() && key.letter() != 0) {
+        // Shortcuts follow the letter of the layout of the system, not the position of the key. Not with Alt: AltGr
+        // comes as Ctrl+Alt on Windows and types characters (AltGr+L: 'ł' in Polish), received as typed text
+        if (key.isControl() && !key.isAlt() && key.letter() != 0) {
             handleShortcut(key, clipboard, requests);
             return;
         }

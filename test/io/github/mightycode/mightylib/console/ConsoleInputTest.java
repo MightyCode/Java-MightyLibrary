@@ -137,6 +137,14 @@ class ConsoleInputTest {
         editor.setText("");
         assertEquals(List.of(), handle("", control(GLFW_KEY_V, 'q'), control(GLFW_KEY_L)));
         assertEquals("", editor.getText());
+
+        // Regression: AltGr comes as Ctrl+Alt on Windows; AltGr+L types 'ł' (Polish) and must not clear the console,
+        // AltGr+A types 'ą' and must not select the line
+        int altGr = GLFW_MOD_CONTROL | GLFW_MOD_ALT;
+        assertEquals(List.of(), handle("ł", new KeyEvent(GLFW_KEY_L, 0, altGr, false, 'l')));
+        handle("ą", new KeyEvent(GLFW_KEY_A, 0, altGr, false, 'a'));
+        assertEquals("łą", editor.getText());
+        assertFalse(editor.hasSelection());
     }
 
     @Test
