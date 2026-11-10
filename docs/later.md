@@ -138,6 +138,7 @@ Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et antic
 
 ## Entrées : remappage et manettes
 - Touches modifiables à l'exécution, sauvegardées/chargées depuis un fichier ; scène prefab de changement des touches.
+- **Liaisons des actions du jeu par lettre de la disposition** : la console reconnaît ses raccourcis par `KeyEvent.letter()` ; les liaisons du jeu (`ActionInput`, `ActionId`) restent par position physique (`EngineConfig.setKeyboardLanguage`) : à faire évoluer avec le remappage (lettre de la disposition ou position, au choix de l'action).
 - **Manettes** (base faite : `GamepadManager`, joueurs, `InputGamepadButton`/`InputGamepadAxis`, virtuelles, commande `gamepad`). Reste :
   - **Actions par joueur** (multijoueur local) : aujourd'hui joueur fixe ou `ANY_PLAYER` ; cible `inputManager.getState(action, joueur)`, clavier/souris attribués à un joueur comme une manette.
   - **Ensembles d'actions activables** (« jeu », « menu » : un même stick déplace et navigue, `MOVE_*_2D` et `SELECT_UP/DOWN`) au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
@@ -153,14 +154,14 @@ Streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
 - **Overlay de debug** (stats, scène, entrées) à côté de la console. S'appuie sur thème, tailles et langues.
-- **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte) ; sélection et copie du journal ; suggestions affichées sous la saisie en plus du Tab bash.
+- **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte ; la palette de `ConsoleColors` y passera) ; suggestions affichées sous la saisie en plus du Tab bash ; glyphe flèche dans la police (l'indicateur des lignes sous la vue écrit « v N lines » faute de `↓`) ; annuler/refaire (Ctrl+Z/Y) dans la saisie, recherche dans le journal (Ctrl+F), menu clic droit, sélection rectangulaire ; mémoriser l'état de `console logs` avec les réglages du joueur (Fenêtres / réglages) ; filtres par source et autres types exposés par commande (le modèle d'ensemble de types cachés existe, cf. Journal à grande échelle).
 - **Commandes, suite** :
   - complétion dans `mighty.py` à partir du JSON de `help <cmd>`, et documentation des commandes générée depuis les schémas ;
   - conditions de multijoueur (commande réservée à l'hôte) : le mécanisme `requires(CommandCondition.hidden|check)` existe, les conditions viendront avec le réseau (permissions par joueur, `futur-discussion.md`) ;
   - commandes Lua : elles déclareront leur syntaxe par la même API (voir Entités et scripts Lua) ;
   - traduction des messages et aides des commandes du joueur (système de langues) : les descriptions de la syntaxe deviendront des clés de langue.
 - **Journal à grande échelle** : l'anneau de `ConsoleLog` oublie au-delà de sa capacité ; cible durable : journal fichier tournant (cf. `futur-discussion.md`) relu par la console, filtres par type/source, niveaux de log au lieu de `System.out` préfixé `--`.
-- **Texte de la console** : un `Text` (VAO/VBO, draw call) par ligne visible, sans découpe GL (`glScissor`) : à reprendre avec le batching 2D.
+- **Texte de la console** : un `Text` (VAO/VBO, draw call) par ligne visible, sans découpe GL (`glScissor`), et un `RectangleRenderer` par rangée surlignée : à reprendre avec le batching 2D.
 
 ## Fenêtres
 - **Sous-fenêtres natives hors Windows** : propriétaire de fenêtre sous Linux (X11 `XSetTransientForHint`, Wayland `xdg_toplevel.set_parent`) et macOS (`addChildWindow`) à la place du simple `GLFW_FLOATING` de `NativeWindowOwner`.
