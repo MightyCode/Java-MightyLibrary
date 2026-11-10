@@ -2,8 +2,12 @@ package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 
 import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandLine;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -90,6 +94,45 @@ public final class CommandParser {
             throw new CommandSyntaxException(e.getMessage() + "\n" + CommandHelp.UsageBlock(commandName,
                     CommandHelp.Branches(walk.path, node -> node.isVisible(context)), option -> option.isVisible(context)));
         }
+    }
+
+    /**
+     * Words that can replace the word being typed, unfiltered (the caller keeps those starting with it): the literals
+     * and values of the expected argument; the options not given yet and --help when the word starts with "-"; the
+     * values of an option waiting for one. Nothing the source does not see. Checked conditions are not asked.
+     * @param words the words after the name of the command, the last one being typed (possibly empty)
+     */
+    public List<String> complete(String[] words, CommandContext context) {
+        if (words.length == 0)
+            return Collections.emptyList();
+
+        String[] before = Arrays.copyOf(words, words.length - 1);
+        Walk walk = new Walk(context, true);
+        try {
+            walk.start();
+            while (walk.index < before.length && !walk.help)
+                walk.read(before);
+        } catch (CommandException e) {
+            // A word that can't be read: the branch is unknown
+            return Collections.emptyList();
+        }
+
+        if (walk.help)
+            return Collections.emptyList();
+        return walk.candidates(words[words.length - 1]);
+    }
+
+    // The help of the command for the source: text and visible tree in JSON, the same for help <cmd> and <cmd> --help
+    public CommandResult help(String id, ECommandLevel level, CommandContext context) {
+        return CommandResult.ok(helpText(id, context), helpJson(id, level, context));
+    }
+
+    public String helpText(String id, CommandContext context) {
+        return CommandHelp.HelpText(id, root, context);
+    }
+
+    public JSONObject helpJson(String id, ECommandLevel level, CommandContext context) {
+        return CommandHelp.HelpJson(id, level, root, context);
     }
 
     /**
@@ -311,6 +354,62 @@ public final class CommandParser {
 
                 throw new CommandSyntaxException("Expected " + e.getExpected() + " for " + label + ", got ->" + word + "<-");
             }
+        }
+
+        // Completion of the word being typed, once the words before it are read
+        private List<String> candidates(String typed) {
+            List<String> values = new ArrayList<>();
+            if (pending != null) {
+                values.addAll(pending.valueType(pendingValue).complete(typed, context));
+                return values;
+            }
+            if (inGreedy) {
+                values.addAll(node.type().complete(typed, context));
+                return values;
+            }
+
+            if (!positionalOnly && typed.startsWith("-")) {
+                int equals = typed.indexOf('=');
+                if (typed.startsWith("--") && equals > 2) {
+                    // --name=value: the values of the option
+                    Option option = findActive(typed.substring(2, equals).toLowerCase(Locale.ROOT));
+                    if (option != null && option.valueCount() > 0) {
+                        String start = typed.substring(0, equals + 1);
+                        for (String value : option.valueType(0).complete(typed.substring(equals + 1), context))
+                            values.add(start + value);
+                    }
+                    return values;
+                }
+
+                for (Option option : active) {
+                    if (option.isVisible(context) && (option.isRepeatable() || !given.contains(option)) && !conflicts(option))
+                        values.add("--" + option.getName());
+                }
+                values.add("--" + Option.HELP);
+                return values;
+            }
+
+            if (node.isArgument() && node.isVariadic())
+                values.addAll(node.type().complete(typed, context));
+
+            for (CommandNode child : node.children()) {
+                if (!child.isVisible(context))
+                    continue;
+
+                if (child.isLiteral())
+                    values.add(child.name());
+                else
+                    values.addAll(child.type().complete(typed, context));
+            }
+            return values;
+        }
+
+        private boolean conflicts(Option option) {
+            for (Option other : given) {
+                if (other != option && option.conflictsWith(other))
+                    return true;
+            }
+            return false;
         }
 
         // End of the line: the branch reached must execute, left out optional arguments are skipped
