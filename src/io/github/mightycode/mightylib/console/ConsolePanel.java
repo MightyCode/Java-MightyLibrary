@@ -27,15 +27,6 @@ final class ConsolePanel {
     private static final long FLASH_NANOSECONDS = 150_000_000L;
     private static final Color4f FLASH_COLOR = new Color4f(0.45f, 0.45f, 0.45f, 0.8f);
 
-    private static final Color4f OUT_COLOR = new Color4f(0.85f, 0.85f, 0.85f, 1f);
-    private static final Color4f ERR_COLOR = new Color4f(1f, 0.45f, 0.45f, 1f);
-    private static final Color4f COMMAND_COLOR = new Color4f(1f, 0.85f, 0.35f, 1f);
-    private static final Color4f RESULT_COLOR = new Color4f(1f, 1f, 1f, 1f);
-    private static final Color4f INPUT_COLOR = new Color4f(1f, 1f, 1f, 1f);
-    private static final Color4f SELECTION_COLOR = new Color4f(0.25f, 0.45f, 0.85f, 0.6f);
-    // Width shown selected after a line whose end is selected
-    private static final float SELECTION_LINE_END = 4;
-
     private final ConsoleView view;
     private final ConsoleLog log;
     private final CommandLineEditor editor;
@@ -92,10 +83,10 @@ final class ConsolePanel {
         cursor = new RectangleRenderer("colorShape2D");
         cursor.setColorMode(new Color4f(1f, 1f, 1f, 0.85f));
         inputSelection = new RectangleRenderer("colorShape2D");
-        inputSelection.setColorMode(SELECTION_COLOR);
+        inputSelection.setColorMode(ConsoleColors.SELECTION);
 
         inputText = createText();
-        inputText.setColor(INPUT_COLOR);
+        inputText.setColor(ConsoleColors.INPUT);
         rows = new ArrayList<>();
         // Measured with the font of the command line, at the size of the rows
         layout = new ConsoleLayout(log, inputText::charAdvance);
@@ -223,7 +214,7 @@ final class ConsolePanel {
 
             ConsoleLayout.Row content = shown.get(index);
             row.setFontSize(fontSize);
-            row.setColor(colorOf(content.line().getType()));
+            row.setColor(ConsoleColors.of(content.line().getType()));
             row.setText(content.text());
             row.setPosition(new Vector2f(x + PADDING, rowTop(inputTop, i)));
         }
@@ -258,13 +249,13 @@ final class ConsolePanel {
             float right = layout.xOf(row, to);
             // The end of a line inside the selection: a little more, an empty line is seen selected too
             if (row.isLastPart() && id != end.lineId())
-                right += SELECTION_LINE_END;
+                right += ConsoleColors.SELECTION_LINE_END;
             if (right <= left)
                 continue;
 
             if (used == highlights.size()) {
                 RectangleRenderer highlight = new RectangleRenderer("colorShape2D");
-                highlight.setColorMode(SELECTION_COLOR);
+                highlight.setColorMode(ConsoleColors.SELECTION);
                 highlights.add(highlight);
             }
             RectangleRenderer highlight = highlights.get(used++);
@@ -277,21 +268,6 @@ final class ConsolePanel {
     // Top of a slot of the panel (0: the top row)
     private float rowTop(float inputTop, int slot) {
         return inputTop - PADDING - (rows.size() - slot) * lineHeight;
-    }
-
-    private static Color4f colorOf(ConsoleLog.EType type) {
-        switch (type) {
-            case ERR:
-            case ERROR:
-                return ERR_COLOR;
-            case COMMAND:
-                return COMMAND_COLOR;
-            case RESULT:
-            case MESSAGE:
-                return RESULT_COLOR;
-            default:
-                return OUT_COLOR;
-        }
     }
 
     // The part of the command line around the cursor that fits, then the cursor
