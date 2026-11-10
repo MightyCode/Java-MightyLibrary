@@ -2,6 +2,12 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandParser;
 import org.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,11 +19,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
 import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.THREAD_CONTEXT;
 import static org.junit.jupiter.api.Assertions.*;
 
-/** Selection written as words (commands), reload and detail of a selection. */
+/** Selection written as words by the command syntax (ResourceArguments), reload and detail of a selection. */
 class ResourceSelectionTest {
     @TempDir
     Path folder;
@@ -72,22 +79,53 @@ class ResourceSelectionTest {
         } while (!resources.finishedCurrentLoading() && System.currentTimeMillis() < end);
     }
 
-    @Test
-    void parseBuildsTheSelectionFromWords() {
-        ResourceSelection selection = ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "grass,x", "re:tile_.*"}, 1);
-        assertTrue(selection.matches(FakeData.class, grass));
-        assertTrue(selection.matches(FakeData.class, sand));
+    // The selection read by the syntax of "cmd <type> [names...] [--regex pattern]"
+    private ResourceSelection select(String... words) {
+        ResourceSelection[] read = new ResourceSelection[1];
+        CommandNode root = CommandNode.root("cmd", "test").then(ResourceArguments.selection(() -> resources, "type",
+                selection -> {
+                    read[0] = selection;
+                    return CommandResult.ok("ok");
+                }));
 
-        assertTrue(ResourceSelection.parse(resources, new String[]{"cmd", "all"}, 1).matches(FakeData.class, grass));
-        assertFalse(ResourceSelection.parse(resources, new String[]{"cmd", "all", "re:tile_.*"}, 1)
-                .matches(FakeData.class, grass));
+        CommandContext context = new CommandContext("cmd", ECommandLevel.DEV, null);
+        CommandParser.Parsed parsed = new CommandParser(root).parse(words, context);
+        parsed.getHandler().run(parsed.getContext());
+        return read[0];
+    }
+
+    private List<String> complete(String... words) {
+        CommandNode root = CommandNode.root("cmd", "test").then(ResourceArguments.selection(() -> resources, "type",
+                selection -> CommandResult.ok("ok")));
+        return new CommandParser(root).complete(words, new CommandContext("cmd", ECommandLevel.DEV, null));
     }
 
     @Test
-    void parseRejectsWhatIsWrong() {
-        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(resources, new String[]{"cmd"}, 1));
-        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(resources, new String[]{"cmd", "Nope"}, 1));
-        assertThrows(IllegalArgumentException.class, () -> ResourceSelection.parse(resources, new String[]{"cmd", "all", "re:(["}, 1));
+    void theSyntaxBuildsTheSelectionFromWords() {
+        // A name in the list OR matching the regex
+        ResourceSelection selection = select("Fake", "grass", "x", "--regex", "tile_.*");
+        assertTrue(selection.matches(FakeData.class, grass));
+        assertTrue(selection.matches(FakeData.class, sand));
+
+        // The option can come before the names
+        assertTrue(select("Fake", "--regex=tile_.*", "grass").matches(FakeData.class, grass));
+        assertTrue(select("all").matches(FakeData.class, grass));
+        assertTrue(select("fake").matches(FakeData.class, grass));
+        assertFalse(select("all", "--regex", "tile_.*").matches(FakeData.class, grass));
+    }
+
+    @Test
+    void theSyntaxRejectsWhatIsWrong() {
+        assertThrows(CommandException.class, () -> select());
+        assertThrows(CommandException.class, () -> select("Nope"));
+        assertThrows(CommandException.class, () -> select("all", "--regex", "(["));
+    }
+
+    @Test
+    void theSyntaxCompletesTypesAndNames() {
+        assertTrue(complete("").containsAll(Arrays.asList("all", "Fake")));
+        assertTrue(complete("Fake", "").containsAll(Arrays.asList("grass", "tile_sand", "tile_stone")));
+        assertTrue(complete("Fake", "grass", "--").contains("--regex"));
     }
 
     @Test
@@ -95,7 +133,7 @@ class ResourceSelectionTest {
         int grassVersion = grass.getVersion();
         int sandVersion = sand.getVersion();
 
-        assertEquals(2, resources.reload(ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "re:tile_.*"}, 1)));
+        assertEquals(2, resources.reload(select("Fake", "--regex", "tile_.*")));
         pump();
 
         assertEquals(grassVersion, grass.getVersion());
@@ -105,12 +143,12 @@ class ResourceSelectionTest {
 
     @Test
     void reloadingNothingIsNotAnError() {
-        assertEquals(0, resources.reload(ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "nothing"}, 1)));
+        assertEquals(0, resources.reload(select("Fake", "nothing")));
     }
 
     @Test
     void describeListsTheSelectedData() {
-        JSONObject result = resources.describe(ResourceSelection.parse(resources, new String[]{"cmd", "Fake", "grass"}, 1));
+        JSONObject result = resources.describe(select("Fake", "grass"));
 
         assertEquals(1, result.getInt("count"));
         JSONObject item = result.getJSONArray("data").getJSONObject(0);
