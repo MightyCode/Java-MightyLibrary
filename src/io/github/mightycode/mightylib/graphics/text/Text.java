@@ -74,6 +74,10 @@ public class Text extends Renderer implements Cloneable {
         if (used != builtWithFont || used.getVersion() != builtWithVersion)
             computeRightUpPosition();
 
+        if (charPositions != null && charPositions.length >= SIZE_COORDINATES)
+            DrawnTexts.record(text, charPositions[0] + position.x, charPositions[1] + position.y,
+                    rectangleSize.x, rectangleSize.y, fontSize);
+
         super.display();
     }
 
