@@ -502,7 +502,7 @@ public class Scene3D extends Scene {
 
         float x, y, z, xy;
         float nx, ny, nz;
-        float lenghtInv = 3.0f * radius;
+        float lengthInv = 3.0f * radius;
         float s, t;
 
         float sectorStep = 2f * (float)Math.PI / sector;
@@ -528,9 +528,9 @@ public class Scene3D extends Scene {
                 tempPosition.add(y);
                 tempPosition.add(z);
 
-                nx = x * lenghtInv;
-                ny = y * lenghtInv;
-                nz = z * lenghtInv;
+                nx = x * lengthInv;
+                ny = y * lengthInv;
+                nz = z * lengthInv;
 
                 tempNormales.add(nx);
                 tempNormales.add(ny);
