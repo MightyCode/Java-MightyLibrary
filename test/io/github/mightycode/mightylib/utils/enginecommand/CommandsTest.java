@@ -208,6 +208,34 @@ class CommandsTest {
     }
 
     @Test
+    void hiddenConditionOfTheRootIsAskedUnderTheOwner() {
+        Commands commands = newCommands();
+        FakeView view = new FakeView();
+        List<IView> asked = new ArrayList<>();
+        commands.register(TestCommands.Syntax("zzview", ECommandLevel.USER, "Only under its view",
+                root -> root.requires(CommandCondition.hidden(context -> {
+                    asked.add(Views.current());
+                    return Views.current() == view;
+                })).executes(context -> CommandResult.ok("view"))), CommandOwner.Of(view, "scene"));
+
+        assertEquals("view", commands.execute("zzview").getMessage());
+        assertEquals(List.of("zzview"), commands.complete("zzv").getCandidates());
+        assertFalse(asked.isEmpty());
+        for (IView current : asked)
+            assertSame(view, current);
+    }
+
+    @Test
+    void helpOfACommandNotRegistered() {
+        BaseCommand command = TestCommands.Syntax("zzalone", ECommandLevel.USER, "Never registered",
+                root -> root.executes(context -> CommandResult.ok("alone")));
+
+        CommandResult help = command.helpResult();
+        assertTrue(help.isSuccess());
+        assertTrue(help.getMessage().startsWith("test:zzalone : Never registered"));
+    }
+
+    @Test
     void mistakeOfASyntaxIsFoundAtRegistration() {
         Commands commands = newCommands();
         BaseCommand broken = TestCommands.Syntax("zzbroken", ECommandLevel.USER, "Broken",

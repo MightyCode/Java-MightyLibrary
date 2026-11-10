@@ -60,7 +60,7 @@ public abstract class BaseCommand {
 
     // ---- Declared syntax ----
 
-    // Main thread, at the first registration
+    // Main thread, at the first registration (or the first help of a command not registered)
     private void buildSyntax() {
         if (parser != null)
             return;
@@ -81,10 +81,18 @@ public abstract class BaseCommand {
 
     /**
      * False when a hidden condition of the root is false: the command does not exist for the source, like a command
-     * above its level.
+     * above its level. Asked under the owner, like the execution: only for a root with a hidden condition (asked for
+     * every command at each lookup and completion).
      */
     boolean isAvailable() {
-        return parser == null || parser.isAvailable(newContext(commandName));
+        if (parser == null || !parser.hasHiddenRootCondition())
+            return true;
+
+        return owner == null ? availableNow() : owner.run(this::availableNow);
+    }
+
+    private boolean availableNow() {
+        return parser.isAvailable(newContext(commandName));
     }
 
     // Main thread, under the owner. Parses the words (args[0] = name typed) and runs the branch, or gives the help
@@ -104,10 +112,14 @@ public abstract class BaseCommand {
 
     /**
      * Main thread. The help the current source sees: help <cmd> and <cmd> --help. The generated help, with the visible
-     * tree of the syntax in JSON in the data.
+     * tree of the syntax in JSON in the data. A command not registered yet declares its syntax first.
      */
     public CommandResult helpResult() {
-        return owner == null ? helpNow() : owner.run(this::helpNow);
+        if (owner == null) {
+            buildSyntax();
+            return helpNow();
+        }
+        return owner.run(this::helpNow);
     }
 
     private CommandResult helpNow() {

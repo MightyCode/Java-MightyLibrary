@@ -33,10 +33,19 @@ public interface ArgumentType<T> {
     }
 
     /**
-     * True when the argument takes the rest of the line, options and "--" included, as one value (Arguments.text):
-     * it can only be the last argument of a branch.
+     * True when the argument takes the rest of the line, from its first word on, options and "--" included, as one
+     * value (Arguments.text, Arguments.commandLine): it can only be the last argument of a branch. Its first word is
+     * read as an option when it starts with "--": write "--" before it.
      */
     default boolean isGreedy() {
         return false;
+    }
+
+    /**
+     * Greedy only: the words of the rest of the line (at least one) as the word given to parse. Joined by a space by
+     * default.
+     */
+    default String joinRest(List<String> words) {
+        return String.join(" ", words);
     }
 }

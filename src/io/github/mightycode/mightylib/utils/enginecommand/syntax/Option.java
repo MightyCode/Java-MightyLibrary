@@ -75,7 +75,7 @@ public final class Option {
         return this;
     }
 
-    // Can be given several times: CommandContext.getList(name) gives each use
+    // Can be given several times: CommandContext.getList(name) gives each use (no default value)
     public Option repeatable() {
         repeatable = true;
         return this;
@@ -162,5 +162,8 @@ public final class Option {
     void validate() {
         if (hasDefault && valueNames.isEmpty())
             throw new IllegalStateException("The flag --" + name + " can't have a default value");
+        // getList gives each use: empty when not given
+        if (hasDefault && repeatable)
+            throw new IllegalStateException("The repeatable option --" + name + " can't have a default value");
     }
 }

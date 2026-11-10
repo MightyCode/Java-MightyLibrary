@@ -12,7 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.enumOf;
-import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.text;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.commandLine;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
 /**
@@ -33,7 +33,7 @@ public class CompleteGenCom extends BaseCommand {
     protected void syntax(CommandNode root) {
         root.option(Option.of("as", "Level of the completion, never above the one of the source")
                         .value("level", enumOf(ECommandLevel.class)))
-                .then(argument("line", text(), "Beginning of the line, between quotes for a final space : \"stats \"")
+                .then(argument("line", commandLine(), "Beginning of the line, between quotes for a final space : \"stats \"")
                         .optional()
                         .executes("The words Tab proposes for the last word of the line", context -> {
                             ICommandSource source = context.has("as")

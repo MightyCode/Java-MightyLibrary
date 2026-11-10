@@ -181,6 +181,14 @@ public final class CommandNode {
         return CommandCondition.Visible(level, conditions, context);
     }
 
+    boolean hasHiddenCondition() {
+        for (CommandCondition condition : conditions) {
+            if (condition.isHidden())
+                return true;
+        }
+        return false;
+    }
+
     // Stops with the message of a checked condition that is false
     void check(CommandContext context) {
         CommandCondition.Check(conditions, context);

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -175,9 +176,9 @@ class CommandParserTest {
     }
 
     @Test
-    void textTakesTheRestOfTheLine() {
+    void commandLineTakesTheRestOfTheLine() {
         CommandNode root = Root().option(Option.of("as", "Level").value("level", enumOf(ECommandLevel.class)))
-                .then(argument("line", text()).executes(Branch("text")));
+                .then(argument("line", commandLine()).executes(Branch("line")));
 
         // One word as it is (its quotes removed), several joined to split the same way
         assertEquals("spawn ", Values(root, "\"spawn \"").get("line"));
@@ -186,6 +187,19 @@ class CommandParserTest {
         CommandContext context = Values(root, "--as user help --help");
         assertEquals(ECommandLevel.USER, context.get("as"));
         assertEquals("help --help", context.get("line"));
+    }
+
+    @Test
+    void textJoinsTheWordsWithoutQuotes() {
+        CommandNode root = Root().then(argument("text", text()).executes(Branch("text")));
+
+        // Bug: the quotes added to split the line again were typed by input text
+        assertEquals("a b c", Values(root, "a \"b c\"").get("text"));
+        assertEquals("a b", Values(root, "\"a b\"").get("text"));
+        assertEquals("a --x -- y", Values(root, "a --x -- y").get("text"));
+        // A text starting with "--" is written after "--"
+        assertEquals("--x", Values(root, "-- --x").get("text"));
+        assertTrue(Error(root, "--x").startsWith("Unknown option ->--x<-"));
     }
 
     @Test
@@ -237,6 +251,15 @@ class CommandParserTest {
         assertTrue(Error(root, "--corners 0 0 --rect 1 1").startsWith("The options --corners and --rect can't be given together"));
 
         assertEquals(List.of("a", "b"), Values(root, "--tag a --tag b").getList("tag"));
+    }
+
+    @Test
+    void repeatableOptionHasNoDefaultValue() {
+        // getList would ignore it
+        CommandNode root = Root().option(Option.of("tag", "Tag").value("tag", word()).repeatable().defaultValue("all"))
+                .executes(Branch("tags"));
+
+        assertThrows(IllegalStateException.class, () -> new CommandParser(root));
     }
 
     @Test
@@ -292,6 +315,15 @@ class CommandParserTest {
         assertTrue(Parse(root, "5 --HELP").isHelp());
         assertTrue(Parse(root, "500 --help").isHelp());
         assertNull(Parse(root, "--help").getHandler());
+    }
+
+    @Test
+    void helpAfterEndOfOptionsIsAWord() {
+        CommandNode root = Root().then(argument("count", integer(1, 100)).executes(Branch("spawn")));
+
+        // Bug: the error became the help although --help came after "--"
+        assertTrue(Error(root, "-- abc --help").startsWith("Expected an integer between 1 and 100 for <count>, got ->abc<-"));
+        assertTrue(Parse(root, "abc --help -- x").isHelp());
     }
 
     // ---- Levels and conditions ----
@@ -381,6 +413,39 @@ class CommandParserTest {
 
         CommandNode scene = Root().requires(CommandCondition.launched(() -> null)).executes(Branch("x"));
         assertEquals("Scene still loading", assertThrows(CommandException.class, () -> Parse(scene, "")).getMessage());
+    }
+
+    @Test
+    void conditionOfAnArgumentIsAskedBeforeItsType() {
+        boolean[] launched = {false};
+        List<String> cameras = new ArrayList<>();
+        CommandNode root = Root()
+                .then(argument("camera", oneOf(() -> {
+                    if (!launched[0])
+                        throw new IllegalStateException("No camera before launch");
+                    return cameras;
+                })).requires(CommandCondition.check(context -> launched[0], "Scene still loading"))
+                        .executes(Branch("camera")));
+
+        // Bug: the type read the cameras of a scene still loading
+        CommandException refused = assertThrows(CommandException.class, () -> Parse(root, "main2D"));
+        assertFalse(refused instanceof CommandSyntaxException);
+        assertEquals("Scene still loading", refused.getMessage());
+
+        launched[0] = true;
+        cameras.add("main2D");
+        assertEquals("camera", Run(root, "main2D"));
+    }
+
+    @Test
+    void anotherArgumentTakesTheWordOfARefusedOne() {
+        CommandNode root = Root()
+                .then(argument("camera", word()).requires(CommandCondition.check(context -> false, "Scene still loading"))
+                        .then(literal("x").executes(Branch("camera"))))
+                .then(argument("count", integer()).executes(Branch("count")));
+
+        assertEquals("count", Run(root, "5"));
+        assertEquals("Scene still loading", assertThrows(CommandException.class, () -> Parse(root, "main2D x")).getMessage());
     }
 
     @Test

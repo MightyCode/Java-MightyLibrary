@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.enumOf;
-import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.text;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.commandLine;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
 /**
@@ -27,7 +27,7 @@ public class AsGenCom extends BaseCommand {
     @Override
     protected void syntax(CommandNode root) {
         root.then(argument("level", enumOf(ECommandLevel.class), "Level of the line, never above the one of the source")
-                .then(argument("line", text(), "The command line, its options included")
+                .then(argument("line", commandLine(), "The command line, its options included")
                         .executes("Run the line at the level: its answer, error or help",
                                 context -> commands.execute(context.get("line"),
                                         ICommandSource.Lowered(context.source(), context.get("level"))))));

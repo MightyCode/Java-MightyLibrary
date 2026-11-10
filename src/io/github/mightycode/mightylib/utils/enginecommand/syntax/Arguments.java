@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 
 import io.github.mightycode.mightylib.registry.Identifier;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandLine;
 
 import java.math.BigDecimal;
 import java.nio.file.InvalidPathException;
@@ -177,12 +178,47 @@ public final class Arguments {
     }
 
     /**
-     * The rest of the line, options and "--" included, as one value: the last argument of its branch. A single word
-     * is given as it is (input text "a b" gives a b), several words are joined so that splitting the value gives them
-     * back (as user screenshot "a b.png" gives screenshot "a b.png").
+     * The rest of the line, options and "--" included after its first word, as one value: the last argument of its
+     * branch. The words are joined by a space (input text "a b" c gives a b c). A text starting with "--" is written
+     * after "--" (input text -- --a).
      */
     public static ArgumentType<String> text() {
         return new Simple<>("text", (word, context) -> word, null, Collections.emptyList(), true);
+    }
+
+    /**
+     * A command line: the rest of the line like text, but several words are joined so that splitting the value gives
+     * them back (as user screenshot "a b.png" gives screenshot "a b.png"); a single word is given as it is
+     * (as user "stats fps" gives stats fps).
+     */
+    public static ArgumentType<String> commandLine() {
+        return new ArgumentType<String>() {
+            @Override
+            public String parse(String word, CommandContext context) {
+                return word;
+            }
+
+            @Override
+            public String describe() {
+                return "command line";
+            }
+
+            @Override
+            public boolean isGreedy() {
+                return true;
+            }
+
+            @Override
+            public String joinRest(List<String> words) {
+                if (words.size() == 1)
+                    return words.get(0);
+
+                List<String> quoted = new ArrayList<>();
+                for (String word : words)
+                    quoted.add(CommandLine.Quote(word));
+                return String.join(" ", quoted);
+            }
+        };
     }
 
     // One of the values, case ignored: the value as declared

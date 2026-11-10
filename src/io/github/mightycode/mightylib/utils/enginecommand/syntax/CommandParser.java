@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 
 import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
-import io.github.mightycode.mightylib.utils.enginecommand.CommandLine;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.json.JSONObject;
@@ -85,8 +84,8 @@ public final class CommandParser {
             walk.finish();
             return new Parsed(walk.node, context);
         } catch (CommandException e) {
-            // "spawn 500 --help": the help is asked, not the error
-            if (HelpAfter(words, walk.index))
+            // "spawn 500 --help": the help is asked, not the error (unless "--" was read: --help is a word then)
+            if (!walk.positionalOnly && HelpAfter(words, walk.index))
                 return new Parsed(null, context);
             if (!(e instanceof CommandSyntaxException))
                 throw e;
@@ -143,6 +142,11 @@ public final class CommandParser {
         return root.isVisible(context);
     }
 
+    // A hidden condition on the root: isAvailable can be false
+    public boolean hasHiddenRootCondition() {
+        return root.hasHiddenCondition();
+    }
+
     private static boolean HelpAfter(String[] words, int from) {
         for (int i = Math.max(0, from); i < words.length; ++i) {
             if (words[i].equals(END_OF_OPTIONS))
@@ -157,15 +161,9 @@ public final class CommandParser {
         return word.length() > 2 && word.startsWith("--");
     }
 
-    // The words of a greedy argument as one value: a single word as it is, several ones joined to split the same way
-    static String JoinRest(String[] words, int from, int to) {
-        if (to - from == 1)
-            return words[from];
-
-        List<String> rest = new ArrayList<>();
-        for (int i = from; i < to; ++i)
-            rest.add(CommandLine.Quote(words[i]));
-        return String.join(" ", rest);
+    // The words of a greedy argument as one value, joined by its type
+    private static String JoinRest(ArgumentType<?> type, String[] words, int from, int to) {
+        return type.joinRest(Arrays.asList(words).subList(from, to));
     }
 
     // Reading of a line, word after word
@@ -198,12 +196,17 @@ public final class CommandParser {
         }
 
         private void start() {
-            enter(root);
+            enter(root, false);
         }
 
         // Its checked conditions are asked on the way, before the words that depend on them (cameras of a scene)
         private void enter(CommandNode next) {
-            if (!completing)
+            enter(next, false);
+        }
+
+        // checked: its conditions were asked before reading its value
+        private void enter(CommandNode next, boolean checked) {
+            if (!completing && !checked)
                 next.check(context);
 
             node = next;
@@ -315,15 +318,28 @@ public final class CommandParser {
                 }
             }
 
+            // The conditions of an argument are asked before its type reads the word (the cameras of a scene that
+            // loads): a false one refuses the argument, its message is the error if no other argument takes the word
+            CommandException unavailable = null;
             CommandSyntaxException refused = null;
             for (CommandNode child : node.children()) {
                 if (!child.isArgument() || !child.isVisible(context))
                     continue;
 
+                if (!completing) {
+                    try {
+                        child.check(context);
+                    } catch (CommandException e) {
+                        if (unavailable == null)
+                            unavailable = e;
+                        continue;
+                    }
+                }
+
                 if (child.isGreedy()) {
                     if (!completing)
-                        context.add(child.name(), parseValue(child.type(), JoinRest(words, index, words.length), "<" + child.name() + ">"));
-                    enter(child);
+                        context.add(child.name(), parseValue(child.type(), JoinRest(child.type(), words, index, words.length), "<" + child.name() + ">"));
+                    enter(child, true);
                     inGreedy = completing;
                     index = words.length;
                     return;
@@ -331,7 +347,7 @@ public final class CommandParser {
 
                 try {
                     Object value = parseValue(child.type(), word, "<" + child.name() + ">");
-                    enter(child);
+                    enter(child, true);
                     context.add(child.name(), value);
                     ++index;
                     return;
@@ -341,6 +357,8 @@ public final class CommandParser {
                 }
             }
 
+            if (unavailable != null)
+                throw unavailable;
             throw refused != null ? refused : new CommandSyntaxException("Unknown argument ->" + word + "<-");
         }
 
