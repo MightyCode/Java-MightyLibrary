@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -64,12 +63,18 @@ public final class ConsoleInput {
 
     public CommandLineEditor getEditor() { return editor; }
 
+    /** The clipboard of the system: read on Ctrl+V only, written on Ctrl+C and Ctrl+X. */
+    public interface IClipboard {
+        String get();
+
+        void set(String text);
+    }
+
     /**
      * Apply the inputs of one tick: the typed text first, then the keys in their order.
      * @param pageLines lines scrolled by Page Up / Page Down
-     * @param clipboard read on Ctrl+V only
      */
-    public List<Request> handle(String typedText, List<KeyEvent> keys, int pageLines, Supplier<String> clipboard) {
+    public List<Request> handle(String typedText, List<KeyEvent> keys, int pageLines, IClipboard clipboard) {
         List<Request> requests = new ArrayList<>();
 
         if (typedText != null && !typedText.isEmpty()) {
@@ -83,7 +88,7 @@ public final class ConsoleInput {
         return requests;
     }
 
-    private void handleKey(KeyEvent key, int pageLines, Supplier<String> clipboard, List<Request> requests) {
+    private void handleKey(KeyEvent key, int pageLines, IClipboard clipboard, List<Request> requests) {
         boolean wasTab = listOnNextTab;
         listOnNextTab = false;
 
@@ -116,30 +121,31 @@ public final class ConsoleInput {
             case GLFW_KEY_DELETE:
                 editor.deleteRight();
                 break;
+            // Shift extends the selection of the command line
             case GLFW_KEY_LEFT:
                 if (key.isControl())
-                    editor.wordLeftMove();
+                    editor.wordLeftMove(key.isShift());
                 else
-                    editor.left();
+                    editor.left(key.isShift());
                 break;
             case GLFW_KEY_RIGHT:
                 if (key.isControl())
-                    editor.wordRightMove();
+                    editor.wordRightMove(key.isShift());
                 else
-                    editor.right();
+                    editor.right(key.isShift());
                 break;
             case GLFW_KEY_HOME:
                 // Ctrl: the top of the log, alone: the beginning of the command line
                 if (key.isControl())
                     requests.add(new Request(ERequest.SCROLL_TOP, null, 0));
                 else
-                    editor.home();
+                    editor.home(key.isShift());
                 break;
             case GLFW_KEY_END:
                 if (key.isControl())
                     requests.add(new Request(ERequest.SCROLL_END, null, 0));
                 else
-                    editor.end();
+                    editor.end(key.isShift());
                 break;
             case GLFW_KEY_UP:
                 // Shift: one row of the log, alone: the history
@@ -170,14 +176,25 @@ public final class ConsoleInput {
     }
 
     // Ctrl + a key that has a letter in the layout of the system
-    private void handleShortcut(KeyEvent key, Supplier<String> clipboard, List<Request> requests) {
+    private void handleShortcut(KeyEvent key, IClipboard clipboard, List<Request> requests) {
         switch (key.letter()) {
+            case 'a':
+                // First press: the command line; a second one (or an empty line): the log (see LogSelection)
+                if (!editor.getText().isEmpty() && !editor.isAllSelected())
+                    editor.selectAll();
+                break;
+            case 'c':
+                // The selection stays; nothing without a selection
+                if (editor.hasSelection() && clipboard != null)
+                    clipboard.set(editor.selectedText());
+                break;
+            case 'x':
+                if (editor.hasSelection() && clipboard != null)
+                    clipboard.set(editor.cutSelection());
+                break;
             case 'v':
-                if (clipboard != null) {
-                    String pasted = clipboard.get();
-                    if (pasted != null)
-                        editor.insert(pasted);
-                }
+                if (clipboard != null)
+                    paste(clipboard.get(), requests);
                 break;
             case 'l':
                 if (!key.isRepeat())
@@ -188,8 +205,21 @@ public final class ConsoleInput {
         }
     }
 
+    // A text of several lines runs a command per complete line, the last one stays in the command line
+    private void paste(String pasted, List<Request> requests) {
+        if (pasted == null)
+            return;
+
+        List<String> lines = editor.paste(pasted);
+        for (String line : lines)
+            requests.add(new Request(ERequest.SUBMIT, line, 0));
+        if (!lines.isEmpty())
+            requests.add(new Request(ERequest.SCROLL_END, null, 0));
+    }
+
     // Tab: write what all the choices share; a second Tab without progress lists them
     private void complete(boolean secondTab) {
+        editor.clearSelection();
         String beginning = editor.getText().substring(0, editor.getCursor());
         CommandCompletion completion = completer.apply(beginning);
 

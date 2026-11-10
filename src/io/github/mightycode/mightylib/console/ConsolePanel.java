@@ -32,6 +32,7 @@ final class ConsolePanel {
     private static final Color4f COMMAND_COLOR = new Color4f(1f, 0.85f, 0.35f, 1f);
     private static final Color4f RESULT_COLOR = new Color4f(1f, 1f, 1f, 1f);
     private static final Color4f INPUT_COLOR = new Color4f(1f, 1f, 1f, 1f);
+    private static final Color4f SELECTION_COLOR = new Color4f(0.25f, 0.45f, 0.85f, 0.6f);
 
     private final ConsoleView view;
     private final ConsoleLog log;
@@ -45,6 +46,8 @@ final class ConsolePanel {
     // The command line is lit until then (System.nanoTime), 0: not lit
     private long flashEnd;
     private final RectangleRenderer cursor;
+    // Behind the selected part of the command line
+    private final RectangleRenderer inputSelection;
     private final Text inputText;
     private final List<Text> rows;
 
@@ -82,6 +85,8 @@ final class ConsolePanel {
         inputBackgroundValue = inputBackground.setColorMode(inputBackgroundColor);
         cursor = new RectangleRenderer("colorShape2D");
         cursor.setColorMode(new Color4f(1f, 1f, 1f, 0.85f));
+        inputSelection = new RectangleRenderer("colorShape2D");
+        inputSelection.setColorMode(SELECTION_COLOR);
 
         inputText = createText();
         inputText.setColor(INPUT_COLOR);
@@ -258,6 +263,16 @@ final class ConsolePanel {
             ++end;
         }
 
+        // The selection behind the text, the part of it that is shown
+        int selectionStart = Math.max(inputScroll, editor.selectionStart());
+        int selectionEnd = Math.min(end, editor.selectionEnd());
+        if (editor.hasSelection() && selectionEnd > selectionStart) {
+            float left = x + promptWidth + inputText.measureWidth(text.subSequence(inputScroll, selectionStart));
+            inputSelection.setSizePix(inputText.measureWidth(text.subSequence(selectionStart, selectionEnd)), lineHeight);
+            inputSelection.setPosition(new Vector2f(left, top));
+            inputSelection.display();
+        }
+
         inputText.setText(PROMPT + text.substring(inputScroll, end));
         inputText.setPosition(new Vector2f(x, top));
         inputText.display();
@@ -275,6 +290,7 @@ final class ConsolePanel {
         background.unload();
         inputBackground.unload();
         cursor.unload();
+        inputSelection.unload();
         inputText.unload();
         for (Text row : rows)
             row.unload();

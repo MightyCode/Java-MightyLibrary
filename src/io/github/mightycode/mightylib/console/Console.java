@@ -112,7 +112,7 @@ public final class Console {
 
     /**
      * State of the console for the developer (command console): mode, logs shown, scroll ("end", or the line at the
-     * bottom of the view and its rows hidden below).
+     * bottom of the view and its rows hidden below), selection (null, or where it is).
      */
     public JSONObject stateJson() {
         JSONObject json = new JSONObject().put("mode", mode.name()).put("logsShown", areLogsShown());
@@ -121,6 +121,10 @@ public final class Console {
         ConsoleLayout.Anchor anchor = panel == null ? null : panel.getLayout().anchor();
         json.put("scroll", anchor == null ? "end"
                 : new JSONObject().put("id", anchor.lineId()).put("row", anchor.rowsBelow()));
+
+        json.put("selection", editor.hasSelection()
+                ? new JSONObject().put("in", "input").put("start", editor.selectionStart()).put("end", editor.selectionEnd())
+                : JSONObject.NULL);
 
         return json;
     }
@@ -314,7 +318,7 @@ public final class Console {
         KeyboardManager keyboard = target.getKeyboardManager();
         int pageRows = panel == null ? 10 : panel.getVisibleRows();
         List<ConsoleInput.Request> requests = input.handle(keyboard.getRawTypedText(), keyboard.getRawKeyEvents(),
-                pageRows, () -> target.getSystemInfo().getClipboardContent());
+                pageRows, clipboardOf(target));
 
         float wheel = target.getMouseManager().getRawMouseScroll().y;
         if (wheel != 0 && panel != null)
@@ -348,6 +352,21 @@ public final class Console {
                     break;
             }
         }
+    }
+
+    // The clipboard of the system, through the window the console is typed in
+    private static ConsoleInput.IClipboard clipboardOf(WindowContext target) {
+        return new ConsoleInput.IClipboard() {
+            @Override
+            public String get() {
+                return target.getSystemInfo().getClipboardContent();
+            }
+
+            @Override
+            public void set(String text) {
+                target.getSystemInfo().setClipboardContent(text);
+            }
+        };
     }
 
     /** After the scene of the main window is drawn, with its OpenGL context current. */

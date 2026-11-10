@@ -26,6 +26,16 @@ class ConsoleInputTest {
     private CommandLineEditor editor;
     private List<String> printed;
     private ConsoleInput input;
+    // The system clipboard
+    private String clipboard;
+
+    private final ConsoleInput.IClipboard fakeClipboard = new ConsoleInput.IClipboard() {
+        @Override
+        public String get() { return clipboard; }
+
+        @Override
+        public void set(String text) { clipboard = text; }
+    };
 
     private static class Command extends BaseCommand {
         Command(String name) {
@@ -50,6 +60,7 @@ class ConsoleInputTest {
         editor = new CommandLineEditor();
         printed = new ArrayList<>();
         input = new ConsoleInput(editor, commands::complete, printed::add);
+        clipboard = "pasted text";
     }
 
     // A key without a letter in the layout (arrows, Enter...)
@@ -65,6 +76,10 @@ class ConsoleInputTest {
         return new KeyEvent(key, 0, GLFW_MOD_SHIFT, false, (char) 0);
     }
 
+    private static KeyEvent controlShift(int key) {
+        return new KeyEvent(key, 0, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, false, (char) 0);
+    }
+
     // Ctrl + the key that has this letter in a QWERTY layout
     private static KeyEvent control(char letter) {
         return new KeyEvent(GLFW_KEY_A + (Character.toUpperCase(letter) - 'A'), 0, GLFW_MOD_CONTROL, false, letter);
@@ -76,7 +91,7 @@ class ConsoleInputTest {
     }
 
     private List<String> handle(String text, KeyEvent... keys) {
-        return input.handle(text, Arrays.asList(keys), 10, () -> "pasted text").stream()
+        return input.handle(text, Arrays.asList(keys), 10, fakeClipboard).stream()
                 .map(ConsoleInput.Request::toString).collect(Collectors.toList());
     }
 
@@ -122,6 +137,60 @@ class ConsoleInputTest {
         editor.setText("");
         assertEquals(List.of(), handle("", control(GLFW_KEY_V, 'q'), control(GLFW_KEY_L)));
         assertEquals("", editor.getText());
+    }
+
+    @Test
+    void shiftMovesSelectAndControlShortcutsCopyCutPaste() {
+        handle("stats fps", shift(GLFW_KEY_LEFT), shift(GLFW_KEY_LEFT), shift(GLFW_KEY_LEFT));
+        assertEquals("fps", editor.selectedText());
+        // Ctrl+C copies and keeps the selection
+        handle("", control('c'));
+        assertEquals("fps", clipboard);
+        assertTrue(editor.hasSelection());
+
+        // Ctrl+Shift+Left: by word; typing replaces the selection
+        handle("", controlShift(GLFW_KEY_LEFT));
+        assertEquals("stats fps", editor.selectedText());
+        handle("help");
+        assertEquals("help", editor.getText());
+
+        // Ctrl+X cuts, Ctrl+V pastes over the selection
+        handle("", shift(GLFW_KEY_HOME), control('x'));
+        assertEquals("help", clipboard);
+        assertEquals("", editor.getText());
+        handle("stats", shift(GLFW_KEY_HOME), control('v'));
+        assertEquals("help", editor.getText());
+        assertFalse(editor.hasSelection());
+
+        // Nothing selected: Ctrl+C copies nothing
+        clipboard = "kept";
+        handle("", control('c'), control('x'));
+        assertEquals("kept", clipboard);
+        assertEquals("help", editor.getText());
+    }
+
+    @Test
+    void controlASelectsTheCommandLineFirst() {
+        handle("stats fps", control('a'));
+        assertTrue(editor.isAllSelected());
+        // Second press: the log (LogSelection), the command line is no longer selected by it
+        handle("", key(GLFW_KEY_END));
+        assertFalse(editor.hasSelection());
+        // Empty command line: nothing to select in it
+        editor.setText("");
+        handle("", control('a'));
+        assertFalse(editor.hasSelection());
+    }
+
+    @Test
+    void pastingSeveralLinesRunsACommandPerCompleteLine() {
+        clipboard = "stats fps\r\n\r\nhelp\rhelp st";
+        handle("x", key(GLFW_KEY_LEFT));
+        assertEquals(List.of("SUBMIT stats fps", "SUBMIT help", "SCROLL_END"), handle("", control('v')));
+        // The last line stays, the text after the cursor too, the cursor after the pasted part
+        assertEquals("help stx", editor.getText());
+        assertEquals(7, editor.getCursor());
+        assertEquals(List.of("stats fps", "help"), editor.getHistory());
     }
 
     @Test
