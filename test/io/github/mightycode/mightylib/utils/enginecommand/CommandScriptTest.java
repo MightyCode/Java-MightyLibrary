@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -13,6 +14,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CommandScriptTest {
@@ -21,13 +25,16 @@ class CommandScriptTest {
         final List<String> calls = new ArrayList<>();
 
         RecordCommand() {
-            super(TestCommands.Id("record"), ECommandLevel.USER);
+            super(TestCommands.Id("record"), ECommandLevel.USER, "Records the words it receives");
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            calls.add(String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
-            return args.length > 1 && args[1].equals("fail") ? CommandResult.error("failed") : CommandResult.ok("recorded");
+        protected void syntax(CommandNode root) {
+            root.then(argument("words", word(), "Any words").variadic().optional().executes(context -> {
+                List<String> words = context.getList("words");
+                calls.add(String.join(" ", words));
+                return !words.isEmpty() && words.get(0).equals("fail") ? CommandResult.error("failed") : CommandResult.ok("recorded");
+            }));
         }
     }
 
@@ -175,12 +182,8 @@ class CommandScriptTest {
     @Test
     void deferredResultBecomesAnErrorAfterItsTimeout() throws Exception {
         Commands commands = new Commands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("never"), ECommandLevel.USER) {
-            @Override
-            public CommandResult execute(String[] args) {
-                return CommandResult.later(new CompletableFuture<>(), 1);
-            }
-        });
+        TestCommands.add(commands, TestCommands.Syntax("never", ECommandLevel.USER, "Never answers",
+                root -> root.executes(context -> CommandResult.later(new CompletableFuture<>(), 1))));
 
         CompletableFuture<CommandResult> future = commands.submit("never");
         commands.processPendingCommands();

@@ -1,14 +1,12 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.registry.Identifier;
-import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandParser;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 
 /**
  * A command: its identifier, its level, its description and its declared syntax (syntax(root)), from which come the
@@ -23,17 +21,8 @@ public abstract class BaseCommand {
     // Set once registered
     private CommandOwner owner;
     private Commands registry;
-    // Built at the first registration. Provisional (migration): null for a command without syntax
+    // Built at the first registration
     private CommandParser parser;
-    private boolean syntaxBuilt;
-
-    /**
-     * Provisional (migration to the declared syntax): a command without description nor syntax, read by
-     * execute(String[]) and completeArgument. Removed once every command declares its syntax.
-     */
-    public BaseCommand(Identifier id, ECommandLevel level) {
-        this(id, level, null, false);
-    }
 
     /**
      * @param id          the namespace of the owner (mightylib for the engine, the game or the mod) and the name of
@@ -42,15 +31,11 @@ public abstract class BaseCommand {
      * @param description what the command does, first line of its help
      */
     public BaseCommand(Identifier id, ECommandLevel level, String description) {
-        this(id, level, description, true);
-    }
-
-    private BaseCommand(Identifier id, ECommandLevel level, String description, boolean described) {
         if (id == null)
             throw new IllegalArgumentException("A command needs an identifier");
         if (level == null)
             throw new IllegalArgumentException("The command " + id + " needs a level");
-        if (described && (description == null || description.isEmpty()))
+        if (description == null || description.isEmpty())
             throw new IllegalArgumentException("The command " + id + " needs a description");
 
         this.id = id;
@@ -61,24 +46,13 @@ public abstract class BaseCommand {
 
     /**
      * Declares the syntax of the command on its root, called once at its first registration (a mistake of the syntax
-     * is an IllegalStateException then). Each branch ends with executes(handler):
+     * is an IllegalStateException then): the fields it uses must be set by the constructor. Each branch ends with
+     * executes(handler):
      * root.then(literal("mode", "...").then(argument("mode", choice("poll", "service"), "...")
      *         .option(Option.of("interval", "...").value("ms", longValue(1, 60000)))
      *         .executes(ctx -> ...)))
-     * Provisional (migration): empty by default, the command then keeps execute(String[]); abstract once every
-     * command declares its syntax.
      */
-    protected void syntax(CommandNode root) {
-    }
-
-    /**
-     * Provisional (migration to the declared syntax): execution of a command without syntax, always called on the
-     * main thread. A command with a syntax runs the handler of its branch instead.
-     * @param args Words of the command, args[0] is the name of the command as typed
-     */
-    public CommandResult execute(String[] args) {
-        return CommandResult.error("The command " + id + " has no syntax");
-    }
+    protected abstract void syntax(CommandNode root);
 
     public String getDescription() {
         return description;
@@ -88,18 +62,15 @@ public abstract class BaseCommand {
 
     // Main thread, at the first registration
     private void buildSyntax() {
-        if (syntaxBuilt)
+        if (parser != null)
             return;
 
         CommandNode root = CommandNode.root(commandName, description);
         syntax(root);
-        parser = root.isEmpty() ? null : new CommandParser(root);
-        syntaxBuilt = true;
-    }
+        if (root.isEmpty())
+            throw new IllegalStateException("The command " + id + " declares no syntax");
 
-    // Provisional (migration): false for a command read by execute(String[])
-    boolean hasSyntax() {
-        return parser != null;
+        parser = new CommandParser(root);
     }
 
     // The values of a line, with the level and the source running or completing the command
@@ -132,17 +103,14 @@ public abstract class BaseCommand {
     }
 
     /**
-     * Main thread. The help the current source sees: help <cmd> and <cmd> --help. A command with a syntax gives its
-     * generated help, with its visible tree in JSON in the data.
+     * Main thread. The help the current source sees: help <cmd> and <cmd> --help. The generated help, with the visible
+     * tree of the syntax in JSON in the data.
      */
     public CommandResult helpResult() {
         return owner == null ? helpNow() : owner.run(this::helpNow);
     }
 
     private CommandResult helpNow() {
-        if (parser == null)
-            return CommandResult.ok(help());
-
         return parser.help(id.toString(), level, newContext(commandName));
     }
 
@@ -177,66 +145,5 @@ public abstract class BaseCommand {
     void clearRegistration() {
         registry = null;
         owner = null;
-    }
-
-    /**
-     * Level of the source of the command being run or completed: the answer can be adapted to it (a readable
-     * message for the player, details in the data for the developer).
-     */
-    protected ECommandLevel currentLevel() {
-        return registry == null ? ECommandLevel.DEV : registry.getCurrentLevel();
-    }
-
-    // A sub-command (an argument) reserved to a level: hide it from the completion of the lower levels
-    protected boolean hasLevel(ECommandLevel level) {
-        return currentLevel().includes(level);
-    }
-
-    /**
-     * A sub-command reserved to a level: below it, the command stops with the error of an unknown argument (or of a
-     * missing one when typed is null), the sub-command does not exist for the source.
-     */
-    protected void requireLevel(ECommandLevel level, String typed) {
-        if (hasLevel(level))
-            return;
-
-        throw new CommandException(typed == null ? noEnoughArgumentError().getMessage()
-                : unknownArgumentError(typed).getMessage());
-    }
-
-    // Help to know how use the command
-    public String help(){
-        return "Help for " + id + " command";
-    }
-
-    /**
-     * Values the word being typed can take, for the completion (Tab in the console). Main thread.
-     * Unfiltered values are fine: they are filtered by what is typed.
-     * @param args Words typed, args[0] is the name of the command and the last one is the word being completed
-     *             (unfinished, possibly empty)
-     */
-    public Collection<String> completeArgument(String[] args) {
-        return Collections.emptyList();
-    }
-
-    public boolean checkArgumentHelp(String[] commands){
-        return commands.length > 1 && commands[1].equals("help");
-    }
-
-    public CommandResult noEnoughArgumentError(){
-        return CommandResult.error("No argument !\nWrite -> " + commandName  + " help<- if you don't know what are/is argument(s)");
-    }
-
-    /**
-     * Stop the command with "Scene still loading" until the scene is launched: its cameras, renderers and objects
-     * only exist from launch() on. A command of a scene can be typed while the scene loads.
-     */
-    protected static void requireLaunched(Scene scene) {
-        if (scene == null || !scene.isLaunched())
-            throw new CommandException("Scene still loading");
-    }
-
-    public CommandResult unknownArgumentError(String command){
-        return CommandResult.error("Unknown argument(s) ->" + command + "<-");
     }
 }

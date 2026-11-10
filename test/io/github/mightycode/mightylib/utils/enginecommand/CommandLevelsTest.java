@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -41,21 +43,23 @@ class CommandLevelsTest {
         private final Commands commands;
 
         LaterCommand(Commands commands) {
-            super(TestCommands.Id("later"), ECommandLevel.USER);
+            super(TestCommands.Id("later"), ECommandLevel.USER, "Answers at the next tick");
             this.commands = commands;
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            CompletableFuture<CommandResult> future = new CompletableFuture<>();
-            long start = commands.getTick();
-            commands.addTickTask(() -> {
-                if (commands.getTick() <= start)
-                    return false;
-                future.complete(CommandResult.ok("later"));
-                return true;
+        protected void syntax(CommandNode root) {
+            root.executes(context -> {
+                CompletableFuture<CommandResult> future = new CompletableFuture<>();
+                long start = commands.getTick();
+                commands.addTickTask(() -> {
+                    if (commands.getTick() <= start)
+                        return false;
+                    future.complete(CommandResult.ok("later"));
+                    return true;
+                });
+                return CommandResult.later(future);
             });
-            return CommandResult.later(future);
         }
     }
 
@@ -64,16 +68,17 @@ class CommandLevelsTest {
         private final Commands commands;
 
         ScriptCommand(Commands commands) {
-            super(TestCommands.Id("script"), ECommandLevel.USER);
+            super(TestCommands.Id("script"), ECommandLevel.USER, "Runs the given lines");
             this.commands = commands;
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            CommandScript script = new CommandScript(commands, "test",
-                    Arrays.asList(Arrays.copyOfRange(args, 1, args.length)));
-            commands.addTickTask(script::step);
-            return CommandResult.later(script.getResult());
+        protected void syntax(CommandNode root) {
+            root.then(argument("lines", word(), "The lines").variadic().executes(context -> {
+                CommandScript script = new CommandScript(commands, "test", context.<String>getList("lines"));
+                commands.addTickTask(script::step);
+                return CommandResult.later(script.getResult());
+            }));
         }
     }
 
@@ -269,12 +274,8 @@ class CommandLevelsTest {
         ConsoleLog log = new ConsoleLog(20);
         Commands commands = new Commands();
         commands.addListener(new CommandEcho(log));
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("detailed"), ECommandLevel.USER) {
-            @Override
-            public CommandResult execute(String[] args) {
-                return CommandResult.ok("Readable", new JSONObject().put("detail", 42));
-            }
-        });
+        TestCommands.add(commands, TestCommands.Syntax("detailed", ECommandLevel.USER, "Readable and detailed",
+                root -> root.executes(context -> CommandResult.ok("Readable", new JSONObject().put("detail", 42)))));
 
         log.add(ConsoleLog.EType.OUT, null, "--engine line");
         run(commands, "detailed", PLAYER);

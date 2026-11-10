@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.integer;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,18 +37,19 @@ class CommandsTest {
         }
 
         EchoCommand(String name, ECommandLevel level) {
-            super(TestCommands.Id(name), level);
+            super(TestCommands.Id(name), level, "Echoes its words");
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            lastArgs = args;
-            return CommandResult.ok(String.join("|", args));
-        }
-
-        @Override
-        public String help() {
-            return "echo help";
+        protected void syntax(CommandNode root) {
+            root.then(argument("words", word(), "Any words").variadic().optional().executes(context -> {
+                List<String> words = context.getList("words");
+                lastArgs = new String[words.size() + 1];
+                lastArgs[0] = context.commandName();
+                for (int i = 0; i < words.size(); ++i)
+                    lastArgs[i + 1] = words.get(i);
+                return CommandResult.ok(String.join("|", lastArgs));
+            }));
         }
     }
 
@@ -215,28 +218,12 @@ class CommandsTest {
         assertThrows(IllegalArgumentException.class, () -> TestCommands.Syntax("zz", ECommandLevel.USER, "", root -> {}));
     }
 
-    // Provisional (migration to the declared syntax): a command without syntax keeps its help
-    @Test
-    void commandWithoutSyntaxKeepsItsHelp() {
-        Commands commands = newCommands();
-        EchoCommand echo = new EchoCommand("echo");
-        TestCommands.add(commands, echo);
-
-        assertEquals("echo help", commands.execute("echo help").getMessage());
-        assertEquals("echo help", commands.execute("echo --help").getMessage());
-        assertNull(echo.lastArgs);
-        assertEquals("echo help", commands.execute("help echo").getMessage());
-    }
-
     @Test
     void exceptionOfACommandBecomesAnError() {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("boom"), ECommandLevel.USER) {
-            @Override
-            public CommandResult execute(String[] args) {
-                throw new IllegalStateException("broken");
-            }
-        });
+        TestCommands.add(commands, TestCommands.Syntax("boom", ECommandLevel.USER, "Breaks", root -> root.executes(context -> {
+            throw new IllegalStateException("broken");
+        })));
 
         CommandResult result = commands.execute("boom");
         assertFalse(result.isSuccess());
@@ -368,13 +355,10 @@ class CommandsTest {
         Commands commands = newCommands();
         FakeView view = new FakeView();
         IView[] seen = new IView[1];
-        commands.register(new BaseCommand(TestCommands.Id("where"), ECommandLevel.USER) {
-            @Override
-            public CommandResult execute(String[] args) {
-                seen[0] = Views.current();
-                return CommandResult.ok("");
-            }
-        }, CommandOwner.Of(view, "scene"));
+        commands.register(TestCommands.Syntax("where", ECommandLevel.USER, "Where it runs", root -> root.executes(context -> {
+            seen[0] = Views.current();
+            return CommandResult.ok("");
+        })), CommandOwner.Of(view, "scene"));
 
         assertTrue(commands.execute("where").isSuccess());
         assertSame(view, seen[0]);
@@ -444,13 +428,8 @@ class CommandsTest {
     @Test
     void commandExceptionIsTheAnswer() {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("loading"), ECommandLevel.USER) {
-            @Override
-            public CommandResult execute(String[] args) {
-                requireLaunched(null);
-                return CommandResult.ok("launched");
-            }
-        });
+        TestCommands.add(commands, TestCommands.Syntax("loading", ECommandLevel.USER, "Needs a launched scene",
+                root -> root.requires(CommandCondition.launched((Scene) null)).executes(context -> CommandResult.ok("launched"))));
 
         CommandResult result = commands.execute("loading");
         assertFalse(result.isSuccess());
@@ -474,12 +453,8 @@ class CommandsTest {
     void deferredResultCompletesTheSubmittedFuture() throws Exception {
         Commands commands = newCommands();
         CompletableFuture<CommandResult> later = new CompletableFuture<>();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("later"), ECommandLevel.USER) {
-            @Override
-            public CommandResult execute(String[] args) {
-                return CommandResult.later(later);
-            }
-        });
+        TestCommands.add(commands, TestCommands.Syntax("later", ECommandLevel.USER, "Answers later",
+                root -> root.executes(context -> CommandResult.later(later))));
 
         CompletableFuture<CommandResult> future = commands.submit("later");
         commands.processPendingCommands();
@@ -492,19 +467,13 @@ class CommandsTest {
     // Completes its first argument with fixed values
     private static class ChoiceCommand extends BaseCommand {
         ChoiceCommand(String name) {
-            super(TestCommands.Id(name), ECommandLevel.USER);
+            super(TestCommands.Id(name), ECommandLevel.USER, "Completes its first argument");
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            return CommandResult.ok("");
-        }
-
-        @Override
-        public Collection<String> completeArgument(String[] args) {
-            if (args.length == 2)
-                return List.of("Scene2D", "Scene3D", "scene3DBis", "Menu Scene");
-            throw new IllegalStateException("No completion here");
+        protected void syntax(CommandNode root) {
+            root.then(argument("scene", suggest(() -> List.of("Scene2D", "Scene3D", "scene3DBis", "Menu Scene")))
+                    .optional().executes(context -> CommandResult.ok("")));
         }
     }
 
@@ -547,7 +516,7 @@ class CommandsTest {
     }
 
     @Test
-    void completeArgumentsIgnoresCaseAddsHelpAndQuotes() {
+    void completeArgumentsIgnoresCaseAndQuotes() {
         Commands commands = newCommands();
         TestCommands.add(commands, new ChoiceCommand("zzchoice"));
 
@@ -556,11 +525,12 @@ class CommandsTest {
         assertEquals("Scene", completion.replacement());
         assertEquals(9, completion.getStart());
 
-        assertTrue(commands.complete("zzchoice ").getCandidates().contains("help"));
+        // help is not proposed as a word of the command: --help is
+        assertFalse(commands.complete("zzchoice ").getCandidates().contains("help"));
         assertEquals("\"Menu Scene\" ", commands.complete("zzchoice Me").replacement());
         assertEquals("\"Menu Scene\" ", commands.complete("zzchoice \"Me").replacement());
 
-        // A failing completion gives nothing instead of throwing
+        // Nothing to propose after the last argument, or for an unknown command
         assertTrue(commands.complete("zzchoice a b").isEmpty());
         assertTrue(commands.complete("unknown a").isEmpty());
     }
@@ -574,12 +544,8 @@ class CommandsTest {
     @Test
     void listenersSeeTheSourceTheCommandAndItsResult() throws Exception {
         Commands commands = newCommands();
-        TestCommands.add(commands, new BaseCommand(TestCommands.Id("source"), ECommandLevel.USER) {
-            @Override
-            public CommandResult execute(String[] args) {
-                return CommandResult.ok(commands.getCurrentSource().name());
-            }
-        });
+        TestCommands.add(commands, TestCommands.Syntax("source", ECommandLevel.USER, "The name of its source",
+                root -> root.executes(context -> CommandResult.ok(commands.getCurrentSource().name()))));
 
         List<String> seen = new ArrayList<>();
         commands.addListener(new ICommandListener() {
