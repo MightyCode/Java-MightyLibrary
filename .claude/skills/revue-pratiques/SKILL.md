@@ -23,5 +23,5 @@ description: Revue hebdomadaire des bonnes pratiques du projet (docs/bonnes-prat
 ## 3. Répondre
 - Tableau, un point par ligne : numéro, point (quelques mots), verdict (**respecté** / **dérive** / **à confirmer**), preuve (une ligne : chiffre, fichier, commit), action proposée.
 - Puis les 2 ou 3 actions prioritaires, et une seule question : laquelle faire (les corrections suivent les règles de `CLAUDE.md` : branche, commits, tests, docs).
-- Mettre à jour la date « Dernière revue » de `CLAUDE.md` (Point hebdomadaire) à la date du jour : seule modification faite par la revue.
+- Mettre à jour la date « Dernière revue » de `CLAUDE.md` (Point hebdomadaire) à la date du jour : seule modification faite par la revue. Elle est commitée avec la première correction choisie après la revue, sur sa branche ; sans correction, seule sur une branche `revue-<date>` fusionnée par `/pr-ml`.
 - Si un point est devenu obsolète ou si l'utilisateur en ajoute un : proposer la modification de `docs/bonnes-pratiques.md` (règle et vérification, jamais l'état), et mettre `collect.py` à jour si le point est mesurable.
