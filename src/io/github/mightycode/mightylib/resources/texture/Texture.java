@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
-import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
@@ -10,7 +9,6 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;
-import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
 

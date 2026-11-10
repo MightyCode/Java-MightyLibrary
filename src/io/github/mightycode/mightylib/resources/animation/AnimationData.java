@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.resources.animation;
 
 import io.github.mightycode.mightylib.resources.DataType;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 

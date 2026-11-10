@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.FallbackTextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.json.JSONObject;

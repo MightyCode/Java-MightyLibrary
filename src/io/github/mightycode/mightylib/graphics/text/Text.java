@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.graphics.renderer.Shape;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
