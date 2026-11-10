@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandScript;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.PathCompletion;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
