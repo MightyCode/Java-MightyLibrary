@@ -428,4 +428,25 @@ class ConsoleInputTest {
         handle("", key(GLFW_KEY_TAB));
         assertEquals(List.of("zzone  zztwo"), printed);
     }
+
+    @Test
+    void clickingTheIndicatorOfTheLinesBelowGoesBackToTheEnd() {
+        ConsoleLog log = new ConsoleLog(20);
+        for (int i = 1; i <= 8; ++i)
+            log.add(ConsoleLog.EType.RESULT, null, "line " + i, ECommandLevel.USER);
+        ConsoleLayout layout = mouseLayout(log);
+        layout.scroll(2);
+        assertEquals(2, layout.linesBelow());
+
+        // On the last row, at the right: a request, no selection
+        assertEquals(List.of("SCROLL_END"), input.handleMouse(press(100, 90, 1, false), layout).stream()
+                .map(Object::toString).collect(Collectors.toList()));
+        assertNull(input.getLogSelection());
+        input.handleMouse(release(100, 90), layout);
+
+        // Elsewhere on the row: a selection starts
+        assertTrue(input.handleMouse(press(10, 90, 1, false), layout).isEmpty());
+        input.handleMouse(hold(30, 90), layout);
+        assertNotNull(input.getLogSelection());
+    }
 }

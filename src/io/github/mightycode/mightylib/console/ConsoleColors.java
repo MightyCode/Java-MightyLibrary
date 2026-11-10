@@ -11,6 +11,9 @@ final class ConsoleColors {
     static final Color4f ERROR = new Color4f(1f, 0.35f, 0.35f, 1f);
     static final Color4f MESSAGE = new Color4f(0.55f, 0.85f, 1f, 1f);
     static final Color4f INPUT = new Color4f(1f, 1f, 1f, 1f);
+    // Indicator of the lines below the view, and its background
+    static final Color4f INDICATOR = new Color4f(1f, 1f, 1f, 1f);
+    static final Color4f INDICATOR_BACKGROUND = new Color4f(0.2f, 0.35f, 0.6f, 0.9f);
     // Behind the selected text
     static final Color4f SELECTION = new Color4f(0.25f, 0.45f, 0.85f, 0.6f);
     // Width shown selected after a line whose end is selected

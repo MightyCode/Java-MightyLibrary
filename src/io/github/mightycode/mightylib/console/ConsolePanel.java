@@ -42,6 +42,10 @@ final class ConsolePanel {
     // Behind the selected part of the command line
     private final RectangleRenderer inputSelection;
     private final Text inputText;
+    // "v N lines" at the right of the last row when the view is not at the end
+    private final RectangleRenderer indicatorBackground;
+    private final Text indicatorText;
+    private String indicatorShown = "";
     private final List<Text> rows;
     // Behind the selected part of each row of the log, reused from a frame to the next (one per row at most)
     private final List<RectangleRenderer> highlights = new ArrayList<>();
@@ -85,6 +89,10 @@ final class ConsolePanel {
         inputSelection = new RectangleRenderer("colorShape2D");
         inputSelection.setColorMode(ConsoleColors.SELECTION);
 
+        indicatorBackground = new RectangleRenderer("colorShape2D");
+        indicatorBackground.setColorMode(ConsoleColors.INDICATOR_BACKGROUND);
+        indicatorText = createText();
+        indicatorText.setColor(ConsoleColors.INDICATOR);
         inputText = createText();
         inputText.setColor(ConsoleColors.INPUT);
         rows = new ArrayList<>();
@@ -162,6 +170,8 @@ final class ConsolePanel {
         for (Text row : rows)
             row.display();
 
+        displayIndicator(x, inputTop);
+
         displayInput(x + PADDING, inputTop, width - 2 * PADDING, showCursor);
 
         // Where the mouse points to, read by the next ticks
@@ -188,6 +198,7 @@ final class ConsolePanel {
         }
 
         inputText.setFontSize(fontSize);
+        indicatorText.setFontSize(fontSize);
         lineHeight = Math.max(1, inputText.lineHeight());
     }
 
@@ -265,6 +276,26 @@ final class ConsolePanel {
         }
     }
 
+    // "v N lines" over the right of the last row, when lines are below the view
+    private void displayIndicator(float x, float inputTop) {
+        String text = layout.linesBelowText();
+        if (text == null || rows.isEmpty())
+            return;
+
+        if (!text.equals(indicatorShown)) {
+            indicatorText.setText(text);
+            indicatorShown = text;
+        }
+
+        float top = rowTop(inputTop, rows.size() - 1);
+        float left = x + layout.indicatorLeft();
+        indicatorBackground.setSizePix(layout.indicatorWidth(), lineHeight);
+        indicatorBackground.setPosition(new Vector2f(left, top));
+        indicatorBackground.display();
+        indicatorText.setPosition(new Vector2f(left + ConsoleLayout.INDICATOR_PADDING, top));
+        indicatorText.display();
+    }
+
     // Top of a slot of the panel (0: the top row)
     private float rowTop(float inputTop, int slot) {
         return inputTop - PADDING - (rows.size() - slot) * lineHeight;
@@ -322,6 +353,8 @@ final class ConsolePanel {
         inputBackground.unload();
         cursor.unload();
         inputSelection.unload();
+        indicatorBackground.unload();
+        indicatorText.unload();
         inputText.unload();
         for (Text row : rows)
             row.unload();

@@ -126,6 +126,8 @@ public final class Console {
         ConsoleLayout.Anchor anchor = panel == null ? null : panel.getLayout().anchor();
         json.put("scroll", anchor == null ? "end"
                 : new JSONObject().put("id", anchor.lineId()).put("row", anchor.rowsBelow()));
+        // Lines below the view, at most ConsoleLayout.MAX_LINES_BELOW + 1 (more than the maximum)
+        json.put("newLinesBelow", panel == null ? 0 : panel.getLayout().linesBelow());
 
         LogSelection logSelection = input.getLogSelection();
         if (logSelection != null)

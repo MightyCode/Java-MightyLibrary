@@ -240,4 +240,96 @@ class ConsoleLayoutTest {
         assertEquals(2f, layout.xOf(layout.rows().get(1), 12));
         assertEquals(0f, layout.xOf(layout.rows().get(1), 4));
     }
+
+    @Test
+    void linesBelowTheViewAreCountedWithTheFilterAndTheLevel() {
+        ConsoleLog log = new ConsoleLog(100);
+        for (int i = 1; i <= 6; ++i)
+            add(log, "l" + i);
+        log.add(ConsoleLog.EType.OUT, null, "out7", ECommandLevel.DEV);
+        add(log, "l8");
+        ConsoleLayout layout = layout(log, 2);
+
+        // At the end: no indicator
+        assertEquals(List.of("out7", "l8"), shown(layout));
+        assertEquals(0, layout.linesBelow());
+        assertNull(layout.linesBelowText());
+        assertTrue(layout.isAtEnd());
+
+        layout.scroll(3);
+        assertEquals(List.of("l4", "l5"), shown(layout));
+        assertEquals(3, layout.linesBelow());
+        assertEquals("v 3 lines", layout.linesBelowText());
+        assertFalse(layout.isAtEnd());
+
+        // Hidden lines are not counted
+        layout.setHiddenTypes(EnumSet.of(ConsoleLog.EType.OUT));
+        assertEquals(List.of("l4", "l5"), shown(layout));
+        assertEquals(2, layout.linesBelow());
+        // Nor the lines the viewer does not see
+        layout.setHiddenTypes(EnumSet.noneOf(ConsoleLog.EType.class));
+        layout.setViewer(ECommandLevel.USER);
+        assertEquals(2, layout.linesBelow());
+
+        // A new line below
+        add(log, "l9");
+        layout.refresh();
+        assertEquals(3, layout.linesBelow());
+        layout.scrollToEnd();
+        shown(layout);
+        assertEquals(0, layout.linesBelow());
+    }
+
+    @Test
+    void aLineCutByTheViewCountsAsOneLineBelow() {
+        ConsoleLog log = new ConsoleLog(10);
+        add(log, "abcdefghijklmnopqrstuvwxy");
+        ConsoleLayout layout = layout(log, 2);
+        layout.scroll(1);
+
+        assertEquals(List.of("abcdefghij", "klmnopqrst"), shown(layout));
+        assertEquals(1, layout.linesBelow());
+        assertEquals("v 1 line", layout.linesBelowText());
+    }
+
+    @Test
+    void theCountOfLinesBelowStopsAtTheMaximum() {
+        ConsoleLog log = new ConsoleLog(3000);
+        for (int i = 0; i < 1500; ++i)
+            add(log, "l" + i);
+        ConsoleLayout layout = layout(log, 2);
+        layout.scrollToTop();
+
+        assertEquals(ConsoleLayout.MAX_LINES_BELOW + 1, layout.linesBelow());
+        assertEquals("v 999+ lines", layout.linesBelowText());
+
+        // Below the maximum: the exact count
+        layout.scroll(-600);
+        shown(layout);
+        assertEquals(898, layout.linesBelow());
+        assertEquals("v 898 lines", layout.linesBelowText());
+    }
+
+    @Test
+    void theIndicatorIsAtTheRightOfTheLastRow() {
+        ConsoleLog log = new ConsoleLog(100);
+        for (int i = 1; i <= 5; ++i)
+            add(log, "l" + i);
+        ConsoleLayout layout = new ConsoleLayout(log, c -> 1f);
+        layout.setGeometry(100, 2, 20);
+        layout.setViewer(ECommandLevel.DEV);
+        layout.setPanelGeometry(6, 0, 20, 0);
+
+        assertEquals(0, layout.indicatorWidth());
+        assertFalse(layout.isOnIndicator(90, 30));
+
+        layout.scroll(1);
+        // "v 1 line" = 8 characters, 4 pixels around
+        assertEquals(16, layout.indicatorWidth());
+        assertEquals(90, layout.indicatorLeft());
+        assertTrue(layout.isOnIndicator(95, 30));
+        assertFalse(layout.isOnIndicator(80, 30));
+        assertFalse(layout.isOnIndicator(95, 10));
+        assertFalse(layout.isOnIndicator(95, 45));
+    }
 }

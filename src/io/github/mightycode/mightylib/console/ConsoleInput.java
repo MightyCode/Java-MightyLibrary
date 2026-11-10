@@ -306,7 +306,11 @@ public final class ConsoleInput {
         keepLogSelection();
         List<Request> requests = new ArrayList<>();
 
-        if (mouse.pressed && mouse.y >= layout.rowsBottom()) {
+        if (mouse.pressed && layout.isOnIndicator(mouse.x, mouse.y)) {
+            // The indicator of the lines below: back to the end
+            drag = EDrag.NONE;
+            requests.add(new Request(ERequest.SCROLL_END, null, 0));
+        } else if (mouse.pressed && mouse.y >= layout.rowsBottom()) {
             listOnNextTab = false;
             logSelection = null;
             pressInput(mouse);

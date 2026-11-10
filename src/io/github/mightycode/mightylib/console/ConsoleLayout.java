@@ -88,6 +88,9 @@ final class ConsoleLayout {
         boolean isLastPart() { return part == parts - 1; }
     }
 
+    // The count of the lines below the view stops here
+    static final int MAX_LINES_BELOW = 999;
+
     private final ConsoleLog log;
     private final ICharAdvance advance;
 
@@ -106,6 +109,7 @@ final class ConsoleLayout {
     private List<Row> rows = Collections.emptyList();
     private Anchor bottom;
     private boolean atEnd = true;
+    private int linesBelow;
     private boolean dirty = true;
     private long builtVersion = -1;
 
@@ -195,6 +199,19 @@ final class ConsoleLayout {
     // Nothing visible below the view
     boolean isAtEnd() { return atEnd; }
 
+    // Lines below the view (filter and level applied), counted up to MAX_LINES_BELOW + 1: more than the maximum
+    int linesBelow() { return linesBelow; }
+
+    // Text of the indicator shown when the view is not at the end, null at the end
+    String linesBelowText() {
+        if (linesBelow == 0)
+            return null;
+
+        String count = linesBelow > MAX_LINES_BELOW ? MAX_LINES_BELOW + "+" : String.valueOf(linesBelow);
+        // The font of the console has no arrow glyph
+        return "v " + count + (linesBelow == 1 ? " line" : " lines");
+    }
+
     private void build() {
         dirty = false;
         // Read before the lines: a line added meanwhile changes it, the next refresh builds again
@@ -202,6 +219,7 @@ final class ConsoleLayout {
         rows = Collections.emptyList();
         bottom = null;
         atEnd = true;
+        linesBelow = 0;
         if (visibleRows <= 0)
             return;
 
@@ -294,7 +312,10 @@ final class ConsoleLayout {
         rows = Collections.unmodifiableList(result);
         Row last = result.get(result.size() - 1);
         bottom = new Anchor(last.line.getId(), last.parts - 1 - last.part);
-        atEnd = last.isLastPart() && log.after(last.line.getId(), 1, viewer, filter).isEmpty();
+        int below = log.after(last.line.getId(), MAX_LINES_BELOW + 1, viewer, filter).size();
+        // A line cut by the view counts as one line below
+        linesBelow = Math.min(MAX_LINES_BELOW + 1, below + (last.isLastPart() ? 0 : 1));
+        atEnd = linesBelow == 0;
     }
 
     private List<Row> rowsOf(ConsoleLog.Line line) {
@@ -448,6 +469,34 @@ final class ConsoleLayout {
     }
 
     float rowsTop() { return rowsTop; }
+
+    // Space kept around the text of the indicator of the lines below
+    static final float INDICATOR_PADDING = 4;
+
+    // Width of the indicator of the lines below, with its padding (0: not shown)
+    float indicatorWidth() {
+        refresh();
+        String text = linesBelowText();
+        if (text == null)
+            return 0;
+
+        float result = 2 * INDICATOR_PADDING;
+        for (int i = 0; i < text.length(); ++i)
+            result += advance.of(text.charAt(i));
+        return result;
+    }
+
+    // Left of the indicator in the panel: at the right of the last row
+    float indicatorLeft() {
+        return textLeft + width - indicatorWidth();
+    }
+
+    // The point of the panel is on the indicator of the lines below
+    boolean isOnIndicator(float x, float y) {
+        float indicatorWidth = indicatorWidth();
+        return indicatorWidth > 0 && x >= textLeft + width - indicatorWidth && x < textLeft + width
+                && y >= rowsBottom() - rowHeight && y < rowsBottom();
+    }
 
     // Below the last slot: the command line
     float rowsBottom() { return rowsTop + visibleRows * rowHeight; }
