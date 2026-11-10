@@ -21,7 +21,7 @@ import java.util.List;
 import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
 
 /**
- * The in-game console, owned by the engine and independent of the scenes: ² (F1 too in DEV) opens it over the main
+ * The in-game console, owned by the engine and independent of the scenes: ² opens it over the main
  * window (semi-transparent, the game sees no input meanwhile), F2 moves it to a window of its own and back.
  * It shows the console log lines the level of the session sees (in DEV the program output, the commands of every
  * source) and runs what is typed as commands at that level.
@@ -236,7 +236,7 @@ public final class Console {
 
         WindowContext main = engine.contexts().getMainWindow();
         InputManager mainInputs = main.getInputManager();
-        boolean toggle = isTogglePressed(mainInputs);
+        boolean toggle = mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE);
 
         switch (mode) {
             case CLOSED:
@@ -261,14 +261,6 @@ public final class Console {
                     type(window, windowView.getPanel());
                 break;
         }
-    }
-
-    // The key of the player (²) opens the console at every level, the one of the developer (F1) in DEV only
-    private boolean isTogglePressed(InputManager inputs) {
-        if (inputs.inputPressed(EngineActions.TOGGLE_PLAYER_CONSOLE))
-            return true;
-
-        return commands.getSessionLevel() == ECommandLevel.DEV && inputs.inputPressed(EngineActions.TOGGLE_CONSOLE);
     }
 
     private void type(WindowContext target, ConsolePanel panel) {

@@ -40,7 +40,7 @@ public class ConsoleGenCom extends BaseCommand {
     protected void syntax(CommandNode root) {
         root.executes("Mode of the in-game console (closed, overlay, detached)",
                         context -> status(Views.engine().console()))
-                .then(drive("open", "The console over the main window (F1)", Console::open))
+                .then(drive("open", "The console over the main window (²)", Console::open))
                 .then(drive("close", "Close the console", Console::close))
                 .then(drive("toggle", "Open the console, or close it", Console::toggle))
                 .then(drive("detach", "The console in a window of its own (F2)", Console::detach))
