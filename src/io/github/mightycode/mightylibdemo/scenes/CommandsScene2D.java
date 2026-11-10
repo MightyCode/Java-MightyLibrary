@@ -82,7 +82,9 @@ public class CommandsScene2D extends Scene {
     }
 
     private String describe() {
-        return "Console (²): cheats on, then spawn 5 --color red (" + shapes.size() + " shapes), spawn --help | ESCAPE: menu";
+        return "Console (²): cheats on, then spawn 5 --color red\n"
+                + "spawn --help (" + shapes.size() + " shapes)\n"
+                + "ESCAPE: menu";
     }
 
     @Override
