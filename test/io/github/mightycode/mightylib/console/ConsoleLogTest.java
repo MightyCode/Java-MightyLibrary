@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
@@ -37,6 +38,30 @@ class ConsoleLogTest {
         assertEquals(List.of("l4", "l5"), texts(log.last(2)));
         assertEquals(List.of("l5"), texts(log.since(4)));
         assertEquals(List.of("l3", "l4", "l5"), texts(log.since(0)));
+    }
+
+    @Test
+    void lowerShowsWrittenLinesToLowerLevelsOnly() {
+        ConsoleLog log = new ConsoleLog(3);
+        List<ConsoleLog.Line> written = log.add(ConsoleLog.EType.COMMAND, "game", "a\nb", ECommandLevel.CHEAT);
+        log.add(ConsoleLog.EType.RESULT, "game", "c", ECommandLevel.CHEAT);
+        long user = log.version(ECommandLevel.USER);
+        long developer = log.version(ECommandLevel.DEV);
+
+        log.lower(written, ECommandLevel.USER);
+        assertEquals(List.of("a", "b"), texts(log.last(10, ECommandLevel.USER)));
+        assertNotEquals(user, log.version(ECommandLevel.USER));
+        // DEV already saw them: nothing to rebuild
+        assertEquals(developer, log.version(ECommandLevel.DEV));
+
+        // Never raised
+        log.lower(written, ECommandLevel.DEV);
+        assertEquals(ECommandLevel.USER, log.get(0).getLevel());
+
+        // A forgotten line is ignored
+        log.add(ConsoleLog.EType.OUT, null, "d");
+        log.lower(written, ECommandLevel.USER);
+        assertEquals(List.of("b"), texts(log.last(10, ECommandLevel.USER)));
     }
 
     @Test

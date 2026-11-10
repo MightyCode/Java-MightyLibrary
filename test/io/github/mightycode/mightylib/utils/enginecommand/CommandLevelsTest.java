@@ -294,25 +294,60 @@ class CommandLevelsTest {
         assertEquals(List.of("Readable"), Arrays.asList(log.last(1, ECommandLevel.USER).get(0).getText()));
     }
 
-    // Regression: "cheats off" was logged at CHEAT (before) and its answer at USER (after): the player saw the answer
-    // without the command
+    // Regression: "cheats off" and its answer were logged at CHEAT, the level before the command: the player, back to
+    // USER, no longer saw the line that turned the cheats off
     @Test
-    void aCommandAndItsAnswerAreLoggedAtTheSameLevel() throws Exception {
+    void theCommandThatLowersTheLevelStaysSeenWithItsAnswer() throws Exception {
         ConsoleLog log = new ConsoleLog(20);
-        Commands commands = new Commands(ECommandLevel.CHEAT, ECommandLevel.CHEAT, true);
+        Commands commands = new Commands(ECommandLevel.CHEAT, ECommandLevel.USER, true);
         commands.addListener(new CommandEcho(log));
         ICommandSource console = ICommandSource.Named("game", commands::getSessionLevel);
+        TestCommands.add(commands, new LevelCommand("zzcheat", ECommandLevel.CHEAT));
 
-        run(commands, "cheats off", console);
         run(commands, "cheats on", console);
+        run(commands, "zzcheat public", console);
+        run(commands, "cheats off", console);
 
-        // Without the data (DEV): the command and its message, twice
-        List<ConsoleLog.Line> lines = log.last(10, ECommandLevel.CHEAT);
-        assertEquals(4, lines.size());
-        assertEquals(lines.get(0).getLevel(), lines.get(1).getLevel());
-        assertEquals(ECommandLevel.CHEAT, lines.get(1).getLevel());
-        assertEquals(lines.get(2).getLevel(), lines.get(3).getLevel());
-        assertEquals(ECommandLevel.USER, lines.get(3).getLevel());
+        // The cheat itself stays hidden from the player
+        List<String> player = new ArrayList<>();
+        for (ConsoleLog.Line line : log.last(10, ECommandLevel.USER))
+            player.add(line.getText());
+        assertEquals(List.of("cheats on", "Cheats on", "cheats off", "Cheats off"), player);
+
+        List<ConsoleLog.Line> cheater = log.last(10, ECommandLevel.CHEAT);
+        assertEquals(6, cheater.size());
+        assertEquals(ECommandLevel.CHEAT, cheater.get(2).getLevel());
+        assertEquals(ECommandLevel.CHEAT, cheater.get(3).getLevel());
+    }
+
+    // A command that raises the level of its source (cheats on) is told with the level it ran at
+    @Test
+    void listenersAreToldOfALoweredLevelOnly() throws Exception {
+        Commands commands = new Commands(ECommandLevel.CHEAT, ECommandLevel.USER, true);
+        ICommandSource console = ICommandSource.Named("game", commands::getSessionLevel);
+        List<String> seen = new ArrayList<>();
+        commands.addListener(new ICommandListener() {
+            @Override
+            public void executed(ICommandSource source, ECommandLevel level, String line) {
+                seen.add(line + ">" + level);
+            }
+
+            @Override
+            public void lowered(ICommandSource source, ECommandLevel level, String line) {
+                seen.add(line + "v" + level);
+            }
+
+            @Override
+            public void answered(ICommandSource source, ECommandLevel level, String line, CommandResult result) {
+                seen.add(line + "<" + level);
+            }
+        });
+
+        run(commands, "cheats on", console);
+        run(commands, "cheats off", console);
+
+        assertEquals(List.of("cheats on>USER", "cheats on<USER",
+                "cheats off>CHEAT", "cheats offvUSER", "cheats off<USER"), seen);
     }
 
     // Regression: the open console rebuilt its rows for every line of program output the player does not see
