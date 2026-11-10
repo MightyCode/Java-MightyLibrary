@@ -87,6 +87,12 @@ public final class ConsoleInput {
         boolean wasTab = listOnNextTab;
         listOnNextTab = false;
 
+        // Shortcuts follow the letter of the layout of the system, not the position of the key
+        if (key.isControl() && key.letter() != 0) {
+            handleShortcut(key, clipboard, requests);
+            return;
+        }
+
         switch (key.key()) {
             case GLFW_KEY_ENTER:
             case GLFW_KEY_KP_ENTER:
@@ -143,19 +149,27 @@ public final class ConsoleInput {
             case GLFW_KEY_TAB:
                 complete(wasTab);
                 break;
-            case GLFW_KEY_V:
-                if (key.isControl() && clipboard != null) {
+            default:
+                // Text comes from the typed text; other keys (², F2...) are actions read by the console
+                break;
+        }
+    }
+
+    // Ctrl + a key that has a letter in the layout of the system
+    private void handleShortcut(KeyEvent key, Supplier<String> clipboard, List<Request> requests) {
+        switch (key.letter()) {
+            case 'v':
+                if (clipboard != null) {
                     String pasted = clipboard.get();
                     if (pasted != null)
                         editor.insert(pasted);
                 }
                 break;
-            case GLFW_KEY_L:
-                if (key.isControl() && !key.isRepeat())
+            case 'l':
+                if (!key.isRepeat())
                     requests.add(new Request(ERequest.CLEAR, null, 0));
                 break;
             default:
-                // Text comes from the typed text; other keys (², F2...) are actions read by the console
                 break;
         }
     }

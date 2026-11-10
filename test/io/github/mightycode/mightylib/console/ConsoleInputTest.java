@@ -52,12 +52,23 @@ class ConsoleInputTest {
         input = new ConsoleInput(editor, commands::complete, printed::add);
     }
 
+    // A key without a letter in the layout (arrows, Enter...)
     private static KeyEvent key(int key) {
-        return new KeyEvent(key, 0, false);
+        return new KeyEvent(key, 0, 0, false, (char) 0);
     }
 
     private static KeyEvent control(int key) {
-        return new KeyEvent(key, GLFW_MOD_CONTROL, false);
+        return new KeyEvent(key, 0, GLFW_MOD_CONTROL, false, (char) 0);
+    }
+
+    // Ctrl + the key that has this letter in a QWERTY layout
+    private static KeyEvent control(char letter) {
+        return new KeyEvent(GLFW_KEY_A + (Character.toUpperCase(letter) - 'A'), 0, GLFW_MOD_CONTROL, false, letter);
+    }
+
+    // Ctrl + a key at a given position whose letter comes from the layout
+    private static KeyEvent control(int key, char letter) {
+        return new KeyEvent(key, 0, GLFW_MOD_CONTROL, false, letter);
     }
 
     private List<String> handle(String text, KeyEvent... keys) {
@@ -91,14 +102,28 @@ class ConsoleInputTest {
         handle("", key(GLFW_KEY_DOWN));
         assertEquals("x ", editor.getText());
 
-        handle("", control(GLFW_KEY_V));
+        handle("", control('v'));
         assertEquals("x pasted text", editor.getText());
+    }
+
+    @Test
+    void shortcutsFollowTheLetterOfTheLayoutNotThePosition() {
+        // AZERTY: the key at the position of Q gives 'a', the one of W gives 'z'; V and L do not move, but a
+        // layout may move them
+        handle("", control(GLFW_KEY_Q, 'v'));
+        assertEquals("pasted text", editor.getText());
+
+        assertEquals(List.of("CLEAR"), handle("", control(GLFW_KEY_SEMICOLON, 'l')));
+        // The position of V with another letter is not a paste, a key without a letter is no shortcut
+        editor.setText("");
+        assertEquals(List.of(), handle("", control(GLFW_KEY_V, 'q'), control(GLFW_KEY_L)));
+        assertEquals("", editor.getText());
     }
 
     @Test
     void escapeClearScrollAreRequests() {
         assertEquals(List.of("CLOSE"), handle("", key(GLFW_KEY_ESCAPE)));
-        assertEquals(List.of("CLEAR"), handle("", control(GLFW_KEY_L)));
+        assertEquals(List.of("CLEAR"), handle("", control('l')));
         assertEquals(List.of("SCROLL 10", "SCROLL -10"), handle("", key(GLFW_KEY_PAGE_UP), key(GLFW_KEY_PAGE_DOWN)));
         // F1, F2: actions of the console, not edits
         assertEquals(List.of(), handle("", key(GLFW_KEY_F1), key(GLFW_KEY_F2)));
