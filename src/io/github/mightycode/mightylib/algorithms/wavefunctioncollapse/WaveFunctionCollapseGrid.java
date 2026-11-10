@@ -46,7 +46,7 @@ public class WaveFunctionCollapseGrid {
     }
 
     private void init() {
-        Set<Integer> listOfTile = rule.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAl_POS);
+        Set<Integer> listOfTile = rule.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAL_POS);
         minimumPossibleTilePositions.clear();
         List<Vector2i> positions = new ArrayList<>();
 

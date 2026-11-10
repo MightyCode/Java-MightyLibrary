@@ -497,7 +497,7 @@ public class Scene3D extends Scene {
 
         ArrayList<Integer> tempIndices = new ArrayList<>();
         ArrayList<Float> tempPosition = new ArrayList<>();
-        ArrayList<Float> tempNormales = new ArrayList<>();
+        ArrayList<Float> tempNormals = new ArrayList<>();
 
         float x, y, z, xy;
         float nx, ny, nz;
@@ -530,9 +530,9 @@ public class Scene3D extends Scene {
                 ny = y * lengthInv;
                 nz = z * lengthInv;
 
-                tempNormales.add(nx);
-                tempNormales.add(ny);
-                tempNormales.add(nz);
+                tempNormals.add(nx);
+                tempNormals.add(ny);
+                tempNormals.add(nz);
 
             }
         }
@@ -557,7 +557,7 @@ public class Scene3D extends Scene {
         }
 
         float[] position = new float[tempPosition.size()];
-        float[] normals = new float[tempNormales.size()];
+        float[] normals = new float[tempNormals.size()];
 
         int i = 0;
 
@@ -567,7 +567,7 @@ public class Scene3D extends Scene {
 
         i = 0;
 
-        for (Float f : tempNormales) {
+        for (Float f : tempNormals) {
             normals[i++] = (f != null ? f : Float.NaN); // Or whatever default you want.
         }
 
