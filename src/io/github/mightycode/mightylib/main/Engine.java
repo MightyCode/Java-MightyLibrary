@@ -227,9 +227,14 @@ public final class Engine implements IView {
 
         // Before the scenes and the game: they add their commands to it. Without access, the player has no console:
         // only the game (api) and, in debug mode, the standard input and the debug server send commands.
+        // A maximum of null closes the access for good: no console, the launch option is ignored
         ECommandLevel access = config.getCommandAccess();
-        commands = new Commands(config.getMaxCommandAccess(), access == null ? ECommandLevel.USER : access,
-                config.isCheatCommand());
+        ECommandLevel maxAccess = config.getMaxCommandAccess();
+        if (maxAccess == null && System.getProperty(EngineConfig.COMMAND_ACCESS_PROPERTY) != null)
+            System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
+
+        commands = new Commands(maxAccess == null ? ECommandLevel.USER : maxAccess,
+                access == null ? ECommandLevel.USER : access, maxAccess != null && config.isCheatCommand());
         if (consoleLog != null)
             commands.addListener(new CommandEcho(consoleLog));
 

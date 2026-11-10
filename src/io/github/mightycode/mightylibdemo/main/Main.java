@@ -25,7 +25,7 @@ public class Main {
 
     // Test of the commands of a released game: RELEASE mode (no debug server), player access USER, cheats allowed
     private static final String RELEASE_PROPERTY = "demo.release";
-    // Maximum access of the build (user, cheat, dev): DEV in debug mode by default
+    // Maximum access of the build (none, user, cheat, dev): DEV in debug mode by default; none: no console at all
     private static final String MAX_COMMAND_ACCESS_PROPERTY = "demo.commands.max";
 
     public static EngineConfig createConfig() {
@@ -39,7 +39,7 @@ public class Main {
 
         String max = System.getProperty(MAX_COMMAND_ACCESS_PROPERTY);
         if (max != null)
-            config.setMaxCommandAccess(ECommandLevel.Parse(max));
+            config.setMaxCommandAccess(max.trim().equalsIgnoreCase("none") ? null : ECommandLevel.Parse(max));
 
         return config;
     }

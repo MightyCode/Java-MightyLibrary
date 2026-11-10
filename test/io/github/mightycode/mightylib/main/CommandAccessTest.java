@@ -38,6 +38,23 @@ class CommandAccessTest {
         assertFalse(config.isConsoleEnabled());
     }
 
+    // Regression: -Dmightylib.commands.access=user opened a console in a game that wanted none
+    @Test
+    void noMaximumClosesTheAccessWhateverTheLaunchOption() {
+        EngineConfig config = new EngineConfig().setMode(EEngineMode.RELEASE)
+                .setCommandAccess(ECommandLevel.USER)
+                .setMaxCommandAccess(null);
+        assertNull(config.getMaxCommandAccess());
+        assertNull(config.getCommandAccess());
+
+        System.setProperty(EngineConfig.COMMAND_ACCESS_PROPERTY, "user");
+        assertNull(config.getCommandAccess());
+        assertFalse(config.isConsoleEnabled());
+
+        // Also in debug mode
+        assertNull(config.setMode(EEngineMode.DEBUG).getCommandAccess());
+    }
+
     @Test
     void launchOptionChangesTheAccessWithinTheMaximum() {
         EngineConfig config = new EngineConfig().setMode(EEngineMode.RELEASE).setCommandAccess(ECommandLevel.USER);

@@ -51,7 +51,8 @@ public class EngineConfig {
     // Commands of the player: unset (null) gives DEV in debug mode, none in release
     private boolean commandAccessSet;
     private ECommandLevel commandAccess;
-    // Null: DEV in debug mode, USER in release
+    // Unset: DEV in debug mode, USER in release; set to null: no access at all
+    private boolean maxCommandAccessSet;
     private ECommandLevel maxCommandAccess;
     private boolean cheatCommand;
     private String consoleFont = "bahnschrift";
@@ -209,12 +210,10 @@ public class EngineConfig {
     /**
      * Highest level of the build: the session never goes above it (Commands.setSessionLevel). By default DEV in debug
      * mode, USER in release: a game raises it to CHEAT for cheats, to DEV for a developer mode; a competitive game
-     * keeps USER.
+     * keeps USER. Null: no access at all, whatever the access and the launch option (no console in the game).
      */
     public EngineConfig setMaxCommandAccess(ECommandLevel level) {
-        if (level == null)
-            throw new IllegalArgumentException("The maximum command access is a level");
-
+        this.maxCommandAccessSet = true;
         this.maxCommandAccess = level;
         return this;
     }
@@ -358,8 +357,9 @@ public class EngineConfig {
     }
     public boolean isOpenGLErrorCheck() { return openGLErrorCheck; }
     public int getDebugServerPort() { return debugServerPort; }
+    // Null: no access at all (setMaxCommandAccess(null)), the launch option is ignored
     public ECommandLevel getMaxCommandAccess() {
-        if (maxCommandAccess != null)
+        if (maxCommandAccessSet)
             return maxCommandAccess;
 
         return mode == EEngineMode.DEBUG ? ECommandLevel.DEV : ECommandLevel.USER;
@@ -367,6 +367,9 @@ public class EngineConfig {
 
     // Level of the player at the start, bounded by the maximum; null: no access (no console)
     public ECommandLevel getCommandAccess() {
+        if (getMaxCommandAccess() == null)
+            return null;
+
         ECommandLevel access;
         String property = System.getProperty(COMMAND_ACCESS_PROPERTY);
         if (property != null && property.trim().equalsIgnoreCase("none")) {
