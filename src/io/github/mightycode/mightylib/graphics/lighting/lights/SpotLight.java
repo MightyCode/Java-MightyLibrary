@@ -1,6 +1,6 @@
-package io.github.mightycode.mightylib.graphics.lightning.lights;
+package io.github.mightycode.mightylib.graphics.lighting.lights;
 
-import io.github.mightycode.mightylib.graphics.lightning.materials.BasicMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;

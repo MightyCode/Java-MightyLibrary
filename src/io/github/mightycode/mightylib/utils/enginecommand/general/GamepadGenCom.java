@@ -39,7 +39,7 @@ public class GamepadGenCom extends BaseCommand {
 
     // The id of a gamepad, completed from the connected ones
     private static ArgumentType<Integer> gamepadId() {
-        return new ArgumentType<Integer>() {
+        return new ArgumentType<>() {
             @Override
             public Integer parse(String word, CommandContext context) {
                 try {

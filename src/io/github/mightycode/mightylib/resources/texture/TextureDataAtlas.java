@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.resources.DataType;
-import io.github.mightycode.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
 import java.awt.image.BufferedImage;

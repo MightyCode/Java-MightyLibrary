@@ -1,11 +1,9 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.resources.sound.SoundData;
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;

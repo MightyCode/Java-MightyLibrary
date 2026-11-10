@@ -58,11 +58,10 @@ public class Elastic {
             return b + c;
 
         double p = d * 0.3;
-        double a = c;
         double s = p / 4;
 
         return -(float)(
-                a
+                c
                 * Math.pow(2, 10 * (t -= 1))
                 * Math.sin((t * d - s)
                 * (2 * Math.PI) / p)) + b;
@@ -105,10 +104,9 @@ public class Elastic {
             return b + c;
 
         double p = d * 0.3;
-        double a = c;
         double s = p / 4;
 
-        return (float)(a
+        return (float)(c
                 * Math.pow(2, -10 * t)
                 * Math.sin((t * d - s)
                 * (2 * Math.PI) / p) + c + b);
@@ -156,16 +154,15 @@ public class Elastic {
             return b + c;
 
         double p = d * (0.3 * 1.5);
-        double a = c;
         double s = p / 4;
 
         if (t < 1)
-            return (float)(-0.5 * (a
+            return (float)(-0.5 * (c
                     * Math.pow(2, 10 * (t -= 1))
                     * Math.sin((t * d - s)
                     * (2 * Math.PI) / p)) + b);
 
-        return (float)(a
+        return (float)(c
                 * Math.pow(2, -10 * (t -= 1))
                 * Math.sin((t * d - s)
                 * (2 * Math.PI) / p)

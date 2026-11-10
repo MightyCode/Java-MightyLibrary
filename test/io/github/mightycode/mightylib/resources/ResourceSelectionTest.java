@@ -116,7 +116,7 @@ class ResourceSelectionTest {
 
     @Test
     void theSyntaxRejectsWhatIsWrong() {
-        assertThrows(CommandException.class, () -> select());
+        assertThrows(CommandException.class, this::select);
         assertThrows(CommandException.class, () -> select("Nope"));
         assertThrows(CommandException.class, () -> select("all", "--regex", "(["));
     }

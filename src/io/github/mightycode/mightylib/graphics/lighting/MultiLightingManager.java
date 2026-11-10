@@ -1,14 +1,14 @@
-package io.github.mightycode.mightylib.graphics.lightning;
+package io.github.mightycode.mightylib.graphics.lighting;
 
-import io.github.mightycode.mightylib.graphics.lightning.lights.DirectionalLight;
-import io.github.mightycode.mightylib.graphics.lightning.lights.PointLight;
-import io.github.mightycode.mightylib.graphics.lightning.lights.SpotLight;
+import io.github.mightycode.mightylib.graphics.lighting.lights.DirectionalLight;
+import io.github.mightycode.mightylib.graphics.lighting.lights.PointLight;
+import io.github.mightycode.mightylib.graphics.lighting.lights.SpotLight;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultiLightningManager {
+public class MultiLightingManager {
     private final List<Renderer> renderers;
 
     private DirectionalLight directionalLight;
@@ -21,7 +21,7 @@ public class MultiLightningManager {
 
     private final String spotStructName;
 
-    public MultiLightningManager(String directionalStructName, String pointStructName, String spotStructName){
+    public MultiLightingManager(String directionalStructName, String pointStructName, String spotStructName){
         renderers = new ArrayList<>();
         pointLights = new ArrayList<>();
 
@@ -30,13 +30,13 @@ public class MultiLightningManager {
         this.spotStructName = spotStructName;
     }
 
-    public MultiLightningManager setDirectionalLight(DirectionalLight directionalLight){
+    public MultiLightingManager setDirectionalLight(DirectionalLight directionalLight){
         this.directionalLight = directionalLight;
 
         return this;
     }
 
-    public MultiLightningManager setSpotLight(SpotLight spotLight){
+    public MultiLightingManager setSpotLight(SpotLight spotLight){
         this.spotLight = spotLight;
 
         return this;

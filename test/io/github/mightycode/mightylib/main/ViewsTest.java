@@ -84,7 +84,7 @@ class ViewsTest {
             worker.join();
         }
 
-        assertTrue(seen.get() instanceof IllegalStateException);
+        assertInstanceOf(IllegalStateException.class, seen.get());
     }
 
     @Test
@@ -115,6 +115,6 @@ class ViewsTest {
         });
 
         MainThreadTestAccess.processAll();
-        assertTrue(seenByTask.get() instanceof IllegalStateException);
+        assertInstanceOf(IllegalStateException.class, seenByTask.get());
     }
 }

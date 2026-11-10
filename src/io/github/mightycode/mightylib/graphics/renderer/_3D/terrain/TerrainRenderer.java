@@ -15,7 +15,7 @@ public class TerrainRenderer extends Renderer {
     private final ModelMesh mesh;
 
     public TerrainRenderer(ModelMesh mesh, boolean willUpdateFrequently) {
-        super("multiColoredLightning3D", true);
+        super("multiColoredLighting3D", true);
         this.mesh = mesh;
         this.willUpdateFrequently = willUpdateFrequently;
     }

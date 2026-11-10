@@ -67,9 +67,6 @@ public final class ClientThread extends CommunicationThread {
 
                     String result = client.readMessage();
                     if (result != null) {
-                        /*if (result.contains("Connection lost")){
-                            this.running = false;
-                        }*/
                         timeOutCounter = GameTime.currentTime();
 
                         if (result.contains("|")) {

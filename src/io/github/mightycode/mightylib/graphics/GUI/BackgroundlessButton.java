@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.main.WindowContext;
 import org.joml.Vector2f;
 
+import java.util.Objects;
+
 public class BackgroundlessButton extends GUI {
     private final WindowContext context;
     public final Text Text, OverlapsText;
@@ -16,10 +18,7 @@ public class BackgroundlessButton extends GUI {
         super();
         this.context = context;
 
-        if (text == null)
-            this.Text = new Text();
-        else
-            this.Text = text;
+        this.Text = Objects.requireNonNullElseGet(text, Text::new);
 
         if (text != null) {
             this.OverlapsText = text.createCopy();

@@ -14,7 +14,6 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -522,6 +521,21 @@ class CommandsTest {
         partial = CommandLine.SplitPartial("");
         assertArrayEquals(new String[]{""}, partial.getWords());
         assertEquals(0, partial.getLastStart());
+    }
+
+    @Test
+    void splitPartialStartsAWordAfterAClosedQuoteOrAnEmptyQuote() {
+        CommandLine.Partial partial = CommandLine.SplitPartial("say \"a b\" c");
+        assertArrayEquals(new String[]{"say", "a b", "c"}, partial.getWords());
+        assertEquals(10, partial.getLastStart());
+
+        partial = CommandLine.SplitPartial("say \"a b\" ");
+        assertArrayEquals(new String[]{"say", "a b", ""}, partial.getWords());
+        assertEquals(10, partial.getLastStart());
+
+        partial = CommandLine.SplitPartial("say \"\"");
+        assertArrayEquals(new String[]{"say", ""}, partial.getWords());
+        assertEquals(4, partial.getLastStart());
     }
 
     @Test

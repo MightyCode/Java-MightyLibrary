@@ -1,14 +1,14 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
-import io.github.mightycode.mightylib.graphics.lightning.MultiLightningManager;
-import io.github.mightycode.mightylib.graphics.lightning.lights.DirectionalLight;
-import io.github.mightycode.mightylib.graphics.lightning.lights.LightDecrease;
-import io.github.mightycode.mightylib.graphics.lightning.lights.SpotLight;
+import io.github.mightycode.mightylib.graphics.lighting.MultiLightingManager;
+import io.github.mightycode.mightylib.graphics.lighting.lights.DirectionalLight;
+import io.github.mightycode.mightylib.graphics.lighting.lights.LightDecrease;
+import io.github.mightycode.mightylib.graphics.lighting.lights.SpotLight;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
-import io.github.mightycode.mightylib.graphics.lightning.materials.BasicMaterial;
-import io.github.mightycode.mightylib.graphics.lightning.lights.PointLight;
-import io.github.mightycode.mightylib.graphics.lightning.materials.Material;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.lights.PointLight;
+import io.github.mightycode.mightylib.graphics.lighting.materials.Material;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -35,7 +35,7 @@ public class Scene3DBis extends Scene {
 
     private CubeRenderer lightPoint;
 
-    private MultiLightningManager lightManager;
+    private MultiLightingManager lightManager;
 
     private CubeRenderer[] lightPoints;
 
@@ -162,7 +162,7 @@ public class Scene3DBis extends Scene {
                 new Vector3f( 0.0f,  0.0f, -3.0f)
         };
 
-        lightManager = new MultiLightningManager(
+        lightManager = new MultiLightingManager(
                 "dirLight", "pointLights", "spotLight"
         );
 

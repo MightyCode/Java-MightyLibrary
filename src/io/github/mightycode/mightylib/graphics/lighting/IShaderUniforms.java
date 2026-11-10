@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.lightning;
+package io.github.mightycode.mightylib.graphics.lighting;
 
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 

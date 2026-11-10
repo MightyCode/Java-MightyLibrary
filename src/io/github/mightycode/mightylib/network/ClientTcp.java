@@ -74,7 +74,7 @@ public class ClientTcp {
             return null;
         }
 
-        InputStream stream = null;
+        InputStream stream;
         String message = null;
 
         try {

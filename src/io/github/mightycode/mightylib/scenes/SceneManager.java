@@ -8,7 +8,6 @@ import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.Engine;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 

@@ -47,9 +47,6 @@ public class CubeRenderer extends Renderer {
         for (EDirection3D direction3D : EDirection3D.values())
             faces.put(direction3D, new RectangularFace());
 
-        /*faces.get(EDirection3D.Forward).Rotation = ERotation.TwoPi;
-        faces.get(EDirection3D.Forward).Flip = EFlip.Horizontal;*/
-
         float[] vertices = {
                 // Positive X face
                 1, 1, 1,

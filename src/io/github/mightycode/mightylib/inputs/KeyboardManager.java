@@ -256,7 +256,7 @@ public class KeyboardManager {
             wasMain.add(mainKey);
         }
 
-        keyEvents = blocked ? Collections.<KeyEvent>emptyList() : Collections.unmodifiableList(events);
+        keyEvents = blocked ? Collections.emptyList() : Collections.unmodifiableList(events);
 
         if (state[GLFW_KEY_CAPS_LOCK] && !oldState[GLFW_KEY_CAPS_LOCK])
             capsLockActivated = !capsLockActivated;

@@ -10,7 +10,6 @@ import io.github.mightycode.mightylib.resources.map.TileMap;
 import io.github.mightycode.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.inputs.InputManager;
@@ -107,7 +106,7 @@ public class Scene2D extends Scene {
 
         slimeTextureTweening.setTweeningValues(ETweeningType.Back, ETweeningBehaviour.InOut)
                 .initTwoValue(1, new Vector2f(400, 400), new Vector2f(400 + 150, 400 - 150))
-                .setTweeningOption(ETweeningOption.LoopReversed).setAdditionnalArguments(3f,  null);
+                .setTweeningOption(ETweeningOption.LoopReversed).setAdditionalArguments(3f,  null);
 
 
         text = new Text();
@@ -200,8 +199,6 @@ public class Scene2D extends Scene {
         polygonRenderer.setMainTextureChannel("error");
         polygonRenderer.setSizePix(100, 100);
         polygonRenderer.setPosition(new Vector2f(1500, 300));
-        /*polygonRenderer.getShape().setDrawMode(EDrawMode.LineLoop);
-        glLineWidth(10f);*/
         polygonRenderer.setReferenceVertex(indexVertexReference);
     }
 

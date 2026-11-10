@@ -127,8 +127,6 @@ public class WaveFunctionCollapseGrid {
                     if (oldSize != newSize) {
                         // For all element in map with old size, remove the position if vector x and y match
                         List<Vector2i> positions = minimumPossibleTilePositions.get(oldSize);
-                        /*System.out.println("New Position " + newPos.x + ", "
-                                + newPos.y + " : " + oldSize + " -> " + newSize);*/
 
                         for (int i = 0; i < positions.size(); ++i) {
                             Vector2i pos = positions.get(i);
@@ -204,8 +202,6 @@ public class WaveFunctionCollapseGrid {
 
     // Do n step of wave function algorithm
     public void waveFunctionAlgorithmStep(int n) {
-        //printMatricesOfAvailableSize();
-        //printMinimumPossibleTilePositions();
         Vector2i currentPosition = getNextTileToCompute();
         if (currentPosition == null) {
             finished = true;

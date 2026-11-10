@@ -2,8 +2,6 @@ package io.github.mightycode.mightylib.main.monitors;
 
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,7 +23,7 @@ public class MonitorInfo {
 
     MonitorInfo(int index, long handle, String name, boolean primary, int x, int y, int width, int height,
                 int refreshRate, int workX, int workY, int workWidth, int workHeight, List<VideoMode> videoModes) {
-        this.videoModes = Collections.unmodifiableList(new ArrayList<>(videoModes));
+        this.videoModes = List.copyOf(videoModes);
         this.index = index;
         this.handle = handle;
         this.name = name;

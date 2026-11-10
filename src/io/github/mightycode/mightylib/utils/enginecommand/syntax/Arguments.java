@@ -192,7 +192,7 @@ public final class Arguments {
      * (as user "stats fps" gives stats fps).
      */
     public static ArgumentType<String> commandLine() {
-        return new ArgumentType<String>() {
+        return new ArgumentType<>() {
             @Override
             public String parse(String word, CommandContext context) {
                 return word;
@@ -284,7 +284,7 @@ public final class Arguments {
 
     // A file or a folder, relative to the folder ("" for the working directory) or absolute, completed from the disk
     public static ArgumentType<Path> path(String folder) {
-        return new ArgumentType<Path>() {
+        return new ArgumentType<>() {
             @Override
             public Path parse(String word, CommandContext context) {
                 if (word.isEmpty())

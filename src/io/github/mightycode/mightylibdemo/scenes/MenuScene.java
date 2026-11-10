@@ -9,7 +9,6 @@ import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.scenes.DefaultLoadingScene;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
-import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;

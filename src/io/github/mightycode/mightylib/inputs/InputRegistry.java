@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.inputs;
 import io.github.mightycode.mightylib.registry.Identifier;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,13 +76,13 @@ public final class InputRegistry {
     // Sorted by identifier
     public static synchronized List<InputAction> getActions() {
         List<InputAction> actions = new ArrayList<>(ACTIONS.values());
-        actions.sort((a, b) -> a.identifier().compareTo(b.identifier()));
+        actions.sort(Comparator.comparing(InputAction::identifier));
         return actions;
     }
 
     public static synchronized List<InputAxis> getAxes() {
         List<InputAxis> axes = new ArrayList<>(AXES.values());
-        axes.sort((a, b) -> a.identifier().compareTo(b.identifier()));
+        axes.sort(Comparator.comparing(InputAxis::identifier));
         return axes;
     }
 
@@ -106,7 +107,7 @@ public final class InputRegistry {
                 result.add(element);
         }
 
-        result.sort((a, b) -> identifierOf.apply(a).compareTo(identifierOf.apply(b)));
+        result.sort(Comparator.comparing(identifierOf));
         return result;
     }
 }

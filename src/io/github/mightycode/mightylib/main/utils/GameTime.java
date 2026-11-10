@@ -64,10 +64,10 @@ public class GameTime {
             gametime = new GameTime();
         }
 
-        return gametime.getCurrentTIme();
+        return gametime.getCurrentTime();
     }
 
-    public float getCurrentTIme(){
+    public float getCurrentTime(){
         return currentTime / NANO_TO_SEC;
     }
 

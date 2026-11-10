@@ -35,7 +35,6 @@ public final class MainLoop {
      *
      * @return ListError.NO_ERROR, a ListError start failure, or the status given by the scene
      */
-    @SuppressWarnings("BusyWait")
     public static int run(EngineConfig config) {
         Engine engine = new Engine(config);
 
