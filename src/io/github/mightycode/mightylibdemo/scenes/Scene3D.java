@@ -1,13 +1,13 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
-import io.github.mightycode.mightylib.graphics.lightning.MultiLightningManager;
-import io.github.mightycode.mightylib.graphics.lightning.lights.DirectionalLight;
-import io.github.mightycode.mightylib.graphics.lightning.lights.LightDecrease;
-import io.github.mightycode.mightylib.graphics.lightning.lights.PointLight;
-import io.github.mightycode.mightylib.graphics.lightning.lights.SpotLight;
+import io.github.mightycode.mightylib.graphics.lighting.MultiLightingManager;
+import io.github.mightycode.mightylib.graphics.lighting.lights.DirectionalLight;
+import io.github.mightycode.mightylib.graphics.lighting.lights.LightDecrease;
+import io.github.mightycode.mightylib.graphics.lighting.lights.PointLight;
+import io.github.mightycode.mightylib.graphics.lighting.lights.SpotLight;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
-import io.github.mightycode.mightylib.graphics.lightning.materials.BasicMaterial;
-import io.github.mightycode.mightylib.graphics.lightning.materials.Material;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.materials.Material;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapColorFunctions;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
@@ -46,7 +46,7 @@ public class Scene3D extends Scene {
     // Model of the demonstration package (not in the repository), behind the stand
     private static final String BACKPACK_MODEL = "backpack";
     private ModelRenderer backpack;
-    private MultiLightningManager backpackLights;
+    private MultiLightingManager backpackLights;
     private CubeRenderer[] backpackLightCubes;
     private Text missingBackpackLabel;
 
@@ -54,7 +54,7 @@ public class Scene3D extends Scene {
     private final int faceSize = lineSize * 6;
     private final int boxSize = faceSize * 6;
 
-    private CubeRenderer light, cubeColorLightning, cubeColorMaterial;
+    private CubeRenderer light, cubeColorLighting, cubeColorMaterial;
 
     private CubeRenderer cubeTexturedMaterial;
 
@@ -103,10 +103,10 @@ public class Scene3D extends Scene {
         /// RENDERERS ///
 
         // Cube
-        cubeColorLightning = new CubeRenderer("colorLightning3D");
-        cubeColorLightning.setPosition(new Vector3f(-1f, 3.0f, -4f));
-        cubeColorLightning.setColorMode(ColorList.Red());
-        cubeColorLightning.setNormal();
+        cubeColorLighting = new CubeRenderer("colorLighting3D");
+        cubeColorLighting.setPosition(new Vector3f(-1f, 3.0f, -4f));
+        cubeColorLighting.setColorMode(ColorList.Red());
+        cubeColorLighting.setNormal();
 
         light = new CubeRenderer("colorShape3D");
         light.setPosition(new Vector3f(-1f, 10.0f, -4f));
@@ -118,7 +118,7 @@ public class Scene3D extends Scene {
                 new Vector3f(0.2f), new Vector3f(0.5f), new Vector3f(1)
         );
 
-        cubeColorLightning.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+        cubeColorLighting.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
                 .addShaderValue("worldColor", Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f))
                 .addShaderValue("lightPos", Vector3f.class, light.position())
                 .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
@@ -131,12 +131,12 @@ public class Scene3D extends Scene {
         // Displacement texture for cubes/crate
         sBlock.addTextureChannel("dispMap1", "displacementMap", 1);
 
-        sphere = new Renderer("colorLightning3D", true);
+        sphere = new Renderer("colorLighting3D", true);
         computeSphere(sphere);
         sphere.setScale(new Vector3f(10, 10, 10));
         sphere.setPosition(new Vector3f(20, 10, 10));
 
-        cubeColorLightning.copyShaderValuesTo(sphere, false);
+        cubeColorLighting.copyShaderValuesTo(sphere, false);
 
         cubeColorMaterial = new CubeRenderer("colorMaterial3D");
         cubeColorMaterial.setPosition(new Vector3f(-1f, 3.0f, -8f));
@@ -236,7 +236,7 @@ public class Scene3D extends Scene {
 
         LightDecrease lightDecrease = new LightDecrease(1.0f, 0.09f, 0.032f);
 
-        backpackLights = new MultiLightningManager("dirLight", "pointLights", "spotLight");
+        backpackLights = new MultiLightingManager("dirLight", "pointLights", "spotLight");
         backpackLights.setDirectionalLight(new DirectionalLight(new BasicMaterial(
                 new Vector3f(0.05f), new Vector3f(0.3f), new Vector3f(0.3f)))
                 .setDirection(new Vector3f(-0.2f, -1.0f, -0.3f)));
@@ -301,8 +301,8 @@ public class Scene3D extends Scene {
 
         light.setX(rotationTweening.value() * 2);
 
-        cubeColorLightning.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
-        cubeColorLightning.updateShaderValue("lightPos", light.position());
+        cubeColorLighting.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeColorLighting.updateShaderValue("lightPos", light.position());
 
         cubeColorMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
         cubeColorMaterial.updateShaderValue("light.vector", RendererUtils.ToLightPosition(light.position()));
@@ -327,7 +327,7 @@ public class Scene3D extends Scene {
         // Better to draw the world here
         light.display();
 
-        cubeColorLightning.display();
+        cubeColorLighting.display();
         cubeColorMaterial.display();
 
         heightMapRenderer.display();
@@ -360,7 +360,7 @@ public class Scene3D extends Scene {
     public void unload(){
         super.unload();
         sBlock.unload();
-        cubeColorLightning.unload();
+        cubeColorLighting.unload();
         cubeColorMaterial.unload();
         cubeTexturedMaterial.unload();
         light.unload();

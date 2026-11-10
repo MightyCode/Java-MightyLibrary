@@ -7,7 +7,7 @@ src/io/github/mightycode/
     main/          # MainLoop (la boucle), Engine (services partagés, démarrage, arrêt), Context (scène + fenêtres), WindowContext (une fenêtre + ses entrées), WindowView, WindowConfig, DisplaySettings/EWindowMode (affichage d'une fenêtre), IView/Views (vue courante), Window, ContextManager, MainThread, Workers, GameTime
     scenes/        # Scene, SceneManager, SceneManagerInterface, TemplateSceneLoading, caméras 2D/3D
     resources/     # Resources (pipeline, une instance par Engine), DataType, ResourceLoader, batchs
-    graphics/      # GLResources, GLElement, renderer/ (Shape, Renderer, _2D, _3D), shader/, text/, GUI/, lightning/
+    graphics/      # GLResources, GLElement, renderer/ (Shape, Renderer, _2D, _3D), shader/, text/, GUI/, lighting/
     console/       # Console (²/F2), ConsoleLog (journal), LogCapture (stdout/stderr), CommandLineEditor, ConsoleInput, rendu (ConsolePanel, ConsoleWindowView)
     inputs/        # InputRegistry (actions et axes), InputManager (liaisons), KeyboardManager, MouseManager, dispositions clavier
     registry/      # Identifier (namespace:path)
