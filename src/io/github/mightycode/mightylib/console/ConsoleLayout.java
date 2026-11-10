@@ -391,6 +391,42 @@ final class ConsoleLayout {
         anchor = atEnd ? null : bottom;
     }
 
+    // ---- Geometry of the panel, in pixels from its top left (set by the panel at each display) ----
+
+    private float textLeft;
+    private float rowsTop;
+    private float inputTextLeft;
+    private int inputScroll;
+
+    /**
+     * @param textLeft      left of the text of the rows
+     * @param rowsTop       top of the first slot (the top row)
+     * @param inputTextLeft left of the first character of the command line shown (after the prompt)
+     * @param inputScroll   first character of the command line shown (it scrolls around the cursor)
+     */
+    void setPanelGeometry(float textLeft, float rowsTop, float inputTextLeft, int inputScroll) {
+        this.textLeft = textLeft;
+        this.rowsTop = rowsTop;
+        this.inputTextLeft = inputTextLeft;
+        this.inputScroll = inputScroll;
+    }
+
+    float rowsTop() { return rowsTop; }
+
+    // Below the last slot: the command line
+    float rowsBottom() { return rowsTop + visibleRows * rowHeight; }
+
+    // The place in the log under a point of the panel (the nearest one outside the rows), null if nothing is shown
+    LogPosition logPositionAt(float x, float y) {
+        return positionAt(x - textLeft, y - rowsTop);
+    }
+
+    // Index of the command line under x, the nearest one (not before the first character shown)
+    int inputIndexAt(CharSequence text, float x) {
+        int first = Math.max(0, Math.min(inputScroll, text.length()));
+        return first + indexAt(text.subSequence(first, text.length()), x - inputTextLeft);
+    }
+
     // ---- Conversions ----
 
     /**

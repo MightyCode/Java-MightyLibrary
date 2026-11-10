@@ -58,6 +58,8 @@ final class ConsolePanel {
     private final ConsoleLayout layout;
     // First character of the command line shown, when it is wider than the panel
     private int inputScroll;
+    private float originX;
+    private float originY;
 
     // Level of the player (only the lines it sees are shown) and filter of the console
     private final Console console;
@@ -165,7 +167,17 @@ final class ConsolePanel {
             row.display();
 
         displayInput(x + PADDING, inputTop, width - 2 * PADDING, showCursor);
+
+        // Where the mouse points to, read by the next ticks
+        originX = x;
+        originY = y;
+        layout.setPanelGeometry(PADDING, rowTop(inputTop, 0) - y, PADDING + inputText.measureWidth(PROMPT), inputScroll);
     }
+
+    // Top left of the panel in the window, in pixels (y downward), as last drawn
+    float originX() { return originX; }
+
+    float originY() { return originY; }
 
     // Font size giving rows of ROW_HEIGHT pixels with the metrics of the font used now
     private void updateFontSize() {

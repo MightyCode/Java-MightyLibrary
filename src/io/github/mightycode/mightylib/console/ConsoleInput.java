@@ -205,6 +205,85 @@ public final class ConsoleInput {
         }
     }
 
+    // ---- Mouse ----
+
+    /** The left button of the mouse during a tick, in pixels from the top left of the panel. */
+    static final class MouseState {
+        final float x;
+        final float y;
+        final boolean pressed;
+        final boolean held;
+        final boolean released;
+        // 1, 2 or 3 on a press (ClickCounter), 0 otherwise
+        final int clicks;
+        final boolean shift;
+
+        MouseState(float x, float y, boolean pressed, boolean held, boolean released, int clicks, boolean shift) {
+            this.x = x;
+            this.y = y;
+            this.pressed = pressed;
+            this.held = held;
+            this.released = released;
+            this.clicks = clicks;
+            this.shift = shift;
+        }
+    }
+
+    private enum EDrag {
+        NONE, INPUT
+    }
+
+    // What the button held since its press selects
+    private EDrag drag = EDrag.NONE;
+
+    /**
+     * Apply the mouse of one tick: a press places the cursor (Shift: extends the selection), dragging selects, a
+     * double click selects a word, a triple click the line.
+     * @param layout where the rows and the command line are in the panel
+     */
+    List<Request> handleMouse(MouseState mouse, ConsoleLayout layout) {
+        List<Request> requests = new ArrayList<>();
+
+        if (mouse.pressed && mouse.y >= layout.rowsBottom()) {
+            listOnNextTab = false;
+            pressInput(mouse, layout);
+        } else if (mouse.held && drag == EDrag.INPUT) {
+            editor.moveTo(layout.inputIndexAt(editor.getText(), mouse.x), true);
+        }
+
+        if (mouse.released || !mouse.held)
+            drag = EDrag.NONE;
+
+        return requests;
+    }
+
+    private void pressInput(MouseState mouse, ConsoleLayout layout) {
+        String text = editor.getText();
+        int index = layout.inputIndexAt(text, mouse.x);
+        drag = EDrag.NONE;
+
+        switch (mouse.clicks) {
+            case 2: {
+                // The word under the cursor (the separators of Ctrl+Left/Right)
+                int start = index;
+                while (start > 0 && !CommandLineEditor.IsSeparator(text.charAt(start - 1)))
+                    --start;
+                int end = index;
+                while (end < text.length() && !CommandLineEditor.IsSeparator(text.charAt(end)))
+                    ++end;
+                editor.select(start, end);
+                break;
+            }
+            case 3:
+                editor.selectAll();
+                break;
+            default:
+                editor.moveTo(index, mouse.shift);
+                drag = EDrag.INPUT;
+                break;
+        }
+    }
+
     // A text of several lines runs a command per complete line, the last one stays in the command line
     private void paste(String pasted, List<Request> requests) {
         if (pasted == null)

@@ -14,6 +14,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.json.JSONObject;
 
@@ -22,6 +23,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
 
 /**
@@ -52,6 +56,7 @@ public final class Console {
     private final String fontName;
     private final CommandLineEditor editor;
     private final ConsoleInput input;
+    private final ClickCounter clickCounter = new ClickCounter();
 
     private EMode mode = EMode.CLOSED;
     // Types of log lines the console doesn't show (the log keeps them), shared by the overlay and the window
@@ -324,6 +329,9 @@ public final class Console {
         if (wheel != 0 && panel != null)
             panel.scroll(Math.round(wheel * WHEEL_ROWS));
 
+        if (panel != null)
+            requests.addAll(input.handleMouse(mouseState(target, panel), panel.getLayout()));
+
         for (ConsoleInput.Request request : requests) {
             switch (request.getType()) {
                 case SUBMIT:
@@ -352,6 +360,25 @@ public final class Console {
                     break;
             }
         }
+    }
+
+    // The left button of the window's mouse, in pixels from the top left of the panel
+    private ConsoleInput.MouseState mouseState(WindowContext target, ConsolePanel panel) {
+        MouseManager mouse = target.getMouseManager();
+        KeyboardManager keyboard = target.getKeyboardManager();
+        Vector2f position = mouse.getRawPos();
+        float x = position.x - panel.originX();
+        float y = position.y - panel.originY();
+        boolean pressed = mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
+        int clicks = pressed ? clickCounter.press(position.x, position.y, System.nanoTime()) : 0;
+        boolean shift = keyboard.getRawKeyState(GLFW_KEY_LEFT_SHIFT) || keyboard.getRawKeyState(GLFW_KEY_RIGHT_SHIFT);
+
+        // A press above the overlay (on the game) is not for the console
+        if (pressed && y < 0)
+            pressed = false;
+
+        return new ConsoleInput.MouseState(x, y, pressed, mouse.getRawButton(GLFW_MOUSE_BUTTON_LEFT),
+                mouse.rawButtonReleased(GLFW_MOUSE_BUTTON_LEFT), clicks, shift);
     }
 
     // The clipboard of the system, through the window the console is typed in

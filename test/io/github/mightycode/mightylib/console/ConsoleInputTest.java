@@ -193,6 +193,81 @@ class ConsoleInputTest {
         assertEquals(List.of("stats fps", "help"), editor.getHistory());
     }
 
+    // ---- Mouse: rows from y = 0 to 100, the command line below, its text from x = 20, characters 1 pixel wide ----
+
+    private static final float INPUT_Y = 110;
+
+    private static ConsoleLayout mouseLayout(ConsoleLog log) {
+        ConsoleLayout layout = new ConsoleLayout(log, c -> 1f);
+        layout.setGeometry(100, 5, 20);
+        layout.setViewer(ECommandLevel.DEV);
+        layout.setPanelGeometry(6, 0, 20, 0);
+        return layout;
+    }
+
+    private static ConsoleInput.MouseState press(float x, float y, int clicks, boolean shift) {
+        return new ConsoleInput.MouseState(x, y, true, true, false, clicks, shift);
+    }
+
+    private static ConsoleInput.MouseState hold(float x, float y) {
+        return new ConsoleInput.MouseState(x, y, false, true, false, 0, false);
+    }
+
+    private static ConsoleInput.MouseState release(float x, float y) {
+        return new ConsoleInput.MouseState(x, y, false, false, true, 0, false);
+    }
+
+    @Test
+    void aClickPlacesTheCursorAndDraggingSelects() {
+        ConsoleLayout layout = mouseLayout(new ConsoleLog(10));
+        handle("stats fps");
+
+        input.handleMouse(press(22.4f, INPUT_Y, 1, false), layout);
+        assertEquals(2, editor.getCursor());
+        assertFalse(editor.hasSelection());
+
+        input.handleMouse(hold(25, INPUT_Y), layout);
+        assertEquals("ats", editor.selectedText());
+        // Dragging out of the line: the nearest character
+        input.handleMouse(hold(500, 0), layout);
+        assertEquals("ats fps", editor.selectedText());
+        input.handleMouse(release(500, 0), layout);
+        // Released: moving changes nothing
+        input.handleMouse(new ConsoleInput.MouseState(20, INPUT_Y, false, false, false, 0, false), layout);
+        assertEquals("ats fps", editor.selectedText());
+
+        // Shift+click extends from the anchor
+        input.handleMouse(press(20, INPUT_Y, 1, true), layout);
+        assertEquals("st", editor.selectedText());
+        input.handleMouse(release(20, INPUT_Y), layout);
+        input.handleMouse(press(29, INPUT_Y, 1, false), layout);
+        assertFalse(editor.hasSelection());
+        assertEquals(9, editor.getCursor());
+    }
+
+    @Test
+    void doubleClickSelectsAWordTripleClickTheLine() {
+        ConsoleLayout layout = mouseLayout(new ConsoleLog(10));
+        handle("stats fps now");
+
+        input.handleMouse(press(27, INPUT_Y, 1, false), layout);
+        input.handleMouse(release(27, INPUT_Y), layout);
+        input.handleMouse(press(27, INPUT_Y, 2, false), layout);
+        assertEquals("fps", editor.selectedText());
+        // Dragging after a double click keeps the word
+        input.handleMouse(hold(35, INPUT_Y), layout);
+        assertEquals("fps", editor.selectedText());
+        input.handleMouse(release(27, INPUT_Y), layout);
+
+        input.handleMouse(press(27, INPUT_Y, 3, false), layout);
+        assertTrue(editor.isAllSelected());
+
+        // A press in the log does not touch the command line
+        editor.setText("abc");
+        input.handleMouse(press(10, 50, 1, false), layout);
+        assertEquals(3, editor.getCursor());
+    }
+
     @Test
     void escapeClearScrollAreRequests() {
         assertEquals(List.of("CLOSE"), handle("", key(GLFW_KEY_ESCAPE)));
