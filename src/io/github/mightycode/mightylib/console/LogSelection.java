@@ -80,13 +80,20 @@ final class LogSelection {
         return text.toString();
     }
 
+    // The last lines up to the end of the log
+    static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count) {
+        return LastLinesText(log, viewer, filter, count, Long.MAX_VALUE);
+    }
+
     /**
      * The last lines the viewer sees (and the filter shows), as copied like a selection: joined by line breaks.
      * Empty when there is no line. The command "console copy".
      * @param count lines to copy, 0 or less: every line kept
+     * @param upToId the newest line that may be copied (Long.MAX_VALUE: the end of the log)
      */
-    static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count) {
-        List<ConsoleLog.Line> lines = log.upTo(Long.MAX_VALUE, count > 0 ? count : Integer.MAX_VALUE, viewer, filter);
+    static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count,
+                                long upToId) {
+        List<ConsoleLog.Line> lines = log.upTo(upToId, count > 0 ? count : Integer.MAX_VALUE, viewer, filter);
         if (lines.isEmpty())
             return "";
 

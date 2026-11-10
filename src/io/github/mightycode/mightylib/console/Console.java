@@ -167,8 +167,13 @@ public final class Console {
      * @return the copied text, empty (clipboard unchanged) when there is no line
      */
     public String copyLast(int count, ECommandLevel level, boolean all) {
+        return copyLast(count, level, all, Long.MAX_VALUE);
+    }
+
+    // The same, the lines up to upToId only: a command copies the lines before its own echo (the newest COMMAND line)
+    public String copyLast(int count, ECommandLevel level, boolean all, long upToId) {
         Set<ConsoleLog.EType> hidden = all ? Collections.<ConsoleLog.EType>emptySet() : getHiddenTypes();
-        String text = LogSelection.LastLinesText(log, level, line -> !hidden.contains(line.getType()), count);
+        String text = LogSelection.LastLinesText(log, level, line -> !hidden.contains(line.getType()), count, upToId);
         if (!text.isEmpty())
             engine.contexts().getMainWindow().getSystemInfo().setClipboardContent(text);
         return text;

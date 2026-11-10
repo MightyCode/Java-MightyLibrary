@@ -336,6 +336,17 @@ public final class ConsoleLog {
         return low;
     }
 
+    // Id of the newest line kept of this type, 0 if none (read from the newest: the work grows with the lines after it)
+    public synchronized long newestId(EType type) {
+        for (int i = size - 1; i >= 0; --i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.type == type)
+                return line.id;
+        }
+
+        return 0;
+    }
+
     // Id of the oldest line kept (the next id when the log is empty): an older line was forgotten
     public synchronized long oldestId() {
         return size == 0 ? nextId : lines[start].id;

@@ -52,6 +52,19 @@ class LogSelectionTest {
         assertEquals("", LogSelection.LastLinesText(new ConsoleLog(5), ECommandLevel.DEV, null, 3));
     }
 
+    // Regression: "console copy 1" copied its own echo, written in the log before the command runs
+    @Test
+    void theCommandCopiesTheLinesBeforeItsEcho() {
+        ConsoleLog log = new ConsoleLog(20);
+        add(log, "before");
+        long echo = log.add(ConsoleLog.EType.COMMAND, null, "console copy 1", ECommandLevel.USER).get(0).getId();
+        log.add(ConsoleLog.EType.OUT, null, "output meanwhile", ECommandLevel.DEV);
+
+        assertEquals(echo, log.newestId(ConsoleLog.EType.COMMAND));
+        assertEquals(0, new ConsoleLog(5).newestId(ConsoleLog.EType.COMMAND));
+        assertEquals("before", LogSelection.LastLinesText(log, ECommandLevel.DEV, null, 1, echo - 1));
+    }
+
     @Test
     void aLineCutAtTheWidthIsCopiedInOnePiece() {
         ConsoleLog log = new ConsoleLog(10);

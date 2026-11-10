@@ -101,7 +101,10 @@ public class ConsoleGenCom extends BaseCommand {
         if (console == null)
             return status(null);
 
-        String text = console.copyLast(count, context.currentLevel(), context.has("all"));
+        // Commands run on the main thread just after their echo: the newest COMMAND line is this one, not copied
+        long echo = console.getLog().newestId(ConsoleLog.EType.COMMAND);
+        String text = console.copyLast(count, context.currentLevel(), context.has("all"),
+                echo > 0 ? echo - 1 : Long.MAX_VALUE);
         if (text.isEmpty())
             return CommandResult.ok("No line to copy", new JSONObject().put("lines", 0).put("chars", 0));
 
