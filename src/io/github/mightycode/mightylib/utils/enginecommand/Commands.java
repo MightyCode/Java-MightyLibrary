@@ -136,8 +136,9 @@ public class Commands {
         return getCurrentSource().level();
     }
 
+    // Its level and the hidden conditions of its root (CommandCondition.hidden) let the current source see it
     public boolean isVisible(BaseCommand command) {
-        return getCurrentLevel().includes(command.getLevel());
+        return getCurrentLevel().includes(command.getLevel()) && command.isAvailable();
     }
 
     // The commands the current source sees, in registration order
@@ -283,12 +284,14 @@ public class Commands {
             BaseCommand command = findCommand(words[0]);
             if (command != null) {
                 try {
-                    values.addAll(command.getOwner().run(() -> command.completeArgument(words)));
+                    values.addAll(command.getOwner().run(() -> command.hasSyntax()
+                            ? command.completeSyntax(words) : command.completeArgument(words)));
                 } catch (RuntimeException e) {
                     // A completion never stops the typing: no value
                 }
 
-                if (words.length == 2)
+                // Provisional (migration to the declared syntax): only a command without syntax proposes "help"
+                if (words.length == 2 && !command.hasSyntax())
                     values.add("help");
             }
         }
@@ -350,11 +353,15 @@ public class Commands {
             return CommandResult.error("Ambiguous command ->" + args[0] + "<-, write one of : " + identifiers(matching));
 
         BaseCommand command = matching.get(0);
-        if (command.checkArgumentHelp(args))
+        // Provisional (migration to the declared syntax): a command without syntax keeps "<cmd> help", takes
+        // "<cmd> --help" too, and reads its words in execute(String[])
+        if (!command.hasSyntax() && (command.checkArgumentHelp(args)
+                || (args.length > 1 && args[1].equalsIgnoreCase("--help"))))
             return CommandResult.ok(command.help());
 
         try {
-            return command.getOwner().run(() -> command.execute(args));
+            // A CommandException of a handler (CommandSyntaxException included) is the answer
+            return command.getOwner().run(() -> command.hasSyntax() ? command.run(args) : command.execute(args));
         } catch (CommandException e) {
             return CommandResult.error(e.getMessage());
         } catch (RuntimeException e) {

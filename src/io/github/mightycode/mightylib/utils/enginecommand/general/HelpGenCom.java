@@ -37,15 +37,19 @@ public class HelpGenCom extends BaseCommand {
             if (matching.size() > 1 && !Commands.SameIdentifier(matching))
                 return CommandResult.error("Ambiguous command ->" + args[1] + "<-, write its identifier (namespace:name)");
 
-            return CommandResult.ok(matching.get(0).help());
+            // The generated help and its JSON, the same as "<cmd> --help"
+            return matching.get(0).helpResult();
         }
 
         StringBuilder result = new StringBuilder("Available commands :");
-        for (BaseCommand command : commands.getVisibleCommands())
+        for (BaseCommand command : commands.getVisibleCommands()) {
             result.append("\n- ").append(command.getId()).append(" (").append(command.getOwner()).append(')');
+            if (command.getDescription() != null)
+                result.append(" : ").append(command.getDescription());
+        }
 
         result.append("\nWrite a command by its name alone (help) unless another command has it (mightylib:help)");
-        result.append("\nWrite -> [command] help <- to know how to use a command");
+        result.append("\nWrite -> help [command] <- or -> [command] --help <- to know how to use a command");
         if (hasLevel(ECommandLevel.DEV))
             result.append("\nWrite a word with spaces between double quotes : screenshot \"my folder/a.png\"");
 
@@ -54,6 +58,6 @@ public class HelpGenCom extends BaseCommand {
 
     @Override
     public String help(){
-        return super.help() + "\nhelp : list all commands\nhelp [command] : display tips about the command";
+        return super.help() + "\nhelp : list all commands\nhelp [command] : display tips about the command (as [command] --help)";
     }
 }

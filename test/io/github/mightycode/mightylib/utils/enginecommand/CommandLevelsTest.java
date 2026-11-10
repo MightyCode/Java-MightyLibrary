@@ -2,16 +2,18 @@ package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.console.CommandEcho;
 import io.github.mightycode.mightylib.console.ConsoleLog;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.ICommandHandler;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CommandLevelsTest {
@@ -19,27 +21,18 @@ class CommandLevelsTest {
     private static final ICommandSource CHEATER = ICommandSource.Named("game", ECommandLevel.CHEAT);
     private static final ICommandSource DEVELOPER = ICommandSource.Named("server", ECommandLevel.DEV);
 
+    // public, other, and secret reserved to the developer
     private static class LevelCommand extends BaseCommand {
         LevelCommand(String name, ECommandLevel level) {
-            super(TestCommands.Id(name), level);
+            super(TestCommands.Id(name), level, "Answers the level of its source");
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            if (args.length > 1 && args[1].equals("secret"))
-                requireLevel(ECommandLevel.DEV, args[1]);
-            if (args.length == 1)
-                requireLevel(ECommandLevel.DEV, null);
-
-            return CommandResult.ok(getName() + " at " + currentLevel());
-        }
-
-        @Override
-        public Collection<String> completeArgument(String[] args) {
-            List<String> values = new ArrayList<>(Arrays.asList("public", "other"));
-            if (hasLevel(ECommandLevel.DEV))
-                values.add("secret");
-            return values;
+        protected void syntax(CommandNode root) {
+            ICommandHandler answer = context -> CommandResult.ok(getName() + " at " + context.currentLevel());
+            root.then(literal("public").executes(answer))
+                    .then(literal("other").executes(answer))
+                    .then(literal("secret", "Reserved").level(ECommandLevel.DEV).executes(answer));
         }
     }
 
@@ -149,7 +142,7 @@ class CommandLevelsTest {
         assertFalse(hidden.isSuccess());
         assertEquals(unknown.getMessage().replace("zzzz", "zzdev"), hidden.getMessage());
         // Its help argument and its identifier too
-        assertEquals(hidden.getMessage(), run(commands, "zzdev help", PLAYER).getMessage());
+        assertEquals(hidden.getMessage(), run(commands, "zzdev --help", PLAYER).getMessage());
         assertEquals(unknown.getMessage().replace("zzzz", "test:zzdev"), run(commands, "test:zzdev", PLAYER).getMessage());
         assertEquals(unknown.getMessage().replace("zzzz", "exec"), run(commands, "exec a.txt", PLAYER).getMessage());
 
@@ -171,18 +164,27 @@ class CommandLevelsTest {
     }
 
     @Test
-    void requireLevelHidesASubCommand() throws Exception {
+    void reservedBranchHidesASubCommand() throws Exception {
         Commands commands = withLevels();
 
         CommandResult secret = run(commands, "zzuser secret", PLAYER);
         assertFalse(secret.isSuccess());
-        assertEquals("Unknown argument(s) ->secret<-", secret.getMessage());
+        assertEquals(run(commands, "zzuser zzzz", PLAYER).getMessage().replace("zzzz", "secret"), secret.getMessage());
+        assertTrue(secret.getMessage().startsWith("Unknown argument ->secret<-"));
+        assertFalse(secret.getMessage().contains("zzuser secret"));
         assertFalse(run(commands, "zzuser", PLAYER).isSuccess());
         assertEquals("zzuser at USER", run(commands, "zzuser public", PLAYER).getMessage());
         assertEquals("zzuser at DEV", run(commands, "zzuser secret", DEVELOPER).getMessage());
 
-        assertFalse(commands.complete("zzuser s", PLAYER).getCandidates().contains("secret"));
+        assertEquals(List.of("other", "public"), commands.complete("zzuser ", PLAYER).getCandidates());
         assertTrue(commands.complete("zzuser s", DEVELOPER).getCandidates().contains("secret"));
+
+        // The help too: nothing of the branch, in the text and the JSON
+        CommandResult help = run(commands, "help zzuser", PLAYER);
+        assertFalse(help.getMessage().contains("secret"));
+        assertFalse(help.getData().toString().contains("secret"));
+        assertEquals(help.getMessage(), run(commands, "zzuser --help", PLAYER).getMessage());
+        assertTrue(run(commands, "zzuser --help", DEVELOPER).getMessage().contains("zzuser secret : Reserved"));
     }
 
     @Test

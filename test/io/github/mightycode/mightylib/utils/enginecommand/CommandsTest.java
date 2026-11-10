@@ -6,15 +6,23 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.integer;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 import static org.junit.jupiter.api.Assertions.*;
 
 class CommandsTest {
@@ -108,20 +116,116 @@ class CommandsTest {
         assertFalse(commands.execute("help \"not closed").isSuccess());
     }
 
+    // Declares its syntax: greet <name> [--times n], greet fail
+    private static class GreetCommand extends BaseCommand {
+        GreetCommand() {
+            super(TestCommands.Id("greet"), ECommandLevel.USER, "Greets someone");
+        }
+
+        @Override
+        protected void syntax(CommandNode root) {
+            root.then(argument("name", suggest(() -> List.of("Alice", "Bob")), "Who to greet")
+                            .option(Option.of("times", "How many times").value("n", integer(1, 3)).defaultValue(1))
+                            .executes("Greet once or more", context -> CommandResult.ok(String.join(" ",
+                                    Collections.nCopies(context.<Integer>get("times"), "Hello " + context.get("name"))))))
+                    .then(literal("fail", "Fails on purpose").executes(context -> {
+                        throw new CommandException("Failed on purpose");
+                    }));
+        }
+    }
+
     @Test
-    void helpArgumentAnswersTheCommandHelp() {
+    void helpOptionAnswersTheGeneratedHelp() {
+        Commands commands = newCommands();
+        TestCommands.add(commands, new GreetCommand());
+
+        CommandResult result = commands.execute("greet --help");
+        assertTrue(result.isSuccess());
+        assertTrue(result.getMessage().startsWith("test:greet : Greets someone\nUsage :\n"
+                + "  greet <name> [--times <n>] : Greet once or more\n  greet fail : Fails on purpose"), result.getMessage());
+        assertEquals("test:greet", result.getData().getString("id"));
+
+        // Anywhere on the line, and the same as help <cmd>
+        assertEquals(result.getMessage(), commands.execute("greet Bob --help").getMessage());
+        CommandResult help = commands.execute("help greet");
+        assertEquals(result.getMessage(), help.getMessage());
+        assertEquals(result.getData().toString(), help.getData().toString());
+
+        String list = commands.execute("help").getMessage();
+        assertTrue(list.contains("- test:greet (game) : Greets someone"), list);
+        assertTrue(list.contains("- mightylib:help (engine)"), list);
+    }
+
+    @Test
+    void commandWithSyntaxRunsItsBranchWithTypedValues() {
+        Commands commands = newCommands();
+        TestCommands.add(commands, new GreetCommand());
+
+        assertEquals("Hello Bob Hello Bob", commands.execute("greet Bob --times 2").getMessage());
+        assertEquals("Hello Bob", commands.execute("greet Bob").getMessage());
+
+        CommandResult incomplete = commands.execute("greet");
+        assertFalse(incomplete.isSuccess());
+        assertEquals("Incomplete command\nUsage :\n  greet <name> [--times <n>]\n  greet fail", incomplete.getMessage());
+        assertTrue(commands.execute("greet Bob --times 9").getMessage()
+                .startsWith("Expected an integer between 1 and 3 for --times <n>, got ->9<-\nUsage :"));
+
+        // A CommandException of a handler is the answer
+        CommandResult failed = commands.execute("greet fail");
+        assertFalse(failed.isSuccess());
+        assertEquals("Failed on purpose", failed.getMessage());
+    }
+
+    @Test
+    void commandWithSyntaxCompletesFromIt() {
+        Commands commands = newCommands();
+        TestCommands.add(commands, new GreetCommand());
+
+        // No "help" in second word: --help is an option
+        assertEquals(List.of("Alice", "Bob", "fail"), commands.complete("greet ").getCandidates());
+        assertEquals(List.of("--help", "--times"), commands.complete("greet Bob -").getCandidates());
+        assertEquals("--times ", commands.complete("greet Bob --t").replacement());
+        assertTrue(commands.complete("greet fail -").getCandidates().contains("--help"));
+    }
+
+    @Test
+    void hiddenConditionOfTheRootHidesTheCommand() {
+        Commands commands = newCommands();
+        boolean[] host = {false};
+        TestCommands.add(commands, TestCommands.Syntax("zzhost", ECommandLevel.USER, "Only for the host",
+                root -> root.requires(CommandCondition.hidden(context -> host[0])).executes(context -> CommandResult.ok("host"))));
+
+        assertEquals("No command with its name ->zzhost<-", commands.execute("zzhost").getMessage());
+        assertTrue(commands.complete("zzh").isEmpty());
+        assertFalse(commands.execute("help").getMessage().contains("zzhost"));
+
+        host[0] = true;
+        assertEquals("host", commands.execute("zzhost").getMessage());
+        assertEquals(List.of("zzhost"), commands.complete("zzh").getCandidates());
+    }
+
+    @Test
+    void mistakeOfASyntaxIsFoundAtRegistration() {
+        Commands commands = newCommands();
+        BaseCommand broken = TestCommands.Syntax("zzbroken", ECommandLevel.USER, "Broken",
+                root -> root.then(literal("dead")));
+
+        assertThrows(IllegalStateException.class, () -> TestCommands.add(commands, broken));
+        assertNull(commands.findCommand("zzbroken"));
+        assertThrows(IllegalArgumentException.class, () -> TestCommands.Syntax("zz", ECommandLevel.USER, "", root -> {}));
+    }
+
+    // Provisional (migration to the declared syntax): a command without syntax keeps its help
+    @Test
+    void commandWithoutSyntaxKeepsItsHelp() {
         Commands commands = newCommands();
         EchoCommand echo = new EchoCommand("echo");
         TestCommands.add(commands, echo);
 
-        CommandResult result = commands.execute("echo help");
-        assertTrue(result.isSuccess());
-        assertEquals("echo help", result.getMessage());
+        assertEquals("echo help", commands.execute("echo help").getMessage());
+        assertEquals("echo help", commands.execute("echo --help").getMessage());
         assertNull(echo.lastArgs);
-
         assertEquals("echo help", commands.execute("help echo").getMessage());
-        assertTrue(commands.execute("help").getMessage().contains("- test:echo (game)"));
-        assertTrue(commands.execute("help").getMessage().contains("- mightylib:help (engine)"));
     }
 
     @Test
