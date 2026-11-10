@@ -47,7 +47,8 @@ public class Resources {
         }
     }
 
-    public final List<ResourceLoader> Loaders;
+    // Fixed at the construction: the mandatory loaders, then those of the project, one per type of data
+    private final List<ResourceLoader> loaders;
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
@@ -68,41 +69,58 @@ public class Resources {
     private boolean initialized;
     private boolean firstLoadDone;
 
-    // The mandatory loaders are created; the shaders come from the shader manager (GLSL version and list)
-    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ShaderManager shaderManager) {
-        this(loadingMethod, maxNumberOfWorkers, null, shaderManager);
+    /**
+     * The mandatory loaders are created (the shaders come from the shader manager: GLSL version and list), then those
+     * of the project are added after them (IProjectLoading.loaders). The list can't change afterwards.
+     */
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ShaderManager shaderManager,
+                     List<ResourceLoader> projectLoaders) {
+        this(loadingMethod, maxNumberOfWorkers, withMandatoryLoaders(shaderManager, projectLoaders));
     }
 
     // Only the given loaders are used (no GL loader): tests
     Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
-        this(loadingMethod, maxNumberOfWorkers, loaders, null);
-    }
-
-    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders,
-                      ShaderManager shaderManager) {
         this.loadingMethod = loadingMethod;
         resources = new ConcurrentHashMap<>();
-        Loaders = new ArrayList<>();
+        this.loaders = checkedLoaders(loaders);
 
         scheduler = new ResourceScheduler(this, maxNumberOfWorkers);
 
-        if (loaders != null) {
-            Loaders.addAll(loaders);
-        } else {
-            // Mandatory loaders
-            Loaders.add(new ShaderLoader(shaderManager));
-            Loaders.add(new IconLoader());
-            Loaders.add(new TextureDataLoader());
-            Loaders.add(new AnimationDataLoader());
-            Loaders.add(new FontLoader());
-            JSONLoader jsonLoader = new JSONLoader();
-            Loaders.add(jsonLoader);
-
-            Loaders.add(new BatchLoader(jsonLoader));
-        }
-
         initialized = false;
         firstLoadDone = false;
+    }
+
+    private static List<ResourceLoader> withMandatoryLoaders(ShaderManager shaderManager,
+                                                             List<ResourceLoader> projectLoaders) {
+        List<ResourceLoader> all = new ArrayList<>();
+        all.add(new ShaderLoader(shaderManager));
+        all.add(new IconLoader());
+        all.add(new TextureDataLoader());
+        all.add(new AnimationDataLoader());
+        all.add(new FontLoader());
+        JSONLoader jsonLoader = new JSONLoader();
+        all.add(jsonLoader);
+        all.add(new BatchLoader(jsonLoader));
+
+        all.addAll(projectLoaders);
+        return all;
+    }
+
+    // An unmodifiable copy; two loaders of the same type of data would share (and overwrite) one registry
+    private static List<ResourceLoader> checkedLoaders(List<ResourceLoader> loaders) {
+        Set<Class<? extends DataType>> types = new HashSet<>();
+        for (ResourceLoader loader : loaders) {
+            if (!types.add(loader.getType()))
+                throw new IllegalArgumentException("Two loaders for the type " + loader.getType().getSimpleName()
+                        + " (" + loader.getResourceNameType() + ")");
+        }
+
+        return List.copyOf(loaders);
+    }
+
+    // The loaders, in their order (mandatory then project); unmodifiable
+    List<ResourceLoader> loaders() {
+        return loaders;
     }
 
     public void setStrict(boolean strict) {
@@ -143,7 +161,7 @@ public class Resources {
             return;
 
         // Init all loaders
-        for (ResourceLoader loader : Loaders){
+        for (ResourceLoader loader : loaders){
             loader.attachTo(this);
             Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
@@ -201,7 +219,7 @@ public class Resources {
             loadAllOfType(BatchResources.class);
             loadBatch(((BatchResourcesMethod) loadingMethod).firstBatch);
         } else {
-            for (ResourceLoader loader : Loaders){
+            for (ResourceLoader loader : loaders){
                 loadAllOfType(loader.getType());
             }
         }
@@ -520,7 +538,7 @@ public class Resources {
         if (loader != null)
             return loader;
 
-        for (ResourceLoader candidate : Loaders) {
+        for (ResourceLoader candidate : loaders) {
             if (candidate.getType().isInstance(data))
                 return candidate;
         }
@@ -562,7 +580,7 @@ public class Resources {
     // ---- Registry ----
 
     public Class<? extends DataType> getClassFromName(String name) {
-        for (ResourceLoader resourceLoader : Loaders) {
+        for (ResourceLoader resourceLoader : loaders) {
             if (resourceLoader.getResourceNameType().equals(name))
                 return resourceLoader.getType();
         }
@@ -579,7 +597,7 @@ public class Resources {
     }
 
     private ResourceLoader getLoader (Class<? extends DataType> typeOfResource){
-        for (ResourceLoader loader : Loaders){
+        for (ResourceLoader loader : loaders){
             if (typeOfResource.equals(loader.getType()))
                 return loader;
         }
@@ -705,7 +723,7 @@ public class Resources {
      */
     void discoverNewFiles(java.util.function.BiPredicate<Class<? extends DataType>, DataType> accepted) {
         Map<Class<? extends DataType>, Map<String, DataType>> found = new LinkedHashMap<>();
-        for (ResourceLoader loader : new ArrayList<>(Loaders)) {
+        for (ResourceLoader loader : loaders) {
             Map<String, DataType> map = new HashMap<>();
             try {
                 loader.discover(map);
@@ -787,14 +805,6 @@ public class Resources {
     }
 
     // ---- Data added by the code ----
-
-    public void addCategoryAndLoader(Class<? extends DataType> category, ResourceLoader loader) {
-        if (resources.containsKey(category))
-            return;
-
-        resources.put(category, new ConcurrentHashMap<>());
-        Loaders.add(loader);
-    }
 
     // Data created by the code, read by its loader then loaded; referenced as "manually"
     public void addResourceAndSetUp(Class<? extends DataType> type, DataType dataType) {

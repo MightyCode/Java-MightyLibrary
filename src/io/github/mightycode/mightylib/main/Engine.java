@@ -210,7 +210,9 @@ public final class Engine implements IView {
         shaderManager.init(config.getShaderVersion());
 
         System.out.println("--Create Resources");
-        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()), shaderManager);
+        IProjectLoading projectLoading = config.getProjectLoading();
+        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()), shaderManager,
+                projectLoading != null ? projectLoading.loaders() : List.of());
         resources.setStrict(config.isStrictResources());
         if (config.isStrictResources())
             System.out.println("--Strict resources: a resource that fails stops the program");
@@ -250,9 +252,7 @@ public final class Engine implements IView {
             console.setLogsShown(config.isConsoleLogsShown());
         }
 
-        IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {
-            projectLoading.init(resources);
             projectLoading.registerCommands(commands.registryFor(CommandOwner.GAME));
             projectLoading.contextLoading(mainWindow);
         }

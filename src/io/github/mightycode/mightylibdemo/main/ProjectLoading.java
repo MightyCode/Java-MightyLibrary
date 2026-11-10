@@ -28,22 +28,25 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
-import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
 import io.github.mightycode.mightylib.resources.map.TileSetLoader;
 import io.github.mightycode.mightylib.resources.models.ModelLoader;
 import io.github.mightycode.mightylib.resources.sound.SoundLoader;
 import io.github.mightycode.mightylib.resources.texture.TextureDataAtlasLoader;
 
+import java.util.List;
+
 class ProjectLoading implements IProjectLoading {
     @Override
-    public void init(Resources resources) {
-        resources.Loaders.add(new TileSetLoader());
-        resources.Loaders.add(new TileMapLoader());
-        resources.Loaders.add(new SoundLoader());
-        resources.Loaders.add(new ModelLoader());
-        resources.Loaders.add(new TextureDataAtlasLoader());
-        resources.Loaders.add(new WaveCollapseRulesLoader());
+    public List<ResourceLoader> loaders() {
+        return List.of(
+                new TileSetLoader(),
+                new TileMapLoader(),
+                new SoundLoader(),
+                new ModelLoader(),
+                new TextureDataAtlasLoader(),
+                new WaveCollapseRulesLoader());
     }
 
     // Commands of the game: kept for the whole run, whatever the scene
