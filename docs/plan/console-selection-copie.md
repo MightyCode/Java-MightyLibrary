@@ -114,3 +114,47 @@ Aucune.
 - Dernier commit : supprimer ce plan (et `docs/plan/` s'il est vide) ; vérifier que les docs ne gardent aucune trace de ce qui est fini.
 - Pousser, ouvrir une PR vers `dev` (pas `master`) dont la description reprend le Bilan et la liste des vérifications manuelles.
 - Attendre le feu vert de l'utilisateur, puis fusionner par un commit de fusion (pas de squash), mettre `dev` à jour en local, supprimer la branche en local et sur GitHub.
+
+## Bilan
+Branche `console-selection` (non poussée), un commit par étape ; `mvn -o -q test` passe après chacune, vérifications en jeu par `tools/scenario.py` sans problème au journal.
+
+### Fait
+1. **Lettre des touches** (`c34430e`) : `KeyEvent(key, scancode, mods, repeat, letter)`, `letter()` par `glfwGetKeyName` dans le callback (touches simulées : `glfwGetKeyName(touche, 0)`), `ConsoleInput` compare des lettres pour Ctrl+A/C/X/V/L.
+2. **`ConsoleLayout` et ancre** (`0535bc3`) : mise en page sans GL, ancre `Anchor(id, rangées cachées dessous)`, `ConsoleLog.upTo/after/oldestId/clearedUpTo`, Maj+↑/↓ et Ctrl+Début/Fin, JSON `scroll`.
+3. **Filtre et `console logs`** (`24828f7`) : types cachés dans `Console`, `console logs [on|off]` (`DEV`), `EngineConfig.setConsoleLogsShown` et `-Dmightylib.console.logs`, JSON `logsShown`, versions du journal par niveau et type cachés.
+4. **Couleurs** (`7d60600`) : `ConsoleColors` (palette du plan, plus `SELECTION`, `SELECTION_LINE_END`, couleurs de l'indicateur), `ConsolePanel` ne garde plus de couleur.
+5. **Sélection dans la saisie au clavier** (`c973b9d`) : sélection dans `CommandLineEditor`, Maj+flèches, Ctrl+A/C/X/V, collage multiligne, `ConsoleInput.IClipboard`, JSON `selection`.
+6. **Souris : accès bruts et saisie** (`c68c189`) : accès bruts de `MouseManager`, `ClickCounter`, `MouseState`/`handleMouse`, clic, glisser, double et triple clic, Maj+clic dans la saisie.
+7. **Sélection du journal** (`60ab8de`) : `LogSelection`, glisser, double et triple clic, Maj+clic, défilement auto, Ctrl+A 2e appui, Ctrl+C/X, règle d'une seule sélection, surlignage par `ConsolePanel`.
+8. **Indicateur** (`94800bc`) : `ConsoleLayout.linesBelow()`/`linesBelowText()`/`isOnIndicator`, dessin à droite de la dernière rangée, clic → `SCROLL_END`, JSON `newLinesBelow`.
+9. **`console copy [n] [--all]`** (`ae5af1f`) : `LogSelection.LastLinesText` (même copie que Ctrl+C), `Console.copyLast`, commande `USER`, `--all` en `DEV`, réponse `{lines, chars}`.
+10. **Démo et docs** (`d751f36`) : `ConsoleFeedScene` inscrite dans `MenuScene` ; `architecture.md` (Console, Entrées), `debug-tools.md`, `later.md`, `decisions.md`, `CLAUDE.md` (tests couverts) à jour ; `current.md` inchangé ; ce plan gardé.
+
+### Écarts au plan et raison
+- **Ancre par panneau** (étape 2) : l'overlay et la fenêtre détachée gardent chacun leur ancre (comme l'ancien `scrollOffset`), le JSON lit le panneau affiché ; le plan ne tranchait pas.
+- **←/→ sur une sélection de la saisie** (étape 5) : sans Maj, vont au début/fin de la sélection (comportement usuel), non prévu.
+- **Glisser après un double ou triple clic** (étape 6) : garde le mot ou la ligne, n'étend pas.
+- **`SELECTION_LINE_END`** (étape 7) : les rangées qui finissent une ligne sélectionnée ont 4 px de plus, sinon une ligne vide sélectionnée ne se voit pas ; constante déplacée dans `ConsoleColors` (étape 4).
+- **État des boutons de la souris indépendant de la capture** (étape 6) : nécessaire aux accès bruts ; effet de bord : un bouton tenu quand la capture se termine ne compte plus comme un nouvel appui pour le jeu.
+- **`IClipboard`** (étape 5) : interface à la place du `Supplier` pour lire et écrire le presse-papiers.
+- **Texte de l'indicateur** (étape 8) : « v N lines » au lieu de « ↓ N lignes » : la police `bahnschrift` du projet n'a pas le glyphe `↓` (U+2193, absent de `bahnschrift.fnt` ; le caractère s'afficherait comme une espace) et les messages de la console sont en anglais ; glyphe noté dans `later.md`. Une ligne coupée par le bas de la vue compte pour une ligne sous la vue (sinon l'indicateur afficherait 0 alors que la vue n'est pas en bas) ; le JSON `newLinesBelow` vaut 1000 pour « plus de 999 ».
+- **`console copy`** (étape 9) : `--all` n'est pas un argument mais une option `.level(DEV)` de `copy` ; sans ligne à copier, le presse-papiers n'est pas touché et la réponse dit « No line to copy ».
+- **Démo** (étape 10) : touches ↑/↓ (actions `SELECT_UP`/`SELECT_DOWN`) pour l'intervalle (100 ms à 2 s, 500 ms au départ), types des lignes alternés (un par ligne) au lieu de plusieurs par intervalle.
+- **Presse-papiers de l'utilisateur écrasé** par les scénarios qui testent Ctrl+C/X/`console copy` (étapes 5, 7, 9) : inévitable pour vérifier par `Get-Clipboard`.
+
+### Vérifié, et comment
+- Tests automatisés : `KeyEventTest`, `ConsoleInputTest`, `ConsoleLayoutTest` (coupe, ancre stable, rangées coupées, ancre oubliée ou effacée, conversions, compte des lignes sous la vue avec filtre, niveau, plafond et ligne coupée, indicateur), `ConsoleLogTest`, `CommandLineEditorTest`, `ClickCounterTest`, `MouseRawTest`, `LogSelectionTest` (dont `LastLinesText`), `ConsoleLogsOptionTest`, `CommandLevelsTest` (`console logs` et `console copy --all` invisibles en `USER`).
+- En jeu (`scenario.py`) : Ctrl+V et Ctrl+L simulés ; Maj+↑ → `scroll` inchangé quand des lignes arrivent, Ctrl+Début/Fin ; `console logs off` puis `on` garde `scroll` ; `selection` dans la saisie (Maj+←, Ctrl+A en AZERTY = touche Q) et dans le journal (glisser simulé, 8 lignes copiées, lues par `Get-Clipboard`) ; double et triple clic ; `newLinesBelow` (7, puis 25 avec des lignes ajoutées, 0 après Ctrl+Fin) ; `console copy 3`, `copy 2`, `copy --all 2`, `as user console copy --all` refusé, `console logs off` puis `copy 2` sans lignes de sortie du programme, `Get-Clipboard` ; `ConsoleFeedScene` écrit bien les lignes de chaque type (`log Feed`) ; `leakcheck Scene2D` (console utilisée) et `leakcheck ConsoleFeedScene` : pas de fuite.
+- Pas de capture d'écran (consigne d'économie) : le rendu n'est pas vérifié.
+
+### Non vérifié, à vérifier à la main par l'utilisateur
+Dans `ConsoleFeedScene`, overlay puis fenêtre détachée (F2) :
+- Ctrl+A deux fois (saisie puis tout le journal), Maj+flèches, Ctrl+Maj+←/→ dans la saisie ;
+- sélection à la souris et double/triple clic dans la saisie et dans le journal, glisser hors du panneau (défilement automatique) ;
+- Ctrl+C/X/V avec un autre logiciel (texte copié, collé), collage de plusieurs lignes (une commande par ligne complète, la dernière reste dans la saisie) ;
+- Maj+↑/↓ et Ctrl+Début/Fin ;
+- vue remontée qui ne bouge pas pendant que les lignes arrivent ; `console logs off` puis `on` qui garde la position ;
+- indicateur « v N lines » (position, lisibilité sur le texte, clic dessus qui ramène à la fin) ;
+- couleurs de chaque type (sortie, erreur, commande, résultat, message, erreur de commande) et surlignage de la sélection (positions des rectangles, lignes coupées, lignes vides) ;
+- raccourcis en AZERTY (Ctrl+A, Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+L) ;
+- `console copy 5` puis collage dans un autre logiciel.
