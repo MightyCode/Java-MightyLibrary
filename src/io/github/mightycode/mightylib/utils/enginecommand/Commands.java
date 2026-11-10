@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.console.LogCapture;
+import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
 
@@ -12,11 +13,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -25,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -43,6 +48,9 @@ public class Commands {
         private final String line;
         private final ICommandSource source;
         private final CompletableFuture<CommandResult> result;
+        // Level of the source when the command runs: the command and its answer are told with it, even when the
+        // command changes the level of its source (cheats off)
+        private ECommandLevel level;
 
         private CommandRequest(String line, ICommandSource source) {
             this.line = line;
@@ -67,6 +75,9 @@ public class Commands {
     private final ECommandLevel maxLevel;
     private volatile ECommandLevel sessionLevel;
 
+    // Among the views having the same command, the one the commands target (Engine.commandWindow), null if none
+    private Function<List<IView>, IView> viewChooser = views -> null;
+
     // Everything allowed, without the cheats command: the tests, a tool
     public Commands() {
         this(ECommandLevel.DEV, ECommandLevel.DEV, false);
@@ -89,6 +100,14 @@ public class Commands {
         commands = new ArrayList<>();
         ListGeneralCommand.addCommands(registryFor(CommandOwner.ENGINE), this,
                 cheatCommand && maxLevel.includes(ECommandLevel.CHEAT));
+    }
+
+    /**
+     * Main thread. Chooses, among the views having a command with the same identifier (a scene shown in two windows),
+     * the one a typed name runs: returns one of the given views, or null to leave the name ambiguous.
+     */
+    public void setViewChooser(Function<List<IView>, IView> viewChooser) {
+        this.viewChooser = viewChooser == null ? views -> null : viewChooser;
     }
 
     // ---- Levels ----
@@ -203,8 +222,9 @@ public class Commands {
 
         CommandRequest request;
         while ((request = pendingRequests.poll()) != null) {
+            request.level = request.source.level();
             for (ICommandListener listener : listeners)
-                listener.executed(request.source, request.line);
+                listener.executed(request.source, request.level, request.line);
 
             CommandResult result = execute(request.line, request.source);
 
@@ -220,7 +240,7 @@ public class Commands {
 
     private void answer(CommandRequest request, CommandResult result) {
         for (ICommandListener listener : listeners)
-            listener.answered(request.source, request.line, result);
+            listener.answered(request.source, request.level, request.line, result);
 
         request.result.complete(result);
     }
@@ -323,6 +343,9 @@ public class Commands {
         List<BaseCommand> matching = matchCommands(args[0]);
         if (matching.isEmpty())
             return CommandResult.error("No command with its name ->" + args[0] + "<-");
+        if (matching.size() > 1 && SameIdentifier(matching))
+            return CommandResult.error("The command ->" + matching.get(0).getId()
+                    + "<- exists in several windows, target one with -> window <- first");
         if (matching.size() > 1)
             return CommandResult.error("Ambiguous command ->" + args[0] + "<-, write one of : " + identifiers(matching));
 
@@ -382,7 +405,8 @@ public class Commands {
 
     /**
      * The commands a typed name gives among the ones the current source sees: the one with this identifier
-     * (namespace:path), or those with this path. Case insensitive.
+     * (namespace:path), or those with this path. Case insensitive. When several views have the command, only the
+     * one of the targeted view is kept (setViewChooser), all of them if none is targeted.
      */
     public List<BaseCommand> matchCommands(String name) {
         List<BaseCommand> result = new ArrayList<>();
@@ -403,14 +427,59 @@ public class Commands {
                 if (command.getId().equals(id))
                     result.add(command);
             }
-            return result;
+            return keepTargeted(result);
         }
 
         for (BaseCommand command : visible) {
             if (command.getName().equalsIgnoreCase(name))
                 result.add(command);
         }
+        return keepTargeted(result);
+    }
+
+    // Commands with the same identifier (one per view): the one of the view the chooser gives, all of them otherwise
+    private List<BaseCommand> keepTargeted(List<BaseCommand> matching) {
+        if (matching.size() < 2)
+            return matching;
+
+        Map<Identifier, List<BaseCommand>> byId = new LinkedHashMap<>();
+        for (BaseCommand command : matching)
+            byId.computeIfAbsent(command.getId(), id -> new ArrayList<>()).add(command);
+
+        List<BaseCommand> result = new ArrayList<>();
+        for (List<BaseCommand> same : byId.values()) {
+            BaseCommand kept = same.size() == 1 ? same.get(0) : targeted(same);
+            if (kept != null)
+                result.add(kept);
+            else
+                result.addAll(same);
+        }
         return result;
+    }
+
+    private BaseCommand targeted(List<BaseCommand> same) {
+        List<IView> views = new ArrayList<>();
+        for (BaseCommand command : same)
+            views.add(command.getOwner().view());
+
+        IView chosen = viewChooser.apply(Collections.unmodifiableList(views));
+        if (chosen == null)
+            return null;
+
+        for (BaseCommand command : same) {
+            if (command.getOwner().view() == chosen)
+                return command;
+        }
+        return null;
+    }
+
+    // Several commands, all with the same identifier: the command of several views, none targeted
+    public static boolean SameIdentifier(List<BaseCommand> commands) {
+        for (BaseCommand command : commands) {
+            if (!command.getId().equals(commands.get(0).getId()))
+                return false;
+        }
+        return true;
     }
 
     // The only command a typed name gives, null if unknown or ambiguous
@@ -427,15 +496,16 @@ public class Commands {
         boolean withNamespace = typed != null && typed.indexOf(':') >= 0;
         List<BaseCommand> visible = getVisibleCommands();
 
-        Map<String, Integer> pathCount = new HashMap<>();
+        // The identifiers of each path: the same command of several views counts once
+        Map<String, Set<Identifier>> pathIds = new HashMap<>();
         for (BaseCommand command : visible)
-            pathCount.merge(command.getName(), 1, Integer::sum);
+            pathIds.computeIfAbsent(command.getName(), path -> new HashSet<>()).add(command.getId());
 
         Set<String> names = new LinkedHashSet<>();
         for (BaseCommand command : visible) {
             if (!withNamespace)
                 names.add(command.getName());
-            if (withNamespace || pathCount.get(command.getName()) > 1)
+            if (withNamespace || pathIds.get(command.getName()).size() > 1)
                 names.add(command.getId().toString());
         }
 
@@ -443,10 +513,9 @@ public class Commands {
     }
 
     private static String identifiers(List<BaseCommand> commands) {
-        List<String> ids = new ArrayList<>();
+        Set<String> ids = new TreeSet<>();
         for (BaseCommand command : commands)
             ids.add(command.getId().toString());
-        Collections.sort(ids);
 
         return String.join(", ", ids);
     }
@@ -458,14 +527,16 @@ public class Commands {
 
     /**
      * Main thread. The command belongs to the owner: removed with removeOwnedBy, run under its view.
-     * @throws IllegalArgumentException if a command with the same identifier already exists, or the command is
-     *                                  registered
+     * Two views can have a command with the same identifier (a scene shown in two windows): the targeted one runs it
+     * (setViewChooser).
+     * @throws IllegalArgumentException if a command with the same identifier already exists (outside of another view),
+     *                                  or the command is registered
      */
     public void register(BaseCommand command, CommandOwner owner) {
         if (owner == null)
             throw new IllegalArgumentException("A command needs an owner");
         for (BaseCommand existing : commands) {
-            if (existing.getId().equals(command.getId()))
+            if (existing.getId().equals(command.getId()) && !OfOtherViews(existing.getOwner(), owner))
                 throw new IllegalArgumentException("A command ->" + command.getId() + "<- already exists");
         }
 
@@ -473,13 +544,23 @@ public class Commands {
         commands.add(command);
     }
 
+    private static boolean OfOtherViews(CommandOwner first, CommandOwner second) {
+        return first.view() != null && second.view() != null && first.view() != second.view();
+    }
+
     // The registry of an owner: what it registers belongs to it
     public CommandRegistry registryFor(CommandOwner owner) {
         return command -> register(command, owner);
     }
 
-    // Main thread. A scene, a window view... removes its commands when it is left
+    // Main thread. A scene, a window view... removes its commands when it is left: they can be registered again
     public void removeOwnedBy(CommandOwner owner) {
-        commands.removeIf(command -> command.getOwner().equals(owner));
+        commands.removeIf(command -> {
+            if (!command.getOwner().equals(owner))
+                return false;
+
+            command.clearRegistration();
+            return true;
+        });
     }
 }

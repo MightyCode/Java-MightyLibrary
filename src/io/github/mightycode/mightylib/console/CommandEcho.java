@@ -18,17 +18,17 @@ public final class CommandEcho implements ICommandListener {
     }
 
     @Override
-    public void executed(ICommandSource source, String line) {
-        log.add(ConsoleLog.EType.COMMAND, source.name(), line, source.level());
+    public void executed(ICommandSource source, ECommandLevel level, String line) {
+        log.add(ConsoleLog.EType.COMMAND, source.name(), line, level);
     }
 
     @Override
-    public void answered(ICommandSource source, String line, CommandResult result) {
+    public void answered(ICommandSource source, ECommandLevel level, String line, CommandResult result) {
         ConsoleLog.EType type = result.isSuccess() ? ConsoleLog.EType.RESULT : ConsoleLog.EType.ERROR;
 
         String message = result.getMessage();
         if (message != null && !message.isEmpty())
-            log.add(type, source.name(), message, source.level());
+            log.add(type, source.name(), message, level);
 
         if (result.getData() != null)
             log.add(type, source.name(), result.getData().toString(2), ECommandLevel.DEV);

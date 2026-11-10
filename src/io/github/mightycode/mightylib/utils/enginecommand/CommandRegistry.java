@@ -6,7 +6,7 @@ package io.github.mightycode.mightylib.utils.enginecommand;
  */
 public interface CommandRegistry {
     /**
-     * @throws IllegalArgumentException if a command with the same name already exists
+     * @throws IllegalArgumentException if a command with the same identifier already exists
      */
     void register(BaseCommand command);
 }

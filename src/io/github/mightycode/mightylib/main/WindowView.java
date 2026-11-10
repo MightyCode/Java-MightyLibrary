@@ -134,7 +134,8 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
     /**
      * A command of this view, run under it (its view and the OpenGL context of its window), removed when the
      * window closes. From launch() on.
-     * @throws IllegalArgumentException if a command with the same name already exists
+     * The same view opened in several windows has the command in each: the window targeted by the commands runs it.
+     * @throws IllegalArgumentException if a command of the engine, the game or this view has the same identifier
      */
     protected final void addCommand(BaseCommand command) {
         engine().commands().register(command, CommandOwner.Of(this, "window"));

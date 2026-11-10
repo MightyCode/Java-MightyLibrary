@@ -158,8 +158,14 @@ public final class Engine implements IView {
         MainLoop.setMode(config.getMode());
         Logger.DO_CHECK = config.isOpenGLErrorCheck();
 
+        // Resolved once (the launch option is read and reported once). Without access, the player has no console:
+        // only the game (api) and, in debug mode, the standard input and the debug server send commands.
+        // A maximum of null closes the access for good: no console, the launch option is ignored
+        ECommandLevel access = config.getCommandAccess();
+        ECommandLevel maxAccess = config.getMaxCommandAccess();
+
         // From the first line: the console and the debug server clients see the whole output
-        if (config.isConsoleEnabled() || config.getMode() == EEngineMode.DEBUG) {
+        if (access != null || config.getMode() == EEngineMode.DEBUG) {
             consoleLog = new ConsoleLog(config.getConsoleLogCapacity());
             LogCapture.install(consoleLog);
         }
@@ -225,16 +231,13 @@ public final class Engine implements IView {
             return ListError.LIBRARIES_LOAD_FAIL;
         }
 
-        // Before the scenes and the game: they add their commands to it. Without access, the player has no console:
-        // only the game (api) and, in debug mode, the standard input and the debug server send commands.
-        // A maximum of null closes the access for good: no console, the launch option is ignored
-        ECommandLevel access = config.getCommandAccess();
-        ECommandLevel maxAccess = config.getMaxCommandAccess();
+        // Before the scenes and the game: they add their commands to it
         if (maxAccess == null && System.getProperty(EngineConfig.COMMAND_ACCESS_PROPERTY) != null)
             System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
 
         commands = new Commands(maxAccess == null ? ECommandLevel.USER : maxAccess,
                 access == null ? ECommandLevel.USER : access, maxAccess != null && config.isCheatCommand());
+        commands.setViewChooser(this::targetedView);
         if (consoleLog != null)
             commands.addListener(new CommandEcho(consoleLog));
 
@@ -242,7 +245,7 @@ public final class Engine implements IView {
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
 
-        if (config.isConsoleEnabled())
+        if (access != null)
             console = new Console(this, consoleLog, commands, config.getConsoleFont());
 
         IProjectLoading projectLoading = config.getProjectLoading();
@@ -348,6 +351,27 @@ public final class Engine implements IView {
     // Null to come back to the main window
     public void setCommandWindow(WindowContext window) {
         commandWindow = window;
+    }
+
+    /**
+     * Among views having the same command (a scene shown in two windows), the one of the targeted window, else the
+     * one of its context; null if none or several.
+     */
+    private IView targetedView(List<IView> views) {
+        WindowContext target = commandWindow();
+        IView inContext = null;
+        int inContextCount = 0;
+        for (IView view : views) {
+            WindowContext window = view.context();
+            if (window == target)
+                return view;
+            if (window != null && window.getContext() == target.getContext()) {
+                inContext = view;
+                ++inContextCount;
+            }
+        }
+
+        return inContextCount == 1 ? inContext : null;
     }
 
     /**

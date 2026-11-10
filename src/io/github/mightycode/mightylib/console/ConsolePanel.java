@@ -136,7 +136,8 @@ final class ConsolePanel {
             resizeRows(rowCount);
 
         shownLevel = viewer.get();
-        if (log.version() != builtVersion || shownLevel != builtLevel || scrollOffset != builtScroll || width != builtWidth
+        // A line hidden from the viewer (program output for the player) rebuilds nothing
+        if (log.version(shownLevel) != builtVersion || shownLevel != builtLevel || scrollOffset != builtScroll || width != builtWidth
                 || height != builtHeight || x != builtX || y != builtY || fontSize != builtFontSize)
             buildRows(x, y, width, height, inputTop);
 
@@ -204,7 +205,7 @@ final class ConsolePanel {
             row.setPosition(new Vector2f(x + PADDING, inputTop - PADDING - (rows.size() - i) * lineHeight));
         }
 
-        builtVersion = log.version();
+        builtVersion = log.version(shownLevel);
         builtLevel = shownLevel;
         builtScroll = scrollOffset;
         builtWidth = width;

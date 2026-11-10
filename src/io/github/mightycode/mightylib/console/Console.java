@@ -292,7 +292,8 @@ public final class Console {
                         close();
                     break;
                 case CLEAR:
-                    log.clear();
+                    // Only what the player sees: the developer keeps the log (console log, debug server)
+                    log.clear(getViewerLevel());
                     break;
                 case SCROLL:
                     if (panel != null)

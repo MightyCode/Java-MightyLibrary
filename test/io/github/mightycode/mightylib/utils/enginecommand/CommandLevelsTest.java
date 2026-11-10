@@ -289,4 +289,65 @@ class CommandLevelsTest {
         // Only the visible lines count in the last ones
         assertEquals(List.of("Readable"), Arrays.asList(log.last(1, ECommandLevel.USER).get(0).getText()));
     }
+
+    // Regression: "cheats off" was logged at CHEAT (before) and its answer at USER (after): the player saw the answer
+    // without the command
+    @Test
+    void aCommandAndItsAnswerAreLoggedAtTheSameLevel() throws Exception {
+        ConsoleLog log = new ConsoleLog(20);
+        Commands commands = new Commands(ECommandLevel.CHEAT, ECommandLevel.CHEAT, true);
+        commands.addListener(new CommandEcho(log));
+        ICommandSource console = ICommandSource.Named("game", commands::getSessionLevel);
+
+        run(commands, "cheats off", console);
+        run(commands, "cheats on", console);
+
+        // Without the data (DEV): the command and its message, twice
+        List<ConsoleLog.Line> lines = log.last(10, ECommandLevel.CHEAT);
+        assertEquals(4, lines.size());
+        assertEquals(lines.get(0).getLevel(), lines.get(1).getLevel());
+        assertEquals(ECommandLevel.CHEAT, lines.get(1).getLevel());
+        assertEquals(lines.get(2).getLevel(), lines.get(3).getLevel());
+        assertEquals(ECommandLevel.USER, lines.get(3).getLevel());
+    }
+
+    // Regression: the open console rebuilt its rows for every line of program output the player does not see
+    @Test
+    void hiddenLinesDoNotChangeTheVersionOfTheViewer() {
+        ConsoleLog log = new ConsoleLog(20);
+        long player = log.version(ECommandLevel.USER);
+        long developer = log.version(ECommandLevel.DEV);
+
+        log.add(ConsoleLog.EType.OUT, null, "--engine line");
+        assertEquals(player, log.version(ECommandLevel.USER));
+        assertNotEquals(developer, log.version(ECommandLevel.DEV));
+
+        log.add(ConsoleLog.EType.MESSAGE, null, "for the player", ECommandLevel.USER);
+        assertNotEquals(player, log.version(ECommandLevel.USER));
+    }
+
+    // Regression: the clear of the player erased the log the developer reads (console log, debug server)
+    @Test
+    void theClearOfThePlayerOnlyHidesItsLines() {
+        ConsoleLog log = new ConsoleLog(20);
+        log.add(ConsoleLog.EType.OUT, null, "--engine line");
+        log.add(ConsoleLog.EType.MESSAGE, null, "old", ECommandLevel.USER);
+        long player = log.version(ECommandLevel.USER);
+
+        log.clear(ECommandLevel.USER);
+        assertNotEquals(player, log.version(ECommandLevel.USER));
+        assertTrue(log.last(10, ECommandLevel.USER).isEmpty());
+        assertEquals(2, log.last(10, ECommandLevel.DEV).size());
+
+        log.add(ConsoleLog.EType.MESSAGE, null, "new", ECommandLevel.USER);
+        assertEquals("new", log.last(10, ECommandLevel.USER).get(0).getText());
+        // Cleared for the levels below too, not above
+        List<String> cheater = new ArrayList<>();
+        for (ConsoleLog.Line line : log.last(10, ECommandLevel.CHEAT))
+            cheater.add(line.getText());
+        assertEquals(List.of("old", "new"), cheater);
+
+        log.clear(ECommandLevel.DEV);
+        assertEquals(0, log.size());
+    }
 }

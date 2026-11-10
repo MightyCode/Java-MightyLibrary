@@ -1,5 +1,8 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.Engine;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -74,7 +77,9 @@ public class WaitGenCom extends BaseCommand {
 
     private CommandResult waitLoaded(long timeout) {
         // Of the window targeted when the wait starts
-        SceneManager sceneManager = ListGeneralCommand.targetScenes();
+        Engine engine = Views.engine();
+        Context context = engine.commandContext();
+        SceneManager sceneManager = context.getSceneManager();
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
         // A simulated input of this tick is seen by the next tick, whose scene can then ask a change,
         // done at the beginning of the tick after: start checking two ticks later
@@ -82,6 +87,12 @@ public class WaitGenCom extends BaseCommand {
         commands.addTickTask(() -> {
             if (future.isDone())
                 return true;
+
+            // Its scenes are unloaded: they will never be loaded
+            if (!engine.contexts().getContexts().contains(context)) {
+                future.complete(CommandResult.error("The window " + context.getName() + " closed during the wait"));
+                return true;
+            }
 
             if (commands.getTick() < startTick + 2 || sceneManager.isSceneChangePending()
                     || sceneManager.isCurrentSceneLoading())

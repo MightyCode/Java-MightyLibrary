@@ -85,7 +85,8 @@ public class ConsoleGenCom extends BaseCommand {
             case "clear":
                 if (engine.consoleLog() == null)
                     return CommandResult.error("No console log");
-                engine.consoleLog().clear();
+                // Below DEV, only for the source and the levels below: the developer keeps the log
+                engine.consoleLog().clear(currentLevel());
                 return CommandResult.ok("");
             default:
                 break;
@@ -159,7 +160,7 @@ public class ConsoleGenCom extends BaseCommand {
                 "\nconsole : mode of the in-game console (closed, overlay, detached)" +
                 "\nconsole open|close|toggle : the console over the main window (F1)" +
                 "\nconsole detach|attach : the console in a window of its own, or back on the main window (F2)" +
-                "\nconsole clear : forget the lines of the log" +
+                "\nconsole clear : clear the lines of the console" +
                 "\nconsole log [n] : the last n lines of the log (" + DEFAULT_LOG_LINES + " by default), with their id" +
                 "\nconsole log since ID : the lines written after the line ID" +
                 "\nconsole follow [on|off] : (debug server) receive every new line of the log, see DebugServer";

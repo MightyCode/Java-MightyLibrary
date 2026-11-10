@@ -33,7 +33,8 @@ public class HelpGenCom extends BaseCommand {
 
             if (matching.isEmpty())
                 return unknownArgumentError(args[1]);
-            if (matching.size() > 1)
+            // The same command in several windows: the same help
+            if (matching.size() > 1 && !Commands.SameIdentifier(matching))
                 return CommandResult.error("Ambiguous command ->" + args[1] + "<-, write its identifier (namespace:name)");
 
             return CommandResult.ok(matching.get(0).help());

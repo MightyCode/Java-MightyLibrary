@@ -62,6 +62,12 @@ public abstract class BaseCommand {
         this.owner = owner;
     }
 
+    // Removed from its registry: it can be registered again (a scene used again registers its commands again)
+    void clearRegistration() {
+        registry = null;
+        owner = null;
+    }
+
     /**
      * Level of the source of the command being run or completed: the answer can be adapted to it (a readable
      * message for the player, details in the data for the developer).

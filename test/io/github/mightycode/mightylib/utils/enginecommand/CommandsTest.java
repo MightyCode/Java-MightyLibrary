@@ -277,13 +277,64 @@ class CommandsTest {
     }
 
     @Test
-    void aCommandIsRegisteredOnce() {
+    void aCommandIsRegisteredOnceAtATime() {
         Commands commands = newCommands();
         EchoCommand echo = new EchoCommand("echo");
-        TestCommands.add(commands, echo);
-        commands.removeOwnedBy(CommandOwner.GAME);
+        CommandOwner scene = CommandOwner.Of(new FakeView(), "scene");
+        commands.register(echo, scene);
 
-        assertThrows(IllegalArgumentException.class, () -> TestCommands.add(commands, echo));
+        assertThrows(IllegalArgumentException.class, () -> commands.register(echo, CommandOwner.Of(new FakeView(), "scene")));
+    }
+
+    // Regression: a scene used again (same instance, command kept in a field) could not register its command again
+    @Test
+    void aRemovedCommandCanBeRegisteredAgain() {
+        Commands commands = newCommands();
+        EchoCommand echo = new EchoCommand("echo");
+        CommandOwner scene = CommandOwner.Of(new FakeView(), "scene");
+
+        for (int i = 0; i < 2; ++i) {
+            commands.register(echo, scene);
+            assertSame(scene, echo.getOwner());
+            commands.removeOwnedBy(scene);
+            assertNull(echo.getOwner());
+        }
+    }
+
+    // Regression: the same scene in two windows could not have its command twice
+    @Test
+    void theCommandOfSeveralViewsRunsInTheTargetedOne() {
+        Commands commands = newCommands();
+        FakeView first = new FakeView();
+        FakeView second = new FakeView();
+        EchoCommand ofFirst = new EchoCommand("spawn");
+        EchoCommand ofSecond = new EchoCommand("spawn");
+        commands.register(ofFirst, CommandOwner.Of(first, "scene"));
+        commands.register(ofSecond, CommandOwner.Of(second, "scene"));
+
+        // No targeted view: refused, with a message about the windows
+        CommandResult refused = commands.execute("spawn a");
+        assertFalse(refused.isSuccess());
+        assertTrue(refused.getMessage().contains("several windows"), refused.getMessage());
+        assertNull(commands.findCommand("test:spawn"));
+        // Completion: the path once, no identifier (only one command)
+        assertEquals(List.of("spawn"), commands.complete("spaw").getCandidates());
+        assertTrue(commands.execute("help spawn").isSuccess());
+
+        IView[] target = {second};
+        commands.setViewChooser(views -> views.contains(target[0]) ? target[0] : null);
+        assertTrue(commands.execute("spawn b").isSuccess());
+        assertArrayEquals(new String[]{"spawn", "b"}, ofSecond.lastArgs);
+        assertNull(ofFirst.lastArgs);
+
+        target[0] = first;
+        assertTrue(commands.execute("test:spawn c").isSuccess());
+        assertArrayEquals(new String[]{"test:spawn", "c"}, ofFirst.lastArgs);
+
+        // Not between a view and the game, nor twice in the same view
+        assertThrows(IllegalArgumentException.class, () -> TestCommands.add(commands, new EchoCommand("spawn")));
+        assertThrows(IllegalArgumentException.class,
+                () -> commands.register(new EchoCommand("spawn"), CommandOwner.Of(first, "scene")));
     }
 
     @Test
@@ -429,12 +480,12 @@ class CommandsTest {
         List<String> seen = new ArrayList<>();
         commands.addListener(new ICommandListener() {
             @Override
-            public void executed(ICommandSource source, String line) {
+            public void executed(ICommandSource source, ECommandLevel level, String line) {
                 seen.add(source.name() + ">" + line);
             }
 
             @Override
-            public void answered(ICommandSource source, String line, CommandResult result) {
+            public void answered(ICommandSource source, ECommandLevel level, String line, CommandResult result) {
                 seen.add(source.name() + "<" + result.getMessage());
             }
         });
