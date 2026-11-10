@@ -82,6 +82,12 @@ public class DebugServer {
             return name;
         }
 
+        // The debug server only exists in debug mode
+        @Override
+        public ECommandLevel level() {
+            return ECommandLevel.DEV;
+        }
+
         @Override
         public synchronized boolean setFollowLog(boolean follow) {
             if (log == null)

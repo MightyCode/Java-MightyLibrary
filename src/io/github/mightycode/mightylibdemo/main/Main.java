@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLang
 import io.github.mightycode.mightylib.main.*;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 import io.github.mightycode.mightylibdemo.scenes.loadingScenes.LoadingSceneImplementation;
 
@@ -22,7 +23,28 @@ public class Main {
         System.exit(MainLoop.run(createConfig()));
     }
 
+    // Test of the commands of a released game: RELEASE mode (no debug server), player access USER, cheats allowed
+    private static final String RELEASE_PROPERTY = "demo.release";
+    // Maximum access of the build (none, user, cheat, dev): DEV in debug mode by default; none: no console at all
+    private static final String MAX_COMMAND_ACCESS_PROPERTY = "demo.commands.max";
+
     public static EngineConfig createConfig() {
+        EngineConfig config = createBaseConfig();
+
+        if (Boolean.getBoolean(RELEASE_PROPERTY)) {
+            config.setMode(EEngineMode.RELEASE)
+                    .setCommandAccess(ECommandLevel.USER)
+                    .setMaxCommandAccess(ECommandLevel.CHEAT);
+        }
+
+        String max = System.getProperty(MAX_COMMAND_ACCESS_PROPERTY);
+        if (max != null)
+            config.setMaxCommandAccess(max.trim().equalsIgnoreCase("none") ? null : ECommandLevel.Parse(max));
+
+        return config;
+    }
+
+    private static EngineConfig createBaseConfig() {
         return new EngineConfig()
                 .setStartScene(MenuScene::new)
                 .setLoadingScene(LoadingSceneImplementation::new)
@@ -35,6 +57,8 @@ public class Main {
                 .setKeyboardLanguage(AZERTYKeyboardLanguage.getInstance())
                 .setGainTreePath("sounds/sounds.gaintree")
                 .setMode(EEngineMode.DEBUG)
+                // The player turns the cheats on with "cheats on" (always on in DEV)
+                .setCheatCommand(true)
                 // Set to true to locate an OpenGL error, it slows down rendering
                 .setOpenGLErrorCheck(false)
                 .setProjectLoading(new ProjectLoading())

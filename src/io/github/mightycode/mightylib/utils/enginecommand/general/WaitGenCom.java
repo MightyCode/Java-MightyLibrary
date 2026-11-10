@@ -1,7 +1,11 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Context;
+import io.github.mightycode.mightylib.main.Engine;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,12 +21,10 @@ public class WaitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "wait";
 
     private final Commands commands;
-    private final SceneManager sceneManager;
 
-    public WaitGenCom(Commands commands, SceneManager sceneManager) {
-        super(COMMAND_NAME);
+    public WaitGenCom(Commands commands) {
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
         this.commands = commands;
-        this.sceneManager = sceneManager;
     }
 
     @Override
@@ -74,9 +76,10 @@ public class WaitGenCom extends BaseCommand {
     }
 
     private CommandResult waitLoaded(long timeout) {
-        if (sceneManager == null)
-            return CommandResult.error("No scene manager");
-
+        // Of the window targeted when the wait starts
+        Engine engine = Views.engine();
+        Context context = engine.commandContext();
+        SceneManager sceneManager = context.getSceneManager();
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
         // A simulated input of this tick is seen by the next tick, whose scene can then ask a change,
         // done at the beginning of the tick after: start checking two ticks later
@@ -85,11 +88,17 @@ public class WaitGenCom extends BaseCommand {
             if (future.isDone())
                 return true;
 
-            if (commands.getTick() < startTick + 2 || sceneManager.commandTarget().isSceneChangePending()
-                    || sceneManager.commandTarget().isCurrentSceneLoading())
+            // Its scenes are unloaded: they will never be loaded
+            if (!engine.contexts().getContexts().contains(context)) {
+                future.complete(CommandResult.error("The window " + context.getName() + " closed during the wait"));
+                return true;
+            }
+
+            if (commands.getTick() < startTick + 2 || sceneManager.isSceneChangePending()
+                    || sceneManager.isCurrentSceneLoading())
                 return false;
 
-            future.complete(CommandResult.ok(sceneManager.commandTarget().getCurrentScene().getClass().getName() + " loaded"));
+            future.complete(CommandResult.ok(sceneManager.getCurrentScene().getClass().getName() + " loaded"));
             return true;
         });
 

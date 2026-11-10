@@ -23,7 +23,10 @@ import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
+import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -50,6 +53,7 @@ public final class Engine implements IView {
     private GLResources glResources;
     private SoundManager soundManager;
     private SceneManager sceneManager;
+    private Commands commands;
     private DebugServer debugServer;
     // Program output and commands: null without console nor debug mode
     private ConsoleLog consoleLog;
@@ -80,7 +84,10 @@ public final class Engine implements IView {
     // The scenes of the main context
     public SceneManager sceneManager() { return sceneManager; }
 
-    // The in-game console, null when disabled (EngineConfig.setConsole)
+    // The commands of the engine, the game and the views, created by setup
+    public Commands commands() { return commands; }
+
+    // The in-game console, null without access to the commands (EngineConfig.setCommandAccess)
     public Console console() { return console; }
 
     // What the console shows: program output and commands of every source; null without console nor debug mode
@@ -151,8 +158,14 @@ public final class Engine implements IView {
         MainLoop.setMode(config.getMode());
         Logger.DO_CHECK = config.isOpenGLErrorCheck();
 
+        // Resolved once (the launch option is read and reported once). Without access, the player has no console:
+        // only the game (api) and, in debug mode, the standard input and the debug server send commands.
+        // A maximum of null closes the access for good: no console, the launch option is ignored
+        ECommandLevel access = config.getCommandAccess();
+        ECommandLevel maxAccess = config.getMaxCommandAccess();
+
         // From the first line: the console and the debug server clients see the whole output
-        if (config.isConsoleEnabled() || config.getMode() == EEngineMode.DEBUG) {
+        if (access != null || config.getMode() == EEngineMode.DEBUG) {
             consoleLog = new ConsoleLog(config.getConsoleLogCapacity());
             LogCapture.install(consoleLog);
         }
@@ -218,18 +231,27 @@ public final class Engine implements IView {
             return ListError.LIBRARIES_LOAD_FAIL;
         }
 
+        // Before the scenes and the game: they add their commands to it
+        if (maxAccess == null && System.getProperty(EngineConfig.COMMAND_ACCESS_PROPERTY) != null)
+            System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
+
+        commands = new Commands(maxAccess == null ? ECommandLevel.USER : maxAccess,
+                access == null ? ECommandLevel.USER : access, maxAccess != null && config.isCheatCommand());
+        commands.setViewChooser(this::targetedView);
+        if (consoleLog != null)
+            commands.addListener(new CommandEcho(consoleLog));
+
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
 
-        if (consoleLog != null)
-            sceneManager.getCommands().addListener(new CommandEcho(consoleLog));
-        if (config.isConsoleEnabled())
-            console = new Console(this, consoleLog, sceneManager.getCommands(), config.getConsoleFont());
+        if (access != null)
+            console = new Console(this, consoleLog, commands, config.getConsoleFont());
 
         IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {
             projectLoading.init(resources);
+            projectLoading.registerCommands(commands.registryFor(CommandOwner.GAME));
             projectLoading.contextLoading(mainWindow);
         }
 
@@ -240,13 +262,13 @@ public final class Engine implements IView {
         resources.load();
         sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
-        // Commands are only processed in debug mode
+        // The standard input and the debug server only exist in debug mode
         if (MainLoop.isDebug()) {
-            sceneManager.getCommands().startConsole();
+            commands.startConsole();
 
             int debugServerPort = config.getDebugServerPort();
             if (debugServerPort > 0) {
-                debugServer = new DebugServer(sceneManager.getCommands(), debugServerPort, consoleLog);
+                debugServer = new DebugServer(commands, debugServerPort, consoleLog);
                 if (!debugServer.start())
                     debugServer = null;
             }
@@ -329,6 +351,27 @@ public final class Engine implements IView {
     // Null to come back to the main window
     public void setCommandWindow(WindowContext window) {
         commandWindow = window;
+    }
+
+    /**
+     * Among views having the same command (a scene shown in two windows), the one of the targeted window, else the
+     * one of its context; null if none or several.
+     */
+    private IView targetedView(List<IView> views) {
+        WindowContext target = commandWindow();
+        IView inContext = null;
+        int inContextCount = 0;
+        for (IView view : views) {
+            WindowContext window = view.context();
+            if (window == target)
+                return view;
+            if (window != null && window.getContext() == target.getContext()) {
+                inContext = view;
+                ++inContextCount;
+            }
+        }
+
+        return inContextCount == 1 ? inContext : null;
     }
 
     /**

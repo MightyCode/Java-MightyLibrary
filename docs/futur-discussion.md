@@ -13,6 +13,9 @@ Déjà dans le moteur (ne pas reproposer) : A*, Dijkstra, tweens, son positionn�
 - **Son** : groupes de volume (musique, effets, voix), fondus enchaînés, variation de hauteur des effets répétés.
 - **Animations** : machine à états ; import Aseprite.
 
+## Réseau
+- **Permissions par joueur** : opérateur, administrateur, triche autorisée par le serveur ; le niveau des commandes (`ECommandLevel`) ne vaut qu'en local, en réseau c'est le serveur qui décide.
+
 ## Production et distribution
 - **Livrer** : `jpackage`/`jlink` (Java intégré) ; macOS `-XstartOnFirstThread` ; prérequis Steam.
 - **Journal fichier et rapports de plantage**.

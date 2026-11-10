@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import io.github.mightycode.mightylib.main.monitors.Monitors;
 import io.github.mightycode.mightylib.main.monitors.VideoMode;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.Arrays;
 import java.util.Collection;
@@ -24,7 +25,7 @@ public class MonitorsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "monitors";
 
     public MonitorsGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

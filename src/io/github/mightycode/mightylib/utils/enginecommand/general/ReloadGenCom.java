@@ -5,13 +5,14 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.ResourceSelection;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 
 public class ReloadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "reload";
 
     public ReloadGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override

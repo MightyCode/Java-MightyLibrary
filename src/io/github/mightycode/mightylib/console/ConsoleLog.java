@@ -1,6 +1,9 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
@@ -13,7 +16,11 @@ public final class ConsoleLog {
     public static final int DEFAULT_CAPACITY = 5000;
 
     public enum EType {
-        OUT, ERR, COMMAND, RESULT, ERROR
+        // Program output (System.out, System.err): for the developer only
+        OUT, ERR,
+        COMMAND, RESULT, ERROR,
+        // Written by the game for the player (Console.print)
+        MESSAGE
     }
 
     public static final class Line {
@@ -21,17 +28,22 @@ public final class ConsoleLog {
         private final EType type;
         private final String source;
         private final String text;
+        private final ECommandLevel level;
 
-        Line(long id, EType type, String source, String text) {
+        Line(long id, EType type, String source, String text, ECommandLevel level) {
             this.id = id;
             this.type = type;
             this.source = source;
             this.text = text;
+            this.level = level;
         }
 
         // Increasing from 1, never reused
         public long getId() { return id; }
         public EType getType() { return type; }
+        // The lowest level that sees the line
+        public ECommandLevel getLevel() { return level; }
+        public boolean isVisible(ECommandLevel viewer) { return viewer.includes(level); }
         // Source of a command or of its result (game, stdin, server...), null for the program output
         public String getSource() { return source; }
         public String getText() { return text; }
@@ -51,6 +63,10 @@ public final class ConsoleLog {
     private long nextId;
     // Changes at each modification (added lines or clear): a display only rebuilds when it changed
     private long version;
+    // Per viewer level: changes only when what this level sees changes (a hidden line changes nothing)
+    private final long[] levelVersions = new long[ECommandLevel.values().length];
+    // Per viewer level: the lines up to this id were cleared for it (clear by a level below DEV)
+    private final long[] clearedUpTo = new long[ECommandLevel.values().length];
 
     private final CopyOnWriteArrayList<Consumer<Line>> listeners;
 
@@ -67,8 +83,13 @@ public final class ConsoleLog {
         listeners = new CopyOnWriteArrayList<>();
     }
 
-    /** Add one entry, split on the line breaks. */
+    /** Add one entry, split on the line breaks: the program output is seen by DEV, the rest by every level. */
     public void add(EType type, String source, String text) {
+        add(type, source, text, type == EType.OUT || type == EType.ERR ? ECommandLevel.DEV : ECommandLevel.USER);
+    }
+
+    /** Add one entry, split on the line breaks, seen from the level on. */
+    public void add(EType type, String source, String text, ECommandLevel level) {
         if (text == null)
             return;
 
@@ -81,11 +102,15 @@ public final class ConsoleLog {
         List<Line> added = new ArrayList<>(count);
         synchronized (this) {
             for (int i = 0; i < count; ++i) {
-                Line line = new Line(nextId++, type, source, split[i]);
+                Line line = new Line(nextId++, type, source, split[i], level);
                 append(line);
                 added.add(line);
             }
             ++version;
+            for (ECommandLevel viewer : ECommandLevel.values()) {
+                if (viewer.includes(level))
+                    ++levelVersions[viewer.ordinal()];
+            }
         }
 
         for (Line line : added) {
@@ -104,6 +129,7 @@ public final class ConsoleLog {
         }
     }
 
+    // Forget every line: for every viewer, the debug server clients included
     public synchronized void clear() {
         for (int i = 0; i < lines.length; ++i)
             lines[i] = null;
@@ -111,10 +137,36 @@ public final class ConsoleLog {
         start = 0;
         size = 0;
         ++version;
+        for (int i = 0; i < levelVersions.length; ++i)
+            ++levelVersions[i];
+    }
+
+    /**
+     * Clear asked by a viewer: DEV forgets every line; a lower level only stops seeing the current lines, it and the
+     * levels below (the player's console), the developer still reads them (console log, debug server).
+     */
+    public synchronized void clear(ECommandLevel viewer) {
+        if (viewer == ECommandLevel.DEV) {
+            clear();
+            return;
+        }
+
+        for (ECommandLevel level : ECommandLevel.values()) {
+            if (viewer.includes(level)) {
+                clearedUpTo[level.ordinal()] = nextId - 1;
+                ++levelVersions[level.ordinal()];
+            }
+        }
+        ++version;
     }
 
     public synchronized long version() {
         return version;
+    }
+
+    // Changes only when what the viewer sees changes
+    public synchronized long version(ECommandLevel viewer) {
+        return levelVersions[viewer.ordinal()];
     }
 
     public synchronized int size() {
@@ -133,6 +185,22 @@ public final class ConsoleLog {
             result.add(lines[(start + i) % lines.length]);
 
         return result;
+    }
+
+    // The last count lines (or less) the level sees, oldest first, without the ones it cleared
+    public synchronized List<Line> last(int count, ECommandLevel viewer) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        List<Line> fromNewest = new ArrayList<>();
+        for (int i = size - 1; i >= 0 && fromNewest.size() < count; --i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.id <= cleared)
+                break;
+            if (line.isVisible(viewer))
+                fromNewest.add(line);
+        }
+
+        Collections.reverse(fromNewest);
+        return fromNewest;
     }
 
     // The lines whose id is greater than the given one, oldest first (the forgotten ones are lost)

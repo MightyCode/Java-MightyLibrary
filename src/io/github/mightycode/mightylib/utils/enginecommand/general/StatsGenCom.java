@@ -3,9 +3,11 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import io.github.mightycode.mightylib.utils.enginecommand.JsonSelect;
 import org.json.JSONObject;
@@ -14,13 +16,19 @@ import java.util.Arrays;
 
 public class StatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "stats";
+    // The only statistic of the player (USER), the others are for the developer
+    private static final String FPS = "fps";
 
     public StatsGenCom() {
-        super(COMMAND_NAME);
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER);
     }
 
     @Override
     public Collection<String> completeArgument(String[] args) {
+        // The player only has the frames per second
+        if (!hasLevel(ECommandLevel.DEV))
+            return args.length == 2 ? Collections.singletonList(FPS) : Collections.emptyList();
+
         // stats reset, or fields of the statistics (the first level, deeper ones are written with dots)
         List<String> values = new ArrayList<>(EngineStats.toJson().keySet());
         values.add("glObjects");
@@ -31,6 +39,10 @@ public class StatsGenCom extends BaseCommand {
 
     @Override
     public CommandResult execute(String[] args) {
+        if (args.length == 2 && args[1].equals(FPS) && !hasLevel(ECommandLevel.DEV))
+            return CommandResult.ok("FPS : " + EngineStats.toJson().opt(FPS));
+        requireLevel(ECommandLevel.DEV, args.length > 1 ? args[1] : null);
+
         if (args.length > 1 && args[1].equals("reset")) {
             EngineStats.resetMax();
             return CommandResult.ok("Worst frame timings reset");

@@ -18,7 +18,14 @@ import io.github.mightycode.mightylib.inputs.inputType.InputGamepadAxis;
 import io.github.mightycode.mightylib.inputs.inputType.InputGamepadButton;
 import io.github.mightycode.mightylib.inputs.inputType.InputOr;
 import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.registry.Identifier;
+import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
@@ -36,6 +43,23 @@ class ProjectLoading implements IProjectLoading {
         resources.Loaders.add(new ModelLoader());
         resources.Loaders.add(new TextureDataAtlasLoader());
         resources.Loaders.add(new WaveCollapseRulesLoader());
+    }
+
+    // Commands of the game: kept for the whole run, whatever the scene
+    @Override
+    public void registerCommands(CommandRegistry registry) {
+        registry.register(new BaseCommand(Identifier.of("demo", "menu"), ECommandLevel.USER) {
+            @Override
+            public CommandResult execute(String[] args) {
+                Views.engine().sceneManager().requestSceneChange(new MenuScene(), new String[]{});
+                return CommandResult.ok("Back to the menu");
+            }
+
+            @Override
+            public String help() {
+                return super.help() + "\ndemo:menu : go back to the menu";
+            }
+        });
     }
 
     @Override

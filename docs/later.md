@@ -23,13 +23,14 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0).
 
 ### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading`. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
+- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading` et le point provisoire `IProjectLoading.registerCommands` ; les commandes du moteur et du jeu sont figées après le démarrage, celles des scènes et des vues restent dynamiques. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
 - **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
 - **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
-- **Identifiants à espace de noms** (`jeu:slime`, classe `registry/Identifier`, déjà utilisée par les actions et axes) pour ressources, commandes, scènes : aujourd'hui noms globaux → collisions.
+- **Identifiants à espace de noms** (`jeu:slime`, classe `registry/Identifier`, déjà utilisée par les actions, les axes et les commandes) pour ressources et scènes : aujourd'hui noms globaux → collisions.
+- **Commandes d'un mod** : le mod est leur propriétaire (`CommandOwner`), espace = identifiant du mod, niveau `DEV` ; insérer `MODDER` entre `CHEAT` et `DEV` si les outils de mod doivent être séparés de ceux du moteur.
 - La liste des scènes du menu de la démo (`MenuScene.createSceneEntries`) devra venir du registre de scènes par nom, pas d'une liste écrite en dur.
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
 - **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
@@ -102,7 +103,8 @@ Le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour fa
 - Collisions par nom (`"player"`, `"enemy"`, `"environment"`) déclarées par le projet.
 - Signaux de logique via le bus d'événements (Modding), pas d'IDs en dur.
 - Moteur = générique (sprites, animations, physique, sons, particules, caméra et tremblement, manettes, debug, log, temps, sauvegarde) ; le jeu enregistre ses fonctions par le point d'injection.
-- **Rechargement à chaud** des `.lua` en gardant la mémoire des entités ; commandes `lua reload`, `lua eval <code>`.
+- **Rechargement à chaud** des `.lua` en gardant la mémoire des entités ; commandes `lua reload`, `lua eval <code>` (niveau `DEV`).
+- **Commandes écrites en Lua** : enregistrées par un script (propriétaire = le script, retirées à son rechargement).
 - Erreur de script → log fichier:ligne, entité désactivée, le jeu continue.
 - Documentation de l'API générée depuis les fonctions enregistrées.
 - À décider : état Lua par scène (environnement isolé par script) ou par entité ; coût Java ↔ Lua mesuré dans `stats`.
@@ -151,7 +153,11 @@ Streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
 - **Overlay de debug** (stats, scène, entrées) à côté de la console. S'appuie sur thème, tailles et langues.
-- **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte) ; sélection et copie du journal ; suggestions affichées sous la saisie en plus du Tab bash ; complétion des commandes de scène existantes (`completeArgument` à écrire).
+- **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte) ; sélection et copie du journal ; suggestions affichées sous la saisie en plus du Tab bash.
+- **Commandes, suite** :
+  - arguments déclaratifs : un schéma d'arguments par commande qui produirait `help`, la complétion et les niveaux par sous-commande (aujourd'hui écrits à la main : `completeArgument`, `requireLevel`) ;
+  - condition de disponibilité par commande (`isAvailable()`, même refus silencieux que les niveaux) : commande réservée à l'hôte en multijoueur, ou valable dans un certain état de la partie ;
+  - traduction des messages et aides des commandes du joueur (système de langues).
 - **Journal à grande échelle** : l'anneau de `ConsoleLog` oublie au-delà de sa capacité ; cible durable : journal fichier tournant (cf. `futur-discussion.md`) relu par la console, filtres par type/source, niveaux de log au lieu de `System.out` préfixé `--`.
 - **Texte de la console** : un `Text` (VAO/VBO, draw call) par ligne visible, sans découpe GL (`glScissor`) : à reprendre avec le batching 2D.
 

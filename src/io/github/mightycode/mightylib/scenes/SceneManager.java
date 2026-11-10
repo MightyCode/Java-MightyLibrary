@@ -11,7 +11,6 @@ import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.sounds.SoundManager;
-import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
 import java.util.function.Supplier;
 
@@ -20,8 +19,8 @@ public class SceneManager {
     private Scene currentScene;
 
     private final Context context;
-    // Null for the contexts other than the main one: the console and the debug server serve the main one
-    private final Commands commands;
+    // The commands of the engine are run by the scenes of the main context only
+    private final boolean runsCommands;
     private final Engine engine;
     private final SoundManager soundManager;
 
@@ -29,12 +28,13 @@ public class SceneManager {
     private String scenesPackage;
 
     // defaultLoadingScene: displayed while a scene loads, unless the scene overrides createLoadingScene
-    public SceneManager(Engine engine, Context context, boolean withCommands, Supplier<TemplateSceneLoading> defaultLoadingScene) {
+    // runsCommands: the main context, which runs the pending commands of the engine at each tick
+    public SceneManager(Engine engine, Context context, boolean runsCommands, Supplier<TemplateSceneLoading> defaultLoadingScene) {
         this.context = context;
         this.engine = engine;
         sceneInterface = new SceneManagerInterface(engine.resources(), defaultLoadingScene);
 
-        commands = withCommands ? new Commands(this) : null;
+        this.runsCommands = runsCommands;
         soundManager = engine.soundManager();
     }
 
@@ -50,10 +50,8 @@ public class SceneManager {
 
 
     public void update() {
-        // Commands: debug mode, or a game keeping its console
-        if (commands != null && (MainLoop.isDebug() || engine.console() != null)) {
+        if (runsCommands)
             updateMain();
-        }
 
         if (sceneInterface.isWantingChange())
             changeScene();
@@ -70,8 +68,8 @@ public class SceneManager {
         WindowContext mainWindow = context.getMainWindow();
         InputManager mainInputManager = mainWindow.getInputManager();
 
-        // Commands come from the console thread or the debug server, never block here
-        commands.processPendingCommands();
+        // Commands come from the console, the debug server or the game, never block here
+        engine.commands().processPendingCommands();
 
         if (MainLoop.isDebug() && mainInputManager.inputPressed(EngineActions.RELOAD_TEXTURE))
             engine.resources().reloadAllOfType(TextureData.class);
@@ -87,9 +85,6 @@ public class SceneManager {
     }
 
     private void changeScene() {
-        if (commands != null)
-            commands.removeSceneCommands();
-
         Scene previousScene = currentScene;
         if (previousScene != null) {
             System.out.println("--Unload scene" + previousScene.getClass().getName());
@@ -131,10 +126,6 @@ public class SceneManager {
         return sceneInterface.ExitStatus;
     }
 
-    public Commands getCommands() {
-        return commands;
-    }
-
     public Scene getCurrentScene() {
         return currentScene;
     }
@@ -162,11 +153,6 @@ public class SceneManager {
         sceneInterface.exit(status);
     }
     // The context of this scene manager: its windows and its engine
-    // The scenes of the context targeted by the commands (see Engine.commandWindow): this one by default
-    public SceneManager commandTarget() {
-        return engine.commandContext().getSceneManager();
-    }
-
     public Context getContext() {
         return context;
     }

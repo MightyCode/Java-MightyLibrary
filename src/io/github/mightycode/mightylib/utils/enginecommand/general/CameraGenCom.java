@@ -1,11 +1,11 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.JsonSelect;
 import org.joml.Vector2f;
@@ -24,17 +24,14 @@ import java.util.List;
  */
 public class CameraGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "camera";
-    private final SceneManager sceneManager;
-
-    public CameraGenCom(SceneManager sceneManager) {
-        super(COMMAND_NAME);
-        this.sceneManager = sceneManager;
+    public CameraGenCom() {
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV);
     }
 
     @Override
     public Collection<String> completeArgument(String[] args) {
-        Scene scene = sceneManager.commandTarget().getCurrentScene();
-        if (scene == null)
+        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
+        if (scene == null || !scene.isLaunched())
             return Collections.emptyList();
 
         if (args.length == 2) {
@@ -60,9 +57,10 @@ public class CameraGenCom extends BaseCommand {
         if (checkArgumentHelp(args))
             return CommandResult.ok(help());
 
-        Scene scene = sceneManager.commandTarget().getCurrentScene();
+        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
         if (scene == null)
             return CommandResult.error("No current scene");
+        requireLaunched(scene);
 
         if (args.length < 2)
             return list(scene);

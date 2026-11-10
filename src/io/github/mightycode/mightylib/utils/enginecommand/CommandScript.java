@@ -13,6 +13,8 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CommandScript {
     private final Commands commands;
+    // Who started the script: every line runs as it, even the ones run later in a tick task (never above its level)
+    private final ICommandSource source;
     private final String name;
     private final List<String> lines;
     private final CompletableFuture<CommandResult> result;
@@ -25,8 +27,10 @@ public class CommandScript {
     private String waitedLine;
     private int waitedLineNumber;
 
+    // The script runs as the current source of the commands (the one running exec)
     public CommandScript(Commands commands, String name, List<String> lines) {
         this.commands = commands;
+        this.source = commands.getCurrentSource();
         this.name = name;
         this.lines = lines;
         this.result = new CompletableFuture<>();
@@ -67,7 +71,7 @@ public class CommandScript {
             if (line.isEmpty() || line.startsWith("#"))
                 continue;
 
-            CommandResult lineResult = commands.execute(line);
+            CommandResult lineResult = commands.execute(line, source);
             if (lineResult.isDeferred()) {
                 waited = lineResult.getDeferred();
                 waitedCommand = lineResult;

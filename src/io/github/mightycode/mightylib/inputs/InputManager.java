@@ -343,6 +343,9 @@ public class InputManager {
         actionConfigurations.put(EngineActions.TOGGLE_CONSOLE,
                 new ActionInput(EngineActions.TOGGLE_CONSOLE, new InputSimple(GLFW_KEY_F1, EInputType.Keyboard)));
 
+        actionConfigurations.put(EngineActions.TOGGLE_PLAYER_CONSOLE,
+                new ActionInput(EngineActions.TOGGLE_PLAYER_CONSOLE, new InputSimple(GLFW_KEY_GRAVE_ACCENT, EInputType.Keyboard)));
+
         actionConfigurations.put(EngineActions.DETACH_CONSOLE,
                 new ActionInput(EngineActions.DETACH_CONSOLE, new InputSimple(GLFW_KEY_F2, EInputType.Keyboard)));
 
