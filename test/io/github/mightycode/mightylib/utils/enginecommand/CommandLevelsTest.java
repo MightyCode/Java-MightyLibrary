@@ -207,6 +207,21 @@ class CommandLevelsTest {
         assertFalse(run(commands, "screenshot --rect 0 0 1 1 --corners 0 0 1 1", DEVELOPER).isSuccess());
         assertFalse(commands.complete("console ", PLAYER).getCandidates().contains("log"));
         assertTrue(commands.complete("console ", DEVELOPER).getCandidates().contains("log"));
+
+        // The program output is for the developer: so is the command that shows or hides it
+        assertTrue(run(commands, "console logs off", PLAYER).getMessage().startsWith("Unknown argument ->logs<-"));
+        assertFalse(commands.complete("console ", PLAYER).getCandidates().contains("logs"));
+        assertTrue(commands.complete("console ", DEVELOPER).getCandidates().contains("logs"));
+        assertEquals(List.of("off", "on"), commands.complete("console logs ", DEVELOPER).getCandidates());
+        assertTrue(run(commands, "console logs maybe", DEVELOPER).getMessage().contains("maybe"));
+
+        // The player copies what the console shows; --all (the program output too) is for the developer
+        assertTrue(commands.complete("console ", PLAYER).getCandidates().contains("copy"));
+        assertFalse(commands.complete("console copy --", PLAYER).getCandidates().contains("--all"));
+        assertTrue(commands.complete("console copy --", DEVELOPER).getCandidates().contains("--all"));
+        assertFalse(run(commands, "console copy --all", PLAYER).isSuccess());
+        assertTrue(run(commands, "console copy 0", DEVELOPER).getMessage().contains("0"));
+        assertTrue(run(commands, "console copy five", DEVELOPER).getMessage().contains("five"));
     }
 
     @Test

@@ -14,10 +14,18 @@ import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import org.joml.Vector2f;
 import org.joml.Vector2i;
+import org.json.JSONObject;
 
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
 
 /**
@@ -48,8 +56,11 @@ public final class Console {
     private final String fontName;
     private final CommandLineEditor editor;
     private final ConsoleInput input;
+    private final ClickCounter clickCounter = new ClickCounter();
 
     private EMode mode = EMode.CLOSED;
+    // Types of log lines the console doesn't show (the log keeps them), shared by the overlay and the window
+    private final Set<ConsoleLog.EType> hiddenTypes = EnumSet.noneOf(ConsoleLog.EType.class);
 
     // Overlay of the main window, created at its first display
     private ConsoleView overlayView;
@@ -94,10 +105,82 @@ public final class Console {
 
     // A Tab was received but changes nothing: the command line of the shown console flashes
     private void bell() {
-        ConsolePanel panel = mode == EMode.DETACHED && windowView != null ? windowView.getPanel() : overlay;
+        ConsolePanel panel = shownPanel();
         if (panel != null)
             panel.flash();
     }
+
+    // The panel of the window the console is in (the overlay when closed), null before its first display
+    private ConsolePanel shownPanel() {
+        return mode == EMode.DETACHED && windowView != null ? windowView.getPanel() : overlay;
+    }
+
+    /**
+     * State of the console for the developer (command console): mode, logs shown, scroll ("end", or the line at the
+     * bottom of the view and its rows hidden below), selection (null, or where it is).
+     */
+    public JSONObject stateJson() {
+        JSONObject json = new JSONObject().put("mode", mode.name()).put("logsShown", areLogsShown());
+
+        ConsolePanel panel = shownPanel();
+        ConsoleLayout.Anchor anchor = panel == null ? null : panel.getLayout().anchor();
+        json.put("scroll", anchor == null ? "end"
+                : new JSONObject().put("id", anchor.lineId()).put("row", anchor.rowsBelow()));
+        // Lines below the view, at most ConsoleLayout.MAX_LINES_BELOW + 1 (more than the maximum)
+        json.put("newLinesBelow", panel == null ? 0 : panel.getLayout().linesBelow());
+
+        LogSelection logSelection = input.getLogSelection();
+        if (logSelection != null)
+            json.put("selection", new JSONObject().put("in", "log")
+                    .put("from", positionJson(logSelection.start())).put("to", positionJson(logSelection.end())));
+        else if (editor.hasSelection())
+            json.put("selection", new JSONObject().put("in", "input")
+                    .put("start", editor.selectionStart()).put("end", editor.selectionEnd()));
+        else
+            json.put("selection", JSONObject.NULL);
+
+        return json;
+    }
+
+    /**
+     * Show or hide the program output (stdout, stderr) in the console; the log keeps it (console log, debug server).
+     * The view keeps its place: hiding then showing the lines comes back to the same one.
+     */
+    public void setLogsShown(boolean shown) {
+        if (shown) {
+            hiddenTypes.remove(ConsoleLog.EType.OUT);
+            hiddenTypes.remove(ConsoleLog.EType.ERR);
+        } else {
+            hiddenTypes.add(ConsoleLog.EType.OUT);
+            hiddenTypes.add(ConsoleLog.EType.ERR);
+        }
+    }
+
+    public boolean areLogsShown() {
+        return !hiddenTypes.contains(ConsoleLog.EType.OUT) || !hiddenTypes.contains(ConsoleLog.EType.ERR);
+    }
+
+    /**
+     * Copy the last lines of the console to the clipboard of the system, as Ctrl+C on a selection of them would: the
+     * lines the level sees, without the types hidden by "console logs off" (unless all). Main thread.
+     * @param count lines to copy, 0 or less: every line kept
+     * @return the copied text, empty (clipboard unchanged) when there is no line
+     */
+    public String copyLast(int count, ECommandLevel level, boolean all) {
+        return copyLast(count, level, all, Long.MAX_VALUE);
+    }
+
+    // The same, the lines up to upToId only: a command copies the lines before its own echo (the newest COMMAND line)
+    public String copyLast(int count, ECommandLevel level, boolean all, long upToId) {
+        Set<ConsoleLog.EType> hidden = all ? Collections.<ConsoleLog.EType>emptySet() : getHiddenTypes();
+        String text = LogSelection.LastLinesText(log, level, line -> !hidden.contains(line.getType()), count, upToId);
+        if (!text.isEmpty())
+            engine.contexts().getMainWindow().getSystemInfo().setClipboardContent(text);
+        return text;
+    }
+
+    // The types of lines not shown (read by the panels at each display)
+    Set<ConsoleLog.EType> getHiddenTypes() { return Collections.unmodifiableSet(hiddenTypes); }
 
     public ConsoleLog getLog() { return log; }
 
@@ -267,11 +350,14 @@ public final class Console {
         KeyboardManager keyboard = target.getKeyboardManager();
         int pageRows = panel == null ? 10 : panel.getVisibleRows();
         List<ConsoleInput.Request> requests = input.handle(keyboard.getRawTypedText(), keyboard.getRawKeyEvents(),
-                pageRows, () -> target.getSystemInfo().getClipboardContent());
+                pageRows, clipboardOf(target), panel == null ? null : panel.getLayout());
 
         float wheel = target.getMouseManager().getRawMouseScroll().y;
         if (wheel != 0 && panel != null)
             panel.scroll(Math.round(wheel * WHEEL_ROWS));
+
+        if (panel != null)
+            requests.addAll(input.handleMouse(mouseState(target, panel), panel.getLayout()));
 
         for (ConsoleInput.Request request : requests) {
             switch (request.getType()) {
@@ -291,12 +377,57 @@ public final class Console {
                     if (panel != null)
                         panel.scroll(request.getAmount());
                     break;
+                case SCROLL_TOP:
+                    if (panel != null)
+                        panel.scrollToTop();
+                    break;
                 case SCROLL_END:
                     if (panel != null)
                         panel.scrollToEnd();
                     break;
             }
         }
+    }
+
+    // The left button of the window's mouse, in pixels from the top left of the panel
+    private ConsoleInput.MouseState mouseState(WindowContext target, ConsolePanel panel) {
+        MouseManager mouse = target.getMouseManager();
+        KeyboardManager keyboard = target.getKeyboardManager();
+        Vector2f position = mouse.getRawPos();
+        float x = position.x - panel.originX();
+        float y = position.y - panel.originY();
+        boolean pressed = mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT);
+        int clicks = pressed ? clickCounter.press(position.x, position.y, System.nanoTime()) : 0;
+        boolean shift = keyboard.getRawKeyState(GLFW_KEY_LEFT_SHIFT) || keyboard.getRawKeyState(GLFW_KEY_RIGHT_SHIFT);
+
+        // A press above the overlay (on the game) is not for the console
+        if (pressed && y < 0)
+            pressed = false;
+
+        return new ConsoleInput.MouseState(x, y, pressed, mouse.getRawButton(GLFW_MOUSE_BUTTON_LEFT),
+                mouse.rawButtonReleased(GLFW_MOUSE_BUTTON_LEFT), clicks, shift, System.nanoTime());
+    }
+
+    private static JSONObject positionJson(LogPosition position) {
+        return new JSONObject().put("id", position.lineId()).put("char", position.character());
+    }
+
+    // The selection in the log, drawn by the panels; null if none
+    LogSelection getLogSelection() { return input.getLogSelection(); }
+
+    // The clipboard of the system, through the window the console is typed in
+    private static ConsoleInput.IClipboard clipboardOf(WindowContext target) {
+        return new ConsoleInput.IClipboard() {
+            @Override
+            public String get() {
+                return target.getSystemInfo().getClipboardContent();
+            }
+
+            @Override
+            public void set(String text) {
+                target.getSystemInfo().setClipboardContent(text);
+            }
+        };
     }
 
     /** After the scene of the main window is drawn, with its OpenGL context current. */
@@ -309,8 +440,7 @@ public final class Console {
             if (overlay == null) {
                 overlayView = new ConsoleView(engine, main);
                 try (Views.Scope ignored = Views.enter(overlayView)) {
-                    overlay = new ConsolePanel(overlayView, log, this::getViewerLevel, editor, fontName,
-                            OVERLAY_BACKGROUND, OVERLAY_INPUT_BACKGROUND);
+                    overlay = new ConsolePanel(overlayView, this, OVERLAY_BACKGROUND, OVERLAY_INPUT_BACKGROUND);
                 }
             }
 

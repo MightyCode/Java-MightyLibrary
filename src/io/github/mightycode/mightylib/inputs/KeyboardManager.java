@@ -89,7 +89,8 @@ public class KeyboardManager {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
                 if (action != GLFW_RELEASE && key != GLFW_KEY_UNKNOWN)
-                    incomingKeyEvents.add(new KeyEvent(key, mods, action == GLFW_REPEAT));
+                    incomingKeyEvents.add(new KeyEvent(key, scancode, mods, action == GLFW_REPEAT,
+                            KeyEvent.LetterOf(glfwGetKeyName(key, scancode))));
             }
         });
     }
@@ -223,7 +224,7 @@ public class KeyboardManager {
 
             // A simulated key is typed like a real one
             if (simulated && !oldSimulated[key])
-                events.add(new KeyEvent(key, simulatedMods(), false));
+                events.add(new KeyEvent(key, 0, simulatedMods(), false, KeyEvent.LetterOf(glfwGetKeyName(key, 0))));
             oldSimulated[key] = simulated;
 
             if (state[key]){

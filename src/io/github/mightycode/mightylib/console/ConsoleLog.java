@@ -5,8 +5,10 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * Lines shown by the console: the program output (stdout, stderr) and the commands of every source with their result.
@@ -63,8 +65,9 @@ public final class ConsoleLog {
     private long nextId;
     // Changes at each modification (added lines or clear): a display only rebuilds when it changed
     private long version;
-    // Per viewer level: changes only when what this level sees changes (a hidden line changes nothing)
-    private final long[] levelVersions = new long[ECommandLevel.values().length];
+    // Per viewer level and type of line: changes only when what this level sees of this type changes (a hidden line
+    // changes nothing, a type filtered out by the display neither)
+    private final long[][] typeVersions = new long[ECommandLevel.values().length][EType.values().length];
     // Per viewer level: the lines up to this id were cleared for it (clear by a level below DEV)
     private final long[] clearedUpTo = new long[ECommandLevel.values().length];
 
@@ -109,7 +112,7 @@ public final class ConsoleLog {
             ++version;
             for (ECommandLevel viewer : ECommandLevel.values()) {
                 if (viewer.includes(level))
-                    ++levelVersions[viewer.ordinal()];
+                    ++typeVersions[viewer.ordinal()][type.ordinal()];
             }
         }
 
@@ -138,7 +141,7 @@ public final class ConsoleLog {
                     lines[index] = new Line(current.id, current.type, current.source, current.text, level);
                     for (ECommandLevel viewer : ECommandLevel.values()) {
                         if (viewer.includes(level) && !viewer.includes(current.level))
-                            ++levelVersions[viewer.ordinal()];
+                            ++typeVersions[viewer.ordinal()][current.type.ordinal()];
                     }
                     changed = true;
                 }
@@ -167,9 +170,12 @@ public final class ConsoleLog {
 
         start = 0;
         size = 0;
+        // Every viewer cleared its lines: a position kept on one of them goes back to the end (clearedUpTo)
+        for (int i = 0; i < clearedUpTo.length; ++i)
+            clearedUpTo[i] = nextId - 1;
         ++version;
-        for (int i = 0; i < levelVersions.length; ++i)
-            ++levelVersions[i];
+        for (ECommandLevel viewer : ECommandLevel.values())
+            changedEveryType(viewer);
     }
 
     /**
@@ -185,7 +191,7 @@ public final class ConsoleLog {
         for (ECommandLevel level : ECommandLevel.values()) {
             if (viewer.includes(level)) {
                 clearedUpTo[level.ordinal()] = nextId - 1;
-                ++levelVersions[level.ordinal()];
+                changedEveryType(level);
             }
         }
         ++version;
@@ -195,9 +201,27 @@ public final class ConsoleLog {
         return version;
     }
 
+    private void changedEveryType(ECommandLevel viewer) {
+        long[] versions = typeVersions[viewer.ordinal()];
+        for (int i = 0; i < versions.length; ++i)
+            ++versions[i];
+    }
+
     // Changes only when what the viewer sees changes
     public synchronized long version(ECommandLevel viewer) {
-        return levelVersions[viewer.ordinal()];
+        return version(viewer, Collections.<EType>emptySet());
+    }
+
+    // Changes only when what the viewer sees of the types not hidden changes (a sum of counters that only increase)
+    public synchronized long version(ECommandLevel viewer, Set<EType> hiddenTypes) {
+        long[] versions = typeVersions[viewer.ordinal()];
+        long sum = 0;
+        for (EType type : EType.values()) {
+            if (!hiddenTypes.contains(type))
+                sum += versions[type.ordinal()];
+        }
+
+        return sum;
     }
 
     public synchronized int size() {
@@ -232,6 +256,105 @@ public final class ConsoleLog {
 
         Collections.reverse(fromNewest);
         return fromNewest;
+    }
+
+    /*
+     * Reads around a line, for a display that keeps its position on a line (ConsoleLayout). Only the lines the viewer
+     * sees, not cleared for it, accepted by the filter (null: every line). The work grows with the lines read, not
+     * with the size of the log (the ids are increasing: the line is found by dichotomy).
+     */
+
+    // The last count lines whose id is at most the given one, oldest first
+    public synchronized List<Line> upTo(long id, int count, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        List<Line> fromNewest = new ArrayList<>();
+        for (int i = indexAfter(id) - 1; i >= 0 && fromNewest.size() < count; --i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.id <= cleared)
+                break;
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                fromNewest.add(line);
+        }
+
+        Collections.reverse(fromNewest);
+        return fromNewest;
+    }
+
+    // The first count lines whose id is greater than the given one, oldest first
+    public synchronized List<Line> after(long id, int count, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        List<Line> result = new ArrayList<>();
+        for (int i = indexAfter(Math.max(id, cleared)); i < size && result.size() < count; ++i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                result.add(line);
+        }
+
+        return result;
+    }
+
+    // Number of lines whose id is greater than the given one, counted up to max (after without the list)
+    public synchronized int countAfter(long id, int max, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        int count = 0;
+        for (int i = indexAfter(Math.max(id, cleared)); i < size && count < max; ++i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                ++count;
+        }
+
+        return count;
+    }
+
+    // The lines whose id is between the two given ones (included), oldest first
+    public synchronized List<Line> between(long fromId, long toId, ECommandLevel viewer, Predicate<Line> filter) {
+        long cleared = clearedUpTo[viewer.ordinal()];
+        List<Line> result = new ArrayList<>();
+        for (int i = indexAfter(Math.max(fromId - 1, cleared)); i < size; ++i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.id > toId)
+                break;
+            if (line.isVisible(viewer) && (filter == null || filter.test(line)))
+                result.add(line);
+        }
+
+        return result;
+    }
+
+    // Index (from the oldest kept line) of the first line whose id is greater than the given one, size if none
+    private int indexAfter(long id) {
+        int low = 0;
+        int high = size;
+        while (low < high) {
+            int middle = (low + high) >>> 1;
+            if (lines[(start + middle) % lines.length].id <= id)
+                low = middle + 1;
+            else
+                high = middle;
+        }
+
+        return low;
+    }
+
+    // Id of the newest line kept of this type, 0 if none (read from the newest: the work grows with the lines after it)
+    public synchronized long newestId(EType type) {
+        for (int i = size - 1; i >= 0; --i) {
+            Line line = lines[(start + i) % lines.length];
+            if (line.type == type)
+                return line.id;
+        }
+
+        return 0;
+    }
+
+    // Id of the oldest line kept (the next id when the log is empty): an older line was forgotten
+    public synchronized long oldestId() {
+        return size == 0 ? nextId : lines[start].id;
+    }
+
+    // The lines up to this id were cleared for the viewer (Ctrl+L, console clear), 0 if none
+    public synchronized long clearedUpTo(ECommandLevel viewer) {
+        return clearedUpTo[viewer.ordinal()];
     }
 
     // The lines whose id is greater than the given one, oldest first (the forgotten ones are lost)

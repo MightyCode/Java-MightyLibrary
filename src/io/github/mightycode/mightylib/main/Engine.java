@@ -245,8 +245,10 @@ public final class Engine implements IView {
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
 
-        if (access != null)
+        if (access != null) {
             console = new Console(this, consoleLog, commands, config.getConsoleFont());
+            console.setLogsShown(config.isConsoleLogsShown());
+        }
 
         IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {

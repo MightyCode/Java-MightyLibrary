@@ -8,7 +8,9 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -62,6 +64,19 @@ public class ConsoleGenCom extends BaseCommand {
                         .then(argument("count", integer(1, Integer.MAX_VALUE),
                                 "Number of lines (" + DEFAULT_LOG_LINES + " by default)")
                                 .executes(context -> log(Views.engine().consoleLog(), context.get("count"), null))))
+                .then(literal("copy", "Copy the last lines of the console to the clipboard, as shown"
+                        + " (the program output only when it is shown)")
+                        .option(Option.of("all", "Copy the program output too, even when the console hides it")
+                                .level(ECommandLevel.DEV))
+                        .executes("Copy every line of the console", context -> copy(context, 0))
+                        .then(argument("count", integer(1, Integer.MAX_VALUE), "Number of lines, the last ones")
+                                .executes(context -> copy(context, context.get("count")))))
+                // The program output is seen in DEV only
+                .then(literal("logs", "Show or hide the program output (stdout, stderr) in the console")
+                        .level(ECommandLevel.DEV)
+                        .executes(context -> logs(null))
+                        .then(argument("state", choice("on", "off"), "Show the program output or hide it")
+                                .executes(context -> logs(context.get("state").equals("on")))))
                 .then(literal("follow", "Receive every new line of the log (debug server, see DebugServer)")
                         .level(ECommandLevel.DEV)
                         .executes(context -> follow(true))
@@ -81,6 +96,34 @@ public class ConsoleGenCom extends BaseCommand {
         });
     }
 
+    private static CommandResult copy(CommandContext context, int count) {
+        Console console = Views.engine().console();
+        if (console == null)
+            return status(null);
+
+        // Commands run on the main thread just after their echo: the newest COMMAND line is this one, not copied
+        long echo = console.getLog().newestId(ConsoleLog.EType.COMMAND);
+        String text = console.copyLast(count, context.currentLevel(), context.has("all"),
+                echo > 0 ? echo - 1 : Long.MAX_VALUE);
+        if (text.isEmpty())
+            return CommandResult.ok("No line to copy", new JSONObject().put("lines", 0).put("chars", 0));
+
+        int lines = text.split("\n", -1).length;
+        return CommandResult.ok(lines + (lines == 1 ? " line copied" : " lines copied"),
+                new JSONObject().put("lines", lines).put("chars", text.length()));
+    }
+
+    // null: switch
+    private static CommandResult logs(Boolean shown) {
+        Console console = Views.engine().console();
+        if (console == null)
+            return status(null);
+
+        console.setLogsShown(shown == null ? !console.areLogsShown() : shown);
+        return CommandResult.ok(console.areLogsShown() ? "Logs shown" : "Logs hidden",
+                new JSONObject().put("logsShown", console.areLogsShown()));
+    }
+
     private CommandResult follow(boolean on) {
         Engine engine = Views.engine();
         if (engine.consoleLog() == null)
@@ -95,8 +138,7 @@ public class ConsoleGenCom extends BaseCommand {
         if (console == null)
             return CommandResult.error("The console is disabled (EngineConfig.setCommandAccess)");
 
-        return CommandResult.ok("Console " + console.getMode().name().toLowerCase(),
-                new JSONObject().put("mode", console.getMode().name()));
+        return CommandResult.ok("Console " + console.getMode().name().toLowerCase(), console.stateJson());
     }
 
     // The last lines, or the lines after the id (when not null)
