@@ -118,6 +118,15 @@ class CommandHelpTest {
     }
 
     @Test
+    void descriptionOfAnArgumentIsNotTheOneOfItsBranch() {
+        CommandParser parser = new CommandParser(CommandNode.root("wait", "Wait")
+                .then(argument("ticks", integer(1, 10), "Ticks to wait").executes(OK)));
+
+        String help = parser.helpText("test:wait", Context(ECommandLevel.DEV));
+        assertTrue(help.contains("\n  wait <ticks>\nArguments :\n  <ticks> : Ticks to wait (integer 1..10)\n"), help);
+    }
+
+    @Test
     void helpJsonIsTheVisibleTree() {
         JSONObject json = Spawn().helpJson("demo:spawn", ECommandLevel.CHEAT, Context(ECommandLevel.USER));
 

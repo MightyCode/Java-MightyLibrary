@@ -32,6 +32,8 @@ public abstract class ListGeneralCommand {
         registry.register(new WaitGenCom(commands));
         registry.register(new ExecGenCom(commands));
         registry.register(new ConsoleGenCom(commands));
+        registry.register(new AsGenCom(commands));
+        registry.register(new CompleteGenCom(commands));
 
         if (cheatCommand)
             registry.register(new CheatsGenCom(commands));

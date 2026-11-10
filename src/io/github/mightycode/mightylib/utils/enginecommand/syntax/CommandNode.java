@@ -186,9 +186,12 @@ public final class CommandNode {
         CommandCondition.Check(conditions, context);
     }
 
-    // The description of the branch ending here
+    // The description of the branch ending here: the one given to executes, else the one of the root or the literal
+    // (the one of an argument describes the value, shown with the arguments)
     String branchDescription() {
-        return branchDescription != null ? branchDescription : description;
+        if (branchDescription != null || kind == Kind.ARGUMENT)
+            return branchDescription;
+        return description;
     }
 
     // Checks the whole tree once (registration): a mistake of the command is found at once, not when typed

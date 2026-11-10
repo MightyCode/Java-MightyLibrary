@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import java.util.Locale;
 import java.util.function.Supplier;
 
 /**
@@ -20,6 +21,30 @@ public interface ICommandSource {
      */
     default boolean setFollowLog(boolean follow) {
         return false;
+    }
+
+    /**
+     * The source at a level that can only be lower than its own (commands as and complete): "server#1 (as user)",
+     * at Min(level, its level), asked at each use. Following the log goes to the source.
+     */
+    static ICommandSource Lowered(ICommandSource source, ECommandLevel level) {
+        String name = source.name() + " (as " + level.name().toLowerCase(Locale.ROOT) + ")";
+        return new ICommandSource() {
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public ECommandLevel level() {
+                return ECommandLevel.Min(level, source.level());
+            }
+
+            @Override
+            public boolean setFollowLog(boolean follow) {
+                return source.setFollowLog(follow);
+            }
+        };
     }
 
     static ICommandSource Named(String name, ECommandLevel level) {

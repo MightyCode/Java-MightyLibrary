@@ -352,4 +352,71 @@ class CommandLevelsTest {
         log.clear(ECommandLevel.DEV);
         assertEquals(0, log.size());
     }
+
+    // ---- as and complete: what the player sees, checked without him ----
+
+    @Test
+    void asNeverRaisesTheLevel() throws Exception {
+        Commands commands = withLevels();
+
+        assertEquals("zzuser at USER", run(commands, "as user zzuser public", DEVELOPER).getMessage());
+        assertEquals("zzuser at CHEAT", run(commands, "as cheat zzuser public", DEVELOPER).getMessage());
+        // as itself is reserved to the developer: the player can't use it to climb
+        assertEquals("No command with its name ->as<-", run(commands, "as dev zzuser secret", PLAYER).getMessage());
+        assertEquals("No command with its name ->as<-", run(commands, "as cheat as dev zzdev public", DEVELOPER).getMessage());
+
+        ICommandSource lowered = ICommandSource.Lowered(PLAYER, ECommandLevel.DEV);
+        assertEquals(ECommandLevel.USER, lowered.level());
+        assertEquals("game (as dev)", lowered.name());
+    }
+
+    @Test
+    void developerCommandIsUnknownAsUser() throws Exception {
+        Commands commands = withLevels();
+
+        String unknown = run(commands, "as user zzzz public", DEVELOPER).getMessage();
+        assertEquals(unknown.replace("zzzz", "zzdev"), run(commands, "as user zzdev public", DEVELOPER).getMessage());
+        assertEquals(unknown.replace("zzzz", "exec"), run(commands, "as user exec a.txt", DEVELOPER).getMessage());
+        // A reserved branch too, and the help of the player
+        assertTrue(run(commands, "as user zzuser secret", DEVELOPER).getMessage().startsWith("Unknown argument ->secret<-"));
+        assertFalse(run(commands, "as user help zzuser", DEVELOPER).getMessage().contains("secret"));
+        assertTrue(run(commands, "as dev help zzuser", DEVELOPER).getMessage().contains("secret"));
+    }
+
+    @Test
+    void asRunsWithTheLoweredSourceAndKeepsDeferredResults() throws Exception {
+        Commands commands = withLevels();
+        TestCommands.add(commands, TestCommands.Syntax("zzsource", ECommandLevel.USER, "Its source",
+                root -> root.executes(context -> CommandResult.ok(context.source().name() + " " + context.currentLevel()))));
+        TestCommands.add(commands, new LaterCommand(commands));
+
+        assertEquals("server (as user) USER", run(commands, "as user zzsource", DEVELOPER).getMessage());
+        assertEquals("later", run(commands, "as user later", DEVELOPER).getMessage());
+        // One word between quotes: the whole line
+        assertEquals("zzuser at USER", run(commands, "as user \"zzuser public\"", DEVELOPER).getMessage());
+    }
+
+    @Test
+    void completeGivesWhatTheLevelIsProposed() throws Exception {
+        Commands commands = withLevels();
+
+        CommandResult player = run(commands, "complete --as user \"zzuser \"", DEVELOPER);
+        assertTrue(player.isSuccess());
+        assertEquals("other public", player.getMessage());
+        assertEquals(List.of("other", "public"), player.getData().getJSONArray("candidates").toList());
+        assertEquals(7, player.getData().getInt("start"));
+        assertEquals("", player.getData().getString("typed"));
+        assertTrue(player.getData().isNull("replacement"));
+
+        assertTrue(run(commands, "complete \"zzuser \"", DEVELOPER).getMessage().contains("secret"));
+
+        // Neither the commands nor the branches of the developer
+        List<Object> names = run(commands, "complete --as user zz", DEVELOPER).getData().getJSONArray("candidates").toList();
+        assertEquals(List.of("zzuser"), names);
+        String all = run(commands, "complete --as user", DEVELOPER).getMessage();
+        assertFalse(all.contains("exec") || all.contains("complete") || all.contains("zzdev"), all);
+        assertTrue(all.contains("help"), all);
+
+        assertEquals("zzuser ", run(commands, "complete --as user zzu", DEVELOPER).getData().getString("replacement"));
+    }
 }
