@@ -199,8 +199,6 @@ public class Scene2D extends Scene {
         polygonRenderer.setMainTextureChannel("error");
         polygonRenderer.setSizePix(100, 100);
         polygonRenderer.setPosition(new Vector2f(1500, 300));
-        /*polygonRenderer.getShape().setDrawMode(EDrawMode.LineLoop);
-        glLineWidth(10f);*/
         polygonRenderer.setReferenceVertex(indexVertexReference);
     }
 

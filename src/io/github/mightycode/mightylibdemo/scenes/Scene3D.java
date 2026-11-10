@@ -497,13 +497,11 @@ public class Scene3D extends Scene {
 
         ArrayList<Integer> tempIndices = new ArrayList<>();
         ArrayList<Float> tempPosition = new ArrayList<>();
-        ArrayList<Float> tempTextures = new ArrayList<>();
         ArrayList<Float> tempNormales = new ArrayList<>();
 
         float x, y, z, xy;
         float nx, ny, nz;
         float lengthInv = 3.0f * radius;
-        float s, t;
 
         float sectorStep = 2f * (float)Math.PI / sector;
         float stackStep = (float)Math.PI / stack;
@@ -536,11 +534,6 @@ public class Scene3D extends Scene {
                 tempNormales.add(ny);
                 tempNormales.add(nz);
 
-                s = (float)j / sector;
-                t = (float)i / stack;
-
-                tempTextures.add(s);
-                tempTextures.add(t);
             }
         }
 
