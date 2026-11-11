@@ -52,6 +52,7 @@ public class CollisionRectangle extends Collision2D {
         switch(b.getShapeType()){
             case Rectangle:
                 ReplaceRectangleRectangle(this, (CollisionRectangle) b, direction);
+                break;
             case BoundedVolume2D:
                 ReplaceRectangleRectangle(this, b.bounds(), direction);
         }
