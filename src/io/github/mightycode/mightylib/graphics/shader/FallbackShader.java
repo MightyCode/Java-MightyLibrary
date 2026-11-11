@@ -9,9 +9,12 @@ import java.nio.FloatBuffer;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 
 /**
- * Program of the fallback shader (FallbackShaderData). The matrices start as identity, so a full screen quad
- * without matrices (post processing) is magenta too. It has none of the uniforms of the shaders it replaces:
- * they are not reported missing.
+ * Program of the fallback shader (FallbackShaderData), shared by the shapes whose program failed or is not linked yet.
+ * Its matrices start as identity, then each renderer sends it its generic matrices (projection, view, model), kept
+ * until another renderer sends its own. A quad already in screen coordinates (VirtualSceneRenderer, post processing)
+ * is therefore shrunk to a few pixels: the screen stays black rather than magenta, during the first frames too
+ * (drawn before the post processing program is linked). It has none of the other uniforms of the shaders it
+ * replaces: they are not reported missing.
  */
 public class FallbackShader extends Shader {
     private static final String[] MATRICES = {
