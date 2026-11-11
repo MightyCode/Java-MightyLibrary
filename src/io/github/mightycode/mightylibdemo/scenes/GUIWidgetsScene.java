@@ -64,7 +64,7 @@ public class GUIWidgetsScene extends Scene {
         track = new RectangleRenderer("colorShape2D");
         track.setColorMode(new Color4f(0.2f, 0.22f, 0.28f, 1f));
         track.setPosition(new Vector2f(LEFT, 345));
-        track.setSizePix(RIGHT - LEFT + 200, 10);
+        track.setSizePix(RIGHT - LEFT, 10);
 
         square = new RectangleRenderer("colorShape2D");
         square.setColorMode(new Color4f(0.95f, 0.8f, 0.2f, 1f));
@@ -138,7 +138,10 @@ public class GUIWidgetsScene extends Scene {
         track.display();
 
         square.setSizePix(size, size);
-        square.setPosition(new Vector2f(travel.value() + shake.x, 360 - size / 2f + shake.y));
+        // The tweening goes from LEFT to RIGHT : the square stays inside the track whatever its size
+        float progress = (travel.value() - LEFT) / (RIGHT - LEFT);
+        float x = LEFT + progress * (RIGHT - LEFT - size);
+        square.setPosition(new Vector2f(x + shake.x, 360 - size / 2f + shake.y));
         square.display();
 
         info.setText("Type : " + typeSelector.getSelectedName()
