@@ -31,11 +31,7 @@ public class FallbackSoundData extends SoundData {
             buffer.put((i / halfPeriod) % 2 == 0 ? AMPLITUDE : (short) -AMPLITUDE);
         buffer.flip();
 
-        SoundLoadInfo info = new SoundLoadInfo();
-        info.Channel = 1;
-        info.SampleRate = SAMPLE_RATE;
-        info.Buffer = buffer;
-        setSoundLoadInfo(info);
+        setSoundLoadInfo(new SoundLoadInfo(1, SAMPLE_RATE, buffer, false));
 
         return super.internLoad();
     }

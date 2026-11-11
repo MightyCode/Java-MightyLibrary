@@ -43,20 +43,20 @@ public class EnumSelector<T extends Enum<?>> {
                 .setFontSize(20);
 
         chooseLeft = new BackgroundlessButton(context);
-        chooseLeft.Text.setFont("bahnschrift")
+        chooseLeft.text().setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.Up)
                 .setPosition(new Vector2f(windowSize.x * 0.87f, windowSize.y * 0.01f))
                 .setFontSize(30)
                 .setText("<-");
 
-        chooseLeft.copyTextToOverlapping().OverlapsText.setColor(new Color4f(0.5f));
+        chooseLeft.copyTextToOverlapping().overlapsText().setColor(new Color4f(0.5f));
 
         chooseRight = chooseLeft.copy();
-        chooseRight.Text.setPosition(new Vector2f(windowSize.x * 0.97f, windowSize.y * 0.01f))
+        chooseRight.text().setPosition(new Vector2f(windowSize.x * 0.97f, windowSize.y * 0.01f))
                 .setText("->");
 
-        chooseRight.copyTextToOverlapping().OverlapsText.setColor(new Color4f(0.8f));
+        chooseRight.copyTextToOverlapping().overlapsText().setColor(new Color4f(0.8f));
 
         background = new RectangleRenderer("colorShape2D");
         background.setColorMode(ColorList.White());

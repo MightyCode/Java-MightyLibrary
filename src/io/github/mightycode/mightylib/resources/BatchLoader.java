@@ -23,7 +23,7 @@ public class BatchLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, Resources.FOLDER + "batchs", new String[]{});
+        exploreResourcesFile(data, resources().folder() + "batchs", new String[]{});
     }
 
     @Override

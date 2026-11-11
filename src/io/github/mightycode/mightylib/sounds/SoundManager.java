@@ -48,7 +48,7 @@ public class SoundManager {
         gainTree = new KeyTree<>();
         // No gain tree: every sound keeps a gain of 1
         if (gainPath != null)
-            SoundLoader.loadGainTree(gainPath, gainTree);
+            SoundLoader.loadGainTree(resources.folder() + gainPath, gainTree);
     }
 
 
@@ -138,8 +138,8 @@ public class SoundManager {
         KeyTreeNode<String, Float> node = gainTree.getNode(name);
 
         while(node != null){
-            if (node.value != null)
-                gain *= node.value;
+            if (node.getValue() != null)
+                gain *= node.getValue();
 
             //System.out.println(node.getKey());
             node = node.parent();

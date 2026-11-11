@@ -20,7 +20,7 @@ public class TileMapLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, Resources.FOLDER + "tilemap");
+        exploreResourcesFile(data, resources().folder() + "tilemap");
     }
 
     @Override

@@ -25,7 +25,7 @@ public class FontLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/fonts/fonts.json"));
+        JSONObject obj = new JSONObject(FileMethods.readFileAsString(resources().folder() + FontFace.FONTS_FOLDER + "fonts.json"));
         obj = obj.getJSONObject("fonts");
 
         create(data, obj);

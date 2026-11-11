@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.resources.models;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.ColorTextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Matrix3f;
@@ -47,7 +46,7 @@ public class ModelLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, Resources.FOLDER);
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override

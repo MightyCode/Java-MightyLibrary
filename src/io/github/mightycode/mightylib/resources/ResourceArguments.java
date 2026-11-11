@@ -76,7 +76,7 @@ public final class ResourceArguments {
                 String type = context.getOr(TYPE, ALL);
                 Set<String> names = new LinkedHashSet<>();
 
-                for (ResourceLoader loader : current.Loaders) {
+                for (ResourceLoader loader : current.loaders()) {
                     if (type.equals(ALL) || type.equals(loader.getResourceNameType()))
                         names.addAll(current.getResourceNames(loader.getType()));
                 }
@@ -156,7 +156,7 @@ public final class ResourceArguments {
     private static List<String> typeNames(Resources resources) {
         List<String> names = new ArrayList<>();
         names.add(ALL);
-        for (ResourceLoader loader : resources.Loaders)
+        for (ResourceLoader loader : resources.loaders())
             names.add(loader.getResourceNameType());
         return names;
     }

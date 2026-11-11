@@ -312,7 +312,7 @@ public class Shape {
             glBindVertexArray(entry.id);
 
         // Called for each draw: avoid building the message when checks are disabled
-        if (Logger.DO_CHECK)
+        if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Bind vao buffer : " + entry.id);
     }
 

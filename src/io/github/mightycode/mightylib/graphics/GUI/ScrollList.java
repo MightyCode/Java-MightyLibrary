@@ -53,19 +53,19 @@ public class ScrollList {
         this.visibleRows = Math.max(1, (int) (height / rowHeight));
 
         BackgroundlessButton model = new BackgroundlessButton(context);
-        model.Text.setFont(fontName)
+        model.text().setFont(fontName)
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
                 .setFontSize(fontSize);
-        model.Text.copyTo(model.OverlapsText);
-        model.OverlapsText.setColor(new Color4f(0.3f));
+        model.text().copyTo(model.overlapsText());
+        model.overlapsText().setColor(new Color4f(0.3f));
 
         rows = new ArrayList<>();
         for (int i = 0; i < visibleRows; i++) {
             BackgroundlessButton row = (i == 0) ? model : model.copy();
-            row.Text.setPosition(new Vector2f(x + (width - SCROLLBAR_WIDTH) * 0.5f, y + rowHeight * (i + 0.5f)));
-            row.Text.copyTo(row.OverlapsText);
-            row.OverlapsText.setColor(new Color4f(0.3f));
+            row.text().setPosition(new Vector2f(x + (width - SCROLLBAR_WIDTH) * 0.5f, y + rowHeight * (i + 0.5f)));
+            row.text().copyTo(row.overlapsText());
+            row.overlapsText().setColor(new Color4f(0.3f));
             rows.add(row);
         }
 
@@ -180,8 +180,8 @@ public class ScrollList {
             int item = firstItem + i;
             String label = item < items.size() ? items.get(item) : "";
 
-            row.Text.setText(label);
-            row.OverlapsText.setText(label.isEmpty() ? "" : "->" + label + "<-");
+            row.text().setText(label);
+            row.overlapsText().setText(label.isEmpty() ? "" : "->" + label + "<-");
         }
 
         needRefill = false;

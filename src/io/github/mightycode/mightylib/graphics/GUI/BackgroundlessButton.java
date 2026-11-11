@@ -8,7 +8,16 @@ import java.util.Objects;
 
 public class BackgroundlessButton extends GUI {
     private final WindowContext context;
-    public final Text Text, OverlapsText;
+    private final Text text, overlapsText;
+
+    public Text text() {
+        return text;
+    }
+
+    // Displayed instead of the text while the button is selected
+    public Text overlapsText() {
+        return overlapsText;
+    }
 
     public BackgroundlessButton(WindowContext context){
         this(context, null);
@@ -18,28 +27,28 @@ public class BackgroundlessButton extends GUI {
         super();
         this.context = context;
 
-        this.Text = Objects.requireNonNullElseGet(text, Text::new);
+        this.text = Objects.requireNonNullElseGet(text, Text::new);
 
         if (text != null) {
-            this.OverlapsText = text.createCopy();
+            this.overlapsText = text.createCopy();
         } else {
-            this.OverlapsText = new Text();
+            this.overlapsText = new Text();
         }
     }
 
     @Override
     public void display() {
         if ((GUIMouseSelected() || forceSelected()) && !forceUnselected()) {
-            OverlapsText.display();
+            overlapsText.display();
         } else {
-            Text.display();
+            text.display();
         }
     }
 
     @Override
     public boolean GUIMouseSelected(){
-        Vector2f position = Text.leftUpPosition();
-        Vector2f size = Text.size();
+        Vector2f position = text.leftUpPosition();
+        Vector2f size = text.size();
         Vector2f mousePosition = referenceCamera.transformPosition(context.getMouseManager().pos());
 
         return (mousePosition.x >= position.x - (size.x * 0.1f) && mousePosition.x <= position.x + (size.x * 1.1f)
@@ -48,22 +57,22 @@ public class BackgroundlessButton extends GUI {
 
     public BackgroundlessButton copy(){
         BackgroundlessButton temp = new BackgroundlessButton(context);
-        Text.copyTo(temp.Text);
-        OverlapsText.copyTo(temp.OverlapsText);
+        text.copyTo(temp.text);
+        overlapsText.copyTo(temp.overlapsText);
 
         return temp;
     }
 
     public BackgroundlessButton copyTextToOverlapping(){
-        this.Text.copyTo(OverlapsText);
+        this.text.copyTo(overlapsText);
 
         return this;
     }
 
     @Override
     public void unload(){
-        Text.unload();
-        OverlapsText.unload();
+        text.unload();
+        overlapsText.unload();
     }
 
     @Override

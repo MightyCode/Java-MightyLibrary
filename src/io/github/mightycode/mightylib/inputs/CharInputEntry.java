@@ -7,7 +7,7 @@ public class CharInputEntry {
     public static final int ALT = CAPSLOCK + 1;
     public static final int FINAL_ID = ALT;
 
-    public HashMap<Integer, Character> entries;
+    private final HashMap<Integer, Character> entries;
 
     private final int keyId;
     private final char representation;

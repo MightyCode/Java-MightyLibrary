@@ -21,7 +21,7 @@ class SoundDataEstimateTest {
         SoundLoadInfo info = decoder.decode(FOLDER + file, () -> {});
         try {
             sound.setSoundLoadInfo(info);
-            assertEquals((long) info.Buffer.capacity() * Short.BYTES, sound.estimatedCpuBytes(), file);
+            assertEquals((long) info.getBuffer().capacity() * Short.BYTES, sound.estimatedCpuBytes(), file);
             assertEquals(0, sound.estimatedGpuBytes());
         } finally {
             info.release();

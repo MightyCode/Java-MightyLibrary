@@ -67,7 +67,7 @@ public class FrameBuffer implements IRenderTextureBindable {
     }
 
     public void bindFrameBuffer(){
-        if (Logger.DO_CHECK && GLContext.current() != owner)
+        if (Logger.isGLErrorCheck() && GLContext.current() != owner)
             throw new IllegalStateException("The framebuffer " + fbo + " belongs to the OpenGL context " + owner.getName()
                     + ", the current one is " + GLContext.current().getName());
 
@@ -92,7 +92,7 @@ public class FrameBuffer implements IRenderTextureBindable {
         glBindTexture(GL_TEXTURE_2D, renderTextureId);
 
         // Called for each draw: avoid building the message when checks are disabled
-        if (Logger.DO_CHECK)
+        if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Bind Texture : " + renderTextureId);
     }
 

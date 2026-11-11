@@ -63,7 +63,7 @@ public final class GLContext {
         current = this;
         LIVE.add(this);
 
-        if (Logger.DO_CHECK)
+        if (Logger.isGLErrorCheck())
             setupDebugMessages();
     }
 
@@ -77,7 +77,7 @@ public final class GLContext {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         // A debug context lets the driver report OpenGL errors itself, with a readable message
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, Logger.DO_CHECK ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, Logger.isGLErrorCheck() ? GLFW_TRUE : GLFW_FALSE);
     }
 
     /**

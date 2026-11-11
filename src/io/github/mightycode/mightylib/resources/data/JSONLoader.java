@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.resources.data;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 
 import java.util.Map;
 
@@ -19,7 +18,7 @@ public class JSONLoader extends ResourceLoader {
     }
 
     @Override
-    public void create(Map<String, DataType> data){ exploreResourcesFile(data, Resources.FOLDER); }
+    public void create(Map<String, DataType> data){ exploreResourcesFile(data, resources().folder()); }
 
     @Override
     public void fileDetected(Map<String, DataType> data, String currentPath, String name) {

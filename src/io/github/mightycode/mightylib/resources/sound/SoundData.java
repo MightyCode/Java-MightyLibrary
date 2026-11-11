@@ -68,8 +68,8 @@ public class SoundData extends SingleSourceDataType {
             tempInfo.release();
 
         tempInfo = info;
-        if (info != null && info.Buffer != null)
-            decodedBytes = (long) info.Buffer.capacity() * Short.BYTES;
+        if (info != null && info.getBuffer() != null)
+            decodedBytes = (long) info.getBuffer().capacity() * Short.BYTES;
     }
 
     @Override
@@ -79,7 +79,7 @@ public class SoundData extends SingleSourceDataType {
         }
 
         this.bufferId = alGenBuffers();
-        alBufferData(bufferId, tempInfo.Channel == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, tempInfo.Buffer, tempInfo.SampleRate);
+        alBufferData(bufferId, tempInfo.getChannels() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, tempInfo.getBuffer(), tempInfo.getSampleRate());
         // OpenAL has its own copy
         tempInfo.release();
         tempInfo = null;

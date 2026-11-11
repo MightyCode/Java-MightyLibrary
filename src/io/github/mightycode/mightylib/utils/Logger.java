@@ -3,7 +3,17 @@ package io.github.mightycode.mightylib.utils;
 import static org.lwjgl.opengl.GL20.*;
 
 public class Logger {
-    public static boolean DO_CHECK = true;
+    // glGetError after the sensitive GL calls, GL objects created on the main thread only (EngineConfig.setOpenGLErrorCheck).
+    // Read from any thread (GenDeleteResources checks the calling thread)
+    private static volatile boolean glErrorCheck = true;
+
+    public static boolean isGLErrorCheck() {
+        return glErrorCheck;
+    }
+
+    public static void setGLErrorCheck(boolean glErrorCheck) {
+        Logger.glErrorCheck = glErrorCheck;
+    }
 
     public static String getCurrentStackTrace() {
         return Thread.currentThread().getStackTrace()[2].toString();
@@ -19,7 +29,7 @@ public class Logger {
     }
 
     public static void CheckOpenGLError(String message) {
-        if (!DO_CHECK)
+        if (!glErrorCheck)
             return;
 
         int error = glGetError();

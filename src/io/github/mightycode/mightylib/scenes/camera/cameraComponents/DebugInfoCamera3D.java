@@ -19,14 +19,18 @@ public class DebugInfoCamera3D implements IUpdatableDisplayable {
 
 
     protected Camera3D camera;
-    public final Text Text;
+    private final Text text;
     private final Set<Integer> info = new HashSet<>();
 
     private int precision = 2;
 
+    public Text text() {
+        return text;
+    }
+
     public DebugInfoCamera3D(){
-        Text = new Text();
-        Text.setReference(EDirection.LeftUp).setAlignment(ETextAlignment.Left)
+        text = new Text();
+        text.setReference(EDirection.LeftUp).setAlignment(ETextAlignment.Left)
                 .setPosition(new Vector2f(0, 0))
                 .setColor(ColorList.Purple())
                 .setFont("arial").setFontSize(25);
@@ -34,7 +38,7 @@ public class DebugInfoCamera3D implements IUpdatableDisplayable {
 
     public DebugInfoCamera3D(Camera2D camera){
         this();
-        Text.setReferenceCamera(camera);
+        text.setReferenceCamera(camera);
     }
 
     public DebugInfoCamera3D init(Camera3D camera){
@@ -44,7 +48,7 @@ public class DebugInfoCamera3D implements IUpdatableDisplayable {
     public DebugInfoCamera3D init(Camera3D camera, Vector2f position){
         this.camera = camera;
 
-        this.Text.setPosition(position);
+        this.text.setPosition(position);
 
         return this;
     }
@@ -65,7 +69,7 @@ public class DebugInfoCamera3D implements IUpdatableDisplayable {
 
     @Override
     public void display() {
-        Text.display();
+        text.display();
     }
 
     @Override
@@ -109,11 +113,11 @@ public class DebugInfoCamera3D implements IUpdatableDisplayable {
             }
         }
 
-        Text.setText(result.toString());
+        text.setText(result.toString());
     }
 
     @Override
     public void unload() {
-        Text.unload();
+        text.unload();
     }
 }

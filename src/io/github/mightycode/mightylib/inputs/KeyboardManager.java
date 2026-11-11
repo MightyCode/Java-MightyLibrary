@@ -27,7 +27,7 @@ public class KeyboardManager {
     private static final int MIN_LANGUAGE_KEY = GLFW_KEY_A;
     private static final int MAX_LANGUAGE_KEY = GLFW_KEY_Z;
 
-    public final WindowInfo windowInfo;
+    private final WindowInfo windowInfo;
     private final boolean[] state = new boolean[KEYS];
     private final boolean[] oldState = new boolean[KEYS];
 

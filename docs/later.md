@@ -14,16 +14,24 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 À étendre (base JUnit 5 : `architecture.md`, liste dans `CLAUDE.md`) : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
 - **Analyse statique automatisable** : Claude ne peut pas obtenir lui-même les warnings d'IntelliJ (export manuel depuis l'IDE ; `inspect.bat` plante, voir le skill `/analyse-intellij`). Brancher un outil lançable en ligne de commande (SpotBugs ou Error Prone via un profil Maven, ou équivalent) couvrant au moins les catégories à risque de `bonnes-pratiques.md` (point 11), avec un résumé texte par script ; puis adapter le point 11, `collect.py` et le skill.
 
+## Bugs relevés en passant (non corrigés)
+- `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
+- `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
+- `scenario.py` : `wait-loaded` après un changement de scène lancé par le jeu (bouton du menu, `input ENTER`) reste bloqué alors que `scene` répond `loading: false` (reproduit sur `dev`).
+- `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
+
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
 - **Deux modules Maven** : `mightylib` (jar) et `demo`, qui en dépend comme un projet externe.
 - **Jar léger** : dépendances (LWJGL et natives, JOML, org.json, JBox2D…) déclarées dans le pom, pas embarquées.
 - **Distribution** : `mvn install`, puis JitPack ou GitHub Packages. **Versions** sémantiques par release.
 - **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
+  - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources.
+  - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
 - **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0).
 
 ### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.init`/`contextLoading` et le point provisoire `IProjectLoading.registerCommands` ; les commandes du moteur et du jeu sont figées après le démarrage, celles des scènes et des vues restent dynamiques. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
+- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.contextLoading` et les points provisoires `IProjectLoading.loaders` (liste de loaders figée à la construction de `Resources`, les mods fourniront les leurs à la même phase) et `IProjectLoading.registerCommands` ; les commandes du moteur et du jeu sont figées après le démarrage, celles des scènes et des vues restent dynamiques. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
 - **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
 - **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
 

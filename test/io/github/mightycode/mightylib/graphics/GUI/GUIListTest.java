@@ -11,6 +11,8 @@ import org.joml.Vector2f;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 // Selection and activation of GUIList and GUI, without window nor GL (fake mouse, fake actions, fake elements)
@@ -122,9 +124,9 @@ class GUIListTest {
         first = new FakeGUI();
         second = new FakeGUI();
         third = new FakeGUI();
-        list.GUIs.put(1, first);
-        list.GUIs.put(2, second);
-        list.GUIs.put(3, third);
+        list.put(1, first);
+        list.put(2, second);
+        list.put(3, third);
     }
 
     private void press(FakeAction action) {
@@ -243,7 +245,7 @@ class GUIListTest {
 
     @Test
     void theSelectionStopsAtTheEndsWithoutLoop() {
-        list.ShouldLoop = false;
+        list.setLooping(false);
         press(down);
         press(up);
         assertEquals(1, list.getSelected());
@@ -263,6 +265,52 @@ class GUIListTest {
         assertFalse(first.isActivated(inputManager, VALIDATE));
         assertTrue(second.isActivated(inputManager, VALIDATE));
         assertFalse(third.isActivated(inputManager, VALIDATE));
+    }
+
+    @Test
+    void removingTheSelectedElementUnselectsIt() {
+        press(down);
+        press(down);
+        assertEquals(2, list.getSelected());
+
+        assertSame(second, list.remove(2));
+        assertNull(list.getSelected());
+        assertNull(list.get(2));
+
+        validate.pressed = true;
+        assertNull(list.getActivated());
+    }
+
+    @Test
+    void removingAnotherElementKeepsTheSelection() {
+        press(down);
+        list.remove(3);
+        assertEquals(1, list.getSelected());
+
+        // The removed element is skipped by the navigation
+        list.setLooping(false);
+        press(down);
+        press(down);
+        assertEquals(2, list.getSelected());
+    }
+
+    @Test
+    void replacingTheSelectedElementSelectsTheNewOne() {
+        press(down);
+        FakeGUI replacing = new FakeGUI();
+        assertTrue(first.forceSelected());
+        list.put(1, replacing);
+        assertFalse(first.forceSelected());
+
+        validate.pressed = true;
+        assertEquals(1, list.getActivated());
+        assertSame(replacing, list.get(1));
+    }
+
+    @Test
+    void idsCantBeChanged() {
+        assertEquals(Set.of(1, 2, 3), list.ids());
+        assertThrows(UnsupportedOperationException.class, () -> list.ids().remove(1));
     }
 
     @Test

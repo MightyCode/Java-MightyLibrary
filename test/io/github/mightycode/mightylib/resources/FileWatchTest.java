@@ -28,20 +28,17 @@ class FileWatchTest {
     @TempDir
     Path folder;
 
-    private String previousFolder;
     private ResourceWatcher watcher;
 
     @BeforeEach
     void setUp() {
         MainThreadTestAccess.setCurrentAsMain();
-        previousFolder = Resources.FOLDER;
     }
 
     @AfterEach
     void tearDown() {
         if (watcher != null)
             watcher.stop();
-        Resources.FOLDER = previousFolder;
     }
 
     private static void write(Path file, String content, long modified) throws IOException {
@@ -207,10 +204,9 @@ class FileWatchTest {
     }
 
     private Resources newResources(FakeLoader fakeLoader) throws IOException {
-        Resources.FOLDER = folder.toString().replace('\\', '/') + "/";
         Files.createDirectories(folder.resolve("batchs"));
         JSONLoader jsonLoader = new JSONLoader();
-        return new Resources(new Resources.BatchResourcesMethod("unused"), 2,
+        return new Resources(new Resources.BatchResourcesMethod("unused"), 2, folder.toString(),
                 Arrays.asList(fakeLoader, jsonLoader, new BatchLoader(jsonLoader)));
     }
 

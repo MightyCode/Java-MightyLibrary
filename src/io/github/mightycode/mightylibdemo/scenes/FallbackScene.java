@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
@@ -38,7 +37,7 @@ public class FallbackScene extends Scene {
     public void init(String[] args) {
         // Read by their loaders, they fail: missing files
         resources.addResourceAndSetUp(TextureData.class,
-                new TextureData(BROKEN_TEXTURE, Resources.FOLDER + "textures/missing/brokenTexture.png"));
+                new TextureData(BROKEN_TEXTURE, resources.folder() + "textures/missing/brokenTexture.png"));
         resources.addResourceAndSetUp(Shader.class,
                 new Shader(BROKEN_SHADER, true, "missing/brokenV.glsl", "missing/brokenF.glsl"));
     }

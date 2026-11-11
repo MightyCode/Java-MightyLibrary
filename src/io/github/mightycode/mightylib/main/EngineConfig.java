@@ -15,6 +15,7 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
 import org.joml.Vector2i;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -63,6 +64,7 @@ public class EngineConfig {
 
     private int shaderVersion = -1;
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
+    private String resourcesFolder = Resources.DEFAULT_FOLDER;
     private int maxThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
     private int maxGLUploadMillisecondsPerFrame = -1;
     private float inGameLoadingShare = 0.3f;
@@ -267,6 +269,12 @@ public class EngineConfig {
         return this;
     }
 
+    // Folder read by the resource loaders, relative to the working directory ("resources/" by default)
+    public EngineConfig setResourcesFolder(String resourcesFolder) {
+        this.resourcesFolder = Objects.requireNonNull(resourcesFolder, "resourcesFolder");
+        return this;
+    }
+
     public EngineConfig setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
         return this;
@@ -444,6 +452,7 @@ public class EngineConfig {
     public IProjectLoading getProjectLoading() { return projectLoading; }
     public int getShaderVersion() { return shaderVersion; }
     public Resources.LoadingMethod getResourcesLoadingMethod() { return resourcesLoadingMethod; }
+    public String getResourcesFolder() { return resourcesFolder; }
     public int getMaxThreads() { return maxThreads; }
     public int getMaxGLUploadMillisecondsPerFrame() { return maxGLUploadMillisecondsPerFrame; }
     public float getInGameLoadingShare() { return inGameLoadingShare; }

@@ -156,7 +156,7 @@ public final class Engine implements IView {
         MainThread.setCurrentAsMain();
         Workers.start(config.getMaxThreads());
         MainLoop.setMode(config.getMode());
-        Logger.DO_CHECK = config.isOpenGLErrorCheck();
+        Logger.setGLErrorCheck(config.isOpenGLErrorCheck());
 
         // Resolved once (the launch option is read and reported once). Without access, the player has no console:
         // only the game (api) and, in debug mode, the standard input and the debug server send commands.
@@ -206,11 +206,14 @@ public final class Engine implements IView {
         GenDeleteResources.Init();
 
         System.out.println("--Create ShaderManager");
-        shaderManager = new ShaderManager();
+        shaderManager = new ShaderManager(config.getResourcesFolder());
         shaderManager.init(config.getShaderVersion());
 
         System.out.println("--Create Resources");
-        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()), shaderManager);
+        IProjectLoading projectLoading = config.getProjectLoading();
+        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
+                config.getResourcesFolder(), shaderManager,
+                projectLoading != null ? projectLoading.loaders() : List.of());
         resources.setStrict(config.isStrictResources());
         if (config.isStrictResources())
             System.out.println("--Strict resources: a resource that fails stops the program");
@@ -250,9 +253,7 @@ public final class Engine implements IView {
             console.setLogsShown(config.isConsoleLogsShown());
         }
 
-        IProjectLoading projectLoading = config.getProjectLoading();
         if (projectLoading != null) {
-            projectLoading.init(resources);
             projectLoading.registerCommands(commands.registryFor(CommandOwner.GAME));
             projectLoading.contextLoading(mainWindow);
         }

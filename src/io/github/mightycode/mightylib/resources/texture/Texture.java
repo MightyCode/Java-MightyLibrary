@@ -86,7 +86,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             EngineStats.countTextureBind();
 
             // Called for each draw: avoid building the message when checks are disabled
-            if (Logger.DO_CHECK)
+            if (Logger.isGLErrorCheck())
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
         // Failed or still loading: the fallback texture instead
         } else {
