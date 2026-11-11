@@ -6,6 +6,8 @@ import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.KeyRepeat;
+import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -44,6 +46,8 @@ public class ScrollList {
     private InputAction[] activationActions = new InputAction[0];
 
     private InputAction actionUp, actionDown;
+    private final KeyRepeat repeatUp = new KeyRepeat();
+    private final KeyRepeat repeatDown = new KeyRepeat();
     private InputAction[] keyboardActivationActions = new InputAction[0];
 
     private boolean needRefill = true;
@@ -148,6 +152,15 @@ public class ScrollList {
         this.keyboardActivationActions = activationActions;
     }
 
+    /**
+     * Up and down held move the selection again and again : after the delay, one row at each interval (seconds).
+     * By default the repeat of the keyboards of the system (0.5 s, then 30 rows a second).
+     */
+    public void setKeyRepeat(float delay, float interval) {
+        repeatUp.setRepeat(delay, interval);
+        repeatDown.setRepeat(delay, interval);
+    }
+
     /** Actions (left click...) that activate the row under the mouse. */
     public void setupActivationActions(InputAction... actionIds) {
         this.activationActions = actionIds;
@@ -217,10 +230,17 @@ public class ScrollList {
             }
         }
 
-        if (actionUp != null && inputManager.inputPressed(actionUp))
-            moveSelection(-1);
-        else if (actionDown != null && inputManager.inputPressed(actionDown))
-            moveSelection(1);
+        float seconds = GameTime.DeltaTime();
+        if (actionDown != null) {
+            int steps = repeatDown.update(inputManager.inputPressed(actionDown), inputManager.getState(actionDown), seconds);
+            for (int i = 0; i < steps; ++i)
+                moveSelection(1);
+        }
+        if (actionUp != null) {
+            int steps = repeatUp.update(inputManager.inputPressed(actionUp), inputManager.getState(actionUp), seconds);
+            for (int i = 0; i < steps; ++i)
+                moveSelection(-1);
+        }
 
         // The mouse moving (or the wheel turning under it) makes the hover a choice again
         if (mouseMoved || wheeled)

@@ -8,7 +8,9 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.KeyRepeat;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
@@ -82,6 +84,10 @@ public class MenuScene extends Scene {
     private Text title;
 
     private FloatTweening rotation;
+
+    // Up and down held go on, like the arrows of a keyboard in any list
+    private final KeyRepeat repeatDown = new KeyRepeat();
+    private final KeyRepeat repeatUp = new KeyRepeat();
 
     private EZone zone = EZone.FIELD;
     // Written in red in the panel while the panel is about the scene it happened for (errorKey)
@@ -249,9 +255,12 @@ public class MenuScene extends Scene {
         if (field.isSubmitted())
             launchScene(shown.isEmpty() ? null : shown.get(0));
 
-        if (input.inputPressed(ActionId.SELECT_DOWN))
+        float seconds = GameTime.DeltaTime();
+        int down = repeatDown.update(input.inputPressed(ActionId.SELECT_DOWN), input.getState(ActionId.SELECT_DOWN), seconds);
+        int up = repeatUp.update(input.inputPressed(ActionId.SELECT_UP), input.getState(ActionId.SELECT_UP), seconds);
+        for (int i = 0; i < down; ++i)
             navigateDown();
-        else if (input.inputPressed(ActionId.SELECT_UP))
+        for (int i = 0; i < up; ++i)
             navigateUp();
 
         if (input.inputPressed(ActionId.ENTER))
