@@ -13,7 +13,7 @@ in float screenSizeY;
 
 out vec4 FragColor;
 
-#include "colorsManipulation"
+#include "utils/colorsManipulation.glsl"
 
 bool pointInsideEllipse(vec2 point, Ellipse ellipse)
 {

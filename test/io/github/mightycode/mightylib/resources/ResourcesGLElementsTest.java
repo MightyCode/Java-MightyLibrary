@@ -1,13 +1,19 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
+import io.github.mightycode.mightylib.graphics.shader.FallbackShader;
+import io.github.mightycode.mightylib.graphics.shader.FallbackShaderData;
+import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.THREAD_CONTEXT;
@@ -41,6 +47,14 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
                     return name;
                 }
             });
+        }
+
+        // Names of the data given to dataReloaded, in order
+        final List<String> reloadedData = new ArrayList<>();
+
+        @Override
+        public void dataReloaded(DataType data) {
+            reloadedData.add(data.getDataName());
         }
 
         @Override
@@ -99,6 +113,54 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         resources.unloadBatch("level");
         pump();
         sink.assertAllReleased();
+    }
+
+    // The program of a shader is the GL element of its sources, the fallback ones give the fallback program
+    @Test
+    void shaderDataGivesItsProgram() {
+        ShaderData data = new ShaderData("program", true, "v.glsl", "f.glsl");
+        assertEquals(Shader.class, data.glElementType());
+        Shader program = (Shader) data.createGLElement();
+        assertSame(data, program.getData());
+        assertTrue(program.isDimension2DShader());
+
+        FallbackShaderData fallback = new FallbackShaderData("3_30");
+        assertEquals(Shader.class, fallback.glElementType());
+        assertInstanceOf(FallbackShader.class, fallback.createGLElement());
+        assertFalse(fallback.hasSource());
+    }
+
+    // A reload that failed on a missing include: the include is watched too, creating it reloads the shader
+    @Test
+    void aShaderWatchesTheFilesOfAFailedReload() {
+        ShaderData data = new ShaderData("program", true, "v.glsl", "f.glsl");
+        ShaderData copy = new ShaderData("program", true, "v.glsl", "f.glsl");
+        copy.setSourcePaths(List.of("v.glsl", "missing.glsl"));
+
+        ((DataType) data).reloadFailed(copy);
+        assertEquals(List.of("v.glsl", "f.glsl", "missing.glsl"), data.sourcePaths());
+    }
+
+    // The sink tries again the elements that failed with the previous version: told of each reload, not of a first load
+    @Test
+    void theSinkIsToldWhenADataIsReloaded() throws Exception {
+        FakeData apart = fake(THREAD_CONTEXT, "apart");
+        FakeData inPlace = fake(THREAD_CONTEXT, "inPlace");
+        inPlace.reloadApart = false;
+        batch("level", "apart", "inPlace");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+        assertTrue(sink.reloadedData.isEmpty());
+
+        resources.reload(apart);
+        resources.reload(inPlace);
+        pump();
+        assertTrue(sink.reloadedData.contains("apart"));
+        assertTrue(sink.reloadedData.contains("inPlace"));
+        assertEquals(2, sink.reloadedData.size());
+        assertConsistent();
     }
 
     @Test

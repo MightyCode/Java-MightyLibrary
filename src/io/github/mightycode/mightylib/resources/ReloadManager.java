@@ -167,6 +167,7 @@ class ReloadManager {
             return;
 
         data.reloadCopy = null;
+        data.reloadFailed(copy);
         System.err.println("--" + message + ", the previous version is kept");
         resources.dependencies().wakeWaiters(data);
         copyEnded();

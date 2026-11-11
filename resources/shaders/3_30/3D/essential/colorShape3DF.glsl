@@ -3,7 +3,7 @@ out vec4 FragColor;
 
 uniform int color;
 
-#include "colorsManipulation"
+#include "utils/colorsManipulation.glsl"
 
 void main()
 {

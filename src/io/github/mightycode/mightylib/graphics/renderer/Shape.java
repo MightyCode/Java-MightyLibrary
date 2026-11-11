@@ -1,8 +1,10 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
@@ -69,17 +71,25 @@ public class Shape {
     protected EDrawMode drawMode;
     private int glDrawMode;
 
+    // Program of the shader, held (urgent reference) until unload
     protected Shader shader;
+    private boolean shaderReleased;
     // Belongs to the engine of the view that creates it
     private final Resources resources = Views.engine().resources();
-    // The shader if loaded, otherwise the fallback one (failed or still loading)
-    public Shader getShader() { return resources.usable(Shader.class, shader); }
+    private final GLResources glResources = Views.engine().glResources();
+
+    // The program if linked, otherwise the fallback one (failed or still loading), always linked
+    public Shader getShader() {
+        return shader.isLoaded() ? shader : glResources.fallbackShader();
+    }
 
     public Shape(String shaderName, boolean useEbo) {
         setDrawMode(EDrawMode.Triangles);
 
-        shader = resources.getResourceOrFallback(Shader.class, shaderName);
-        setDimensionTo2D(this.shader.isDimension2DShader());
+        // Unknown or failed: the fallback data, whose program is linked from the start
+        ShaderData data = resources.getResourceOrFallback(ShaderData.class, shaderName);
+        shader = (Shader) glResources.acquire(data, true);
+        setDimensionTo2D(data.isDimension2DShader());
 
         verticesToDraw = 0;
         indicesSize = 0;
@@ -483,5 +493,11 @@ public class Shape {
 
         if (useEbo)
             GenDeleteResources.DeleteBuffersEBO(ebo);
+
+        // Given back once: unload can be called twice
+        if (!shaderReleased) {
+            glResources.releaseResource(shader);
+            shaderReleased = true;
+        }
     }
 }

@@ -7,78 +7,65 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+/**
+ * The shaders listed in shaders.json of the GLSL version (ShaderManager). Their sources are read and preprocessed by
+ * the workers (ShaderPreprocessor: #include searched next to the including file, then in the version folder).
+ */
 public class ShaderLoader extends ResourceLoader {
-
-    /*
-     * Shader library
-     * The shader library is a map (read by the workers) that contains the shader utility file name as key and the shader content as value.
-     */
-    private final Map<String, String> shaderLibrary;
-
     private final ShaderManager shaderManager;
 
     @Override
     public Class<? extends DataType> getType() {
-        return Shader.class;
+        return ShaderData.class;
     }
 
     public ShaderLoader(ShaderManager shaderManager) {
         this.shaderManager = shaderManager;
-        shaderLibrary = new ConcurrentHashMap<>();
     }
 
     @Override
     public String getResourceNameType() {
-        return "Shader";
+        return "ShaderData";
     }
 
     @Override
     public DataType createFallback() {
-        return new FallbackShader(shaderManager.getVersion());
+        return new FallbackShaderData(shaderManager.getVersion());
     }
 
     @Override
     public void create(Map<String, DataType> data) {
-        JSONObject shadersInfo = shaderManager.getShadersInfo();
+        JSONObject shadersList = shaderManager.getShadersInfo().getJSONObject("shaders");
 
-        // Load first the library files
-        JSONObject libraryObject = shadersInfo.getJSONObject("library");
-        for (String key : libraryObject.keySet()) {
-            String content = FileMethods.readFileAsString(shaderManager.versionFolder() + libraryObject.getString(key));
-            shaderLibrary.put(key, content);
-        }
-
-        JSONObject shadersList = shadersInfo.getJSONObject("shaders");
-
-        // Then load the shaders
         Iterator<String> arrayShader = shadersList.keys();
-        do {
+        while (arrayShader.hasNext()) {
             // Name of the shader key (used by renderer)
             String currentShader = arrayShader.next();
 
             JSONObject JShader = shadersList.getJSONObject(currentShader);
 
-            // "Table" of the string path
+            // From the working directory: the files are watched for hot reload
             JSONArray files = JShader.getJSONArray("files");
             String[] sArrayFiles = new String[files.length()];
             for (int i = 0; i < files.length(); ++i) {
-                sArrayFiles[i] = files.getString(i);
+                sArrayFiles[i] = shaderManager.versionFolder() + files.getString(i);
             }
 
             JSONArray tags = JShader.getJSONArray("tags");
-            // Get id the access the shader more easily
 
-            Shader shader = new Shader(
+            ShaderData shader = new ShaderData(
                     currentShader,
                     isTagIn(tags, "2D") || isTagIn(tags, "none"), sArrayFiles);
 
             data.put(currentShader, shader);
-
-        } while(arrayShader.hasNext());
+        }
     }
 
     private boolean isTagIn(JSONArray array, String tag){
@@ -99,77 +86,49 @@ public class ShaderLoader extends ResourceLoader {
 
     @Override
     public void initWithFile(DataType dataType) {
-        if (!(dataType instanceof Shader)) {
+        if (!(dataType instanceof ShaderData) || !dataType.hasSource())
             return;
-        }
 
-        Shader shader = (Shader) dataType;
+        ShaderData shader = (ShaderData) dataType;
 
-        boolean useGeometryShader = shader.numberSource() == 3;
-
-        String vertexShaderPath = shaderManager.versionFolder() + shader.getSourcePath(0);
-        String fragmentShaderPath = shaderManager.versionFolder() + shader.getSourcePath(1);
-
-        String geometryShaderPath = null;
-        if (useGeometryShader) {
-            shader.activateGeometryShader();
-            geometryShaderPath = shaderManager.versionFolder() + shader.getSourcePath(2);
-        }
-
-        // Worker thread: files and preprocessing only, the compilation is made by the load (main thread, in steps).
-        // A missing file makes the preload fail: the fallback replaces the shader
-        shader.setShaderContent(0, completeWithLibraryFile(readSource(vertexShaderPath)));
-        shader.checkCancelled();
-        shader.setShaderContent(1, completeWithLibraryFile(readSource(fragmentShaderPath)));
-
-        if (useGeometryShader) {
+        // Worker thread: files and preprocessing only, the compilation is made by its GL element (Shader).
+        // A missing file or include makes the preload fail: the fallback replaces the shader. The files read, and
+        // those missing, are watched either way: changing or creating one reads the shader again
+        Set<String> watched = new LinkedHashSet<>();
+        List<List<String>> stageFiles = new ArrayList<>();
+        try {
+            String vertex = preprocess(shader.getSourcePath(0), watched, stageFiles);
             shader.checkCancelled();
-            shader.setShaderContent(2, completeWithLibraryFile(readSource(geometryShaderPath)));
-        }
-    }
+            String fragment = preprocess(shader.getSourcePath(1), watched, stageFiles);
 
-    private static String readSource(String path) {
-        if (!new File(path).isFile())
-            throw new IllegalStateException("Shader file not found: " + path);
-
-        return FileMethods.readFileAsString(path);
-    }
-
-    public String completeWithLibraryFile(String content) {
-        String includeTag = "#include";
-
-        if (content.contains(includeTag)) {
-            String[] lines = content.split("\n");
-            StringBuilder newContent = new StringBuilder();
-
-            for (String line : lines) {
-                line = line.trim();
-
-                if (line.startsWith(includeTag)) {
-                    String fileName = line.substring(includeTag.length());
-                    fileName = fileName.trim();
-
-                    if (fileName.startsWith("\"") && fileName.endsWith("\"")) {
-                        fileName = fileName.substring(1, fileName.length() - 1);
-                        System.out.println("Loading shader library file: " + fileName);
-                    } else {
-                        System.err.println("Error: shader library file name " + fileName + " is not valid");
-                        continue;
-                    }
-
-                    if (shaderLibrary.containsKey(fileName)) {
-                        newContent.append(shaderLibrary.get(fileName)).append("\n");
-                    } else {
-                        System.err.println("Error: shader library file " + fileName + " not found");
-                    }
-                } else {
-                    newContent.append(line).append("\n");
-                }
+            String geometry = null;
+            if (shader.usesGeometryShader()) {
+                shader.checkCancelled();
+                geometry = preprocess(shader.getSourcePath(2), watched, stageFiles);
             }
 
-            return newContent.toString();
+            shader.setSources(vertex, fragment, geometry);
+            shader.setStageFiles(stageFiles);
+        } finally {
+            shader.setSourcePaths(watched);
         }
+    }
 
-        return content;
+    private String preprocess(String path, Set<String> watched, List<List<String>> stageFiles) {
+        // GLSL 140: the line after "#line n" is n + 1 (n from GLSL 330)
+        int lineOffset = "1_40".equals(shaderManager.getVersion()) ? -1 : 0;
+        ShaderPreprocessor preprocessor = new ShaderPreprocessor(ShaderLoader::readIfFile,
+                shaderManager.versionFolder(), lineOffset);
+        try {
+            String source = preprocessor.process(path);
+            stageFiles.add(List.copyOf(preprocessor.files()));
+            return source;
+        } finally {
+            watched.addAll(preprocessor.watchedFiles());
+        }
+    }
+
+    private static String readIfFile(String path) {
+        return new File(path).isFile() ? FileMethods.readFileAsString(path) : null;
     }
 }

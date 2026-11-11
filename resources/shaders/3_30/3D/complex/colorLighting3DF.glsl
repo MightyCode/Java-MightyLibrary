@@ -12,7 +12,7 @@ uniform vec3 worldColor;
 uniform vec3 lightPos;
 uniform vec3 lightColor;
 
-#include "colorsManipulation"
+#include "utils/colorsManipulation.glsl"
 
 void main() {
     // ambient

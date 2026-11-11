@@ -8,7 +8,7 @@ uniform int color;
 
 uniform sampler2DRect ourTexture;
 
-#include "colorsManipulation"
+#include "utils/colorsManipulation.glsl"
 
 void main()
 {

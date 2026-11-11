@@ -39,7 +39,7 @@
             ]
         },
         {
-            "type" : "Shader",
+            "type" : "ShaderData",
             "files" : [],
             "regex" : [
                 ".*"

@@ -209,11 +209,7 @@ class ResourceScheduler {
     void submit(DataType data, boolean preload, Runnable work, Runnable end) {
         boolean urgent = resources.isUrgent(data);
 
-        DataType.TYPE_SET_UP where = data.getTypeSetUp();
-        if (where == DataType.TYPE_SET_UP.THREAD_PRELOAD_MAIN_LOAD)
-            where = preload ? DataType.TYPE_SET_UP.THREAD_CONTEXT : DataType.TYPE_SET_UP.MAIN_CONTEXT;
-
-        switch (where) {
+        switch (data.getTypeSetUp()) {
             case IMMEDIATELY_IN_CURRENT_CONTEXT:
                 work.run();
                 end.run();

@@ -18,7 +18,7 @@ public class ReloadGenCom extends BaseCommand {
     @Override
     protected void syntax(CommandNode root) {
         root.then(ResourceArguments.selection(() -> Views.engine().resources(),
-                "all or the name of a resource type, for example TextureData, Shader, FontFace", selection -> {
+                "all or the name of a resource type, for example TextureData, ShaderData, FontFace", selection -> {
                     int count = Views.engine().resources().reload(selection);
                     return CommandResult.ok("Reload " + count + " data (" + selection + ")");
                 }));

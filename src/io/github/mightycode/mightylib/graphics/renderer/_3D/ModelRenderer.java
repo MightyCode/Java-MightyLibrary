@@ -37,11 +37,12 @@ public class ModelRenderer extends Renderer {
     private MeshSet pending;
     private String diffuseOverride;
 
-    private boolean bindSpecular;
+    // Sampler uniforms (specular null when the shader has no specular map), in shaderValues as optional values
+    private String diffuseUniform;
+    private String specularUniform;
     private boolean faceCulling;
 
     private final ShaderValue shininessValue;
-    private final boolean sendShininess;
 
     // Sends the next mesh at each GLResources step
     private final MeshUpload upload;
@@ -65,7 +66,6 @@ public class ModelRenderer extends Renderer {
 
         setTextureUniforms(DEFAULT_DIFFUSE_UNIFORM, DEFAULT_SPECULAR_UNIFORM);
 
-        sendShininess = shape.getShader().getLink(SHININESS_UNIFORM) != -1;
         shininessValue = new ShaderValue(SHININESS_UNIFORM, Float.class, 32f);
 
         faceCulling = true;
@@ -175,18 +175,23 @@ public class ModelRenderer extends Renderer {
      * Uniforms absent from the shader are ignored.
      */
     public ModelRenderer setTextureUniforms(String diffuseUniform, String specularUniform) {
-        sendSampler(diffuseUniform, DIFFUSE_UNIT);
-        bindSpecular = sendSampler(specularUniform, SPECULAR_UNIT);
+        this.diffuseUniform = setSampler(this.diffuseUniform, diffuseUniform, DIFFUSE_UNIT);
+        this.specularUniform = setSampler(this.specularUniform, specularUniform, SPECULAR_UNIT);
 
         return this;
     }
 
-    private boolean sendSampler(String uniform, int unit) {
-        if (uniform == null || shape.getShader().getLink(uniform) == -1)
-            return false;
+    // The unit of the sampler, sent at each draw when the current program has it
+    private String setSampler(String previous, String uniform, int unit) {
+        if (previous != null) {
+            shaderValues.remove(previous);
+            optionalValues.remove(previous);
+        }
 
-        shape.getShader().sendValueToShader(new ShaderValue(uniform, Integer.class, unit));
-        return true;
+        if (uniform != null)
+            putOptionalValue(uniform, new ShaderValue(uniform, Integer.class, unit));
+
+        return uniform;
     }
 
     // Replace the diffuse map of every mesh (model file without material), kept when the model is reloaded
@@ -240,10 +245,11 @@ public class ModelRenderer extends Renderer {
         if (!isVisible() || shown.sent == 0)
             return;
 
-        for (ShaderValue value : shaderValues.values())
-            sentToShader(value);
+        sendShaderValues();
 
-        boolean sendMeshShininess = sendShininess && !shaderValues.containsKey(SHININESS_UNIFORM);
+        // Decided on the current program: it can change (fallback while loading, hot reload)
+        boolean bindSpecular = specularUniform != null && hasUniform(specularUniform);
+        boolean sendMeshShininess = !shaderValues.containsKey(SHININESS_UNIFORM) && hasUniform(SHININESS_UNIFORM);
 
         if (faceCulling)
             glEnable(GL_CULL_FACE);

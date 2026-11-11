@@ -16,6 +16,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
 public class Renderer extends UUID implements IDisplayable {
     protected GLResources glResources = Views.engine().glResources();
@@ -38,14 +40,20 @@ public class Renderer extends UUID implements IDisplayable {
     protected IRenderTextureBindable mainTexture;
     protected IRenderTextureBindable[] textures;
 
-    // Colored
+    /*
+     * Every value this renderer sends, sent again at each draw (filtered by the program, which skips unchanged ones):
+     * the program can change at any time (fallback while loading, hot reload) and has none of them at first.
+     */
     protected HashMap<String, ShaderValue> shaderValues;
+    // Keys of the values sent only when the current program has their uniform, never reported missing (generic ones)
+    protected HashSet<String> optionalValues;
 
     public Renderer(String shaderName, boolean useEbo) {
         shape = new Shape(shaderName, useEbo);
         model = new Matrix4f().identity();
 
         shaderValues = new HashMap<>();
+        optionalValues = new HashSet<>();
 
         visible = true;
 
@@ -57,30 +65,40 @@ public class Renderer extends UUID implements IDisplayable {
 
         referenceCamera = null;
 
-        if (shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1){
-            if (shape.is2DPurpose())
-                shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
-                        Views.current().camera2D().getProjection());
-            else
-                shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
-                        Views.current().camera3D().getView());
-        }
-
-        if (shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1){
-            if (shape.is2DPurpose()) {
-                shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
-                        Views.current().camera2D().getView());
-            }
-            else
-                shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
-                        Views.current().camera3D().getProjection());
+        // Generic matrices: sent at each draw when the current program uses them
+        if (shape.is2DPurpose()) {
+            putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera2D().getProjection());
+            putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera2D().getView());
+        } else {
+            putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera3D().getView());
+            putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera3D().getProjection());
         }
 
         applyModel();
 
-        if (shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1) {
-            shaderValues.put(ShaderManager.GENERIC_MODEL_FIELD_NAME,
-                    new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
+        putOptionalValue(ShaderManager.GENERIC_MODEL_FIELD_NAME,
+                new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
+    }
+
+    // A value sent only when the current program has its uniform (not reported missing otherwise)
+    protected void putOptionalValue(String key, ShaderValue value) {
+        shaderValues.put(key, value);
+        optionalValues.add(key);
+    }
+
+    // True when the current program of the shape has this uniform
+    protected boolean hasUniform(String name) {
+        return shape.getShader().getLink(name) != -1;
+    }
+
+    // Send the values of this renderer to the current program (the unchanged ones are skipped by it)
+    protected void sendShaderValues() {
+        for (Map.Entry<String, ShaderValue> entry : shaderValues.entrySet()) {
+            ShaderValue value = entry.getValue();
+            if (optionalValues.contains(entry.getKey()) && !hasUniform(value.getName()))
+                continue;
+
+            sentToShader(value);
         }
     }
 
@@ -102,13 +120,12 @@ public class Renderer extends UUID implements IDisplayable {
             }
         }
 
-        for (ShaderValue value : shaderValues.values()){
-            sentToShader(value);
-        }
+        sendShaderValues();
     }
 
     public Renderer addShaderValue(String name, Class<?> type, Object object){
         shaderValues.put(name, new ShaderValue(name, type, object));
+        optionalValues.remove(name);
 
         return this;
     }
@@ -125,6 +142,10 @@ public class Renderer extends UUID implements IDisplayable {
                 continue;
 
             other.shaderValues.put(value.getName(), value);
+            if (optionalValues.contains(value.getName()))
+                other.optionalValues.add(value.getName());
+            else
+                other.optionalValues.remove(value.getName());
         }
 
         return other;
@@ -236,9 +257,7 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     public void setMainTextureChannel(String name, String nameOfUniform) {
-        shape.getShader().sendValueToShader(
-                new ShaderValue(nameOfUniform, Integer.class, 0)
-        );
+        addShaderValue(nameOfUniform, Integer.class, 0);
 
         setMainTextureChannel(name);
     }
@@ -272,9 +291,7 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     public void addTextureChannel(IRenderTextureBindable texture, String nameOfUniform, int channelNumber) {
-        shape.getShader().sendValueToShader(
-                new ShaderValue(nameOfUniform, Integer.class, channelNumber)
-        );
+        addShaderValue(nameOfUniform, Integer.class, channelNumber);
 
         shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
 
@@ -338,8 +355,8 @@ public class Renderer extends UUID implements IDisplayable {
             return;
 
         referenceCamera = camera;
-        shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, camera.getProjection());
-        shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
+        putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, camera.getProjection());
+        putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
     }
 
     public void unload() {
