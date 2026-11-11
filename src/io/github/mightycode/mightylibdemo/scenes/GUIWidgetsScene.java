@@ -14,19 +14,20 @@ import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.type.FloatTweening;
 import io.github.mightycode.mightylib.physics.tweenings.type.Vector2fTweening;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.sounds.SoundSource;
+import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylibdemo.main.ActionId;
-import io.github.mightycode.mightylib.sounds.SoundSource;
-import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.lwjgl.openal.AL10;
 
 /**
  * GUI widgets, Shaking2D and positional sound. The square goes back and forth with the tweening type chosen in the
- * EnumSelector (top right); a looping chime follows it (SoundListener at the middle of the track: use headphones). The horizontal slider sets its size, the vertical slider the amplitude of the shake that Enter starts
- * (Shaking2D driven by a Vector2fTweening going from the amplitude to zero).
+ * EnumSelector (top right); a looping chime follows it (SoundListener at the middle of the track: use headphones).
+ * The lower horizontal slider sets its size, the upper one the volume of the chime, the vertical slider the amplitude
+ * of the shake that Enter starts (Shaking2D driven by a Vector2fTweening going from the amplitude to zero).
  */
 public class GUIWidgetsScene extends Scene {
     private static final float LEFT = 200f;
@@ -109,6 +110,8 @@ public class GUIWidgetsScene extends Scene {
         chime.gainNode = "music";
         chime.gain = DEFAULT_VOLUME;
         chime.loop = true;
+        // Kept by the scene until unload, played again if the sound is reloaded
+        chime.owned = true;
         chime.position.set(soundPosition());
         ambience = engine().soundManager().createSoundSource(chime);
     }
@@ -244,9 +247,9 @@ public class GUIWidgetsScene extends Scene {
         if (square == null)
             return;
 
-        // The looping sound outlives the scene otherwise; the listener goes back to the origin
+        // The owned looping sound outlives the scene otherwise; the listener goes back to the origin
         if (ambience != null)
-            ambience.stop();
+            ambience.release();
         ambience = null;
         engine().soundManager().getListener().setPosition(new Vector2f());
 

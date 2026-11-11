@@ -21,7 +21,14 @@ public class SoundSource {
 
     private boolean hadPlayed;
 
-    SoundSource(Resources resources, String gainNode) {
+    // Owned: deleted only once released (SoundSourceCreationInfo.owned)
+    private final boolean owned;
+    private boolean released;
+    // Owned source stopped while playing because its buffer was deleted (reload): played again once loaded
+    private boolean resumeWhenLoaded;
+
+    SoundSource(Resources resources, String gainNode, boolean owned) {
+        this.owned = owned;
         this.resources = resources;
         this.soundData = null;
         this.sourceId  = -1;
@@ -69,9 +76,21 @@ public class SoundSource {
         if (bufferId != boundBufferId || bufferId == 0)
             return;
 
+        boolean wasPlaying = isPlaying();
         AL10.alSourceStop(sourceId);
         AL10.alSourcei(sourceId, AL10.AL_BUFFER, 0);
         boundBufferId = 0;
+
+        resumeWhenLoaded = owned && !released && wasPlaying;
+    }
+
+    // Called by the manager at each tick: a reloaded sound plays again in its owned source
+    void resumeIfLoaded() {
+        if (!resumeWhenLoaded || soundData == null || !soundData.isLoaded())
+            return;
+
+        resumeWhenLoaded = false;
+        play();
     }
 
     public SoundSource setLoop(boolean value){
@@ -153,9 +172,31 @@ public class SoundSource {
         AL10.alSourcePlay(sourceId);
     }
 
-    // False until the manager has created the OpenAL source (after the delay of its creation info)
+    /*
+     * True once the manager has created the OpenAL source (after the delay of its creation info), until the source
+     * is released or deleted: the setters and play/stop are only valid meanwhile.
+     */
     public boolean isReady() {
-        return hadPlayed;
+        return sourceId != -1 && !released;
+    }
+
+    /**
+     * Gives an owned source back to the manager, which deletes it at its next update (also valid before the source
+     * is ready: it is then never created). The source must not be used afterwards.
+     */
+    public void release() {
+        if (isReady())
+            stop();
+        released = true;
+        resumeWhenLoaded = false;
+    }
+
+    boolean isReleased() {
+        return released;
+    }
+
+    boolean isOwned() {
+        return owned;
     }
 
     boolean hadPlayed(){
@@ -188,7 +229,12 @@ public class SoundSource {
     }
 
     void unload() {
+        // Never created (released or cleared before its delay ended)
+        if (sourceId == -1)
+            return;
+
         stop();
         AL10.alDeleteSources(sourceId);
+        sourceId = -1;
     }
 }
