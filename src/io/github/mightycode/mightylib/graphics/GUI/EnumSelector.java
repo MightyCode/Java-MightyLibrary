@@ -10,11 +10,7 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
-import org.joml.Vector2i;
 
-/**
- * No used
- */
 public class EnumSelector<T extends Enum<?>> {
     private final T[] values;
     private boolean updated;
@@ -29,45 +25,63 @@ public class EnumSelector<T extends Enum<?>> {
 
     private InputAction clickActionId;
 
+    /** Selector at the top right of the window (default position). */
     public EnumSelector(T[] values, WindowContext context){
+        this(values, context, DefaultPosition(context), DefaultWidth(context));
+    }
+
+    /**
+     * @param position top left corner of the selector, in virtual window pixels
+     * @param width width of the selector in pixels (the height is 8% of the window height)
+     */
+    public EnumSelector(T[] values, WindowContext context, Vector2f position, float width){
         this.values = values;
         this.inputManager = context.getInputManager();
-        Vector2i windowSize = context.getWindow().getInfo().getVirtualSizeCopy();
+        float height = context.getWindow().getInfo().getVirtualSizeCopy().y * 0.08f;
+        float textY = position.y + height * 0.125f;
 
         typeSelectedName = new Text();
         typeSelectedName.setFont("bahnschrift")
                 .setColor(ColorList.Blue())
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.Up)
-                .setPosition(new Vector2f(windowSize.x * 0.92f, windowSize.y * 0.01f))
+                .setPosition(new Vector2f(position.x + width * 0.515f, textY))
                 .setFontSize(20);
 
         chooseLeft = new BackgroundlessButton(context);
         chooseLeft.text().setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.Up)
-                .setPosition(new Vector2f(windowSize.x * 0.87f, windowSize.y * 0.01f))
+                .setPosition(new Vector2f(position.x + width * 0.21f, textY))
                 .setFontSize(30)
                 .setText("<-");
 
         chooseLeft.copyTextToOverlapping().overlapsText().setColor(new Color4f(0.5f));
 
         chooseRight = chooseLeft.copy();
-        chooseRight.text().setPosition(new Vector2f(windowSize.x * 0.97f, windowSize.y * 0.01f))
+        chooseRight.text().setPosition(new Vector2f(position.x + width * 0.82f, textY))
                 .setText("->");
 
         chooseRight.copyTextToOverlapping().overlapsText().setColor(new Color4f(0.8f));
 
         background = new RectangleRenderer("colorShape2D");
         background.setColorMode(ColorList.White());
-        background.setPosition(new Vector2f(windowSize.x * 0.835f, windowSize.y * 0.0f));
-        background.setSizePix(windowSize.x * 0.45f, windowSize.y * 0.08f);
+        background.setPosition(new Vector2f(position));
+        background.setSizePix(width, height);
 
         canLoop = true;
 
         updated = false;
 
         setSelected(0);
+    }
+
+    private static Vector2f DefaultPosition(WindowContext context) {
+        return new Vector2f(context.getWindow().getInfo().getVirtualSizeCopy().x * 0.835f, 0f);
+    }
+
+    private static float DefaultWidth(WindowContext context) {
+        return context.getWindow().getInfo().getVirtualSizeCopy().x * 0.165f;
     }
 
     public void init(InputAction clickActionId){
