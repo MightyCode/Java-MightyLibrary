@@ -15,13 +15,13 @@ import java.util.Set;
 public class DebugInfoCamera2D implements IUpdatableDisplayable {
     protected Camera2D camera;
     private final Text text;
+    private final Set<String> info = new HashSet<>();
+
+    private int precision = 2;
 
     public Text text() {
         return text;
     }
-    private final Set<String> info = new HashSet<>();
-
-    private int precision = 2;
 
     public DebugInfoCamera2D(){
         text = new Text();

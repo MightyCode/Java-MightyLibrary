@@ -11,6 +11,8 @@ import org.joml.Vector2f;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 // Selection and activation of GUIList and GUI, without window nor GL (fake mouse, fake actions, fake elements)
@@ -307,7 +309,7 @@ class GUIListTest {
 
     @Test
     void idsCantBeChanged() {
-        assertEquals(java.util.Set.of(1, 2, 3), list.ids());
+        assertEquals(Set.of(1, 2, 3), list.ids());
         assertThrows(UnsupportedOperationException.class, () -> list.ids().remove(1));
     }
 

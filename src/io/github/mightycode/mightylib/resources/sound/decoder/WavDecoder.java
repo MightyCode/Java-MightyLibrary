@@ -47,8 +47,7 @@ public class WavDecoder implements SoundDecoder {
                 }
             }
 
-            SoundLoadInfo info = new SoundLoadInfo(channels, rate, builder.finish(), true);
-            return info;
+            return new SoundLoadInfo(channels, rate, builder.finish(), true);
         } catch (UnsupportedAudioFileException e) {
             throw new ResourceException("unsupported wav file " + path, e);
         } catch (ResourceException | CancellationException e) {

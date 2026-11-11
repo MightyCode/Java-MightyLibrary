@@ -20,13 +20,13 @@ public class DebugInfoCamera3D implements IUpdatableDisplayable {
 
     protected Camera3D camera;
     private final Text text;
+    private final Set<Integer> info = new HashSet<>();
+
+    private int precision = 2;
 
     public Text text() {
         return text;
     }
-    private final Set<Integer> info = new HashSet<>();
-
-    private int precision = 2;
 
     public DebugInfoCamera3D(){
         text = new Text();

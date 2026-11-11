@@ -67,6 +67,7 @@ public class TerrainGeneration {
     public float getJiggle() {
         return jiggle;
     }
+
     private float calculateElevation(Vector2f pos) {
         float frequency = 0.05f;
         float amplitude = 1;
