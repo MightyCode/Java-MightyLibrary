@@ -60,7 +60,7 @@ public class AnimationData extends SingleSourceDataType {
     public FrameData getFrame(int index){
         if (framesData == null)
             return null;
-        if (0 > index || index > frameNumber())
+        if (0 > index || index >= frameNumber())
             return null;
 
         return framesData[index];

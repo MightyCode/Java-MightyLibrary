@@ -14,9 +14,9 @@ public enum ETweeningOption {
         if (lowerCase.equals("direct")) return Direct;
         if (lowerCase.equals("directmirrored")) return DirectMirrored;
         if (lowerCase.equals("directreversed")) return DirectReversed;
-        if (lowerCase.equals("loop")) return DirectReversed;
-        if (lowerCase.equals("loopmirrored")) return DirectReversed;
-        if (lowerCase.equals("loopreversed")) return DirectReversed;
+        if (lowerCase.equals("loop")) return Loop;
+        if (lowerCase.equals("loopmirrored")) return LoopMirrored;
+        if (lowerCase.equals("loopreversed")) return LoopReversed;
 
         return null;
     }

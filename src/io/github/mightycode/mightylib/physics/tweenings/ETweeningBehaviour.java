@@ -9,8 +9,8 @@ public enum ETweeningBehaviour {
         String lowerCase = txt.trim().toLowerCase();
 
         if (lowerCase.equals("in")) return In;
-        if (lowerCase.equals("out")) return In;
-        if (lowerCase.equals("inout")) return In;
+        if (lowerCase.equals("out")) return Out;
+        if (lowerCase.equals("inout")) return InOut;
 
         return null;
     }

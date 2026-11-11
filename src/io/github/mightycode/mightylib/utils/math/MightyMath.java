@@ -105,8 +105,8 @@ public abstract class MightyMath {
 	}
 
 	public static Vector2f RotatePointAround(Vector2f pt, Vector2f ref, float angle){
-		double s = Math.cos(angle);
-		double c = Math.sin(angle);
+		double c = Math.cos(angle);
+		double s = Math.sin(angle);
 
 		return new Vector2f(
 				(float)(c * (pt.x - ref.x) - s * (pt.y - ref.y) + ref.x),
@@ -150,14 +150,20 @@ public abstract class MightyMath {
 	 * @return true if the point is over the line
 	 */
 	public static boolean isPositionOverridingLine(Vector2f point, Vector4f line, float precision){
-		// ax + b -> line;
-		float a = (line.y - line.w) / (line.x - line.z);
-		float b = line.y - a * line.x;
-
 		float xInf = Math.min(line.x, line.z);
 		float xSup = Math.max(line.x, line.z);
 		float yInf = Math.min(line.y, line.w);
 		float ySup = Math.max(line.y, line.w);
+
+		// Vertical line: no slope
+		if (line.x == line.z) {
+			return Math.abs(point.x - line.x) <= precision
+					&& yInf - precision <= point.y && point.y <= ySup + precision;
+		}
+
+		// ax + b -> line;
+		float a = (line.y - line.w) / (line.x - line.z);
+		float b = line.y - a * line.x;
 
 		return a * point.x + b - precision <= point.y &&
 				point.y <= a * point.x + b + precision &&
