@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+    branches: [dev, master]
+  pull_request:
+    branches: [dev, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      # The tests need neither a window nor OpenGL (see docs/debug-tools.md for the in-game checks)
+      - name: Compile and test
+        run: mvn -B test
