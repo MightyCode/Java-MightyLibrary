@@ -104,6 +104,14 @@ class PolygonTest {
     }
 
     @Test
+    void earClippingAClockwisePolygonGivesTheSameArea() {
+        float[] clockwise = {0, 2, 1, 2, 1, 1, 2, 1, 2, 0, 0, 0};
+        int[] indices = new Polygon(clockwise).earClipIndices();
+        assertEquals(12, indices.length);
+        assertEquals(3f, area(clockwise, indices), 1e-4);
+    }
+
+    @Test
     void earClippingAConcavePolygonCoversExactlyItsArea() {
         int[] indices = new Polygon(L_SHAPE).earClipIndices();
         assertEquals(12, indices.length);

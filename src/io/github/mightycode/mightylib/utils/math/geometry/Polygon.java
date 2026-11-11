@@ -4,6 +4,7 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Polygon {
@@ -138,6 +139,18 @@ public class Polygon {
         for (int i = 0; i < vertices.length; i += 2){
             polygonCopy.add(new Vector2f(vertices[i], vertices[i + 1]));
             polygonIndices.add(i / 2);
+        }
+
+        // The ears are found on a counter-clockwise polygon: a clockwise one is walked the other way round
+        float signedArea = 0;
+        for (int i = 0; i < vertices.length; i += 2){
+            int next = (i + 2) % vertices.length;
+            signedArea += vertices[i] * vertices[next + 1] - vertices[next] * vertices[i + 1];
+        }
+
+        if (signedArea < 0){
+            Collections.reverse(polygonCopy);
+            Collections.reverse(polygonIndices);
         }
 
         // The first ear is cut each time, the ears are searched again as the polygon changes
