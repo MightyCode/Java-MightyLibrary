@@ -9,24 +9,6 @@ import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 
 // The owner of the capture (the console) reads the mouse the game no longer sees, simulation included
 class MouseRawTest {
-    // A mouse without window: the real cursor and buttons are given
-    private static final class FakeMouse extends MouseManager {
-        double x = 50;
-        double y = 60;
-        boolean left;
-
-        @Override
-        protected boolean realButton(int buttonId) {
-            return buttonId == GLFW_MOUSE_BUTTON_LEFT && left;
-        }
-
-        @Override
-        protected void realCursor(double[] x, double[] y) {
-            x[0] = this.x;
-            y[0] = this.y;
-        }
-    }
-
     @Test
     void rawReadsIgnoreTheCapture() {
         FakeMouse mouse = new FakeMouse();
@@ -40,6 +22,8 @@ class MouseRawTest {
         assertTrue(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));
         assertTrue(mouse.getRawButton(GLFW_MOUSE_BUTTON_LEFT));
         assertEquals(new Vector2f(50, 60), mouse.getRawPos());
+        // Without window the virtual coordinates are the pixels
+        assertEquals(new Vector2f(50, 60), mouse.getRawVirtualPos());
 
         mouse.postUpdate();
         assertFalse(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));

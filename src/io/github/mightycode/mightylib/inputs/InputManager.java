@@ -105,21 +105,25 @@ public class InputManager {
      * focus back is not a press for the next holder.
      */
     private final InputFocus focus = new InputFocus(this::focusChanged);
+    // Keys, text and actions only: a click that gives the focus up is for the scene (InputFocus.releaseForClick)
     // The presses and releases of this tick are not seen (a focus change happened during it)
     private boolean edgesDropped;
 
     public InputFocus focus() { return focus; }
 
-    private void focusChanged() {
+    private void focusChanged(boolean mousePressPasses) {
         boolean held = focus.isHeld();
-        edgesDropped = true;
+        // The actions bound to the mouse button would be lost with the others: the managers drop their own edges
+        if (!mousePressPasses)
+            edgesDropped = true;
         if (keyManager != null) {
             keyManager.setCaptured(held);
             keyManager.dropEdges();
         }
         if (mouseManager != null) {
             mouseManager.setCaptured(held);
-            mouseManager.dropEdges();
+            if (!mousePressPasses)
+                mouseManager.dropEdges();
         }
     }
 

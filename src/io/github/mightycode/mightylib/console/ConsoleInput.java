@@ -123,10 +123,16 @@ public final class ConsoleInput {
 
         // Shortcuts follow the letter of the layout of the system, not the position of the key. Not with Alt: AltGr
         // comes as Ctrl+Alt on Windows and types characters (AltGr+L: 'ł' in Polish), received as typed text
-        if (key.isControl() && !key.isAlt() && key.letter() != 0) {
+        if (LineEditKeys.IsShortcut(key)) {
             handleShortcut(key, clipboard, requests);
             return;
         }
+
+        // The keys that move in the command line and delete from it (shared with the text fields)
+        if (key.key() == GLFW_KEY_BACKSPACE || key.key() == GLFW_KEY_DELETE)
+            logSelection = null;
+        if (LineEditKeys.Handle(editor, key))
+            return;
 
         switch (key.key()) {
             case GLFW_KEY_ENTER:
@@ -143,42 +149,12 @@ public final class ConsoleInput {
                 if (!key.isRepeat())
                     requests.add(new Request(ERequest.CLOSE, null, 0));
                 break;
-            case GLFW_KEY_BACKSPACE:
-                logSelection = null;
-                if (key.isControl())
-                    editor.deleteWordLeft();
-                else
-                    editor.deleteLeft();
-                break;
-            case GLFW_KEY_DELETE:
-                logSelection = null;
-                editor.deleteRight();
-                break;
-            // Shift extends the selection of the command line
-            case GLFW_KEY_LEFT:
-                if (key.isControl())
-                    editor.wordLeftMove(key.isShift());
-                else
-                    editor.left(key.isShift());
-                break;
-            case GLFW_KEY_RIGHT:
-                if (key.isControl())
-                    editor.wordRightMove(key.isShift());
-                else
-                    editor.right(key.isShift());
-                break;
+            // Home and End alone are line edits (LineEditKeys): with Ctrl they scroll the log
             case GLFW_KEY_HOME:
-                // Ctrl: the top of the log, alone: the beginning of the command line
-                if (key.isControl())
-                    requests.add(new Request(ERequest.SCROLL_TOP, null, 0));
-                else
-                    editor.home(key.isShift());
+                requests.add(new Request(ERequest.SCROLL_TOP, null, 0));
                 break;
             case GLFW_KEY_END:
-                if (key.isControl())
-                    requests.add(new Request(ERequest.SCROLL_END, null, 0));
-                else
-                    editor.end(key.isShift());
+                requests.add(new Request(ERequest.SCROLL_END, null, 0));
                 break;
             case GLFW_KEY_UP:
                 // Shift: one row of the log, alone: the history

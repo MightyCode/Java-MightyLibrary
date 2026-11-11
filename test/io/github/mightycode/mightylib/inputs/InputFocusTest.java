@@ -185,6 +185,42 @@ class InputFocusTest {
         assertTrue(inputManager.getState(GAME));
     }
 
+    // A tick in which the button of the mouse goes down, the focus being held since the tick before
+    private FakeMouse mouseWithFocusHeld(InputManager manager) {
+        FakeMouse mouse = (FakeMouse) manager.getMouseManager();
+        mouse.postUpdate();
+        manager.focus().request("owner");
+        mouse.postUpdate();
+        manager.resetDroppedEdges();
+        mouse.left = true;
+        mouse.postUpdate();
+        return mouse;
+    }
+
+    @Test
+    void clickElsewhereGivesTheFocusBackWithoutLosingThePress() {
+        FakeMouse mouse = new FakeMouse();
+        InputManager manager = new InputManager(null, mouse, gamepads);
+        mouseWithFocusHeld(manager);
+        assertFalse(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        assertTrue(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));
+
+        manager.focus().releaseForClick("owner");
+        assertFalse(manager.focus().isHeld());
+        assertTrue(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+    }
+
+    @Test
+    void otherReleasesLoseThePress() {
+        FakeMouse mouse = new FakeMouse();
+        InputManager manager = new InputManager(null, mouse, gamepads);
+        mouseWithFocusHeld(manager);
+
+        manager.focus().release("owner");
+        assertFalse(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        assertTrue(mouse.getButton(GLFW_MOUSE_BUTTON_LEFT));
+    }
+
     @Test
     void blockingHidesEngineActionsToo() {
         inputManager.setBlocked(true);

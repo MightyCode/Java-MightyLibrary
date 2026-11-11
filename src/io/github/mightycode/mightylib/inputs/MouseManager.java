@@ -150,6 +150,9 @@ public class MouseManager {
     // Position of the cursor in window pixels (origin at the top left, like simulateMove), not the virtual one
     public Vector2f getRawPos() { return new Vector2f(windowPos); }
 
+    // Position of the cursor in virtual coordinates (pos() without the capture): to place it in the GUI of the owner
+    public Vector2f getRawVirtualPos() { return new Vector2f(pos); }
+
     public boolean getRawButton(int buttonId) {
         return isButton(buttonId) && state[buttonId];
     }

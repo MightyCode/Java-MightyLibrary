@@ -15,9 +15,15 @@ import java.util.List;
  */
 public final class InputFocus {
     private final List<Object> owners = new ArrayList<>();
-    private final Runnable onChange;
+    private final IChangeListener onChange;
 
-    InputFocus(Runnable onChange) {
+    /** Told of each change of the top owner. */
+    interface IChangeListener {
+        /** @param mousePressPasses the mouse press of the tick is still for the scene (a click elsewhere) */
+        void focusChanged(boolean mousePressPasses);
+    }
+
+    InputFocus(IChangeListener onChange) {
         this.onChange = onChange;
     }
 
@@ -30,11 +36,23 @@ public final class InputFocus {
 
         owners.remove(owner);
         owners.add(owner);
-        onChange.run();
+        onChange.focusChanged(false);
     }
 
     /** The owner gives up its place, wherever it is: the owner below gets the focus back if it was the top. */
     public void release(Object owner) {
+        release(owner, false);
+    }
+
+    /**
+     * The owner gives the focus up because the player clicked elsewhere: unlike release(owner), the press of the
+     * mouse button of this tick is still for the scene (a click on another widget is not lost).
+     */
+    public void releaseForClick(Object owner) {
+        release(owner, true);
+    }
+
+    private void release(Object owner, boolean mousePressPasses) {
         int index = owners.indexOf(owner);
         if (index < 0)
             return;
@@ -42,7 +60,7 @@ public final class InputFocus {
         boolean top = index == owners.size() - 1;
         owners.remove(index);
         if (top)
-            onChange.run();
+            onChange.focusChanged(mousePressPasses);
     }
 
     /** The owner at the top, null when the scene holds the focus. */
