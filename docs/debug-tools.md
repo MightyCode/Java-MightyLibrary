@@ -68,4 +68,4 @@ python tools/scenario.py "scene Scene2D" wait-loaded "?gl summary" "input ESCAPE
 ## Profilage
 - **JFR** : événements `mightylib.Frame`/`mightylib.Tick`. `jcmd <pid> JFR.start duration=30s filename=rec.jfr` (pid : `jcmd -l`) ou `-XX:StartFlightRecording=…` ; `jfr print --events mightylib.Frame rec.jfr`, ou JMC/VisualVM.
 - **GPU** : RenderDoc ou Nsight Graphics (OpenGL 3.3 core).
-- **Erreurs GL** : `EngineConfig.setOpenGLErrorCheck(true)` (`Logger.DO_CHECK`) = `glGetError` après les appels sensibles, plus lent.
+- **Erreurs GL** : `EngineConfig.setOpenGLErrorCheck(true)` (`Logger.isGLErrorCheck()`) = `glGetError` après les appels sensibles, plus lent.
