@@ -5,6 +5,8 @@ description: Analyse l'export des inspections IntelliJ (XML dans target/analyse)
 
 # Analyse des inspections IntelliJ
 
+Error Prone et SpotBugs, eux, se lancent sans l'utilisateur : `python tools/analyse.py` (voir `docs/debug-tools.md`) ; le tri et la correction ci-dessous valent aussi pour leurs constats.
+
 ## 1. Obtenir l'export
 L'inspecteur en ligne de commande (`inspect.bat`) d'IntelliJ 2024.2 plante au démarrage de la JVM (accès à `sun.nio.fs`) : ne pas le relancer. Demander l'export à l'utilisateur : *Code → Inspect Code…*, portée « Whole project », bouton *Export* de la fenêtre de résultats, format XML, dossier `target/analyse` (un fichier par inspection).
 

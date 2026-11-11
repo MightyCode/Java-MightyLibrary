@@ -65,6 +65,11 @@ python tools/scenario.py "scene Scene2D" wait-loaded "?gl summary" "input ESCAPE
 - Fluidité d'un chargement : `python tools/scenario.py "scene GLLoading" "stats reset" wait-loaded stats` (`reset` après `scene` exclut le tick qui exécute `init`). Préchargement : `scene PreloadScene`, puis `resources batch <batch>` et `input ENTER`.
 - Fuite à la main : `gl` sur une scène, allers-retours, `gl` à nouveau : compteurs et références identiques.
 
+## Analyse statique (`tools/analyse.py`)
+`python tools/analyse.py` : profil Maven `analyse` (`mvn -P analyse process-classes`, une sortie à part dans `target/static-analysis`, `target/classes` du jeu intact), environ 30 s. Error Prone s'exécute dans `javac` (forké, avec les `--add-exports` du JDK 17+ ; avertissements dans `target/static-analysis.log`), SpotBugs lit ensuite le bytecode (`spotbugsXml.xml`). Aucun constat ne fait échouer le build.
+- Sortie : nombre de constats par motif et par zone (`lib`/`demo`), les motifs des catégories à risque de `bonnes-pratiques.md` (point 11) en premier (`*`). `--details MOTIF…` : `fichier:ligne | outil motif | message` (préfixe du nom) ; `--details-all` ; `--no-run` relit le dernier résultat.
+- Filtres : `tools/spotbugs-exclude.xml` (SpotBugs) et les `-Xep:Nom:OFF` du profil dans `pom.xml` (Error Prone) ; chaque exclusion dit pourquoi. Première exécution : sans `-o` pour télécharger les plugins.
+
 ## Profilage
 - **JFR** : événements `mightylib.Frame`/`mightylib.Tick`. `jcmd <pid> JFR.start duration=30s filename=rec.jfr` (pid : `jcmd -l`) ou `-XX:StartFlightRecording=…` ; `jfr print --events mightylib.Frame rec.jfr`, ou JMC/VisualVM.
 - **GPU** : RenderDoc ou Nsight Graphics (OpenGL 3.3 core).

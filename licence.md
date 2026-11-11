@@ -49,7 +49,7 @@ Les jars `natives-windows` / `natives-linux` embarquent des bibliothèques C :
 
 ## Outils de test et de build (non distribués)
 
-JUnit 5 (EPL 2.0, tests seulement), Maven et ses plugins (Apache 2.0). Rien à joindre à un jeu.
+JUnit 5 (EPL 2.0, tests seulement), Maven et ses plugins (Apache 2.0), Error Prone (Apache 2.0) et SpotBugs (LGPL 2.1), ces deux derniers seulement dans le profil `analyse` (analyse statique, jamais dans le jar). Rien à joindre à un jeu.
 
 ## Licence du projet : GPL v3
 
