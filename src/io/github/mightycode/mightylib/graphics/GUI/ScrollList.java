@@ -226,11 +226,16 @@ public class ScrollList {
         if (mouseMoved || wheeled)
             hoverSuppressed = false;
 
+        // The rows show what the hover is tested against
+        if (needRefill)
+            refill();
+
+        // Hovered : the mouse is over the text of a row, not only in its band
         int newHovered = -1;
         if (inArea && !hoverSuppressed) {
             int row = (int) ((mouse.y - y) / rowHeight);
             int item = selection.first() + row;
-            if (row >= 0 && row < visibleRows && item < selection.count())
+            if (row >= 0 && row < visibleRows && item < selection.count() && rows.get(row).GUIMouseSelected())
                 newHovered = item;
         }
         hovered = newHovered;
