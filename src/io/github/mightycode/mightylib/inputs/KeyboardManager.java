@@ -112,14 +112,22 @@ public class KeyboardManager {
         return hidden() ? Collections.emptyList() : keyEvents;
     }
 
-    // ---- Capture: the owner of the keyboard (the console) reads it, the game sees nothing ----
+    // ---- Focus: the owner of the keyboard (the console, a text field) reads it, the game sees nothing ----
 
-    // Set by InputManager.setCaptured
+    // Set by InputManager when its focus is held
     private boolean captured;
     // Engine actions are read while the keyboard is captured (InputManager)
     private boolean rawRead;
+    // The focus changed during this tick: what was typed or pressed in it is for nobody (until postUpdate)
+    private boolean edgesDropped;
 
     void setCaptured(boolean captured) { this.captured = captured; }
+
+    void dropEdges() {
+        edgesDropped = true;
+        typedText = "";
+        keyEvents = Collections.emptyList();
+    }
 
     public boolean isCaptured() { return captured; }
 
@@ -178,7 +186,7 @@ public class KeyboardManager {
      * @return boolean
      */
     public boolean keyPressed(int keyID){
-        if (hidden())
+        if (hidden() || edgesDropped)
             return false;
 
         return (state[keyID] && !oldState[keyID]);
@@ -191,7 +199,7 @@ public class KeyboardManager {
      * @return boolean
      */
     public boolean keyReleased(int keyID){
-        if (hidden())
+        if (hidden() || edgesDropped)
             return false;
 
         return (!state[keyID] && oldState[keyID]);
@@ -206,6 +214,7 @@ public class KeyboardManager {
 
     public void postUpdate(){
         boolean mainKeyChanged = false;
+        edgesDropped = false;
         numberKeyPressed = 0;
 
         // Text typed since the last postUpdate, then the simulated one

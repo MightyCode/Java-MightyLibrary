@@ -66,6 +66,35 @@ class MouseRawTest {
     }
 
     @Test
+    void droppedEdgesLastUntilTheNextTick() {
+        FakeMouse mouse = new FakeMouse();
+        mouse.postUpdate();
+        mouse.left = true;
+        mouse.postUpdate();
+        assertTrue(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        mouse.simulateScroll(0, 2);
+
+        // A change of focus during the tick: the press is for nobody, the button is still held
+        mouse.dropEdges();
+        assertFalse(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        assertFalse(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        assertTrue(mouse.getButton(GLFW_MOUSE_BUTTON_LEFT));
+        assertEquals(0, mouse.getRawMouseScroll().y);
+
+        mouse.left = false;
+        mouse.postUpdate();
+        assertTrue(mouse.buttonReleased(GLFW_MOUSE_BUTTON_LEFT));
+        mouse.dropEdges();
+        assertFalse(mouse.buttonReleased(GLFW_MOUSE_BUTTON_LEFT));
+        assertFalse(mouse.rawButtonReleased(GLFW_MOUSE_BUTTON_LEFT));
+
+        mouse.postUpdate();
+        mouse.left = true;
+        mouse.postUpdate();
+        assertTrue(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+    }
+
+    @Test
     void rawReadsFollowTheSimulation() {
         FakeMouse mouse = new FakeMouse();
         mouse.postUpdate();

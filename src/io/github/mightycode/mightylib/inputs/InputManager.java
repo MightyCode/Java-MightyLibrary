@@ -97,21 +97,31 @@ public class InputManager {
     public boolean isBlocked() { return blocked; }
 
     /*
-     * A captured manager (the console is typing in its window) hides the keyboard, the mouse and every action from
-     * the game, except the actions of the engine (namespace mightylib: open the console...). Read at each query, so
-     * it applies at once; the owner of the capture reads the raw values (getRawKeyEvents, getRawTypedText...).
+     * The focus: while an owner holds it (the console is typing in this window, a text field), the scene sees
+     * neither the keyboard, nor the mouse, nor any action, except the actions of the engine (namespace mightylib:
+     * open the console...). Read at each query, so it applies at once; the owner reads the raw values
+     * (getRawKeyEvents, getRawTypedText...).
+     * A change of the holder drops what was pressed during the current tick for everyone: the key that gives the
+     * focus back is not a press for the next holder.
      */
-    private boolean captured;
+    private final InputFocus focus = new InputFocus(this::focusChanged);
+    // The presses and releases of this tick are not seen (a focus change happened during it)
+    private boolean edgesDropped;
 
-    public void setCaptured(boolean captured) {
-        this.captured = captured;
-        if (keyManager != null)
-            keyManager.setCaptured(captured);
-        if (mouseManager != null)
-            mouseManager.setCaptured(captured);
+    public InputFocus focus() { return focus; }
+
+    private void focusChanged() {
+        boolean held = focus.isHeld();
+        edgesDropped = true;
+        if (keyManager != null) {
+            keyManager.setCaptured(held);
+            keyManager.dropEdges();
+        }
+        if (mouseManager != null) {
+            mouseManager.setCaptured(held);
+            mouseManager.dropEdges();
+        }
     }
-
-    public boolean isCaptured() { return captured; }
 
     private static boolean isEngineAction(InputAction action) {
         return Identifier.ENGINE_NAMESPACE.equals(action.identifier().namespace());
@@ -119,12 +129,12 @@ public class InputManager {
 
     // The action is not seen at all
     private boolean hides(InputAction action) {
-        return blocked || (captured && !isEngineAction(action));
+        return blocked || (focus.isHeld() && !isEngineAction(action));
     }
 
-    // An engine action read while captured: the keyboard and the mouse answer for it
+    // An engine action read while the focus is held: the keyboard and the mouse answer for it
     private boolean beginRead(InputAction action) {
-        boolean raw = captured && isEngineAction(action);
+        boolean raw = focus.isHeld() && isEngineAction(action);
         if (raw)
             setRawRead(true);
         return raw;
@@ -144,7 +154,7 @@ public class InputManager {
 
     // Value of the axis for this tick, 0 if not bound
     public float getAxis(InputAxis axis){
-        if (blocked || captured)
+        if (blocked || focus.isHeld())
             return 0;
 
         AxisInput axisInput = axisConfigurations.get(axis);
@@ -230,7 +240,7 @@ public class InputManager {
 
 
     public boolean inputPressed(InputAction action){
-        if (hides(action))
+        if (hides(action) || edgesDropped)
             return false;
 
         ActionInput actionInput = actionConfigurations.get(action);
@@ -247,7 +257,7 @@ public class InputManager {
 
 
     public boolean inputReleased(InputAction action){
-        if (hides(action))
+        if (hides(action) || edgesDropped)
             return false;
 
         ActionInput actionInput = actionConfigurations.get(action);
@@ -320,10 +330,16 @@ public class InputManager {
 
     // Compute the inputs of the next tick
     public void postUpdate(){
+        resetDroppedEdges();
         keyManager.postUpdate();
         mouseManager.postUpdate();
         simulation.update();
         updateAxisSimulation();
+    }
+
+    // Package-private for the tests (no keyboard nor mouse there)
+    void resetDroppedEdges(){
+        edgesDropped = false;
     }
 
     // Package-private for the tests (no keyboard nor mouse there)
