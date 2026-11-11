@@ -24,6 +24,11 @@ public class TextField extends GUI {
     private static final float PADDING = 8f;
     private static final long CURSOR_BLINK_NANOSECONDS = 500_000_000L;
 
+    // Background: focused (typing), selected (under the mouse or forced by a GUIList or a scene), or neither
+    private static final Color4f FOCUSED_COLOR = new Color4f(0.2f, 0.24f, 0.36f, 1f);
+    private static final Color4f SELECTED_COLOR = new Color4f(0.17f, 0.18f, 0.26f, 1f);
+    private static final Color4f IDLE_COLOR = new Color4f(0.12f, 0.12f, 0.16f, 1f);
+
     private final WindowContext context;
     private final float x, y, width, height;
 
@@ -35,6 +40,10 @@ public class TextField extends GUI {
     private final RectangleRenderer cursor;
     private final Text text;
     private final Text hint;
+    // The color the background has now, set again only when it changes
+    private Color4f backgroundColor;
+    // Reused by display, called at each frame
+    private final Vector2f drawPosition = new Vector2f();
 
     private final ConsoleInput.IClipboard clipboard;
 
@@ -156,9 +165,11 @@ public class TextField extends GUI {
     @Override
     public void display() {
         boolean focused = hasFocus();
-        // Focused (typing), selected (under the mouse or forced by a GUIList or a scene), or neither
-        background.setColorMode(focused ? new Color4f(0.2f, 0.24f, 0.36f, 1f)
-                : isSelectedNow() ? new Color4f(0.17f, 0.18f, 0.26f, 1f) : new Color4f(0.12f, 0.12f, 0.16f, 1f));
+        Color4f color = focused ? FOCUSED_COLOR : isSelectedNow() ? SELECTED_COLOR : IDLE_COLOR;
+        if (color != backgroundColor) {
+            backgroundColor = color;
+            background.setColorMode(color);
+        }
         background.display();
 
         float textY = y + (height - text.lineHeight()) * 0.5f;
@@ -166,7 +177,7 @@ public class TextField extends GUI {
         String content = model.getText();
 
         if (content.isEmpty()) {
-            hint.setPosition(new Vector2f(textX, textY));
+            hint.setPosition(drawPosition.set(textX, textY));
             hint.display();
         } else {
             int start = model.visibleStart();
@@ -175,19 +186,19 @@ public class TextField extends GUI {
             int from = Math.max(start, model.editor().selectionStart());
             int to = Math.min(end, model.editor().selectionEnd());
             if (focused && model.editor().hasSelection() && to > from) {
-                selection.setPosition(new Vector2f(textX + model.xOf(from), textY));
+                selection.setPosition(drawPosition.set(textX + model.xOf(from), textY));
                 selection.setSizePix(model.xOf(to) - model.xOf(from), text.lineHeight());
                 selection.display();
             }
 
             text.setText(content.substring(start, end));
-            text.setPosition(new Vector2f(textX, textY));
+            text.setPosition(drawPosition.set(textX, textY));
             text.display();
         }
 
         boolean blinkOn = (System.nanoTime() / CURSOR_BLINK_NANOSECONDS) % 2 == 0;
         if (focused && blinkOn) {
-            cursor.setPosition(new Vector2f(textX + model.xOf(model.editor().getCursor()), textY));
+            cursor.setPosition(drawPosition.set(textX + model.xOf(model.editor().getCursor()), textY));
             cursor.setSizePix(2, text.lineHeight());
             cursor.display();
         }
