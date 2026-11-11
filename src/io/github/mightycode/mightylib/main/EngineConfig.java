@@ -15,6 +15,7 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
 import org.joml.Vector2i;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -355,7 +356,7 @@ public class EngineConfig {
         if (property == null)
             return watchResources;
 
-        switch (property.trim().toLowerCase()) {
+        switch (property.trim().toLowerCase(Locale.ROOT)) {
             case "poll": case "polling": case "true":
                 return ResourceWatcher.Mode.POLLING;
             case "service":
@@ -440,7 +441,7 @@ public class EngineConfig {
 
     // shown: true, hidden: false, anything else: null
     static Boolean ParseLogsShown(String value) {
-        switch (value.trim().toLowerCase()) {
+        switch (value.trim().toLowerCase(Locale.ROOT)) {
             case "shown":
                 return Boolean.TRUE;
             case "hidden":

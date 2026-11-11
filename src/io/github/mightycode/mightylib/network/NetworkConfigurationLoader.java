@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.utils.Logger;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public class NetworkConfigurationLoader extends ResourceLoader {
@@ -48,7 +49,7 @@ public class NetworkConfigurationLoader extends ResourceLoader {
         char symbol = '=';
         String[] values = {"","","","",""};
         int i = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(((NetworkConfiguration) dataType).path()))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(((NetworkConfiguration) dataType).path(), StandardCharsets.UTF_8))) {
             String line = reader.readLine();
 
             while (line != null) {

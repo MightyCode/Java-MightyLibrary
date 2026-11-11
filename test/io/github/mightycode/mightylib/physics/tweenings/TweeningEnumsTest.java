@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.physics.tweenings;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 // fromString is an instance method of the enums (any constant can be used to call it)
@@ -13,6 +15,20 @@ class TweeningEnumsTest {
             assertSame(type, any.fromString(type.name()), type.toString());
             assertSame(type, any.fromString("  " + type.name().toUpperCase() + " "), type.toString());
             assertSame(type, any.fromString(type.name().toLowerCase()), type.toString());
+        }
+    }
+
+    // In a Turkish locale "LINEAR".toLowerCase() gives a dotless i: the parsing must not depend on the machine
+    @Test
+    void parsingDoesNotDependOnTheDefaultLocale() {
+        Locale saved = Locale.getDefault();
+        try {
+            Locale.setDefault(new Locale("tr", "TR"));
+            assertSame(ETweeningType.Linear, ETweeningType.Linear.fromString("LINEAR"));
+            assertSame(ETweeningBehaviour.In, ETweeningBehaviour.In.fromString("IN"));
+            assertSame(ETweeningOption.Loop, ETweeningOption.Direct.fromString("LOOP"));
+        } finally {
+            Locale.setDefault(saved);
         }
     }
 

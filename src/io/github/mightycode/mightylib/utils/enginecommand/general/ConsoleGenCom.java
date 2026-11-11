@@ -15,6 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Consumer;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.choice;
@@ -138,7 +139,7 @@ public class ConsoleGenCom extends BaseCommand {
         if (console == null)
             return CommandResult.error("The console is disabled (EngineConfig.setCommandAccess)");
 
-        return CommandResult.ok("Console " + console.getMode().name().toLowerCase(), console.stateJson());
+        return CommandResult.ok("Console " + console.getMode().name().toLowerCase(Locale.ROOT), console.stateJson());
     }
 
     // The last lines, or the lines after the id (when not null)

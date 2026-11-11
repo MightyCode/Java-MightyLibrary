@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
+import java.util.Locale;
+
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
@@ -42,7 +44,7 @@ public final class WindowPlatform {
     }
 
     static int Parse(String name) {
-        switch (name.trim().toLowerCase()) {
+        switch (name.trim().toLowerCase(Locale.ROOT)) {
             case "x11": return GLFW_PLATFORM_X11;
             case "wayland": return GLFW_PLATFORM_WAYLAND;
             case "win32": return GLFW_PLATFORM_WIN32;

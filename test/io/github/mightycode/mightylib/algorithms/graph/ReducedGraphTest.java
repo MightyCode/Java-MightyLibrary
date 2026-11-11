@@ -40,7 +40,7 @@ class ReducedGraphTest {
         NodeIntersection center = reduced.getById(CENTER);
         assertEquals(3, center.size());
         assertEquals(Arrays.asList(ARM_A1, ARM_A2), ids(center.getById(LEAF_A)));
-        assertEquals(Arrays.asList(ARM_B1), ids(center.getById(LEAF_B)));
+        assertEquals(List.of(ARM_B1), ids(center.getById(LEAF_B)));
         assertTrue(ids(center.getById(LEAF_C)).isEmpty(), "directly linked");
 
         NodeIntersection leaf = reduced.getById(LEAF_A);

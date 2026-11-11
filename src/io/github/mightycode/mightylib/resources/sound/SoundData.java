@@ -5,6 +5,8 @@ import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 
+import java.util.Locale;
+
 import static org.lwjgl.openal.AL10.*;
 
 public class SoundData extends SingleSourceDataType {
@@ -53,7 +55,7 @@ public class SoundData extends SingleSourceDataType {
         if (path == null)
             return 1;
 
-        String lower = path.toLowerCase();
+        String lower = path.toLowerCase(Locale.ROOT);
         if (lower.endsWith(".ogg") || lower.endsWith(".mp3"))
             return 10;
         if (lower.endsWith(".flac"))

@@ -90,7 +90,4 @@ public class TextPaddingScene extends Scene {
             texts[i].unload();
         }
     }
-
-    @Override
-    public void release() {}
 }

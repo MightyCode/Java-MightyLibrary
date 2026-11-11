@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -93,7 +94,7 @@ public final class InputRegistry {
 
         if (name.indexOf(':') >= 0) {
             try {
-                T element = elements.get(Identifier.parse(name.toLowerCase()));
+                T element = elements.get(Identifier.parse(name.toLowerCase(Locale.ROOT)));
                 if (element != null)
                     result.add(element);
             } catch (IllegalArgumentException e) {

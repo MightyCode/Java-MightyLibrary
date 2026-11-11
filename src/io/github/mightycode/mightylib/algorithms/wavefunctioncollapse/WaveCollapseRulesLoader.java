@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.data.JSONFile;
 
+import java.util.Locale;
 import java.util.Map;
 
 public class WaveCollapseRulesLoader extends ResourceLoader {
@@ -36,7 +37,7 @@ public class WaveCollapseRulesLoader extends ResourceLoader {
         String ending = getFileExtension(path);
         String fileName = getFileName(path);
 
-        if (ending != null && fileName.toLowerCase().contains(".wavecollapse"))
+        if (ending != null && fileName.toLowerCase(Locale.ROOT).contains(".wavecollapse"))
             return getFileName(path);
 
         return null;

@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.resources.ResourceException;
 import org.joml.Vector4i;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,7 +52,7 @@ public class FontFile {
 
     // A missing or unreadable file is a failure of the data (ResourceException): the fallback font replaces it
     public void load(){
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(path))) {
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(path, StandardCharsets.UTF_8))) {
 
             String line;
             Map<String, String> values = new HashMap<>();

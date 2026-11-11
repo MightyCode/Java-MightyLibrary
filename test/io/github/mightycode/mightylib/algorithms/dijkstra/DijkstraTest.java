@@ -52,7 +52,7 @@ class DijkstraTest {
     void startEqualToEndGivesTheStartAlone() {
         Graph graph = yShape();
         Node start = graph.getById(CENTER);
-        assertEquals(Arrays.asList(CENTER), ids(Dijkstra.findShortestPath(graph, start, start)));
+        assertEquals(List.of(CENTER), ids(Dijkstra.findShortestPath(graph, start, start)));
     }
 
     @Test

@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.physics.tweenings;
 
+import java.util.Locale;
+
 public enum ETweeningType {
     Linear,
     Quadratic,
@@ -14,7 +16,7 @@ public enum ETweeningType {
     Bounce;
 
     public ETweeningType fromString(String txt){
-        String lowerCase = txt.trim().toLowerCase();
+        String lowerCase = txt.trim().toLowerCase(Locale.ROOT);
 
         if (lowerCase.equals("linear")) return Linear;
         if (lowerCase.equals("quadratic")) return Quadratic;

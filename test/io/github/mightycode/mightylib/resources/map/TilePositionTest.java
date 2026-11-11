@@ -35,10 +35,10 @@ class TilePositionTest {
     @Test
     void equalityComparesTheThreeCoordinates() {
         TilePosition position = new TilePosition(1, 2, 3);
-        assertEquals(position, new TilePosition(1, 2, 3));
-        assertNotEquals(position, new TilePosition(9, 2, 3));
-        assertNotEquals(position, new TilePosition(1, 9, 3));
-        assertNotEquals(position, new TilePosition(1, 2, 9));
+        assertEquals(new TilePosition(1, 2, 3), position);
+        assertNotEquals(new TilePosition(9, 2, 3), position);
+        assertNotEquals(new TilePosition(1, 9, 3), position);
+        assertNotEquals(new TilePosition(1, 2, 9), position);
         assertNotEquals(position, null);
         assertNotEquals(position, "1,2,3");
     }

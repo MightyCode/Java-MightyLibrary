@@ -532,14 +532,15 @@ public class Resources {
         } else if (preload) {
             data.setPreloaded();
         } else if (result.success) {
-            if (data.loadContinues()) {
-                // Part of the load done: the update below queues the next step
-            } else if (data.reloadOf != null && isWanted(data)) {
-                reloads.commit(data);
-            } else {
-                data.loadDone(true);
-                dependencies.wakeWaiters(data);
-                reloads.contentChanged(data);
+            // If the load continues (part done), the update below queues the next step
+            if (!data.loadContinues()) {
+                if (data.reloadOf != null && isWanted(data)) {
+                    reloads.commit(data);
+                } else {
+                    data.loadDone(true);
+                    dependencies.wakeWaiters(data);
+                    reloads.contentChanged(data);
+                }
             }
         } else {
             fail(data, "load returned false");

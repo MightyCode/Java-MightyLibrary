@@ -15,6 +15,7 @@ import java.io.File;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.lwjgl.assimp.Assimp.*;
@@ -65,7 +66,7 @@ public class ModelLoader extends ResourceLoader {
         if (ending == null)
             return null;
 
-        ending = ending.toLowerCase();
+        ending = ending.toLowerCase(Locale.ROOT);
         for (String extension : EXTENSIONS) {
             if (extension.equals(ending))
                 return getFileName(path);
