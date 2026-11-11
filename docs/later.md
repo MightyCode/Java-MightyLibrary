@@ -35,7 +35,8 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - `Slider.setMaxPrecision` ne fait rien : `maxPrecision` vaut -1 au départ et la méthode n'écrit que si elle est déjà `>= 0` (condition à revoir).
 - `StrSelector` / `EnumSelector` : position et taille écrites en dur (coin haut droit de la fenêtre), donc deux sélecteurs se superposent et `StrSelector` n'a aucune démo ; à rendre configurables (comme les sliders).
 - `Collision2DGrid.init` journalise sans le préfixe `--` du moteur.
-- Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `SoundListener` (son positionnel), `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
+- `SoundManager.clearAwaitedSong` (changement de scène) oublie les sons en attente de leur délai mais laisse leurs sources, jamais créées, dans la liste ; et dans `lateUpdate`, une source dont l'`init` échoue est retirée de la liste puis encore réglée et jouée (`managerId` des autres sons en attente non décalés).
+- Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
 - `DataFolder.getFileContent` concatène les lignes lues sans saut de ligne (`Scanner.nextLine`).
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).

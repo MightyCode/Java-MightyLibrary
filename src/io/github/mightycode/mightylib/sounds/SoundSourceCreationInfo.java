@@ -12,6 +12,11 @@ public class SoundSourceCreationInfo {
     public boolean relative;
     public String gainNode;
     public float delay;
+    /*
+     * Owned source (an ambience, a music): kept until its creator calls SoundSource.release(), not deleted when it
+     * stops, and played again once its sound is reloaded. Otherwise the manager deletes it as soon as it stops.
+     */
+    public boolean owned;
 
     private final Timer timer;
 
@@ -54,6 +59,7 @@ public class SoundSourceCreationInfo {
         temp.loop = loop;
         temp.relative = relative;
         temp.delay = delay;
+        temp.owned = owned;
 
         return temp;
     }

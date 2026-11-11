@@ -62,7 +62,9 @@ PLATFORM_PROPERTY = "mightylib.glfw.platform"
 STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict"
 NO_CURSOR_CAPTURE_PROPERTY = "mightylib.input.noCursorCapture"
 PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:"
-                             r"|^\[LWJGL\] .*error|^\s+Description :")
+                             r"|^\[LWJGL\] .*error|^\s+Description :"
+                             # OpenAL errors (SoundManager.DisplayError)
+                             r"|Error when |OpenAL function|OpenAL running out|UNKNOWN ERROR")
 
 
 def run_maven(*goals):

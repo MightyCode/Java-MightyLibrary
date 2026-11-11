@@ -73,7 +73,7 @@ public class SoundManager {
 
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
         SoundSourceCreationInfo safeInfo = creationInfo.copy();
-        SoundSource source = new SoundSource(resources, safeInfo.gainNode);
+        SoundSource source = new SoundSource(resources, safeInfo.gainNode, safeInfo.owned);
         safeInfo.startTimer();
 
         safeInfo.managerId = soundsSource.size();
@@ -104,6 +104,13 @@ public class SoundManager {
         SoundSourceCreationInfo info;
         for (int i = awaitedNewSounds.size() - 1; i >= 0; --i){
             info = awaitedNewSounds.get(i);
+
+            // Released before its delay ended: never created, deleted from the list below
+            if (soundsSource.get(info.managerId).isReleased()) {
+                awaitedNewSounds.remove(i);
+                continue;
+            }
+
             info.updateTimer();
 
             if (info.isTimerFinished()) {
@@ -126,9 +133,12 @@ public class SoundManager {
         for (int i = soundsSource.size() - 1; i >= 0; --i) {
             source = soundsSource.get(i);
 
-            if (source.isStopped() && source.hadPlayed()) {
+            // An owned source lives until released; the others until they stop (hadPlayed first: a source still
+            // waiting for its delay has no OpenAL name to query)
+            if (source.isReleased() || (!source.isOwned() && source.hadPlayed() && source.isStopped()))
                 removeAt(i);
-            }
+            else
+                source.resumeIfLoaded();
         }
     }
 
@@ -191,6 +201,9 @@ public class SoundManager {
         for(SoundSource sounds : soundsSource){
             sounds.unload();
         }
+        // Deleted sources: the buffers deleted afterwards must not be detached from them (AL_INVALID_NAME)
+        soundsSource.clear();
+        awaitedNewSounds.clear();
 
         return true;
     }
