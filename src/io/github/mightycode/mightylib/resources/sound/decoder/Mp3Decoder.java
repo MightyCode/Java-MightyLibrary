@@ -48,11 +48,7 @@ public class Mp3Decoder implements SoundDecoder {
             if (channels == 0)
                 throw new ResourceException("no mp3 frame in " + path);
 
-            SoundLoadInfo info = new SoundLoadInfo();
-            info.Channel = channels;
-            info.SampleRate = rate;
-            info.Buffer = builder.finish();
-            info.nativeBuffer = true;
+            SoundLoadInfo info = new SoundLoadInfo(channels, rate, builder.finish(), true);
             return info;
         } catch (ResourceException | CancellationException e) {
             throw e;

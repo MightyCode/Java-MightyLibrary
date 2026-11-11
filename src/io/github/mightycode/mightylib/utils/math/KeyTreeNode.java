@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.utils.math;
 
 public class KeyTreeNode<K, V> {
     private final K key;
-    public V value;
+    private V value;
 
     private final KeyTreeNode<K, V> parent;
 

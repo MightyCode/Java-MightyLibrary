@@ -150,7 +150,7 @@ public class MenuScene extends Scene {
         BackgroundlessButton button;
         if (model == null) {
             button = new BackgroundlessButton(mainContext);
-            button.Text.setFont("bahnschrift")
+            button.text().setFont("bahnschrift")
                     .setAlignment(ETextAlignment.Center)
                     .setReference(EDirection.None)
                     .setFontSize(40);
@@ -158,9 +158,9 @@ public class MenuScene extends Scene {
             button = model.copy();
         }
 
-        button.Text.setPosition(new Vector2f(x, y)).setText(label);
-        button.Text.copyTo(button.OverlapsText);
-        button.OverlapsText.setColor(new Color4f(0.3f)).setText("->" + label + "<-");
+        button.text().setPosition(new Vector2f(x, y)).setText(label);
+        button.text().copyTo(button.overlapsText());
+        button.overlapsText().setColor(new Color4f(0.3f)).setText("->" + label + "<-");
 
         return button;
     }
@@ -196,7 +196,7 @@ public class MenuScene extends Scene {
         }
 
         rotation.update();
-        buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
+        buttonQuit.text().setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
         if (guiList.isStateChanged()){
             engine().soundManager().createSoundSource(CREATION_INFO_SELECT);

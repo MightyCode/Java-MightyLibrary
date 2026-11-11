@@ -96,8 +96,8 @@ public class SoundLoader extends ResourceLoader {
             throw new ResourceException("unsupported sound format: " + path);
 
         SoundLoadInfo info = decoder.decode(path, sound::checkCancelled);
-        if (info.Channel != 1 && info.Channel != 2) {
-            int channels = info.Channel;
+        if (info.getChannels() != 1 && info.getChannels() != 2) {
+            int channels = info.getChannels();
             info.release();
             throw new ResourceException("sound with " + channels + " channels (mono or stereo only): " + path);
         }

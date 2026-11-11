@@ -11,15 +11,19 @@ public class EllipseRenderer extends RectangleRenderer {
         public String Rotation = "ellipse.rotation";
     }
 
-    public ShaderEllipseProperty ShaderProperty;
+    // Names of the uniforms, copied at the construction: the values are added and updated under the same names
+    private final ShaderEllipseProperty shaderProperty;
 
     public EllipseRenderer(String shaderName, ShaderEllipseProperty property) {
         super(shaderName);
 
-        ShaderProperty = property;
-        addShaderValue(ShaderProperty.Center, Vector2f.class, new Vector2f());
-        addShaderValue(ShaderProperty.Radius, Vector2f.class, new Vector2f());
-        addShaderValue(ShaderProperty.Rotation, Float.class, 0f);
+        shaderProperty = new ShaderEllipseProperty();
+        shaderProperty.Center = property.Center;
+        shaderProperty.Radius = property.Radius;
+        shaderProperty.Rotation = property.Rotation;
+        addShaderValue(shaderProperty.Center, Vector2f.class, new Vector2f());
+        addShaderValue(shaderProperty.Radius, Vector2f.class, new Vector2f());
+        addShaderValue(shaderProperty.Rotation, Float.class, 0f);
 
         texturePosition = RectangularFace.BasicTexturePosition();
         setReferenceDirection(EDirection.None);
@@ -36,7 +40,7 @@ public class EllipseRenderer extends RectangleRenderer {
     @Override
     public void setRotationZ(float rotation){
         super.setRotationZ(rotation);
-        updateShaderValue(ShaderProperty.Rotation, rotation);
+        updateShaderValue(shaderProperty.Rotation, rotation);
     }
 
     @Override
@@ -61,7 +65,7 @@ public class EllipseRenderer extends RectangleRenderer {
     }
 
     private void updateValues() {
-        updateShaderValue(ShaderProperty.Radius, new Vector2f(scale.x / 2, scale.y / 2));
+        updateShaderValue(shaderProperty.Radius, new Vector2f(scale.x / 2, scale.y / 2));
 
         Vector2f pos = new Vector2f(this.position.x, this.position.y);
 
@@ -89,6 +93,6 @@ public class EllipseRenderer extends RectangleRenderer {
                 pos.y -= scale.y / 2;
         }
 
-        updateShaderValue(ShaderProperty.Center, pos);
+        updateShaderValue(shaderProperty.Center, pos);
     }
 }

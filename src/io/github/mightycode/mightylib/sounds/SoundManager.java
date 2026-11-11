@@ -138,8 +138,8 @@ public class SoundManager {
         KeyTreeNode<String, Float> node = gainTree.getNode(name);
 
         while(node != null){
-            if (node.value != null)
-                gain *= node.value;
+            if (node.getValue() != null)
+                gain *= node.getValue();
 
             //System.out.println(node.getKey());
             node = node.parent();
