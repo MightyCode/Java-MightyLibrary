@@ -45,7 +45,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Un bug existant découvert hors du sujet en cours : le noter dans `docs/later.md` ou `docs/futur-discussion.md` (et le signaler), pas le corriger en douce.
 - Avant de commencer un gros point (passage de `later.md` à `current.md`), en discuter avec l'utilisateur pour s'assurer que tout est prévu (`/planification-ml`).
 - **Point hebdomadaire** : une revue des bonnes pratiques (`/revue-pratiques`) par semaine. Dernière revue : **2026-11-08**. Au début de toute nouvelle discussion, si la dernière revue date de 7 jours ou plus, le rappeler à l'utilisateur (une ligne) avant de commencer. Après chaque revue, mettre à jour cette date.
-- **Analyse statique** : `python tools/analyse.py` (Error Prone + SpotBugs, 30 s) tous les 3 à 4 jours. Dernière analyse : **2026-11-11**. Au début de toute nouvelle discussion, si elle date de 4 jours ou plus, le rappeler (une ligne, avec celui de la revue). Après chaque analyse, mettre à jour cette date.
+- **Analyses automatiques, pendant la revue hebdomadaire** : `python tools/analyse.py` (Error Prone + SpotBugs) et `python tools/coverage.py` (JaCoCo) font partie de la revue ; on analyse leurs résultats puis on choisit les actions à mener (corrections par thème, tests à ajouter), sans date ni rappel à part.
 - Décrire comment vérifier manuellement ce qui n'a pas pu l'être (quelle scène, quoi observer).
 
 ## Conventions de code

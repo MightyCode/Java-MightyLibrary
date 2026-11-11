@@ -12,6 +12,7 @@ description: Revue hebdomadaire des bonnes pratiques du projet (docs/bonnes-prat
 - Période : celle donnée par l'utilisateur, sinon la dernière semaine.
 - `python .claude/skills/revue-pratiques/collect.py --since "<période>"` : branches et fusions, commits (correctifs sans test, code ancien sans test, commits sans doc), tests, lignes conditionnelles de `current.md`, `printStackTrace`, `catch` vides, fichiers ouverts hors try-with-resources, âge de l'export IntelliJ.
 - `mvn -o -q test` (commande Windows/Linux de `CLAUDE.md`) : résultat réel des tests.
+- `python tools/analyse.py` (Error Prone + SpotBugs) et `python tools/coverage.py` (JaCoCo) : résumés à lire avec `--details`, `--classes` ou `--lines` seulement pour ce qui change ou ce qui est à risque (comparer à la revue précédente si elle est connue). Leurs constats entrent dans le tableau (point 11) et dans les actions proposées.
 - Lire seulement ce que le rapport signale (extraits de code, commits avec `git show --stat`), jamais tout l'historique.
 - Ne pas lancer le jeu : la revue juge si les vérifications en jeu ont été faites, elle ne les refait pas.
 
