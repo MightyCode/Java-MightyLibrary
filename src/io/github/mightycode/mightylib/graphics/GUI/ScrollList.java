@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.inputs.InputAction;
+import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -18,6 +19,10 @@ import java.util.List;
  * Vertical list of text rows, scrolled with the mouse wheel.
  * Only the visible rows exist as GL objects (a fixed pool re-filled on scroll),
  * so the number of items does not matter.
+ *
+ * One row is selected (ListSelection) : by the keyboard (setupKeyboardActions), by the mouse moving over a row,
+ * or by setSelected. The list scrolls to keep it shown. The row under the mouse is getHovered() ; a keyboard move
+ * or new items hide the hover until the mouse moves again.
  */
 public class ScrollList {
     private static final float SCROLLBAR_WIDTH = 6f;
@@ -32,10 +37,14 @@ public class ScrollList {
     private final List<BackgroundlessButton> rows;
     private final RectangleRenderer scrollTrack, scrollThumb;
 
-    private final List<String> items = new ArrayList<>();
-    private int firstItem;
+    private final ListSelection<String> selection;
     private int hovered = -1;
+    // After a keyboard move or new items: the mouse resting on a row is not a choice until it moves
+    private boolean hoverSuppressed;
     private InputAction[] activationActions = new InputAction[0];
+
+    private InputAction actionUp, actionDown;
+    private InputAction[] keyboardActivationActions = new InputAction[0];
 
     private boolean needRefill = true;
 
@@ -51,6 +60,7 @@ public class ScrollList {
         this.height = height;
         this.rowHeight = rowHeight;
         this.visibleRows = Math.max(1, (int) (height / rowHeight));
+        this.selection = new ListSelection<>(visibleRows);
 
         BackgroundlessButton model = new BackgroundlessButton(context);
         model.text().setFont(fontName)
@@ -80,18 +90,65 @@ public class ScrollList {
         scrollThumb.setSizePix(SCROLLBAR_WIDTH, height);
     }
 
+    /**
+     * Replaces the items. The selection stays on the same item if it is still there, otherwise it goes to the first.
+     */
     public void setItems(List<String> newItems) {
-        items.clear();
-        items.addAll(newItems);
-        firstItem = clampFirst(firstItem);
+        selection.setItems(newItems);
+        hoverSuppressed = true;
         needRefill = true;
     }
 
-    /** Index in the items of the row under the mouse, null if none. */
+    /** Index in the items of the row under the mouse, null if none (or hidden by the keyboard, see above). */
     public Integer getHovered() {
         return hovered < 0 ? null : hovered;
     }
 
+    /** Index in the items of the selected row, null if the list is empty. */
+    public Integer getSelected() {
+        return selection.selected() < 0 ? null : selection.selected();
+    }
+
+    /** The selected row, scrolling to show it. */
+    public void setSelected(int index) {
+        if (selection.select(index))
+            hoverSuppressed = true;
+        needRefill = true;
+    }
+
+    /**
+     * The row to show information about : the hovered one, otherwise the selected one. Null if the list is empty.
+     */
+    public Integer getActive() {
+        return hovered >= 0 ? Integer.valueOf(hovered) : getSelected();
+    }
+
+    /** One row up (negative) or down, without loop ; false when already at the end. */
+    public boolean moveSelection(int delta) {
+        boolean moved = selection.move(delta);
+        if (moved) {
+            hoverSuppressed = true;
+            needRefill = true;
+        }
+
+        return moved;
+    }
+
+    public boolean isSelectionAtStart() { return selection.isAtStart(); }
+
+    public boolean isSelectionAtEnd() { return selection.isAtEnd(); }
+
+    /**
+     * Keyboard : up and down move the selection (update), the activation actions (Enter...) activate the selected
+     * row, each on its own trigger. For a list that is not driven by a GUIList : the keys act at each tick.
+     */
+    public void setupKeyboardActions(InputAction up, InputAction down, InputAction... activationActions) {
+        this.actionUp = up;
+        this.actionDown = down;
+        this.keyboardActivationActions = activationActions;
+    }
+
+    /** Actions (left click...) that activate the row under the mouse. */
     public void setupActivationActions(InputAction... actionIds) {
         this.activationActions = actionIds;
     }
@@ -108,17 +165,27 @@ public class ScrollList {
         return rows.get(0).getTrigger();
     }
 
-    /** Index in the items of the row activated at this tick, null otherwise. */
+    /** Index in the items of the row activated at this tick (clicked, or selected and Enter), null otherwise. */
     public Integer getActivated() {
-        if (hovered < 0)
-            return null;
+        InputManager inputManager = context.getInputManager();
+        if (hovered >= 0) {
+            BackgroundlessButton row = rows.get(hovered - selection.first());
+            if (row.isActivated(inputManager, activationActions))
+                return hovered;
+        }
 
-        BackgroundlessButton row = rows.get(hovered - firstItem);
-        return row.isActivated(context.getInputManager(), activationActions) ? hovered : null;
+        if (selection.selected() >= 0) {
+            for (InputAction action : keyboardActivationActions) {
+                if (inputManager.isInput(action, getTrigger()))
+                    return selection.selected();
+            }
+        }
+
+        return null;
     }
 
     public int getFirstVisible() {
-        return firstItem;
+        return selection.first();
     }
 
     public int getVisibleRows() {
@@ -126,15 +193,8 @@ public class ScrollList {
     }
 
     public void scrollTo(int newFirst) {
-        int clamped = clampFirst(newFirst);
-        if (clamped != firstItem) {
-            firstItem = clamped;
+        if (selection.scrollTo(newFirst))
             needRefill = true;
-        }
-    }
-
-    private int clampFirst(int value) {
-        return Math.max(0, Math.min(value, items.size() - visibleRows));
     }
 
     private boolean mouseInArea(Vector2f mouse) {
@@ -142,30 +202,50 @@ public class ScrollList {
     }
 
     public void update() {
+        InputManager inputManager = context.getInputManager();
         Vector2f mouse = camera.transformPosition(context.getMouseManager().pos());
         boolean inArea = mouseInArea(mouse);
+        boolean mouseMoved = !context.getMouseManager().oldPos().equals(context.getMouseManager().pos());
 
+        boolean wheeled = false;
         if (inArea) {
             // Positive y : wheel up, so the list goes toward its start
             float wheel = context.getMouseManager().getMouseScroll().y;
-            if (wheel != 0)
-                scrollTo(firstItem - Math.round(wheel * 2f));
+            if (wheel != 0) {
+                scrollTo(selection.first() - Math.round(wheel * 2f));
+                wheeled = true;
+            }
         }
 
+        if (actionUp != null && inputManager.inputPressed(actionUp))
+            moveSelection(-1);
+        else if (actionDown != null && inputManager.inputPressed(actionDown))
+            moveSelection(1);
+
+        // The mouse moving (or the wheel turning under it) makes the hover a choice again
+        if (mouseMoved || wheeled)
+            hoverSuppressed = false;
+
         int newHovered = -1;
-        if (inArea) {
+        if (inArea && !hoverSuppressed) {
             int row = (int) ((mouse.y - y) / rowHeight);
-            int item = firstItem + row;
-            if (row >= 0 && row < visibleRows && item < items.size())
+            int item = selection.first() + row;
+            if (row >= 0 && row < visibleRows && item < selection.count())
                 newHovered = item;
         }
         hovered = newHovered;
 
+        // The mouse moving over a row selects it
+        if (mouseMoved && hovered >= 0 && selection.select(hovered))
+            needRefill = true;
+
         if (needRefill)
             refill();
 
+        Integer activeRow = getActive();
+        int active = activeRow == null ? -1 : activeRow;
         for (int i = 0; i < visibleRows; i++) {
-            boolean over = firstItem + i == hovered;
+            boolean over = selection.first() + i == active;
             rows.get(i).forceSelect(over);
             if (!over)
                 rows.get(i).forceUnselect(true);
@@ -177,8 +257,8 @@ public class ScrollList {
     private void refill() {
         for (int i = 0; i < visibleRows; i++) {
             BackgroundlessButton row = rows.get(i);
-            int item = firstItem + i;
-            String label = item < items.size() ? items.get(item) : "";
+            int item = selection.first() + i;
+            String label = item < selection.count() ? selection.items().get(item) : "";
 
             row.text().setText(label);
             row.overlapsText().setText(label.isEmpty() ? "" : "->" + label + "<-");
@@ -188,10 +268,10 @@ public class ScrollList {
     }
 
     private void updateThumb() {
-        float ratio = Math.min(1f, visibleRows / (float) Math.max(1, items.size()));
+        float ratio = Math.min(1f, visibleRows / (float) Math.max(1, selection.count()));
         float thumbHeight = Math.max(rowHeight * 0.5f, height * ratio);
-        int maxFirst = Math.max(1, items.size() - visibleRows);
-        float thumbY = y + (height - thumbHeight) * (firstItem / (float) maxFirst);
+        int maxFirst = Math.max(1, selection.count() - visibleRows);
+        float thumbY = y + (height - thumbHeight) * (selection.first() / (float) maxFirst);
 
         scrollThumb.setSizePix(SCROLLBAR_WIDTH, thumbHeight);
         scrollThumb.setPosition(new Vector2f(x + width - SCROLLBAR_WIDTH, thumbY));
@@ -201,7 +281,7 @@ public class ScrollList {
         for (BackgroundlessButton row : rows)
             row.display();
 
-        if (items.size() > visibleRows) {
+        if (selection.count() > visibleRows) {
             scrollTrack.display();
             scrollThumb.display();
         }
