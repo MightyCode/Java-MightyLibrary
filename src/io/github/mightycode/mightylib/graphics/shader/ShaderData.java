@@ -66,7 +66,7 @@ public class ShaderData extends DataType {
     }
 
     // Preload (worker): the files the sources are made of with their includes, and the missing ones (watched)
-    protected void setSourcePaths(Collection<String> files) {
+    public void setSourcePaths(Collection<String> files) {
         sourcePaths = List.copyOf(files);
     }
 
