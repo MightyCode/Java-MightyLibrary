@@ -1,8 +1,10 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylib.algorithms.astar.AStar;
 import io.github.mightycode.mightylib.algorithms.dijkstra.Dijkstra;
 import io.github.mightycode.mightylib.algorithms.graph.Graph;
 import io.github.mightycode.mightylib.algorithms.graph.Node;
+import io.github.mightycode.mightylib.graphics.GUI.StrSelector;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
@@ -17,8 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Graph and Dijkstra : a grid of cells is turned into a Graph (one Node per free cell, linked to its four
- * neighbours), then Dijkstra.findShortestPath looks for the shortest path between the start and the end cells.
+ * Graph, Dijkstra and A* : a grid of cells is turned into a Graph (one Node per free cell, linked to its four
+ * neighbours), then the algorithm chosen in the StrSelector (top right) looks for the shortest path between the
+ * start and the end cells.
  * Left click paints or erases walls, shift + left click moves the start, right click moves the end.
  */
 public class PathfindingScene2D extends Scene {
@@ -26,6 +29,9 @@ public class PathfindingScene2D extends Scene {
     private static final int ROWS = 15;
     private static final float CELL = 40f;
     private static final float TOP = 100f;
+
+    private static final String DIJKSTRA = "Dijkstra";
+    private static final String ASTAR = "A*";
 
     private static final Color4f FLOOR = new Color4f(0.18f, 0.2f, 0.25f, 1f);
     private static final Color4f WALL = new Color4f(0.03f, 0.03f, 0.05f, 1f);
@@ -44,6 +50,7 @@ public class PathfindingScene2D extends Scene {
     private RectangleRenderer rectangle;
     private Text info;
     private Text result;
+    private StrSelector algorithmSelector;
 
     // true when the current drag adds walls, false when it removes them
     private boolean painting;
@@ -72,6 +79,10 @@ public class PathfindingScene2D extends Scene {
                 .setAlignment(ETextAlignment.Left)
                 .setColor(PATH)
                 .setPosition(new Vector2f(20, 55));
+
+        algorithmSelector = new StrSelector(new String[]{DIJKSTRA, ASTAR}, mainContext,
+                new Vector2f(COLUMNS * CELL - 340f, 5f), 330f);
+        algorithmSelector.init(ActionId.LEFT_CLICK);
 
         // A few walls to make the path bend
         for (int y = 3; y < ROWS - 2; ++y)
@@ -123,12 +134,15 @@ public class PathfindingScene2D extends Scene {
             return;
         }
 
-        path = Dijkstra.findShortestPath(graph, start, end);
+        if (ASTAR.equals(algorithmSelector.getSelected()))
+            path = AStar.findShortestPath(graph, start, end);
+        else
+            path = Dijkstra.findShortestPath(graph, start, end);
 
         if (path.isEmpty())
             result.setText("No path : the end is closed off");
         else
-            result.setText("Path : " + path.size() + " nodes, " + graph.size() + " nodes in the graph");
+            result.setText(algorithmSelector.getSelected() + " : " + path.size() + " nodes, " + graph.size() + " nodes in the graph");
     }
 
     @Override
@@ -136,6 +150,10 @@ public class PathfindingScene2D extends Scene {
         super.update();
 
         InputManager input = mainContext.getInputManager();
+
+        algorithmSelector.update();
+        if (algorithmSelector.isUpdated())
+            rebuild();
 
         if (input.inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
@@ -212,6 +230,7 @@ public class PathfindingScene2D extends Scene {
 
         info.display();
         result.display();
+        algorithmSelector.display();
 
         setAndDisplayRealScene();
     }
@@ -226,5 +245,6 @@ public class PathfindingScene2D extends Scene {
         rectangle.unload();
         info.unload();
         result.unload();
+        algorithmSelector.unload();
     }
 }
