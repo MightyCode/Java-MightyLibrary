@@ -296,7 +296,9 @@ class GUIListTest {
     void replacingTheSelectedElementSelectsTheNewOne() {
         press(down);
         FakeGUI replacing = new FakeGUI();
+        assertTrue(first.forceSelected());
         list.put(1, replacing);
+        assertFalse(first.forceSelected());
 
         validate.pressed = true;
         assertEquals(1, list.getActivated());

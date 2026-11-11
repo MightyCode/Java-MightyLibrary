@@ -46,8 +46,11 @@ public class GUIList {
 
     // Adds the element, or replaces the one with this id (the selection stays on the id)
     public GUIList put(int id, GUI gui) {
-        GUIs.put(id, Objects.requireNonNull(gui, "gui"));
+        GUI replaced = GUIs.put(id, Objects.requireNonNull(gui, "gui"));
         if (this.id != null && this.id == id) {
+            // The replaced element leaves the list: no longer selected
+            if (replaced != null && replaced != gui)
+                replaced.forceSelect(false);
             selected = gui;
             // Selected by the actions: the new element is too (by the mouse, it checks the mouse itself)
             if (!selectedByMouse)
