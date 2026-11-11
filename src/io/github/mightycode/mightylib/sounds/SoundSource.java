@@ -27,7 +27,11 @@ public class SoundSource {
     // Owned source stopped while playing because its buffer was deleted (reload): played again once loaded
     private boolean resumeWhenLoaded;
 
-    SoundSource(Resources resources, String gainNode, boolean owned) {
+    // Name asked at creation, known before the source is created
+    private String soundName;
+
+    SoundSource(Resources resources, String soundName, String gainNode, boolean owned) {
+        this.soundName = soundName;
         this.owned = owned;
         this.resources = resources;
         this.soundData = null;
@@ -41,6 +45,7 @@ public class SoundSource {
     }
 
     public boolean init(String soundName){
+        this.soundName = soundName;
         this.sourceId = alGenSources();
 
         return setSoundData(soundName);
@@ -154,7 +159,7 @@ public class SoundSource {
         return gain;
     }
 
-    String getGainNodeName(){
+    public String getGainNodeName(){
         return gainNodeName;
     }
 
@@ -195,8 +200,56 @@ public class SoundSource {
         return released;
     }
 
-    boolean isOwned() {
+    public boolean isOwned() {
         return owned;
+    }
+
+    public String getSoundName() {
+        return soundName;
+    }
+
+    // waiting (delay not ended), released, or the OpenAL state: initial, playing, paused, stopped
+    public String state() {
+        if (released)
+            return "released";
+        if (sourceId == -1)
+            return "waiting";
+
+        switch (AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE)) {
+            case AL10.AL_PLAYING:
+                return "playing";
+            case AL10.AL_PAUSED:
+                return "paused";
+            case AL10.AL_STOPPED:
+                return "stopped";
+            default:
+                return "initial";
+        }
+    }
+
+    // The buffer given to OpenAL is not the one of the sound: fallback (failed, loading) or none; false while waiting
+    public boolean playsFallback() {
+        if (sourceId == -1)
+            return false;
+
+        return soundData == null || boundBufferId == 0 || boundBufferId != soundData.getBufferId();
+    }
+
+    // Read from OpenAL; zero while the source is not ready
+    public Vector3f getPosition() {
+        if (!isReady())
+            return new Vector3f();
+
+        float[] x = new float[1];
+        float[] y = new float[1];
+        float[] z = new float[1];
+        AL10.alGetSource3f(sourceId, AL10.AL_POSITION, x, y, z);
+        return new Vector3f(x[0], y[0], z[0]);
+    }
+
+    // Own gain times the gain of its node in the gain tree (without the distance attenuation)
+    public float getFinalGain() {
+        return gain * gainNode;
     }
 
     boolean hadPlayed(){

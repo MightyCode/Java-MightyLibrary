@@ -10,7 +10,8 @@ Steps are game commands (see `help` in the game) plus:
     wait-loaded                     wait until any scene change (command or game) is done and the scene is loaded
     sleep:SECONDS                   wait, for example sleep:0.5
     leakcheck SCENE [N] [VIA]       load SCENE, do N round trips (default 2) through VIA (default MenuScene),
-                                    print "no leak" or only the OpenGL counters that changed
+                                    print "no leak" or only the counters that changed (OpenGL objects,
+                                    owned sound sources)
     log PATTERN [N]                 last N lines (default 10) of the game log matching the regex PATTERN
     drag X1 Y1 X2 Y2 [--hold S]     press the left button at X1 Y1, move to X2 Y2 in steps during S seconds
                                     (default 0.5, "1s" accepted), release; the cursor stays at X2 Y2
@@ -171,6 +172,14 @@ def gl_snapshot(connection, reader, timeout):
     return counters
 
 
+def leak_snapshot(connection, reader, timeout):
+    # The OpenGL counters and the owned sound sources (one-shot sources end by themselves, they are not counted)
+    counters = gl_snapshot(connection, reader, timeout)
+    data = mighty.send(connection, reader, "sounds").get("data", {})
+    counters["sound.ownedSources"] = data.get("owned", 0)
+    return counters
+
+
 def change_scene(connection, reader, timeout, scene):
     answer = mighty.send(connection, reader, "scene " + scene)
     if not answer.get("success"):
@@ -191,7 +200,7 @@ def leak_check(connection, reader, timeout, words):
     if not loaded:
         print(f"> leakcheck {scene}\n  ERR {compact(answer)}")
         return False
-    before = gl_snapshot(connection, reader, timeout)
+    before = leak_snapshot(connection, reader, timeout)
 
     for _ in range(trips):
         for target in (via, scene):
@@ -199,7 +208,7 @@ def leak_check(connection, reader, timeout, words):
             if not loaded:
                 print(f"> leakcheck {scene}\n  ERR loading {target}: {compact(answer)}")
                 return False
-    after = gl_snapshot(connection, reader, timeout)
+    after = leak_snapshot(connection, reader, timeout)
 
     changes = [f"{key} {before.get(key, 0)}->{after.get(key, 0)}"
                for key in sorted(set(before) | set(after)) if before.get(key, 0) != after.get(key, 0)]

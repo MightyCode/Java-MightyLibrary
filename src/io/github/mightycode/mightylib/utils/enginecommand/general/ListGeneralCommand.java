@@ -17,6 +17,7 @@ public abstract class ListGeneralCommand {
         registry.register(new HelpGenCom(commands));
         registry.register(new ExitGenCom());
         registry.register(new ChangeSoundGainCom());
+        registry.register(new SoundsGenCom());
         registry.register(new StatsGenCom());
         registry.register(new ScreenshotGenCom());
         registry.register(new SceneGenCom());
