@@ -125,6 +125,24 @@
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <version>${jacoco.version}</version>
+                        <configuration>
+                            <!-- Code bound to OpenGL, OpenAL or GLFW (needs a window or a context, never unit tested)
+                                 and the demo itself: left out so the figures only show what a test could cover -->
+                            <excludes>
+                                <exclude>io/github/mightycode/mightylibdemo/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/renderer/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/shader/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/surface/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/lighting/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/debug/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/utils/GenDeleteResources*</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/utils/Screenshot*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundManager*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundListener*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundSource.*</exclude>
+                                <exclude>io/github/mightycode/mightylib/main/monitors/**</exclude>
+                            </excludes>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>jacoco-agent</id>
