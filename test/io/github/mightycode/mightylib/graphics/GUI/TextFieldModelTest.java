@@ -1,9 +1,9 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
-import io.github.mightycode.mightylib.console.ConsoleInput;
 import io.github.mightycode.mightylib.inputs.InputFocus;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyEvent;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +16,7 @@ import static org.lwjgl.glfw.GLFW.*;
 class TextFieldModelTest {
     private static final float CHARACTER = 10;
 
-    private static final class Clipboard implements ConsoleInput.IClipboard {
+    private static final class Clipboard implements IClipboard {
         String content = "";
 
         @Override

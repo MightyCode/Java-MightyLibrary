@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.main.DisplaySettings;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
@@ -407,8 +409,8 @@ public final class Console {
     LogSelection getLogSelection() { return input.getLogSelection(); }
 
     // The clipboard of the system, through the window the console is typed in
-    private static ConsoleInput.IClipboard clipboardOf(WindowContext target) {
-        return new ConsoleInput.IClipboard() {
+    private static IClipboard clipboardOf(WindowContext target) {
+        return new IClipboard() {
             @Override
             public String get() {
                 return target.getSystemInfo().getClipboardContent();

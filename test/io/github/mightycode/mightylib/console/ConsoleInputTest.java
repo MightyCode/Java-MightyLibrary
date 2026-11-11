@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.inputs.KeyEvent;
+import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
@@ -27,7 +29,7 @@ class ConsoleInputTest {
     // The system clipboard
     private String clipboard;
 
-    private final ConsoleInput.IClipboard fakeClipboard = new ConsoleInput.IClipboard() {
+    private final IClipboard fakeClipboard = new IClipboard() {
         @Override
         public String get() { return clipboard; }
 

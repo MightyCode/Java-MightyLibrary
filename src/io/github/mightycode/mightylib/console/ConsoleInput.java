@@ -1,6 +1,9 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.inputs.KeyEvent;
+import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
+import io.github.mightycode.mightylib.inputs.text.LineEditKeys;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandCompletion;
 
 import java.util.ArrayList;
@@ -77,13 +80,6 @@ public final class ConsoleInput {
     private void keepLogSelection() {
         if (logSelection != null && layout != null && !logSelection.keepFrom(layout.oldestKeptId()))
             logSelection = null;
-    }
-
-    /** The clipboard of the system: read on Ctrl+V only, written on Ctrl+C and Ctrl+X. */
-    public interface IClipboard {
-        String get();
-
-        void set(String text);
     }
 
     /**

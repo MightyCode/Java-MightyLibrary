@@ -1,10 +1,10 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
-import io.github.mightycode.mightylib.console.CommandLineEditor;
-import io.github.mightycode.mightylib.console.ConsoleInput;
-import io.github.mightycode.mightylib.console.LineEditKeys;
 import io.github.mightycode.mightylib.inputs.InputFocus;
 import io.github.mightycode.mightylib.inputs.KeyEvent;
+import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
+import io.github.mightycode.mightylib.inputs.text.LineEditKeys;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +22,7 @@ public final class TextFieldModel {
     static final class Tick {
         String typedText = "";
         List<KeyEvent> keys = Collections.emptyList();
-        ConsoleInput.IClipboard clipboard;
+        IClipboard clipboard;
         // The left button of the mouse
         boolean mousePressed;
         boolean mouseHeld;

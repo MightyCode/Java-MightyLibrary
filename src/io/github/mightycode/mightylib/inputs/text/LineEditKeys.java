@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.inputs.text;
 
 import io.github.mightycode.mightylib.inputs.KeyEvent;
 
@@ -63,7 +63,7 @@ public final class LineEditKeys {
      * Ctrl+A (all), Ctrl+C, Ctrl+X, Ctrl+V of a line of text on its own: a pasted text loses its line feeds.
      * @return true if the key was one of them
      */
-    public static boolean HandleShortcut(CommandLineEditor editor, KeyEvent key, ConsoleInput.IClipboard clipboard) {
+    public static boolean HandleShortcut(CommandLineEditor editor, KeyEvent key, IClipboard clipboard) {
         if (!IsShortcut(key))
             return false;
 

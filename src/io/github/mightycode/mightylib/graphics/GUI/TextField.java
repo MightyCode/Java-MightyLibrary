@@ -1,12 +1,12 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
-import io.github.mightycode.mightylib.console.ConsoleInput;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputFocus;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -45,7 +45,7 @@ public class TextField extends GUI {
     // Reused by display, called at each frame
     private final Vector2f drawPosition = new Vector2f();
 
-    private final ConsoleInput.IClipboard clipboard;
+    private final IClipboard clipboard;
 
     /** @param x, y, width, height area in virtual pixels (x, y = top left) */
     public TextField(WindowContext context, float x, float y, float width, float height, String fontName, float fontSize) {
@@ -79,7 +79,7 @@ public class TextField extends GUI {
         cursor = new RectangleRenderer("colorShape2D");
         cursor.setColorMode(new Color4f(1f, 1f, 1f, 1f));
 
-        clipboard = new ConsoleInput.IClipboard() {
+        clipboard = new IClipboard() {
             @Override
             public String get() {
                 return TextField.this.context.getSystemInfo().getClipboardContent();
