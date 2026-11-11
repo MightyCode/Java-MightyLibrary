@@ -1,10 +1,7 @@
 name: CI
 
-on:
-  push:
-    branches: [dev, master]
-  pull_request:
-    branches: [dev, master]
+# Every push (topic branches included): the checks of a pull request are those of its last commit
+on: push
 
 jobs:
   test:
