@@ -156,7 +156,9 @@ public class TextField extends GUI {
     @Override
     public void display() {
         boolean focused = hasFocus();
-        background.setColorMode(focused ? new Color4f(0.2f, 0.24f, 0.36f, 1f) : new Color4f(0.12f, 0.12f, 0.16f, 1f));
+        // Focused (typing), selected (under the mouse or forced by a GUIList or a scene), or neither
+        background.setColorMode(focused ? new Color4f(0.2f, 0.24f, 0.36f, 1f)
+                : isSelectedNow() ? new Color4f(0.17f, 0.18f, 0.26f, 1f) : new Color4f(0.12f, 0.12f, 0.16f, 1f));
         background.display();
 
         float textY = y + (height - text.lineHeight()) * 0.5f;
