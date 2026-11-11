@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static io.github.mightycode.mightylib.resources.DataType.TYPE_SET_UP.THREAD_CONTEXT;
@@ -126,6 +127,17 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         assertEquals(Shader.class, fallback.glElementType());
         assertInstanceOf(FallbackShader.class, fallback.createGLElement());
         assertFalse(fallback.hasSource());
+    }
+
+    // A reload that failed on a missing include: the include is watched too, creating it reloads the shader
+    @Test
+    void aShaderWatchesTheFilesOfAFailedReload() {
+        ShaderData data = new ShaderData("program", true, "v.glsl", "f.glsl");
+        ShaderData copy = new ShaderData("program", true, "v.glsl", "f.glsl");
+        copy.setSourcePaths(List.of("v.glsl", "missing.glsl"));
+
+        ((DataType) data).reloadFailed(copy);
+        assertEquals(List.of("v.glsl", "f.glsl", "missing.glsl"), data.sourcePaths());
     }
 
     // The sink tries again the elements that failed with the previous version: told of each reload, not of a first load

@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -84,6 +86,14 @@ public class FakeData extends DataType {
         int previous = content;
         content = other.content;
         other.content = previous;
+    }
+
+    // Copies whose reload failed, given to this data (main thread)
+    final List<DataType> failedCopies = new CopyOnWriteArrayList<>();
+
+    @Override
+    protected void reloadFailed(DataType copy) {
+        failedCopies.add(copy);
     }
 
     // 0 when not loaded

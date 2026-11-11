@@ -296,6 +296,12 @@ public abstract class DataType extends UUID implements LoadingElement {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " has a reload copy but no swapContent");
     }
 
+    /**
+     * Main thread: the copy could not read or load the new version, this data keeps its content. It can keep what
+     * the copy found out meanwhile (the files to watch: a missing include, ShaderData). Nothing by default.
+     */
+    protected void reloadFailed(DataType copy) {}
+
     // A data managed by its owner outside Resources changed its content (see TextureDataAtlas.replaceContentWith)
     protected final void markContentChanged() {
         nextVersion();

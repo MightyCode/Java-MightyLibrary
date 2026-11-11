@@ -5,7 +5,9 @@ import io.github.mightycode.mightylib.resources.DataType;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The sources of a shader program (CPU side): read by a worker, compiled by its GL element (Shader).
@@ -68,6 +70,14 @@ public class ShaderData extends DataType {
     // Preload (worker): the files the sources are made of with their includes, and the missing ones (watched)
     public void setSourcePaths(Collection<String> files) {
         sourcePaths = List.copyOf(files);
+    }
+
+    // The new version failed (a missing include): its files are watched too, so creating the include reloads it
+    @Override
+    protected void reloadFailed(DataType copy) {
+        Set<String> files = new LinkedHashSet<>(sourcePaths);
+        files.addAll(copy.sourcePaths());
+        setSourcePaths(files);
     }
 
     // Preload (worker): the preprocessed sources, geometry null without a geometry stage
