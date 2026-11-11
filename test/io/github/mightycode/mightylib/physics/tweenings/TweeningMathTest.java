@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.physics.tweenings;
 
 import io.github.mightycode.mightylib.physics.tweenings.tweeningmath.Back;
 import io.github.mightycode.mightylib.physics.tweenings.tweeningmath.Bounce;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,7 +50,6 @@ class TweeningMathTest {
         }
     }
 
-    @Disabled("Known bug: Back.OutFull does not handle a missing swing value (null) like InFull and InOutFull do, it throws")
     @Test
     void backOutWithoutArgument() {
         assertEquals(Back.Out(1f, B, C, D), at(ETweeningType.Back, ETweeningBehaviour.Out, 1f), EPS);

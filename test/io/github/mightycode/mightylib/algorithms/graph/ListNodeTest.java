@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.algorithms.graph;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -84,7 +83,6 @@ class ListNodeTest {
         assertTrue(edges.contains(a));
     }
 
-    @Disabled("Known bug: ListNode.add never refuses a node already inside (the ids list gets a duplicate, size() and indexes drift)")
     @Test
     void addingTheSameNodeTwiceIsRefused() {
         assertTrue(graph.add(a));
@@ -92,7 +90,6 @@ class ListNodeTest {
         assertEquals(1, graph.getIds().size());
     }
 
-    @Disabled("Known bug: ListNode.clear empties the nodes but not the ids list")
     @Test
     void clearEmptiesTheIdsToo() {
         graph.add(a);

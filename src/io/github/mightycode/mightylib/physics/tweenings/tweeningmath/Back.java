@@ -43,6 +43,9 @@ public class Back {
 
     public static float OutFull(float t, float b, float c, float d,
                                 Float s) {
+        if (s == null)
+            return Back.Out(t, b, c, d);
+
         return c * ((t = t / d - 1) * t * ((s + 1) * t + s) + 1) + b;
     }
 

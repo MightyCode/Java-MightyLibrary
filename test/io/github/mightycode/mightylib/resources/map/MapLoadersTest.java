@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.resources.map;
 
 import io.github.mightycode.mightylib.resources.ResourceException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -103,7 +102,6 @@ class MapLoadersTest {
         assertEquals(4, map.getTileType(DEFAULT, 0, 0, 0));
     }
 
-    @Disabled("Known bug: a layer never described in the file stays null, the first access to the map throws a NullPointerException")
     @Test
     void aLayerMissingFromTheFileIsRefused() throws IOException {
         String path = write("missing.tilemap", "layerSize 1 1\nlayerNumber 2 0\nlayer 0\n1\n");

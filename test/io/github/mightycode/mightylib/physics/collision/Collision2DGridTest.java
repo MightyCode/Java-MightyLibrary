@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.physics.collision;
 
 import org.joml.Vector2f;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -70,7 +69,6 @@ class Collision2DGridTest {
         assertTrue(grid.getCollisionNear(new CollisionRectangle(60, 60, 5, 5)).isEmpty());
     }
 
-    @Disabled("Known bug: construct() places the cell with the reduced size of the last row and column, so these cells are built at the wrong place")
     @Test
     void theLastCellsAreTheRestOfTheMap() {
         // 100 / 30 : three cells of 30 and a last one of 10

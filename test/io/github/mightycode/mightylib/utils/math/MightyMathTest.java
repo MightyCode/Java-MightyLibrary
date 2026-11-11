@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.utils.math.geometry.EDirection3D;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -96,7 +95,6 @@ class MightyMathTest {
         assertEquals(3.5f, diagonal.y, EPS);
     }
 
-    @Disabled("Known bug: RotatePointAround swaps cosine and sine, an angle of 0 turns the point by a quarter turn")
     @Test
     void rotatingByZeroKeepsThePoint() {
         Vector2f result = MightyMath.RotatePointAround(new Vector2f(3, 1), new Vector2f(1, 1), 0f);
@@ -104,7 +102,6 @@ class MightyMathTest {
         assertEquals(1f, result.y, EPS);
     }
 
-    @Disabled("Known bug: RotatePointAround swaps cosine and sine")
     @Test
     void aQuarterTurnAroundTheOrigin() {
         Vector2f result = MightyMath.RotatePointAround(new Vector2f(1, 0), new Vector2f(), MightyMath.PI_FLOAT / 2);
@@ -140,7 +137,6 @@ class MightyMathTest {
         assertFalse(MightyMath.isPositionOverridingLine(new Vector2f(5, 2.5f), line, 0.1f));
     }
 
-    @Disabled("Known bug: a vertical segment has an infinite slope, no point is ever found on it")
     @Test
     void verticalSegment() {
         assertTrue(MightyMath.isPositionOverridingLine(new Vector2f(3, 5), new Vector4f(3, 0, 3, 10), 0.01f));

@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.utils.json;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +25,6 @@ class JSONObjectUtilTest {
         assertEquals("false", text("{\"a\":false}", "a"));
     }
 
-    @Disabled("Known bug: org.json parses a decimal of a file as a BigDecimal, which is not handled (gives \"null\")")
     @Test
     void decimalNumbersOfAFile() {
         assertEquals("2.5", text("{\"a\":2.5}", "a"));
@@ -53,7 +51,6 @@ class JSONObjectUtilTest {
         assertThrows(JSONException.class, () -> text("{\"a\":1}", "b"));
     }
 
-    @Disabled("Known bug: an integer too big for an int is parsed as a Long, which is not handled (gives \"null\"), like the decimals")
     @Test
     void bigIntegers() {
         assertEquals("3000000000", text("{\"a\":3000000000}", "a"));

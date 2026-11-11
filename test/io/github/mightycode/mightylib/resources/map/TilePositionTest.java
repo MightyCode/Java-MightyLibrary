@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.resources.map;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -44,7 +43,6 @@ class TilePositionTest {
         assertNotEquals(position, "1,2,3");
     }
 
-    @Disabled("Known bug: TilePosition overrides equals but not hashCode, equal positions are lost in a HashSet / HashMap")
     @Test
     void equalPositionsHaveTheSameHashCode() {
         assertEquals(new TilePosition(1, 2, 3).hashCode(), new TilePosition(1, 2, 3).hashCode());

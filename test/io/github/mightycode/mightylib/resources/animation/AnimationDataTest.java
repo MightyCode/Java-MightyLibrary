@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.resources.animation;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import org.joml.Vector2i;
 import org.joml.Vector4i;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -128,7 +127,6 @@ class AnimationDataTest {
         assertNull(load("hero\n1\n0,0,1,1,0,0,0.5\n").getFrame(-1));
     }
 
-    @Disabled("Known bug: getFrame accepts the index frameNumber(), one past the last frame (ArrayIndexOutOfBoundsException instead of null)")
     @Test
     void anIndexPastTheLastFrameGivesNoFrame() throws IOException {
         assertNull(load("hero\n1\n0,0,1,1,0,0,0.5\n").getFrame(1));

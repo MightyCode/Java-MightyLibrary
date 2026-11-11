@@ -93,7 +93,7 @@ public class Polygon {
     }
 
     public Vector2f get(int index) {
-        if (index > vertices.length / 2)
+        if (index < 0 || index >= vertices.length / 2)
             return null;
 
         return new Vector2f(vertices[index * 2], vertices[index * 2 + 1]);
@@ -140,41 +140,28 @@ public class Polygon {
             polygonIndices.add(i / 2);
         }
 
-        while (polygonCopy.size() >= 3){
+        // The first ear is cut each time, the ears are searched again as the polygon changes
+        while (polygonCopy.size() >= 3 && fill < indices.length / 3){
+            int earIndex = -1;
 
-            List<Vector2f> earVertices = new ArrayList<>();
-
-            for (int i = 0; i < polygonCopy.size(); ++i){
-                if (GeometryMath.isEar(i, polygonCopy)){
-                    earVertices.add(polygonCopy.get(i));
-                }
+            for (int i = 0; i < polygonCopy.size() && earIndex == -1; ++i){
+                if (GeometryMath.isEar(i, polygonCopy))
+                    earIndex = i;
             }
 
-            for (Vector2f earVertex : earVertices) {
-                int indexCopy = polygonCopy.indexOf(earVertex);
-                Vector2f prevVertex = polygonCopy.get(indexCopy > 0 ? indexCopy - 1 : polygonCopy.size() - 1);
-                int prevIndexCopy = polygonCopy.indexOf(prevVertex);
-
-                Vector2f nextVertex = polygonCopy.get((indexCopy + 1) % polygonCopy.size());
-                int nextIndex = polygonCopy.indexOf(nextVertex);
-
-                indices[fill * 3] = polygonIndices.get(prevIndexCopy);
-                indices[fill * 3 + 1] = polygonIndices.get(indexCopy);
-                indices[fill * 3 + 2] = polygonIndices.get(nextIndex);
-
-                fill += 1;
-
-                if (fill == indices.length / 3){
-                    return indices;
-                }
-
-                polygonCopy.remove(indexCopy);
-                polygonIndices.remove(indexCopy);
-            }
-
-            if (earVertices.isEmpty()){
+            if (earIndex == -1)
                 break;
-            }
+
+            int previous = earIndex > 0 ? earIndex - 1 : polygonCopy.size() - 1;
+            int next = (earIndex + 1) % polygonCopy.size();
+
+            indices[fill * 3] = polygonIndices.get(previous);
+            indices[fill * 3 + 1] = polygonIndices.get(earIndex);
+            indices[fill * 3 + 2] = polygonIndices.get(next);
+            ++fill;
+
+            polygonCopy.remove(earIndex);
+            polygonIndices.remove(earIndex);
         }
 
         return indices;

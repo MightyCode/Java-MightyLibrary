@@ -7,7 +7,6 @@ import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import org.joml.Vector2f;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -131,7 +130,6 @@ class Vector2fTweeningTest {
         assertFalse(tweening.finished());
     }
 
-    @Disabled("Known bug: update() negates the stored range with mul(-1) on every mirrored frame, the way back goes the wrong way from the second frame")
     @Test
     void mirroredTweeningComesBackToTheBeginning() {
         Vector2fTweening tweening = twoSeconds(ETweeningOption.DirectMirrored);

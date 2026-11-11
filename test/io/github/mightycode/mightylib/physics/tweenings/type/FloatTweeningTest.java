@@ -7,7 +7,6 @@ import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.Tweening;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -161,7 +160,6 @@ class FloatTweeningTest {
         assertArrayEquals(new float[]{3.75f, 7.5f, 10f}, run(tweening, 3), EPS);
     }
 
-    @Disabled("Known bug: setTweeningOption(Direct) turns the cap of the timer off, the last frame goes past the end value (11.25 here)")
     @Test
     void theLastFrameOfADirectTweeningIsCapped() {
         GameTimeControl.setDeltaTime(0.75f);
@@ -221,7 +219,6 @@ class FloatTweeningTest {
         assertEquals(0f, tweening.value());
     }
 
-    @Disabled("Known bug: FloatTweening.goalValue returns null, Vector2fTweening returns its end value")
     @Test
     void goalValueIsTheEndValue() {
         assertEquals(10f, new FloatTweening().initTwoValue(2f, 0f, 10f).goalValue());

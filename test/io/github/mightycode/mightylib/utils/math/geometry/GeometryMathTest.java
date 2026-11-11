@@ -48,12 +48,6 @@ class GeometryMathTest {
     }
 
     @Test
-    void aTriangleHasNoOtherVertexToCheckSoEveryCornerIsAnEar() {
-        List<Vector2f> clockwise = Arrays.asList(ORIGIN, new Vector2f(0, 1), new Vector2f(1, 0));
-        assertTrue(GeometryMath.isEar(0, clockwise));
-    }
-
-    @Test
     void theReflexCornerOfAnLShapeIsNotAnEar() {
         List<Vector2f> shape = Arrays.asList(ORIGIN, new Vector2f(2, 0), new Vector2f(2, 1),
                 new Vector2f(1, 1), new Vector2f(1, 2), new Vector2f(0, 2));

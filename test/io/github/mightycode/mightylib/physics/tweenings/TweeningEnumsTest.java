@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.physics.tweenings;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -30,7 +29,6 @@ class TweeningEnumsTest {
         assertSame(ETweeningBehaviour.In, ETweeningBehaviour.In.fromString(" IN "));
     }
 
-    @Disabled("Known bug: ETweeningBehaviour.fromString returns In for \"out\" and for \"inout\"")
     @Test
     void behavioursAreParsed() {
         for (ETweeningBehaviour behaviour : ETweeningBehaviour.values())
@@ -45,7 +43,6 @@ class TweeningEnumsTest {
         assertSame(ETweeningOption.DirectReversed, any.fromString(" directreversed"));
     }
 
-    @Disabled("Known bug: ETweeningOption.fromString returns DirectReversed for the three loop options")
     @Test
     void loopOptionsAreParsed() {
         ETweeningOption any = ETweeningOption.Direct;

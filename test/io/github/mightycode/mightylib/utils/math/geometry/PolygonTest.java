@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.utils.math.geometry;
 
 import org.joml.Vector2f;
 import org.joml.Vector4f;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,7 +65,6 @@ class PolygonTest {
         assertEquals(new Vector2f(1, 0), polygon.get(1));
     }
 
-    @Disabled("Known bug: get(size()) is one past the end but is not refused (ArrayIndexOutOfBoundsException instead of null)")
     @Test
     void indexPastTheEndGivesNull() {
         assertNull(new Polygon(SQUARE).get(4));
@@ -105,7 +103,6 @@ class PolygonTest {
         assertEquals(9f, area(hexagon, indices), 1e-4);
     }
 
-    @Disabled("Known bug: isEar never checks that another vertex lies inside the ear, a concave polygon gets triangles outside of it")
     @Test
     void earClippingAConcavePolygonCoversExactlyItsArea() {
         int[] indices = new Polygon(L_SHAPE).earClipIndices();

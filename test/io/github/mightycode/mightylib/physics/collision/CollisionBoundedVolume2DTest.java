@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.physics.collision;
 
 import io.github.mightycode.mightylib.utils.math.EShapeType;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -38,7 +37,6 @@ class CollisionBoundedVolume2DTest {
         assertBounds(0, 0, 0, 0, new CollisionBoundedVolume2D());
     }
 
-    @Disabled("Known bug: the bounds of an empty volume are a point at the origin, which collides with whatever covers the origin")
     @Test
     void anEmptyVolumeCollidesWithNothing() {
         assertFalse(new CollisionBoundedVolume2D().isColliding(rect(-5, -5, 10, 10)));
@@ -176,7 +174,6 @@ class CollisionBoundedVolume2DTest {
         assertEquals(30f, volume.bounds().x(), 1e-5);
     }
 
-    @Disabled("Known bug: copy() copies the list of parts but not the parts, moving the copy moves the original")
     @Test
     void copyIsIndependentFromTheOriginal() {
         CollisionBoundedVolume2D volume = twoParts();

@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.utils.math.geometry;
 
 import org.joml.Vector2f;
 import org.joml.Vector4f;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static io.github.mightycode.mightylib.utils.math.geometry.EDirection.*;
@@ -119,7 +118,6 @@ class DirectionTest {
         assertEquals(Right, Direction.RangedVectorToDirection(new Vector2f(1, 0.5f), unit));
     }
 
-    @Disabled("Known bug: RangedVectorToDirection divides only the range origin (missing parentheses), any range other than 0-1 is wrong")
     @Test
     void rangedVectorOnAnotherRange() {
         Vector4f range = new Vector4f(10, 20, 30, 60);

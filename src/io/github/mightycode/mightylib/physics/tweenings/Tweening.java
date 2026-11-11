@@ -156,10 +156,8 @@ public abstract class Tweening<T> {
     public final Tweening<T> setTweeningOption(ETweeningOption tweeningOption){
         this.option = tweeningOption;
 
-        this.timer.setElapsedTimeCapped((
-                tweeningOption == ETweeningOption.Loop
-                        || tweeningOption == ETweeningOption.LoopMirrored
-                        || tweeningOption == ETweeningOption.LoopReversed));
+        // The time never goes past the duration, so the last frame stays on the end value
+        this.timer.setElapsedTimeCapped(true);
 
         return this;
     }

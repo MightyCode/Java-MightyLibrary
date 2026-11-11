@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.resources.data.JSONFile;
 import io.github.mightycode.mightylib.resources.map.TileMap;
 import org.joml.Vector2i;
 import org.json.JSONObject;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -62,7 +61,6 @@ class WaveFunctionCollapseGridTest {
         assertEquals(3, map.mapHeight());
     }
 
-    @Disabled("Known bug: a new grid does not empty the map (the layer starts at tile 0, only reset() writes -1)")
     @Test
     void aNewGridIsEmpty() {
         Vector2i size = new Vector2i(4, 4);
@@ -124,7 +122,6 @@ class WaveFunctionCollapseGridTest {
         assertEquals(1, tile(map, 0, 0), "the diagonal follows the checkerboard");
     }
 
-    @Disabled("Known bug: the forced cell stays in the cells to compute, the algorithm then writes -1 over it")
     @Test
     void aForcedTileIsKeptByTheAlgorithm() {
         TileMap map = new TileMap("map", "map");
@@ -205,7 +202,6 @@ class WaveFunctionCollapseGridTest {
         assertEquals(9, countCollapsed(map, size));
     }
 
-    @Disabled("Known bug: waveFunctionAlgorithmStep(n) draws n times in the same cell (the second draw writes -1 over the first)")
     @Test
     void severalStepsCollapseSeveralCells() {
         Vector2i size = new Vector2i(4, 4);

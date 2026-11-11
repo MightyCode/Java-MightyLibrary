@@ -88,8 +88,8 @@ public abstract class Direction {
     public static EDirection RangedVectorToDirection(Vector2f vector, Vector4f range){
         return NormalizedVectorToDirection(
                 (new Vector2f(
-                        vector.x - range.x / (range.z - range.x),
-                        vector.y - range.y / (range.w - range.y))).mul(2).sub(1, 1)
+                        (vector.x - range.x) / (range.z - range.x),
+                        (vector.y - range.y) / (range.w - range.y))).mul(2).sub(1, 1)
                 );
     }
 

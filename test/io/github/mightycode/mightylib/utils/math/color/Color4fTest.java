@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.utils.math.color;
 
 import org.joml.Vector3f;
 import org.joml.Vector4f;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.awt.Color;
@@ -116,7 +115,6 @@ class Color4fTest {
         assertColor(0.2f, 0.2f, 0.2f, 1, color);
     }
 
-    @Disabled("Known bug: setColorBased256 divides the vector it receives by 255 instead of a copy")
     @Test
     void setColorBasedOn256KeepsItsArgument() {
         Vector4f source = new Vector4f(255, 0, 51, 255);
