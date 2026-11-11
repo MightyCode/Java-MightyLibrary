@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.algorithms.graph;
 
+import io.github.mightycode.mightylib.algorithms.EVerbosity;
+import io.github.mightycode.mightylib.algorithms.OutputCapture;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -106,5 +108,12 @@ class ReducedGraphTest {
         assertEquals(2, line.size());
         assertEquals(2, line.getSubNodeGraph().size());
         assertEquals(Arrays.asList(2L, 3L), ids(line.getById(1).getById(4)));
+    }
+
+    @Test
+    void buildingIsSilentUnlessAskedOtherwise() {
+        assertEquals(0, OutputCapture.lines(OutputCapture.of(() -> ReducedGraph.constructFrom(yShape()))));
+        assertEquals(1, OutputCapture.lines(OutputCapture.of(
+                () -> ReducedGraph.constructFrom(yShape(), EVerbosity.ESSENTIAL))));
     }
 }

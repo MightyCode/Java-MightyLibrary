@@ -1,17 +1,17 @@
 package io.github.mightycode.mightylib.algorithms.astar;
 
 import io.github.mightycode.mightylib.algorithms.EVerbosity;
+import io.github.mightycode.mightylib.algorithms.OutputCapture;
 import io.github.mightycode.mightylib.algorithms.dijkstra.Dijkstra;
 import io.github.mightycode.mightylib.algorithms.graph.Graph;
 import io.github.mightycode.mightylib.algorithms.graph.Node;
 import org.junit.jupiter.api.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.github.mightycode.mightylib.algorithms.OutputCapture.lines;
 import static io.github.mightycode.mightylib.algorithms.graph.GraphFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,18 +21,6 @@ class AStarTest {
         for (Node node : path)
             result.add(node.getId());
         return result;
-    }
-
-    private static String capture(Runnable run) {
-        PrintStream old = System.out;
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        try {
-            run.run();
-        } finally {
-            System.setOut(old);
-        }
-        return out.toString();
     }
 
     @Test
@@ -85,12 +73,25 @@ class AStarTest {
         Graph graph = yShape();
         Node a = graph.getById(LEAF_A), b = graph.getById(LEAF_B);
 
-        assertEquals("", capture(() -> AStar.findShortestPath(graph, a, b)));
-        assertEquals("", capture(() -> Dijkstra.findShortestPath(graph, a, b)));
+        assertEquals("", OutputCapture.of(() -> AStar.findShortestPath(graph, a, b)));
+        assertEquals("", OutputCapture.of(() -> Dijkstra.findShortestPath(graph, a, b)));
 
-        String essential = capture(() -> AStar.findShortestPath(graph, a, b, EVerbosity.ESSENTIAL));
-        String all = capture(() -> AStar.findShortestPath(graph, a, b, EVerbosity.ALL));
+        String essential = OutputCapture.of(() -> AStar.findShortestPath(graph, a, b, EVerbosity.ESSENTIAL));
+        String all = OutputCapture.of(() -> AStar.findShortestPath(graph, a, b, EVerbosity.ALL));
         assertEquals(1, essential.split("\n").length);
         assertTrue(all.split("\n").length > 1);
+    }
+
+    @Test
+    void aFixedDistanceShorterThanTheStraightLineCanFoolTheHeuristic() {
+        Graph graph = new Graph();
+        Node a = node(graph, 1, 0, 0), b = node(graph, 2, 10, 0), x = node(graph, 3, 0, 1);
+        a.add(b, 3f);
+        a.add(x);
+        x.add(b, 0.1f);
+
+        // Dijkstra finds a - x - b (1.1), A* expands b first through the direct link (3): documented limit
+        assertEquals(Arrays.asList(1L, 3L, 2L), ids(Dijkstra.findShortestPath(graph, a, b)));
+        assertEquals(Arrays.asList(1L, 2L), ids(AStar.findShortestPath(graph, a, b)));
     }
 }

@@ -3,12 +3,15 @@ package io.github.mightycode.mightylib.algorithms.dijkstra;
 import io.github.mightycode.mightylib.algorithms.graph.Graph;
 import io.github.mightycode.mightylib.algorithms.graph.Node;
 import io.github.mightycode.mightylib.algorithms.graph.ReducedGraph;
+import io.github.mightycode.mightylib.algorithms.EVerbosity;
+import io.github.mightycode.mightylib.algorithms.OutputCapture;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static io.github.mightycode.mightylib.algorithms.OutputCapture.lines;
 import static io.github.mightycode.mightylib.algorithms.graph.GraphFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -150,5 +153,18 @@ class DijkstraTest {
         Node unknown = new Node(777, 0, 0);
         Node start = reduced.getById(CENTER).getReferenceNode();
         assertTrue(Dijkstra.findShortestPathReduced(reduced, corresponding, start, unknown).isEmpty());
+    }
+
+    @Test
+    void theReducedSearchIsSilentByDefaultAndTalkativeOnRequest() {
+        Graph corresponding = reduced.createCorresponding();
+        Node start = reduced.getById(LEAF_A).getReferenceNode(), end = reduced.getById(LEAF_B).getReferenceNode();
+
+        assertEquals(0, lines(OutputCapture.of(
+                () -> Dijkstra.findShortestPathReduced(reduced, corresponding, start, end))));
+        assertEquals(1, lines(OutputCapture.of(
+                () -> Dijkstra.findShortestPathReduced(reduced, corresponding, start, end, EVerbosity.ESSENTIAL))));
+        assertTrue(lines(OutputCapture.of(
+                () -> Dijkstra.findShortestPathReduced(reduced, corresponding, start, end, EVerbosity.ALL))) > 1);
     }
 }
