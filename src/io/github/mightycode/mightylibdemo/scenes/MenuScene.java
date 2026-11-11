@@ -77,12 +77,12 @@ public class MenuScene extends Scene {
 
         guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
         guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
-        guiList.GUIs.put(0, button2DScene);
-        guiList.GUIs.put(1, button3DScene);
-        guiList.GUIs.put(2, button3D_2Scene);
-        guiList.GUIs.put(3, buttonQuit);
+        guiList.put(0, button2DScene);
+        guiList.put(1, button3DScene);
+        guiList.put(2, button3D_2Scene);
+        guiList.put(3, buttonQuit);
         guiList.setupActivationActions(ActionId.ENTER, ActionId.LEFT_CLICK);
-        guiList.ShouldLoop = false;
+        guiList.setLooping(false);
 
         // Right : every scene of the demo, scrollable
         sceneEntries = createSceneEntries();
