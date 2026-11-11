@@ -164,10 +164,14 @@ public final class TextFieldModel {
                     dragging = true;
                     break;
             }
-        } else if (focus.isRequested(owner)) {
-            // The click is still for what is under the cursor
-            focus.releaseForClick(owner);
-            dragging = false;
+        } else {
+            // A click elsewhere ends the series: the next one in the field is a single click
+            clicks.reset();
+            if (focus.isRequested(owner)) {
+                // The click is still for what is under the cursor
+                focus.releaseForClick(owner);
+                dragging = false;
+            }
         }
     }
 

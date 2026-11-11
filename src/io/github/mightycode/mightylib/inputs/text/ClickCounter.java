@@ -29,4 +29,9 @@ public final class ClickCounter {
         lastTime = nanoTime;
         return count;
     }
+
+    /** Ends the series (a press somewhere else): the next press is a single click. */
+    public void reset() {
+        count = 0;
+    }
 }

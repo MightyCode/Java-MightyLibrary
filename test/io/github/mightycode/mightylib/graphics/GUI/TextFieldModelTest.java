@@ -378,6 +378,23 @@ class TextFieldModelTest {
     }
 
     @Test
+    void aClickOutsideBetweenTwoClicksInTheFieldIsNotADoubleClick() {
+        focused();
+        model.update(focus, tick("one two"));
+        model.update(focus, click(15));
+
+        TextFieldModel.Tick outside = quickClick(15);
+        outside.mouseInside = false;
+        model.update(focus, outside);
+        assertFalse(model.hasFocus(focus));
+
+        // Back in the field at the same place, soon after: a single click, the cursor only
+        model.update(focus, quickClick(15));
+        assertTrue(model.hasFocus(focus));
+        assertFalse(model.editor().hasSelection());
+    }
+
+    @Test
     void lineScrollsAroundTheCursor() {
         model.setAvailableWidth(50);
         focused();

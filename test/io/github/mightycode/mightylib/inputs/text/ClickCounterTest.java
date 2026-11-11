@@ -25,4 +25,12 @@ class ClickCounterTest {
         assertEquals(1, counter.press(15, 10, 600 * MS));
         assertEquals(2, counter.press(15, 6, 700 * MS));
     }
+
+    @Test
+    void resetEndsTheSeries() {
+        ClickCounter counter = new ClickCounter();
+        counter.press(10, 10, 0);
+        counter.reset();
+        assertEquals(1, counter.press(10, 10, 100 * MS));
+    }
 }
