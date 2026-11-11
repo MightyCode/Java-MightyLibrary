@@ -323,19 +323,26 @@ public class Text extends Renderer implements Cloneable {
         Vector2f textReference = new Vector2f();
         float lineAlignmentOffset = 0;
 
-        rectangleSize.set(usedFont().computeSize(laidOut, fontSize));
-        float textWidth = rectangleSize.x;
-        rectangleSize.add(padding.x + padding.z, padding.y + padding.w);
-
+        float widestLine = 0;
         for (int j = 0; j < lines.length; ++j) {
+            // A wrapped text: the spaces at the end of a line take no room (alignment, size), like in a text editor
+            int measured = maxWidth > 0 ? TextWrap.TrimmedLength(lines[j]) : lines[j].length();
             for (int i = 0; i < lines[j].length(); i++) {
-                currentCharOffset.x += (float) (usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
+                if (i < measured)
+                    currentCharOffset.x += (float) (usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
                 ++charCount;
             }
 
             linesSize[j] = currentCharOffset.x;
+            widestLine = Math.max(widestLine, linesSize[j]);
             currentCharOffset.x = 0;
         }
+
+        rectangleSize.set(usedFont().computeSize(laidOut, fontSize));
+        if (maxWidth > 0)
+            rectangleSize.x = widestLine;
+        float textWidth = rectangleSize.x;
+        rectangleSize.add(padding.x + padding.z, padding.y + padding.w);
 
         currentCharOffset.x = 0;
         charCount = 0;

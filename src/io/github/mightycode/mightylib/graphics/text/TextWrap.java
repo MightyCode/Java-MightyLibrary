@@ -42,6 +42,18 @@ public final class TextWrap {
         return result.toString();
     }
 
+    /**
+     * The length of a line without the spaces at its end: a wrapped line keeps the space before its break (the
+     * characters keep their index), which must not count in its width.
+     */
+    public static int TrimmedLength(CharSequence line) {
+        int length = line.length();
+        while (length > 0 && line.charAt(length - 1) == ' ')
+            --length;
+
+        return length;
+    }
+
     // One explicit line: text[from, to)
     private static void WrapLine(String text, int from, int to, float maxWidth, ILineWidth width, StringBuilder out) {
         int visualStart = from;

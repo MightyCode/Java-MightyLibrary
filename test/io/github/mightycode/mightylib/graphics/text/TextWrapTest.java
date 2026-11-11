@@ -91,4 +91,14 @@ class TextWrapTest {
         for (String line : wrapped.split("\n"))
             assertTrue(line.stripTrailing().length() <= 10, "'" + line + "'");
     }
+
+    @Test
+    void theSpacesAtTheEndOfALineAreNotMeasured() {
+        assertEquals(3, TextWrap.TrimmedLength("abc  "));
+        assertEquals(5, TextWrap.TrimmedLength("  abc"));
+        assertEquals(0, TextWrap.TrimmedLength("   "));
+        assertEquals(0, TextWrap.TrimmedLength(""));
+        // The space kept before a break of the wrapping
+        assertEquals(5, TextWrap.TrimmedLength(wrap("quick brown", 6).split("\n")[0]));
+    }
 }
