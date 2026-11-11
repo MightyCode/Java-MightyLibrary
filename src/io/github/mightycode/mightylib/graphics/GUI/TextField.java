@@ -146,6 +146,8 @@ public class TextField extends GUI {
         tick.shift = keyboard.getRawKeyState(GLFW_KEY_LEFT_SHIFT) || keyboard.getRawKeyState(GLFW_KEY_RIGHT_SHIFT);
         tick.mouseInside = isInside(cursorPosition);
         tick.mouseX = cursorPosition.x - x - PADDING;
+        tick.mouseY = cursorPosition.y - y;
+        tick.nanoTime = System.nanoTime();
 
         model.update(focus(), tick);
     }

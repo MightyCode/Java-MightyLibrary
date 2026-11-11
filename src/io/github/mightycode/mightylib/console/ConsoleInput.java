@@ -324,7 +324,7 @@ public final class ConsoleInput {
         switch (mouse.clicks) {
             case 2:
                 // The word under the cursor (the separators of Ctrl+Left/Right)
-                editor.select(WordStart(text, index), WordEnd(text, index));
+                editor.selectWordAt(index);
                 break;
             case 3:
                 editor.selectAll();
@@ -346,8 +346,8 @@ public final class ConsoleInput {
         String text = mouse.clicks >= 2 ? layout.displayedText(position.lineId()) : null;
         if (mouse.clicks == 2 && text != null) {
             int index = Math.min(position.character(), text.length());
-            logSelection = new LogSelection(new LogPosition(position.lineId(), WordStart(text, index)),
-                    new LogPosition(position.lineId(), WordEnd(text, index)));
+            logSelection = new LogSelection(new LogPosition(position.lineId(), CommandLineEditor.WordStart(text, index)),
+                    new LogPosition(position.lineId(), CommandLineEditor.WordEnd(text, index)));
         } else if (mouse.clicks == 3 && text != null) {
             logSelection = new LogSelection(new LogPosition(position.lineId(), 0),
                     new LogPosition(position.lineId(), text.length()));
@@ -372,21 +372,6 @@ public final class ConsoleInput {
         LogPosition position = layout.logPositionAt(mouse.x, mouse.y);
         if (position != null)
             logSelection.extendTo(position);
-    }
-
-    // Start of the word around the index (the separators of Ctrl+Left/Right)
-    private static int WordStart(CharSequence text, int index) {
-        int start = index;
-        while (start > 0 && !CommandLineEditor.IsSeparator(text.charAt(start - 1)))
-            --start;
-        return start;
-    }
-
-    private static int WordEnd(CharSequence text, int index) {
-        int end = index;
-        while (end < text.length() && !CommandLineEditor.IsSeparator(text.charAt(end)))
-            ++end;
-        return end;
     }
 
     // A text of several lines runs a command per complete line, the last one stays in the command line

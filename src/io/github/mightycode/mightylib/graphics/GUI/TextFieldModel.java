@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.inputs.InputFocus;
 import io.github.mightycode.mightylib.inputs.KeyEvent;
+import io.github.mightycode.mightylib.inputs.text.ClickCounter;
 import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
 import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.inputs.text.LineEditKeys;
@@ -29,8 +30,11 @@ public final class TextFieldModel {
         boolean shift;
         // The cursor is over the field
         boolean mouseInside;
-        // Pixels from the left of the text area
+        // Pixels from the left of the text area, and from the top of the field
         float mouseX;
+        float mouseY;
+        // Time of the tick (System.nanoTime): double and triple clicks
+        long nanoTime;
     }
 
     private final Object owner;
@@ -41,6 +45,8 @@ public final class TextFieldModel {
     private boolean submitted;
     private int leftWith = -1;
     private boolean dragging;
+    // Double click: the word, triple click: the whole line (like the command line of the console)
+    private final ClickCounter clicks = new ClickCounter();
 
     // First character shown (the line scrolls around the cursor) and width of the text area
     private int scroll;
@@ -143,8 +149,21 @@ public final class TextFieldModel {
     private void press(InputFocus focus, Tick tick) {
         if (tick.mouseInside) {
             focus.request(owner);
-            editor.moveTo(indexAt(tick.mouseX), tick.shift);
-            dragging = true;
+            int index = indexAt(tick.mouseX);
+            switch (clicks.press(tick.mouseX, tick.mouseY, tick.nanoTime)) {
+                case 2:
+                    editor.selectWordAt(index);
+                    dragging = false;
+                    break;
+                case 3:
+                    editor.selectAll();
+                    dragging = false;
+                    break;
+                default:
+                    editor.moveTo(index, tick.shift);
+                    dragging = true;
+                    break;
+            }
         } else if (focus.isRequested(owner)) {
             // The click is still for what is under the cursor
             focus.releaseForClick(owner);
