@@ -5,7 +5,6 @@ import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 public class Polygon {
     public static class PolygonBuilder {
