@@ -15,6 +15,7 @@ import org.lwjgl.BufferUtils;
 import java.nio.FloatBuffer;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.lwjgl.opengl.GL20.*;
@@ -68,6 +69,8 @@ public class Shader extends GLElement {
         static final int VERTEX = 0, FRAGMENT = 1, GEOMETRY = 2, LINK = 3;
 
         final String vertex, fragment, geometry;
+        // Files of the #line ids of each source, to translate the compiler log
+        final List<String> vertexFiles, fragmentFiles, geometryFiles;
         final int version;
         int stage = VERTEX;
         int vertexId = -1, fragmentId = -1, geometryId = -1;
@@ -77,6 +80,9 @@ public class Shader extends GLElement {
             fragment = data.getFragmentSource();
             geometry = data.getGeometrySource();
             version = data.getVersion();
+            vertexFiles = data.getStageFiles(0);
+            fragmentFiles = data.getStageFiles(1);
+            geometryFiles = data.getStageFiles(2);
         }
 
         void delete() {
@@ -109,15 +115,15 @@ public class Shader extends GLElement {
         try {
             switch (build.stage) {
                 case Build.VERTEX:
-                    build.vertexId = compile(GL_VERTEX_SHADER, "Vertex", build.vertex);
+                    build.vertexId = compile(GL_VERTEX_SHADER, "Vertex", build.vertex, build.vertexFiles);
                     build.stage = Build.FRAGMENT;
                     return -1;
                 case Build.FRAGMENT:
-                    build.fragmentId = compile(GL_FRAGMENT_SHADER, "Fragment", build.fragment);
+                    build.fragmentId = compile(GL_FRAGMENT_SHADER, "Fragment", build.fragment, build.fragmentFiles);
                     build.stage = build.geometry != null ? Build.GEOMETRY : Build.LINK;
                     return -1;
                 case Build.GEOMETRY:
-                    build.geometryId = compile(GL_GEOMETRY_SHADER, "Geometry", build.geometry);
+                    build.geometryId = compile(GL_GEOMETRY_SHADER, "Geometry", build.geometry, build.geometryFiles);
                     build.stage = Build.LINK;
                     return -1;
                 default:
@@ -130,7 +136,7 @@ public class Shader extends GLElement {
         }
     }
 
-    private int compile(int type, String name, String source) {
+    private int compile(int type, String name, String source, List<String> files) {
         if (source == null)
             throw new ResourceException(name + " source missing");
 
@@ -142,9 +148,9 @@ public class Shader extends GLElement {
         Logger.CheckOpenGLError("Compile " + name + " shader of " + getName() + " (id : " + id + ")");
 
         if (glGetShaderi(id, GL_COMPILE_STATUS) == GL_FALSE) {
-            String log = glGetShaderInfoLog(id);
+            String log = ShaderPreprocessor.translateLog(glGetShaderInfoLog(id).trim(), files);
             glDeleteShader(id);
-            throw new ResourceException(name + " shader does not compile:\n\t" + log.trim());
+            throw new ResourceException(name + " shader does not compile:\n\t" + log);
         }
 
         return id;

@@ -7,8 +7,10 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -93,30 +95,34 @@ public class ShaderLoader extends ResourceLoader {
         // A missing file or include makes the preload fail: the fallback replaces the shader. The files read, and
         // those missing, are watched either way: changing or creating one reads the shader again
         Set<String> watched = new LinkedHashSet<>();
+        List<List<String>> stageFiles = new ArrayList<>();
         try {
-            String vertex = preprocess(shader.getSourcePath(0), watched);
+            String vertex = preprocess(shader.getSourcePath(0), watched, stageFiles);
             shader.checkCancelled();
-            String fragment = preprocess(shader.getSourcePath(1), watched);
+            String fragment = preprocess(shader.getSourcePath(1), watched, stageFiles);
 
             String geometry = null;
             if (shader.usesGeometryShader()) {
                 shader.checkCancelled();
-                geometry = preprocess(shader.getSourcePath(2), watched);
+                geometry = preprocess(shader.getSourcePath(2), watched, stageFiles);
             }
 
             shader.setSources(vertex, fragment, geometry);
+            shader.setStageFiles(stageFiles);
         } finally {
             shader.setSourcePaths(watched);
         }
     }
 
-    private String preprocess(String path, Set<String> watched) {
+    private String preprocess(String path, Set<String> watched, List<List<String>> stageFiles) {
         // GLSL 140: the line after "#line n" is n + 1 (n from GLSL 330)
         int lineOffset = "1_40".equals(shaderManager.getVersion()) ? -1 : 0;
         ShaderPreprocessor preprocessor = new ShaderPreprocessor(ShaderLoader::readIfFile,
                 shaderManager.versionFolder(), lineOffset);
         try {
-            return preprocessor.process(path);
+            String source = preprocessor.process(path);
+            stageFiles.add(List.copyOf(preprocessor.files()));
+            return source;
         } finally {
             watched.addAll(preprocessor.watchedFiles());
         }

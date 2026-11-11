@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -21,7 +22,7 @@ import java.util.regex.Pattern;
  * file that includes it, then in the folder of the GLSL version. Without GL: the files are read by a given function.
  * A file is included once per source, a cycle or a missing file throws a ResourceException, a #version in an
  * included file is refused. "#line n id" directives are inserted (id: index of the file in files(), 0 the main one)
- * so the compiler log gives the real line.
+ * so the compiler log gives the real line, translated to "file:line" by translateLog.
  * One instance per source: files() and watchedFiles() describe the last process.
  */
 public class ShaderPreprocessor {
@@ -190,5 +191,40 @@ public class ShaderPreprocessor {
         } catch (InvalidPathException e) {
             throw new ResourceException("invalid shader path " + path);
         }
+    }
+
+    // ---- Compiler log ----
+
+    // "0:12", "0(12)": file 0, line 12 (formats of the drivers)
+    private static final Pattern LOCATION = Pattern.compile("\\b(\\d+)(?::(\\d+)\\b|\\((\\d+)\\))");
+
+    /**
+     * The compiler log with "file:line" in place of the first "id:line" or "id(line)" of each line, when id is a file
+     * of the list (files() of the source compiled). Done at best: the formats not recognized are kept as they are.
+     */
+    public static String translateLog(String log, List<String> files) {
+        if (files == null || files.isEmpty())
+            return log;
+
+        StringBuilder out = new StringBuilder(log.length());
+        String[] lines = log.split("\n", -1);
+        for (int i = 0; i < lines.length; ++i) {
+            if (i > 0)
+                out.append('\n');
+
+            Matcher matcher = LOCATION.matcher(lines[i]);
+            int id = matcher.find() ? Integer.parseInt(matcher.group(1)) : -1;
+            if (id < 0 || id >= files.size()) {
+                out.append(lines[i]);
+                continue;
+            }
+
+            String line = matcher.group(2) != null ? matcher.group(2) : matcher.group(3);
+            out.append(lines[i], 0, matcher.start())
+                    .append(files.get(id)).append(':').append(line)
+                    .append(lines[i], matcher.end(), lines[i].length());
+        }
+
+        return out.toString();
     }
 }

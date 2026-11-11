@@ -157,6 +157,21 @@ class ShaderPreprocessorTest {
         assertThrows(ResourceException.class, () -> process("shaders/3_30/a.glsl"));
     }
 
+    // NVIDIA "0(12)", Mesa/AMD/Intel "0:12(5)" and "ERROR: 0:12:": the first location of each line
+    @Test
+    void compilerLogIsTranslatedToFileAndLine() {
+        List<String> ids = List.of("shaders/a.glsl", "shaders/utils/lib.glsl");
+
+        assertEquals("shaders/utils/lib.glsl:8 : error C0000: syntax error",
+                ShaderPreprocessor.translateLog("1(8) : error C0000: syntax error", ids));
+        assertEquals("shaders/a.glsl:12(5): error: x undeclared\nERROR: shaders/utils/lib.glsl:3: 'y' : undeclared",
+                ShaderPreprocessor.translateLog("0:12(5): error: x undeclared\nERROR: 1:3: 'y' : undeclared", ids));
+        // Unknown id or format: kept
+        assertEquals("7(2) : error", ShaderPreprocessor.translateLog("7(2) : error", ids));
+        assertEquals("syntax error", ShaderPreprocessor.translateLog("syntax error", ids));
+        assertEquals("0(1) : error", ShaderPreprocessor.translateLog("0(1) : error", List.of()));
+    }
+
     @Test
     void pathsAreNormalized() {
         files.put("shaders/3_30/2D/a.glsl", "#include \"../utils/lib.glsl\"");

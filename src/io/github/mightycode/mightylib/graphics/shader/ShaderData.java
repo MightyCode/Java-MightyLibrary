@@ -20,6 +20,8 @@ public class ShaderData extends DataType {
 
     // Written by the preload (worker), read once loaded (main thread)
     private String vertexSource, fragmentSource, geometrySource;
+    // By stage: the files of the #line ids of its source (ShaderPreprocessor.files), to translate the compiler log
+    private List<List<String>> stageFiles = Collections.emptyList();
 
     public ShaderData(String name, boolean shader2D, String ... paths) {
         super(TYPE_SET_UP.THREAD_CONTEXT, name);
@@ -75,6 +77,16 @@ public class ShaderData extends DataType {
         geometrySource = geometry;
     }
 
+    // Preload (worker): by stage (vertex, fragment, geometry), the files of the #line ids of its source
+    public void setStageFiles(List<List<String>> files) {
+        stageFiles = List.copyOf(files);
+    }
+
+    // Files of the #line ids of the source of the stage (0 vertex, 1 fragment, 2 geometry), empty when unknown
+    public List<String> getStageFiles(int stage) {
+        return stage < stageFiles.size() ? stageFiles.get(stage) : Collections.emptyList();
+    }
+
     public String getVertexSource() {
         return vertexSource;
     }
@@ -117,6 +129,10 @@ public class ShaderData extends DataType {
         List<String> files = other.sourcePaths;
         other.sourcePaths = sourcePaths;
         sourcePaths = files;
+
+        List<List<String>> stages = other.stageFiles;
+        other.stageFiles = stageFiles;
+        stageFiles = stages;
     }
 
     @Override
