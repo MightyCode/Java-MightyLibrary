@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SpotBugs patterns the project accepts on purpose; every entry says why. Run through tools/analyse.py. -->
+<FindBugsFilter>
+    <!-- Getters and constructors of a game engine hand out mutable vectors, colors and arrays on purpose
+         (copying them on every call would cost more than the protection brings). -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2,MS_EXPOSE_REP"/>
+    </Match>
+    <!-- The engine's static utilities use PascalCase (GenDeleteResources.GenBuffers, Logger.LogException). -->
+    <Match>
+        <Bug pattern="NM_METHOD_NAMING_CONVENTION,NM_FIELD_NAMING_CONVENTION"/>
+    </Match>
+</FindBugsFilter>
