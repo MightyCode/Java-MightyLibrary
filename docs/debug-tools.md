@@ -59,7 +59,7 @@ python tools/scenario.py "scene Scene2D" wait-loaded "?gl summary" "input ESCAPE
 - Sortie : `ok` par étape réussie ; `?` devant une étape = réponse complète ; un échec affiche tout.
 - Blocage : rien après `--timeout` s (20) → bloqué ; `wait-loaded` trop long → `BLOCKED` + état `gl`, arrêt. Jeu tué après `--max-duration` (300 s).
 - `-D clé=valeur` (répétable) : propriété système donnée au jeu (ex. `-D mightylib.commands.access=user`).
-- `wait-loaded` attend la scène du dernier `scene X` : après un changement de scène fait autrement (commande de jeu, touche), utiliser `wait loaded`.
+- `wait-loaded` passe par la commande `wait loaded` : il attend la fin de tout changement de scène, demandé par `scene X` ou par le jeu (menu, touche simulée), puis la fin du chargement.
 - `--strict` : échec ou nom inconnu arrête le jeu (sinon log `… its fallback is used` et `usingFallback` dans `resources` ; démo : `FallbackScene` sans `--strict`). `--attach` (jeu déjà lancé, ni lancé ni fermé), `--keep-open`.
 - Souris jamais capturée (`-Dmightylib.input.noCursorCapture=true`, `MouseManager.NO_CAPTURE_PROPERTY` : curseur visible et libre pour l'utilisateur) : regard 3D testé par `input mouse`/`input axis`/`gamepad` ; `--capture-mouse` pour la capture.
 - Fluidité d'un chargement : `python tools/scenario.py "scene GLLoading" "stats reset" wait-loaded stats` (`reset` après `scene` exclut le tick qui exécute `init`). Préchargement : `scene PreloadScene`, puis `resources batch <batch>` et `input ENTER`.

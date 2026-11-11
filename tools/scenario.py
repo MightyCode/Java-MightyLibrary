@@ -7,7 +7,7 @@ Usage:
     python tools/scenario.py --no-compile "scene" ...  # skip compilation
 
 Steps are game commands (see `help` in the game) plus:
-    wait-loaded                     wait until the current scene has finished loading
+    wait-loaded                     wait until any scene change (command or game) is done and the scene is loaded
     sleep:SECONDS                   wait, for example sleep:0.5
     leakcheck SCENE [N] [VIA]       load SCENE, do N round trips (default 2) through VIA (default MenuScene),
                                     print "no leak" or only the OpenGL counters that changed
@@ -27,6 +27,7 @@ MIGHTY_MVN (maven executable) and MIGHTY_MAVEN_JDK (JAVA_HOME used by maven).
 """
 import argparse
 import json
+import math
 import os
 import re
 import subprocess
@@ -130,18 +131,12 @@ def compact(answer):
     return text
 
 
-def wait_loaded(connection, reader, timeout, expected_scene):
-    # The scene changes at the next tick: also wait for the requested scene, not only for the end of loading
-    deadline = time.monotonic() + timeout
-    while True:
-        answer = mighty.send(connection, reader, "scene")
-        data = answer.get("data", {})
-        scene_ok = expected_scene is None or str(data.get("scene", "")).endswith(expected_scene)
-        if scene_ok and not data.get("loading", True):
-            return answer, False
-        if time.monotonic() > deadline:
-            return answer, True
-        time.sleep(0.25)
+def wait_loaded(connection, reader, timeout):
+    # The game decides: no scene change pending (asked by a command or by the game itself, menu, input) and the
+    # current scene loaded. It answers an error at its own timeout, before the socket gives up
+    seconds = max(1, math.ceil(timeout))
+    answer = mighty.send(connection, reader, f"wait loaded --timeout {seconds}", seconds + 5)
+    return answer, not answer.get("success", False)
 
 
 def short(answer):
@@ -178,7 +173,7 @@ def change_scene(connection, reader, timeout, scene):
     answer = mighty.send(connection, reader, "scene " + scene)
     if not answer.get("success"):
         return answer, False
-    answer, timed_out = wait_loaded(connection, reader, timeout, scene)
+    answer, timed_out = wait_loaded(connection, reader, timeout)
     return answer, not timed_out
 
 
@@ -272,7 +267,6 @@ def drag(connection, reader, words):
 
 def run_steps(port, steps, timeout, log_path=None):
     success = True
-    expected_scene = None
     connection = mighty.connect(port, timeout)
     with connection:
         reader = connection.makefile("r", encoding="utf-8")
@@ -296,14 +290,10 @@ def run_steps(port, steps, timeout, log_path=None):
                 success = drag(connection, reader, words) and success
                 continue
 
-            if len(words) >= 2 and words[0] == "scene":
-                # Class name relative to the scenes package, for example Platformer2D.PlatformerBox2D
-                expected_scene = words[1]
-
             if step == "wait-loaded":
-                answer, timed_out = wait_loaded(connection, reader, timeout, expected_scene)
+                answer, timed_out = wait_loaded(connection, reader, timeout)
                 if timed_out:
-                    print(f"> {step}\n  BLOCKED: still loading after {timeout:g}s, scenario stopped: {compact(answer)}")
+                    print(f"> {step}\n  BLOCKED: not loaded after {timeout:g}s, scenario stopped: {compact(answer)}")
                     print("  " + compact(mighty.send(connection, reader, "gl summary")))
                     return False
             else:
