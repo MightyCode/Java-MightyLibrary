@@ -16,4 +16,7 @@ public interface IGLElementSink {
 
     // The first loading is done, the fallback data exist: the sink creates what it needs from them (error texture)
     default void fallbackDataLoaded() {}
+
+    // The data was loaded again (reload, or new load after an unload): the elements that failed with it are tried again
+    default void dataReloaded(DataType data) {}
 }

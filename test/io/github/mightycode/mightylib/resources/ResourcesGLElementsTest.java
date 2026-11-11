@@ -43,6 +43,14 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
             });
         }
 
+        // Names of the data given to dataReloaded, in order
+        final java.util.List<String> reloadedData = new java.util.ArrayList<>();
+
+        @Override
+        public void dataReloaded(DataType data) {
+            reloadedData.add(data.getDataName());
+        }
+
         @Override
         public void release(GLElement element, boolean urgent) {
             int[] counts = references.get(element.getName());
@@ -99,6 +107,28 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         resources.unloadBatch("level");
         pump();
         sink.assertAllReleased();
+    }
+
+    // The sink tries again the elements that failed with the previous version: told of each reload, not of a first load
+    @Test
+    void theSinkIsToldWhenADataIsReloaded() throws Exception {
+        FakeData apart = fake(THREAD_CONTEXT, "apart");
+        FakeData inPlace = fake(THREAD_CONTEXT, "inPlace");
+        inPlace.reloadApart = false;
+        batch("level", "apart", "inPlace");
+        start();
+
+        resources.loadBatch("level");
+        pump();
+        assertTrue(sink.reloadedData.isEmpty());
+
+        resources.reload(apart);
+        resources.reload(inPlace);
+        pump();
+        assertTrue(sink.reloadedData.contains("apart"));
+        assertTrue(sink.reloadedData.contains("inPlace"));
+        assertEquals(2, sink.reloadedData.size());
+        assertConsistent();
     }
 
     @Test

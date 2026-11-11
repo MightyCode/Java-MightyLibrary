@@ -37,6 +37,8 @@ public class GLResources implements IGLElementSink {
     // Elements waiting to be loaded, in order; an element is in one of them (moved in O(1) when its urgency changes)
     private final LinkedHashSet<GLElement> urgentToLoad = new LinkedHashSet<>();
     private final LinkedHashSet<GLElement> preloadToLoad = new LinkedHashSet<>();
+    // Elements whose first loading failed: out of the queues until one of their data is reloaded (dataReloaded)
+    private final LinkedHashSet<GLElement> failedElements = new LinkedHashSet<>();
     // Loaded elements to send again, their data having changed (hot reload)
     private final Queue<GLElement> elementToReload = new ArrayDeque<>();
 
@@ -101,6 +103,13 @@ public class GLResources implements IGLElementSink {
             if (element.loadByResource((int) (remainingNanos / NANO_IN_MILLISECOND)))
                 stepDone = true;
 
+            // Out of the queues: tried again only when one of its data is reloaded, never in a loop
+            if (element.hasFailed()) {
+                if (element.isReferenced())
+                    failedElements.add(element);
+                continue;
+            }
+
             // The step may have released it, or changed its urgency (another element released)
             if (!element.isLoaded() && element.isReferenced())
                 waitingSetOf(element).add(element);
@@ -116,6 +125,28 @@ public class GLResources implements IGLElementSink {
     // Called by GLElement.requestReload
     void queueReload(GLElement element) {
         elementToReload.add(element);
+    }
+
+    /**
+     * Register the element (urgent reference) and load it now, during this call: for the small elements needed
+     * before anything is drawn (fallbacks). Its dependencies must already be loaded.
+     */
+    public <T extends GLElement> T addElementAndLoadNow(Class<T> type, T element, String name) {
+        T registered = addElementOrReturnIfPresent(type, element, name);
+        if (registered.isLoaded())
+            return registered;
+
+        waitingSetOf(registered).remove(registered);
+        while (!registered.isLoaded() && !registered.hasFailed()) {
+            if (!registered.loadByResource(Integer.MAX_VALUE))
+                throw new IllegalStateException(type.getSimpleName() + " " + name
+                        + " can't be loaded now: its dependencies are not loaded");
+        }
+
+        if (registered.hasFailed())
+            failedElements.add(registered);
+
+        return registered;
     }
 
     // True while urgent elements wait to be loaded, except those waiting for a failed data (they use the fallback)
@@ -193,6 +224,21 @@ public class GLResources implements IGLElementSink {
         return register(type, data.createGLElement(), name, urgent);
     }
 
+    // The failed elements made from this data are tried again with its new version
+    @Override
+    public void dataReloaded(DataType data) {
+        Iterator<GLElement> iterator = failedElements.iterator();
+        while (iterator.hasNext()) {
+            GLElement element = iterator.next();
+            if (!element.dependsOn(data))
+                continue;
+
+            iterator.remove();
+            element.clearFailure();
+            waitingSetOf(element).add(element);
+        }
+    }
+
     private <T extends GLElement> T register(Class<T> type, GLElement element, String name, boolean urgent) {
         return addElementOrReturnIfPresent(type, type.cast(element), name, urgent);
     }
@@ -248,6 +294,7 @@ public class GLResources implements IGLElementSink {
             urgentToLoad.remove(element);
             preloadToLoad.remove(element);
             elementToReload.remove(element);
+            failedElements.remove(element);
 
             resources.get(element.getClass()).remove(element.getName());
             element.unloadByResource(150);
@@ -271,8 +318,18 @@ public class GLResources implements IGLElementSink {
 
         json.put("waitingToLoad", urgentToLoad.size());
         json.put("waitingToPreload", preloadToLoad.size());
+        json.put("failed", namesFailed());
 
         return json;
+    }
+
+    // Elements whose first loading failed ("type name"), waiting for one of their data to be reloaded
+    public List<String> namesFailed() {
+        List<String> names = new ArrayList<>();
+        for (GLElement element : failedElements)
+            names.add(element.getClass().getSimpleName() + " " + element.getName());
+
+        return names;
     }
 
     // Names of the elements waiting to be loaded: urgent ones, or only preloaded ones (tests and debug)
@@ -299,6 +356,7 @@ public class GLResources implements IGLElementSink {
         urgentToLoad.clear();
         preloadToLoad.clear();
         elementToReload.clear();
+        failedElements.clear();
         TextureUploader.releaseBuffers();
         placeholders.delete();
     }

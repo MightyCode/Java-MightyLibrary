@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.utils.LoadingElement;
 
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ public abstract class GLElement implements LoadingElement {
     private String name;
     private boolean loaded;
     private boolean loadStarted;
+    // The first loading threw a ResourceException: waits for one of its data to be reloaded (GLResources.dataReloaded)
+    private boolean failed;
 
     public String getName() {
         return name;
@@ -93,11 +96,32 @@ public abstract class GLElement implements LoadingElement {
         return urgentReference;
     }
 
+    /**
+     * Load the element, or a step of it (false until done). An expected failure (the data is wrong, not the code:
+     * a shader that does not compile) throws a ResourceException, after deleting what the element created:
+     * the element is then failed, its users get the fallback until one of its data is reloaded.
+     */
     public abstract boolean load(int remainingMilliseconds);
 
     @Override
     public boolean isLoaded(){
         return loaded;
+    }
+
+    // Its first loading failed (ResourceException): its users get the fallback until one of its data is reloaded
+    public boolean hasFailed() {
+        return failed;
+    }
+
+    // One of its data was reloaded: it is tried again
+    void clearFailure() {
+        failed = false;
+        loadStarted = false;
+    }
+
+    // True when this element was made from the data (it is tried again when the data is reloaded)
+    boolean dependsOn(DataType data) {
+        return resourceDependencies.contains(data);
     }
 
     /**
@@ -124,12 +148,22 @@ public abstract class GLElement implements LoadingElement {
             loadStarted = true;
         }
 
-        loaded = load(remainingMilliseconds);
+        try {
+            loaded = load(remainingMilliseconds);
+        } catch (ResourceException e) {
+            loaded = false;
+            failed = true;
+            System.err.println("--" + getClass().getSimpleName() + " " + name + " failed: " + e.getMessage()
+                    + ", its fallback is used");
+        }
         return true;
     }
 
-    // A data needed by this element failed: it waits for a reload, its users get the fallback meanwhile
+    // This element or a data needed by it failed: it waits for a reload, its users get the fallback meanwhile
     boolean blockedByFailure() {
+        if (failed)
+            return true;
+
         for (DataType type : resourceDependencies) {
             if (type.hasFailed())
                 return true;
@@ -153,6 +187,8 @@ public abstract class GLElement implements LoadingElement {
 
     /**
      * Send the element again, in steps like load, while the current version stays in use.
+     * An expected failure throws a ResourceException, after deleting what the new version created:
+     * the element keeps its current version (it is not failed).
      * @return true once done (by default nothing to do)
      */
     protected boolean reload(int remainingMilliseconds) {
@@ -160,7 +196,15 @@ public abstract class GLElement implements LoadingElement {
     }
 
     boolean reloadByResource(int remainingMilliseconds) {
-        boolean done = !loaded || reload(remainingMilliseconds);
+        boolean done;
+        try {
+            done = !loaded || reload(remainingMilliseconds);
+        } catch (ResourceException e) {
+            done = true;
+            System.err.println("--" + getClass().getSimpleName() + " " + name + " could not be reloaded: "
+                    + e.getMessage() + ", the previous version is kept");
+        }
+
         if (done)
             reloadQueued = false;
 
@@ -177,6 +221,7 @@ public abstract class GLElement implements LoadingElement {
         unload(remainingMilliseconds);
         loaded = false;
         loadStarted = false;
+        failed = false;
         reloadQueued = false;
     }
 }
