@@ -1,6 +1,10 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
+import io.github.mightycode.mightylib.graphics.shader.FallbackShader;
+import io.github.mightycode.mightylib.graphics.shader.FallbackShaderData;
+import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -107,6 +111,21 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         resources.unloadBatch("level");
         pump();
         sink.assertAllReleased();
+    }
+
+    // The program of a shader is the GL element of its sources, the fallback ones give the fallback program
+    @Test
+    void shaderDataGivesItsProgram() {
+        ShaderData data = new ShaderData("program", true, "v.glsl", "f.glsl");
+        assertEquals(Shader.class, data.glElementType());
+        Shader program = (Shader) data.createGLElement();
+        assertSame(data, program.getData());
+        assertTrue(program.isDimension2DShader());
+
+        FallbackShaderData fallback = new FallbackShaderData("3_30");
+        assertEquals(Shader.class, fallback.glElementType());
+        assertInstanceOf(FallbackShader.class, fallback.createGLElement());
+        assertFalse(fallback.hasSource());
     }
 
     // The sink tries again the elements that failed with the previous version: told of each reload, not of a first load

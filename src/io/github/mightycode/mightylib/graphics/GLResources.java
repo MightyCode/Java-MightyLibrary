@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.graphics;
 
+import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.IGLElementSink;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -33,6 +35,7 @@ public class GLResources implements IGLElementSink {
     // The CPU data these elements are made from (null in the tests without data)
     private final Resources cpuResources;
     private final TexturePlaceholders placeholders = new TexturePlaceholders();
+    private Shader fallbackShader;
 
     // Elements waiting to be loaded, in order; an element is in one of them (moved in O(1) when its urgency changes)
     private final LinkedHashSet<GLElement> urgentToLoad = new LinkedHashSet<>();
@@ -180,6 +183,7 @@ public class GLResources implements IGLElementSink {
         }
 
         T.attachTo(this);
+        T.registeredType = type;
         resources.computeIfAbsent(type, key -> new HashMap<>()).put(name, T);
         T.setName(name);
         T.addReference(urgent);
@@ -202,10 +206,23 @@ public class GLResources implements IGLElementSink {
 
     // ---- IGLElementSink: the GL elements held by the batches ----
 
-    // The texture of the fallback data, shown in place of the textures that failed
+    /*
+     * The elements of the fallback data, shown in place of those that failed or are not loaded yet. The texture is
+     * sent in the next frames, the program is linked now: a shape always has a linked program to draw with.
+     */
     @Override
     public void fallbackDataLoaded() {
         addElementOrReturnIfPresent(Texture.class, new Texture(cpuResources, Resources.FALLBACK_NAME), Resources.FALLBACK_NAME);
+
+        ShaderData shaderData = cpuResources.getResourceOrFallback(ShaderData.class, Resources.FALLBACK_NAME);
+        fallbackShader = addElementAndLoadNow(Shader.class, (Shader) shaderData.createGLElement(), Resources.FALLBACK_NAME);
+        if (!fallbackShader.isLoaded())
+            throw new IllegalStateException("The fallback shader can't be linked");
+    }
+
+    // Program used in place of those that failed or are not linked yet; null before the fallback data are loaded
+    public Shader fallbackShader() {
+        return fallbackShader;
     }
 
     @Override
@@ -296,7 +313,7 @@ public class GLResources implements IGLElementSink {
             elementToReload.remove(element);
             failedElements.remove(element);
 
-            resources.get(element.getClass()).remove(element.getName());
+            resources.get(element.registeredType).remove(element.getName());
             element.unloadByResource(150);
         } else if (!element.isUrgent() && urgentToLoad.remove(element)) {
             // Still preloaded, not wanted now anymore

@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -23,7 +24,7 @@ public class ShaderLoader extends ResourceLoader {
 
     @Override
     public Class<? extends DataType> getType() {
-        return Shader.class;
+        return ShaderData.class;
     }
 
     public ShaderLoader(ShaderManager shaderManager) {
@@ -33,12 +34,12 @@ public class ShaderLoader extends ResourceLoader {
 
     @Override
     public String getResourceNameType() {
-        return "Shader";
+        return "ShaderData";
     }
 
     @Override
     public DataType createFallback() {
-        return new FallbackShader(shaderManager.getVersion());
+        return new FallbackShaderData(shaderManager.getVersion());
     }
 
     @Override
@@ -64,15 +65,16 @@ public class ShaderLoader extends ResourceLoader {
 
             // "Table" of the string path
             JSONArray files = JShader.getJSONArray("files");
+            // From the working directory: the files are watched for hot reload
             String[] sArrayFiles = new String[files.length()];
             for (int i = 0; i < files.length(); ++i) {
-                sArrayFiles[i] = files.getString(i);
+                sArrayFiles[i] = shaderManager.versionFolder() + files.getString(i);
             }
 
             JSONArray tags = JShader.getJSONArray("tags");
             // Get id the access the shader more easily
 
-            Shader shader = new Shader(
+            ShaderData shader = new ShaderData(
                     currentShader,
                     isTagIn(tags, "2D") || isTagIn(tags, "none"), sArrayFiles);
 
@@ -99,38 +101,29 @@ public class ShaderLoader extends ResourceLoader {
 
     @Override
     public void initWithFile(DataType dataType) {
-        if (!(dataType instanceof Shader)) {
+        if (!(dataType instanceof ShaderData) || !dataType.hasSource())
             return;
-        }
 
-        Shader shader = (Shader) dataType;
+        ShaderData shader = (ShaderData) dataType;
 
-        boolean useGeometryShader = shader.numberSource() == 3;
-
-        String vertexShaderPath = shaderManager.versionFolder() + shader.getSourcePath(0);
-        String fragmentShaderPath = shaderManager.versionFolder() + shader.getSourcePath(1);
-
-        String geometryShaderPath = null;
-        if (useGeometryShader) {
-            shader.activateGeometryShader();
-            geometryShaderPath = shaderManager.versionFolder() + shader.getSourcePath(2);
-        }
-
-        // Worker thread: files and preprocessing only, the compilation is made by the load (main thread, in steps).
+        // Worker thread: files and preprocessing only, the compilation is made by its GL element (Shader).
         // A missing file makes the preload fail: the fallback replaces the shader
-        shader.setShaderContent(0, completeWithLibraryFile(readSource(vertexShaderPath)));
+        String vertex = completeWithLibraryFile(readSource(shader.getSourcePath(0)));
         shader.checkCancelled();
-        shader.setShaderContent(1, completeWithLibraryFile(readSource(fragmentShaderPath)));
+        String fragment = completeWithLibraryFile(readSource(shader.getSourcePath(1)));
 
-        if (useGeometryShader) {
+        String geometry = null;
+        if (shader.usesGeometryShader()) {
             shader.checkCancelled();
-            shader.setShaderContent(2, completeWithLibraryFile(readSource(geometryShaderPath)));
+            geometry = completeWithLibraryFile(readSource(shader.getSourcePath(2)));
         }
+
+        shader.setSources(vertex, fragment, geometry);
     }
 
     private static String readSource(String path) {
         if (!new File(path).isFile())
-            throw new IllegalStateException("Shader file not found: " + path);
+            throw new ResourceException("shader file not found: " + path);
 
         return FileMethods.readFileAsString(path);
     }

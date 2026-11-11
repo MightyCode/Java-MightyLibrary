@@ -24,6 +24,9 @@ public abstract class GLElement implements LoadingElement {
     // The GLResources holding this element, set when it registers it: an element has a single owner
     private volatile GLResources owner;
 
+    // The type it is registered under in its GLResources (a subtype is registered under its base type: FallbackShader)
+    Class<? extends GLElement> registeredType;
+
     final void attachTo(GLResources glResources) {
         if (owner == glResources)
             return;

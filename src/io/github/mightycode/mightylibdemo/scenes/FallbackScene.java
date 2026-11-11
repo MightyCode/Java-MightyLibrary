@@ -2,7 +2,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import io.github.mightycode.mightylib.resources.animation.Animator;
@@ -38,8 +38,8 @@ public class FallbackScene extends Scene {
         // Read by their loaders, they fail: missing files
         resources.addResourceAndSetUp(TextureData.class,
                 new TextureData(BROKEN_TEXTURE, resources.folder() + "textures/missing/brokenTexture.png"));
-        resources.addResourceAndSetUp(Shader.class,
-                new Shader(BROKEN_SHADER, true, "missing/brokenV.glsl", "missing/brokenF.glsl"));
+        resources.addResourceAndSetUp(ShaderData.class, new ShaderData(BROKEN_SHADER, true,
+                resources.folder() + "shaders/missing/brokenV.glsl", resources.folder() + "shaders/missing/brokenF.glsl"));
     }
 
     @Override
@@ -118,6 +118,6 @@ public class FallbackScene extends Scene {
     @Override
     public void release() {
         resources.deleteResource(TextureData.class, BROKEN_TEXTURE);
-        resources.deleteResource(Shader.class, BROKEN_SHADER);
+        resources.deleteResource(ShaderData.class, BROKEN_SHADER);
     }
 }
