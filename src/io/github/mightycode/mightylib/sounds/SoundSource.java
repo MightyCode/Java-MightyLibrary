@@ -227,7 +227,7 @@ public class SoundSource {
         }
     }
 
-    // The buffer given to OpenAL is not the one of the sound: fallback (failed or loading), or none; false while waiting
+    // The buffer given to OpenAL is not the one of the sound: fallback (failed, loading) or none; false while waiting
     public boolean playsFallback() {
         if (sourceId == -1)
             return false;
