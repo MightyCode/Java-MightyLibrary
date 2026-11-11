@@ -105,7 +105,7 @@ public class Resources {
         all.add(jsonLoader);
         all.add(new BatchLoader(jsonLoader));
 
-        all.addAll(projectLoaders);
+        all.addAll(Objects.requireNonNull(projectLoaders, "projectLoaders"));
         return all;
     }
 
