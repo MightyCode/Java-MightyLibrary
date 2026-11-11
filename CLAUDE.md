@@ -4,7 +4,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 
 ## Documentation (à lire seulement quand la tâche le demande)
 - `docs/current.md` : seul le gros point en cours (API : corrections urgentes, à commencer par la suite du pipeline de `Resources`).
-- `docs/later.md` : feuille de route globale, gros points suivants dans l'ordre (gamma, tests, bibliothèque réutilisable avec modèle d'extension et modding, effets 2D, physique 2D, entités et scripts Lua, thème, rendu 2D, SVG, entrées, son, console, plateformes).
+- `docs/later.md` : feuille de route globale, gros points suivants dans l'ordre (philosophie du moteur : écarts, modèle d'extension et API publique ; gamma, tests, bibliothèque réutilisable et modding, effets 2D, physique 2D, entités et scripts Lua, thème, rendu 2D, SVG, entrées, son, console, plateformes).
 - `docs/techniquegraphique.md` : suite de `later.md`, techniques de rendu 2D/3D de LearnOpenGL (Blinn-Phong, skybox, culling, ombres, normal mapping, animation squelettique, HDR/bloom…).
 - `docs/futur-discussion.md` : sujets à discuter un jour, sans ordre (l'utilisateur décide quand).
 - `licence.md` : licences de toutes les dépendances, des bibliothèques natives et des ressources, ce qu'elles impliquent, à faire avant distribution (à mettre à jour à chaque nouvelle dépendance ou ressource).
@@ -33,6 +33,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - Répertoire de travail = racine du dépôt (ressources lues depuis `resources/`). Point d'entrée : `io.github.mightycode.mightylibdemo.main.Main`.
 
 ## Règles pour Claude
+- **Philosophie du moteur** (`docs/decisions.md`) : classes de base simples + implémentations concrètes proposées + injection ; l'usage courant reste facile et la réimplémentation (presque) complète reste possible. Bases sans hypothèse sur un jeu précis, points d'accroche choisis, rien de propre à la démo dans la bibliothèque ; signaler tout système qui impose une implémentation en dur.
 - **Penser à long terme, à l'échelle d'un vrai jeu** (des milliers de ressources, chargement en continu, nombreuses scènes, mods, projets tiers), pas à celle de la démo : une solution qui suffit à la démo mais ne tiendra pas à cette échelle doit être signalée comme telle, avec la cible durable, et inscrite dans `docs/current.md` ou `docs/later.md`. Préférer corriger le modèle qui produit les bugs plutôt qu'empiler des pansements.
 - **Économiser les tokens** : lire des extraits (Grep, Read avec offset/limit) plutôt que des fichiers entiers ; filtrer les journaux ; réponses courtes ; pas de capture d'écran sauf rendu impossible à vérifier autrement (une seule à la fois, et seulement la zone utile avec `screenshot --rect x y largeur hauteur` ou `--corners x y x2 y2` quand on sait où regarder ; cadrer avec la commande `camera`) ; si une information manque, ajouter une commande qui la renvoie en texte/JSON.
 - Ne jamais importer `io.github.mightycode.mightylibdemo.*` depuis `mightylib` (passer les IDs en paramètre).
