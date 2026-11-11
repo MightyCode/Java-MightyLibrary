@@ -2,8 +2,24 @@
 
 Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en cours : `current.md`. Quand il est fini, **discuter** du point en tête de ce fichier avec l'utilisateur, puis le déplacer dans `current.md`.
 
-## Gamma : rendu linéaire activable et réglable (en premier)
-LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs à l'écran.
+## Philosophie du moteur : bases simples, implémentations proposées, injection (en premier)
+Philosophie de `decisions.md` : usage courant facile, réimplémentation (presque) complète possible. En premier : chaque commit écrit sans elle ajoute du code à reprendre.
+
+### Écarts relevés dans le code
+- **`Renderer` crée son `Shape`** (`shape = new Shape(shaderName, useEbo)` dans son constructeur) : impossible de lui donner un `Shape` hérité. Ajouter un constructeur qui reçoit un `Shape`, en gardant l'actuel pour l'usage simple.
+- **`Shape` expose son état interne en `protected`** (une quinzaine de champs : `vbos`, `vbosStorage`, `eboStorage`, `vboCount`, `in2D`…) : tout son fonctionnement devient un contrat. Le remplacer par quelques méthodes redéfinissables et sortir de la base l'hypothèse 2D/3D (`in2D`). Même revue pour `Renderer` (`model`, `shaderValues`, `textures`… en `protected`).
+- **Systèmes de l'`Engine` créés en dur** : `Console`, `SceneManager`, `SoundManager`, `ShaderManager` (`Engine.setup`) et `InputManager` (`ContextManager`) ; la configuration ne règle que leurs paramètres, un projet ne peut pas fournir les siens. Les rendre injectables (ci-dessous) ; à décider à la planification : interfaces ou classes de base, et ce qui reste fixe.
+- **Rien n'est choisi comme extensible** (au 2026-11-11 : 247 classes publiques, 49 `final`, du `protected` dans 87 fichiers) : tout est ouvert par défaut (voir **Héritage**).
+- **Aucune démo n'étend le rendu** : une scène avec son propre `Shape`/`Renderer` (ex. `CustomRenderer2D`) valide le contrat et fait apparaître ce qui bloque.
+
+### Modèle d'extension validé : le projet injecte, le projet étend
+- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.contextLoading` et les points provisoires `IProjectLoading.loaders` (liste de loaders figée à la construction de `Resources`, les mods fourniront les leurs à la même phase) et `IProjectLoading.registerCommands` ; les commandes du moteur et du jeu sont figées après le démarrage, celles des scènes et des vues restent dynamiques. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
+- **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, systèmes de l'`Engine` (console, gestionnaires de scènes, de sons, de shaders, d'entrées), crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
+- **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape`, `Renderer`, `Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
+- **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0) ; même tri que l'héritage (`bonnes-pratiques.md`, point 7).
+
+## Gamma : rendu linéaire activable et réglable
+LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'écran.
 - Constat : aucun `GL_SRGB*`, calculs en sRGB → éclairage 3D trop sombre, fondus et dégradés ternes (peu visible en pixel art).
 - Règle : `Color4f` et textures du projet sont en sRGB.
 - Activation : option `EngineConfig` + par scène, désactivée par défaut, activée par défaut en 3D éclairée. Active : textures de couleur en `GL_SRGB8_ALPHA8` (pas les cartes de données : normales, spéculaire, hauteurs), couleurs uniformes converties en linéaire, `GL_FRAMEBUFFER_SRGB` ou conversion dans la passe finale si framebuffer intermédiaire (`VirtualSceneRenderer`).
@@ -27,12 +43,7 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
   - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources.
   - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
-- **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0).
-
-### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.contextLoading` et les points provisoires `IProjectLoading.loaders` (liste de loaders figée à la construction de `Resources`, les mods fourniront les leurs à la même phase) et `IProjectLoading.registerCommands` ; les commandes du moteur et du jeu sont figées après le démarrage, celles des scènes et des vues restent dynamiques. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
-- **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
-- **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
+- Extension et API publique : section « Philosophie du moteur » en tête de ce fichier.
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
