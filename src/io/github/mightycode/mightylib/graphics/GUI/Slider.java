@@ -134,8 +134,8 @@ public abstract class Slider {
     }
 
     public void setMaxPrecision(int value){
-        if (maxPrecision >= 0 && maxPrecision < MAX_DIGIT_PRECISION)
-            maxPrecision = value;
+        // A negative value disables the rounding, a too large one is capped.
+        maxPrecision = value < 0 ? -1 : Math.min(value, MAX_DIGIT_PRECISION);
     }
 
     public int getMaxPrecision(){
