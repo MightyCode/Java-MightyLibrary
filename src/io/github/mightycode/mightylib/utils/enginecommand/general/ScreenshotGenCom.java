@@ -79,7 +79,7 @@ public class ScreenshotGenCom extends BaseCommand {
 
         // Answered once the image is written, after the next frame
         final int[] requestedRegion = region;
-        return CommandResult.later(Screenshot.request(file, region, scale, Views.engine().commandWindow().getWindow().getInfo().getWindowId()).thenApply(written -> {
+        return CommandResult.later(Screenshot.request(file, region, scale, Views.engine().targetWindow().getWindow().getInfo().getWindowId()).thenApply(written -> {
             JSONObject data = new JSONObject();
             data.put("path", written.getAbsolutePath());
             if (requestedRegion != null)

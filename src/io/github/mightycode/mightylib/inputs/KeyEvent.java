@@ -14,17 +14,38 @@ public final class KeyEvent {
     private final int mods;
     private final boolean repeat;
     private final char letter;
+    private final int textBefore;
+
+    /** A key that comes after all the text typed during its tick (simulated keys). */
+    public static final int AFTER_TEXT = Integer.MAX_VALUE;
 
     /**
      * @param letter the character the layout of the system gives to the key, lower case (glfwGetKeyName),
      *               0 when the key has no name (arrows, Home, F1...)
      */
     public KeyEvent(int key, int scancode, int mods, boolean repeat, char letter) {
+        this(key, scancode, mods, repeat, letter, AFTER_TEXT);
+    }
+
+    /**
+     * @param textBefore the characters of the text typed during the tick that came before this key (the typed text
+     *                   and the keys are two lists: this puts them back in order), AFTER_TEXT when after all of it
+     */
+    public KeyEvent(int key, int scancode, int mods, boolean repeat, char letter, int textBefore) {
         this.key = key;
         this.scancode = scancode;
         this.mods = mods;
         this.repeat = repeat;
         this.letter = Character.toLowerCase(letter);
+        this.textBefore = Math.max(0, textBefore);
+    }
+
+    /**
+     * The characters of the text typed in the tick before this key, at most the length of that text: an editor
+     * inserts them, then applies the key (typing "a", Backspace, "b" in one tick gives "b").
+     */
+    public int textBefore(int typedLength) {
+        return Math.min(textBefore, typedLength);
     }
 
     // GLFW_KEY_... : the physical position, named after the US layout

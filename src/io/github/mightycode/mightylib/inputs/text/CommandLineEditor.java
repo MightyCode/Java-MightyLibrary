@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.inputs.text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -285,7 +285,7 @@ public final class CommandLineEditor {
     }
 
     // The words are separated by these characters (Ctrl+Left/Right, double click)
-    static boolean IsSeparator(char c) {
+    public static boolean IsSeparator(char c) {
         return Character.isWhitespace(c);
     }
 

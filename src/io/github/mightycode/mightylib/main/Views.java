@@ -50,8 +50,8 @@ public final class Views {
         return view;
     }
 
-    // Null when there is none: for the code that only passes the view along (MainThread)
-    static IView currentOrNull() {
+    // Null when there is none: for the code that only passes the view along (MainThread, Commands)
+    public static IView currentOrNull() {
         return CURRENT.get();
     }
 

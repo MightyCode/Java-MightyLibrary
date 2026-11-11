@@ -9,24 +9,6 @@ import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 
 // The owner of the capture (the console) reads the mouse the game no longer sees, simulation included
 class MouseRawTest {
-    // A mouse without window: the real cursor and buttons are given
-    private static final class FakeMouse extends MouseManager {
-        double x = 50;
-        double y = 60;
-        boolean left;
-
-        @Override
-        protected boolean realButton(int buttonId) {
-            return buttonId == GLFW_MOUSE_BUTTON_LEFT && left;
-        }
-
-        @Override
-        protected void realCursor(double[] x, double[] y) {
-            x[0] = this.x;
-            y[0] = this.y;
-        }
-    }
-
     @Test
     void rawReadsIgnoreTheCapture() {
         FakeMouse mouse = new FakeMouse();
@@ -40,6 +22,8 @@ class MouseRawTest {
         assertTrue(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));
         assertTrue(mouse.getRawButton(GLFW_MOUSE_BUTTON_LEFT));
         assertEquals(new Vector2f(50, 60), mouse.getRawPos());
+        // Without window the virtual coordinates are the pixels
+        assertEquals(new Vector2f(50, 60), mouse.getRawVirtualPos());
 
         mouse.postUpdate();
         assertFalse(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));
@@ -63,6 +47,35 @@ class MouseRawTest {
             assertFalse(mouse.rawButtonPressed(button));
             assertFalse(mouse.rawButtonReleased(button));
         }
+    }
+
+    @Test
+    void droppedEdgesLastUntilTheNextTick() {
+        FakeMouse mouse = new FakeMouse();
+        mouse.postUpdate();
+        mouse.left = true;
+        mouse.postUpdate();
+        assertTrue(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        mouse.simulateScroll(0, 2);
+
+        // A change of focus during the tick: the press is for nobody, the button is still held
+        mouse.dropEdges();
+        assertFalse(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        assertFalse(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));
+        assertTrue(mouse.getButton(GLFW_MOUSE_BUTTON_LEFT));
+        assertEquals(0, mouse.getRawMouseScroll().y);
+
+        mouse.left = false;
+        mouse.postUpdate();
+        assertTrue(mouse.buttonReleased(GLFW_MOUSE_BUTTON_LEFT));
+        mouse.dropEdges();
+        assertFalse(mouse.buttonReleased(GLFW_MOUSE_BUTTON_LEFT));
+        assertFalse(mouse.rawButtonReleased(GLFW_MOUSE_BUTTON_LEFT));
+
+        mouse.postUpdate();
+        mouse.left = true;
+        mouse.postUpdate();
+        assertTrue(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
     }
 
     @Test

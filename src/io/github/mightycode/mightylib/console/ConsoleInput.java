@@ -1,6 +1,9 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.inputs.KeyEvent;
+import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
+import io.github.mightycode.mightylib.inputs.text.LineEditKeys;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandCompletion;
 
 import java.util.ArrayList;
@@ -79,15 +82,8 @@ public final class ConsoleInput {
             logSelection = null;
     }
 
-    /** The clipboard of the system: read on Ctrl+V only, written on Ctrl+C and Ctrl+X. */
-    public interface IClipboard {
-        String get();
-
-        void set(String text);
-    }
-
     /**
-     * Apply the inputs of one tick: the typed text first, then the keys in their order.
+     * Apply the inputs of one tick: the typed text and the keys in the order they came (KeyEvent.textBefore).
      * @param pageLines lines scrolled by Page Up / Page Down
      */
     public List<Request> handle(String typedText, List<KeyEvent> keys, int pageLines, IClipboard clipboard) {
@@ -101,20 +97,30 @@ public final class ConsoleInput {
         keepLogSelection();
         List<Request> requests = new ArrayList<>();
 
-        if (typedText != null && !typedText.isEmpty()) {
-            editor.insert(typedText);
-            listOnNextTab = false;
-            logSelection = null;
-        }
-
+        String text = typedText == null ? "" : typedText;
+        int inserted = 0;
         for (KeyEvent key : keys) {
+            int before = key.textBefore(text.length());
+            if (before > inserted) {
+                insertTyped(text.substring(inserted, before));
+                inserted = before;
+            }
+
             handleKey(key, pageLines, clipboard, requests);
             // A selection in the command line removes the one of the log
             if (editor.hasSelection())
                 logSelection = null;
         }
+        if (inserted < text.length())
+            insertTyped(text.substring(inserted));
 
         return requests;
+    }
+
+    private void insertTyped(String part) {
+        editor.insert(part);
+        listOnNextTab = false;
+        logSelection = null;
     }
 
     private void handleKey(KeyEvent key, int pageLines, IClipboard clipboard, List<Request> requests) {
@@ -123,10 +129,16 @@ public final class ConsoleInput {
 
         // Shortcuts follow the letter of the layout of the system, not the position of the key. Not with Alt: AltGr
         // comes as Ctrl+Alt on Windows and types characters (AltGr+L: 'ł' in Polish), received as typed text
-        if (key.isControl() && !key.isAlt() && key.letter() != 0) {
+        if (LineEditKeys.IsShortcut(key)) {
             handleShortcut(key, clipboard, requests);
             return;
         }
+
+        // The keys that move in the command line and delete from it (shared with the text fields)
+        if (key.key() == GLFW_KEY_BACKSPACE || key.key() == GLFW_KEY_DELETE)
+            logSelection = null;
+        if (LineEditKeys.Handle(editor, key))
+            return;
 
         switch (key.key()) {
             case GLFW_KEY_ENTER:
@@ -143,42 +155,12 @@ public final class ConsoleInput {
                 if (!key.isRepeat())
                     requests.add(new Request(ERequest.CLOSE, null, 0));
                 break;
-            case GLFW_KEY_BACKSPACE:
-                logSelection = null;
-                if (key.isControl())
-                    editor.deleteWordLeft();
-                else
-                    editor.deleteLeft();
-                break;
-            case GLFW_KEY_DELETE:
-                logSelection = null;
-                editor.deleteRight();
-                break;
-            // Shift extends the selection of the command line
-            case GLFW_KEY_LEFT:
-                if (key.isControl())
-                    editor.wordLeftMove(key.isShift());
-                else
-                    editor.left(key.isShift());
-                break;
-            case GLFW_KEY_RIGHT:
-                if (key.isControl())
-                    editor.wordRightMove(key.isShift());
-                else
-                    editor.right(key.isShift());
-                break;
+            // Home and End alone are line edits (LineEditKeys): with Ctrl they scroll the log
             case GLFW_KEY_HOME:
-                // Ctrl: the top of the log, alone: the beginning of the command line
-                if (key.isControl())
-                    requests.add(new Request(ERequest.SCROLL_TOP, null, 0));
-                else
-                    editor.home(key.isShift());
+                requests.add(new Request(ERequest.SCROLL_TOP, null, 0));
                 break;
             case GLFW_KEY_END:
-                if (key.isControl())
-                    requests.add(new Request(ERequest.SCROLL_END, null, 0));
-                else
-                    editor.end(key.isShift());
+                requests.add(new Request(ERequest.SCROLL_END, null, 0));
                 break;
             case GLFW_KEY_UP:
                 // Shift: one row of the log, alone: the history

@@ -56,7 +56,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
 - **Identifiants à espace de noms** (`jeu:slime`, classe `registry/Identifier`, déjà utilisée par les actions, les axes et les commandes) pour ressources et scènes : aujourd'hui noms globaux → collisions.
 - **Commandes d'un mod** : le mod est leur propriétaire (`CommandOwner`), espace = identifiant du mod, niveau `DEV` ; insérer `MODDER` entre `CHEAT` et `DEV` si les outils de mod doivent être séparés de ceux du moteur.
-- La liste des scènes du menu de la démo (`MenuScene.createSceneEntries`) devra venir du registre de scènes par nom, pas d'une liste écrite en dur.
+- Le menu de la démo lit aujourd'hui la complétion de la commande `scene` (`MenuScene`, `SceneChoices`) ; la cible durable reste un registre de scènes par nom (identifiant, description, clé de langue), qui remplacera la recherche par réflexion dans le paquet des scènes et le fichier `menuScenes.json` (scènes cachées, descriptions).
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
 - **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
 - Mods de données (JSON/ressources) et mods de code (jars, sans sandbox : de confiance seulement).
@@ -176,6 +176,7 @@ Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et antic
 Streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
+- **Focus de la bibliothèque GUI** : `InputFocus` (pile de détenteurs par fenêtre) est la base ; reste la navigation Tab, le focus par composant (un seul `TextField` est prévu : avec plusieurs, un clic sur un champ pendant que l'autre a le focus doit passer de l'un à l'autre sans perdre le clic, aujourd'hui l'ordre de mise à jour décide), le focus au clavier et à la manette (aujourd'hui `MenuScene` code sa navigation champ → liste → Quit, parce que `GUIList` ne sait pas déléguer les flèches à un composant qui en a l'usage, comme `ScrollList` ou un curseur de texte), `ScrollList` qui devienne un `GUI`.
 - **Overlay de debug** (stats, scène, entrées) à côté de la console. S'appuie sur thème, tailles et langues.
 - **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte ; la palette de `ConsoleColors` y passera) ; suggestions affichées sous la saisie en plus du Tab bash ; glyphe flèche dans la police (l'indicateur des lignes sous la vue écrit « v N lines » faute de `↓`) ; annuler/refaire (Ctrl+Z/Y) dans la saisie, recherche dans le journal (Ctrl+F), menu clic droit, sélection rectangulaire ; mémoriser l'état de `console logs` avec les réglages du joueur (Fenêtres / réglages) ; filtres par source et autres types exposés par commande (le modèle d'ensemble de types cachés existe, cf. Journal à grande échelle).
 - **Commandes, suite** :

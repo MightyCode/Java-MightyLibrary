@@ -1,0 +1,12 @@
+{
+    "batchs" : [
+        {
+            "type" : "JSONFile",
+            "files" : [
+                "menuScenes"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}
