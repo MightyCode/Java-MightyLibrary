@@ -231,19 +231,19 @@ public class Shader extends GLElement {
                 return true;
         }
 
-        int version = build != null ? build.version : data.getVersion();
         int built;
         try {
             built = buildStep();
         } catch (ResourceException e) {
-            rejectedVersion = version;
+            // The version that failed: buildStep starts again on the current version when the data changed
+            rejectedVersion = data.getVersion();
             throw e;
         }
 
         if (built == -1)
             return false;
 
-        setProgram(built, version);
+        setProgram(built, build.version);
         return true;
     }
 
