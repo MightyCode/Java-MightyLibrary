@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.IView;
+import io.github.mightycode.mightylib.main.TestWindows;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -414,6 +415,94 @@ class CommandsTest {
             commands.removeOwnedBy(scene);
             assertNull(echo.getOwner());
         }
+    }
+
+    // A view of a given window: the code of the view runs commands
+    private static class WindowedView extends FakeView {
+        private final WindowContext window;
+
+        WindowedView(WindowContext window) { this.window = window; }
+
+        @Override
+        public WindowContext context() { return window; }
+    }
+
+    // Reads the window a command works on while it runs
+    private static class TargetCommand extends BaseCommand {
+        final Commands commands;
+        WindowContext seen;
+
+        TargetCommand(Commands commands) {
+            super(TestCommands.Id("where"), ECommandLevel.USER, "Reads its target");
+            this.commands = commands;
+        }
+
+        @Override
+        protected void syntax(CommandNode root) {
+            root.executes(context -> {
+                seen = commands.getCallerWindow();
+                return CommandResult.ok("seen");
+            });
+        }
+    }
+
+    @Test
+    void aCommandRunByTheCodeOfAViewTargetsItsWindow() {
+        Commands commands = newCommands();
+        TargetCommand where = new TargetCommand(commands);
+        TestCommands.add(commands, where);
+        WindowContext second = TestWindows.create("second");
+
+        try (Views.Scope ignored = Views.enter(new WindowedView(second))) {
+            assertTrue(commands.execute("where").isSuccess());
+            assertSame(second, where.seen);
+            // Back to nothing once done
+            assertNull(commands.getCallerWindow());
+        }
+
+        // Submitted (console, stdin, debug server): the window chosen by the "window" command, no caller
+        where.seen = second;
+        commands.submit("where");
+        commands.processPendingCommands();
+        assertNull(where.seen);
+    }
+
+    @Test
+    void aCommandRunByAnotherOneKeepsTheTarget() {
+        Commands commands = newCommands();
+        TargetCommand where = new TargetCommand(commands);
+        TestCommands.add(commands, where);
+        WindowContext first = TestWindows.create("first");
+        WindowContext second = TestWindows.create("second");
+
+        // Run as a source (a script line): the caller of the script stays the target, and none does not become one
+        try (Views.Scope ignored = Views.enter(new WindowedView(second))) {
+            commands.execute("where", ICommandSource.API);
+            assertNull(where.seen);
+
+            TestCommands.add(commands, new BaseCommand(TestCommands.Id("outer"), ECommandLevel.USER, "Runs where") {
+                @Override
+                protected void syntax(CommandNode root) {
+                    root.executes(context -> commands.execute("where"));
+                }
+            });
+            try (Views.Scope inner = Views.enter(new WindowedView(first))) {
+                commands.execute("outer");
+            }
+            // outer was run by the view of first, where by outer: first stays the target
+            assertSame(first, where.seen);
+        }
+    }
+
+    @Test
+    void aCommandRunOutsideAnyViewHasNoCaller() {
+        Commands commands = newCommands();
+        TargetCommand where = new TargetCommand(commands);
+        TestCommands.add(commands, where);
+        where.seen = TestWindows.create("stale");
+
+        assertTrue(commands.execute("where").isSuccess());
+        assertNull(where.seen);
     }
 
     // Regression: the same scene in two windows could not have its command twice

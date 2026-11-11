@@ -46,7 +46,7 @@ public class SceneGenCom extends BaseCommand {
 
         // A scene belongs to the window of the view creating it: the targeted context, not the engine
         Scene scene;
-        try (Views.Scope ignored = Views.enter(Views.engine().commandContext())) {
+        try (Views.Scope ignored = Views.enter(Views.engine().targetContext())) {
             scene = (Scene) sceneClass.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
             return CommandResult.error("Can't create " + sceneClass.getName() + " : " + e);

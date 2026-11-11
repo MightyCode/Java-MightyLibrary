@@ -52,7 +52,7 @@ public class InputGenCom extends BaseCommand {
     }
 
     private static InputManager inputManager() {
-        return Views.engine().commandWindow().getInputManager();
+        return Views.engine().targetWindow().getInputManager();
     }
 
     // A handler whose mistakes (unknown key or button...) are errors of the command
@@ -337,7 +337,7 @@ public class InputGenCom extends BaseCommand {
         mouseData.put("simulated", mouse.isCursorSimulated());
         // Asked by the game (shown or captured), then what GLFW really does (no capture during the tests)
         mouseData.put("cursorShown", mouse.getCursorState());
-        int cursorMode = GLFW.glfwGetInputMode(Views.engine().commandWindow().getWindow().getInfo().getWindowId(), GLFW.GLFW_CURSOR);
+        int cursorMode = GLFW.glfwGetInputMode(Views.engine().targetWindow().getWindow().getInfo().getWindowId(), GLFW.GLFW_CURSOR);
         mouseData.put("cursorMode", cursorMode == GLFW.GLFW_CURSOR_DISABLED ? "captured" : cursorMode == GLFW.GLFW_CURSOR_HIDDEN ? "hidden" : "normal");
         JSONArray buttons = new JSONArray();
         for (int button = 0; button < MouseManager.MOUSE_BUTTONS; ++button) {

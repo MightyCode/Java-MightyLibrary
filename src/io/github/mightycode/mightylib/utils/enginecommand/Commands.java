@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.console.LogCapture;
 import io.github.mightycode.mightylib.main.IView;
+import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
 
@@ -70,6 +72,8 @@ public class Commands {
     private final CopyOnWriteArrayList<ICommandListener> listeners;
     // Source of the submitted command being executed (main thread), null outside
     private ICommandSource currentSource;
+    // Window of the view that runs a command directly from its code (main thread), null outside
+    private WindowContext callerWindow;
 
     // The level of the session never goes above the one of the build
     private final ECommandLevel maxLevel;
@@ -272,7 +276,11 @@ public class Commands {
      * @param beginning the text of the line before the cursor
      */
     public CommandCompletion complete(String beginning) {
-        return complete(beginning, getCurrentSource());
+        if (currentSource != null)
+            return complete(beginning, currentSource);
+
+        // Like execute(line): the candidates (scenes...) are those of the window of the calling view
+        return asCaller(() -> complete(beginning, ICommandSource.API));
     }
 
     // Completion of the word being typed (main thread), with what the source sees
@@ -317,9 +325,34 @@ public class Commands {
     /**
      * Main thread only, as the current source (api outside a command): a command run by another one keeps its level.
      * A deferred result is completed with an error after its timeout, so it always ends.
+     * Called from the code of a view (outside any command), the command works on the window of that view, not on
+     * the one chosen by the "window" command (see getCallerWindow).
      */
     public CommandResult execute(String line) {
-        return execute(line, getCurrentSource());
+        if (currentSource != null)
+            return execute(line, currentSource);
+
+        return asCaller(() -> execute(line, ICommandSource.API));
+    }
+
+    // The code of a view (outside any command) targets its own window
+    private <T> T asCaller(Supplier<T> code) {
+        IView view = Views.currentOrNull();
+        WindowContext previous = callerWindow;
+        callerWindow = view == null ? null : view.context();
+        try {
+            return code.get();
+        } finally {
+            callerWindow = previous;
+        }
+    }
+
+    /**
+     * The window of the view whose code runs the command through execute(line), null for a command typed in the
+     * console, read from stdin, sent by the debug server or submitted: they work on Engine.commandWindow.
+     */
+    public WindowContext getCallerWindow() {
+        return callerWindow;
     }
 
     /**

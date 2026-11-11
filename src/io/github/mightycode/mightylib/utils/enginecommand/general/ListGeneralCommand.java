@@ -45,8 +45,8 @@ public abstract class ListGeneralCommand {
         return Identifier.of(Identifier.ENGINE_NAMESPACE, path);
     }
 
-    // The scenes of the context targeted by the commands (see Engine.commandWindow)
+    // The scenes of the context targeted by the commands (see Engine.targetWindow)
     static SceneManager targetScenes() {
-        return Views.engine().commandContext().getSceneManager();
+        return Views.engine().targetContext().getSceneManager();
     }
 }

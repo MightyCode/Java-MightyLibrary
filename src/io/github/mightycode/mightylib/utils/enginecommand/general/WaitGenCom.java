@@ -67,7 +67,7 @@ public class WaitGenCom extends BaseCommand {
     private CommandResult waitLoaded(long timeout) {
         // Of the window targeted when the wait starts
         Engine engine = Views.engine();
-        Context context = engine.commandContext();
+        Context context = engine.targetContext();
         SceneManager sceneManager = context.getSceneManager();
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
         // A simulated input of this tick is seen by the next tick, whose scene can then ask a change,
