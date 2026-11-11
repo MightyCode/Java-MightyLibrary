@@ -28,7 +28,7 @@ public abstract class MightyMath {
 	public static Vector3f OnesVector() { return new Vector3f(1); }
 	public static Vector3f ZerosVector () { return new Vector3f(0); }
 
-	public static float PI_FLOAT = (float)(Math.PI);
+	public static final float PI_FLOAT = (float)(Math.PI);
 
 	/**
 	 * Calculate the position of a number in the first interval to transpose this number in an second interval.

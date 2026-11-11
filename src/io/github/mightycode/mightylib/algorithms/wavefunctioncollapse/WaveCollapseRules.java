@@ -12,7 +12,7 @@ public class WaveCollapseRules extends DataType {
     private JSONFile data;
 
     public static class Rule {
-        public static Vector2i INITIAL_POS = new Vector2i(0, 0);
+        public static final Vector2i INITIAL_POS = new Vector2i(0, 0);
         private final int id;
         private final List<Vector2i> directions;
         
