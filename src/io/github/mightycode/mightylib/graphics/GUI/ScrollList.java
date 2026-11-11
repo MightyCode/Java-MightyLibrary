@@ -242,8 +242,13 @@ public class ScrollList {
                 moveSelection(-1);
         }
 
-        // The mouse moving (or the wheel turning under it) makes the hover a choice again
-        if (mouseMoved || wheeled)
+        // A click on a row is a choice even if the mouse did not move since the keyboard did
+        boolean clicked = false;
+        for (InputAction action : activationActions)
+            clicked |= inputManager.isInput(action, getTrigger());
+
+        // The mouse moving, the wheel turning under it or a click make the hover a choice again
+        if (mouseMoved || wheeled || clicked)
             hoverSuppressed = false;
 
         // The rows show what the hover is tested against
@@ -260,8 +265,8 @@ public class ScrollList {
         }
         hovered = newHovered;
 
-        // The mouse moving over a row selects it
-        if (mouseMoved && hovered >= 0 && selection.select(hovered))
+        // The mouse moving over a row, or clicking it, selects it
+        if ((mouseMoved || clicked) && hovered >= 0 && selection.select(hovered))
             needRefill = true;
 
         if (needRefill)
