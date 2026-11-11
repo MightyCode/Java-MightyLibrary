@@ -1,4 +1,7 @@
 package io.github.mightycode.mightylib.algorithms.graph;
+
+import io.github.mightycode.mightylib.algorithms.EVerbosity;
+
 import java.util.*;
 
 /**
@@ -22,7 +25,7 @@ public class ReducedGraph extends ListNode<NodeIntersection> {
         subNodeGraph = new ReducedGraphSubNode();
     }
 
-    protected void init(Graph graph) {
+    protected void init(Graph graph, EVerbosity verbosity) {
         subNodeGraph.clear();
 
         Queue<Node> nodeToCheck = new LinkedList<>();
@@ -101,7 +104,7 @@ public class ReducedGraph extends ListNode<NodeIntersection> {
             }
         }
 
-        System.out.println((size() + total / 2) + " / " + graph.size());
+        verbosity.print(EVerbosity.ESSENTIAL, "Reduced graph : " + (size() + total / 2) + " / " + graph.size());
     }
 
     /**
@@ -110,8 +113,12 @@ public class ReducedGraph extends ListNode<NodeIntersection> {
      * @return constructed reduced graph.
      */
     public static ReducedGraph constructFrom(Graph graph) {
+        return constructFrom(graph, EVerbosity.NONE);
+    }
+
+    public static ReducedGraph constructFrom(Graph graph, EVerbosity verbosity) {
         ReducedGraph reducedGraph = new ReducedGraph();
-        reducedGraph.init(graph);
+        reducedGraph.init(graph, verbosity);
         return reducedGraph;
     }
 

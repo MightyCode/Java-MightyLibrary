@@ -127,7 +127,9 @@ public class MenuScene extends Scene {
         list.add(new SceneEntry("RopeSimulation2D", RopeSimulation2D::new));
         list.add(new SceneEntry("PlatformerBox2D", PlatformerBox2D::new));
         list.add(new SceneEntry("Box2D", Box2D::new));
-        list.add(new SceneEntry("CollisionSystem", CollisionSystem::new));
+        list.add(new SceneEntry("CollisionGridScene2D", CollisionGridScene2D::new));
+        list.add(new SceneEntry("PathfindingScene2D", PathfindingScene2D::new));
+        list.add(new SceneEntry("GUIWidgetsScene", GUIWidgetsScene::new));
         list.add(new SceneEntry("Scene3D", Scene3D::new));
         list.add(new SceneEntry("Scene3DBis", Scene3DBis::new));
         list.add(new SceneEntry("TerrainGeneration3D", TerrainGeneration3D::new));

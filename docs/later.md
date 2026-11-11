@@ -32,6 +32,10 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 
 ## Bugs relevés en passant (non corrigés)
 - **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (15) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (6), `VO_VOLATILE_INCREMENT` (2, aussi Error Prone `NonAtomicVolatileUpdate` : `DataType`, `ResourceWatcher`) ; `NP_*` (`FontFile.load`, `ExecGenCom.run`, `EngineConfig.ParseLogsShown`) ; Error Prone `MissingCasesInEnumSwitch` (23), `EmptyCatch` (5), `FutureReturnValueIgnored` (3), `ReferenceEquality` (41), `EnumOrdinal` (20). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
+- `Slider.setMaxPrecision` ne fait rien : `maxPrecision` vaut -1 au départ et la méthode n'écrit que si elle est déjà `>= 0` (condition à revoir).
+- `StrSelector` / `EnumSelector` : position et taille écrites en dur (coin haut droit de la fenêtre), donc deux sélecteurs se superposent et `StrSelector` n'a aucune démo ; à rendre configurables (comme les sliders).
+- `Collision2DGrid.init` journalise sans le préfixe `--` du moteur.
+- Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `SoundListener` (son positionnel), `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
 - `DataFolder.getFileContent` concatène les lignes lues sans saut de ligne (`Scanner.nextLine`).
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
