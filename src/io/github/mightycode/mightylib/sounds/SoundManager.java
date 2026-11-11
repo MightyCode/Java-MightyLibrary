@@ -11,6 +11,7 @@ import org.lwjgl.openal.ALCCapabilities;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static java.sql.Types.NULL;
@@ -73,7 +74,7 @@ public class SoundManager {
 
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
         SoundSourceCreationInfo safeInfo = creationInfo.copy();
-        SoundSource source = new SoundSource(resources, safeInfo.gainNode, safeInfo.owned);
+        SoundSource source = new SoundSource(resources, safeInfo.name, safeInfo.gainNode, safeInfo.owned);
         safeInfo.startTimer();
 
         safeInfo.managerId = soundsSource.size();
@@ -142,6 +143,20 @@ public class SoundManager {
         }
     }
 
+
+    // Read-only view, for inspection (command sounds)
+    public List<SoundSource> getSources(){
+        return Collections.unmodifiableList(soundsSource);
+    }
+
+    public List<KeyTreeNode<String, Float>> getGainNodes(){
+        return gainTree.nodes();
+    }
+
+    // Product of the values of the node and its ancestors (1 for an unknown node)
+    public float getNodeGain(String name){
+        return calculateGain(name);
+    }
 
     private float calculateGain(String name){
         float gain = 1.0f;

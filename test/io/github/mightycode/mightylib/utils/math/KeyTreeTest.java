@@ -65,6 +65,16 @@ class KeyTreeTest {
     }
 
     @Test
+    void nodesAreListedInTheOrderTheyWereAddedAndCannotBeChanged() {
+        KeyTreeNode<String, Integer> root = tree.addNewNode(null, "root", 1);
+        KeyTreeNode<String, Integer> child = tree.addNewNode("root", "child", 2);
+        tree.addNewNode("nobody", "orphan", 3);
+
+        assertEquals(java.util.List.of(root, child), tree.nodes());
+        assertThrows(UnsupportedOperationException.class, () -> tree.nodes().clear());
+    }
+
+    @Test
     void printingDoesNotFail() {
         tree.addNewNode(null, "root", 1);
         tree.addNewNode("root", "child", 2);
