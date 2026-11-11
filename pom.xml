@@ -14,6 +14,8 @@
         <lwjgl.version>3.3.6</lwjgl.version>
         <joml.version>1.10.3</joml.version>
         <json.version>20231013</json.version>
+        <errorprone.version>2.52.0</errorprone.version>
+        <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -41,6 +43,77 @@
             <properties>
                 <lwjgl.natives>natives-windows</lwjgl.natives>
             </properties>
+        </profile>
+        <!-- Static analysis, never part of the normal build: mvn -P analyse process-classes (see tools/analyse.py).
+             Error Prone runs inside javac (forked: JDK 17+ needs the add-exports and add-opens options below),
+             SpotBugs reads the bytecode afterwards. All findings are reported, none fails the build. -->
+        <profile>
+            <id>analyse</id>
+            <build>
+                <!-- Own output folder: the game keeps using target/classes, and a recompilation is always forced -->
+                <directory>${project.basedir}/target/static-analysis</directory>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.13.0</version>
+                        <configuration>
+                            <fork>true</fork>
+                            <showWarnings>true</showWarnings>
+                            <compilerArgs>
+                                <arg>-XDcompilePolicy=simple</arg>
+                                <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
+                                <arg>--should-stop=ifError=FLOW</arg>
+                                <!-- Off: Javadoc and parentheses style (the project writes little Javadoc, and the
+                                     IntelliJ analyzer already covers the style rules of bonnes-pratiques.md) -->
+                                <arg>-Xplugin:ErrorProne -XepAllErrorsAsWarnings -XepDisableWarningsInGeneratedCode -Xep:UnnecessaryParentheses:OFF -Xep:MissingSummary:OFF -Xep:EmptyBlockTag:OFF -Xep:InvalidLink:OFF</arg>
+                                <arg>-Xlint:unchecked,deprecation</arg>
+                                <arg>-Xmaxwarns</arg>
+                                <arg>100000</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                                <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                                <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                            </compilerArgs>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>com.google.errorprone</groupId>
+                                    <artifactId>error_prone_core</artifactId>
+                                    <version>${errorprone.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${spotbugs.plugin.version}</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Medium</threshold>
+                            <xmlOutput>true</xmlOutput>
+                            <failOnError>false</failOnError>
+                            <excludeFilterFile>tools/spotbugs-exclude.xml</excludeFilterFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>spotbugs-analysis</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>spotbugs</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 
