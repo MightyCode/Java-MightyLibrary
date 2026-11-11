@@ -50,7 +50,7 @@ Appliqué par `InputManager.postUpdate()` au tick suivant, vu par tout ce tick (
 - Délai par réponse différée : 30 s (`exec` 300 s). Script récursif refusé. Script long avec `scenario.py` : augmenter `--timeout` (`python tools/scenario.py --timeout 60 "?exec tools/scripts/x.txt"`).
 
 ## `scenario.py` (lancer et vérifier le jeu, Claude)
-Une fenêtre s'ouvre chez l'utilisateur (sur l'écran secondaire, `--monitor` vide = choix du projet) : le prévenir. `--platform x11|wayland` impose la plateforme GLFW (Linux : tester ce qui touche aux fenêtres sous les deux ; sous Wayland, `--monitor` est sans effet). Les erreurs GLFW (`[LWJGL] … error`) comptent comme problèmes.
+Une fenêtre s'ouvre chez l'utilisateur (sur l'écran secondaire, `--monitor` vide = choix du projet) : le prévenir. `--platform x11|wayland` impose la plateforme GLFW (Linux : tester ce qui touche aux fenêtres sous les deux ; sous Wayland, `--monitor` est sans effet). Les erreurs GLFW (`[LWJGL] … error`) et OpenAL (`Error when …`, `SoundManager.DisplayError`) comptent comme problèmes.
 ```bash
 python tools/scenario.py "scene Scene2D" wait-loaded "?gl summary" "input ESCAPE" sleep:0.5 scene
 ```
