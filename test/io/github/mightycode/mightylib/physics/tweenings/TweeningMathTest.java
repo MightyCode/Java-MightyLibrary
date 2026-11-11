@@ -177,6 +177,15 @@ class TweeningMathTest {
     }
 
     @Test
+    void elasticWithAnAmplitudeAboveTheChangeStillStartsEndsAndCrossesTheMiddleRight() {
+        for (ETweeningBehaviour behaviour : ETweeningBehaviour.values()) {
+            assertEquals(B, Tweening.Evaluate(ETweeningType.Elastic, behaviour, 0f, B, C, D, 30f, 1.2f), EPS, behaviour.toString());
+            assertEquals(B + C, Tweening.Evaluate(ETweeningType.Elastic, behaviour, D, B, C, D, 30f, 1.2f), EPS, behaviour.toString());
+        }
+        assertEquals(B + C / 2, Tweening.Evaluate(ETweeningType.Elastic, ETweeningBehaviour.InOut, D / 2, B, C, D, 30f, 1.2f), EPS);
+    }
+
+    @Test
     void elasticArgumentsChangeTheCurve() {
         float byDefault = Tweening.Evaluate(ETweeningType.Elastic, ETweeningBehaviour.In, 3f, 0f, 1f, D);
         float custom = Tweening.Evaluate(ETweeningType.Elastic, ETweeningBehaviour.In, 3f, 0f, 1f, D, 2f, 2f);
