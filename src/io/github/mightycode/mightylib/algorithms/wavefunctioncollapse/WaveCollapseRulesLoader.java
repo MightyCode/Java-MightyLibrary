@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.algorithms.wavefunctioncollapse;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.data.JSONFile;
 
 import java.util.Map;
@@ -23,7 +22,7 @@ public class WaveCollapseRulesLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, Resources.FOLDER);
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override

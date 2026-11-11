@@ -13,7 +13,8 @@ import static org.junit.jupiter.api.Assertions.*;
 // The loaders are given at the construction of Resources, then fixed
 class ResourceLoadersTest {
     private static Resources create(List<ResourceLoader> projectLoaders) {
-        return new Resources(new Resources.AllResourcesMethod(), 1, new ShaderManager(), projectLoaders);
+        return new Resources(new Resources.AllResourcesMethod(), 1, Resources.DEFAULT_FOLDER,
+                new ShaderManager(Resources.DEFAULT_FOLDER), projectLoaders);
     }
 
     @Test

@@ -22,7 +22,7 @@ public class AnimationDataLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, Resources.FOLDER);
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override

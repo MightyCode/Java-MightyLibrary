@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static io.github.mightycode.mightylib.graphics.shader.ShaderManager.SHADER_INFO_PATH;
 
 public class ShaderLoader extends ResourceLoader {
 
@@ -50,7 +49,7 @@ public class ShaderLoader extends ResourceLoader {
         // Load first the library files
         JSONObject libraryObject = shadersInfo.getJSONObject("library");
         for (String key : libraryObject.keySet()) {
-            String content = FileMethods.readFileAsString(SHADER_INFO_PATH + shaderManager.getVersion() + "/" + libraryObject.getString(key));
+            String content = FileMethods.readFileAsString(shaderManager.versionFolder() + libraryObject.getString(key));
             shaderLibrary.put(key, content);
         }
 
@@ -109,13 +108,13 @@ public class ShaderLoader extends ResourceLoader {
 
         boolean useGeometryShader = shader.numberSource() == 3;
 
-        String vertexShaderPath = SHADER_INFO_PATH + shaderManager.getVersion() + "/" + shader.getSourcePath(0);
-        String fragmentShaderPath = SHADER_INFO_PATH + shaderManager.getVersion() + "/" + shader.getSourcePath(1);
+        String vertexShaderPath = shaderManager.versionFolder() + shader.getSourcePath(0);
+        String fragmentShaderPath = shaderManager.versionFolder() + shader.getSourcePath(1);
 
         String geometryShaderPath = null;
         if (useGeometryShader) {
             shader.activateGeometryShader();
-            geometryShaderPath = SHADER_INFO_PATH + shaderManager.getVersion() + "/" + shader.getSourcePath(2);
+            geometryShaderPath = shaderManager.versionFolder() + shader.getSourcePath(2);
         }
 
         // Worker thread: files and preprocessing only, the compilation is made by the load (main thread, in steps).

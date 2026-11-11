@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.resources.data;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -25,7 +24,7 @@ public class CSVLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, Resources.FOLDER);
+        exploreResourcesFile(data, resources().folder());
     }
 
     public String filterFile(String path) {

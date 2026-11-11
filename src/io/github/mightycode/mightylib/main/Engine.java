@@ -206,12 +206,13 @@ public final class Engine implements IView {
         GenDeleteResources.Init();
 
         System.out.println("--Create ShaderManager");
-        shaderManager = new ShaderManager();
+        shaderManager = new ShaderManager(config.getResourcesFolder());
         shaderManager.init(config.getShaderVersion());
 
         System.out.println("--Create Resources");
         IProjectLoading projectLoading = config.getProjectLoading();
-        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()), shaderManager,
+        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
+                config.getResourcesFolder(), shaderManager,
                 projectLoading != null ? projectLoading.loaders() : List.of());
         resources.setStrict(config.isStrictResources());
         if (config.isStrictResources())

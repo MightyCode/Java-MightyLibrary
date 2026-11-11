@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.resources.FileMethods;
+import io.github.mightycode.mightylib.resources.Resources;
 import org.json.JSONObject;
 
 
@@ -12,7 +13,6 @@ import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
  * The cameras belong to the views (IView), not to this class.
  */
 public class ShaderManager {
-    public static final String SHADER_INFO_PATH = "resources/shaders/";
     public static final String LIST_SHADER_FILE_NAME = "shaders.json";
 
     public static final String GENERIC_PROJECTION_FIELD_NAME = "projection";
@@ -20,11 +20,14 @@ public class ShaderManager {
     public static final String GENERIC_MODEL_FIELD_NAME = "model";
     public static final String GENERIC_COLOR_FIELD_NAME = "color";
 
+    // Folder of the shaders, in the folder of the resources
+    private final String shadersFolder;
     private String version;
 
     private JSONObject shadersInfo;
 
-    public ShaderManager() {
+    public ShaderManager(String resourcesFolder) {
+        shadersFolder = Resources.NormalizeFolder(resourcesFolder) + "shaders/";
         version = "330";
     }
 
@@ -46,13 +49,18 @@ public class ShaderManager {
             System.out.println("--Version of shader GLSL 330");
         }
 
-        String shaderListPath = SHADER_INFO_PATH + getVersion() + "/" + ShaderManager.LIST_SHADER_FILE_NAME;
+        String shaderListPath = versionFolder() + LIST_SHADER_FILE_NAME;
 
         shadersInfo = new JSONObject(FileMethods.readFileAsString(shaderListPath));
     }
 
     public String getVersion(){
         return version;
+    }
+
+    // Folder of the shaders of the GLSL version, ending with '/'
+    public String versionFolder() {
+        return shadersFolder + version + "/";
     }
 
     public JSONObject getShadersInfo() {

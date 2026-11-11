@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.TextFormat;
-import io.github.mightycode.mightylib.resources.Resources;
 import org.joml.Vector2i;
 
 import java.util.Map;
@@ -23,7 +22,7 @@ public class TileSetLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, Resources.FOLDER + "tileset");
+        exploreResourcesFile(data, resources().folder() + "tileset");
     }
 
     @Override

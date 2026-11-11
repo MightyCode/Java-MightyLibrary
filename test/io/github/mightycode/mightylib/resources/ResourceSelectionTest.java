@@ -9,7 +9,6 @@ import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandParser;
 import org.json.JSONObject;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -29,20 +28,17 @@ class ResourceSelectionTest {
     @TempDir
     Path folder;
 
-    private String previousFolder;
     private Resources resources;
     private FakeData grass, sand, stone;
 
     @BeforeEach
     void setUp() throws IOException {
         MainThreadTestAccess.setCurrentAsMain();
-        previousFolder = Resources.FOLDER;
-        Resources.FOLDER = folder.toString().replace('\\', '/') + "/";
         Files.createDirectories(folder.resolve("batchs"));
 
         FakeLoader fakeLoader = new FakeLoader();
         JSONLoader jsonLoader = new JSONLoader();
-        resources = new Resources(new Resources.BatchResourcesMethod("unused"), 2,
+        resources = new Resources(new Resources.BatchResourcesMethod("unused"), 2, folder.toString(),
                 Arrays.asList(fakeLoader, jsonLoader, new BatchLoader(jsonLoader)));
 
         grass = new FakeData(THREAD_CONTEXT, "grass");
@@ -59,11 +55,6 @@ class ResourceSelectionTest {
         resources.loadAllOfType(BatchResources.class);
         resources.loadBatch("level");
         pump();
-    }
-
-    @AfterEach
-    void tearDown() {
-        Resources.FOLDER = previousFolder;
     }
 
     private void pump() throws IOException {

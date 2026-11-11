@@ -27,7 +27,7 @@ import java.util.function.IntConsumer;
  * then loaded again while it was read ends in the wanted state without any special case.
  */
 public class Resources {
-    public static String FOLDER = "resources/";
+    public static final String DEFAULT_FOLDER = "resources/";
 
     // Reference added by loadAllOfType (AllResourcesMethod, batch descriptions)
     private static final String ALL_REFERENCE = "all";
@@ -49,6 +49,7 @@ public class Resources {
 
     // Fixed at the construction: the mandatory loaders, then those of the project, one per type of data
     private final List<ResourceLoader> loaders;
+    private final String folder;
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
@@ -72,15 +73,17 @@ public class Resources {
     /**
      * The mandatory loaders are created (the shaders come from the shader manager: GLSL version and list), then those
      * of the project are added after them (IProjectLoading.loaders). The list can't change afterwards.
+     * The loaders read their files in the given folder (EngineConfig.setResourcesFolder).
      */
-    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ShaderManager shaderManager,
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, ShaderManager shaderManager,
                      List<ResourceLoader> projectLoaders) {
-        this(loadingMethod, maxNumberOfWorkers, withMandatoryLoaders(shaderManager, projectLoaders));
+        this(loadingMethod, maxNumberOfWorkers, folder, withMandatoryLoaders(shaderManager, projectLoaders));
     }
 
     // Only the given loaders are used (no GL loader): tests
-    Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
+    Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
+        this.folder = NormalizeFolder(folder);
         resources = new ConcurrentHashMap<>();
         this.loaders = checkedLoaders(loaders);
 
@@ -121,6 +124,20 @@ public class Resources {
     // The loaders, in their order (mandatory then project); unmodifiable
     List<ResourceLoader> loaders() {
         return loaders;
+    }
+
+    // Separators turned to '/', with a final '/': loaders concatenate the paths
+    public static String NormalizeFolder(String folder) {
+        String normalized = Objects.requireNonNull(folder, "folder").replace('\\', '/');
+        return normalized.endsWith("/") ? normalized : normalized + "/";
+    }
+
+    /**
+     * Folder read by the loaders, ending with '/' (default "resources/"). Final and set by the constructor: safe to read
+     * from any thread (workers, resource watcher).
+     */
+    public String folder() {
+        return folder;
     }
 
     public void setStrict(boolean strict) {
