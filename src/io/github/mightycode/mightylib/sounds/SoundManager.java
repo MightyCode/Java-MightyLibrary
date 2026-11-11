@@ -191,6 +191,9 @@ public class SoundManager {
         for(SoundSource sounds : soundsSource){
             sounds.unload();
         }
+        // Deleted sources: the buffers deleted afterwards must not be detached from them (AL_INVALID_NAME)
+        soundsSource.clear();
+        awaitedNewSounds.clear();
 
         return true;
     }

@@ -476,11 +476,12 @@ public final class Engine implements IView {
             debugServer = null;
         }
 
-        if (soundManager != null)
-            soundManager.unloadSoundSource();
-
         // What every window shows, then the resources, while the OpenGL contexts exist
         contexts.unloadViews();
+
+        // After the scenes (their unload can still stop their sources), before the sound buffers
+        if (soundManager != null)
+            soundManager.unloadSoundSource();
 
         WindowContext mainWindow = contexts.getMainWindow();
         if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated()) {
