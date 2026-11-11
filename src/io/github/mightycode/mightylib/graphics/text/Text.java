@@ -25,6 +25,8 @@ public class Text extends Renderer implements Cloneable {
     // Version of the font the characters were placed with (a reloaded font file changes them)
     private int builtWithVersion;
     private String text;
+    // Widest line, 0 = no wrapping (setMaxWidth)
+    private float maxWidth;
 
     private final Vector2f leftUpPosition;
     // Text and padding : what the reference and size() are about
@@ -108,6 +110,26 @@ public class Text extends Renderer implements Cloneable {
         this.computeRightUpPosition();
 
         return this;
+    }
+
+    /**
+     * Wraps the text at the spaces so that no line is wider than this (padding not counted; a word longer than that
+     * is cut), the line feeds of the text are kept. text() is still the text given, the characters keep their index
+     * (getPositionOfChar). 0: no wrapping, the default.
+     */
+    public Text setMaxWidth(float maxWidth) {
+        maxWidth = Math.max(0, maxWidth);
+        if (maxWidth == this.maxWidth)
+            return this;
+
+        this.maxWidth = maxWidth;
+        computeRightUpPosition();
+
+        return this;
+    }
+
+    public float getMaxWidth() {
+        return maxWidth;
     }
 
     public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars, String breakLineFirstChar){
@@ -277,13 +299,16 @@ public class Text extends Renderer implements Cloneable {
         leftUpPosition.x = position.x;
         leftUpPosition.y = position.y;
 
-        int charNumber = text.replace("\n", "").length();
+        // The line feeds added by the wrapping are not characters: the index of each one is the one of text
+        String laidOut = TextWrap.Wrap(text, maxWidth, this::measureWidth);
+
+        int charNumber = laidOut.replace("\n", "").length();
 
         int[] indices = new int[charNumber * 6];
         float[] texturePosition = new float[charNumber * 8];
         charPositions = new float[charNumber * 8];
 
-        String[] lines = text.split("\n");
+        String[] lines = laidOut.split("\n");
         float[] linesSize = new float[lines.length];
 
         int charCount = 0;
@@ -298,7 +323,7 @@ public class Text extends Renderer implements Cloneable {
         Vector2f textReference = new Vector2f();
         float lineAlignmentOffset = 0;
 
-        rectangleSize.set(usedFont().computeSize(text, fontSize));
+        rectangleSize.set(usedFont().computeSize(laidOut, fontSize));
         float textWidth = rectangleSize.x;
         rectangleSize.add(padding.x + padding.z, padding.y + padding.w);
 
@@ -440,6 +465,7 @@ public class Text extends Renderer implements Cloneable {
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
+                .setMaxWidth(maxWidth)
                 .setText(this.text);
 
         text.setReferenceCamera(referenceCamera);
@@ -456,6 +482,7 @@ public class Text extends Renderer implements Cloneable {
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
+                .setMaxWidth(maxWidth)
                 .setText(this.text);
 
         copy.setReferenceCamera(referenceCamera);
