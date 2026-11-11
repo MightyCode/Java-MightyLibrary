@@ -88,3 +88,45 @@ Décisions prises :
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml scene-menu`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+
+### Fait
+Les étapes 1 à 7, un commit chacune sur la branche `scene-menu` (modèle de la discussion : Sonnet 5.5 partout, sur demande de l'utilisateur, y compris pour les étapes 1 à 4 recommandées en Opus).
+1. `InputFocus` (pile de détenteurs par fenêtre) remplace `setCaptured` ; la console passe par lui et rend le focus aussitôt (plus de tick de délai).
+2. `Commands.execute(ligne)` et `complete(début)` appelés par le code d'une vue visent la fenêtre de cette vue (`Commands.getCallerWindow`, `Engine.targetWindow`/`targetContext`) ; les commandes générales lisent leur cible par là.
+3. `TextWrap` et `Text.setMaxWidth`.
+4. `TextField` (`TextFieldModel` sans GL, `console/LineEditKeys` partagé avec `ConsoleInput`), scène `TextFieldScene2D`.
+5. `ScrollList` : `ListSelection` sans GL, flèches, `getSelected`/`setSelected`/`getActive`/`moveSelection`.
+6. `MenuScene` reconstruit, `SceneChoices` sans GL, `menuScenes.json`, batch `menu`.
+7. Docs (`architecture.md`, `debug-tools.md`, `decisions.md`, `later.md`, `CLAUDE.md`).
+
+### Écarts au plan, et pourquoi
+- **Clic qui rend le focus** : `InputFocus.releaseForClick` (non prévu). Sans lui, le clic dehors qui retire le focus du champ était effacé pour la scène : cliquer sur une ligne de la liste demandait deux clics. L'appui de la souris reste pour la scène dans ce cas seulement (les touches et le texte sont toujours effacés).
+- **Appui effacé pour les actions du moteur aussi** : l'effacement des appuis du tick vaut pour toutes les actions, `mightylib` comprises (plus simple, la console lit son action avant tout changement).
+- **Navigation du menu sans `GUIList`** : `GUIList` ne sait pas déléguer les flèches à un composant qui en a l'usage (liste, curseur du champ) ; `MenuScene` gère trois zones (champ, liste, Quit) elle-même. Noté dans `later.md` (focus de la bibliothèque GUI). Le champ rend aussi le focus sur Haut/Bas (`TextField.getLeftWith`) pour que Bas passe à la liste.
+- **Entrée dans le champ** lance la première scène filtrée ; le filtre remet la sélection sur la première ligne (`setItems` garde pourtant la sélection si l'élément existe encore, utile hors filtre).
+- Un cas non couvert : deux champs de texte (un clic sur B pendant que A a le focus : l'ordre de mise à jour décide). Noté dans `later.md`.
+- `WindowContext` accepte une fenêtre `null` (tests) pour créer des fenêtres factices (`TestWindows`).
+- `MouseManager.getRawVirtualPos` ajouté (le champ place son curseur de souris dans l'espace virtuel pendant qu'il a le focus).
+- Les descriptions des scènes du menu sont écrites d'après les noms et le code survolé : à relire.
+
+### Question restante (étape 6)
+`Commands.execute` depuis le code marche en release sans commandes : `Engine.setup` crée toujours `Commands` et la source `api` a le niveau `DEV` ; `setMaxCommandAccess(null)` ne borne que la session. Vérifié en lisant le code (un build release ne démarre pas le serveur de debug, `scenario.py` ne peut pas le piloter).
+
+### Vérifié, et comment
+- `mvn -o -q test` : 864 tests, tous passent (nouveaux : `InputFocusTest`, `TextWrapTest`, `TextFieldModelTest`, `ListSelectionTest`, `SceneChoicesTest`, complétés : `MouseRawTest`, `CommandsTest`).
+- Console : ouverture/fermeture par `²`, Échap, détachement (`scenario.py`), le jeu ne voit rien pendant la saisie.
+- `TextFieldScene2D` : clic, saisie, Entrée (soumet, la scène ne la voit pas), Échap (rend le focus sans quitter), console ouverte par-dessus le champ (le texte va à la console, le focus revient au champ), clic dehors ; `leakcheck` : aucune fuite.
+- `TextPaddingScene` : texte coupé aux espaces, mot long coupé, saut de ligne gardé.
+- `ScrollList` sur l'ancien menu (touche S) : sélection, défilement jusqu'à la ligne 12.
+- `MenuScene` : filtre (`pla`), Entrée lance la première, S/S/Entrée lance la troisième, capture d'écran de la mise en page, `leakcheck MenuScene 2 TextFieldScene2D` : aucune fuite.
+- `MultiWindowScene` : les commandes de debug (`windows`, `input`, `scene`) marchent toujours.
+
+### Non vérifié (à faire à la main)
+- Souris : survol d'une ligne (description du panneau, surbrillance), clic sur une ligne, molette, clic dans le champ puis clic sur une ligne (un seul clic doit lancer), clic sur Quit.
+- Menu : saisie réelle au clavier (accents, Ctrl+A/C/V, Maj+flèches), flèches W/S et Entrée, Échap dans le champ (ne quitte pas) puis hors du champ (quitte), console `²` ouverte pendant la saisie puis fermée.
+- `MultiWindowScene` : une commande lancée par le code de la seconde fenêtre agit sur elle (testé en unitaire seulement, pas en jeu : aucune scène de la démo ne lance de commande dans une seconde fenêtre).
+- `GUIWidgetsScene` : non modifiée, rien à voir normalement.
+- Le menu d'un build release (accès aux commandes `none`).
+- Erreur en rouge du panneau : pas de moyen de faire échouer `scene <nom>` depuis le menu.
