@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.inputs.text.ClickCounter;
 import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
 import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.main.DisplaySettings;

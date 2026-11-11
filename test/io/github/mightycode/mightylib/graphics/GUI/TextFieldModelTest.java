@@ -57,12 +57,26 @@ class TextFieldModelTest {
         return tick;
     }
 
+    // Time of the clicks: a second apart by default, never a double click
+    private long now;
+
     private TextFieldModel.Tick click(float mouseX) {
+        return clickAfter(mouseX, 1_000_000_000L);
+    }
+
+    // A click soon after the previous one: a double or triple click at the same place
+    private TextFieldModel.Tick quickClick(float mouseX) {
+        return clickAfter(mouseX, 100_000_000L);
+    }
+
+    private TextFieldModel.Tick clickAfter(float mouseX, long nanoseconds) {
+        now += nanoseconds;
         TextFieldModel.Tick tick = tick("");
         tick.mousePressed = true;
         tick.mouseHeld = true;
         tick.mouseInside = true;
         tick.mouseX = mouseX;
+        tick.nanoTime = now;
         return tick;
     }
 
@@ -306,6 +320,78 @@ class TextFieldModelTest {
         shifted.shift = true;
         model.update(focus, shifted);
         assertEquals("bcd", model.editor().selectedText());
+    }
+
+    @Test
+    void doubleClickSelectsTheWordAndTripleClickTheLine() {
+        focused();
+        model.update(focus, tick("one two three"));
+
+        // In "two" (characters 4 to 7, 10 pixels each)
+        model.update(focus, click(55));
+        model.update(focus, quickClick(55));
+        assertEquals("two", model.editor().selectedText());
+
+        model.update(focus, quickClick(55));
+        assertEquals("one two three", model.editor().selectedText());
+
+        // A fourth click starts again: the cursor only
+        model.update(focus, quickClick(55));
+        assertFalse(model.editor().hasSelection());
+    }
+
+    @Test
+    void doubleClickOnAFieldWithoutFocusTakesItAndSelectsTheWord() {
+        model.setText("one two");
+        model.update(focus, click(15));
+        model.update(focus, quickClick(15));
+
+        assertTrue(model.hasFocus(focus));
+        assertEquals("one", model.editor().selectedText());
+    }
+
+    @Test
+    void theMouseHeldAfterADoubleClickDoesNotDragTheSelection() {
+        focused();
+        model.update(focus, tick("one two"));
+        model.update(focus, click(15));
+        model.update(focus, quickClick(15));
+
+        TextFieldModel.Tick held = tick("");
+        held.mouseHeld = true;
+        held.mouseInside = true;
+        held.mouseX = 60;
+        model.update(focus, held);
+        assertEquals("one", model.editor().selectedText());
+    }
+
+    @Test
+    void clicksFarApartOrSlowAreSingleClicks() {
+        focused();
+        model.update(focus, tick("one two"));
+        model.update(focus, click(15));
+        model.update(focus, quickClick(55));
+        assertFalse(model.editor().hasSelection());
+
+        model.update(focus, click(55));
+        assertFalse(model.editor().hasSelection());
+    }
+
+    @Test
+    void aClickOutsideBetweenTwoClicksInTheFieldIsNotADoubleClick() {
+        focused();
+        model.update(focus, tick("one two"));
+        model.update(focus, click(15));
+
+        TextFieldModel.Tick outside = quickClick(15);
+        outside.mouseInside = false;
+        model.update(focus, outside);
+        assertFalse(model.hasFocus(focus));
+
+        // Back in the field at the same place, soon after: a single click, the cursor only
+        model.update(focus, quickClick(15));
+        assertTrue(model.hasFocus(focus));
+        assertFalse(model.editor().hasSelection());
     }
 
     @Test

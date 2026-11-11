@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.inputs.text;
 
 import org.junit.jupiter.api.Test;
 
@@ -24,5 +24,13 @@ class ClickCounterTest {
         assertEquals(1, counter.press(10, 10, 500 * MS));
         assertEquals(1, counter.press(15, 10, 600 * MS));
         assertEquals(2, counter.press(15, 6, 700 * MS));
+    }
+
+    @Test
+    void resetEndsTheSeries() {
+        ClickCounter counter = new ClickCounter();
+        counter.press(10, 10, 0);
+        counter.reset();
+        assertEquals(1, counter.press(10, 10, 100 * MS));
     }
 }
