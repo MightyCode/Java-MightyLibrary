@@ -70,7 +70,7 @@ public final class InputFocus {
 
     /** True when the owner is at the top: the one to read the raw inputs. */
     public boolean isCurrent(Object owner) {
-        return owner != null && owners.size() > 0 && owners.get(owners.size() - 1) == owner;
+        return owner != null && !owners.isEmpty() && owners.get(owners.size() - 1) == owner;
     }
 
     /** True when the owner has a place in the stack, at the top or not. */
