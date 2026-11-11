@@ -70,6 +70,11 @@ python tools/scenario.py "scene Scene2D" wait-loaded "?gl summary" "input ESCAPE
 - Sortie : nombre de constats par motif et par zone (`lib`/`demo`), les motifs des catégories à risque de `bonnes-pratiques.md` (point 11) en premier (`*`). `--details MOTIF…` : `fichier:ligne | outil motif | message` (préfixe du nom) ; `--details-all` ; `--no-run` relit le dernier résultat.
 - Filtres : `tools/spotbugs-exclude.xml` (SpotBugs) et les `-Xep:Nom:OFF` du profil dans `pom.xml` (Error Prone) ; chaque exclusion dit pourquoi. Première exécution : sans `-o` pour télécharger les plugins.
 
+## Couverture de code (`tools/coverage.py`)
+`python tools/coverage.py` : lance `mvn -P coverage test` (JaCoCo, profil Maven hors build normal, environ 20 s) et affiche lignes et branches couvertes par paquet. `--classes PARTIE` (partie du nom de paquet) : détail par classe ; `--lines CLASSE` : numéros des lignes non couvertes ; `--no-run` relit le dernier résultat ; rapport HTML dans `target/site/jacoco/index.html`.
+- Seule la logique testée sans GL est couverte : lire les chiffres **par paquet** (rendu, scènes et démo sont à 0 % par construction), jamais comme un pourcentage global à atteindre.
+- Usage : repérer la logique pure sans test (algorithmes, `physics`, `utils/math`, `resources/map`) et les branches d'erreur non exercées d'un code déjà testé.
+
 ## Profilage
 - **JFR** : événements `mightylib.Frame`/`mightylib.Tick`. `jcmd <pid> JFR.start duration=30s filename=rec.jfr` (pid : `jcmd -l`) ou `-XX:StartFlightRecording=…` ; `jfr print --events mightylib.Frame rec.jfr`, ou JMC/VisualVM.
 - **GPU** : RenderDoc ou Nsight Graphics (OpenGL 3.3 core).
