@@ -104,3 +104,27 @@ Pas de nouvelle scène : changement d'API sans nouvelle fonctionnalité. Adapter
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml champs-publics`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+**Fait** (un commit par étape) :
+1. Loaders figés : `IProjectLoading.loaders()` lu par `Engine` avant de créer `Resources` ; `List.copyOf(obligatoires + projet)`, doublon de type → `IllegalArgumentException` ; `addCategoryAndLoader` supprimé ; `ResourceArguments` lit `loaders()`.
+2. Dossier d'instance : `Resources.folder()` (`final`, normalisé), `EngineConfig.setResourcesFolder`, `Resources.DEFAULT_FOLDER` ; loaders, `ResourceWatcher`, `TextureDataLoader` (liste calculée dans `create`), arbre des gains (chemin complet passé par `SoundManager`), `FallbackScene` ; tests sans statique sauvegardé/restauré.
+3. `GUIList` : `put`/`remove`/`get`/`ids`, `setLooping`/`isLooping`.
+4. `Logger.isGLErrorCheck()`/`setGLErrorCheck` (`volatile`) ; `TileLayer.DEFAULT_CATEGORY_NAME` `final`.
+5. `CollisionBoundedVolume2D` (`put`/`remove`/`get`/`names`), `BackgroundlessButton` (`text()`/`overlapsText()`), `DebugInfoCamera2D`/`3D` (`text()`), `EllipseRenderer` (noms des uniformes copiés, `private final`), `KeyboardManager`, `CharInputEntry`, `KeyTreeNode`, `TerrainGeneration` (setters chaînés + getters), `SoundLoadInfo` (constructeur + getters + `release()`).
+6. `PublicFieldsTest` (réflexion sur les classes compilées, sans initialisation de classe ; seules les classes publiques et leurs englobantes publiques ; liste blanche des structures pures, vérifiée elle aussi) ; documents.
+
+**Écarts au plan** :
+- Étape 2 (choix de l'utilisateur) : `FontLoader`/`FontFace`, `IconLoader`, `TextureDataAtlasLoader` et les shaders (`ShaderManager(String dossier)`, `versionFolder()` ; `SHADER_INFO_PATH` supprimé) passent aussi par le dossier, ils écrivaient `"resources/"` en dur. `GamepadManager.MAPPINGS_FILE` reste en dur (noté dans `later.md`). `Resources.NormalizeFolder` est public (utilisé par `ShaderManager`).
+- Étape 3 : `put` sur l'id sélectionné reporte la sélection au clavier sur le nouvel élément ; `remove` de l'élément sélectionné annule aussi son `forceSelect`.
+- Étape 6 : le test de garde a trouvé `WaveCollapseRules.Rule.INITIAL_POS` et `MightyMath.PI_FLOAT`, jamais réaffectés → `static final` (le `Vector2i` reste mutable : noté dans `later.md`).
+- Relevé hors sujet, noté dans `later.md` : `wait-loaded` de `scenario.py` bloqué après un changement de scène lancé par le menu (reproduit sur `dev`).
+
+**Vérifié** : `mvn -o -q test` à chaque étape (nouveaux tests `ResourceLoadersTest`, `ResourcesFolderTest`, `GUIListTest` étendu, `SoundDecodingTest` adapté, `PublicFieldsTest`) ; en jeu par `scenario.py` : types du projet présents (`?reload WaveCollapseRules`, `?resources`), `Scene2D`, `Scene3D`, `FallbackScene` (erreurs attendues seulement), `reload all`, rechargement à chaud d'une texture modifiée (`watch TextureData` + fichier touché → 1 rechargement), menu au clavier sans boucle (haut ×2 → `Scene2D`, bas ×5 → Quitter), `CollisionSystem`, `TerrainGeneration3D`, `SoundFormatsScene`, vérification GL activée temporairement (`setOpenGLErrorCheck(true)`) sans erreur.
+
+**À vérifier à la main** :
+- `MenuScene` : navigation clavier et souris, survol des boutons (texte « ->x<- »), clic et Entrée, liste défilante de droite.
+- `CollisionSystem` : le rectangle du volume englobant suit et entre en collision comme avant.
+- `TerrainGeneration3D` : terrain identique.
+- Une scène avec du son (`SoundFormatsScene`, `Scene2D`) : sons audibles, gains inchangés.
+- Rechargement à chaud d'une texture à l'œil (`watch TextureData`, modifier une image).
