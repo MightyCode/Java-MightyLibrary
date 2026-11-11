@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         }
 
         // Names of the data given to dataReloaded, in order
-        final java.util.List<String> reloadedData = new java.util.ArrayList<>();
+        final List<String> reloadedData = new ArrayList<>();
 
         @Override
         public void dataReloaded(DataType data) {
