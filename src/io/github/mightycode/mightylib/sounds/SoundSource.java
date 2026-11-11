@@ -227,8 +227,11 @@ public class SoundSource {
         }
     }
 
-    // The buffer given to OpenAL is not the one of the sound: fallback (failed or loading), or none
+    // The buffer given to OpenAL is not the one of the sound: fallback (failed or loading), or none; false while waiting
     public boolean playsFallback() {
+        if (sourceId == -1)
+            return false;
+
         return soundData == null || boundBufferId == 0 || boundBufferId != soundData.getBufferId();
     }
 
@@ -237,7 +240,9 @@ public class SoundSource {
         if (!isReady())
             return new Vector3f();
 
-        float[] x = new float[1], y = new float[1], z = new float[1];
+        float[] x = new float[1];
+        float[] y = new float[1];
+        float[] z = new float[1];
         AL10.alGetSource3f(sourceId, AL10.AL_POSITION, x, y, z);
         return new Vector3f(x[0], y[0], z[0]);
     }
