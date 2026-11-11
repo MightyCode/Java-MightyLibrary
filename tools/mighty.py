@@ -34,10 +34,10 @@ def connect(port, wait_seconds):
 ANSWER_TIMEOUT = 35
 
 
-def send(connection, reader, command):
+def send(connection, reader, command, answer_timeout=None):
     connection.sendall((command + "\n").encode("utf-8"))
     # Commands can wait for the next frames (screenshot, loading...)
-    connection.settimeout(ANSWER_TIMEOUT)
+    connection.settimeout(ANSWER_TIMEOUT if answer_timeout is None else answer_timeout)
     while True:
         line = reader.readline()
         if not line:
