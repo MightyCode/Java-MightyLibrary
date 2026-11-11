@@ -89,8 +89,9 @@ public class KeyboardManager {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
                 if (action != GLFW_RELEASE && key != GLFW_KEY_UNKNOWN)
+                    // The text that came before it in this tick: the editors put them back in order
                     incomingKeyEvents.add(new KeyEvent(key, scancode, mods, action == GLFW_REPEAT,
-                            KeyEvent.LetterOf(glfwGetKeyName(key, scancode))));
+                            KeyEvent.LetterOf(glfwGetKeyName(key, scancode)), incomingText.length()));
             }
         });
     }

@@ -83,7 +83,7 @@ public final class ConsoleInput {
     }
 
     /**
-     * Apply the inputs of one tick: the typed text first, then the keys in their order.
+     * Apply the inputs of one tick: the typed text and the keys in the order they came (KeyEvent.textBefore).
      * @param pageLines lines scrolled by Page Up / Page Down
      */
     public List<Request> handle(String typedText, List<KeyEvent> keys, int pageLines, IClipboard clipboard) {
@@ -97,20 +97,30 @@ public final class ConsoleInput {
         keepLogSelection();
         List<Request> requests = new ArrayList<>();
 
-        if (typedText != null && !typedText.isEmpty()) {
-            editor.insert(typedText);
-            listOnNextTab = false;
-            logSelection = null;
-        }
-
+        String text = typedText == null ? "" : typedText;
+        int inserted = 0;
         for (KeyEvent key : keys) {
+            int before = key.textBefore(text.length());
+            if (before > inserted) {
+                insertTyped(text.substring(inserted, before));
+                inserted = before;
+            }
+
             handleKey(key, pageLines, clipboard, requests);
             // A selection in the command line removes the one of the log
             if (editor.hasSelection())
                 logSelection = null;
         }
+        if (inserted < text.length())
+            insertTyped(text.substring(inserted));
 
         return requests;
+    }
+
+    private void insertTyped(String part) {
+        editor.insert(part);
+        listOnNextTab = false;
+        logSelection = null;
     }
 
     private void handleKey(KeyEvent key, int pageLines, IClipboard clipboard, List<Request> requests) {

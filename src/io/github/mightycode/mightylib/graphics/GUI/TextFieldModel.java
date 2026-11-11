@@ -100,8 +100,17 @@ public final class TextFieldModel {
             return;
 
         String before = editor.getText();
-        editor.insert(tick.typedText);
+        // The text and the keys in the order they came: what follows a key that gives the focus back is lost
+        String text = tick.typedText == null ? "" : tick.typedText;
+        int inserted = 0;
+        boolean left = false;
         for (KeyEvent key : tick.keys) {
+            int typedBefore = key.textBefore(text.length());
+            if (typedBefore > inserted) {
+                editor.insert(text.substring(inserted, typedBefore));
+                inserted = typedBefore;
+            }
+
             boolean leaving = IsLeavingKey(key.key());
             // A held Escape or Enter repeats: only the first one counts
             if (leaving && key.isRepeat())
@@ -111,12 +120,15 @@ public final class TextFieldModel {
                 submitted = key.key() == GLFW_KEY_ENTER || key.key() == GLFW_KEY_KP_ENTER;
                 leftWith = key.key();
                 focus.release(owner);
+                left = true;
                 break;
             }
 
             if (!LineEditKeys.Handle(editor, key))
                 LineEditKeys.HandleShortcut(editor, key, tick.clipboard);
         }
+        if (!left && inserted < text.length())
+            editor.insert(text.substring(inserted));
 
         changed = !before.equals(editor.getText());
         keepCursorVisible();

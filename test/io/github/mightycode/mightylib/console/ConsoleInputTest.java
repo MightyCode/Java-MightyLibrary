@@ -107,6 +107,19 @@ class ConsoleInputTest {
     }
 
     @Test
+    void textAndKeysOfATickAreAppliedInTheOrderTheyCame() {
+        // "ab", Left, "c", then Backspace after everything (a simulated key): "acb" without its "c"
+        handle("abc", new KeyEvent(GLFW_KEY_LEFT, 0, 0, false, (char) 0, 2), key(GLFW_KEY_BACKSPACE));
+        assertEquals("ab", editor.getText());
+        editor.setText("");
+
+        // "x", Enter, "y" in one tick: "x" is run, "y" starts the next line
+        assertEquals(List.of("SUBMIT x", "SCROLL_END"),
+                handle("xy", new KeyEvent(GLFW_KEY_ENTER, 0, 0, false, (char) 0, 1)));
+        assertEquals("y", editor.getText());
+    }
+
+    @Test
     void editingKeysAndHistory() {
         handle("abc", key(GLFW_KEY_LEFT), key(GLFW_KEY_BACKSPACE));
         assertEquals("ac", editor.getText());

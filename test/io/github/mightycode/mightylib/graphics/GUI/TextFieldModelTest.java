@@ -97,6 +97,26 @@ class TextFieldModelTest {
     }
 
     @Test
+    void textAndKeysOfATickAreAppliedInTheOrderTheyCame() {
+        focused();
+        // "a", Backspace, "b" in one tick
+        model.update(focus, tick("ab", new KeyEvent(GLFW_KEY_BACKSPACE, 0, 0, false, (char) 0, 1)));
+
+        assertEquals("b", model.getText());
+        assertTrue(model.isChanged());
+    }
+
+    @Test
+    void textTypedAfterTheKeyThatLeavesIsLost() {
+        focused();
+        // "a", Escape, "b": the "b" is typed once the field no longer has the focus
+        model.update(focus, tick("ab", new KeyEvent(GLFW_KEY_ESCAPE, 0, 0, false, (char) 0, 1)));
+
+        assertEquals("a", model.getText());
+        assertFalse(model.hasFocus(focus));
+    }
+
+    @Test
     void changedLastsOneTick() {
         focused();
         model.update(focus, tick("a"));
