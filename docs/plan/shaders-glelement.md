@@ -99,3 +99,36 @@ Aucune. Si le format du journal du compilateur pose problème en implémentation
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml shader-glelement`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait (un commit par étape)
+1. `b063c01` État d'échec de `GLElement` (`hasFailed`, `ResourceException` dans `load` → hors des files, une ligne ; dans `reload` → version chargée gardée), `IGLElementSink.dataReloaded` appelé par `Resources.endStep` dès la deuxième version d'une donnée, `GLResources.addElementAndLoadNow`, `failed` dans `describe`/`gl summary`.
+2. `e258114` Valeurs d'uniform tenues par le `Renderer` : matrices génériques et samplers de `ModelRenderer` en valeurs **optionnelles** (`putOptionalValue`, envoyées si le programme courant a l'uniform, sans signalement), unités de `setMainTextureChannel(nom, uniform)`/`addTextureChannel` dans `shaderValues` ; spéculaire et brillance décidées au dessin (`hasUniform`).
+3. `66f1d75` `ShaderData` (worker, `THREAD_CONTEXT`) + `Shader extends GLElement` (étapes à partir d'une copie `Build` des sources et de leur version, recommencées si la version change ; version rejetée retenue pour ne pas recompiler en boucle un GLSL cassé) ; `FallbackShaderData` + `FallbackShader` (lié tout de suite, `GLResources.fallbackShader()`) ; `Shape` acquiert/rend son programme ; renommage `ShaderData` (batch, commandes, `FallbackScene`) ; `Logger.CheckShaderError`/`CheckProgramError` supprimés (plus d'utilisateur).
+4. `e0c008e` `ShaderPreprocessor` + 13 tests ; `ShaderData.sourcePaths()` dynamique ; section `library` supprimée ; `31bb17c` traduction du journal en `fichier:ligne` (+1 test).
+5. `58c28ba` Suppression de `THREAD_PRELOAD_MAIN_LOAD`, `loadContinues`, de la branche de `ResourceScheduler.submit`, de `ResourcesSlicedLoadTest` et des étapes de `FakeData`.
+6. `21eaded` `FallbackScene` (GLSL qui ne compile pas, `#include` manquant ; fichiers dans `resources/shaders/3_30/fallbackDemo/`), `85b5d23` documents.
+
+### Écarts au plan, et pourquoi
+- `GLElement.registeredType` : `releaseResource` retirait l'élément de la table par `getClass()` ; `FallbackShader` (sous-classe) est enregistré sous `Shader`, il fallait la clé d'enregistrement.
+- `GLContext.forgetProgram`, `glCreateProgram` : les programmes restent hors `GenDeleteResources` comme avant (noté dans `later.md`, « Écarts relevés »).
+- Les chemins des `ShaderData` sont maintenant complets (dossier de la version compris) : avant, `sourcePaths()` donnait des chemins relatifs au dossier de la version, que l'observateur ne trouvait pas (le rechargement à chaud des shaders par fichier ne marchait pas).
+- `1_40/shaders.json` n'avait pas de section `library` (son chargement aurait levé une exception dans l'ancien `ShaderLoader.create`) : rien à y supprimer.
+- `#line` : décalage de -1 en GLSL 140 (la ligne après `#line n` y vaut `n + 1`), non vérifié en jeu (aucune machine en 1_40).
+- `MultiSourceDataType` n'a plus d'utilisateur : gardé, noté dans `later.md`.
+
+### Vérifié, et comment
+- `mvn -o -q test` : tout passe (nouveaux : `GLResourcesTest` ×4, `ResourcesGLElementsTest` ×2, `ResourceLoadersTest` ×1, `ShaderPreprocessorTest` ×14).
+- `scenario.py` : `Scene2D`, `Scene3D`, `Game3D2D`, `TerrainGeneration3D`, `FallbackScene` sans ligne à problème ni avertissement d'uniform ; `leakcheck Scene2D`, `Scene3D`, `FallbackScene` sans fuite ; `gl summary` liste `Shader` avec ses références et `failed`.
+- `reload ShaderData texture2D` pendant l'affichage : rechargé sans message ; GLSL cassé puis `reload` : une ligne « could not be reloaded… previous version is kept », réparé puis `reload` : silencieux.
+- GLSL cassé au lancement : `failed: ["Shader texture2D"]`, repli ; réparé puis `reload` : `failed` vide.
+- `watch ShaderData` + modification de `utils/colorsManipulation.glsl` : les 6 shaders qui l'incluent sont relus ; cassé, ceux dessinés (`coloredText`, `colorShape2D` dans le menu) gardent l'ancien programme avec une ligne chacun, le journal donne `1(8)` puis, traduit, `resources/shaders/3_30/utils/colorsManipulation.glsl:8`.
+- `FallbackScene` : capture, les deux nouveaux carrés sont magenta ; `missingIncludeShader` en échec de donnée, `notCompilingShader` dans `failed` ; création de `fallbackDemo/missingLibrary.glsl` avec `watch` actif → shader relu, carré vert.
+- Limite constatée de l'observateur (antérieure) : un fichier créé dans la seconde qui suit `watch` est pris pour l'état de départ et n'est pas vu comme un changement.
+
+### À vérifier à la main
+- `FallbackScene` : les carrés « GLSL cassé » et « `#include` manquant » (en bas) sont magenta, une ligne de journal chacun.
+- `Scene2D`, `Scene3D` (textures spéculaires et brillance des modèles), `Game3D2D`, `TerrainGeneration3D` s'affichent comme avant, y compris quand l'une d'elles est la première scène (`EngineConfig` de la démo).
+- `reload ShaderData` et modification de `utils/colorsManipulation.glsl` (avec `watch ShaderData`) pendant l'affichage : pas de clignotement.
+- GLSL cassé pendant l'affichage : l'ancien rendu reste avec une ligne de journal, puis le nouveau une fois réparé.
+- `gl summary` et `leakcheck` : pas de fuite de `Shader`.
