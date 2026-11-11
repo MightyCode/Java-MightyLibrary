@@ -76,6 +76,7 @@ Choix à faire par l'auteur au moment du projet payant, pas avant. Si le modèle
 | `models/weapon`, `models/world/tree`, `models/basicShape` | inconnu | **inconnu** |
 | `textures/world/*.png`, `gui/*`, `shaderEffects/*`, `icon/icon.ico` | inconnu (peut-être créés par l'auteur) | **à confirmer** |
 | `sounds/select*` (ogg, wav, mp3, flac) | inconnu (probablement créés par l'auteur) | **à confirmer** |
+| `sounds/chime.wav` | généré par programme pour le projet (arpège de cloches, mono) | aucune |
 | shaders GLSL (`resources/shaders`) | écrits pour le projet, techniques de LearnOpenGL (`docs/techniquegraphique.md`) | les idées ne sont pas protégées ; vérifier tout code copié |
 
 Tant que le projet reste gratuit et non commercial, ce tableau est informatif. Pour un projet payant : tant que la provenance d'une ressource n'est pas écrite, on ne peut pas dire si elle est redistribuable. Pour une version publique (jar sur JitPack ou Maven Central), les ressources de la démo sont séparées de la bibliothèque : **la bibliothèque seule n'a besoin que des polices et textures dont elle a vraiment besoin au démarrage** (la police de l'écran de chargement, `error`).

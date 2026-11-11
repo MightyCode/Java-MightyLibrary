@@ -153,6 +153,11 @@ public class SoundSource {
         AL10.alSourcePlay(sourceId);
     }
 
+    // False until the manager has created the OpenAL source (after the delay of its creation info)
+    public boolean isReady() {
+        return hadPlayed;
+    }
+
     boolean hadPlayed(){
         return this.hadPlayed;
     }
