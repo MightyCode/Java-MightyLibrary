@@ -13,7 +13,7 @@ src/io/github/mightycode/
     registry/      # Identifier (namespace:path)
     sounds/        # SoundManager (OpenAL, une instance par Engine), arbre de gains
     physics/       # collisions maison, tweenings, B2Utils (JBox2D)
-    algorithms/    # A*, Dijkstra, graphes, Wave Function Collapse
+    algorithms/    # A*, Dijkstra, graphes, Wave Function Collapse (silencieux par défaut : `EVerbosity` NONE/ESSENTIAL/ALL passé en paramètre)
     utils/         # commandes, JSON, maths, Logger
   mightylibdemo/   # démo : Main, ProjectLoading, ActionId, AxisId, scènes de démo
 resources/         # assets ; batchs/*.batch = groupes de ressources
