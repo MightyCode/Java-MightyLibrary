@@ -89,7 +89,7 @@ def read_spotbugs():
 
 
 def is_risk(name):
-    return any(name.startswith(prefix) or name == prefix for prefix in RISK)
+    return any(name.startswith(prefix) for prefix in RISK)
 
 
 def zone(path):
