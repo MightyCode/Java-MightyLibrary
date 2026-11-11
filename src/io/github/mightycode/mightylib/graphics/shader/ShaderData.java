@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.shader;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.resources.DataType;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -62,8 +63,8 @@ public class ShaderData extends DataType {
         return sourcePaths;
     }
 
-    // Preload (worker): the files the sources are made of, the stage files first (watched for hot reload)
-    protected void setSourcePaths(List<String> files) {
+    // Preload (worker): the files the sources are made of with their includes, and the missing ones (watched)
+    protected void setSourcePaths(Collection<String> files) {
         sourcePaths = List.copyOf(files);
     }
 

@@ -2,24 +2,21 @@ package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
-import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
+/**
+ * The shaders listed in shaders.json of the GLSL version (ShaderManager). Their sources are read and preprocessed by
+ * the workers (ShaderPreprocessor: #include searched next to the including file, then in the version folder).
+ */
 public class ShaderLoader extends ResourceLoader {
-
-    /*
-     * Shader library
-     * The shader library is a map (read by the workers) that contains the shader utility file name as key and the shader content as value.
-     */
-    private final Map<String, String> shaderLibrary;
-
     private final ShaderManager shaderManager;
 
     @Override
@@ -29,7 +26,6 @@ public class ShaderLoader extends ResourceLoader {
 
     public ShaderLoader(ShaderManager shaderManager) {
         this.shaderManager = shaderManager;
-        shaderLibrary = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -44,43 +40,30 @@ public class ShaderLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        JSONObject shadersInfo = shaderManager.getShadersInfo();
+        JSONObject shadersList = shaderManager.getShadersInfo().getJSONObject("shaders");
 
-        // Load first the library files
-        JSONObject libraryObject = shadersInfo.getJSONObject("library");
-        for (String key : libraryObject.keySet()) {
-            String content = FileMethods.readFileAsString(shaderManager.versionFolder() + libraryObject.getString(key));
-            shaderLibrary.put(key, content);
-        }
-
-        JSONObject shadersList = shadersInfo.getJSONObject("shaders");
-
-        // Then load the shaders
         Iterator<String> arrayShader = shadersList.keys();
-        do {
+        while (arrayShader.hasNext()) {
             // Name of the shader key (used by renderer)
             String currentShader = arrayShader.next();
 
             JSONObject JShader = shadersList.getJSONObject(currentShader);
 
-            // "Table" of the string path
-            JSONArray files = JShader.getJSONArray("files");
             // From the working directory: the files are watched for hot reload
+            JSONArray files = JShader.getJSONArray("files");
             String[] sArrayFiles = new String[files.length()];
             for (int i = 0; i < files.length(); ++i) {
                 sArrayFiles[i] = shaderManager.versionFolder() + files.getString(i);
             }
 
             JSONArray tags = JShader.getJSONArray("tags");
-            // Get id the access the shader more easily
 
             ShaderData shader = new ShaderData(
                     currentShader,
                     isTagIn(tags, "2D") || isTagIn(tags, "none"), sArrayFiles);
 
             data.put(currentShader, shader);
-
-        } while(arrayShader.hasNext());
+        }
     }
 
     private boolean isTagIn(JSONArray array, String tag){
@@ -107,62 +90,39 @@ public class ShaderLoader extends ResourceLoader {
         ShaderData shader = (ShaderData) dataType;
 
         // Worker thread: files and preprocessing only, the compilation is made by its GL element (Shader).
-        // A missing file makes the preload fail: the fallback replaces the shader
-        String vertex = completeWithLibraryFile(readSource(shader.getSourcePath(0)));
-        shader.checkCancelled();
-        String fragment = completeWithLibraryFile(readSource(shader.getSourcePath(1)));
-
-        String geometry = null;
-        if (shader.usesGeometryShader()) {
+        // A missing file or include makes the preload fail: the fallback replaces the shader. The files read, and
+        // those missing, are watched either way: changing or creating one reads the shader again
+        Set<String> watched = new LinkedHashSet<>();
+        try {
+            String vertex = preprocess(shader.getSourcePath(0), watched);
             shader.checkCancelled();
-            geometry = completeWithLibraryFile(readSource(shader.getSourcePath(2)));
-        }
+            String fragment = preprocess(shader.getSourcePath(1), watched);
 
-        shader.setSources(vertex, fragment, geometry);
-    }
-
-    private static String readSource(String path) {
-        if (!new File(path).isFile())
-            throw new ResourceException("shader file not found: " + path);
-
-        return FileMethods.readFileAsString(path);
-    }
-
-    public String completeWithLibraryFile(String content) {
-        String includeTag = "#include";
-
-        if (content.contains(includeTag)) {
-            String[] lines = content.split("\n");
-            StringBuilder newContent = new StringBuilder();
-
-            for (String line : lines) {
-                line = line.trim();
-
-                if (line.startsWith(includeTag)) {
-                    String fileName = line.substring(includeTag.length());
-                    fileName = fileName.trim();
-
-                    if (fileName.startsWith("\"") && fileName.endsWith("\"")) {
-                        fileName = fileName.substring(1, fileName.length() - 1);
-                        System.out.println("Loading shader library file: " + fileName);
-                    } else {
-                        System.err.println("Error: shader library file name " + fileName + " is not valid");
-                        continue;
-                    }
-
-                    if (shaderLibrary.containsKey(fileName)) {
-                        newContent.append(shaderLibrary.get(fileName)).append("\n");
-                    } else {
-                        System.err.println("Error: shader library file " + fileName + " not found");
-                    }
-                } else {
-                    newContent.append(line).append("\n");
-                }
+            String geometry = null;
+            if (shader.usesGeometryShader()) {
+                shader.checkCancelled();
+                geometry = preprocess(shader.getSourcePath(2), watched);
             }
 
-            return newContent.toString();
+            shader.setSources(vertex, fragment, geometry);
+        } finally {
+            shader.setSourcePaths(watched);
         }
+    }
 
-        return content;
+    private String preprocess(String path, Set<String> watched) {
+        // GLSL 140: the line after "#line n" is n + 1 (n from GLSL 330)
+        int lineOffset = "1_40".equals(shaderManager.getVersion()) ? -1 : 0;
+        ShaderPreprocessor preprocessor = new ShaderPreprocessor(ShaderLoader::readIfFile,
+                shaderManager.versionFolder(), lineOffset);
+        try {
+            return preprocessor.process(path);
+        } finally {
+            watched.addAll(preprocessor.watchedFiles());
+        }
+    }
+
+    private static String readIfFile(String path) {
+        return new File(path).isFile() ? FileMethods.readFileAsString(path) : null;
     }
 }
