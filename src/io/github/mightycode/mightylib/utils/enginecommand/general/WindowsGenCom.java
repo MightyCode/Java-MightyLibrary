@@ -12,6 +12,8 @@ import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 import static org.lwjgl.glfw.GLFW.GLFW_FOCUSED;
 import static org.lwjgl.glfw.GLFW.glfwGetWindowAttrib;
 
@@ -76,7 +78,7 @@ public class WindowsGenCom extends BaseCommand {
 
         long glfwId = window.getWindow().getInfo().getWindowId();
         json.put("focused", glfwId != 0 && glfwGetWindowAttrib(glfwId, GLFW_FOCUSED) == 1);
-        json.put("mode", window.getWindow().getInfo().getWindowMode().name().toLowerCase());
+        json.put("mode", window.getWindow().getInfo().getWindowMode().name().toLowerCase(Locale.ROOT));
         json.put("display", window.getDisplay().toString());
         json.put("size", window.getWindow().getInfo().getSizeRef().x + "x" + window.getWindow().getInfo().getSizeRef().y);
         json.put("virtualSize", window.getWindow().getInfo().getVirtualSizeRef().x + "x"

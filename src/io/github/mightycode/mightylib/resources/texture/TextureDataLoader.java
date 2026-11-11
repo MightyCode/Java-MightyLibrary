@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -72,7 +73,7 @@ public class TextureDataLoader extends ResourceLoader {
             files.filter(Files::isRegularFile).forEach(file -> {
                 String fileName = file.getFileName().toString();
                 int dot = fileName.lastIndexOf('.');
-                if (dot <= 0 || !IMAGE_EXTENSIONS.contains(fileName.substring(dot + 1).toLowerCase()))
+                if (dot <= 0 || !IMAGE_EXTENSIONS.contains(fileName.substring(dot + 1).toLowerCase(Locale.ROOT)))
                     return;
                 if (listed.contains(file.toAbsolutePath().normalize()))
                     return;
