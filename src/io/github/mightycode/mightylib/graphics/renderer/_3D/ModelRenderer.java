@@ -264,7 +264,7 @@ public class ModelRenderer extends Renderer {
         if (faceCulling)
             glDisable(GL_CULL_FACE);
 
-        if (Logger.DO_CHECK)
+        if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Display model " + modelName);
     }
 

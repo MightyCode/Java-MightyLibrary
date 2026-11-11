@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.resources.map;
 import org.joml.Vector2i;
 
 public class TileLayer {
-    public static String DEFAULT_CATEGORY_NAME = "Default";
+    public static final String DEFAULT_CATEGORY_NAME = "Default";
     private final Vector2i mapSize;
     private final int[][] tiles;
 

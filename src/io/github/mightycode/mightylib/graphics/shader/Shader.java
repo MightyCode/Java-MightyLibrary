@@ -238,7 +238,7 @@ public class Shader extends MultiSourceDataType {
         context.setCurrentProgram(shaderProgram);
         EngineStats.countProgramBind();
 
-        if (Logger.DO_CHECK)
+        if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Use program shader (id : " + shaderProgram + ")");
     }
 
@@ -281,7 +281,7 @@ public class Shader extends MultiSourceDataType {
         EngineStats.countUniformUpload();
         int link = getLink(value.getName());
 
-        if (Logger.DO_CHECK)
+        if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 
         // Removed by the GLSL compiler when unused, or absent from the fallback shader: reported once, ignored

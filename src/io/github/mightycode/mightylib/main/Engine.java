@@ -156,7 +156,7 @@ public final class Engine implements IView {
         MainThread.setCurrentAsMain();
         Workers.start(config.getMaxThreads());
         MainLoop.setMode(config.getMode());
-        Logger.DO_CHECK = config.isOpenGLErrorCheck();
+        Logger.setGLErrorCheck(config.isOpenGLErrorCheck());
 
         // Resolved once (the launch option is read and reported once). Without access, the player has no console:
         // only the game (api) and, in debug mode, the standard input and the debug server send commands.

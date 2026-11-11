@@ -49,7 +49,7 @@ public abstract class GenDeleteResources {
 
     // GL objects only exist in the context of the main thread: a call from a worker fails or corrupts the driver state
     private static void CheckMainThread(String operation) {
-        if (Logger.DO_CHECK && !MainThread.isMainThread())
+        if (Logger.isGLErrorCheck() && !MainThread.isMainThread())
             throw new IllegalStateException(operation + " called from thread " + Thread.currentThread().getName()
                     + ", GL calls must run on the main thread (MainThread.execute)");
     }
