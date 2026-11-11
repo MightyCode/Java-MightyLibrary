@@ -18,6 +18,7 @@ LearnOpenGL « Gamma Correction ». En premier car il change toutes les couleurs
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
 - `scenario.py` : `wait-loaded` après un changement de scène lancé par le jeu (bouton du menu, `input ENTER`) reste bloqué alors que `scene` répond `loading: false` (reproduit sur `dev`).
+- `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
