@@ -3,7 +3,7 @@
 Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en cours : `current.md`. Quand il est fini, **discuter** du point en tête de ce fichier avec l'utilisateur, puis le déplacer dans `current.md`.
 
 ## Philosophie du moteur : bases simples, implémentations proposées, injection (en premier)
-Philosophie de `decisions.md` : usage courant facile, réimplémentation (presque) complète possible. En premier : chaque commit écrit sans elle ajoute du code à reprendre.
+Philosophie de `decisions.md` : usage courant facile (niveau Processing), réimplémentation (presque) complète possible par héritage + injection. En premier : chaque commit écrit sans elle ajoute du code à reprendre.
 
 ### Écarts relevés dans le code
 - **`Renderer` crée son `Shape`** (`shape = new Shape(shaderName, useEbo)` dans son constructeur) : impossible de lui donner un `Shape` hérité. Ajouter un constructeur qui reçoit un `Shape`, en gardant l'actuel pour l'usage simple.
