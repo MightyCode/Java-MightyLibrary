@@ -12,8 +12,6 @@ import io.github.mightycode.mightylib.utils.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.*;
-
 /**
  * Display a Model (ModelLoader): one Mesh per mesh of the model, sent to the graphic card one mesh per frame
  * within the GLResources budget, meshes are displayed as soon as they are sent.
@@ -39,7 +37,6 @@ public class ModelRenderer extends Renderer {
     // Sampler uniforms (specular null when the shader has no specular map), in shaderValues as optional values
     private String diffuseUniform;
     private String specularUniform;
-    private boolean faceCulling;
 
     private final ShaderValue shininessValue;
 
@@ -66,7 +63,7 @@ public class ModelRenderer extends Renderer {
 
         shininessValue = new ShaderValue(SHININESS_UNIFORM, Float.class, 32f);
 
-        faceCulling = true;
+        setFaceCulling(true);
 
         upload = glResources.addElementOrReturnIfPresent(MeshUpload.class, new MeshUpload(this),
                 "ModelRenderer/" + modelName + "#" + id());
@@ -203,8 +200,9 @@ public class ModelRenderer extends Renderer {
         return this;
     }
 
+    @Override
     public ModelRenderer setFaceCulling(boolean faceCulling) {
-        this.faceCulling = faceCulling;
+        super.setFaceCulling(faceCulling);
         return this;
     }
 
@@ -240,20 +238,18 @@ public class ModelRenderer extends Renderer {
     public void display() {
         rebuildIfChanged();
 
-        if (!isVisible() || shown.sent == 0)
+        if (shown.sent == 0)
             return;
 
-        // The program of the renderer is used once for every mesh
-        mesh.applyDimension();
-        getShader().use();
-        sendShaderValues();
+        super.display();
+    }
 
+    // The program of the renderer is used and its values sent once: each mesh only binds its textures
+    @Override
+    public void draw() {
         // Decided on the current program: it can change (fallback while loading, hot reload)
         boolean bindSpecular = specularUniform != null && hasUniform(specularUniform);
         boolean sendMeshShininess = !shaderValues.containsKey(SHININESS_UNIFORM) && hasUniform(SHININESS_UNIFORM);
-
-        if (faceCulling)
-            glEnable(GL_CULL_FACE);
 
         for (int i = 0; i < shown.sent; ++i) {
             shown.diffuseTextures[i].bindRenderTexture(DIFFUSE_UNIT);
@@ -268,9 +264,6 @@ public class ModelRenderer extends Renderer {
             shown.glMeshes[i].bind();
             shown.glMeshes[i].draw();
         }
-
-        if (faceCulling)
-            glDisable(GL_CULL_FACE);
 
         if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Display model " + modelName);

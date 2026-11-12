@@ -26,12 +26,12 @@ public class CustomRenderer2D extends Scene {
     private static class StarRenderer extends Renderer {
         private float time;
 
-        public StarRenderer(float radius) {
+        public StarRenderer(float innerRatio) {
             super(SHADER, false);
 
             Mesh star = getMesh();
             star.setDrawMode(EDrawMode.TriangleFan);
-            fillStar(star, radius);
+            fillStar(star, innerRatio);
 
             addShaderValue("time", Float.class, 0f);
         }
@@ -55,7 +55,7 @@ public class CustomRenderer2D extends Scene {
         float centerX = size.x / 2f;
         float centerY = size.y / 2f;
 
-        first = new StarRenderer(1f);
+        first = new StarRenderer(0.45f);
         first.setPosition(new Vector3f(centerX - 150, centerY, 1f));
         first.setScale(new Vector3f(180f, 180f, 1f));
 
@@ -111,10 +111,10 @@ public class CustomRenderer2D extends Scene {
         mesh.addVboFloat(colors, 4, Mesh.STATIC_STORE);
     }
 
-    // Workaround: the depth test depends on the tag of the shader (2D: none), only the Mesh can change it
+    // A 2D shader gives neither depth test nor depth write by default: both are needed to hide the far star
     private void applyDepth() {
-        first.getMesh().setDimensionTo2D(!depthTest);
-        second.getMesh().setDimensionTo2D(!depthTest);
+        first.setDepthTest(depthTest).setDepthWrite(depthTest);
+        second.setDepthTest(depthTest).setDepthWrite(depthTest);
     }
 
     @Override

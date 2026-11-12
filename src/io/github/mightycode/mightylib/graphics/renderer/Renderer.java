@@ -45,6 +45,8 @@ public class Renderer extends UUID implements IDisplayable {
     // Program of the shader, held (urgent reference) until unload
     private final Shader shader;
     private boolean shaderReleased;
+    // Depth and culling of each draw, by default from the tag of the shader (2D: no depth)
+    private final RenderState renderState;
 
     /*
      * Every value this renderer sends, sent again at each draw (filtered by the program, which skips unchanged ones):
@@ -60,8 +62,9 @@ public class Renderer extends UUID implements IDisplayable {
         shader = (Shader) glResources.acquire(shaderData, true);
         boolean in2D = shaderData.isDimension2DShader();
 
+        renderState = new RenderState(!in2D, !in2D, false);
+
         mesh = new Mesh(useEbo);
-        mesh.setDimensionTo2D(in2D);
         model = new Matrix4f().identity();
 
         shaderValues = new HashMap<>();
@@ -121,11 +124,44 @@ public class Renderer extends UUID implements IDisplayable {
 
     public void display(){
         if(visible) {
-            mesh.applyDimension();
+            applyRenderState();
             getShader().use();
             updateShader();
             draw();
+            renderState.restore();
         }
+    }
+
+    // Set the OpenGL state of the draw (depth, culling) before the program is used
+    protected void applyRenderState() {
+        renderState.apply();
+    }
+
+    public Renderer setDepthTest(boolean depthTest) {
+        renderState.setDepthTest(depthTest);
+        return this;
+    }
+
+    public boolean isDepthTest() {
+        return renderState.isDepthTest();
+    }
+
+    public Renderer setDepthWrite(boolean depthWrite) {
+        renderState.setDepthWrite(depthWrite);
+        return this;
+    }
+
+    public boolean isDepthWrite() {
+        return renderState.isDepthWrite();
+    }
+
+    public Renderer setFaceCulling(boolean faceCulling) {
+        renderState.setFaceCulling(faceCulling);
+        return this;
+    }
+
+    public boolean isFaceCulling() {
+        return renderState.isFaceCulling();
     }
 
     public void updateShader(){

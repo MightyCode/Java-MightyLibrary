@@ -60,8 +60,6 @@ public class Mesh {
     protected boolean useEbo;
     protected int verticesToDraw;
 
-    protected boolean in2D;
-
     protected EDrawMode drawMode;
     private int glDrawMode;
 
@@ -349,23 +347,6 @@ public class Mesh {
         glBindVertexArray(0);
     }
 
-
-    public void applyDimension() {
-        if (in2D)
-            glDisable(GL_DEPTH_TEST);
-        else
-            glEnable(GL_DEPTH_TEST);
-    }
-
-
-    public void setDimensionTo2D(boolean state){
-        this.in2D = state;
-    }
-
-
-    public boolean is2DPurpose(){
-        return this.in2D;
-    }
 
     public void draw(){
         EngineStats.countDrawCall();
