@@ -42,9 +42,6 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 
 ## Bugs relevés en passant (non corrigés)
 - **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (15) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (6), `VO_VOLATILE_INCREMENT` (2, aussi Error Prone `NonAtomicVolatileUpdate` : `DataType`, `ResourceWatcher`) ; `NP_*` (`FontFile.load`, `ExecGenCom.run`, `EngineConfig.ParseLogsShown`) ; Error Prone `MissingCasesInEnumSwitch` (23), `EmptyCatch` (5), `FutureReturnValueIgnored` (3), `ReferenceEquality` (41), `EnumOrdinal` (20). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
-- `Slider.setMaxPrecision` ne fait rien : `maxPrecision` vaut -1 au départ et la méthode n'écrit que si elle est déjà `>= 0` (condition à revoir).
-- `StrSelector` / `EnumSelector` : position et taille écrites en dur (coin haut droit de la fenêtre), donc deux sélecteurs se superposent et `StrSelector` n'a aucune démo ; à rendre configurables (comme les sliders).
-- `Collision2DGrid.init` journalise sans le préfixe `--` du moteur.
 - `SoundManager.clearAwaitedSong` (changement de scène) oublie les sons en attente de leur délai mais laisse leurs sources, jamais créées, dans la liste ; et dans `lateUpdate`, une source dont l'`init` échoue est retirée de la liste puis encore réglée et jouée (`managerId` des autres sons en attente non décalés).
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
 - `DataFolder.getFileContent` concatène les lignes lues sans saut de ligne (`Scanner.nextLine`).
@@ -60,7 +57,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Shaders** : includes GLSL lus depuis le classpath (jar) par l'abstraction de sources de `Resources` (aujourd'hui `ShaderLoader` lit le disque) ; shaders injectés par les projets et les mods (leur `shaders.json` ou leurs `ShaderData`, un nom identique remplace celui du moteur) ; variantes par `#define` injectés par le moteur (ubershader) ; `#version` et macros `in`/`out` injectés pour n'avoir qu'un jeu de fichiers au lieu de `1_40`/`3_30`.
   - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources.
   - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
-  - **Shaders `1_40` en grande partie absents** (4 fichiers contre 29 en `3_30`) : la règle « un nouveau shader existe dans les deux versions » n'est plus tenue ; le doublon disparaît avec l'injection de `#version` et des macros `in`/`out`.
+  - **Shaders `1_40` en grande partie absents** (4 fichiers contre 31 en `3_30`) : la règle « un nouveau shader existe dans les deux versions » n'est plus tenue ; le doublon disparaît avec l'injection de `#version` et des macros `in`/`out`.
   - **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
 - Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
 
@@ -150,7 +147,7 @@ Le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour fa
 ## Thème, tailles automatiques et langues
 Dépend du point d'injection (thèmes et langues fournis par le projet et les mods). Dès maintenant, ne pas figer d'API `Text`/GUI qui empêcherait clés de langue et thème.
 - **Langues** (à la Flutter) : `resources/lang/<langue>.json` chargé comme `DataType` ; paramètres `{nom}`, pluriels simples ; langue de repli, log des clés manquantes ; script `tools/` générant des constantes typées ; `Text` liable à une clé, mis à jour au changement de langue ; clés à espace de noms.
-- **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
+- **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)`, police `bahnschrift` dans `ValueSelector`).
 - **Tailles automatiques** : unité relative à la résolution virtuelle, ancres et pourcentages, recalcul au redimensionnement.
 - **Padding du texte** : utiliser `Text.setPadding` dans les composants GUI et l'exposer au thème.
 
