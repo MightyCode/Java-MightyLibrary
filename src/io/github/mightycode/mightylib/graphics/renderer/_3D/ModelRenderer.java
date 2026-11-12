@@ -48,7 +48,7 @@ public class ModelRenderer extends Renderer {
     }
 
     public ModelRenderer(String shaderName, String modelName) {
-        super(shaderName, true);
+        super(shaderName);
         this.modelName = modelName;
 
         // Unknown, failed or not loaded yet: the fallback cube, replaced once the model is loaded (see rebuildIfChanged)
@@ -277,7 +277,6 @@ public class ModelRenderer extends Renderer {
         if (pending != null)
             pending.release();
 
-        // The base mesh is empty: the meshes of the model are drawn instead
         super.unload();
     }
 

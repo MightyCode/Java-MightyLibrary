@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection3D;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
@@ -10,7 +10,7 @@ import org.joml.Vector3f;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CubeRenderer extends Renderer {
+public class CubeRenderer extends MeshRenderer {
     private static final int FACE_NUMBER = 6;
     private static final int VERTEX_TEXTURE_SIZE = 2;
     private static final int VERTEX_POSITION_SIZE = 3;

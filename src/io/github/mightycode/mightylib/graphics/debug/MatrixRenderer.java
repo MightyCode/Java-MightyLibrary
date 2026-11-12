@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.debug;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -24,7 +24,7 @@ public class MatrixRenderer {
     private static final int VBO_COLOR_SHIFT = 4 * 4;
 
     // Custom renderer
-    private final Renderer renderer;
+    private final MeshRenderer renderer;
     private final int numberCell;
     private final int vboPositionIndex;
     private final int vboColorIndex;
@@ -37,7 +37,7 @@ public class MatrixRenderer {
         this.numberCell = numberCell;
 
         // Setup the renderer
-        renderer = new Renderer("multiColoredShape2D", true);
+        renderer = new MeshRenderer("multiColoredShape2D", true);
         renderer.setColorMode(ColorList.Red());
         renderer.getMesh().setEboStorage(Mesh.STATIC_STORE);
         renderer.getMesh().setEbo(new int[0]);

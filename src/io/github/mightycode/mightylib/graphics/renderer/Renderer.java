@@ -1,11 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
-import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.GLResources;
-import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
@@ -21,13 +18,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class Renderer extends UUID implements IDisplayable {
+public abstract class Renderer extends UUID implements IDisplayable {
     protected GLResources glResources = Views.engine().glResources();
     protected Resources resources = Views.engine().resources();
 
     protected Camera referenceCamera;
-
-    protected Mesh mesh;
 
     protected final Vector3f position;
     protected final Vector3f scale;
@@ -37,10 +32,6 @@ public class Renderer extends UUID implements IDisplayable {
     protected Matrix4f model;
 
     private boolean visible;
-
-    // Textures channels
-    protected IRenderTextureBindable mainTexture;
-    protected IRenderTextureBindable[] textures;
 
     // Program of the shader, held (urgent reference) until unload
     private final Shader shader;
@@ -56,7 +47,7 @@ public class Renderer extends UUID implements IDisplayable {
     // Keys of the values sent only when the current program has their uniform, never reported missing (generic ones)
     protected HashSet<String> optionalValues;
 
-    public Renderer(String shaderName, boolean useEbo) {
+    protected Renderer(String shaderName) {
         // Unknown or failed: the fallback data, whose program is linked from the start
         ShaderData shaderData = resources.getResourceOrFallback(ShaderData.class, shaderName);
         shader = (Shader) glResources.acquire(shaderData, true);
@@ -64,7 +55,6 @@ public class Renderer extends UUID implements IDisplayable {
 
         renderState = new RenderState(!in2D, !in2D, false);
 
-        mesh = new Mesh(useEbo);
         model = new Matrix4f().identity();
 
         shaderValues = new HashMap<>();
@@ -75,8 +65,6 @@ public class Renderer extends UUID implements IDisplayable {
         position = new Vector3f();
         scale = new Vector3f(1f);
         rotation = new Vector3f();
-
-        mainTexture = null;
 
         referenceCamera = null;
 
@@ -164,19 +152,13 @@ public class Renderer extends UUID implements IDisplayable {
         return renderState.isFaceCulling();
     }
 
+    // Called with the program in use, before draw: sends the values of this renderer
     public void updateShader(){
-        if (mainTexture != null)
-            mainTexture.bindRenderTexture(0);
-
-        if (textures != null) {
-            for (int i = 0; i < textures.length; ++i) {
-                if (textures[i] != null)
-                    textures[i].bindRenderTexture(i + 1);
-            }
-        }
-
         sendShaderValues();
     }
+
+    // Draw the geometry, with the program in use and the values sent
+    public abstract void draw();
 
     public Renderer addShaderValue(String name, Class<?> type, Object object){
         shaderValues.put(name, new ShaderValue(name, type, object));
@@ -208,11 +190,6 @@ public class Renderer extends UUID implements IDisplayable {
 
     protected void sentToShader(ShaderValue value) {
         getShader().sendValueToShader(value);
-    }
-
-    public void draw(){
-        mesh.bind();
-        mesh.draw();
     }
 
     public void setPosition(Vector3f position){
@@ -308,88 +285,15 @@ public class Renderer extends UUID implements IDisplayable {
         return this;
     }
 
-    public void setMainTextureChannel(String name) {
-        setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(name), name));
-    }
-
-    public void setMainTextureChannel(String name, String nameOfUniform) {
-        addShaderValue(nameOfUniform, Integer.class, 0);
-
-        setMainTextureChannel(name);
-    }
-
-    public void setMainTextureChannel(IRenderTextureBindable texture) {
-        if (mainTexture instanceof GLElement) {
-            if (texture instanceof GLElement) {
-                if (mainTexture == texture) {
-                    glResources.releaseResource((GLElement) texture);
-                    return;
-                }
-            }
-
-            glResources.releaseResource((GLElement) mainTexture);
-        }
-
-        mesh.enableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
-        mainTexture = texture;
-    }
-
-    public void addTextureChannel(String name, String nameOfUniform, int channelNumber) {
-        if (textures == null || channelNumber <= 0)
-            return;
-
-        if (channelNumber > textures.length)
-            return;
-
-        addTextureChannel(
-                glResources.addElementOrReturnIfPresent(Texture.class, new Texture(resources, name), name),
-                nameOfUniform, channelNumber);
-    }
-
-    public void addTextureChannel(IRenderTextureBindable texture, String nameOfUniform, int channelNumber) {
-        addShaderValue(nameOfUniform, Integer.class, channelNumber);
-
-        mesh.enableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
-
-        if (textures == null)
-            textures = new IRenderTextureBindable[30];
-        else {
-            if (textures[channelNumber - 1] instanceof GLElement)
-                glResources.releaseResource((GLElement) textures[channelNumber - 1]);
-        }
-
-        textures[channelNumber - 1] = texture;
-    }
-
-
-    public ShaderValue setColorMode(Color4f color, boolean disableTexture) {
+    public ShaderValue setColorMode(Color4f color) {
         ShaderValue value = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
         shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
-
-        if (disableTexture)
-            mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
 
         return value;
     }
 
-
-    public ShaderValue setColorMode(Color4f color) {
-        return setColorMode(color, true);
-    }
-
     public void setNoColorNoTextureMode() {
-        mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
-
         shaderValues.remove(ShaderManager.GENERIC_COLOR_FIELD_NAME);
-    }
-
-
-    public Mesh getMesh(){
-        return mesh;
-    }
-
-    public void setMesh(Mesh mesh){
-        this.mesh = mesh;
     }
 
     public Vector3f position(){
@@ -416,22 +320,10 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     public void unload() {
-        mesh.unload();
-
         // Given back once: unload can be called twice
         if (!shaderReleased) {
             glResources.releaseResource(shader);
             shaderReleased = true;
-        }
-
-        if (mainTexture instanceof GLElement)
-            glResources.releaseResource((GLElement) mainTexture);
-
-        if (textures != null) {
-            for (IRenderTextureBindable texture : textures) {
-                if (texture instanceof GLElement)
-                    glResources.releaseResource((GLElement) texture);
-            }
         }
     }
 }

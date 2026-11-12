@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -8,7 +8,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public abstract class Shape2DRenderer extends Renderer {
+public abstract class Shape2DRenderer extends MeshRenderer {
     private final static Vector4f REFERENCE_RANGE_DIRECTION = new Vector4f(0, 0, 1, 1);
 
     // Reference direction and point are related

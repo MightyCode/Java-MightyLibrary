@@ -1,12 +1,12 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D.heightMap;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector3f;
 
-public class HeightMapRenderer extends Renderer {
+public class HeightMapRenderer extends MeshRenderer {
     @FunctionalInterface
     public interface IHeightMapper {
         float map(float height, float min, float max);

@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
@@ -15,15 +15,15 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 
 /**
  * Shows how to draw custom geometry with a custom shader: a star (triangle fan with a color per vertex)
- * built by a Renderer subclass, and a second one built from a Mesh created by the scene.
+ * built by a MeshRenderer subclass, and a second one drawing a Mesh created by the scene.
  * Key D: toggles the depth test (the stars are at different depths and overlap).
  */
 public class CustomRenderer2D extends Scene {
     private static final String SHADER = "customStar2D";
     private static final int COLOR_CHANNEL = 3;
 
-    // A renderer which fills its own shape with a star
-    private static class StarRenderer extends Renderer {
+    // A renderer which fills its own mesh with a star
+    private static class StarRenderer extends MeshRenderer {
         private float time;
 
         public StarRenderer(float innerRatio) {
@@ -43,7 +43,7 @@ public class CustomRenderer2D extends Scene {
     }
 
     private StarRenderer first;
-    private Renderer second;
+    private MeshRenderer second;
     private float secondTime;
     private boolean depthTest;
 
@@ -59,14 +59,11 @@ public class CustomRenderer2D extends Scene {
         first.setPosition(new Vector3f(centerX - 150, centerY, 1f));
         first.setScale(new Vector3f(180f, 180f, 1f));
 
-        // Workaround: the constructor of Renderer always creates its own Mesh, so the one built by the scene
-        // replaces it and the first one has to be unloaded by hand
-        second = new Renderer(SHADER, false);
-        second.getMesh().unload();
+        // The renderer owns the mesh given to it: unloaded with it
         Mesh secondMesh = new Mesh(false);
         secondMesh.setDrawMode(EDrawMode.TriangleFan);
         fillStar(secondMesh, 0.6f);
-        second.setMesh(secondMesh);
+        second = new MeshRenderer(secondMesh, SHADER);
         second.addShaderValue("time", Float.class, 0f);
         second.setPosition(new Vector3f(centerX, centerY, -1f));
         second.setScale(new Vector3f(280f, 280f, 1f));

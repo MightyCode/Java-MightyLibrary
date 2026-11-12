@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.debug;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -21,7 +21,7 @@ public class GraphRenderer {
     private static final int VBO_SHIFT = 8;
 
     // Custom renderer
-    private final Renderer renderer;
+    private final MeshRenderer renderer;
 
     // List of rectangles' vertices
     float[] vbo;
@@ -36,7 +36,7 @@ public class GraphRenderer {
 
     public GraphRenderer(Camera2D referenceCamera){
         // Setup the renderer
-        renderer = new Renderer("colorShape2D", true);
+        renderer = new MeshRenderer("colorShape2D", true);
         renderer.setColorMode(ColorList.Blue());
         renderer.getMesh().setEboStorage(Mesh.DYNAMIC_STORE);
         renderer.getMesh().setEbo(new int[0]);

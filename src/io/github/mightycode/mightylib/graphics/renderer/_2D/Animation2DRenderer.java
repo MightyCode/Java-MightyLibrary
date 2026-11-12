@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -10,7 +10,7 @@ import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Animation2DRenderer extends Renderer {
+public class Animation2DRenderer extends MeshRenderer {
     private final Vector2f referencePosition;
     private Animator animator;
     private String currentTextureName;
