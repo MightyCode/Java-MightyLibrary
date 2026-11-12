@@ -1,27 +1,32 @@
 # Plus tard
 
-Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en cours : `current.md`. Quand il est fini, **discuter** du point en tête de ce fichier avec l'utilisateur, puis le déplacer dans `current.md`.
+Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en cours : `current.md`. Quand il est fini, **discuter** du premier point de la feuille de route (la section qui suit « Écrire `current.md` ») avec l'utilisateur, puis le déplacer dans `current.md` (format ci-dessous).
 
-## Philosophie du moteur : bases simples, implémentations proposées, injection (en premier)
-Philosophie de `decisions.md` : usage courant facile (niveau Processing), réimplémentation (presque) complète possible par héritage + injection. En premier : chaque commit écrit sans elle ajoute du code à reprendre.
+## Écrire `current.md`
 
-### Écarts relevés dans le code
-- **`Renderer` crée son `Shape`** (`shape = new Shape(shaderName, useEbo)` dans son constructeur) : impossible de lui donner un `Shape` hérité. Ajouter un constructeur qui reçoit un `Shape`, en gardant l'actuel pour l'usage simple.
-- **`Shape` expose son état interne en `protected`** (une quinzaine de champs : `vbos`, `vbosStorage`, `eboStorage`, `vboCount`, `in2D`…) : tout son fonctionnement devient un contrat. Le remplacer par quelques méthodes redéfinissables et sortir de la base l'hypothèse 2D/3D (`in2D`). Même revue pour `Renderer` (`model`, `shaderValues`, `textures`… en `protected`).
-- **Systèmes de l'`Engine` créés en dur** : `Console`, `SceneManager`, `SoundManager`, `ShaderManager` (`Engine.setup`) et `InputManager` (`ContextManager`) ; la configuration ne règle que leurs paramètres, un projet ne peut pas fournir les siens. Les rendre injectables (ci-dessous) ; à décider à la planification : interfaces ou classes de base, et ce qui reste fixe.
-- **Rien n'est choisi comme extensible** (au 2026-11-11 : 247 classes publiques, 49 `final`, du `protected` dans 87 fichiers) : tout est ouvert par défaut (voir **Héritage**).
-- **Aucune démo n'étend le rendu** : une scène avec son propre `Shape`/`Renderer` (ex. `CustomRenderer2D`) valide le contrat et fait apparaître ce qui bloque.
-- **Matrices 3D croisées dans `Renderer`** : en 3D, le constructeur met `camera3D().getView()` sous la clé `projection` et `getProjection()` sous `view` ; compensé par les noms des `ShaderValue` (envoyées sous leur propre nom), mais trompeur (et `copyShaderValuesTo` copie par nom de valeur, pas par clé). À remettre droit.
-- **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
-- **Shaders `1_40` en grande partie absents** (4 fichiers contre 29 en `3_30`) : la règle « un nouveau shader existe dans les deux versions » n'est plus tenue. Le doublon disparaîtrait avec l'injection de `#version` et des macros `in`/`out` (**Shaders** dans **Bibliothèque réutilisable**).
-- **Repli GL connu en dur par `GLResources`** : `fallbackDataLoaded` crée la `Texture` et le `Shader` de repli (imports de `graphics.shader`) ; un projet qui ajoute un type d'élément GL dont le repli doit être prêt avant tout dessin doit modifier `GLResources`. Cible : chaque donnée de repli déclare son élément (créé à `fallbackDataLoaded`, lié tout de suite ou envoyé aux frames suivantes), à décider avec le tri de l'API publique.
-- **`MultiSourceDataType` n'a plus d'utilisateur** (le shader n'en hérite plus, son `sourcePaths()` `final` empêchait une liste dynamique) : le garder comme base proposée ou le retirer, à décider avec le tri de l'API publique.
+### But
+`current.md` est le **seul gros point en cours**, découpé en objectifs qu'on peut terminer. Il dit ce qui reste à faire, rien d'autre : l'état présent est dans `architecture.md`, les raisons durables dans `decisions.md`, l'historique dans git, le détail d'un objectif en cours d'implémentation dans `docs/plan/`. Il sert de point d'entrée aux skills : `/planification-ml` part d'un de ses objectifs, `/implement-next-objective` prend sa première puce (ou celle marquée (U)), `/pr-ml` et `/revue-pratiques` vérifient qu'il ne garde aucune trace de ce qui est fini.
 
-### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.contextLoading` et les points provisoires `IProjectLoading.loaders` (liste de loaders figée à la construction de `Resources`, les mods fourniront les leurs à la même phase) et `IProjectLoading.registerCommands` ; les commandes du moteur et du jeu sont figées après le démarrage, celles des scènes et des vues restent dynamiques. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
-- **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, systèmes de l'`Engine` (console, gestionnaires de scènes, de sons, de shaders, d'entrées), crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
-- **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape`, `Renderer`, `Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
-- **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0) ; même tri que l'héritage (`bonnes-pratiques.md`, point 7).
+### Cycle de vie
+1. `current.md` vide → discuter avec l'utilisateur du point en tête de `later.md` (et des autres documents : un point plus urgent peut exister ailleurs, un prérequis peut manquer).
+2. Écrire le point dans `current.md` (format ci-dessous) et retirer sa section de `later.md` ; ce qui n'entre pas dans le point reste dans `later.md`, rattaché à la section qui le traitera. Mettre à jour les renvois (`CLAUDE.md`, `bonnes-pratiques.md`, autres sections de `later.md`).
+3. Chaque objectif passe par `/planification-ml <objectif>` → `docs/plan/<sujet>.md`, puis implémentation et `/pr-ml`. Un objectif simple (peu de fichiers, aucun choix de conception ni d'API ouvert) peut aller directement à `/implement-next-objective`.
+4. Objectif atteint → supprimer sa puce dans la même branche (ou la réduire à son reste), décrire le nouvel état dans `architecture.md`, supprimer le plan.
+5. Dernière puce supprimée → le fichier ne garde que son en-tête : retour en 1.
+
+### Format
+- **Titre** : `# Gros point actuel — <nom du point>` (le nom de la section de `later.md`).
+- **Paragraphe de règles** (fixe, recopié d'un point à l'autre) : ce qui reste seulement, pas d'historique, propositions à valider avant d'appliquer, changements cassants maintenant, un `/planification-ml` par objectif, signification de (U).
+- **Paragraphe de cadrage** (trois ou quatre phrases) : pourquoi ce point passe avant les autres (ce qui en dépend), et le **critère de fin** du point entier, vérifiable (ex. « la démo compile contre la seule API publique »).
+- **Objectifs** : une puce de premier niveau par objectif, `- **Nom court** : …`, dans l'ordre d'exécution (du moins risqué au plus cassant, prérequis d'abord). Une puce = un objectif planifiable et fusionnable seul (une branche, une PR), ni une tâche de dix minutes ni un point entier. `(U)` sur le plus urgent seulement.
+- **Sous-puces** d'un objectif : les constats précis (classe, méthode, champ, chiffre daté « au AAAA-MM-JJ »), la cible, et ce qui reste **à décider** (marqué « à décider » ou « à discuter avant toute décision ») : la planification part de là. Assez de détail pour que `/planification-ml` n'ait pas à relire `later.md`, pas de solution détaillée (elle va dans le plan).
+- **Dernier objectif = test d'acceptation** du point quand c'est possible (une démo, un module, une scène qui doit fonctionner).
+
+### Ce qui n'y va pas
+- Rien de conditionnel (« si les mesures l'exigent », « si un vrai jeu le demande ») : ces lignes restent dans `later.md` (`bonnes-pratiques.md`, point 6).
+- Aucun « fait », « déjà », « aujourd'hui fait X », aucune date de fin.
+- Pas de bug découvert hors du point : il va dans « Bugs relevés en passant » ou dans `futur-discussion.md`.
+- Pas de second gros point : un objectif qui grossit au point d'en devenir un retourne dans `later.md`.
 
 ## Gamma : rendu linéaire activable et réglable
 LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'écran.
@@ -49,14 +54,15 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
-- **Deux modules Maven** : `mightylib` (jar) et `demo`, qui en dépend comme un projet externe.
 - **Jar léger** : dépendances (LWJGL et natives, JOML, org.json, JBox2D…) déclarées dans le pom, pas embarquées.
 - **Distribution** : `mvn install`, puis JitPack ou GitHub Packages. **Versions** sémantiques par release.
 - **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
 - **Shaders** : includes GLSL lus depuis le classpath (jar) par l'abstraction de sources de `Resources` (aujourd'hui `ShaderLoader` lit le disque) ; shaders injectés par les projets et les mods (leur `shaders.json` ou leurs `ShaderData`, un nom identique remplace celui du moteur) ; variantes par `#define` injectés par le moteur (ubershader) ; `#version` et macros `in`/`out` injectés pour n'avoir qu'un jeu de fichiers au lieu de `1_40`/`3_30`.
   - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources.
   - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
-- Extension et API publique : section « Philosophie du moteur » en tête de ce fichier.
+  - **Shaders `1_40` en grande partie absents** (4 fichiers contre 29 en `3_30`) : la règle « un nouveau shader existe dans les deux versions » n'est plus tenue ; le doublon disparaît avec l'injection de `#version` et des macros `in`/`out`.
+  - **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
+- Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
