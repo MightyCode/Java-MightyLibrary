@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
@@ -69,7 +69,7 @@ public class TerrainGeneration3D extends Scene {
         // Platform of cubes
         sBlock = new Renderer("textureDisplacement3D", false);
         float[] cratesInfo = createCrates(10);
-        sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
+        sBlock.getMesh().addAllVbo(cratesInfo, new int[]{3, 2}, Mesh.STATIC_STORE, Mesh.STATIC_STORE);
         sBlock.setMainTextureChannel("container");
         // Displacement texture for cubes/crate
         sBlock.addTextureChannel("dispMap1", "displacementMap", 1);

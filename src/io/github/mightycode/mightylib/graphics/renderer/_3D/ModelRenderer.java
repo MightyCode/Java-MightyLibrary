@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.resources.models.Model;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
@@ -15,7 +15,7 @@ import java.util.List;
 import static org.lwjgl.opengl.GL11.*;
 
 /**
- * Display a Model (ModelLoader): one Shape per mesh, sent to the graphic card one mesh per frame
+ * Display a Model (ModelLoader): one Mesh per mesh of the model, sent to the graphic card one mesh per frame
  * within the GLResources budget, meshes are displayed as soon as they are sent.
  * Each mesh binds its diffuse map on unit 0 and its specular map on unit 1.
  */
@@ -74,13 +74,13 @@ public class ModelRenderer extends Renderer {
                 "ModelRenderer/" + modelName + "#" + id());
     }
 
-    // The meshes of one version of the model, each with its own shape, and their textures
+    // The meshes of one version of the model, each with its own Mesh, and their textures
     private final class MeshSet {
         final Model model;
         final int version;
         // A copy: a reloaded model gives its previous list to the copy that unloads it
         final List<ModelMesh> meshes;
-        final Shape[] shapes;
+        final Mesh[] glMeshes;
         final Texture[] diffuseTextures;
         final Texture[] specularTextures;
         int sent;
@@ -89,7 +89,7 @@ public class ModelRenderer extends Renderer {
             this.model = model;
             version = model.getVersion();
             meshes = new ArrayList<>(model.getMeshes());
-            shapes = new Shape[meshes.size()];
+            glMeshes = new Mesh[meshes.size()];
             diffuseTextures = new Texture[meshes.size()];
             specularTextures = new Texture[meshes.size()];
 
@@ -113,15 +113,15 @@ public class ModelRenderer extends Renderer {
                 return true;
 
             ModelMesh mesh = meshes.get(sent);
-            Shape meshShape = new Shape(shaderName, true);
-            meshShape.setEboStorage(Shape.STATIC_STORE);
-            meshShape.addVboFloat(mesh.getPositions(), 3, Shape.STATIC_STORE);
-            meshShape.addVboFloat(mesh.getTextureCoordinates(), 2, Shape.STATIC_STORE);
-            meshShape.addVboFloat(mesh.getNormals(), 3, Shape.STATIC_STORE);
-            meshShape.setEbo(mesh.getIndices());
+            Mesh glMesh = new Mesh(shaderName, true);
+            glMesh.setEboStorage(Mesh.STATIC_STORE);
+            glMesh.addVboFloat(mesh.getPositions(), 3, Mesh.STATIC_STORE);
+            glMesh.addVboFloat(mesh.getTextureCoordinates(), 2, Mesh.STATIC_STORE);
+            glMesh.addVboFloat(mesh.getNormals(), 3, Mesh.STATIC_STORE);
+            glMesh.setEbo(mesh.getIndices());
             Logger.CheckOpenGLError("Send mesh " + mesh.getName() + " of model " + modelName);
 
-            shapes[sent] = meshShape;
+            glMeshes[sent] = glMesh;
             ++sent;
 
             return complete();
@@ -138,7 +138,7 @@ public class ModelRenderer extends Renderer {
 
         void release() {
             for (int i = 0; i < sent; ++i)
-                shapes[i].unload();
+                glMeshes[i].unload();
 
             for (Texture texture : diffuseTextures)
                 glResources.releaseResource(texture);
@@ -264,7 +264,7 @@ public class ModelRenderer extends Renderer {
                 sentToShader(shininessValue);
             }
 
-            shown.shapes[i].display();
+            shown.glMeshes[i].display();
         }
 
         if (faceCulling)
@@ -282,7 +282,7 @@ public class ModelRenderer extends Renderer {
         if (pending != null)
             pending.release();
 
-        // The base shape only gives the shader: no mesh in it
+        // The base mesh only gives the shader: no mesh in it
         super.unload();
     }
 
@@ -311,7 +311,7 @@ public class ModelRenderer extends Renderer {
 
         @Override
         public void unload(int remainingMilliseconds) {
-            // The shapes belong to the renderer
+            // The meshes belong to the renderer
         }
     }
 }

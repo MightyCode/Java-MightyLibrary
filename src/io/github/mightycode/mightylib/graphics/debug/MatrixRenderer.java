@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.debug;
 
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
@@ -39,12 +39,12 @@ public class MatrixRenderer {
         // Setup the renderer
         renderer = new Renderer("multiColoredShape2D", true);
         renderer.setColorMode(ColorList.Red());
-        renderer.getShape().setEboStorage(Shape.STATIC_STORE);
-        renderer.getShape().setEbo(new int[0]);
+        renderer.getMesh().setEboStorage(Mesh.STATIC_STORE);
+        renderer.getMesh().setEbo(new int[0]);
         renderer.setReferenceCamera(camera);
 
-        vboPositionIndex = renderer.getShape().addVboFloat(new float[0], 2, Shape.STATIC_STORE);
-        vboColorIndex = renderer.getShape().addVboFloat(new float[0], 4, Shape.STATIC_STORE);
+        vboPositionIndex = renderer.getMesh().addVboFloat(new float[0], 2, Mesh.STATIC_STORE);
+        vboColorIndex = renderer.getMesh().addVboFloat(new float[0], 4, Mesh.STATIC_STORE);
 
         lowValue = new Color4f(222 / 255f, 235 / 255f, 183 / 255f, 1);
         highValue = new Color4f(59 / 255f, 77 / 255f, 6 / 255f, 1);
@@ -147,9 +147,9 @@ public class MatrixRenderer {
 
         // Update the renderer with computed values
 
-        renderer.getShape().setEbo(ebo);
-        renderer.getShape().updateVbo(position, vboPositionIndex);
-        renderer.getShape().updateVbo(colors, vboColorIndex);
+        renderer.getMesh().setEbo(ebo);
+        renderer.getMesh().updateVbo(position, vboPositionIndex);
+        renderer.getMesh().updateVbo(colors, vboColorIndex);
     }
 
     public void display() {

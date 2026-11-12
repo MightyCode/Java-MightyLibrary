@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
@@ -15,7 +15,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 
 /**
  * Shows how to draw custom geometry with a custom shader: a star (triangle fan with a color per vertex)
- * built by a Renderer subclass, and a second one built from a Shape created by the scene.
+ * built by a Renderer subclass, and a second one built from a Mesh created by the scene.
  * Key D: toggles the depth test (the stars are at different depths and overlap).
  */
 public class CustomRenderer2D extends Scene {
@@ -29,7 +29,7 @@ public class CustomRenderer2D extends Scene {
         public StarRenderer(float radius) {
             super(SHADER, false);
 
-            Shape star = getShape();
+            Mesh star = getMesh();
             star.setDrawMode(EDrawMode.TriangleFan);
             fillStar(star, radius);
 
@@ -59,14 +59,14 @@ public class CustomRenderer2D extends Scene {
         first.setPosition(new Vector3f(centerX - 150, centerY, 1f));
         first.setScale(new Vector3f(180f, 180f, 1f));
 
-        // Workaround: the constructor of Renderer always creates its own Shape (and takes the shader),
+        // Workaround: the constructor of Renderer always creates its own Mesh (and takes the shader),
         // so the one built by the scene replaces it and the first one has to be unloaded by hand
         second = new Renderer(SHADER, false);
-        second.getShape().unload();
-        Shape secondShape = new Shape(SHADER, false);
-        secondShape.setDrawMode(EDrawMode.TriangleFan);
-        fillStar(secondShape, 0.6f);
-        second.setShape(secondShape);
+        second.getMesh().unload();
+        Mesh secondMesh = new Mesh(SHADER, false);
+        secondMesh.setDrawMode(EDrawMode.TriangleFan);
+        fillStar(secondMesh, 0.6f);
+        second.setMesh(secondMesh);
         second.addShaderValue("time", Float.class, 0f);
         second.setPosition(new Vector3f(centerX, centerY, -1f));
         second.setScale(new Vector3f(280f, 280f, 1f));
@@ -75,7 +75,7 @@ public class CustomRenderer2D extends Scene {
     }
 
     // A star: the center, then outer and inner points alternately, back to the first one
-    private static void fillStar(Shape shape, float innerRatio) {
+    private static void fillStar(Mesh mesh, float innerRatio) {
         int points = 5;
         int vertexCount = points * 2 + 2;
         float[] positions = new float[vertexCount * 2];
@@ -98,23 +98,23 @@ public class CustomRenderer2D extends Scene {
             colors[vertex * 4 + 3] = 1f;
         }
 
-        shape.addVboFloat(positions, 2, Shape.STATIC_STORE);
+        mesh.addVboFloat(positions, 2, Mesh.STATIC_STORE);
 
-        // Workaround: a Shape gives the next channel to each VBO (no explicit channel), so the color goes
+        // Workaround: a Mesh gives the next channel to each VBO (no explicit channel), so the color goes
         // to channel 3 only after filling channels 1 and 2 with unused data
         float[] unused = new float[vertexCount * 2];
-        shape.addVboFloat(unused, 2, Shape.STATIC_STORE);
-        shape.addVboFloat(unused, 2, Shape.STATIC_STORE);
-        shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
-        shape.disableVbo(Shape.COMMON_NORMAL_POSITION_CHANNEL);
+        mesh.addVboFloat(unused, 2, Mesh.STATIC_STORE);
+        mesh.addVboFloat(unused, 2, Mesh.STATIC_STORE);
+        mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
+        mesh.disableVbo(Mesh.COMMON_NORMAL_POSITION_CHANNEL);
 
-        shape.addVboFloat(colors, 4, Shape.STATIC_STORE);
+        mesh.addVboFloat(colors, 4, Mesh.STATIC_STORE);
     }
 
-    // Workaround: the depth test depends on the tag of the shader (2D: none), only the Shape can change it
+    // Workaround: the depth test depends on the tag of the shader (2D: none), only the Mesh can change it
     private void applyDepth() {
-        first.getShape().setDimensionTo2D(!depthTest);
-        second.getShape().setDimensionTo2D(!depthTest);
+        first.getMesh().setDimensionTo2D(!depthTest);
+        second.getMesh().setDimensionTo2D(!depthTest);
     }
 
     @Override

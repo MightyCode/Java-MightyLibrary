@@ -21,7 +21,7 @@ import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL40.GL_PATCHES;
 
-public class Shape {
+public class Mesh {
     public static final int STATIC_STORE = GL_STATIC_DRAW;
     public static final int DYNAMIC_STORE = GL_DYNAMIC_DRAW;
     public static final int STREAM_STORE = GL_STREAM_DRAW;
@@ -46,7 +46,7 @@ public class Shape {
         }
     }
 
-    // One vertex array per context that draws this shape, created when it first does
+    // One vertex array per context that draws this mesh, created when it first does
     private final ArrayList<VaoEntry> vaoEntries = new ArrayList<>(1);
     private VaoEntry lastEntry;
     // Changes with each change of the buffers and attributes: a vertex array of another version is rebuilt
@@ -83,7 +83,7 @@ public class Shape {
         return shader.isLoaded() ? shader : glResources.fallbackShader();
     }
 
-    public Shape(String shaderName, boolean useEbo) {
+    public Mesh(String shaderName, boolean useEbo) {
         setDrawMode(EDrawMode.Triangles);
 
         // Unknown or failed: the fallback data, whose program is linked from the start
@@ -273,7 +273,7 @@ public class Shape {
         this.indicesSize = indicesSize;
 
         if (!useEbo)
-            System.err.print(">(Shape.java) Providing EBO without using EBO !");
+            System.err.print(">(Mesh.java) Providing EBO without using EBO !");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         Logger.CheckOpenGLError("Bind ebo : " + ebo);
@@ -288,7 +288,7 @@ public class Shape {
     public void updateEbo(int[] newArray, int startIndex) {
         bind();
         if (!useEbo) {
-            System.err.print(">(Shape.java) Trying to update array without using EBO !");
+            System.err.print(">(Mesh.java) Trying to update array without using EBO !");
             return;
         }
 

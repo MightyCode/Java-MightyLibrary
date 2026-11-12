@@ -21,7 +21,7 @@ import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.type.FloatTweening;
 import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
@@ -126,7 +126,7 @@ public class Scene3D extends Scene {
         // Platform of cubes
         sBlock = new Renderer("textureDisplacement3D", false);
         float[] cratesInfo = createCrates(10);
-        sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
+        sBlock.getMesh().addAllVbo(cratesInfo, new int[]{3, 2}, Mesh.STATIC_STORE, Mesh.STATIC_STORE);
         sBlock.setMainTextureChannel("container");
         // Displacement texture for cubes/crate
         sBlock.addTextureChannel("dispMap1", "displacementMap", 1);
@@ -295,7 +295,7 @@ public class Scene3D extends Scene {
         displacementMapTweening.update();
 
         timeShaderValue.setObject(displacementMapTweening.value());
-        sBlock.getShape().getShader().sendValueToShader(timeShaderValue);
+        sBlock.getMesh().getShader().sendValueToShader(timeShaderValue);
 
         rotationTweening.update();
 
@@ -571,8 +571,8 @@ public class Scene3D extends Scene {
             normals[i++] = (f != null ? f : Float.NaN); // Or whatever default you want.
         }
 
-        renderer.getShape().setEbo(tempIndices.stream().mapToInt(j -> j).toArray());
-        renderer.getShape().addVboFloat(position, 3, Shape.STATIC_STORE);
-        renderer.getShape().addVboFloat(normals, 3, Shape.STATIC_STORE);
+        renderer.getMesh().setEbo(tempIndices.stream().mapToInt(j -> j).toArray());
+        renderer.getMesh().addVboFloat(position, 3, Mesh.STATIC_STORE);
+        renderer.getMesh().addVboFloat(normals, 3, Mesh.STATIC_STORE);
     }
 }

@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.game;
 
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.map.*;
 import io.github.mightycode.mightylib.resources.texture.Texture;
@@ -114,13 +114,13 @@ public class TileMapRenderer extends Renderer {
 
         this.leftUpPosition = new Vector2f(0, 0);
 
-        shape.setEboStorage(Shape.STATIC_STORE);
-        shape.setEbo(new int[0]);
+        mesh.setEboStorage(Mesh.STATIC_STORE);
+        mesh.setEbo(new int[0]);
 
-        positionIndex = shape.addVboFloat(new float[0],
-                2, (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
-        textureIndex = shape.addVboFloat(new float[0],
-                2,  (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
+        positionIndex = mesh.addVboFloat(new float[0],
+                2, (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
+        textureIndex = mesh.addVboFloat(new float[0],
+                2,  (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
 
         animatedTiles = new ArrayList<>();
 
@@ -271,9 +271,9 @@ public class TileMapRenderer extends Renderer {
             }
         }
 
-        shape.setEbo(tilesIndices);
-        shape.updateVbo(tilesTexturePosition, textureIndex);
-        shape.updateVbo(tilesPosition, positionIndex);
+        mesh.setEbo(tilesIndices);
+        mesh.updateVbo(tilesTexturePosition, textureIndex);
+        mesh.updateVbo(tilesPosition, positionIndex);
     }
 
     public void update(){
@@ -304,7 +304,7 @@ public class TileMapRenderer extends Renderer {
         if (tilemap.hasBeenUpdated())
             loadTileMapInformation();
         else if (animationChanged)
-            shape.updateVbo(tilesTexturePosition, textureIndex);
+            mesh.updateVbo(tilesTexturePosition, textureIndex);
     }
 
     private void updateAnimatedTileTexture(AnimatedTile animatedTile) {
@@ -405,9 +405,9 @@ public class TileMapRenderer extends Renderer {
     public void reset() {
         this.tilemap = null;
         this.tileSetAtlas = null;
-        shape.setEbo(new int[0]);
-        shape.updateVbo(new float[0], positionIndex);
-        shape.updateVbo(new float[0], textureIndex);
+        mesh.setEbo(new int[0]);
+        mesh.updateVbo(new float[0], positionIndex);
+        mesh.updateVbo(new float[0], textureIndex);
 
         animatedTiles.clear();
     }

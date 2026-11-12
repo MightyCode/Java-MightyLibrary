@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.text;
 
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -60,11 +60,11 @@ public class Text extends Renderer implements Cloneable {
         this.leftUpPosition = new Vector2f(0, 0);
 
         // Dynamic: text content can change every frame (debug info, counters...)
-        shape.setEboStorage(Shape.DYNAMIC_STORE);
-        shape.setEbo(new int[0]);
+        mesh.setEboStorage(Mesh.DYNAMIC_STORE);
+        mesh.setEbo(new int[0]);
 
-        positionIndex = shape.addVboFloat(new float[0], 2, Shape.DYNAMIC_STORE);
-        textureIndex = shape.addVboFloat(new float[0], 2, Shape.DYNAMIC_STORE);
+        positionIndex = mesh.addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
+        textureIndex = mesh.addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
     }
 
     private boolean shouldNotDrawText(){
@@ -449,9 +449,9 @@ public class Text extends Renderer implements Cloneable {
             currentCharOffset.y += (float) (usedFont().getFontFile().getLineHeight() * fontSize);
         }
 
-        shape.setEbo(indices);
-        shape.updateVbo(texturePosition, textureIndex);
-        shape.updateVbo(charPositions, positionIndex);
+        mesh.setEbo(indices);
+        mesh.updateVbo(texturePosition, textureIndex);
+        mesh.updateVbo(charPositions, positionIndex);
     }
 
     // X Y Z W

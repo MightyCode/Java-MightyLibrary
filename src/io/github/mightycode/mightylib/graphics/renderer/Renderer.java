@@ -25,7 +25,7 @@ public class Renderer extends UUID implements IDisplayable {
 
     protected Camera referenceCamera;
 
-    protected Shape shape;
+    protected Mesh mesh;
 
     protected final Vector3f position;
     protected final Vector3f scale;
@@ -49,7 +49,7 @@ public class Renderer extends UUID implements IDisplayable {
     protected HashSet<String> optionalValues;
 
     public Renderer(String shaderName, boolean useEbo) {
-        shape = new Shape(shaderName, useEbo);
+        mesh = new Mesh(shaderName, useEbo);
         model = new Matrix4f().identity();
 
         shaderValues = new HashMap<>();
@@ -66,7 +66,7 @@ public class Renderer extends UUID implements IDisplayable {
         referenceCamera = null;
 
         // Generic matrices: sent at each draw when the current program uses them
-        if (shape.is2DPurpose()) {
+        if (mesh.is2DPurpose()) {
             putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera2D().getProjection());
             putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera2D().getView());
         } else {
@@ -86,9 +86,9 @@ public class Renderer extends UUID implements IDisplayable {
         optionalValues.add(key);
     }
 
-    // True when the current program of the shape has this uniform
+    // True when the current program of the mesh has this uniform
     protected boolean hasUniform(String name) {
-        return shape.getShader().getLink(name) != -1;
+        return mesh.getShader().getLink(name) != -1;
     }
 
     // Send the values of this renderer to the current program (the unchanged ones are skipped by it)
@@ -152,11 +152,11 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     protected void sentToShader(ShaderValue value) {
-        shape.getShader().sendValueToShader(value);
+        mesh.getShader().sendValueToShader(value);
     }
 
     public void draw(){
-        shape.display();
+        mesh.display();
     }
 
     public void setPosition(Vector3f position){
@@ -274,7 +274,7 @@ public class Renderer extends UUID implements IDisplayable {
             glResources.releaseResource((GLElement) mainTexture);
         }
 
-        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+        mesh.enableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
         mainTexture = texture;
     }
 
@@ -293,7 +293,7 @@ public class Renderer extends UUID implements IDisplayable {
     public void addTextureChannel(IRenderTextureBindable texture, String nameOfUniform, int channelNumber) {
         addShaderValue(nameOfUniform, Integer.class, channelNumber);
 
-        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+        mesh.enableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
 
         if (textures == null)
             textures = new IRenderTextureBindable[30];
@@ -311,7 +311,7 @@ public class Renderer extends UUID implements IDisplayable {
         shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
 
         if (disableTexture)
-            shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+            mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
 
         return value;
     }
@@ -322,18 +322,18 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     public void setNoColorNoTextureMode() {
-        shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
+        mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
 
         shaderValues.remove(ShaderManager.GENERIC_COLOR_FIELD_NAME);
     }
 
 
-    public Shape getShape(){
-        return shape;
+    public Mesh getMesh(){
+        return mesh;
     }
 
-    public void setShape(Shape shape){
-        this.shape = shape;
+    public void setMesh(Mesh mesh){
+        this.mesh = mesh;
     }
 
     public Vector3f position(){
@@ -360,7 +360,7 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     public void unload() {
-        shape.unload();
+        mesh.unload();
 
         if (mainTexture instanceof GLElement)
             glResources.releaseResource((GLElement) mainTexture);

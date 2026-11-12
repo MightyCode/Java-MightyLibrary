@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer._3D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection3D;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;
@@ -85,7 +85,7 @@ public class CubeRenderer extends Renderer {
                 0, 0, 1,
         };
 
-        positionIndex = shape.addVboFloat(vertices, VERTEX_POSITION_SIZE, Shape.STATIC_STORE);
+        positionIndex = mesh.addVboFloat(vertices, VERTEX_POSITION_SIZE, Mesh.STATIC_STORE);
 
         int[] ref = RectangularFace.IndicesForSquare();
 
@@ -96,7 +96,7 @@ public class CubeRenderer extends Renderer {
             }
         }
 
-        shape.setEbo(ebo);
+        mesh.setEbo(ebo);
 
         setPosition(new Vector3f(0));
     }
@@ -113,7 +113,7 @@ public class CubeRenderer extends Renderer {
                     VERTEX_TEXTURE_SIZE * VERTEX_NUMBER * i, vertexTexture.length);
         }
 
-        textureIndex = shape.addVboFloat(table, VERTEX_TEXTURE_SIZE, Shape.STATIC_STORE);
+        textureIndex = mesh.addVboFloat(table, VERTEX_TEXTURE_SIZE, Mesh.STATIC_STORE);
     }
 
     public void setNormal(){
@@ -127,6 +127,6 @@ public class CubeRenderer extends Renderer {
             }
         }
 
-        normalIndex = shape.addVboFloat(table, VERTEX_NORMAL_SIZE, Shape.STATIC_STORE);
+        normalIndex = mesh.addVboFloat(table, VERTEX_NORMAL_SIZE, Mesh.STATIC_STORE);
     }
 }

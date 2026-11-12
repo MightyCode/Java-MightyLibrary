@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -32,24 +32,24 @@ public abstract class Shape2DRenderer extends Renderer {
 
         texturePosition = new Vector4f();
 
-        positionIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
-        textureIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
+        positionIndex = mesh.addVboFloat(new float[]{}, 2, Mesh.STATIC_STORE);
+        textureIndex = mesh.addVboFloat(new float[]{}, 2, Mesh.STATIC_STORE);
     }
 
     private void uploadGeometry() {
         if (indicesDirty) {
-            shape.setEboStorage(Shape.STATIC_STORE);
-            shape.setEbo(getIndices());
+            mesh.setEboStorage(Mesh.STATIC_STORE);
+            mesh.setEbo(getIndices());
             indicesDirty = false;
         }
 
         if (positionDirty) {
-            shape.updateVbo(calculatePosition(), positionIndex);
+            mesh.updateVbo(calculatePosition(), positionIndex);
             positionDirty = false;
         }
 
         if (textureDirty) {
-            shape.updateVbo(calculateTexturePosition(), textureIndex);
+            mesh.updateVbo(calculateTexturePosition(), textureIndex);
             textureDirty = false;
         }
     }
