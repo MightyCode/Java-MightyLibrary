@@ -50,11 +50,12 @@ public class Mesh {
     protected ArrayList<Boolean> vbosInteger;
 
     protected ArrayList<Integer> vbos;
+    // Channel (attribute location in the shader) of each vbo
+    protected ArrayList<Integer> vbosChannel;
     protected ArrayList<Integer> vbosStorage;
     // Number of elements currently allocated for each vbo, to update without reallocating when it doesn't change
     protected ArrayList<Integer> vbosSize;
     protected ArrayList<Boolean> vbosEnable;
-    protected int vboCount;
     protected int indicesSize;
 
     protected boolean useEbo;
@@ -70,19 +71,27 @@ public class Mesh {
         indicesSize = 0;
 
         vbos = new ArrayList<>();
+        vbosChannel = new ArrayList<>();
         vbosStorage = new ArrayList<>();
         vbosSize = new ArrayList<>();
         vbosEnable = new ArrayList<>();
         vbosVertexSize = new ArrayList<>();
         vbosInteger = new ArrayList<>();
-        vboCount = 0;
         ebo = 0;
         eboStorage = STATIC_STORE;
         bind();
         setUseEbo(useEbo);
     }
 
+    // Add a float attribute on the next free channel, returns the index of its vbo (for updateVbo)
     public int addVboFloat(float[] vertices, int vertexSize, int storage) {
+        return addVboFloat(nextFreeChannel(), vertices, vertexSize, storage);
+    }
+
+    // Add a float attribute on the given channel (location in the shader), returns the index of its vbo (for updateVbo)
+    public int addVboFloat(int channel, float[] vertices, int vertexSize, int storage) {
+        checkChannelFree(channel);
+
         bind();
         int vbo = GenDeleteResources.GenBuffers();
         Logger.CheckOpenGLError("Gen vbo buffer : " + vbo);
@@ -96,34 +105,58 @@ public class Mesh {
         glBufferData(GL_ARRAY_BUFFER, buffer, storage);
         Logger.CheckOpenGLError("Buffer vbo buffer : " + storage + " of size : " + vertices.length);
 
-        glVertexAttribPointer(vboCount, vertexSize, GL_FLOAT, false, 0, 0);
+        glVertexAttribPointer(channel, vertexSize, GL_FLOAT, false, 0, 0);
         Logger.CheckOpenGLError("Vbo attrib pointer : " + vbo);
 
-        return endAddVbo(vbo, vertices.length, vertexSize, storage, false);
+        return endAddVbo(vbo, channel, vertices.length, vertexSize, storage, false);
     }
 
+    // Add an integer attribute on the next free channel, returns the index of its vbo (for updateVbo)
     public int addVboInt(int[] vertices, int vertexSize, int storage){
+        return addVboInt(nextFreeChannel(), vertices, vertexSize, storage);
+    }
+
+    // Add an integer attribute on the given channel (location in the shader), returns the index of its vbo
+    public int addVboInt(int channel, int[] vertices, int vertexSize, int storage){
+        checkChannelFree(channel);
+
         bind();
         int vbo = GenDeleteResources.GenBuffers();
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferData(GL_ARRAY_BUFFER, vertices, storage);
-        glVertexAttribIPointer(vboCount, vertexSize, GL_INT,0, 0);
+        glVertexAttribIPointer(channel, vertexSize, GL_INT,0, 0);
 
-        return endAddVbo(vbo, vertices.length, vertexSize, storage, true);
+        return endAddVbo(vbo, channel, vertices.length, vertexSize, storage, true);
     }
 
-    private int endAddVbo(int vbo, int arrayLength, int vertexSize, int storage, boolean integer){
-        vbosEnable.add(false);
-        enableVbo(vboCount);
+    // The lowest channel without attribute: the rank of the vbo when no channel is given explicitly
+    private int nextFreeChannel() {
+        int channel = 0;
+        while (vbosChannel.contains(channel))
+            ++channel;
 
+        return channel;
+    }
+
+    private void checkChannelFree(int channel) {
+        if (channel < 0)
+            throw new IllegalArgumentException("Negative attribute channel : " + channel);
+
+        if (vbosChannel.contains(channel))
+            throw new IllegalArgumentException("Attribute channel " + channel + " already used by this mesh");
+    }
+
+    private int endAddVbo(int vbo, int channel, int arrayLength, int vertexSize, int storage, boolean integer){
         verticesToDraw = arrayLength / vertexSize;
         vbos.add(vbo);
+        vbosChannel.add(channel);
         vbosStorage.add(storage);
         vbosSize.add(arrayLength);
         vbosVertexSize.add(vertexSize);
         vbosInteger.add(integer);
-        ++vboCount;
+        vbosEnable.add(false);
+        enableVbo(channel);
         layoutChanged();
 
         return vbos.size() - 1;
@@ -172,35 +205,38 @@ public class Mesh {
     }
 
 
-    public void disableVbo(int pos){
-        if(vbosEnable.size() <= pos)
+    // Stop feeding the attribute of this channel (no effect when the mesh has none on it)
+    public void disableVbo(int channel){
+        int index = vbosChannel.indexOf(channel);
+        if (index == -1)
             return;
 
-        if (vbosEnable.get(pos)) {
+        if (vbosEnable.get(index)) {
             bind();
-            glDisableVertexAttribArray(pos);
-            vbosEnable.set(pos, false);
+            glDisableVertexAttribArray(channel);
+            vbosEnable.set(index, false);
             layoutChanged();
         }
     }
 
-    public void enableVbo(int pos){
-        if(vbosEnable.size() <= pos) return;
+    // Feed again the attribute of this channel (no effect when the mesh has none on it)
+    public void enableVbo(int channel){
+        int index = vbosChannel.indexOf(channel);
+        if (index == -1)
+            return;
 
-        if (!vbosEnable.get(pos)) {
+        if (!vbosEnable.get(index)) {
             bind();
-            glEnableVertexAttribArray(pos);
-            Logger.CheckOpenGLError("Vbo enable attrib : " + pos);
-            vbosEnable.set(pos, true);
+            glEnableVertexAttribArray(channel);
+            Logger.CheckOpenGLError("Vbo enable attrib : " + channel);
+            vbosEnable.set(index, true);
             layoutChanged();
         }
     }
 
-    public boolean isEnableVbo(int pos) {
-        if (vbosEnable.size() <= pos)
-            return false;
-
-        return vbosEnable.get(pos);
+    public boolean isEnableVbo(int channel) {
+        int index = vbosChannel.indexOf(channel);
+        return index != -1 && vbosEnable.get(index);
     }
 
     public void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
@@ -313,17 +349,18 @@ public class Mesh {
         glBindVertexArray(entry.id);
 
         for (int i = 0; i < vbos.size(); ++i) {
+            int channel = vbosChannel.get(i);
             glBindBuffer(GL_ARRAY_BUFFER, vbos.get(i));
 
             if (vbosInteger.get(i))
-                glVertexAttribIPointer(i, vbosVertexSize.get(i), GL_INT, 0, 0);
+                glVertexAttribIPointer(channel, vbosVertexSize.get(i), GL_INT, 0, 0);
             else
-                glVertexAttribPointer(i, vbosVertexSize.get(i), GL_FLOAT, false, 0, 0);
+                glVertexAttribPointer(channel, vbosVertexSize.get(i), GL_FLOAT, false, 0, 0);
 
             if (vbosEnable.get(i))
-                glEnableVertexAttribArray(i);
+                glEnableVertexAttribArray(channel);
             else
-                glDisableVertexAttribArray(i);
+                glDisableVertexAttribArray(channel);
         }
 
         if (useEbo && ebo != 0)
@@ -418,7 +455,7 @@ public class Mesh {
         vbosSize.clear();
         vbosVertexSize.clear();
         vbosInteger.clear();
-        vboCount = 0;
+        vbosChannel.clear();
         layoutChanged();
     }
 

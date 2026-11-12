@@ -95,17 +95,9 @@ public class CustomRenderer2D extends Scene {
             colors[vertex * 4 + 3] = 1f;
         }
 
-        mesh.addVboFloat(positions, 2, Mesh.STATIC_STORE);
-
-        // Workaround: a Mesh gives the next channel to each VBO (no explicit channel), so the color goes
-        // to channel 3 only after filling channels 1 and 2 with unused data
-        float[] unused = new float[vertexCount * 2];
-        mesh.addVboFloat(unused, 2, Mesh.STATIC_STORE);
-        mesh.addVboFloat(unused, 2, Mesh.STATIC_STORE);
-        mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
-        mesh.disableVbo(Mesh.COMMON_NORMAL_POSITION_CHANNEL);
-
-        mesh.addVboFloat(colors, 4, Mesh.STATIC_STORE);
+        mesh.addVboFloat(Mesh.COMMON_VERTEX_POSITION_CHANNEL, positions, 2, Mesh.STATIC_STORE);
+        // The location of the color in the shader
+        mesh.addVboFloat(COLOR_CHANNEL, colors, 4, Mesh.STATIC_STORE);
     }
 
     // A 2D shader gives neither depth test nor depth write by default: both are needed to hide the far star
