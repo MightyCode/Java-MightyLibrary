@@ -59,11 +59,11 @@ public class CustomRenderer2D extends Scene {
         first.setPosition(new Vector3f(centerX - 150, centerY, 1f));
         first.setScale(new Vector3f(180f, 180f, 1f));
 
-        // Workaround: the constructor of Renderer always creates its own Mesh (and takes the shader),
-        // so the one built by the scene replaces it and the first one has to be unloaded by hand
+        // Workaround: the constructor of Renderer always creates its own Mesh, so the one built by the scene
+        // replaces it and the first one has to be unloaded by hand
         second = new Renderer(SHADER, false);
         second.getMesh().unload();
-        Mesh secondMesh = new Mesh(SHADER, false);
+        Mesh secondMesh = new Mesh(false);
         secondMesh.setDrawMode(EDrawMode.TriangleFan);
         fillStar(secondMesh, 0.6f);
         second.setMesh(secondMesh);

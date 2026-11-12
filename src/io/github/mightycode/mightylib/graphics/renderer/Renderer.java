@@ -6,6 +6,8 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindab
 import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
@@ -40,6 +42,10 @@ public class Renderer extends UUID implements IDisplayable {
     protected IRenderTextureBindable mainTexture;
     protected IRenderTextureBindable[] textures;
 
+    // Program of the shader, held (urgent reference) until unload
+    private final Shader shader;
+    private boolean shaderReleased;
+
     /*
      * Every value this renderer sends, sent again at each draw (filtered by the program, which skips unchanged ones):
      * the program can change at any time (fallback while loading, hot reload) and has none of them at first.
@@ -49,7 +55,13 @@ public class Renderer extends UUID implements IDisplayable {
     protected HashSet<String> optionalValues;
 
     public Renderer(String shaderName, boolean useEbo) {
-        mesh = new Mesh(shaderName, useEbo);
+        // Unknown or failed: the fallback data, whose program is linked from the start
+        ShaderData shaderData = resources.getResourceOrFallback(ShaderData.class, shaderName);
+        shader = (Shader) glResources.acquire(shaderData, true);
+        boolean in2D = shaderData.isDimension2DShader();
+
+        mesh = new Mesh(useEbo);
+        mesh.setDimensionTo2D(in2D);
         model = new Matrix4f().identity();
 
         shaderValues = new HashMap<>();
@@ -66,7 +78,7 @@ public class Renderer extends UUID implements IDisplayable {
         referenceCamera = null;
 
         // Generic matrices: sent at each draw when the current program uses them
-        if (mesh.is2DPurpose()) {
+        if (in2D) {
             putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera2D().getProjection());
             putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera2D().getView());
         } else {
@@ -86,9 +98,14 @@ public class Renderer extends UUID implements IDisplayable {
         optionalValues.add(key);
     }
 
-    // True when the current program of the mesh has this uniform
+    // The program if linked, otherwise the fallback one (failed or still loading), always linked
+    public Shader getShader() {
+        return shader.isLoaded() ? shader : glResources.fallbackShader();
+    }
+
+    // True when the current program of this renderer has this uniform
     protected boolean hasUniform(String name) {
-        return mesh.getShader().getLink(name) != -1;
+        return getShader().getLink(name) != -1;
     }
 
     // Send the values of this renderer to the current program (the unchanged ones are skipped by it)
@@ -104,6 +121,8 @@ public class Renderer extends UUID implements IDisplayable {
 
     public void display(){
         if(visible) {
+            mesh.applyDimension();
+            getShader().use();
             updateShader();
             draw();
         }
@@ -152,11 +171,12 @@ public class Renderer extends UUID implements IDisplayable {
     }
 
     protected void sentToShader(ShaderValue value) {
-        mesh.getShader().sendValueToShader(value);
+        getShader().sendValueToShader(value);
     }
 
     public void draw(){
-        mesh.display();
+        mesh.bind();
+        mesh.draw();
     }
 
     public void setPosition(Vector3f position){
@@ -361,6 +381,12 @@ public class Renderer extends UUID implements IDisplayable {
 
     public void unload() {
         mesh.unload();
+
+        // Given back once: unload can be called twice
+        if (!shaderReleased) {
+            glResources.releaseResource(shader);
+            shaderReleased = true;
+        }
 
         if (mainTexture instanceof GLElement)
             glResources.releaseResource((GLElement) mainTexture);

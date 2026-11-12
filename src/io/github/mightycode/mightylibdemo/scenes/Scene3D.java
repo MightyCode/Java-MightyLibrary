@@ -130,6 +130,7 @@ public class Scene3D extends Scene {
         sBlock.setMainTextureChannel("container");
         // Displacement texture for cubes/crate
         sBlock.addTextureChannel("dispMap1", "displacementMap", 1);
+        sBlock.addShaderValue("time", Float.class, timeShaderValue.getObjectTyped(Float.class));
 
         sphere = new Renderer("colorLighting3D", true);
         computeSphere(sphere);
@@ -295,7 +296,7 @@ public class Scene3D extends Scene {
         displacementMapTweening.update();
 
         timeShaderValue.setObject(displacementMapTweening.value());
-        sBlock.getMesh().getShader().sendValueToShader(timeShaderValue);
+        sBlock.updateShaderValue("time", timeShaderValue.getObjectTyped(Float.class));
 
         rotationTweening.update();
 

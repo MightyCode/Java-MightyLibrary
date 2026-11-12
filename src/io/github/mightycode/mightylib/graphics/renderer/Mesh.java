@@ -1,16 +1,10 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.GLContext;
-import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
-import io.github.mightycode.mightylib.graphics.shader.Shader;
-import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
-import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;
-import io.github.mightycode.mightylib.utils.math.ID;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.lwjgl.BufferUtils;
 
@@ -71,25 +65,8 @@ public class Mesh {
     protected EDrawMode drawMode;
     private int glDrawMode;
 
-    // Program of the shader, held (urgent reference) until unload
-    protected Shader shader;
-    private boolean shaderReleased;
-    // Belongs to the engine of the view that creates it
-    private final Resources resources = Views.engine().resources();
-    private final GLResources glResources = Views.engine().glResources();
-
-    // The program if linked, otherwise the fallback one (failed or still loading), always linked
-    public Shader getShader() {
-        return shader.isLoaded() ? shader : glResources.fallbackShader();
-    }
-
-    public Mesh(String shaderName, boolean useEbo) {
+    public Mesh(boolean useEbo) {
         setDrawMode(EDrawMode.Triangles);
-
-        // Unknown or failed: the fallback data, whose program is linked from the start
-        ShaderData data = resources.getResourceOrFallback(ShaderData.class, shaderName);
-        shader = (Shader) glResources.acquire(data, true);
-        setDimensionTo2D(data.isDimension2DShader());
 
         verticesToDraw = 0;
         indicesSize = 0;
@@ -296,14 +273,6 @@ public class Mesh {
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, startIndex, newArray);
     }
 
-    public void display() {
-        applyDimension();
-        applyShader();
-        bind();
-        draw();
-    }
-
-
     /**
      * Bind the vertex array of the current OpenGL context. Vertex arrays are not shared between contexts: each
      * context has its own, created at the first bind and rebuilt from the layout (buffers, attributes, element
@@ -413,16 +382,6 @@ public class Mesh {
     }
 
 
-    public void applyShader(){
-        getShader().use();
-    }
-
-
-    public ID getShaderId(){
-        return new ID(getShader().getShaderId());
-    }
-
-
     public void setDrawMode(EDrawMode drawMode) {
         this.drawMode = drawMode;
 
@@ -493,11 +452,5 @@ public class Mesh {
 
         if (useEbo)
             GenDeleteResources.DeleteBuffersEBO(ebo);
-
-        // Given back once: unload can be called twice
-        if (!shaderReleased) {
-            glResources.releaseResource(shader);
-            shaderReleased = true;
-        }
     }
 }

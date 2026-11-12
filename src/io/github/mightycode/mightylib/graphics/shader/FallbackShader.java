@@ -9,7 +9,7 @@ import java.nio.FloatBuffer;
 import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
 
 /**
- * Program of the fallback shader (FallbackShaderData), shared by the shapes whose program failed or is not linked yet.
+ * Program of the fallback shader (FallbackShaderData), shared by the renderers whose program failed or is not linked yet.
  * Its matrices start as identity, then each renderer sends it its generic matrices (projection, view, model), kept
  * until another renderer sends its own. A quad already in screen coordinates (VirtualSceneRenderer, post processing)
  * is therefore shrunk to a few pixels: the screen stays black rather than magenta, during the first frames too

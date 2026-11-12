@@ -28,7 +28,6 @@ public class ModelRenderer extends Renderer {
     private static final int DIFFUSE_UNIT = 0;
     private static final int SPECULAR_UNIT = 1;
 
-    private final String shaderName;
     private final String modelName;
     // The model asked for; the one displayed is its usable version (the fallback cube while it is not loaded)
     private final Model requestedModel;
@@ -53,7 +52,6 @@ public class ModelRenderer extends Renderer {
 
     public ModelRenderer(String shaderName, String modelName) {
         super(shaderName, true);
-        this.shaderName = shaderName;
         this.modelName = modelName;
 
         // Unknown, failed or not loaded yet: the fallback cube, replaced once the model is loaded (see rebuildIfChanged)
@@ -113,7 +111,7 @@ public class ModelRenderer extends Renderer {
                 return true;
 
             ModelMesh mesh = meshes.get(sent);
-            Mesh glMesh = new Mesh(shaderName, true);
+            Mesh glMesh = new Mesh(true);
             glMesh.setEboStorage(Mesh.STATIC_STORE);
             glMesh.addVboFloat(mesh.getPositions(), 3, Mesh.STATIC_STORE);
             glMesh.addVboFloat(mesh.getTextureCoordinates(), 2, Mesh.STATIC_STORE);
@@ -245,6 +243,9 @@ public class ModelRenderer extends Renderer {
         if (!isVisible() || shown.sent == 0)
             return;
 
+        // The program of the renderer is used once for every mesh
+        mesh.applyDimension();
+        getShader().use();
         sendShaderValues();
 
         // Decided on the current program: it can change (fallback while loading, hot reload)
@@ -264,7 +265,8 @@ public class ModelRenderer extends Renderer {
                 sentToShader(shininessValue);
             }
 
-            shown.glMeshes[i].display();
+            shown.glMeshes[i].bind();
+            shown.glMeshes[i].draw();
         }
 
         if (faceCulling)
@@ -282,7 +284,7 @@ public class ModelRenderer extends Renderer {
         if (pending != null)
             pending.release();
 
-        // The base mesh only gives the shader: no mesh in it
+        // The base mesh is empty: the meshes of the model are drawn instead
         super.unload();
     }
 
