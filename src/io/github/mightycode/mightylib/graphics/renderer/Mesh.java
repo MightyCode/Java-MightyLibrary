@@ -15,6 +15,12 @@ import static org.lwjgl.opengl.ARBVertexArrayObject.glBindVertexArray;
 import static org.lwjgl.opengl.GL32.*;
 import static org.lwjgl.opengl.GL40.GL_PATCHES;
 
+/**
+ * Geometry only: vertex buffers (one per attribute, each on a channel = attribute location in the shader),
+ * an optional element buffer, the draw mode, and one vertex array per OpenGL context. The program and the
+ * OpenGL state of the draw belong to the renderer (MeshRenderer) which owns the mesh.
+ * Hook: draw() can be overridden (instanced draw for example), it is called with the vertex array bound.
+ */
 public class Mesh {
     public static final int STATIC_STORE = GL_STATIC_DRAW;
     public static final int DYNAMIC_STORE = GL_DYNAMIC_DRAW;
@@ -24,9 +30,9 @@ public class Mesh {
     public static final int COMMON_TEXTURE_POSITION_CHANNEL = 1;
     public static final int COMMON_NORMAL_POSITION_CHANNEL = 2;
 
-    protected int eboStorage;
+    private int eboStorage;
 
-    protected int ebo;
+    private int ebo;
 
     // A vertex array of one OpenGL context, set up for the layout of the given version
     private static final class VaoEntry {
@@ -46,22 +52,22 @@ public class Mesh {
     // Changes with each change of the buffers and attributes: a vertex array of another version is rebuilt
     private int layoutVersion;
     // Size and kind of each attribute, to set a new vertex array up
-    protected ArrayList<Integer> vbosVertexSize;
-    protected ArrayList<Boolean> vbosInteger;
+    private final ArrayList<Integer> vbosVertexSize;
+    private final ArrayList<Boolean> vbosInteger;
 
-    protected ArrayList<Integer> vbos;
+    private final ArrayList<Integer> vbos;
     // Channel (attribute location in the shader) of each vbo
-    protected ArrayList<Integer> vbosChannel;
-    protected ArrayList<Integer> vbosStorage;
+    private final ArrayList<Integer> vbosChannel;
+    private final ArrayList<Integer> vbosStorage;
     // Number of elements currently allocated for each vbo, to update without reallocating when it doesn't change
-    protected ArrayList<Integer> vbosSize;
-    protected ArrayList<Boolean> vbosEnable;
-    protected int indicesSize;
+    private final ArrayList<Integer> vbosSize;
+    private final ArrayList<Boolean> vbosEnable;
+    private int indicesSize;
 
-    protected boolean useEbo;
-    protected int verticesToDraw;
+    private boolean useEbo;
+    private int verticesToDraw;
 
-    protected EDrawMode drawMode;
+    private EDrawMode drawMode;
     private int glDrawMode;
 
     public Mesh(boolean useEbo) {
@@ -385,6 +391,7 @@ public class Mesh {
     }
 
 
+    // Hook: one draw call of the whole geometry, with the vertex array bound (bind) and the program in use
     public void draw(){
         EngineStats.countDrawCall();
 
@@ -442,6 +449,25 @@ public class Mesh {
 
     public EDrawMode getDrawMode(){
         return drawMode;
+    }
+
+    // Number of vertex buffers (attributes)
+    public int getVboCount() {
+        return vbos.size();
+    }
+
+    // Vertices drawn without element buffer (from the last vbo added)
+    public int getVertexCount() {
+        return verticesToDraw;
+    }
+
+    // Indices drawn with the element buffer
+    public int getIndexCount() {
+        return indicesSize;
+    }
+
+    public boolean isUsingEbo() {
+        return useEbo;
     }
 
     public void unloadVBO() {

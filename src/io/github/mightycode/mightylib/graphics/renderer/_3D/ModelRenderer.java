@@ -52,8 +52,8 @@ public class ModelRenderer extends Renderer {
         this.modelName = modelName;
 
         // Unknown, failed or not loaded yet: the fallback cube, replaced once the model is loaded (see rebuildIfChanged)
-        requestedModel = resources.getResourceOrFallback(Model.class, modelName);
-        Model model = resources.usable(Model.class, requestedModel);
+        requestedModel = resources().getResourceOrFallback(Model.class, modelName);
+        Model model = resources().usable(Model.class, requestedModel);
         if (model == null || !model.isLoaded())
             throw new IllegalStateException("Model not loaded : " + modelName + " (load its batch before creating the renderer)");
 
@@ -65,7 +65,7 @@ public class ModelRenderer extends Renderer {
 
         setFaceCulling(true);
 
-        upload = glResources.addElementOrReturnIfPresent(MeshUpload.class, new MeshUpload(this),
+        upload = glResources().addElementOrReturnIfPresent(MeshUpload.class, new MeshUpload(this),
                 "ModelRenderer/" + modelName + "#" + id());
     }
 
@@ -127,7 +127,7 @@ public class ModelRenderer extends Renderer {
             for (int i = 0; i < diffuseTextures.length; ++i) {
                 Texture previous = diffuseTextures[i];
                 diffuseTextures[i] = takeTexture(textureName);
-                glResources.releaseResource(previous);
+                glResources().releaseResource(previous);
             }
         }
 
@@ -136,15 +136,15 @@ public class ModelRenderer extends Renderer {
                 glMeshes[i].unload();
 
             for (Texture texture : diffuseTextures)
-                glResources.releaseResource(texture);
+                glResources().releaseResource(texture);
             for (Texture texture : specularTextures)
-                glResources.releaseResource(texture);
+                glResources().releaseResource(texture);
         }
     }
 
     // The model was loaded (the fallback cube was displayed) or reloaded: its meshes are sent apart
     private void rebuildIfChanged() {
-        Model model = resources.usable(Model.class, requestedModel);
+        Model model = resources().usable(Model.class, requestedModel);
         MeshSet latest = pending != null ? pending : shown;
         if (latest.isOf(model))
             return;
@@ -162,7 +162,7 @@ public class ModelRenderer extends Renderer {
         if (name == null)
             name = "error";
 
-        return glResources.addElementOrReturnIfPresent(Texture.class, new Texture(name), name);
+        return glResources().addElementOrReturnIfPresent(Texture.class, new Texture(name), name);
     }
 
     /**
@@ -178,10 +178,8 @@ public class ModelRenderer extends Renderer {
 
     // The unit of the sampler, sent at each draw when the current program has it
     private String setSampler(String previous, String uniform, int unit) {
-        if (previous != null) {
-            shaderValues.remove(previous);
-            optionalValues.remove(previous);
-        }
+        if (previous != null)
+            removeShaderValue(previous);
 
         if (uniform != null)
             putOptionalValue(uniform, new ShaderValue(uniform, Integer.class, unit));
@@ -249,7 +247,7 @@ public class ModelRenderer extends Renderer {
     public void draw() {
         // Decided on the current program: it can change (fallback while loading, hot reload)
         boolean bindSpecular = specularUniform != null && hasUniform(specularUniform);
-        boolean sendMeshShininess = !shaderValues.containsKey(SHININESS_UNIFORM) && hasUniform(SHININESS_UNIFORM);
+        boolean sendMeshShininess = !hasShaderValue(SHININESS_UNIFORM) && hasUniform(SHININESS_UNIFORM);
 
         for (int i = 0; i < shown.sent; ++i) {
             shown.diffuseTextures[i].bindRenderTexture(DIFFUSE_UNIT);
@@ -258,7 +256,7 @@ public class ModelRenderer extends Renderer {
 
             if (sendMeshShininess) {
                 shininessValue.setObject(shown.meshes.get(i).getShininess());
-                sentToShader(shininessValue);
+                sendToShader(shininessValue);
             }
 
             shown.glMeshes[i].bind();
@@ -271,7 +269,7 @@ public class ModelRenderer extends Renderer {
 
     @Override
     public void unload() {
-        glResources.releaseResource(upload);
+        glResources().releaseResource(upload);
 
         shown.release();
         if (pending != null)

@@ -40,7 +40,7 @@ public class HeightMapRenderer extends MeshRenderer {
     private final TextureData heightMapTexture;
     public HeightMapRenderer(String heightMapName, boolean willUpdateFrequently) {
         super("multiColoredLighting3D", true);
-        this.heightMapTexture = resources.getResource(TextureData.class, heightMapName);
+        this.heightMapTexture = resources().getResource(TextureData.class, heightMapName);
         heightMapTexture.computeCache();
 
         this.willUpdateFrequently = willUpdateFrequently;
@@ -71,7 +71,7 @@ public class HeightMapRenderer extends MeshRenderer {
             }
         }
 
-        mesh.setEbo(indices);
+        getMesh().setEbo(indices);
 
         if (willUpdateFrequently) {
             positions = new float[vertexCount * 3];
@@ -81,9 +81,9 @@ public class HeightMapRenderer extends MeshRenderer {
 
         int store = willUpdateFrequently ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE;
 
-        shapePosition = mesh.addVboFloat(positions, 3, store);
-        colorPosition = mesh.addVboInt(colors, 1, store);
-        normalPosition  = mesh.addVboFloat(normals, 3, store);
+        shapePosition = getMesh().addVboFloat(positions, 3, store);
+        colorPosition = getMesh().addVboInt(colors, 1, store);
+        normalPosition  = getMesh().addVboFloat(normals, 3, store);
 
         tempColor = new Color4f(1);
     }
@@ -166,9 +166,9 @@ public class HeightMapRenderer extends MeshRenderer {
             }
         }
 
-        mesh.updateSubVbo(positions, shapePosition, 0);
-        mesh.updateSubVbo(colors, colorPosition, 0);
-        mesh.updateSubVbo(normals, normalPosition, 0);
+        getMesh().updateSubVbo(positions, shapePosition, 0);
+        getMesh().updateSubVbo(colors, colorPosition, 0);
+        getMesh().updateSubVbo(normals, normalPosition, 0);
 
         if (!willUpdateFrequently) {
             positions = null;

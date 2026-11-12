@@ -60,11 +60,11 @@ public class Text extends MeshRenderer implements Cloneable {
         this.leftUpPosition = new Vector2f(0, 0);
 
         // Dynamic: text content can change every frame (debug info, counters...)
-        mesh.setEboStorage(Mesh.DYNAMIC_STORE);
-        mesh.setEbo(new int[0]);
+        getMesh().setEboStorage(Mesh.DYNAMIC_STORE);
+        getMesh().setEbo(new int[0]);
 
-        positionIndex = mesh.addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
-        textureIndex = mesh.addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
+        positionIndex = getMesh().addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
+        textureIndex = getMesh().addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
     }
 
     private boolean shouldNotDrawText(){
@@ -80,7 +80,7 @@ public class Text extends MeshRenderer implements Cloneable {
             computeRightUpPosition();
 
         if (charPositions != null && charPositions.length >= SIZE_COORDINATES)
-            DrawnTexts.record(text, charPositions[0] + position.x, charPositions[1] + position.y,
+            DrawnTexts.record(text, charPositions[0] + position().x, charPositions[1] + position().y,
                     rectangleSize.x - padding.x - padding.z, rectangleSize.y - padding.y - padding.w, fontSize);
 
         super.display();
@@ -94,7 +94,7 @@ public class Text extends MeshRenderer implements Cloneable {
         }
 
         // Unknown name: the fallback font
-        this.font = resources.getResourceOrFallback(FontFace.class, fontName);
+        this.font = resources().getResourceOrFallback(FontFace.class, fontName);
 
         computeRightUpPosition();
 
@@ -208,7 +208,7 @@ public class Text extends MeshRenderer implements Cloneable {
 
 
     public Text setPosition(Vector2f position){
-        if (position == null || position.x == this.position.x && position.y == this.position.y)
+        if (position == null || position.x == position().x && position.y == position().y)
             return this;
 
         super.setPosition(new Vector3f(position.x, position.y, 0.0f));
@@ -281,7 +281,7 @@ public class Text extends MeshRenderer implements Cloneable {
 
     // The font if loaded, otherwise the fallback one (failed or still loading)
     private FontFace usedFont() {
-        return resources.usable(FontFace.class, font);
+        return resources().usable(FontFace.class, font);
     }
 
     private void computeRightUpPosition() {
@@ -296,8 +296,8 @@ public class Text extends MeshRenderer implements Cloneable {
         }
         builtWithVersion = used.getVersion();
 
-        leftUpPosition.x = position.x;
-        leftUpPosition.y = position.y;
+        leftUpPosition.x = position().x;
+        leftUpPosition.y = position().y;
 
         // The line feeds added by the wrapping are not characters: the index of each one is the one of text
         String laidOut = TextWrap.Wrap(text, maxWidth, this::measureWidth);
@@ -449,9 +449,9 @@ public class Text extends MeshRenderer implements Cloneable {
             currentCharOffset.y += (float) (usedFont().getFontFile().getLineHeight() * fontSize);
         }
 
-        mesh.setEbo(indices);
-        mesh.updateVbo(texturePosition, textureIndex);
-        mesh.updateVbo(charPositions, positionIndex);
+        getMesh().setEbo(indices);
+        getMesh().updateVbo(texturePosition, textureIndex);
+        getMesh().updateVbo(charPositions, positionIndex);
     }
 
     // X Y Z W
@@ -469,13 +469,13 @@ public class Text extends MeshRenderer implements Cloneable {
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
                 .setPadding(padding.x, padding.y, padding.z, padding.w)
-                .setPosition(new Vector2f(this.position.x, this.position.y))
+                .setPosition(new Vector2f(position().x, position().y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
                 .setMaxWidth(maxWidth)
                 .setText(this.text);
 
-        text.setReferenceCamera(referenceCamera);
+        text.setReferenceCamera(getReferenceCamera());
 
         return text;
     }
@@ -486,13 +486,13 @@ public class Text extends MeshRenderer implements Cloneable {
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
                 .setPadding(padding.x, padding.y, padding.z, padding.w)
-                .setPosition(new Vector2f(this.position.x, this.position.y))
+                .setPosition(new Vector2f(position().x, position().y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
                 .setMaxWidth(maxWidth)
                 .setText(this.text);
 
-        copy.setReferenceCamera(referenceCamera);
+        copy.setReferenceCamera(getReferenceCamera());
 
         return copy;
     }

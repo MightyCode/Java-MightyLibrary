@@ -34,10 +34,10 @@ public class Animation2DRenderer extends MeshRenderer {
         texturePosition = RectangularFace.BasicTexturePosition();
 
         int[] indices = RectangularFace.IndicesForSquare();
-        mesh.setEboStorage(Mesh.STATIC_STORE);
-        mesh.setEbo(indices);
-        positionIndex = mesh.addVboFloat(calculatePosition(), 2, Mesh.DYNAMIC_STORE);
-        textureIndex = mesh.addVboFloat(texturePos(), 2, Mesh.DYNAMIC_STORE);
+        getMesh().setEboStorage(Mesh.STATIC_STORE);
+        getMesh().setEbo(indices);
+        positionIndex = getMesh().addVboFloat(calculatePosition(), 2, Mesh.DYNAMIC_STORE);
+        textureIndex = getMesh().addVboFloat(texturePos(), 2, Mesh.DYNAMIC_STORE);
 
         referencePosition = new Vector2f();
 
@@ -80,7 +80,7 @@ public class Animation2DRenderer extends MeshRenderer {
 
     public void updateInfoForFrame(){
         this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
-        mesh.updateVbo(texturePos(), textureIndex);
+        getMesh().updateVbo(texturePos(), textureIndex);
 
         updatePosition();
         this.setScale(this.animationScale);
@@ -148,7 +148,7 @@ public class Animation2DRenderer extends MeshRenderer {
         this.offsetRotation.x = offsetRotation.x;
         this.offsetRotation.y = offsetRotation.y;
 
-        mesh.updateVbo(calculatePosition(), positionIndex);
+        getMesh().updateVbo(calculatePosition(), positionIndex);
     }
 
     private float[] calculatePosition(){
@@ -187,7 +187,7 @@ public class Animation2DRenderer extends MeshRenderer {
     public Animation2DRenderer setHorizontalFlip(boolean state){
         horizontalFlip = state;
 
-        mesh.updateVbo(texturePos(), textureIndex);
+        getMesh().updateVbo(texturePos(), textureIndex);
 
         return this;
     }
@@ -195,7 +195,7 @@ public class Animation2DRenderer extends MeshRenderer {
     public Animation2DRenderer setVerticalFlip(boolean state){
         verticalFlip = state;
 
-        mesh.updateVbo(texturePos(), textureIndex);
+        getMesh().updateVbo(texturePos(), textureIndex);
 
         return this;
     }
@@ -211,7 +211,7 @@ public class Animation2DRenderer extends MeshRenderer {
 
     @Override
     public Vector3f position(){
-        return new Vector3f(referencePosition.x, referencePosition.y, position.z);
+        return new Vector3f(referencePosition.x, referencePosition.y, super.position().z);
     }
 
     public void setScale(Vector2f scale){

@@ -1,7 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
-import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -15,8 +16,8 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     private EDirection referenceDirection;
     private Vector2f referencePoint;
 
-    protected final int positionIndex, textureIndex;
-    protected Vector4f texturePosition;
+    private final int positionIndex, textureIndex;
+    private Vector4f texturePosition;
 
     // The geometry is sent at the next display: subclasses' fields are not set yet in this constructor,
     // and several changes in a tick cost a single upload
@@ -32,11 +33,13 @@ public abstract class Shape2DRenderer extends MeshRenderer {
 
         texturePosition = new Vector4f();
 
+        Mesh mesh = getMesh();
         positionIndex = mesh.addVboFloat(new float[]{}, 2, Mesh.STATIC_STORE);
         textureIndex = mesh.addVboFloat(new float[]{}, 2, Mesh.STATIC_STORE);
     }
 
     private void uploadGeometry() {
+        Mesh mesh = getMesh();
         if (indicesDirty) {
             mesh.setEboStorage(Mesh.STATIC_STORE);
             mesh.setEbo(getIndices());
@@ -100,6 +103,10 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         return this;
     }
 
+    public Vector4f getTexturePosition() {
+        return texturePosition;
+    }
+
     // Set size with size of pixel
     public Shape2DRenderer setSizePix(Vector2f newSize){
         setScale(new Vector3f(newSize.x, newSize.y, 1.0f));
@@ -114,6 +121,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     }
 
     public Shape2DRenderer setSizeToTexture() {
+        IRenderTextureBindable mainTexture = getMainTexture();
         if (mainTexture == null)
             return this;
 
@@ -130,7 +138,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     }
 
     public Vector2f get2DPosition(){
-        return new Vector2f(position.x, position.y);
+        return new Vector2f(position().x, position().y);
     }
 
     // Sent at the next display

@@ -85,7 +85,7 @@ public class CubeRenderer extends MeshRenderer {
                 0, 0, 1,
         };
 
-        positionIndex = mesh.addVboFloat(vertices, VERTEX_POSITION_SIZE, Mesh.STATIC_STORE);
+        positionIndex = getMesh().addVboFloat(vertices, VERTEX_POSITION_SIZE, Mesh.STATIC_STORE);
 
         int[] ref = RectangularFace.IndicesForSquare();
 
@@ -96,7 +96,7 @@ public class CubeRenderer extends MeshRenderer {
             }
         }
 
-        mesh.setEbo(ebo);
+        getMesh().setEbo(ebo);
 
         setPosition(new Vector3f(0));
     }
@@ -113,7 +113,7 @@ public class CubeRenderer extends MeshRenderer {
                     VERTEX_TEXTURE_SIZE * VERTEX_NUMBER * i, vertexTexture.length);
         }
 
-        textureIndex = mesh.addVboFloat(table, VERTEX_TEXTURE_SIZE, Mesh.STATIC_STORE);
+        textureIndex = getMesh().addVboFloat(table, VERTEX_TEXTURE_SIZE, Mesh.STATIC_STORE);
     }
 
     public void setNormal(){
@@ -127,6 +127,6 @@ public class CubeRenderer extends MeshRenderer {
             }
         }
 
-        normalIndex = mesh.addVboFloat(table, VERTEX_NORMAL_SIZE, Mesh.STATIC_STORE);
+        normalIndex = getMesh().addVboFloat(table, VERTEX_NORMAL_SIZE, Mesh.STATIC_STORE);
     }
 }

@@ -114,12 +114,12 @@ public class TileMapRenderer extends MeshRenderer {
 
         this.leftUpPosition = new Vector2f(0, 0);
 
-        mesh.setEboStorage(Mesh.STATIC_STORE);
-        mesh.setEbo(new int[0]);
+        getMesh().setEboStorage(Mesh.STATIC_STORE);
+        getMesh().setEbo(new int[0]);
 
-        positionIndex = mesh.addVboFloat(new float[0],
+        positionIndex = getMesh().addVboFloat(new float[0],
                 2, (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
-        textureIndex = mesh.addVboFloat(new float[0],
+        textureIndex = getMesh().addVboFloat(new float[0],
                 2,  (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
 
         animatedTiles = new ArrayList<>();
@@ -147,7 +147,7 @@ public class TileMapRenderer extends MeshRenderer {
         this.tileMapVersion = tilemap.getVersion();
         this.tileSetAtlas = tilemap.tileSetAtlas();
         // The same element as the one a batch listing the map sends during the loading
-        atlasTexture = glResources.addElementOrReturnIfPresent(Texture.class, tilemap.createGLElement(), tilemap.glElementName());
+        atlasTexture = glResources().addElementOrReturnIfPresent(Texture.class, tilemap.createGLElement(), tilemap.glElementName());
         setMainTextureChannel(atlasTexture);
 
         loadGeneralInformation();
@@ -177,8 +177,8 @@ public class TileMapRenderer extends MeshRenderer {
     }
 
     private void loadTileMapInformation() {
-        leftUpPosition.x = position.x;
-        leftUpPosition.y = position.y;
+        leftUpPosition.x = position().x;
+        leftUpPosition.y = position().y;
 
         switch(this.reference){
             case None:
@@ -271,9 +271,9 @@ public class TileMapRenderer extends MeshRenderer {
             }
         }
 
-        mesh.setEbo(tilesIndices);
-        mesh.updateVbo(tilesTexturePosition, textureIndex);
-        mesh.updateVbo(tilesPosition, positionIndex);
+        getMesh().setEbo(tilesIndices);
+        getMesh().updateVbo(tilesTexturePosition, textureIndex);
+        getMesh().updateVbo(tilesPosition, positionIndex);
     }
 
     public void update(){
@@ -304,7 +304,7 @@ public class TileMapRenderer extends MeshRenderer {
         if (tilemap.hasBeenUpdated())
             loadTileMapInformation();
         else if (animationChanged)
-            mesh.updateVbo(tilesTexturePosition, textureIndex);
+            getMesh().updateVbo(tilesTexturePosition, textureIndex);
     }
 
     private void updateAnimatedTileTexture(AnimatedTile animatedTile) {
@@ -405,9 +405,9 @@ public class TileMapRenderer extends MeshRenderer {
     public void reset() {
         this.tilemap = null;
         this.tileSetAtlas = null;
-        mesh.setEbo(new int[0]);
-        mesh.updateVbo(new float[0], positionIndex);
-        mesh.updateVbo(new float[0], textureIndex);
+        getMesh().setEbo(new int[0]);
+        getMesh().updateVbo(new float[0], positionIndex);
+        getMesh().updateVbo(new float[0], textureIndex);
 
         animatedTiles.clear();
     }

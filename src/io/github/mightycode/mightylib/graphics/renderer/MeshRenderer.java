@@ -8,13 +8,15 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 
 /**
  * A renderer which draws one Mesh, with its textures. The renderer owns its mesh: unload releases it.
+ * A subclass fills the mesh (getMesh) in its constructor and can redefine the hooks of Renderer;
+ * the mesh is drawn by draw() (bind, then Mesh.draw).
  */
 public class MeshRenderer extends Renderer {
-    protected final Mesh mesh;
+    private final Mesh mesh;
 
     // Textures channels
-    protected IRenderTextureBindable mainTexture;
-    protected IRenderTextureBindable[] textures;
+    private IRenderTextureBindable mainTexture;
+    private IRenderTextureBindable[] textures;
 
     // A renderer with a new empty mesh, to fill through getMesh()
     public MeshRenderer(String shaderName, boolean useEbo) {
@@ -29,7 +31,7 @@ public class MeshRenderer extends Renderer {
         mainTexture = null;
     }
 
-    // Bind the textures, then send the values
+    // Bind the textures, then send the values (a subclass calls super)
     @Override
     public void updateShader(){
         if (mainTexture != null)
@@ -52,7 +54,7 @@ public class MeshRenderer extends Renderer {
     }
 
     public void setMainTextureChannel(String name) {
-        setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(name), name));
+        setMainTextureChannel(glResources().addElementOrReturnIfPresent(Texture.class, new Texture(name), name));
     }
 
     public void setMainTextureChannel(String name, String nameOfUniform) {
@@ -65,12 +67,12 @@ public class MeshRenderer extends Renderer {
         if (mainTexture instanceof GLElement) {
             if (texture instanceof GLElement) {
                 if (mainTexture == texture) {
-                    glResources.releaseResource((GLElement) texture);
+                    glResources().releaseResource((GLElement) texture);
                     return;
                 }
             }
 
-            glResources.releaseResource((GLElement) mainTexture);
+            glResources().releaseResource((GLElement) mainTexture);
         }
 
         mesh.enableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
@@ -85,7 +87,7 @@ public class MeshRenderer extends Renderer {
             return;
 
         addTextureChannel(
-                glResources.addElementOrReturnIfPresent(Texture.class, new Texture(resources, name), name),
+                glResources().addElementOrReturnIfPresent(Texture.class, new Texture(resources(), name), name),
                 nameOfUniform, channelNumber);
     }
 
@@ -98,7 +100,7 @@ public class MeshRenderer extends Renderer {
             textures = new IRenderTextureBindable[30];
         else {
             if (textures[channelNumber - 1] instanceof GLElement)
-                glResources.releaseResource((GLElement) textures[channelNumber - 1]);
+                glResources().releaseResource((GLElement) textures[channelNumber - 1]);
         }
 
         textures[channelNumber - 1] = texture;
@@ -130,17 +132,22 @@ public class MeshRenderer extends Renderer {
         return mesh;
     }
 
+    // The texture bound on unit 0, null when none
+    protected IRenderTextureBindable getMainTexture() {
+        return mainTexture;
+    }
+
     @Override
     public void unload() {
         mesh.unload();
 
         if (mainTexture instanceof GLElement)
-            glResources.releaseResource((GLElement) mainTexture);
+            glResources().releaseResource((GLElement) mainTexture);
 
         if (textures != null) {
             for (IRenderTextureBindable texture : textures) {
                 if (texture instanceof GLElement)
-                    glResources.releaseResource((GLElement) texture);
+                    glResources().releaseResource((GLElement) texture);
             }
         }
 

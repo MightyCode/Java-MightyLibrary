@@ -18,18 +18,27 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+/**
+ * Base of every renderer: transform, program (shader), shader values, OpenGL state of the draw (RenderState),
+ * visibility and reference camera. It has no geometry: MeshRenderer draws one Mesh, ModelRenderer a model.
+ * The program, the values and the state are grouped apart from the transform (a future shareable Material).
+ *
+ * A subclass implements draw() and can redefine the hooks updateShader() and applyRenderState();
+ * display() calls them in this order: applyRenderState, program in use, updateShader, draw.
+ */
 public abstract class Renderer extends UUID implements IDisplayable {
-    protected GLResources glResources = Views.engine().glResources();
-    protected Resources resources = Views.engine().resources();
+    // Belong to the engine of the view that creates the renderer
+    private final GLResources glResources = Views.engine().glResources();
+    private final Resources resources = Views.engine().resources();
 
-    protected Camera referenceCamera;
+    private Camera referenceCamera;
 
-    protected final Vector3f position;
-    protected final Vector3f scale;
-    protected final Vector3f rotation;
-    protected float angle;
+    private final Vector3f position;
+    private final Vector3f scale;
+    private final Vector3f rotation;
+    private float angle;
 
-    protected Matrix4f model;
+    private final Matrix4f model;
 
     private boolean visible;
 
@@ -43,10 +52,14 @@ public abstract class Renderer extends UUID implements IDisplayable {
      * Every value this renderer sends, sent again at each draw (filtered by the program, which skips unchanged ones):
      * the program can change at any time (fallback while loading, hot reload) and has none of them at first.
      */
-    protected HashMap<String, ShaderValue> shaderValues;
+    private final HashMap<String, ShaderValue> shaderValues;
     // Keys of the values sent only when the current program has their uniform, never reported missing (generic ones)
-    protected HashSet<String> optionalValues;
+    private final HashSet<String> optionalValues;
 
+    /*
+     * Takes the program of the shader (the fallback one while it loads or when it failed); the tag of the shader
+     * chooses the default camera (2D or 3D) and the default depth state (2D: neither test nor write).
+     */
     protected Renderer(String shaderName) {
         // Unknown or failed: the fallback data, whose program is linked from the start
         ShaderData shaderData = resources.getResourceOrFallback(ShaderData.class, shaderName);
@@ -66,8 +79,6 @@ public abstract class Renderer extends UUID implements IDisplayable {
         scale = new Vector3f(1f);
         rotation = new Vector3f();
 
-        referenceCamera = null;
-
         // Generic matrices: sent at each draw when the current program uses them
         if (in2D) {
             putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera2D().getProjection());
@@ -81,6 +92,19 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
         putOptionalValue(ShaderManager.GENERIC_MODEL_FIELD_NAME,
                 new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
+    }
+
+    protected final Resources resources() {
+        return resources;
+    }
+
+    protected final GLResources glResources() {
+        return glResources;
+    }
+
+    // The camera given to setReferenceCamera, null when the default camera of the view is used
+    protected final Camera getReferenceCamera() {
+        return referenceCamera;
     }
 
     // A value sent only when the current program has its uniform (not reported missing otherwise)
@@ -106,10 +130,11 @@ public abstract class Renderer extends UUID implements IDisplayable {
             if (optionalValues.contains(entry.getKey()) && !hasUniform(value.getName()))
                 continue;
 
-            sentToShader(value);
+            sendToShader(value);
         }
     }
 
+    // Not meant to be redefined: redefine the hooks instead (a subclass may still check a condition, then call super)
     public void display(){
         if(visible) {
             applyRenderState();
@@ -120,7 +145,7 @@ public abstract class Renderer extends UUID implements IDisplayable {
         }
     }
 
-    // Set the OpenGL state of the draw (depth, culling) before the program is used
+    // Hook: sets the OpenGL state of the draw (depth, culling) before the program is used; call super to keep it
     protected void applyRenderState() {
         renderState.apply();
     }
@@ -152,16 +177,35 @@ public abstract class Renderer extends UUID implements IDisplayable {
         return renderState.isFaceCulling();
     }
 
-    // Called with the program in use, before draw: sends the values of this renderer
+    /*
+     * Hook called with the program in use, before draw: sends the values of this renderer. A subclass binds its
+     * textures or sends values computed at each draw here, and calls super (or sendShaderValues).
+     */
     public void updateShader(){
         sendShaderValues();
     }
 
-    // Draw the geometry, with the program in use and the values sent
+    // Hook: draws the geometry, with the program in use and the values sent (one or several draw calls)
     public abstract void draw();
 
     public Renderer addShaderValue(String name, Class<?> type, Object object){
         shaderValues.put(name, new ShaderValue(name, type, object));
+        optionalValues.remove(name);
+
+        return this;
+    }
+
+    public boolean hasShaderValue(String name) {
+        return shaderValues.containsKey(name);
+    }
+
+    // The value sent under this name, null when there is none
+    public ShaderValue getShaderValue(String name) {
+        return shaderValues.get(name);
+    }
+
+    public Renderer removeShaderValue(String name) {
+        shaderValues.remove(name);
         optionalValues.remove(name);
 
         return this;
@@ -188,7 +232,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
         return other;
     }
 
-    protected void sentToShader(ShaderValue value) {
+    // Send one value to the current program (skipped by it when unchanged)
+    protected void sendToShader(ShaderValue value) {
         getShader().sendValueToShader(value);
     }
 
@@ -293,7 +338,7 @@ public abstract class Renderer extends UUID implements IDisplayable {
     }
 
     public void setNoColorNoTextureMode() {
-        shaderValues.remove(ShaderManager.GENERIC_COLOR_FIELD_NAME);
+        removeShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME);
     }
 
     public Vector3f position(){
@@ -319,6 +364,7 @@ public abstract class Renderer extends UUID implements IDisplayable {
         putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
     }
 
+    // A subclass releases what it created, then calls super (the program)
     public void unload() {
         // Given back once: unload can be called twice
         if (!shaderReleased) {

@@ -12,7 +12,7 @@ public class PolygonRenderer extends Shape2DRenderer {
     public PolygonRenderer (String shaderName, Polygon polygon){
         super(shaderName, true);
         this.polygon = polygon;
-        texturePosition = RectangularFace.BasicTexturePosition();
+        setTexturePosition(RectangularFace.BasicTexturePosition());
         setReferenceDirection(EDirection.None);
     }
 
