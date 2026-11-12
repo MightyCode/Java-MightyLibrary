@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.debug;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
@@ -18,7 +18,7 @@ public class NodesRenderer {
     private static final int VBO_SHIFT = 8;
 
     // Custom renderer
-    private final Renderer renderer;
+    private final MeshRenderer renderer;
 
     // List of rectangles' vertices
     private float[] vbo;
@@ -27,13 +27,13 @@ public class NodesRenderer {
 
     public NodesRenderer(Camera2D referenceCamera){
         // Setup the renderer
-        renderer = new Renderer("colorShape2D", true);
+        renderer = new MeshRenderer("colorShape2D", true);
         renderer.setColorMode(ColorList.Red());
-        renderer.getShape().setEboStorage(Shape.DYNAMIC_STORE);
-        renderer.getShape().setEbo(new int[0]);
+        renderer.getMesh().setEboStorage(Mesh.DYNAMIC_STORE);
+        renderer.getMesh().setEbo(new int[0]);
         renderer.setReferenceCamera(referenceCamera);
 
-        vboPositionIndex = renderer.getShape().addVboFloat(new float[0], 2, Shape.DYNAMIC_STORE);
+        vboPositionIndex = renderer.getMesh().addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
 
         nodeSize = 2;
     }
@@ -65,7 +65,7 @@ public class NodesRenderer {
         }
 
         // Give the renderer the order of vertex to draw
-        renderer.getShape().setEbo(ebo);
+        renderer.getMesh().setEbo(ebo);
 
         // Create the array containing the future vertex positions.
         vbo = new float[VBO_SHIFT * nodes.size()];
@@ -106,7 +106,7 @@ public class NodesRenderer {
         }
 
         // Update the renderer with computed vertex positions
-        renderer.getShape().updateVbo(vbo, vboPositionIndex);
+        renderer.getMesh().updateVbo(vbo, vboPositionIndex);
     }
 
     public void display() {

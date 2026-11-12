@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -10,7 +10,7 @@ import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Animation2DRenderer extends Renderer {
+public class Animation2DRenderer extends MeshRenderer {
     private final Vector2f referencePosition;
     private Animator animator;
     private String currentTextureName;
@@ -34,10 +34,10 @@ public class Animation2DRenderer extends Renderer {
         texturePosition = RectangularFace.BasicTexturePosition();
 
         int[] indices = RectangularFace.IndicesForSquare();
-        shape.setEboStorage(Shape.STATIC_STORE);
-        shape.setEbo(indices);
-        positionIndex = shape.addVboFloat(calculatePosition(), 2, Shape.DYNAMIC_STORE);
-        textureIndex = shape.addVboFloat(texturePos(), 2, Shape.DYNAMIC_STORE);
+        getMesh().setEboStorage(Mesh.STATIC_STORE);
+        getMesh().setEbo(indices);
+        positionIndex = getMesh().addVboFloat(calculatePosition(), 2, Mesh.DYNAMIC_STORE);
+        textureIndex = getMesh().addVboFloat(texturePos(), 2, Mesh.DYNAMIC_STORE);
 
         referencePosition = new Vector2f();
 
@@ -80,7 +80,7 @@ public class Animation2DRenderer extends Renderer {
 
     public void updateInfoForFrame(){
         this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
-        shape.updateVbo(texturePos(), textureIndex);
+        getMesh().updateVbo(texturePos(), textureIndex);
 
         updatePosition();
         this.setScale(this.animationScale);
@@ -148,7 +148,7 @@ public class Animation2DRenderer extends Renderer {
         this.offsetRotation.x = offsetRotation.x;
         this.offsetRotation.y = offsetRotation.y;
 
-        shape.updateVbo(calculatePosition(), positionIndex);
+        getMesh().updateVbo(calculatePosition(), positionIndex);
     }
 
     private float[] calculatePosition(){
@@ -187,7 +187,7 @@ public class Animation2DRenderer extends Renderer {
     public Animation2DRenderer setHorizontalFlip(boolean state){
         horizontalFlip = state;
 
-        shape.updateVbo(texturePos(), textureIndex);
+        getMesh().updateVbo(texturePos(), textureIndex);
 
         return this;
     }
@@ -195,7 +195,7 @@ public class Animation2DRenderer extends Renderer {
     public Animation2DRenderer setVerticalFlip(boolean state){
         verticalFlip = state;
 
-        shape.updateVbo(texturePos(), textureIndex);
+        getMesh().updateVbo(texturePos(), textureIndex);
 
         return this;
     }
@@ -211,7 +211,7 @@ public class Animation2DRenderer extends Renderer {
 
     @Override
     public Vector3f position(){
-        return new Vector3f(referencePosition.x, referencePosition.y, position.z);
+        return new Vector3f(referencePosition.x, referencePosition.y, super.position().z);
     }
 
     public void setScale(Vector2f scale){

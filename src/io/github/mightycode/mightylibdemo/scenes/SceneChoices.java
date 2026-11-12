@@ -2,6 +2,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -11,11 +12,29 @@ import java.util.Set;
 
 /**
  * The scenes the menu offers, without GL: the names the scene command suggests (relative to the package of the
- * scenes, for example Platformer2D.PlatformerBox2D), minus the hidden ones, sorted by the name shown. The name shown
- * is the short one (PlatformerBox2D), the relative one only when two scenes have the same short name. The relative
- * name stays what the command takes.
+ * scenes, for example Platformer2D.PlatformerBox2D), minus the hidden ones, sorted by the name shown (or by date, see
+ * ESort). The name shown is the short one (PlatformerBox2D), the relative one only when two scenes have the same short
+ * name. The relative name stays what the command takes.
  */
 final class SceneChoices {
+    enum ESort {
+        NAME("Name"),
+        // The newest first; the scenes without date after, by name
+        ADDED("Last added"),
+        MODIFIED("Last modified");
+
+        private final String label;
+
+        ESort(String label) {
+            this.label = label;
+        }
+
+        String label() { return label; }
+
+        ESort next() { return values()[(ordinal() + 1) % values().length]; }
+    }
+
+
     static final class Entry {
         private final String command;
         private final String label;
@@ -36,6 +55,8 @@ final class SceneChoices {
     }
 
     private final List<Entry> entries;
+    private Map<String, SceneHistory.Dates> dates = Collections.emptyMap();
+    private ESort sort = ESort.NAME;
 
     /**
      * @param candidates the names the scene command suggests
@@ -58,9 +79,43 @@ final class SceneChoices {
             list.add(new Entry(name, shared ? name : ShortName(name)));
         }
 
-        list.sort(Comparator.comparing((Entry entry) -> entry.label.toLowerCase(Locale.ROOT))
-                .thenComparing(entry -> entry.command));
         entries = list;
+        resort();
+    }
+
+    /** The dates of the scenes, by the name the command takes (SceneHistory); a scene missing has none. */
+    void setDates(Map<String, SceneHistory.Dates> newDates) {
+        dates = newDates;
+        resort();
+    }
+
+    void setSort(ESort newSort) {
+        sort = newSort;
+        resort();
+    }
+
+    ESort sort() {
+        return sort;
+    }
+
+    private void resort() {
+        Comparator<Entry> byName = Comparator.comparing((Entry entry) -> entry.label.toLowerCase(Locale.ROOT))
+                .thenComparing(entry -> entry.command);
+        if (sort == ESort.NAME) {
+            entries.sort(byName);
+            return;
+        }
+
+        // Newest first, no date last
+        entries.sort(Comparator.comparingLong((Entry entry) -> -time(entry)).thenComparing(byName));
+    }
+
+    private long time(Entry entry) {
+        SceneHistory.Dates entryDates = dates.get(entry.command);
+        if (entryDates == null)
+            return Long.MIN_VALUE + 1;
+
+        return sort == ESort.ADDED ? entryDates.added() : entryDates.modified();
     }
 
     /** All the scenes offered, sorted. */

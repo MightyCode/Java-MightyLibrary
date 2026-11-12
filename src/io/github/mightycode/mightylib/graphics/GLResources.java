@@ -208,7 +208,7 @@ public class GLResources implements IGLElementSink {
 
     /*
      * The elements of the fallback data, shown in place of those that failed or are not loaded yet. The texture is
-     * sent in the next frames, the program is linked now: a shape always has a linked program to draw with.
+     * sent in the next frames, the program is linked now: a renderer always has a linked program to draw with.
      */
     @Override
     public void fallbackDataLoaded() {

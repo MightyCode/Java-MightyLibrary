@@ -25,7 +25,7 @@ public class EllipseRenderer extends RectangleRenderer {
         addShaderValue(shaderProperty.Radius, Vector2f.class, new Vector2f());
         addShaderValue(shaderProperty.Rotation, Float.class, 0f);
 
-        texturePosition = RectangularFace.BasicTexturePosition();
+        setTexturePosition(RectangularFace.BasicTexturePosition());
         setReferenceDirection(EDirection.None);
     }
 
@@ -65,32 +65,32 @@ public class EllipseRenderer extends RectangleRenderer {
     }
 
     private void updateValues() {
-        updateShaderValue(shaderProperty.Radius, new Vector2f(scale.x / 2, scale.y / 2));
+        updateShaderValue(shaderProperty.Radius, new Vector2f(scale().x / 2, scale().y / 2));
 
-        Vector2f pos = new Vector2f(this.position.x, this.position.y);
+        Vector2f pos = new Vector2f(position().x, position().y);
 
         switch (getReferenceDirection()){
             case Left:
             case LeftUp:
             case LeftDown:
-                pos.x += scale.x / 2;
+                pos.x += scale().x / 2;
                 break;
             case Right:
             case RightUp:
             case RightDown:
-                pos.x -= scale.x / 2;
+                pos.x -= scale().x / 2;
         }
 
         switch (getReferenceDirection()){
             case Up:
             case LeftUp:
             case RightUp:
-                pos.y += scale.y / 2;
+                pos.y += scale().y / 2;
                 break;
             case Down:
             case LeftDown:
             case RightDown:
-                pos.y -= scale.y / 2;
+                pos.y -= scale().y / 2;
         }
 
         updateShaderValue(shaderProperty.Center, pos);

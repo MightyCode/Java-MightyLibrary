@@ -10,6 +10,8 @@ import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyRepeat;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.main.MainThread;
+import io.github.mightycode.mightylib.main.Workers;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
@@ -50,7 +52,8 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
  * The hidden scenes and the descriptions are data (resources/data/menuScenes.json, batch "menu").
  * Keys : up and down (W, S) go from the field to the list then Quit, Enter chooses (in the field: starts typing),
  * Escape quits ; in the field Enter launches the first scene of the list, Escape or a click elsewhere give the
- * focus back (InputFocus).
+ * focus back (InputFocus). Tab, or a click on the button beside the field, changes the sort: by name, last added,
+ * last modified (dates read from git by SceneHistory, in a worker).
  */
 public class MenuScene extends Scene {
     private static final SoundSourceCreationInfo CREATION_INFO_SELECT = new SoundSourceCreationInfo();
@@ -69,6 +72,10 @@ public class MenuScene extends Scene {
         FIELD, LIST, QUIT
     }
 
+    // Kept from one visit of the menu to the next: the dates do not change while the demo runs
+    private static volatile Map<String, SceneHistory.Dates> sceneDates;
+    private static SceneChoices.ESort lastSort = SceneChoices.ESort.NAME;
+
     private SceneChoices choices;
     private Map<String, String> descriptions;
     private String defaultDescription;
@@ -78,6 +85,7 @@ public class MenuScene extends Scene {
     private TextField field;
     private ScrollList sceneList;
     private BackgroundlessButton buttonQuit;
+    private BackgroundlessButton buttonSort;
     private RectangleRenderer panel;
     private Text panelTitle;
     private Text panelText;
@@ -137,6 +145,19 @@ public class MenuScene extends Scene {
 
         // The scenes are the ones the command "scene" suggests: nothing to maintain here when one is added
         choices = new SceneChoices(engine().commands().complete("scene ").getCandidates(), hidden);
+        choices.setSort(lastSort);
+        if (sceneDates != null) {
+            choices.setDates(sceneDates);
+        } else {
+            Workers.supply(SceneHistory::Read).thenAccept(dates -> MainThread.execute(() -> {
+                sceneDates = dates;
+                // The menu may be gone (unload sets choices to null)
+                if (choices != null) {
+                    choices.setDates(dates);
+                    refilter();
+                }
+            }));
+        }
         shown = choices.entries();
 
         /// RENDERERS ///
@@ -158,7 +179,8 @@ public class MenuScene extends Scene {
         float listTop = top + fieldHeight + 10f;
         float bottom = windowSize.y * 0.86f;
 
-        field = new TextField(mainContext, left, top, listWidth, fieldHeight, "bahnschrift", 30);
+        float sortWidth = 230f;
+        field = new TextField(mainContext, left, top, listWidth - sortWidth - 10f, fieldHeight, "bahnschrift", 30);
         field.setHint("Filter the scenes...");
 
         sceneList = new ScrollList(mainContext, left, listTop, listWidth, bottom - listTop, 50f, "bahnschrift", 30);
@@ -201,6 +223,16 @@ public class MenuScene extends Scene {
         buttonQuit.text().copyTo(buttonQuit.overlapsText());
         buttonQuit.overlapsText().setColor(new Color4f(0.3f)).setText("->Quit<-");
 
+        buttonSort = new BackgroundlessButton(mainContext);
+        buttonSort.text().setFont("bahnschrift")
+                .setAlignment(ETextAlignment.Center)
+                .setReference(EDirection.None)
+                .setFontSize(26)
+                .setPosition(new Vector2f(left + listWidth - sortWidth * 0.5f, top + fieldHeight * 0.5f));
+        buttonSort.text().copyTo(buttonSort.overlapsText());
+        buttonSort.overlapsText().setColor(new Color4f(0.3f));
+        refreshSortButton();
+
         rotation = new FloatTweening();
         rotation.setTweeningOption(ETweeningOption.LoopReversed)
                 .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
@@ -217,7 +249,21 @@ public class MenuScene extends Scene {
         return labels;
     }
 
-    // The filter changed: the list shows the scenes that match, the first one is chosen
+    private void refreshSortButton() {
+        String label = "Sort: " + choices.sort().label();
+        buttonSort.text().setText(label);
+        buttonSort.overlapsText().setText(label);
+    }
+
+    private void nextSort() {
+        lastSort = choices.sort().next();
+        choices.setSort(lastSort);
+        refreshSortButton();
+        // The selection stays on the same scene (ScrollList.setItems)
+        refilter();
+    }
+
+    // The filter or the sort changed: the list shows the scenes that match in order
     private void refilter() {
         shown = choices.filter(field.getText());
         sceneList.setItems(labelsOf(shown));
@@ -272,6 +318,9 @@ public class MenuScene extends Scene {
 
         if (buttonQuit.GUIMouseSelected() && input.inputPressed(ActionId.LEFT_CLICK))
             quit();
+
+        if ((buttonSort.GUIMouseSelected() && input.inputPressed(ActionId.LEFT_CLICK)) || input.inputPressed(ActionId.TAB))
+            nextSort();
 
         if (input.inputPressed(ActionId.ESCAPE))
             quit();
@@ -409,6 +458,7 @@ public class MenuScene extends Scene {
         super.display();
 
         title.display();
+        buttonSort.display();
         panel.display();
         panelTitle.display();
         panelText.display();
@@ -438,5 +488,8 @@ public class MenuScene extends Scene {
             sceneList.unload();
         if (buttonQuit != null)
             buttonQuit.unload();
+        if (buttonSort != null)
+            buttonSort.unload();
+        choices = null;
     }
 }
