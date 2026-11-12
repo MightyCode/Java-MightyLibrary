@@ -18,7 +18,7 @@ Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill 
 6. **`current.md` = un seul gros point, qu'on peut terminer.** Rien de conditionnel (« si les mesures l'exigent », « si un vrai jeu le demande ») : ces lignes vont dans `later.md`.
    *Vérification* : `grep -n -i -E "si les mesures|si un vrai jeu|seulement si" docs/current.md` est vide ; le point en cours avance d'une revue à l'autre.
 7. **Surface de l'API décidée avant le premier jar** : chaque package de `mightylib` est classé (API promise, expérimental, à retirer), après discussion (cf. `current.md`, « Héritage et API publique »). Tout ce qui est public est un engagement.
-   *Vérification* : la classification existe et couvre les packages ajoutés depuis ; tant qu'elle n'existe pas, le rappeler si un jar approche.
+   *Vérification* : la classification existe et couvre les packages ajoutés depuis ; tant qu'elle n'existe pas, le rappeler si un jar approche. Les classes extensibles choisies n'ont aucun champ `protected` (`ExtensionFieldsTest`).
 8. **Le code ancien gagne des tests quand on le touche** (`network/`, GUI, `DataFolder`, loaders maison, algorithmes) : c'est là que se cachent les bugs.
    *Vérification* : les fichiers anciens modifiés dans la semaine ont gagné un test ou une vérification en jeu.
 

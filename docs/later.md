@@ -57,7 +57,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Shaders** : includes GLSL lus depuis le classpath (jar) par l'abstraction de sources de `Resources` (aujourd'hui `ShaderLoader` lit le disque) ; shaders injectés par les projets et les mods (leur `shaders.json` ou leurs `ShaderData`, un nom identique remplace celui du moteur) ; variantes par `#define` injectés par le moteur (ubershader) ; `#version` et macros `in`/`out` injectés pour n'avoir qu'un jeu de fichiers au lieu de `1_40`/`3_30`.
   - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources.
   - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
-  - **Shaders `1_40` en grande partie absents** (4 fichiers contre 31 en `3_30`) : la règle « un nouveau shader existe dans les deux versions » n'est plus tenue ; le doublon disparaît avec l'injection de `#version` et des macros `in`/`out`.
+  - **Shaders `1_40` en grande partie absents** (4 fichiers contre 31 en `3_30`) : un pilote GLSL 1.40 est incompatible avec le contexte 3.3 core demandé ; retirer `resources/shaders/1_40/` et la branche GLSL 140 de `ShaderManager.init`, ne plus y ajouter de shader ; le doublon disparaît de toute façon avec l'injection de `#version` et des macros `in`/`out`.
   - **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
 - Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
 
@@ -162,6 +162,10 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
   - **Batch** (`SpriteBatch`) : sommets transformés sur CPU dans un VBO dynamique ; texte et formes variées.
   - **Instancing** (quad + attributs par instance, `glVertexAttribDivisor`, `glDrawElementsInstanced`) : sprites et particules.
   - Remplissage par frame efficace (`glMapBufferRange`, `glBufferSubData`).
+
+- **`Material` partageable** : programme, valeurs d'uniform et `RenderState` (regroupés dans `Renderer`) extraits en un objet partagé entre renderers, avec une clé de tri pour le regroupement des dessins ; partage d'un `Mesh` entre renderers (possession, compteur de références).
+- **État de dessin à étendre** : blend par renderer, cache des `glEnable`/`glDisable` redondants dans `GLContext` ; attributs nommés (en plus des canaux) si besoin.
+- Bugs connus : `Renderer.updateShaderValue` sur une valeur absente lève une `NullPointerException` ; `Shape2DRenderer.setTexturePosition` ne marque pas la texture à renvoyer (il faut appeler `updateShapeTexture()`).
 
 ## Rendu SVG
 Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et anticrénelage communs).

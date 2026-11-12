@@ -117,3 +117,22 @@ Chaque étape : compiler, `mvn -o -q test`, vérifier en jeu ; relire le diff co
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml renderer-extensible`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait
+Les 10 étapes, un commit chacune sur `renderer-extensible` : plan, démo `CustomRenderer2D` + shader `customStar2D`, matrices 3D droites, `Shape` → `Mesh`, programme dans `Renderer`, `RenderState`, `Renderer` abstraite / `MeshRenderer`, canaux explicites, champs privés + `ExtensionFieldsTest`, docs.
+
+### Écarts au plan
+- `Shape2DRenderer.texturePosition` était lu par `RectangleRenderer`, `EllipseRenderer`, `PolygonRenderer` (le plan le croyait inutilisé) : privé, avec `setTexturePosition`/`getTexturePosition`.
+- `position`, `scale`, `rotation`, `angle`, `model` de `Renderer` sont aussi privés (accès par `position()`, `scale()`… existants).
+- `Renderer.setColorMode(color)` reste dans `Renderer` (sans toucher aux UV) ; `MeshRenderer` ajoute `setColorMode(color, disableTexture)`.
+- Démo : la première étoile avait un rapport intérieur de 1 (décagone), corrigé ; l'étape 6 oblige `setDepthWrite` en plus de `setDepthTest` (un shader 2D n'écrit pas la profondeur par défaut).
+- Bugs existants notés dans `later.md` : `updateShaderValue` sur valeur absente (NPE), `setTexturePosition` sans renvoi de la texture.
+
+### Vérifié
+`mvn -o -q test` (903 tests, dont `ExtensionFieldsTest`, `PublicFieldsTest`) ; avec `scenario.py` : `Scene2D`, `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`, `CustomRenderer2D` (touche D), `MultiWindowScene` (outils et second contexte) chargées sans erreur de log ; captures de `Scene3D` et `Game3D2D` identiques avant/après ; `leakcheck CustomRenderer2D` et `Scene3D` sans fuite.
+
+### À vérifier à la main
+- `CustomRenderer2D` : deux étoiles colorées animées ; D : la petite étoile passe devant/derrière la grande.
+- `Scene3D` : culling des modèles et lumières ; `Game3D2D` : 2D par-dessus la 3D ; `TerrainGeneration3D`, `Scene3DBis`.
+- `Scene2D` : formes, textes, tilemap ; `MultiWindowScene` : rendu dans chaque fenêtre.
