@@ -1,35 +1,57 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.GUI.BackgroundlessButton;
-import io.github.mightycode.mightylib.graphics.GUI.GUIList;
+import io.github.mightycode.mightylib.graphics.GUI.GUI;
 import io.github.mightycode.mightylib.graphics.GUI.ScrollList;
+import io.github.mightycode.mightylib.graphics.GUI.TextField;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputManager;
-import io.github.mightycode.mightylib.scenes.DefaultLoadingScene;
-import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
-import io.github.mightycode.mightylib.sounds.SoundManager;
-import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
-import io.github.mightycode.mightylib.utils.math.color.Color4f;
-import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
-import io.github.mightycode.mightylib.utils.math.MightyMath;
+import io.github.mightycode.mightylib.inputs.KeyRepeat;
+import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.type.FloatTweening;
+import io.github.mightycode.mightylib.resources.data.JSONFile;
+import io.github.mightycode.mightylib.scenes.DefaultLoadingScene;
+import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
+import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.math.MightyMath;
+import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylibdemo.main.ActionId;
-import io.github.mightycode.mightylibdemo.scenes.Platformer2D.Test2DPlatformerBox2D;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
 
+/**
+ * The menu of the demo: a field that filters the scenes, the list of the scenes, a panel that describes the one
+ * chosen, and Quit. It shows how a game talks to the engine with its commands: the scenes are the candidates of the
+ * completion of the "scene" command, and a choice runs "scene <name>" (or "exit") through Commands.execute, which
+ * works on the window of this scene. A command that fails writes its message in red in the panel.
+ *
+ * The hidden scenes and the descriptions are data (resources/data/menuScenes.json, batch "menu").
+ * Keys : up and down (W, S) go from the field to the list then Quit, Enter chooses (in the field: starts typing),
+ * Escape quits ; in the field Enter launches the first scene of the list, Escape or a click elsewhere give the
+ * focus back (InputFocus).
+ */
 public class MenuScene extends Scene {
     private static final SoundSourceCreationInfo CREATION_INFO_SELECT = new SoundSourceCreationInfo();
     static {
@@ -38,16 +60,49 @@ public class MenuScene extends Scene {
         CREATION_INFO_SELECT.gain = 0.2f;
     }
 
-    private GUIList guiList;
+    private static final Color4f PANEL_COLOR = new Color4f(0.1f, 0.25f, 0.55f, 1f);
+    private static final Color4f TEXT_COLOR = new Color4f(1f, 1f, 1f, 1f);
+    private static final Color4f ERROR_COLOR = new Color4f(1f, 0.4f, 0.35f, 1f);
 
+    // The part of the menu the keys act on
+    private enum EZone {
+        FIELD, LIST, QUIT
+    }
+
+    private SceneChoices choices;
+    private Map<String, String> descriptions;
+    private String defaultDescription;
+    // The scenes of the list now (the filter applied)
+    private List<SceneChoices.Entry> shown;
+
+    private TextField field;
     private ScrollList sceneList;
-    private List<SceneEntry> sceneEntries;
-
     private BackgroundlessButton buttonQuit;
+    private RectangleRenderer panel;
+    private Text panelTitle;
+    private Text panelText;
+    private Text title;
 
     private FloatTweening rotation;
 
-    private Text title;
+    // Up and down held go on, like the arrows of a keyboard in any list
+    private final KeyRepeat repeatDown = new KeyRepeat();
+    private final KeyRepeat repeatUp = new KeyRepeat();
+
+    private EZone zone = EZone.FIELD;
+    // Written in red in the panel while the panel is about the scene it happened for (errorKey)
+    private String error;
+    private String errorKey;
+    private boolean errorShown;
+
+    // For the sound of the selection
+    private EZone lastZone;
+    private Integer lastSelected;
+
+    @Override
+    protected String[] getInvolvedBatch() {
+        return new String[]{ "menu" };
+    }
 
     @Override
     protected TemplateSceneLoading createLoadingScene(String[] args) {
@@ -66,157 +121,285 @@ public class MenuScene extends Scene {
         main3DCamera.setPos(new Vector3f(0, 0, 0));
         setClearColor(52, 189, 235, 1f);
 
+        /// DATA ///
+
+        JSONObject config = resources.getResource(JSONFile.class, "menuScenes").getObject();
+        Set<String> hidden = new HashSet<>();
+        JSONArray hiddenNames = config.getJSONArray("hidden");
+        for (int i = 0; i < hiddenNames.length(); ++i)
+            hidden.add(hiddenNames.getString(i));
+
+        descriptions = new HashMap<>();
+        JSONObject descriptionsJson = config.getJSONObject("descriptions");
+        for (String name : descriptionsJson.keySet())
+            descriptions.put(name, descriptionsJson.getString(name));
+        defaultDescription = config.optString("defaultDescription", "No description.");
+
+        // The scenes are the ones the command "scene" suggests: nothing to maintain here when one is added
+        choices = new SceneChoices(engine().commands().complete("scene ").getCandidates(), hidden);
+        shown = choices.entries();
+
         /// RENDERERS ///
 
         Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeCopy();
-
-        // Left : shortcuts to the main test scenes
-        BackgroundlessButton button2DScene = createButton("Test2DScene", windowSize.x * 0.25f, windowSize.y * 0.4f, null);
-        BackgroundlessButton button3DScene = createButton("Test3DScene", windowSize.x * 0.25f, windowSize.y * 0.52f, button2DScene);
-        BackgroundlessButton button3D_2Scene = createButton("Test3DScene-2", windowSize.x * 0.25f, windowSize.y * 0.64f, button2DScene);
-        buttonQuit = createButton("Quit", windowSize.x * 0.5f, windowSize.y * 0.9f, button2DScene);
-
-        guiList = new GUIList(mainContext.getInputManager(), mainContext.getMouseManager());
-        guiList.setupActionInputValues(ActionId.SELECT_UP, ActionId.SELECT_DOWN);
-        guiList.GUIs.put(0, button2DScene);
-        guiList.GUIs.put(1, button3DScene);
-        guiList.GUIs.put(2, button3D_2Scene);
-        guiList.GUIs.put(3, buttonQuit);
-        guiList.setupActivationActions(ActionId.ENTER, ActionId.LEFT_CLICK);
-        guiList.ShouldLoop = false;
-
-        // Right : every scene of the demo, scrollable
-        sceneEntries = createSceneEntries();
-        List<String> names = new ArrayList<>();
-        for (SceneEntry entry : sceneEntries)
-            names.add(entry.name);
-
-        sceneList = new ScrollList(mainContext, windowSize.x * 0.55f, windowSize.y * 0.25f,
-                windowSize.x * 0.4f, windowSize.y * 0.56f, windowSize.y * 0.08f, "bahnschrift", 30);
-        sceneList.setupActivationActions(ActionId.LEFT_CLICK);
-        sceneList.setItems(names);
-
-        rotation = new FloatTweening();
-        rotation.setTweeningOption(ETweeningOption.LoopReversed)
-                .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
-                .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
 
         title = new Text();
         title.setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
                 .setFontSize(80)
-                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.12f))
+                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.09f))
                 .setText("MightyLibrary");
+
+        float left = windowSize.x * 0.07f;
+        float top = windowSize.y * 0.22f;
+        float listWidth = windowSize.x * 0.42f;
+        float fieldHeight = 54f;
+        float listTop = top + fieldHeight + 10f;
+        float bottom = windowSize.y * 0.86f;
+
+        field = new TextField(mainContext, left, top, listWidth, fieldHeight, "bahnschrift", 30);
+        field.setHint("Filter the scenes...");
+
+        sceneList = new ScrollList(mainContext, left, listTop, listWidth, bottom - listTop, 50f, "bahnschrift", 30);
+        sceneList.setupActivationActions(ActionId.LEFT_CLICK);
+        sceneList.setItems(labelsOf(shown));
+
+        float panelLeft = left + listWidth + 40f;
+        float panelWidth = windowSize.x - left - panelLeft;
+        float padding = 20f;
+
+        panel = new RectangleRenderer("colorShape2D");
+        panel.setColorMode(PANEL_COLOR);
+        panel.setPosition(new Vector2f(panelLeft, top));
+        panel.setSizePix(panelWidth, bottom - top);
+
+        panelTitle = new Text();
+        panelTitle.setFont("bahnschrift")
+                .setFontSize(38)
+                .setReference(EDirection.LeftUp)
+                .setAlignment(ETextAlignment.Left)
+                .setColor(TEXT_COLOR)
+                .setPosition(new Vector2f(panelLeft + padding, top + padding));
+
+        panelText = new Text();
+        panelText.setFont("bahnschrift")
+                .setFontSize(28)
+                .setReference(EDirection.LeftUp)
+                .setAlignment(ETextAlignment.Left)
+                .setColor(TEXT_COLOR)
+                .setMaxWidth(panelWidth - 2 * padding)
+                .setPosition(new Vector2f(panelLeft + padding, top + padding + 70f));
+
+        buttonQuit = new BackgroundlessButton(mainContext);
+        buttonQuit.text().setFont("bahnschrift")
+                .setAlignment(ETextAlignment.Center)
+                .setReference(EDirection.None)
+                .setFontSize(40)
+                .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.93f))
+                .setText("Quit");
+        buttonQuit.text().copyTo(buttonQuit.overlapsText());
+        buttonQuit.overlapsText().setColor(new Color4f(0.3f)).setText("->Quit<-");
+
+        rotation = new FloatTweening();
+        rotation.setTweeningOption(ETweeningOption.LoopReversed)
+                .setTweeningValues(ETweeningType.Sinusoidal, ETweeningBehaviour.InOut)
+                .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
+
+        refreshPanel();
     }
 
-    private static class SceneEntry {
-        final String name;
-        final Supplier<Scene> factory;
+    private static List<String> labelsOf(List<SceneChoices.Entry> entries) {
+        List<String> labels = new ArrayList<>();
+        for (SceneChoices.Entry entry : entries)
+            labels.add(entry.label());
 
-        SceneEntry(String name, Supplier<Scene> factory) {
-            this.name = name;
-            this.factory = factory;
-        }
+        return labels;
     }
 
-    // Every scene reachable from the menu (add new test scenes here)
-    private static List<SceneEntry> createSceneEntries() {
-        List<SceneEntry> list = new ArrayList<>();
-        list.add(new SceneEntry("Test2DScene", Test2DScene::new));
-        list.add(new SceneEntry("Test2DWaveFunctionCollapse", Test2DWaveFunctionCollapseScene::new));
-        list.add(new SceneEntry("Test2DRopeSimulation", Test2DRopeSimulation::new));
-        list.add(new SceneEntry("Test2DPlatformerBox2D", Test2DPlatformerBox2D::new));
-        list.add(new SceneEntry("TestBox2D", TestBox2D::new));
-        list.add(new SceneEntry("TestCollisionSystem", TestCollisionSystem::new));
-        list.add(new SceneEntry("Test3DScene", Test3DScene::new));
-        list.add(new SceneEntry("Test3DScene-2", Test3DScene2::new));
-        list.add(new SceneEntry("Test3DSceneTerrainGeneration", Test3DSceneTerrainGeneration::new));
-        list.add(new SceneEntry("Test3D2DGame", Test3D2DGame::new));
-        list.add(new SceneEntry("TestSoundFormatsScene", TestSoundFormatsScene::new));
-        list.add(new SceneEntry("TestGamepadScene", TestGamepadScene::new));
-        list.add(new SceneEntry("TestPreloadScene", TestPreloadScene::new));
-        list.add(new SceneEntry("TestGLLoading", TestGLLoading::new));
-        list.add(new SceneEntry("TestFallbackScene", TestFallbackScene::new));
-        list.add(new SceneEntry("DocumentationScene", DocumentationScene::new));
-        return list;
-    }
-
-    private BackgroundlessButton createButton(String label, float x, float y, BackgroundlessButton model) {
-        BackgroundlessButton button;
-        if (model == null) {
-            button = new BackgroundlessButton(mainContext);
-            button.Text.setFont("bahnschrift")
-                    .setAlignment(ETextAlignment.Center)
-                    .setReference(EDirection.None)
-                    .setFontSize(40);
-        } else {
-            button = model.copy();
-        }
-
-        button.Text.setPosition(new Vector2f(x, y)).setText(label);
-        button.Text.copyTo(button.OverlapsText);
-        button.OverlapsText.setColor(new Color4f(0.3f)).setText("->" + label + "<-");
-
-        return button;
+    // The filter changed: the list shows the scenes that match, the first one is chosen
+    private void refilter() {
+        shown = choices.filter(field.getText());
+        sceneList.setItems(labelsOf(shown));
+        error = null;
     }
 
     @Override
     public void update() {
         super.update();
 
-        guiList.update();
+        InputManager input = mainContext.getInputManager();
+        MouseManager mouse = mainContext.getMouseManager();
 
+        // While the field has the focus the scene sees no input: only the field and the mouse position work
+        field.update();
         sceneList.update();
 
-        Integer activatedScene = sceneList.getActivated();
-        Integer id = guiList.getActivated();
+        boolean filterChanged = field.isChanged();
+        if (filterChanged)
+            refilter();
 
-        if (activatedScene != null) {
-            sceneManagerInterface.setNewScene(sceneEntries.get(activatedScene).factory.get(), new String[]{""});
-        } else if (id != null) {
-            switch (id) {
-                case 0:
-                    sceneManagerInterface.setNewScene(new Test2DScene(), new String[]{""});
-                    break;
-                case 1:
-                    sceneManagerInterface.setNewScene(new Test3DScene(), new String[]{""});
-                    break;
-                case 2:
-                    sceneManagerInterface.setNewScene(new Test3DScene2(), new String[]{""});
-                    break;
-                case 3:
-                    sceneManagerInterface.exit(0);
-                    break;
-            }
+        // The mouse chooses the zone it moves over
+        if (!mouse.oldPos().equals(mouse.pos())) {
+            if (field.GUIMouseSelected())
+                zone = EZone.FIELD;
+            else if (sceneList.getHovered() != null)
+                zone = EZone.LIST;
+            else if (buttonQuit.GUIMouseSelected())
+                zone = EZone.QUIT;
         }
+
+        // What the field says when it gives the focus back
+        if (field.getLeftWith() == GLFW_KEY_DOWN)
+            navigateDown();
+        if (field.isSubmitted())
+            launchScene(shown.isEmpty() ? null : shown.get(0));
+
+        float seconds = GameTime.DeltaTime();
+        int down = repeatDown.update(input.inputPressed(ActionId.SELECT_DOWN), input.getState(ActionId.SELECT_DOWN), seconds);
+        int up = repeatUp.update(input.inputPressed(ActionId.SELECT_UP), input.getState(ActionId.SELECT_UP), seconds);
+        for (int i = 0; i < down; ++i)
+            navigateDown();
+        for (int i = 0; i < up; ++i)
+            navigateUp();
+
+        if (input.inputPressed(ActionId.ENTER))
+            activateZone();
+
+        Integer clicked = sceneList.getActivated();
+        if (clicked != null)
+            launchScene(shown.get(clicked));
+
+        if (buttonQuit.GUIMouseSelected() && input.inputPressed(ActionId.LEFT_CLICK))
+            quit();
+
+        if (input.inputPressed(ActionId.ESCAPE))
+            quit();
+
+        setSelected(field, zone == EZone.FIELD);
+        setSelected(buttonQuit, zone == EZone.QUIT);
+        refreshPanel();
 
         rotation.update();
-        buttonQuit.Text.setRotation(rotation.value(), new Vector3f(0, 0, 1));
+        buttonQuit.text().setRotation(rotation.value(), new Vector3f(0, 0, 1));
 
-        if (guiList.isStateChanged()){
-            SoundManager.getInstance().createSoundSource(CREATION_INFO_SELECT);
+        // A sound when the choice changes, not when the filter changes it
+        Integer selected = sceneList.getSelected();
+        if (lastZone != null && !filterChanged && (zone != lastZone || !Objects.equals(selected, lastSelected)))
+            engine().soundManager().createSoundSource(CREATION_INFO_SELECT);
+        lastZone = zone;
+        lastSelected = selected;
+    }
+
+    private void navigateDown() {
+        switch (zone) {
+            case FIELD:
+                zone = shown.isEmpty() ? EZone.QUIT : EZone.LIST;
+                break;
+            case LIST:
+                if (!sceneList.moveSelection(1))
+                    zone = EZone.QUIT;
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void navigateUp() {
+        switch (zone) {
+            case QUIT:
+                zone = shown.isEmpty() ? EZone.FIELD : EZone.LIST;
+                break;
+            case LIST:
+                if (sceneList.isSelectionAtStart())
+                    zone = EZone.FIELD;
+                else
+                    sceneList.moveSelection(-1);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void activateZone() {
+        switch (zone) {
+            case FIELD:
+                field.requestFocus();
+                break;
+            case LIST:
+                Integer selected = sceneList.getSelected();
+                if (selected != null)
+                    launchScene(shown.get(selected));
+                break;
+            case QUIT:
+                quit();
+                break;
+        }
+    }
+
+    // The engine's way to change scenes: its command, as the console would run it
+    private void launchScene(SceneChoices.Entry entry) {
+        if (entry == null) {
+            fail("No scene to launch: nothing matches \"" + field.getText() + "\".");
+            return;
         }
 
-        //main2DCamera.setX(rotation.value() * 50);
+        CommandResult result = engine().commands().execute("scene " + entry.command());
+        if (!result.isSuccess())
+            fail(result.getMessage());
+    }
 
-        InputManager inputManager = mainContext.getInputManager();
+    private void quit() {
+        CommandResult result = engine().commands().execute("exit");
+        if (!result.isSuccess())
+            fail(result.getMessage());
+    }
 
-        if (inputManager.inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.exit(0);
+    // In the panel, and in the log
+    private void fail(String message) {
+        error = message;
+        errorKey = currentKey();
+        System.err.println("--Menu: " + message);
+    }
 
-        if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
-                inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F2) )
-            sceneManagerInterface.setNewScene(new Test2DRopeSimulation(), new String[]{""});
+    // The scene the panel is about : the one under the mouse, otherwise the selected one
+    private String currentKey() {
+        Integer row = sceneList.getActive();
+        return row == null ? "" : shown.get(row).command();
+    }
 
-        if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
-                inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F3) )
-            sceneManagerInterface.setNewScene(new Test3DSceneTerrainGeneration(), new String[]{""});
+    // The part of the menu the keys act on is shown selected
+    private static void setSelected(GUI gui, boolean selected) {
+        if (selected)
+            gui.forceSelect(true);
+        else
+            gui.forceUnselect(true);
+    }
 
-        if (inputManager.getKeyboardManager().getKeyState(GLFW_KEY_LEFT_SHIFT) &&
-                inputManager.getKeyboardManager().getKeyState(GLFW_KEY_F4) )
-            sceneManagerInterface.setNewScene(new Test2DPlatformerBox2D(), new String[]{""});
+    private void refreshPanel() {
+        // Another choice: the error is old news
+        if (error != null && !Objects.equals(errorKey, currentKey()))
+            error = null;
 
+        Integer row = sceneList.getActive();
+        SceneChoices.Entry entry = row == null ? null : shown.get(row);
+
+        boolean inError = error != null;
+        if (inError != errorShown) {
+            errorShown = inError;
+            panelText.setColor(inError ? ERROR_COLOR : TEXT_COLOR);
+        }
+
+        if (inError) {
+            panelTitle.setText("Error");
+            panelText.setText(error);
+        } else if (entry == null) {
+            panelTitle.setText("No scene");
+            panelText.setText("No scene matches the filter.");
+        } else {
+            panelTitle.setText(entry.label());
+            panelText.setText(descriptions.getOrDefault(entry.command(), defaultDescription));
+        }
     }
 
     @Override
@@ -226,8 +409,12 @@ public class MenuScene extends Scene {
         super.display();
 
         title.display();
-        guiList.display();
+        panel.display();
+        panelTitle.display();
+        panelText.display();
+        field.display();
         sceneList.display();
+        buttonQuit.display();
 
         super.setAndDisplayRealScene();
     }
@@ -236,13 +423,20 @@ public class MenuScene extends Scene {
     public void unload() {
         super.unload();
 
-        if (guiList != null)
-            guiList.unload();
-
-        if (sceneList != null)
-            sceneList.unload();
-
         if (title != null)
             title.unload();
+        if (panel != null)
+            panel.unload();
+        if (panelTitle != null)
+            panelTitle.unload();
+        if (panelText != null)
+            panelText.unload();
+        // Gives the focus back if the scene is left while typing
+        if (field != null)
+            field.unload();
+        if (sceneList != null)
+            sceneList.unload();
+        if (buttonQuit != null)
+            buttonQuit.unload();
     }
 }

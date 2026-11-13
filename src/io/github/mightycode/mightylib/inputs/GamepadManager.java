@@ -1,5 +1,9 @@
 package io.github.mightycode.mightylib.inputs;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +28,8 @@ public class GamepadManager {
     // Any connected gamepad, assigned or not
     public static final int ANY_PLAYER = -1;
 
+    // Optional SDL_GameControllerDB file of the project, read at startup
+    public static final String MAPPINGS_FILE = "resources/gamecontrollerdb.txt";
     public static final int REAL_SLOTS = GLFW_JOYSTICK_LAST + 1;
     public static final int VIRTUAL_SLOTS = 8;
 
@@ -275,6 +281,29 @@ public class GamepadManager {
         boolean added = source.addMappings(mappings);
         if (!added)
             System.err.println("--Invalid gamepad mappings");
+
+        return added;
+    }
+
+    /**
+     * Add the mappings of a gamecontrollerdb.txt of the project. False when the file doesn't exist (nothing to do,
+     * not an error), can't be read or holds no valid mapping.
+     */
+    public boolean loadMappingsFile(Path file) {
+        if (!Files.isRegularFile(file))
+            return false;
+
+        String content;
+        try {
+            content = Files.readString(file, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            System.err.println("--Gamepad mappings file " + file + " can't be read : " + e.getMessage());
+            return false;
+        }
+
+        boolean added = addMappings(content);
+        if (added)
+            System.out.println("--Gamepad mappings loaded from " + file);
 
         return added;
     }

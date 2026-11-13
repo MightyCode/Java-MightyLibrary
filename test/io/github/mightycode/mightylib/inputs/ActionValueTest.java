@@ -14,11 +14,13 @@ import static org.lwjgl.glfw.GLFW.*;
 
 // Values of the actions bound to a gamepad (no keyboard nor mouse : they need a window)
 class ActionValueTest {
-    private static final int RIGHT = 100;
-    private static final int LEFT = 101;
-    private static final int RIGHT_OR_A = 102;
-    private static final int A_AND_RIGHT = 103;
-    private static final int TRIGGER = 104;
+    // The registry is shared by the whole JVM : identifiers unique to this class
+    private static final InputAction RIGHT = InputRegistry.action("test_action_value:right");
+    private static final InputAction LEFT = InputRegistry.action("test_action_value:left");
+    private static final InputAction RIGHT_OR_A = InputRegistry.action("test_action_value:right_or_a");
+    private static final InputAction A_AND_RIGHT = InputRegistry.action("test_action_value:a_and_right");
+    private static final InputAction TRIGGER = InputRegistry.action("test_action_value:trigger");
+    private static final InputAction NOT_BOUND = InputRegistry.action("test_action_value:not_bound");
 
     private FakeGamepadSource source;
     private GamepadManager gamepads;
@@ -36,11 +38,11 @@ class ActionValueTest {
         IAction right = new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X, InputGamepadAxis.POSITIVE);
         IAction a = new InputGamepadButton(GLFW_GAMEPAD_BUTTON_A);
         inputManager.init(new ActionInput[]{
-                new ActionInput(RIGHT, "RIGHT", right),
-                new ActionInput(LEFT, "LEFT", new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X, InputGamepadAxis.NEGATIVE)),
-                new ActionInput(RIGHT_OR_A, "RIGHT_OR_A", new InputOr(right, a)),
-                new ActionInput(A_AND_RIGHT, "A_AND_RIGHT", new InputAnd(a, right)),
-                new ActionInput(TRIGGER, "TRIGGER", new InputGamepadAxis(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, InputGamepadAxis.POSITIVE)),
+                new ActionInput(RIGHT, right),
+                new ActionInput(LEFT, new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X, InputGamepadAxis.NEGATIVE)),
+                new ActionInput(RIGHT_OR_A, new InputOr(right, a)),
+                new ActionInput(A_AND_RIGHT, new InputAnd(a, right)),
+                new ActionInput(TRIGGER, new InputGamepadAxis(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, InputGamepadAxis.POSITIVE)),
         });
     }
 
@@ -85,13 +87,13 @@ class ActionValueTest {
 
     @Test
     void simulatedActionHasFullValue() {
-        inputManager.getSimulation().press(RIGHT, 1);
-        inputManager.getSimulation().update();
+        inputManager.simulatePress(RIGHT, 1);
+        inputManager.updateActionSimulation();
         assertEquals(1, inputManager.getValue(RIGHT));
     }
 
     @Test
     void unknownActionHasNoValue() {
-        assertEquals(0, inputManager.getValue(999));
+        assertEquals(0, inputManager.getValue(NOT_BOUND));
     }
 }

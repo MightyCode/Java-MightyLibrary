@@ -167,6 +167,31 @@ class ResourcesReloadTest extends ResourcesTestBase {
         assertConsistent();
     }
 
+    // The data is given the copy that failed: it can keep what the copy found out (ShaderData: the files to watch)
+    @Test
+    void aFailedReloadGivesItsCopyToTheData() throws Exception {
+        FakeData shader = fake(THREAD_CONTEXT, "shader");
+        batch("level", "shader");
+        start();
+        resources.loadBatch("level");
+        pump();
+
+        shader.preloadThrows = new ResourceException("#include \"missing.glsl\" not found");
+        resources.reload(shader);
+        pump();
+        assertTrue(shader.isLoaded());
+        assertEquals(1, shader.failedCopies.size());
+        assertNotSame(shader, shader.failedCopies.get(0));
+        assertEquals("shader", shader.failedCopies.get(0).getDataName());
+
+        // A reload that works is not reported
+        shader.preloadThrows = null;
+        resources.reload(shader);
+        pump();
+        assertEquals(1, shader.failedCopies.size());
+        assertConsistent();
+    }
+
     // The data using a reloaded one are read again, in chain
     @Test
     void reloadedDependencyReloadsItsDependents() throws Exception {

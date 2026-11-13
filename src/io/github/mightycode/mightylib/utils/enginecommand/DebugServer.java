@@ -1,5 +1,8 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import io.github.mightycode.mightylib.console.ConsoleLog;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -13,12 +16,16 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Local server to send commands to the running program from another process (scripts, tools...).
  * It only listens on the loopback address, so it is not reachable from another computer.
  * Protocol : one command per line, one JSON line in answer : {"success": bool, "message": "...", "data": {...}}
+ * A client following the console log ("console follow on") also receives, between the answers, one line per log line :
+ * {"event": "log", "id": n, "type": "OUT|ERR|COMMAND|RESULT|ERROR", "source": "...", "text": "..."}
  */
 public class DebugServer {
     private static final long STOP_WAIT_MILLISECONDS = 500;
@@ -29,15 +36,107 @@ public class DebugServer {
 
     private final Commands commands;
     private final int port;
+    // Followed by the clients asking for it, null: no follow
+    private final ConsoleLog log;
+    private final AtomicInteger nextClient;
 
     private ServerSocket serverSocket;
     // Answers being written, waited at stop so the client of an exit command gets its answer
     private final AtomicInteger pendingAnswers;
 
     public DebugServer(Commands commands, int port) {
+        this(commands, port, null);
+    }
+
+    public DebugServer(Commands commands, int port, ConsoleLog log) {
         this.commands = commands;
         this.port = port;
+        this.log = log;
         this.pendingAnswers = new AtomicInteger();
+        this.nextClient = new AtomicInteger(1);
+    }
+
+    /**
+     * One connection: the source of its commands, its writer shared by the answers and the followed log lines.
+     * Followed lines are queued and written by a thread of their own: a client that reads slowly never blocks the
+     * thread writing to the log (often the main one); past FOLLOW_QUEUE_SIZE waiting lines, new ones are dropped.
+     */
+    private final class Client implements ICommandSource {
+        private static final int FOLLOW_QUEUE_SIZE = 10000;
+
+        private final String name;
+        private final BufferedWriter out;
+        private final Consumer<ConsoleLog.Line> follower;
+        private final LinkedBlockingQueue<ConsoleLog.Line> followed;
+        private Thread followThread;
+
+        private Client(BufferedWriter out) {
+            this.name = "server#" + nextClient.getAndIncrement();
+            this.out = out;
+            this.followed = new LinkedBlockingQueue<>(FOLLOW_QUEUE_SIZE);
+            this.follower = followed::offer;
+        }
+
+        @Override
+        public String name() {
+            return name;
+        }
+
+        // The debug server only exists in debug mode
+        @Override
+        public ECommandLevel level() {
+            return ECommandLevel.DEV;
+        }
+
+        @Override
+        public synchronized boolean setFollowLog(boolean follow) {
+            if (log == null)
+                return false;
+
+            if (follow && followThread == null) {
+                followThread = new Thread(this::writeFollowed, "MightyLibrary-DebugFollow");
+                followThread.setDaemon(true);
+                followThread.start();
+                log.addListener(follower);
+            } else if (!follow && followThread != null) {
+                log.removeListener(follower);
+                followThread.interrupt();
+                followThread = null;
+                followed.clear();
+            }
+
+            return true;
+        }
+
+        private void writeFollowed() {
+            try {
+                while (!Thread.currentThread().isInterrupted()) {
+                    ConsoleLog.Line line = followed.take();
+                    send(new JSONObject()
+                            .put("event", "log")
+                            .put("id", line.getId())
+                            .put("type", line.getType().name())
+                            .put("source", line.getSource() == null ? JSONObject.NULL : line.getSource())
+                            .put("text", line.getText()));
+                }
+            } catch (InterruptedException e) {
+                // Follow stopped
+                Thread.currentThread().interrupt();
+            }
+        }
+
+        // From any thread: a failed write means the client is gone, its reading loop ends
+        private void send(JSONObject json) {
+            synchronized (out) {
+                try {
+                    out.write(json.toString());
+                    out.write('\n');
+                    out.flush();
+                } catch (IOException e) {
+                    // Disconnected
+                }
+            }
+        }
     }
 
     /**
@@ -109,9 +208,11 @@ public class DebugServer {
     }
 
     private void handleClient(Socket client) {
+        Client connection = null;
         try (Socket socket = client;
              BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
              BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8))) {
+            connection = new Client(out);
 
             String line;
             while ((line = in.readLine()) != null) {
@@ -123,14 +224,12 @@ public class DebugServer {
                     CommandResult result;
                     try {
                         // Always completed once executed: deferred results have their own timeout
-                        result = commands.submit(line).get();
+                        result = commands.submit(line, connection).get();
                     } catch (ExecutionException e) {
                         result = CommandResult.error(e.getCause().toString());
                     }
 
-                    out.write(result.toJson().toString());
-                    out.write('\n');
-                    out.flush();
+                    connection.send(result.toJson());
                 } finally {
                     pendingAnswers.decrementAndGet();
                 }
@@ -139,6 +238,9 @@ public class DebugServer {
             // Client disconnected
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        } finally {
+            if (connection != null)
+                connection.setFollowLog(false);
         }
     }
 

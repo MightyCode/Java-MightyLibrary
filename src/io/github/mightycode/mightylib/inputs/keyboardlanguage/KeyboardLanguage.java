@@ -18,11 +18,11 @@ public abstract class KeyboardLanguage {
     public abstract String keyboardConfigurationName();
 
     final protected boolean shouldCapsLock(){
-        return manager.isCapsLock() || manager.getKeyState(GLFW.GLFW_KEY_LEFT_SHIFT) || manager.getKeyState(GLFW.GLFW_KEY_RIGHT_SHIFT);
+        return manager.isCapsLock() || manager.getRawKeyState(GLFW.GLFW_KEY_LEFT_SHIFT) || manager.getRawKeyState(GLFW.GLFW_KEY_RIGHT_SHIFT);
     }
 
     final protected boolean shouldAltGr(){
-        return manager.getKeyState(GLFW.GLFW_KEY_RIGHT_ALT);
+        return manager.getRawKeyState(GLFW.GLFW_KEY_RIGHT_ALT);
     }
 
     public char translateKeyTo(int keyId) {

@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.utils.LoadingElement;
 
 import java.util.ArrayList;
@@ -9,6 +10,8 @@ public abstract class GLElement implements LoadingElement {
     private String name;
     private boolean loaded;
     private boolean loadStarted;
+    // The first loading threw a ResourceException: waits for one of its data to be reloaded (GLResources.dataReloaded)
+    private boolean failed;
 
     public String getName() {
         return name;
@@ -18,7 +21,36 @@ public abstract class GLElement implements LoadingElement {
         this.name = name;
     }
 
+    // The GLResources holding this element, set when it registers it: an element has a single owner
+    private volatile GLResources owner;
+
+    // The type it is registered under in its GLResources (a subtype is registered under its base type: FallbackShader)
+    Class<? extends GLElement> registeredType;
+
+    final void attachTo(GLResources glResources) {
+        if (owner == glResources)
+            return;
+
+        if (owner != null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + name
+                    + " is already managed by another GLResources");
+
+        owner = glResources;
+    }
+
+    // The GLResources holding this element; fails while it is not registered
+    protected final GLResources glResources() {
+        GLResources current = owner;
+        if (current == null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + name
+                    + " is not registered in a GLResources");
+
+        return current;
+    }
+
     private int reference;
+    // References wanting the element now (renderers, loaded batches), the others only preload it
+    private int urgentReference;
 
     protected ArrayList<DataType> resourceDependencies;
     protected ArrayList<GLElement> glElementDependencies;
@@ -29,29 +61,70 @@ public abstract class GLElement implements LoadingElement {
         glElementDependencies = new ArrayList<>();
     }
 
-    void addReference() {
-        //System.out.println("Adding reference to " + this.getClass().getSimpleName() + " = " + this.getName());
-        ++reference;
+    // The element also waits for this data (and is blocked by its failure)
+    public final void addResourceDependency(DataType data) {
+        resourceDependencies.add(data);
     }
 
-    void removeReference() {
-        //System.out.println("Removing reference to " + this.getClass().getSimpleName() + " = " + this.getName());
+    void addReference(boolean urgent) {
+        ++reference;
+        if (urgent)
+            ++urgentReference;
+    }
+
+    void removeReference(boolean urgent) {
         --reference;
+        if (urgent)
+            --urgentReference;
+    }
+
+    void clearReferences() {
+        reference = 0;
+        urgentReference = 0;
     }
 
     boolean isReferenced(){
         return reference != 0;
     }
 
+    boolean isUrgent() {
+        return urgentReference != 0;
+    }
+
     public int getNumberReference() {
         return reference;
     }
 
+    public int getNumberUrgentReference() {
+        return urgentReference;
+    }
+
+    /**
+     * Load the element, or a step of it (false until done). An expected failure (the data is wrong, not the code:
+     * a shader that does not compile) throws a ResourceException, after deleting what the element created:
+     * the element is then failed, its users get the fallback until one of its data is reloaded.
+     */
     public abstract boolean load(int remainingMilliseconds);
 
     @Override
     public boolean isLoaded(){
         return loaded;
+    }
+
+    // Its first loading failed (ResourceException): its users get the fallback until one of its data is reloaded
+    public boolean hasFailed() {
+        return failed;
+    }
+
+    // One of its data was reloaded: it is tried again
+    void clearFailure() {
+        failed = false;
+        loadStarted = false;
+    }
+
+    // True when this element was made from the data (it is tried again when the data is reloaded)
+    boolean dependsOn(DataType data) {
+        return resourceDependencies.contains(data);
     }
 
     /**
@@ -78,12 +151,22 @@ public abstract class GLElement implements LoadingElement {
             loadStarted = true;
         }
 
-        loaded = load(remainingMilliseconds);
+        try {
+            loaded = load(remainingMilliseconds);
+        } catch (ResourceException e) {
+            loaded = false;
+            failed = true;
+            System.err.println("--" + getClass().getSimpleName() + " " + name + " failed: " + e.getMessage()
+                    + ", its fallback is used");
+        }
         return true;
     }
 
-    // A data needed by this element failed: it waits for a reload, its users get the fallback meanwhile
+    // This element or a data needed by it failed: it waits for a reload, its users get the fallback meanwhile
     boolean blockedByFailure() {
+        if (failed)
+            return true;
+
         for (DataType type : resourceDependencies) {
             if (type.hasFailed())
                 return true;
@@ -102,11 +185,13 @@ public abstract class GLElement implements LoadingElement {
             return;
 
         reloadQueued = true;
-        GLResources.getInstance().queueReload(this);
+        glResources().queueReload(this);
     }
 
     /**
      * Send the element again, in steps like load, while the current version stays in use.
+     * An expected failure throws a ResourceException, after deleting what the new version created:
+     * the element keeps its current version (it is not failed).
      * @return true once done (by default nothing to do)
      */
     protected boolean reload(int remainingMilliseconds) {
@@ -114,7 +199,15 @@ public abstract class GLElement implements LoadingElement {
     }
 
     boolean reloadByResource(int remainingMilliseconds) {
-        boolean done = !loaded || reload(remainingMilliseconds);
+        boolean done;
+        try {
+            done = !loaded || reload(remainingMilliseconds);
+        } catch (ResourceException e) {
+            done = true;
+            System.err.println("--" + getClass().getSimpleName() + " " + name + " could not be reloaded: "
+                    + e.getMessage() + ", the previous version is kept");
+        }
+
         if (done)
             reloadQueued = false;
 
@@ -131,6 +224,7 @@ public abstract class GLElement implements LoadingElement {
         unload(remainingMilliseconds);
         loaded = false;
         loadStarted = false;
+        failed = false;
         reloadQueued = false;
     }
 }

@@ -1,22 +1,20 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 
+// Binding of a registered action in an InputManager
 public class ActionInput implements IAction {
-    private final int actionId;
-    private final String actionName;
+    private final InputAction action;
     private final IAction input;
 
-    public ActionInput(int actionId, String actionName, IAction input){
-        this.actionId = actionId;
-        this.actionName = actionName;
+    public ActionInput(InputAction action, IAction input){
+        this.action = action;
         this.input = input;
     }
 
-    public int actionId() { return actionId; }
+    public InputAction action() { return action; }
     public IAction actionInput() { return input; }
-
-    public String actionName() { return actionName; }
 
     @Override
     public boolean getState(InputManager inputManager) {

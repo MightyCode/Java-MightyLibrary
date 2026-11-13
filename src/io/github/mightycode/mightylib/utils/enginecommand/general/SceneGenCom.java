@@ -1,44 +1,58 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONObject;
 
-import java.util.Arrays;
+import java.util.List;
+
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
 public class SceneGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "scene";
-    private final SceneManager sceneManager;
-
-    public SceneGenCom(SceneManager sceneManager) {
-        super(COMMAND_NAME);
-        this.sceneManager = sceneManager;
+    public SceneGenCom() {
+        super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
+                "The current scene and whether it is still loading, or change the scene");
     }
 
     @Override
-    public CommandResult execute(String[] args) {
-        if (args.length < 2)
-            return currentScene();
+    protected void syntax(CommandNode root) {
+        root.executes("Name of the current scene and whether it is still loading", context -> currentScene())
+                .then(argument("name", suggest(() -> SceneClasses.Find(ListGeneralCommand.targetScenes().getScenesPackage())),
+                        "Class name relative to the package of the first scene (for example Platformer2D.PlatformerBox2D)"
+                                + " or the full class name")
+                        .executes("Change the scene", context -> changeScene(context.get("name"), new String[]{""}))
+                        .then(argument("args", word(), "Arguments given to the scene").variadic()
+                                .executes("Change the scene with arguments", context -> {
+                                    List<String> sceneArgs = context.getList("args");
+                                    return changeScene(context.get("name"), sceneArgs.toArray(new String[0]));
+                                })));
+    }
 
-        Class<?> sceneClass = findSceneClass(args[1]);
+    private CommandResult changeScene(String name, String[] sceneArgs) {
+        Class<?> sceneClass = findSceneClass(name);
         if (sceneClass == null)
-            return CommandResult.error("Unknown scene ->" + args[1] + "<-, give its class name relative to "
-                    + sceneManager.getScenesPackage() + " or its full name");
+            return CommandResult.error("Unknown scene ->" + name + "<-, give its class name relative to "
+                    + ListGeneralCommand.targetScenes().getScenesPackage() + " or its full name");
 
         if (!Scene.class.isAssignableFrom(sceneClass))
             return CommandResult.error(sceneClass.getName() + " is not a scene");
 
+        // A scene belongs to the window of the view creating it: the targeted context, not the engine
         Scene scene;
-        try {
+        try (Views.Scope ignored = Views.enter(Views.engine().targetContext())) {
             scene = (Scene) sceneClass.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
             return CommandResult.error("Can't create " + sceneClass.getName() + " : " + e);
         }
 
-        String[] sceneArgs = args.length > 2 ? Arrays.copyOfRange(args, 2, args.length) : new String[]{""};
-        sceneManager.requestSceneChange(scene, sceneArgs);
+        ListGeneralCommand.targetScenes().requestSceneChange(scene, sceneArgs);
 
         return CommandResult.ok("Changing scene to " + sceneClass.getName()
                 + ", use -> scene <- to know when it is loaded");
@@ -46,16 +60,16 @@ public class SceneGenCom extends BaseCommand {
 
     private CommandResult currentScene() {
         JSONObject data = new JSONObject();
-        Scene scene = sceneManager.getCurrentScene();
+        Scene scene = ListGeneralCommand.targetScenes().getCurrentScene();
 
         data.put("scene", scene == null ? JSONObject.NULL : scene.getClass().getName());
-        data.put("loading", sceneManager.isCurrentSceneLoading());
+        data.put("loading", ListGeneralCommand.targetScenes().isCurrentSceneLoading());
 
         return CommandResult.ok("Current scene", data);
     }
 
     private Class<?> findSceneClass(String name) {
-        String[] candidates = { sceneManager.getScenesPackage() + "." + name, name };
+        String[] candidates = { ListGeneralCommand.targetScenes().getScenesPackage() + "." + name, name };
 
         for (String candidate : candidates) {
             try {
@@ -66,13 +80,5 @@ public class SceneGenCom extends BaseCommand {
         }
 
         return null;
-    }
-
-    @Override
-    public String help() {
-        return super.help() +
-                "\nscene : name of the current scene and whether it is still loading" +
-                "\nscene [name] [args...] : change the scene, name is the class name relative to the package of" +
-                " the first scene (for example Platformer2D.Test2DPlatformerBox2D) or the full class name";
     }
 }

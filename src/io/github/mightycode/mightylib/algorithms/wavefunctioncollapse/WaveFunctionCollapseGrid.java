@@ -30,6 +30,10 @@ public class WaveFunctionCollapseGrid {
         layers[0] = layer;
 
         map.setInformation(mapSize, layers, null, null);
+        // A new layer is filled with the tile 0: the cells are empty until they are collapsed
+        for (int y = 0; y < mapSize.y; ++y)
+            for (int x = 0; x < mapSize.x; ++x)
+                layer.setTileType(x, y, -1);
 
         availableTiles = newTileLists(mapSize.y, mapSize.x);
         for (int y = 0; y < mapSize.y; ++y) {
@@ -46,7 +50,7 @@ public class WaveFunctionCollapseGrid {
     }
 
     private void init() {
-        Set<Integer> listOfTile = rule.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAl_POS);
+        Set<Integer> listOfTile = rule.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAL_POS);
         minimumPossibleTilePositions.clear();
         List<Vector2i> positions = new ArrayList<>();
 
@@ -76,6 +80,14 @@ public class WaveFunctionCollapseGrid {
     }
 
     public void forceTileType(int x, int y, int tileId){
+        // The cell is decided: it must not be drawn again by the algorithm
+        List<Vector2i> sameSize = minimumPossibleTilePositions.get(availableTiles[y][x].size());
+        if (sameSize != null) {
+            sameSize.removeIf(pos -> pos.x == x && pos.y == y);
+            if (sameSize.isEmpty())
+                minimumPossibleTilePositions.remove(availableTiles[y][x].size());
+        }
+
         setTileAt(x, y, tileId);
     }
 
@@ -127,8 +139,6 @@ public class WaveFunctionCollapseGrid {
                     if (oldSize != newSize) {
                         // For all element in map with old size, remove the position if vector x and y match
                         List<Vector2i> positions = minimumPossibleTilePositions.get(oldSize);
-                        /*System.out.println("New Position " + newPos.x + ", "
-                                + newPos.y + " : " + oldSize + " -> " + newSize);*/
 
                         for (int i = 0; i < positions.size(); ++i) {
                             Vector2i pos = positions.get(i);
@@ -202,20 +212,15 @@ public class WaveFunctionCollapseGrid {
         return new ArrayList[height][width];
     }
 
-    // Do n step of wave function algorithm
+    // Collapses n cells (fewer when there are not enough left)
     public void waveFunctionAlgorithmStep(int n) {
-        //printMatricesOfAvailableSize();
-        //printMinimumPossibleTilePositions();
-        Vector2i currentPosition = getNextTileToCompute();
-        if (currentPosition == null) {
-            finished = true;
-            return;
-        }
-        //printMinimumPossibleTilePositions();
+        for (int i = 0; i < n; ++i) {
+            Vector2i currentPosition = getNextTileToCompute();
+            if (currentPosition == null) {
+                finished = true;
+                return;
+            }
 
-        System.out.println("Chosen position : (" + currentPosition.x + ", " + currentPosition.y + ")");
-
-        for (int i = 0; i < n; ++i){
             int chosenTile = -1;
 
             if (!availableTiles[currentPosition.y][currentPosition.x].isEmpty())

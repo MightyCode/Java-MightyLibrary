@@ -62,7 +62,8 @@ public class Collision2DGrid {
 
                 setTmpAreaSize(cellSize, x, y);
 
-                tmp.setPosition(x * cellSize.x, y * cellSize.y);
+                // The last cell of a row or column is smaller: the position uses the regular size
+                tmp.setPosition(x * cellsSize.x, y * cellsSize.y);
                 tmp.setSize(cellSize.x, cellSize.y);
 
                 for (Collision2D collision : allCollisions){

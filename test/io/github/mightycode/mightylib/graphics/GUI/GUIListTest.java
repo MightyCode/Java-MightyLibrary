@@ -1,7 +1,9 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.inputs.EInputState;
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.inputType.IAction;
@@ -9,13 +11,17 @@ import org.joml.Vector2f;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 // Selection and activation of GUIList and GUI, without window nor GL (fake mouse, fake actions, fake elements)
 class GUIListTest {
-    private static final int UP = 10;
-    private static final int DOWN = 11;
-    private static final int VALIDATE = 12;
+    // The registry is shared by the whole JVM : identifiers unique to this class
+    private static final InputAction UP = InputRegistry.action("test_gui_list:up");
+    private static final InputAction DOWN = InputRegistry.action("test_gui_list:down");
+    private static final InputAction VALIDATE = InputRegistry.action("test_gui_list:validate");
+    private static final InputAction NOT_BOUND = InputRegistry.action("test_gui_list:not_bound");
 
     // An action whose state is set by the test
     private static class FakeAction implements IAction {
@@ -105,9 +111,9 @@ class GUIListTest {
         validate = new FakeAction();
         inputManager = new InputManager(null, null, null);
         inputManager.init(new ActionInput[]{
-                new ActionInput(UP, "UP", up),
-                new ActionInput(DOWN, "DOWN", down),
-                new ActionInput(VALIDATE, "VALIDATE", validate),
+                new ActionInput(UP, up),
+                new ActionInput(DOWN, down),
+                new ActionInput(VALIDATE, validate),
         });
 
         mouse = new FakeMouse();
@@ -118,9 +124,9 @@ class GUIListTest {
         first = new FakeGUI();
         second = new FakeGUI();
         third = new FakeGUI();
-        list.GUIs.put(1, first);
-        list.GUIs.put(2, second);
-        list.GUIs.put(3, third);
+        list.put(1, first);
+        list.put(2, second);
+        list.put(3, third);
     }
 
     private void press(FakeAction action) {
@@ -192,7 +198,7 @@ class GUIListTest {
     void anUnknownOrMissingActionNeverActivates() {
         first.forceSelect(true);
 
-        assertFalse(first.isActivated(inputManager, 999));
+        assertFalse(first.isActivated(inputManager, NOT_BOUND));
         assertFalse(first.isActivated(inputManager));
     }
 
@@ -239,7 +245,7 @@ class GUIListTest {
 
     @Test
     void theSelectionStopsAtTheEndsWithoutLoop() {
-        list.ShouldLoop = false;
+        list.setLooping(false);
         press(down);
         press(up);
         assertEquals(1, list.getSelected());
@@ -259,6 +265,52 @@ class GUIListTest {
         assertFalse(first.isActivated(inputManager, VALIDATE));
         assertTrue(second.isActivated(inputManager, VALIDATE));
         assertFalse(third.isActivated(inputManager, VALIDATE));
+    }
+
+    @Test
+    void removingTheSelectedElementUnselectsIt() {
+        press(down);
+        press(down);
+        assertEquals(2, list.getSelected());
+
+        assertSame(second, list.remove(2));
+        assertNull(list.getSelected());
+        assertNull(list.get(2));
+
+        validate.pressed = true;
+        assertNull(list.getActivated());
+    }
+
+    @Test
+    void removingAnotherElementKeepsTheSelection() {
+        press(down);
+        list.remove(3);
+        assertEquals(1, list.getSelected());
+
+        // The removed element is skipped by the navigation
+        list.setLooping(false);
+        press(down);
+        press(down);
+        assertEquals(2, list.getSelected());
+    }
+
+    @Test
+    void replacingTheSelectedElementSelectsTheNewOne() {
+        press(down);
+        FakeGUI replacing = new FakeGUI();
+        assertTrue(first.forceSelected());
+        list.put(1, replacing);
+        assertFalse(first.forceSelected());
+
+        validate.pressed = true;
+        assertEquals(1, list.getActivated());
+        assertSame(replacing, list.get(1));
+    }
+
+    @Test
+    void idsCantBeChanged() {
+        assertEquals(Set.of(1, 2, 3), list.ids());
+        assertThrows(UnsupportedOperationException.class, () -> list.ids().remove(1));
     }
 
     @Test

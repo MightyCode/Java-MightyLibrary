@@ -5,13 +5,14 @@ description: Revue hebdomadaire des bonnes pratiques du projet (docs/bonnes-prat
 
 # Revue des bonnes pratiques
 
-`docs/bonnes-pratiques.md` fait foi (points et vérifications) : ce skill ne donne que la procédure. Rien n'est corrigé pendant la revue.
+`docs/bonnes-pratiques.md` fait foi (points et vérifications) : ce skill ne donne que la procédure. Rien n'est corrigé pendant la revue (sauf la date de la dernière revue dans `CLAUDE.md`).
 
 ## 1. Collecter
 - Lire `docs/bonnes-pratiques.md` en entier.
 - Période : celle donnée par l'utilisateur, sinon la dernière semaine.
 - `python .claude/skills/revue-pratiques/collect.py --since "<période>"` : branches et fusions, commits (correctifs sans test, code ancien sans test, commits sans doc), tests, lignes conditionnelles de `current.md`, `printStackTrace`, `catch` vides, fichiers ouverts hors try-with-resources, âge de l'export IntelliJ.
 - `mvn -o -q test` (commande Windows/Linux de `CLAUDE.md`) : résultat réel des tests.
+- `python tools/analyse.py` (Error Prone + SpotBugs) et `python tools/coverage.py` (JaCoCo) : résumés à lire avec `--details`, `--classes` ou `--lines` seulement pour ce qui change ou ce qui est à risque (comparer à la revue précédente si elle est connue). Leurs constats entrent dans le tableau (point 11) et dans les actions proposées.
 - Lire seulement ce que le rapport signale (extraits de code, commits avec `git show --stat`), jamais tout l'historique.
 - Ne pas lancer le jeu : la revue juge si les vérifications en jeu ont été faites, elle ne les refait pas.
 
@@ -23,4 +24,5 @@ description: Revue hebdomadaire des bonnes pratiques du projet (docs/bonnes-prat
 ## 3. Répondre
 - Tableau, un point par ligne : numéro, point (quelques mots), verdict (**respecté** / **dérive** / **à confirmer**), preuve (une ligne : chiffre, fichier, commit), action proposée.
 - Puis les 2 ou 3 actions prioritaires, et une seule question : laquelle faire (les corrections suivent les règles de `CLAUDE.md` : branche, commits, tests, docs).
+- Mettre à jour la date « Dernière revue » de `CLAUDE.md` (Point hebdomadaire) à la date du jour : seule modification faite par la revue. Elle est commitée avec la première correction choisie après la revue, sur sa branche ; sans correction, seule sur une branche `revue-<date>` fusionnée par `/pr-ml`.
 - Si un point est devenu obsolète ou si l'utilisateur en ajoute un : proposer la modification de `docs/bonnes-pratiques.md` (règle et vérification, jamais l'état), et mettre `collect.py` à jour si le point est mesurable.

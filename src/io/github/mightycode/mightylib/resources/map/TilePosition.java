@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources.map;
 
+import java.util.Objects;
+
 public class TilePosition implements Comparable<TilePosition>, Cloneable {
     private int x, y, layer;
 
@@ -28,6 +30,11 @@ public class TilePosition implements Comparable<TilePosition>, Cloneable {
         }
 
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y, layer);
     }
 
     @Override

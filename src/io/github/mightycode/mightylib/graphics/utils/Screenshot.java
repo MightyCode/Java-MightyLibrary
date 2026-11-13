@@ -32,8 +32,11 @@ public final class Screenshot {
         // Size factor applied after the crop, 1 to keep the size
         private final float scale;
         private final CompletableFuture<File> result;
+        // Window to capture (GLFW id)
+        private final long windowId;
 
-        private Request(File file, int[] region, float scale) {
+        private Request(File file, int[] region, float scale, long windowId) {
+            this.windowId = windowId;
             this.file = file;
             this.region = region;
             this.scale = scale;
@@ -45,8 +48,8 @@ public final class Screenshot {
     private static final List<Request> requests = new ArrayList<>();
 
     // Main thread only
-    public static CompletableFuture<File> request(File file) {
-        return request(file, null, 1f);
+    public static CompletableFuture<File> request(File file, long windowId) {
+        return request(file, null, 1f, windowId);
     }
 
     /**
@@ -54,19 +57,37 @@ public final class Screenshot {
      * whole image; it is clipped to the image, the future fails if nothing is left.
      * scale in ]0, 1] reduces the saved image (smooth), applied after the crop.
      */
-    public static CompletableFuture<File> request(File file, int[] region, float scale) {
+    public static CompletableFuture<File> request(File file, int[] region, float scale, long windowId) {
         if (scale <= 0f || scale > 1f)
             throw new IllegalArgumentException("Screenshot scale must be in ]0, 1] : " + scale);
 
-        Request request = new Request(file, region == null ? null : region.clone(), scale);
+        Request request = new Request(file, region == null ? null : region.clone(), scale, windowId);
         requests.add(request);
 
         return request.result;
     }
 
+    // The window is destroyed: what waited for its image fails instead of waiting forever
+    public static void cancelRequests(long windowId) {
+        for (Request request : new ArrayList<>(requests)) {
+            if (request.windowId == windowId) {
+                requests.remove(request);
+                request.result.completeExceptionally(new IOException("The window was closed before the screenshot"));
+            }
+        }
+    }
+
     // Main thread, once the frame is drawn in the default framebuffer and before the buffers are swapped
     public static void captureIfRequested(long windowId) {
-        if (requests.isEmpty())
+        boolean requested = false;
+        for (Request request : requests) {
+            if (request.windowId == windowId) {
+                requested = true;
+                break;
+            }
+        }
+
+        if (!requested)
             return;
 
         int width, height;
@@ -76,13 +97,24 @@ public final class Screenshot {
         width = widthBuffer.get(0);
         height = heightBuffer.get(0);
 
+        List<Request> capturedRequests = new ArrayList<>();
+        for (Request request : requests) {
+            if (request.windowId == windowId)
+                capturedRequests.add(request);
+        }
+        requests.removeAll(capturedRequests);
+
+        // A minimized window has no image
+        if (width <= 0 || height <= 0) {
+            for (Request request : capturedRequests)
+                request.result.completeExceptionally(new IOException("The window is minimized, it has no image"));
+            return;
+        }
+
         ByteBuffer pixels = BufferUtils.createByteBuffer(width * height * 4);
         glReadBuffer(GL_BACK);
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-
-        List<Request> capturedRequests = new ArrayList<>(requests);
-        requests.clear();
 
         // Encoding a PNG is slow, it must not slow down the game
         Thread encoder = new Thread(() -> {

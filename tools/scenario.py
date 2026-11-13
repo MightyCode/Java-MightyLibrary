@@ -2,16 +2,19 @@
 """Run a scenario on the game in one call: compile, launch, send commands, summarize, exit.
 
 Usage:
-    python tools/scenario.py "scene Test2DScene" wait-loaded gl "input ENTER" stats
+    python tools/scenario.py "scene Scene2D" wait-loaded gl "input ENTER" stats
     python tools/scenario.py --attach "stats"          # use an already running game
     python tools/scenario.py --no-compile "scene" ...  # skip compilation
 
 Steps are game commands (see `help` in the game) plus:
-    wait-loaded                     wait until the current scene has finished loading
+    wait-loaded                     wait until any scene change (command or game) is done and the scene is loaded
     sleep:SECONDS                   wait, for example sleep:0.5
     leakcheck SCENE [N] [VIA]       load SCENE, do N round trips (default 2) through VIA (default MenuScene),
-                                    print "no leak" or only the OpenGL counters that changed
+                                    print "no leak" or only the counters that changed (OpenGL objects,
+                                    owned sound sources)
     log PATTERN [N]                 last N lines (default 10) of the game log matching the regex PATTERN
+    drag X1 Y1 X2 Y2 [--hold S]     press the left button at X1 Y1, move to X2 Y2 in steps during S seconds
+                                    (default 0.5, "1s" accepted), release; the cursor stays at X2 Y2
 
 Output is short: a successful step prints "ok" only (and the file of a screenshot); prefix a step with "?" to
 see its whole answer, for example "?gl summary". Failures always print the whole answer.
@@ -25,6 +28,7 @@ MIGHTY_MVN (maven executable) and MIGHTY_MAVEN_JDK (JAVA_HOME used by maven).
 """
 import argparse
 import json
+import math
 import os
 import re
 import subprocess
@@ -55,9 +59,13 @@ CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
 PORT_FILE = os.path.join(ROOT, "target", f"scenario-{os.getpid()}.port")
 PORT_FILE_PROPERTY = "mightylib.debugServer.portFile"
 MONITOR_PROPERTY = "mightylib.window.monitor"
+PLATFORM_PROPERTY = "mightylib.glfw.platform"
 STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict"
 NO_CURSOR_CAPTURE_PROPERTY = "mightylib.input.noCursorCapture"
-PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:")
+PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:"
+                             r"|^\[LWJGL\] .*error|^\s+Description :"
+                             # OpenAL errors (SoundManager.DisplayError)
+                             r"|Error when |OpenAL function|OpenAL running out|UNKNOWN ERROR")
 
 
 def run_maven(*goals):
@@ -79,7 +87,7 @@ def prepare(compile_sources):
         run_maven("dependency:build-classpath", "-Dmdep.outputFile=" + CLASSPATH_FILE)
 
 
-def launch(log_path, monitor, strict=False, capture_mouse=False):
+def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, defines=()):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
         classpath = os.path.join(ROOT, "target", "classes") + os.pathsep + file.read().strip()
 
@@ -90,11 +98,14 @@ def launch(log_path, monitor, strict=False, capture_mouse=False):
     options = [f"-D{PORT_FILE_PROPERTY}={PORT_FILE}"]
     if monitor:
         options.append(f"-D{MONITOR_PROPERTY}={monitor}")
+    if platform:
+        options.append(f"-D{PLATFORM_PROPERTY}={platform}")
     if strict:
         options.append(f"-D{STRICT_RESOURCES_PROPERTY}=true")
     if not capture_mouse:
         # The mouse of the user stays free while the game runs (3D scenes would capture it)
         options.append(f"-D{NO_CURSOR_CAPTURE_PROPERTY}=true")
+    options.extend(f"-D{define}" for define in defines)
 
     return subprocess.Popen([JAVA, *options, "-cp", classpath, MAIN_CLASS], cwd=ROOT,
                             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
@@ -123,18 +134,12 @@ def compact(answer):
     return text
 
 
-def wait_loaded(connection, reader, timeout, expected_scene):
-    # The scene changes at the next tick: also wait for the requested scene, not only for the end of loading
-    deadline = time.monotonic() + timeout
-    while True:
-        answer = mighty.send(connection, reader, "scene")
-        data = answer.get("data", {})
-        scene_ok = expected_scene is None or str(data.get("scene", "")).endswith(expected_scene)
-        if scene_ok and not data.get("loading", True):
-            return answer, False
-        if time.monotonic() > deadline:
-            return answer, True
-        time.sleep(0.25)
+def wait_loaded(connection, reader, timeout):
+    # The game decides: no scene change pending (asked by a command or by the game itself, menu, input) and the
+    # current scene loaded. It answers an error at its own timeout, before the socket gives up
+    seconds = max(1, math.ceil(timeout))
+    answer = mighty.send(connection, reader, f"wait loaded --timeout {seconds}", seconds + 5)
+    return answer, not answer.get("success", False)
 
 
 def short(answer):
@@ -167,11 +172,19 @@ def gl_snapshot(connection, reader, timeout):
     return counters
 
 
+def leak_snapshot(connection, reader, timeout):
+    # The OpenGL counters and the owned sound sources (one-shot sources end by themselves, they are not counted)
+    counters = gl_snapshot(connection, reader, timeout)
+    data = mighty.send(connection, reader, "sounds").get("data", {})
+    counters["sound.ownedSources"] = data.get("owned", 0)
+    return counters
+
+
 def change_scene(connection, reader, timeout, scene):
     answer = mighty.send(connection, reader, "scene " + scene)
     if not answer.get("success"):
         return answer, False
-    answer, timed_out = wait_loaded(connection, reader, timeout, scene)
+    answer, timed_out = wait_loaded(connection, reader, timeout)
     return answer, not timed_out
 
 
@@ -187,7 +200,7 @@ def leak_check(connection, reader, timeout, words):
     if not loaded:
         print(f"> leakcheck {scene}\n  ERR {compact(answer)}")
         return False
-    before = gl_snapshot(connection, reader, timeout)
+    before = leak_snapshot(connection, reader, timeout)
 
     for _ in range(trips):
         for target in (via, scene):
@@ -195,7 +208,7 @@ def leak_check(connection, reader, timeout, words):
             if not loaded:
                 print(f"> leakcheck {scene}\n  ERR loading {target}: {compact(answer)}")
                 return False
-    after = gl_snapshot(connection, reader, timeout)
+    after = leak_snapshot(connection, reader, timeout)
 
     changes = [f"{key} {before.get(key, 0)}->{after.get(key, 0)}"
                for key in sorted(set(before) | set(after)) if before.get(key, 0) != after.get(key, 0)]
@@ -220,9 +233,51 @@ def log_lines(log_path, words):
     return True
 
 
+DRAG_STEPS = 5
+# The game reads the input once per tick: two commands in the same tick would be merged
+DRAG_PAUSE = 0.2
+
+
+def drag(connection, reader, words):
+    usage = "usage: drag X1 Y1 X2 Y2 [--hold SECONDS]"
+    args = words[1:]
+    hold = 0.5
+    if "--hold" in args:
+        index = args.index("--hold")
+        try:
+            hold = float(args[index + 1].rstrip("s"))
+        except (IndexError, ValueError):
+            print("> drag\n  ERR " + usage)
+            return False
+        del args[index:index + 2]
+    try:
+        x1, y1, x2, y2 = (float(value) for value in args)
+    except ValueError:
+        print("> drag\n  ERR " + usage)
+        return False
+
+    # (command, pause after it): the whole move lasts about the hold time
+    commands = [(f"input mouse {x1:g} {y1:g}", DRAG_PAUSE), ("input mouse hold", DRAG_PAUSE)]
+    for i in range(1, DRAG_STEPS + 1):
+        commands.append((f"input mouse {x1 + (x2 - x1) * i / DRAG_STEPS:g} {y1 + (y2 - y1) * i / DRAG_STEPS:g}",
+                         hold / DRAG_STEPS))
+    commands.append(("input mouse release", 0))
+
+    for command, pause in commands:
+        answer = mighty.send(connection, reader, command)
+        if not answer.get("success"):
+            # Never leave the button held
+            mighty.send(connection, reader, "input mouse release")
+            print(f"> drag\n  ERR {command}: {compact(answer)}")
+            return False
+        time.sleep(pause)
+
+    print(f"> drag {x1:g} {y1:g} {x2:g} {y2:g} --hold {hold:g}  ok")
+    return True
+
+
 def run_steps(port, steps, timeout, log_path=None):
     success = True
-    expected_scene = None
     connection = mighty.connect(port, timeout)
     with connection:
         reader = connection.makefile("r", encoding="utf-8")
@@ -242,15 +297,14 @@ def run_steps(port, steps, timeout, log_path=None):
             if words and words[0] == "log":
                 success = log_lines(log_path, words) and success
                 continue
-
-            if len(words) >= 2 and words[0] == "scene":
-                # Class name relative to the scenes package, for example Platformer2D.Test2DPlatformerBox2D
-                expected_scene = words[1]
+            if words and words[0] == "drag":
+                success = drag(connection, reader, words) and success
+                continue
 
             if step == "wait-loaded":
-                answer, timed_out = wait_loaded(connection, reader, timeout, expected_scene)
+                answer, timed_out = wait_loaded(connection, reader, timeout)
                 if timed_out:
-                    print(f"> {step}\n  BLOCKED: still loading after {timeout:g}s, scenario stopped: {compact(answer)}")
+                    print(f"> {step}\n  BLOCKED: not loaded after {timeout:g}s, scenario stopped: {compact(answer)}")
                     print("  " + compact(mighty.send(connection, reader, "gl summary")))
                     return False
             else:
@@ -312,11 +366,17 @@ def main():
     parser.add_argument("--monitor", default="secondary",
                         help="screen of the game window: secondary (default, falls back to the primary one), primary,"
                              " largest, an index or a part of a name; empty to keep the choice of the project")
+    parser.add_argument("--platform", default=None,
+                        help="GLFW platform: x11, wayland (Linux; Wayland can't place windows), win32, cocoa;"
+                             " by default GLFW chooses")
     parser.add_argument("--no-compile", action="store_true", help="skip the compilation")
     parser.add_argument("--strict", action="store_true",
                         help="a resource that fails stops the game instead of using its fallback (debug mode only)")
     parser.add_argument("--capture-mouse", action="store_true",
                         help="let the game capture the mouse (3D scenes hide and lock it); by default it stays free")
+    parser.add_argument("-D", dest="defines", action="append", default=[], metavar="KEY=VALUE",
+                        help="system property given to the game, for example -D mightylib.commands.access=user"
+                             " (repeatable)")
     parser.add_argument("--attach", action="store_true", help="use an already running game, don't launch or close it")
     parser.add_argument("--keep-open", action="store_true", help="don't close the game at the end")
     parser.add_argument("--log", default=os.path.join(ROOT, "target", "scenario.log"),
@@ -329,7 +389,7 @@ def main():
         return 0 if run_steps(args.port, args.steps, args.timeout) else 1
 
     prepare(not args.no_compile)
-    process = launch(args.log, args.monitor, args.strict, args.capture_mouse)
+    process = launch(args.log, args.monitor, args.strict, args.capture_mouse, args.platform, args.defines)
 
     # A blocked game (main thread stuck, no answer) must not block the caller forever
     def kill_blocked_game():

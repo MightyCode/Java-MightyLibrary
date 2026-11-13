@@ -14,6 +14,9 @@
         <lwjgl.version>3.3.6</lwjgl.version>
         <joml.version>1.10.3</joml.version>
         <json.version>20260719</json.version>
+        <errorprone.version>2.52.0</errorprone.version>
+        <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
+        <jacoco.version>0.8.16</jacoco.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -41,6 +44,123 @@
             <properties>
                 <lwjgl.natives>natives-windows</lwjgl.natives>
             </properties>
+        </profile>
+        <!-- Static analysis, never part of the normal build: mvn -P analyse process-classes (see tools/analyse.py).
+             Error Prone runs inside javac (forked: JDK 17+ needs the add-exports and add-opens options below),
+             SpotBugs reads the bytecode afterwards. All findings are reported, none fails the build. -->
+        <profile>
+            <id>analyse</id>
+            <build>
+                <!-- Own output folder: the game keeps using target/classes, and a recompilation is always forced -->
+                <directory>${project.basedir}/target/static-analysis</directory>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>3.13.0</version>
+                        <configuration>
+                            <fork>true</fork>
+                            <showWarnings>true</showWarnings>
+                            <compilerArgs>
+                                <arg>-XDcompilePolicy=simple</arg>
+                                <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
+                                <arg>--should-stop=ifError=FLOW</arg>
+                                <!-- Off: Javadoc and parentheses style (the project writes little Javadoc, and the
+                                     IntelliJ analyzer already covers the style rules of bonnes-pratiques.md) -->
+                                <arg>-Xplugin:ErrorProne -XepAllErrorsAsWarnings -XepDisableWarningsInGeneratedCode -Xep:UnnecessaryParentheses:OFF -Xep:MissingSummary:OFF -Xep:EmptyBlockTag:OFF -Xep:InvalidLink:OFF</arg>
+                                <arg>-Xlint:unchecked,deprecation</arg>
+                                <arg>-Xmaxwarns</arg>
+                                <arg>100000</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                                <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                                <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
+                            </compilerArgs>
+                            <annotationProcessorPaths>
+                                <path>
+                                    <groupId>com.google.errorprone</groupId>
+                                    <artifactId>error_prone_core</artifactId>
+                                    <version>${errorprone.version}</version>
+                                </path>
+                            </annotationProcessorPaths>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${spotbugs.plugin.version}</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Medium</threshold>
+                            <xmlOutput>true</xmlOutput>
+                            <failOnError>false</failOnError>
+                            <excludeFilterFile>tools/spotbugs-exclude.xml</excludeFilterFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>spotbugs-analysis</id>
+                                <phase>process-classes</phase>
+                                <goals>
+                                    <goal>spotbugs</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- Code coverage of the unit tests, never part of the normal build: mvn -P coverage test (see tools/coverage.py) -->
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.version}</version>
+                        <configuration>
+                            <!-- Code bound to OpenGL, OpenAL or GLFW (needs a window or a context, never unit tested)
+                                 and the demo itself: left out so the figures only show what a test could cover -->
+                            <excludes>
+                                <exclude>io/github/mightycode/mightylibdemo/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/renderer/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/shader/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/surface/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/lighting/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/debug/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/utils/GenDeleteResources*</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/utils/Screenshot*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundManager*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundListener*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundSource.*</exclude>
+                                <exclude>io/github/mightycode/mightylib/main/monitors/**</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>jacoco-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>jacoco-report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 

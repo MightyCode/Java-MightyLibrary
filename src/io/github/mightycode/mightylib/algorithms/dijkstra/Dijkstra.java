@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.algorithms.dijkstra;
 
+import io.github.mightycode.mightylib.algorithms.EVerbosity;
 import io.github.mightycode.mightylib.algorithms.graph.*;
 
 import java.util.*;
@@ -7,6 +8,11 @@ import java.util.*;
 public class Dijkstra {
     public static List<Node> findShortestPathReduced(ReducedGraph reducedGraph, Graph correspondingGraph,
                                                      Node startNode, Node endNode){
+        return findShortestPathReduced(reducedGraph, correspondingGraph, startNode, endNode, EVerbosity.NONE);
+    }
+
+    public static List<Node> findShortestPathReduced(ReducedGraph reducedGraph, Graph correspondingGraph,
+                                                     Node startNode, Node endNode, EVerbosity verbosity){
         if (startNode == endNode)
             return new ArrayList<>();
 
@@ -88,11 +94,12 @@ public class Dijkstra {
 
             currentIntersection = reducedGraph.getById(current.getId());
 
-            for (Long id : currentIntersection.getIds()){
-                System.out.println(id);
+            if (verbosity.allows(EVerbosity.ALL)) {
+                for (Long id : currentIntersection.getIds())
+                    verbosity.print(EVerbosity.ALL, "Dijkstra reduced, link of " + current.getId() + " : " + id);
             }
 
-            System.out.println("Next : " + next.getId());
+            verbosity.print(EVerbosity.ALL, "Dijkstra reduced, next : " + next.getId());
 
             nextIntersection = currentIntersection.getById(next.getId());
 
@@ -145,10 +152,11 @@ public class Dijkstra {
             correspondingGraph.remove(endIntersection);
         }
 
+        verbosity.print(EVerbosity.ESSENTIAL, "Dijkstra reduced : path of " + result.size() + " nodes, "
+                + intersectionPath.size() + " intersections");
+
         return result;
     }
-
-
 
     public static Node findAndAdd(Node reference, ReducedGraph reducedGraph, Graph correspondingGraph){
         NodeSubIntersection endSubNode = reducedGraph.getSubNodeGraph().getById(reference.getId());
@@ -171,9 +179,14 @@ public class Dijkstra {
     }
 
     public static List<Node> findShortestPath(Graph graph, Node startNode, Node endNode) {
+        return findShortestPath(graph, startNode, endNode, EVerbosity.NONE);
+    }
+
+    public static List<Node> findShortestPath(Graph graph, Node startNode, Node endNode, EVerbosity verbosity) {
         Map<Node, Float> distances = new HashMap<>();
         Map<Node, Node> previousNodes = new HashMap<>();
-        PriorityQueue<Node> priorityQueue = new PriorityQueue<>(Comparator.comparingDouble(distances::get));
+        // Entries keep the distance they were queued with, so the ordering never changes under the queue
+        PriorityQueue<Map.Entry<Node, Float>> priorityQueue = new PriorityQueue<>(Map.Entry.comparingByValue());
         Set<Node> visited = new HashSet<>();
 
         for (Node node : graph.getNodes()) {
@@ -182,15 +195,24 @@ public class Dijkstra {
         }
 
         distances.put(startNode, 0f);
-        priorityQueue.offer(startNode);
+        priorityQueue.offer(new AbstractMap.SimpleImmutableEntry<>(startNode, 0f));
 
         while (!priorityQueue.isEmpty()) {
-            Node currentNode = priorityQueue.poll();
+            Node currentNode = priorityQueue.poll().getKey();
 
-            if (currentNode.equals(endNode))
-                return reconstructPath(previousNodes, endNode);
+            // Stale queue entry: the node was already expanded with a better distance
+            if (visited.contains(currentNode))
+                continue;
+
+            if (currentNode.equals(endNode)) {
+                List<Node> path = reconstructPath(previousNodes, endNode);
+                verbosity.print(EVerbosity.ESSENTIAL, "Dijkstra : path of " + path.size() + " nodes, "
+                        + visited.size() + " nodes expanded");
+                return path;
+            }
 
             visited.add(currentNode);
+            verbosity.print(EVerbosity.ALL, "Dijkstra expands node " + currentNode.getId());
 
             for (Node neighbor : currentNode.getNodes()) {
                 if (visited.contains(neighbor))
@@ -201,11 +223,12 @@ public class Dijkstra {
                 if (newDistance < distances.get(neighbor)) {
                     distances.put(neighbor, newDistance);
                     previousNodes.put(neighbor, currentNode);
-                    priorityQueue.offer(neighbor);
+                    priorityQueue.offer(new AbstractMap.SimpleImmutableEntry<>(neighbor, newDistance));
                 }
             }
         }
 
+        verbosity.print(EVerbosity.ESSENTIAL, "Dijkstra : no path, " + visited.size() + " nodes expanded");
         return new ArrayList<>();
     }
 

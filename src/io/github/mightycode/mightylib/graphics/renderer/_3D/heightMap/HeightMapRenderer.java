@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.graphics.renderer._3D.heightMap;
 
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.graphics.renderer.Shape;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector3f;
@@ -40,8 +39,8 @@ public class HeightMapRenderer extends Renderer {
 
     private final TextureData heightMapTexture;
     public HeightMapRenderer(String heightMapName, boolean willUpdateFrequently) {
-        super("multiColoredLightning3D", true);
-        this.heightMapTexture = Resources.getInstance().getResource(TextureData.class, heightMapName);
+        super("multiColoredLighting3D", true);
+        this.heightMapTexture = resources.getResource(TextureData.class, heightMapName);
         heightMapTexture.computeCache();
 
         this.willUpdateFrequently = willUpdateFrequently;

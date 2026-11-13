@@ -1,10 +1,14 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class GUIList {
     private final InputManager inputManager;
@@ -15,14 +19,15 @@ public class GUIList {
     private Integer id;
     private Integer oldId;
 
-    public final Map<Integer, GUI> GUIs;
+    private final Map<Integer, GUI> GUIs;
 
-    private int actionUpValue = -1,
-            actionDownValue = -1;
+    // null : no navigation by actions
+    private InputAction actionUpValue,
+            actionDownValue;
 
-    private int[] activationActions = new int[0];
+    private InputAction[] activationActions = new InputAction[0];
 
-    public boolean ShouldLoop = true;
+    private boolean looping = true;
 
     public GUIList(InputManager inputManager, MouseManager mouseManager) {
         this.mouseManager = mouseManager;
@@ -39,15 +44,64 @@ public class GUIList {
         return id;
     }
 
+    // Adds the element, or replaces the one with this id (the selection stays on the id)
+    public GUIList put(int id, GUI gui) {
+        GUI replaced = GUIs.put(id, Objects.requireNonNull(gui, "gui"));
+        if (this.id != null && this.id == id) {
+            // The replaced element leaves the list: no longer selected
+            if (replaced != null && replaced != gui)
+                replaced.forceSelect(false);
+            selected = gui;
+            // Selected by the actions: the new element is too (by the mouse, it checks the mouse itself)
+            if (!selectedByMouse)
+                gui.forceSelect(true);
+        }
+
+        return this;
+    }
+
+    // Removes the element; the selected one is unselected first, so it can't be activated any more
+    public GUI remove(int id) {
+        GUI removed = GUIs.remove(id);
+        if (this.id != null && this.id == id) {
+            if (removed != null)
+                removed.forceSelect(false);
+            selected = null;
+            this.id = null;
+            selectedByMouse = false;
+        }
+
+        return removed;
+    }
+
+    public GUI get(int id) {
+        return GUIs.get(id);
+    }
+
+    // The ids of the elements, unmodifiable
+    public Set<Integer> ids() {
+        return Collections.unmodifiableSet(GUIs.keySet());
+    }
+
+    // Navigation by actions goes from the last element to the first (and back); true by default
+    public GUIList setLooping(boolean looping) {
+        this.looping = looping;
+        return this;
+    }
+
+    public boolean isLooping() {
+        return looping;
+    }
+
     public boolean isMouseSelecting(){ return selectedByMouse; }
 
-    public void setupActionInputValues(int actionUpValue, int actionDownValue){
+    public void setupActionInputValues(InputAction actionUpValue, InputAction actionDownValue){
         this.actionUpValue = actionUpValue;
         this.actionDownValue = actionDownValue;
     }
 
     /** Actions (Enter, left click...) that activate the selected element, each on its own trigger. */
-    public void setupActivationActions(int... actionIds) {
+    public void setupActivationActions(InputAction... actionIds) {
         this.activationActions = actionIds;
     }
 
@@ -91,9 +145,9 @@ public class GUIList {
         }
 
         Integer id = null;
-        if (actionUpValue != -1 && inputManager.inputPressed(actionUpValue)) {
+        if (actionUpValue != null && inputManager.inputPressed(actionUpValue)) {
             id = selectUp();
-        } else if (actionDownValue != -1 && inputManager.inputPressed(actionDownValue)) {
+        } else if (actionDownValue != null && inputManager.inputPressed(actionDownValue)) {
             id = selectDown();
         }
 
@@ -114,7 +168,7 @@ public class GUIList {
         GUIs.get(id).forceSelect(true);
     }
 
-    // Nearest id before the selected one; with ShouldLoop, from the first to the last
+    // Nearest id before the selected one; with looping, from the first to the last
     private Integer selectUp(){
         if (this.id == null)
             return selectMinimum();
@@ -129,11 +183,11 @@ public class GUIList {
                 previous = key;
         }
 
-        return previous != null || !ShouldLoop ? previous : last;
+        return previous != null || !looping ? previous : last;
     }
 
 
-    // Nearest id after the selected one; with ShouldLoop, from the last to the first
+    // Nearest id after the selected one; with looping, from the last to the first
     private Integer selectDown(){
         if (this.id == null)
             return selectMinimum();
@@ -148,7 +202,7 @@ public class GUIList {
                 next = key;
         }
 
-        return next != null || !ShouldLoop ? next : first;
+        return next != null || !looping ? next : first;
     }
 
     private Integer selectMinimum(){

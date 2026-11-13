@@ -1,6 +1,6 @@
 # Licences de la bibliothèque
 
-État au 2026-11-08, pour la branche `sound-decoding`. Vérifié dans les `pom.xml` des dépendances (dépôt Maven local), les dépôts officiels et les fichiers du projet. **Ce document n'est pas un avis juridique** : les points marqués « à vérifier » le sont réellement.
+État au 2026-11-08. Vérifié dans les `pom.xml` des dépendances (dépôt Maven local), les dépôts officiels et les fichiers du projet. **Ce document n'est pas un avis juridique** : les points marqués « à vérifier » le sont réellement.
 
 ## Contexte : projet gratuit, usage payant éventuel plus tard
 
@@ -49,7 +49,7 @@ Les jars `natives-windows` / `natives-linux` embarquent des bibliothèques C :
 
 ## Outils de test et de build (non distribués)
 
-JUnit 5 (EPL 2.0, tests seulement), Maven et ses plugins (Apache 2.0). Rien à joindre à un jeu.
+JUnit 5 (EPL 2.0, tests seulement), Maven et ses plugins (Apache 2.0), Error Prone (Apache 2.0) et SpotBugs (LGPL 2.1), seulement dans le profil `analyse` (analyse statique), et JaCoCo (EPL 2.0), seulement dans le profil `coverage` : jamais dans le jar. Rien à joindre à un jeu.
 
 ## Licence du projet : GPL v3
 
@@ -76,6 +76,7 @@ Choix à faire par l'auteur au moment du projet payant, pas avant. Si le modèle
 | `models/weapon`, `models/world/tree`, `models/basicShape` | inconnu | **inconnu** |
 | `textures/world/*.png`, `gui/*`, `shaderEffects/*`, `icon/icon.ico` | inconnu (peut-être créés par l'auteur) | **à confirmer** |
 | `sounds/select*` (ogg, wav, mp3, flac) | inconnu (probablement créés par l'auteur) | **à confirmer** |
+| `sounds/chime.wav` | généré par programme pour le projet (arpège de cloches, mono) | aucune |
 | shaders GLSL (`resources/shaders`) | écrits pour le projet, techniques de LearnOpenGL (`docs/techniquegraphique.md`) | les idées ne sont pas protégées ; vérifier tout code copié |
 
 Tant que le projet reste gratuit et non commercial, ce tableau est informatif. Pour un projet payant : tant que la provenance d'une ressource n'est pas écrite, on ne peut pas dire si elle est redistribuable. Pour une version publique (jar sur JitPack ou Maven Central), les ressources de la démo sont séparées de la bibliothèque : **la bibliothèque seule n'a besoin que des polices et textures dont elle a vraiment besoin au démarrage** (la police de l'écran de chargement, `error`).

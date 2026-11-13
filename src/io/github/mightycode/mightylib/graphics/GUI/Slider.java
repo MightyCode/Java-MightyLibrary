@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -28,7 +29,7 @@ public abstract class Slider {
     private int maxPrecision;
 
 
-    private int clickActionId;
+    private InputAction clickActionId;
 
     public Slider(Camera2D referenceCamera, InputManager inputManager, MouseManager mouseManager,
                             Vector2f position, Vector2f size, double minValue, double maxValue,
@@ -73,7 +74,7 @@ public abstract class Slider {
         setValue(minValue);
     }
 
-    public void init(int clickActionId){
+    public void init(InputAction clickActionId){
         this.clickActionId = clickActionId;
     }
 
@@ -133,8 +134,8 @@ public abstract class Slider {
     }
 
     public void setMaxPrecision(int value){
-        if (maxPrecision >= 0 && maxPrecision < MAX_DIGIT_PRECISION)
-            maxPrecision = value;
+        // A negative value disables the rounding, a too large one is capped.
+        maxPrecision = value < 0 ? -1 : Math.min(value, MAX_DIGIT_PRECISION);
     }
 
     public int getMaxPrecision(){

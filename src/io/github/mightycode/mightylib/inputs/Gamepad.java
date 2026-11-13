@@ -2,8 +2,11 @@ package io.github.mightycode.mightylib.inputs;
 
 import org.joml.Vector2f;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -44,9 +47,20 @@ public class Gamepad {
         return AXIS_NAMES[checkAxis(axis)];
     }
 
+    // Every name accepted by parseButton
+    public static List<String> buttonNames() {
+        List<String> names = new ArrayList<>(Arrays.asList(BUTTON_NAMES));
+        names.addAll(Arrays.asList(PLAYSTATION_BUTTON_NAMES));
+        return names;
+    }
+
+    public static List<String> axisNames() {
+        return Arrays.asList(AXIS_NAMES);
+    }
+
     // Name of buttonName (case insensitive), CROSS/CIRCLE/SQUARE/TRIANGLE, or the id
     public static int parseButton(String text) {
-        String upper = text.toUpperCase();
+        String upper = text.toUpperCase(Locale.ROOT);
         for (int button = 0; button < BUTTONS; ++button) {
             if (BUTTON_NAMES[button].equals(upper))
                 return button;
@@ -66,7 +80,7 @@ public class Gamepad {
 
     // Name of axisName (case insensitive) or the id
     public static int parseAxis(String text) {
-        String upper = text.toUpperCase();
+        String upper = text.toUpperCase(Locale.ROOT);
         for (int axis = 0; axis < AXES; ++axis) {
             if (AXIS_NAMES[axis].equals(upper))
                 return axis;

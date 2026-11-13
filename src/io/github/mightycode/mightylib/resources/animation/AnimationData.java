@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.resources.animation;
 
 import io.github.mightycode.mightylib.resources.DataType;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 
@@ -54,14 +53,14 @@ public class AnimationData extends SingleSourceDataType {
 
     @Override
     protected boolean internLoad() {
-        return framesData != null && Resources.getInstance().isExistingResource(TextureData.class, textureName);
+        return framesData != null && resources().isExistingResource(TextureData.class, textureName);
     }
 
 
     public FrameData getFrame(int index){
         if (framesData == null)
             return null;
-        if (0 > index || index > frameNumber())
+        if (0 > index || index >= frameNumber())
             return null;
 
         return framesData[index];

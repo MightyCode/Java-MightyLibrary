@@ -50,7 +50,7 @@ public abstract class Tweening<T> {
             case Exponential:
                 return Exponential.Evaluate(behaviour, t, b, c, d);
             case Circular:
-                return Cicular.Evaluate(behaviour, t, b, c, d);
+                return Circular.Evaluate(behaviour, t, b, c, d);
             case Elastic:
                 return Elastic.Evaluate(behaviour, t, b, c, d,
                         additionalValue1, additionalValue2);
@@ -156,10 +156,8 @@ public abstract class Tweening<T> {
     public final Tweening<T> setTweeningOption(ETweeningOption tweeningOption){
         this.option = tweeningOption;
 
-        this.timer.setElapsedTimeCapped((
-                tweeningOption == ETweeningOption.Loop
-                        || tweeningOption == ETweeningOption.LoopMirrored
-                        || tweeningOption == ETweeningOption.LoopReversed));
+        // The time never goes past the duration, so the last frame stays on the end value
+        this.timer.setElapsedTimeCapped(true);
 
         return this;
     }
@@ -172,7 +170,7 @@ public abstract class Tweening<T> {
         return this;
     }
 
-    public final Tweening<T> setAdditionnalArguments(Float arg1, Float arg2){
+    public final Tweening<T> setAdditionalArguments(Float arg1, Float arg2){
         this.additionalValue1 = arg1;
         this.additionalValue2 = arg2;
 

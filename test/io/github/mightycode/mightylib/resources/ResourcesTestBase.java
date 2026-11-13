@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -32,7 +31,6 @@ abstract class ResourcesTestBase {
     @TempDir
     Path folder;
 
-    protected String previousFolder;
     protected Resources resources;
     protected FakeLoader fakeLoader;
     protected final List<FakeData> all = new ArrayList<>();
@@ -41,19 +39,12 @@ abstract class ResourcesTestBase {
     void setUp() throws IOException {
         MainThreadTestAccess.setCurrentAsMain();
 
-        previousFolder = Resources.FOLDER;
-        Resources.FOLDER = folder.toString().replace('\\', '/') + "/";
         Files.createDirectories(folder.resolve("batchs"));
 
         fakeLoader = new FakeLoader();
         JSONLoader jsonLoader = new JSONLoader();
-        resources = Resources.createForTests(new Resources.BatchResourcesMethod("unused"), WORKERS,
+        resources = new Resources(new Resources.BatchResourcesMethod("unused"), WORKERS, folder.toString(),
                 Arrays.asList(fakeLoader, jsonLoader, new BatchLoader(jsonLoader)));
-    }
-
-    @AfterEach
-    void tearDown() {
-        Resources.FOLDER = previousFolder;
     }
 
     // ---- Helpers ----

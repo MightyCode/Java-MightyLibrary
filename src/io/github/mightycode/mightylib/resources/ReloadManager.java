@@ -94,6 +94,7 @@ class ReloadManager {
         // is dropped
         DataType abandoned = data.reloadCopy;
 
+        copy.attachTo(data.resources());
         copy.reloadOf = data;
         data.reloadCopy = copy;
         if (abandoned != null)
@@ -166,6 +167,7 @@ class ReloadManager {
             return;
 
         data.reloadCopy = null;
+        data.reloadFailed(copy);
         System.err.println("--" + message + ", the previous version is kept");
         resources.dependencies().wakeWaiters(data);
         copyEnded();

@@ -110,7 +110,7 @@ public class Color4f extends Vector4f {
     }
 
     public void setColorBased256(Vector4f color){
-        setColor(color.div(255f));
+        setColor(new Vector4f(color).div(255f));
     }
 
     public void setColor(Vector3f color){
@@ -118,7 +118,7 @@ public class Color4f extends Vector4f {
     }
 
     public void setColorBased256(Vector3f color){
-        setColor(color.div(255f));
+        setColor(new Vector3f(color).div(255f));
     }
 
     public void setColor(float f){

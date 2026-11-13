@@ -158,7 +158,7 @@ public final class ResourceWatcher {
     private Set<Path> listFolders() {
         Set<Path> directories = new HashSet<>();
         try {
-            Files.walkFileTree(Paths.get(Resources.FOLDER).toAbsolutePath().normalize(), new SimpleFileVisitor<>() {
+            Files.walkFileTree(Paths.get(resources.folder()).toAbsolutePath().normalize(), new SimpleFileVisitor<>() {
                 @Override
                 public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
                     directories.add(directory);

@@ -33,6 +33,7 @@ public abstract class ListNode<T extends ListNode<?>>{
 
     public void clear(){
         nodes.clear();
+        ids.clear();
     }
 
     public int size(){
@@ -40,12 +41,12 @@ public abstract class ListNode<T extends ListNode<?>>{
     }
 
     public boolean add(T node){
-        if (ids.add(node.getId())) {
-            nodes.put(node.getId(), node);
-            return true;
-        }
+        if (nodes.containsKey(node.getId()))
+            return false;
 
-        return false;
+        ids.add(node.getId());
+        nodes.put(node.getId(), node);
+        return true;
     }
 
     public void addAll(Collection<T> nodes){

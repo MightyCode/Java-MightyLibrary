@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
@@ -8,6 +9,8 @@ import io.github.mightycode.mightylib.utils.Logger;
 import static org.lwjgl.opengl.GL30.*;
 
 public class FrameBuffer implements IRenderTextureBindable {
+    // Framebuffers are not shared between contexts: it is used and deleted in the context that created it
+    private final GLContext owner = GLContext.current();
     private int fbo;
     private int rbo;
 
@@ -64,6 +67,10 @@ public class FrameBuffer implements IRenderTextureBindable {
     }
 
     public void bindFrameBuffer(){
+        if (Logger.isGLErrorCheck() && GLContext.current() != owner)
+            throw new IllegalStateException("The framebuffer " + fbo + " belongs to the OpenGL context " + owner.getName()
+                    + ", the current one is " + GLContext.current().getName());
+
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         Logger.CheckOpenGLError("Bind FrameBuffer : " + fbo);
     }
@@ -85,7 +92,7 @@ public class FrameBuffer implements IRenderTextureBindable {
         glBindTexture(GL_TEXTURE_2D, renderTextureId);
 
         // Called for each draw: avoid building the message when checks are disabled
-        if (Logger.DO_CHECK)
+        if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Bind Texture : " + renderTextureId);
     }
 
@@ -106,13 +113,13 @@ public class FrameBuffer implements IRenderTextureBindable {
     }
 
     public void unload(){
-        GenDeleteResources.DeleteFramebuffers(fbo);
+        GenDeleteResources.DeleteFramebuffers(owner, fbo);
         Logger.CheckOpenGLError("Delete FrameBuffer : " + fbo);
 
         GenDeleteResources.DeleteTexture(renderTextureId);
         Logger.CheckOpenGLError("Delete Texture : " + renderTextureId);
 
-        GenDeleteResources.DeleteRenderBuffers(rbo);
+        GenDeleteResources.DeleteRenderBuffers(owner, rbo);
         Logger.CheckOpenGLError("Delete RenderBuffer : " + rbo);
     }
 }

@@ -8,15 +8,64 @@ import org.joml.Vector3f;
 // Inspired by Sebastien Lague (https://www.youtube.com/@SebastianLague) : https://www.youtube.com/watch?v=yyJ-hdISgnw
 public class TerrainGeneration {
     private final OpenSimplexNoise noiseGen;
-    public int LayerCount = 5;
-    public float Lacunarity = 2f;
-    public float Persistence = 0.5f;
-    public int RidgeLayerStart = 3;
-
-    public float Jiggle = 0.7f;
+    private int layerCount = 5;
+    private float lacunarity = 2f;
+    private float persistence = 0.5f;
+    private int ridgeLayerStart = 3;
+    private float jiggle = 0.7f;
 
     public TerrainGeneration () {
         noiseGen = new OpenSimplexNoise(42);
+    }
+
+    // Number of noise layers
+    public TerrainGeneration setLayerCount(int layerCount) {
+        this.layerCount = layerCount;
+        return this;
+    }
+
+    public int getLayerCount() {
+        return layerCount;
+    }
+
+    // Frequency multiplier between two layers
+    public TerrainGeneration setLacunarity(float lacunarity) {
+        this.lacunarity = lacunarity;
+        return this;
+    }
+
+    public float getLacunarity() {
+        return lacunarity;
+    }
+
+    // Amplitude multiplier between two layers
+    public TerrainGeneration setPersistence(float persistence) {
+        this.persistence = persistence;
+        return this;
+    }
+
+    public float getPersistence() {
+        return persistence;
+    }
+
+    // First layer made of ridges
+    public TerrainGeneration setRidgeLayerStart(int ridgeLayerStart) {
+        this.ridgeLayerStart = ridgeLayerStart;
+        return this;
+    }
+
+    public int getRidgeLayerStart() {
+        return ridgeLayerStart;
+    }
+
+    // Random offset of the grid points, in cells
+    public TerrainGeneration setJiggle(float jiggle) {
+        this.jiggle = jiggle;
+        return this;
+    }
+
+    public float getJiggle() {
+        return jiggle;
     }
 
     private float calculateElevation(Vector2f pos) {
@@ -24,16 +73,16 @@ public class TerrainGeneration {
         float amplitude = 1;
         float elevation = 0;
 
-        for (int i = 0; i < LayerCount; ++i) {
+        for (int i = 0; i < layerCount; ++i) {
             float noise = (float)noiseGen.getNoise2D(pos.x * frequency, pos.y * frequency).getValue();
 
-            if (i >= RidgeLayerStart) {
+            if (i >= ridgeLayerStart) {
                 noise = 0.5f - Math.abs(noise);
             }
 
             elevation += noise * amplitude;
-            amplitude *= Persistence;
-            frequency *= Lacunarity;
+            amplitude *= persistence;
+            frequency *= lacunarity;
         }
 
         return elevation * 10;
@@ -70,8 +119,8 @@ public class TerrainGeneration {
     }
 
     private Vector2f calculateJiggle(Vector2f pos) {
-        float ox = (float)noiseGen.getNoise2D(pos.x, pos.y).getValue() * Jiggle;
-        float oy = (float)noiseGen.getNoise2D(pos.x - 10000, pos.y - 10000).getValue() * Jiggle;
+        float ox = (float)noiseGen.getNoise2D(pos.x, pos.y).getValue() * jiggle;
+        float oy = (float)noiseGen.getNoise2D(pos.x - 10000, pos.y - 10000).getValue() * jiggle;
 
         return new Vector2f(ox, oy);
     }

@@ -36,6 +36,7 @@ class FallbackRegistry {
                     + " is replaced by the fallback of its type");
 
         fallback.setNotManuallyCreated();
+        fallback.attachTo(resources);
         map.put(Resources.FALLBACK_NAME, fallback);
         fallbacks.put(loader.getType(), fallback);
     }

@@ -24,7 +24,7 @@ public class IconLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, "resources");
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override

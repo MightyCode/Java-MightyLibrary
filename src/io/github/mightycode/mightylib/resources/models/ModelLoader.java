@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.resources.models;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.ColorTextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Matrix3f;
@@ -16,6 +15,7 @@ import java.io.File;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import static org.lwjgl.assimp.Assimp.*;
@@ -47,7 +47,7 @@ public class ModelLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, Resources.FOLDER);
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override
@@ -66,7 +66,7 @@ public class ModelLoader extends ResourceLoader {
         if (ending == null)
             return null;
 
-        ending = ending.toLowerCase();
+        ending = ending.toLowerCase(Locale.ROOT);
         for (String extension : EXTENSIONS) {
             if (extension.equals(ending))
                 return getFileName(path);
@@ -184,7 +184,7 @@ public class ModelLoader extends ResourceLoader {
             return null;
         }
 
-        TextureData texture = Resources.getInstance().addOwnedResource(TextureData.class,
+        TextureData texture = model.ownedResources().addOwnedResource(TextureData.class,
                 new TextureData(model.getDataName() + "/" + file, fullPath), model.ownerName());
         model.addOwnedTexture(texture);
 
@@ -192,7 +192,7 @@ public class ModelLoader extends ResourceLoader {
     }
 
     private String registerColor(Model model, int argb) {
-        TextureData texture = Resources.getInstance().addOwnedResource(TextureData.class, new ColorTextureData(argb), model.ownerName());
+        TextureData texture = model.ownedResources().addOwnedResource(TextureData.class, new ColorTextureData(argb), model.ownerName());
         model.addOwnedTexture(texture);
 
         return texture.getDataName();

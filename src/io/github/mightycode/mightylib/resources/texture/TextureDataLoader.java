@@ -5,7 +5,6 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import org.json.JSONObject;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
@@ -26,6 +25,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 public class TextureDataLoader extends ResourceLoader {
-    private final static String LIST_TEXTURES = Resources.FOLDER + "textures/textures.json";
+    private static final String LIST_TEXTURES = "textures/textures.json";
     private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList("png", "jpg", "jpeg", "bmp", "tga", "gif"));
 
     @Override
@@ -48,7 +48,7 @@ public class TextureDataLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString(LIST_TEXTURES));
+        JSONObject obj = new JSONObject(FileMethods.readFileAsString(resources().folder() + LIST_TEXTURES));
         create(data, obj, "");
     }
 
@@ -65,7 +65,7 @@ public class TextureDataLoader extends ResourceLoader {
         for (DataType texture : data.values())
             listed.add(Paths.get(((TextureData) texture).path()).toAbsolutePath().normalize());
 
-        Path folder = Paths.get(Resources.FOLDER + "textures");
+        Path folder = Paths.get(resources().folder() + "textures");
         if (!Files.isDirectory(folder))
             return;
 
@@ -73,7 +73,7 @@ public class TextureDataLoader extends ResourceLoader {
             files.filter(Files::isRegularFile).forEach(file -> {
                 String fileName = file.getFileName().toString();
                 int dot = fileName.lastIndexOf('.');
-                if (dot <= 0 || !IMAGE_EXTENSIONS.contains(fileName.substring(dot + 1).toLowerCase()))
+                if (dot <= 0 || !IMAGE_EXTENSIONS.contains(fileName.substring(dot + 1).toLowerCase(Locale.ROOT)))
                     return;
                 if (listed.contains(file.toAbsolutePath().normalize()))
                     return;
@@ -120,7 +120,7 @@ public class TextureDataLoader extends ResourceLoader {
                 String temp = information.getString("qualityType");
 
                 TextureData currentTexture = new TextureData(currentNode,
-                        Resources.FOLDER + currentPath + information.getString("file"));
+                        resources().folder() + currentPath + information.getString("file"));
 
                 if (temp.equals("pixelart")){
                     currentTexture.defaultAspectTexture = TextureParameters.PIXEL_ART_PARAMETERS;

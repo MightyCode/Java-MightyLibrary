@@ -1,31 +1,52 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
+import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
 public abstract class ListGeneralCommand {
-    public static void addCommands(Commands commands, SceneManager sceneManager){
-        if (!commands.getCommands().isEmpty()) {
-            System.err.println("Error, commands list is not empty.\n It must be empty to add general commands");
-            return;
-        }
+    /**
+     * The general commands, owned by the engine.
+     * @param cheatCommand the command "cheats on|off" (the build allows the cheats and the game wants the command)
+     */
+    public static void addCommands(CommandRegistry registry, Commands commands, boolean cheatCommand){
+        registry.register(new ReloadGenCom());
+        registry.register(new WatchGenCom());
+        registry.register(new HelpGenCom(commands));
+        registry.register(new ExitGenCom());
+        registry.register(new ChangeSoundGainCom());
+        registry.register(new SoundsGenCom());
+        registry.register(new StatsGenCom());
+        registry.register(new ScreenshotGenCom());
+        registry.register(new SceneGenCom());
+        registry.register(new GLGenCom());
+        registry.register(new TextureUploadGenCom());
+        registry.register(new ResourcesGenCom());
+        registry.register(new InputGenCom());
+        registry.register(new GamepadGenCom());
+        registry.register(new CameraGenCom());
+        registry.register(new MonitorsGenCom());
+        registry.register(new WindowsGenCom());
+        registry.register(new WindowGenCom());
+        registry.register(new WaitGenCom(commands));
+        registry.register(new ExecGenCom(commands));
+        registry.register(new ConsoleGenCom(commands));
+        registry.register(new AsGenCom(commands));
+        registry.register(new CompleteGenCom(commands));
 
-        commands.addCommand(new ReloadGenCom());
-        commands.addCommand(new WatchGenCom());
-        commands.addCommand(new HelpGenCom(commands));
-        commands.addCommand(new ExitGenCom(sceneManager));
-        commands.addCommand(new ChangeSoundGainCom());
-        commands.addCommand(new StatsGenCom());
-        commands.addCommand(new ScreenshotGenCom());
-        commands.addCommand(new SceneGenCom(sceneManager));
-        commands.addCommand(new GLGenCom());
-        commands.addCommand(new TextureUploadGenCom());
-        commands.addCommand(new ResourcesGenCom());
-        commands.addCommand(new InputGenCom());
-        commands.addCommand(new GamepadGenCom());
-        commands.addCommand(new CameraGenCom(sceneManager));
-        commands.addCommand(new MonitorsGenCom());
-        commands.addCommand(new WaitGenCom(commands, sceneManager));
-        commands.addCommand(new ExecGenCom(commands));
+        if (cheatCommand)
+            registry.register(new CheatsGenCom(commands));
+    }
+
+    // Identifier of a general command
+    static Identifier Id(String path) {
+        return Identifier.of(Identifier.ENGINE_NAMESPACE, path);
+    }
+
+    // The scenes of the context targeted by the commands (see Engine.targetWindow)
+    static SceneManager targetScenes() {
+        return Views.engine().targetContext().getSceneManager();
     }
 }

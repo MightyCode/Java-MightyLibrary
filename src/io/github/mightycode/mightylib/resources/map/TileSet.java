@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.resources.map;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Vector2i;
 
@@ -124,7 +123,7 @@ public class TileSet extends SingleSourceDataType {
         this.texture = texture;
 
         // Unknown texture: the fallback one. The number of tiles is known once the texture is loaded (internLoad)
-        textureData = Resources.getInstance().getResourceOrFallback(TextureData.class, texture);
+        textureData = resources().getResourceOrFallback(TextureData.class, texture);
         addDependency(textureData);
     }
 
@@ -200,7 +199,7 @@ public class TileSet extends SingleSourceDataType {
             return false;
 
         // A failed texture is replaced by the fallback: at least one tile, so the map can still be drawn
-        TextureData usable = Resources.getInstance().usable(TextureData.class, textureData);
+        TextureData usable = resources().usable(TextureData.class, textureData);
         tileNumber.x = Math.max(1, usable.getWidth() / tileSize.x);
         tileNumber.y = Math.max(1, usable.getHeight() / tileSize.y);
         return true;

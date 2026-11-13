@@ -41,10 +41,10 @@ public final class TextureUploadBench {
             // Warm up each way once, then the repeats go through the ways in turn so that none is favoured
             List<List<Double>> calls = new ArrayList<>();
             List<List<Double>> totals = new ArrayList<>();
-            for (int v = 0; v < variants.length; ++v) {
+            for (TextureUploader.Variant variant : variants) {
                 calls.add(new ArrayList<>());
                 totals.add(new ArrayList<>());
-                send(variants[v], pixels, width, height);
+                send(variant, pixels, width, height);
             }
 
             for (int r = 0; r < REPEATS; ++r) {

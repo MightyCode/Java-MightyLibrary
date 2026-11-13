@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONArray;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -13,6 +14,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
+import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class CommandScriptTest {
@@ -21,19 +25,22 @@ class CommandScriptTest {
         final List<String> calls = new ArrayList<>();
 
         RecordCommand() {
-            super("record");
+            super(TestCommands.Id("record"), ECommandLevel.USER, "Records the words it receives");
         }
 
         @Override
-        public CommandResult execute(String[] args) {
-            calls.add(String.join(" ", Arrays.copyOfRange(args, 1, args.length)));
-            return args.length > 1 && args[1].equals("fail") ? CommandResult.error("failed") : CommandResult.ok("recorded");
+        protected void syntax(CommandNode root) {
+            root.then(argument("words", word(), "Any words").variadic().optional().executes(context -> {
+                List<String> words = context.getList("words");
+                calls.add(String.join(" ", words));
+                return !words.isEmpty() && words.get(0).equals("fail") ? CommandResult.error("failed") : CommandResult.ok("recorded");
+            }));
         }
     }
 
     private static Commands commandsWith(RecordCommand record) {
-        Commands commands = new Commands(null);
-        commands.addCommand(record);
+        Commands commands = new Commands();
+        TestCommands.add(commands, record);
         return commands;
     }
 
@@ -48,7 +55,7 @@ class CommandScriptTest {
 
     @Test
     void waitAnswersAfterTheGivenTicks() throws Exception {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
 
         CompletableFuture<CommandResult> future = commands.submit("wait 3");
         commands.processPendingCommands();
@@ -72,13 +79,13 @@ class CommandScriptTest {
 
         commands.processPendingCommands();
 
-        assertEquals(Arrays.asList("b"), record.calls, "the line after -> wait 1 <- runs at the next tick");
+        assertEquals(List.of("b"), record.calls, "the line after -> wait 1 <- runs at the next tick");
         assertTrue(script.getResult().isDone());
     }
 
     @Test
     void waitRejectsBadArguments() {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
 
         assertFalse(commands.execute("wait 0").isSuccess());
         assertFalse(commands.execute("wait abc").isSuccess());
@@ -94,7 +101,7 @@ class CommandScriptTest {
                 Arrays.asList("# comment", "record a", "", "wait 2", "record b"));
 
         assertFalse(script.step());
-        assertEquals(Arrays.asList("a"), record.calls);
+        assertEquals(List.of("a"), record.calls);
 
         commands.addTickTask(script::step);
         for (int tick = 0; tick < 5 && !script.getResult().isDone(); ++tick)
@@ -127,8 +134,8 @@ class CommandScriptTest {
 
     @Test
     void scriptStopsOnAnUnknownCommand() throws Exception {
-        Commands commands = new Commands(null);
-        CommandScript script = new CommandScript(commands, "test", Arrays.asList("unknownCommand"));
+        Commands commands = new Commands();
+        CommandScript script = new CommandScript(commands, "test", List.of("unknownCommand"));
 
         assertTrue(script.step());
         assertFalse(script.getResult().get(1, TimeUnit.SECONDS).isSuccess());
@@ -149,9 +156,9 @@ class CommandScriptTest {
 
     @Test
     void execRefusesAScriptRunningItself(@TempDir Path folder) throws Exception {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
         Path file = folder.resolve("loop.txt");
-        Files.write(file, Arrays.asList("exec \"" + file + "\""), StandardCharsets.UTF_8);
+        Files.write(file, List.of("exec \"" + file + "\""), StandardCharsets.UTF_8);
 
         CommandResult result = run(commands, "exec \"" + file + "\"", 10);
 
@@ -164,7 +171,7 @@ class CommandScriptTest {
 
     @Test
     void execReportsAMissingFile(@TempDir Path folder) {
-        Commands commands = new Commands(null);
+        Commands commands = new Commands();
 
         CommandResult result = commands.execute("exec \"" + folder.resolve("missing.txt") + "\"");
 
@@ -174,13 +181,9 @@ class CommandScriptTest {
 
     @Test
     void deferredResultBecomesAnErrorAfterItsTimeout() throws Exception {
-        Commands commands = new Commands(null);
-        commands.addCommand(new BaseCommand("never") {
-            @Override
-            public CommandResult execute(String[] args) {
-                return CommandResult.later(new CompletableFuture<>(), 1);
-            }
-        });
+        Commands commands = new Commands();
+        TestCommands.add(commands, TestCommands.Syntax("never", ECommandLevel.USER, "Never answers",
+                root -> root.executes(context -> CommandResult.later(new CompletableFuture<>(), 1))));
 
         CompletableFuture<CommandResult> future = commands.submit("never");
         commands.processPendingCommands();

@@ -20,7 +20,7 @@ public class TileMapLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, Resources.FOLDER + "tilemap");
+        exploreResourcesFile(data, resources().folder() + "tilemap");
     }
 
     @Override
@@ -68,7 +68,7 @@ public class TileMapLoader extends ResourceLoader {
 
             if (linePart[0].equals("tileset")) {
                 String tilesetName = TextFormat.word(linePart, 1, path, lineNumber, "tileset name");
-                TileSet tileset = Resources.getInstance().getResource(TileSet.class, tilesetName);
+                TileSet tileset = resources().getResource(TileSet.class, tilesetName);
                 int startId = 0;
 
                 if (linePart.length >= 3)
@@ -129,6 +129,10 @@ public class TileMapLoader extends ResourceLoader {
 
         if (layers == null || layerSize == null)
             throw new ResourceException("bad format in " + path + ": missing layerSize or layerNumber");
+
+        for (int i = 0; i < layers.length; ++i)
+            if (layers[i] == null)
+                throw new ResourceException("bad format in " + path + ": layer " + i + " is not described");
 
         tileMap.setInformation(layerSize, layers,
                 layersCategories.toArray(new String[0]),

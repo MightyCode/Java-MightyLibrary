@@ -63,7 +63,7 @@ class ResourcesManualTest extends ResourcesTestBase {
         assertEquals(1, manual.unloads.get());
     }
 
-    // TestGLLoading: data deleted and created again with the same name in the same frame
+    // GLLoading: data deleted and created again with the same name in the same frame
     @Test
     void deleteThenAddSameNameKeepsTheNewOne() throws Exception {
         start();
@@ -100,5 +100,34 @@ class ResourcesManualTest extends ResourcesTestBase {
         assertEquals(0, built.preloads.get());
         assertEquals(1, built.loads.get());
         assertConsistent();
+    }
+
+    // A data does not read a global Resources when it is created: the one registering it attaches itself
+    @Test
+    void dataKnowsTheResourcesRegisteringIt() throws Exception {
+        FakeData fromLoader = fake(MAIN_CONTEXT, "fromLoader");
+        FakeData manual = new FakeData(MAIN_CONTEXT, "manual");
+        all.add(manual);
+        assertThrows(IllegalStateException.class, fromLoader::resources, "not registered before init");
+        assertThrows(IllegalStateException.class, manual::resources, "not registered before being added");
+
+        start();
+        resources.addResourceAndSetUp(FakeData.class, manual);
+        pump();
+
+        assertSame(resources, fromLoader.resources());
+        assertSame(resources, manual.resources());
+        assertConsistent();
+    }
+
+    @Test
+    void dataCannotMoveToAnotherResources() {
+        FakeData data = fake(MAIN_CONTEXT, "data");
+        start();
+
+        Resources other = new Resources(new Resources.AllResourcesMethod(), 1, folder.toString(),
+                java.util.Collections.singletonList(new FakeLoader()));
+        assertThrows(IllegalStateException.class, () -> data.attachTo(other));
+        assertSame(resources, data.resources());
     }
 }

@@ -2,10 +2,8 @@ package io.github.mightycode.mightylib.inputs;
 
 import io.github.mightycode.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
-import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWScrollCallback;
 
-import java.nio.DoubleBuffer;
 import java.util.Arrays;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -25,6 +23,10 @@ public class MouseManager {
     private final boolean[] oldState = new boolean[MOUSE_BUTTONS];
 
     private final Vector2f pos;
+    // In window pixels, simulation included (getRawPos)
+    private final Vector2f windowPos = new Vector2f();
+    private final double[] cursorX = new double[1];
+    private final double[] cursorY = new double[1];
     private final Vector2f oldPos;
 
     private final Vector2f relativePos;
@@ -96,31 +98,81 @@ public class MouseManager {
     }
 
     public boolean getButton(int buttonId){
-        if(buttonId >= 0 && buttonId < MOUSE_BUTTONS){
+        if(!captured && buttonId >= 0 && buttonId < MOUSE_BUTTONS){
             return state[buttonId];
         }
         return false;
     }
 
     public boolean getState(int buttonId){
-        return glfwGetMouseButton(windowInfo.getWindowId(), buttonId) == 1;
+        return !captured && realButton(buttonId);
+    }
+
+    // The button of the real mouse now (GLFW), whatever the capture
+    protected boolean realButton(int buttonId) {
+        return glfwGetMouseButton(windowInfo.getWindowId(), buttonId) == GLFW_PRESS;
+    }
+
+    // The position of the real cursor now (GLFW), in window pixels
+    protected void realCursor(double[] x, double[] y) {
+        glfwGetCursorPos(windowInfo.getWindowId(), x, y);
     }
 
     public boolean buttonPressed(int buttonID){
-        return state[buttonID] && !oldState[buttonID];
+        return !captured && !edgesDropped && state[buttonID] && !oldState[buttonID];
     }
 
     public boolean buttonReleased(int buttonID){
-        return !state[buttonID] && oldState[buttonID];
+        return !captured && !edgesDropped && !state[buttonID] && oldState[buttonID];
+    }
+
+    // ---- Focus (InputManager.focus()): an owner (the console, a text field) owns the mouse, the game sees no
+    // button, no scroll, no movement and a cursor out of the window ----
+    private static final float NOWHERE = -1_000_000f;
+    private boolean captured;
+    // The focus changed during this tick: its presses, releases and scroll are for nobody (until postUpdate)
+    private boolean edgesDropped;
+
+    void setCaptured(boolean captured) { this.captured = captured; }
+
+    void dropEdges() {
+        edgesDropped = true;
+        mouseScroll.set(0);
+    }
+
+    public boolean isCaptured() { return captured; }
+
+    // ---- Raw reads, whatever the capture, simulation included: for the owner of the capture only (the console) ----
+
+    // Scroll of the tick
+    public Vector2f getRawMouseScroll() { return new Vector2f(mouseScroll); }
+
+    // Position of the cursor in window pixels (origin at the top left, like simulateMove), not the virtual one
+    public Vector2f getRawPos() { return new Vector2f(windowPos); }
+
+    // Position of the cursor in virtual coordinates (pos() without the capture): to place it in the GUI of the owner
+    public Vector2f getRawVirtualPos() { return new Vector2f(pos); }
+
+    public boolean getRawButton(int buttonId) {
+        return isButton(buttonId) && state[buttonId];
+    }
+
+    public boolean rawButtonPressed(int buttonId) {
+        return !edgesDropped && isButton(buttonId) && state[buttonId] && !oldState[buttonId];
+    }
+
+    public boolean rawButtonReleased(int buttonId) {
+        return !edgesDropped && isButton(buttonId) && !state[buttonId] && oldState[buttonId];
+    }
+
+    private static boolean isButton(int buttonId) {
+        return buttonId >= 0 && buttonId < MOUSE_BUTTONS;
     }
 
     public void mouseUpdate(){
-        DoubleBuffer x = BufferUtils.createDoubleBuffer(1);
-        DoubleBuffer y = BufferUtils.createDoubleBuffer(1);
-
-        glfwGetCursorPos(windowInfo.getWindowId(), x, y);
-        double realX = x.get(0);
-        double realY = y.get(0);
+        realCursor(cursorX, cursorY);
+        double realX = cursorX[0];
+        double realY = cursorY[0];
 
         if (pendingSimulatedCursor != null) {
             simulatedCursor = pendingSimulatedCursor;
@@ -145,6 +197,7 @@ public class MouseManager {
         lastWindowY = windowY;
         lastWindowSimulated = simulated;
 
+        windowPos.set(windowX, windowY);
         toVirtual(windowX, windowY, pos);
     }
 
@@ -152,11 +205,17 @@ public class MouseManager {
      * Movement of the cursor during the last tick in window pixels (y positive downward), independent of the
      * virtual size : for a camera look. Unbounded when the cursor is disabled (setCursor(false)).
      */
-    public float deltaX() { return delta.x; }
-    public float deltaY() { return delta.y; }
+    public float deltaX() { return captured ? 0 : delta.x; }
+    public float deltaY() { return captured ? 0 : delta.y; }
 
     // Window pixels (origin at the top left) to the virtual coordinates given by pos()
     private void toVirtual(float x, float y, Vector2f result) {
+        // A mouse without window (tests): the same
+        if (windowInfo == null) {
+            result.set(x, y);
+            return;
+        }
+
         if (windowInfo.getRatio() <= windowInfo.getVirtualRatio()){
             float diff = windowInfo.getSizeRef().x * 1f / windowInfo.getVirtualSizeRef().x;
 
@@ -206,34 +265,53 @@ public class MouseManager {
     }
 
     public float posX(){
-        return pos.x;
+        return captured ? NOWHERE : pos.x;
     }
     public float posY(){
-        return pos.y;
+        return captured ? NOWHERE : pos.y;
     }
 
-    public Vector2f pos(){return new Vector2f(pos);}
+    public Vector2f pos(){return new Vector2f(posX(), posY());}
 
-    public float oldPosX() { return oldPos.x;}
-    public float oldPosY() { return oldPos.y;}
+    public float oldPosX() { return captured ? NOWHERE : oldPos.x;}
+    public float oldPosY() { return captured ? NOWHERE : oldPos.y;}
 
-    public Vector2f oldPos() { return new Vector2f(oldPos);}
+    public Vector2f oldPos() { return new Vector2f(oldPosX(), oldPosY());}
+
+    // A blocked mouse (the window waits for a modal window) has no button, no scroll and its cursor is nowhere
+    private boolean blocked;
+
+    public void setBlocked(boolean blocked) { this.blocked = blocked; }
+
+    public boolean isBlocked() { return blocked; }
 
     public void postUpdate(){
+        edgesDropped = false;
         oldPos.set(pos);
         mouseUpdate();
+        if (blocked) {
+            pos.set(-1_000_000f);
+            delta.set(0);
+        }
 
-        relativePos.x = posX() / windowInfo.getSizeRef().x;
-        relativePos.y = posY() / windowInfo.getSizeRef().y;
+        if (windowInfo != null) {
+            relativePos.x = pos.x / windowInfo.getSizeRef().x;
+            relativePos.y = pos.y / windowInfo.getSizeRef().y;
+        }
 
         buttonSimulation.update();
         for(int key = 0; key < state.length; ++key){
             oldState[key] = state[key];
-            state[key] = getState(key) || buttonSimulation.getState(key);
+            // Whatever the capture (the reads hide it): the owner of the capture reads it, and a button held when
+            // the capture ends is not pressed again
+            state[key] = !blocked && (realButton(key) || buttonSimulation.getState(key));
         }
 
         // Real scroll events of the next tick are added by the callback
-        mouseScroll.set(pendingScroll);
+        if (blocked)
+            mouseScroll.set(0);
+        else
+            mouseScroll.set(pendingScroll);
         pendingScroll.set(0);
     }
 
@@ -266,5 +344,5 @@ public class MouseManager {
         return displayCursor;
     }
 
-    public Vector2f getMouseScroll() { return new Vector2f(mouseScroll); }
+    public Vector2f getMouseScroll() { return captured ? new Vector2f() : new Vector2f(mouseScroll); }
 }

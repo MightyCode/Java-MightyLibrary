@@ -2,9 +2,9 @@ package io.github.mightycode.mightylib.algorithms.wavefunctioncollapse;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.data.JSONFile;
 
+import java.util.Locale;
 import java.util.Map;
 
 public class WaveCollapseRulesLoader extends ResourceLoader {
@@ -23,7 +23,7 @@ public class WaveCollapseRulesLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, Resources.FOLDER);
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override
@@ -37,7 +37,7 @@ public class WaveCollapseRulesLoader extends ResourceLoader {
         String ending = getFileExtension(path);
         String fileName = getFileName(path);
 
-        if (ending != null && fileName.toLowerCase().contains(".wavecollapse"))
+        if (ending != null && fileName.toLowerCase(Locale.ROOT).contains(".wavecollapse"))
             return getFileName(path);
 
         return null;
@@ -49,6 +49,6 @@ public class WaveCollapseRulesLoader extends ResourceLoader {
             return;
 
         WaveCollapseRules rules = (WaveCollapseRules) dataType;
-        rules.setData(Resources.getInstance().getResource(JSONFile.class, rules.getDataName() + ".wavecollapse"));
+        rules.setData(resources().getResource(JSONFile.class, rules.getDataName() + ".wavecollapse"));
     }
 }

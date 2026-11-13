@@ -7,13 +7,14 @@ A library to create a game.
 - Chargement automatique des ressources présentes dans le dossier ressources. ✅
 - Chargement et déchargement de ressources par bloc. ✅
 - Support des fichiers pratiques comme json, csv. ✅
-- Chargement de fichiers atlas et de fichiers map (format tiled). ✅
+- Chargement de fichiers atlas et de fichiers map (format propre au moteur). ✅
+- Import de cartes Tiled (`.tmx`/`.tmj`). ❌
 - Chargement threadé des ressources + parallélisation. ✅
 - Rechargement à chaud des ressources, placeholders en cas d'erreur, préchargement de la scène suivante. ✅
 
 **Graphiques :**
 - Support shaders. ✅
-- Support geometry shaders. ❌
+- Support geometry shaders. ✅
 - Envoie des informations aux shader seulement quand nécessaire. ✅
 - Forme avec contours. ❌
 - Chargement de SVG. ❌

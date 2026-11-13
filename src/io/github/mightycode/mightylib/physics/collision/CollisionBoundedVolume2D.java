@@ -4,20 +4,45 @@ import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylib.utils.math.EShapeType;
 import org.joml.Vector4f;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 public class CollisionBoundedVolume2D extends Collision2D {
 
-    public final Map<String, Collision2D> Collisions;
+    private final Map<String, Collision2D> collisions;
 
     public CollisionBoundedVolume2D(){
-        Collisions = new HashMap<>();
+        collisions = new HashMap<>();
         this.shapeType = EShapeType.BoundedVolume2D;
+    }
+
+    // Adds the collision, or replaces the one with this name
+    public CollisionBoundedVolume2D put(String name, Collision2D collision) {
+        collisions.put(name, Objects.requireNonNull(collision, "collision"));
+        return this;
+    }
+
+    public Collision2D remove(String name) {
+        return collisions.remove(name);
+    }
+
+    public Collision2D get(String name) {
+        return collisions.get(name);
+    }
+
+    // The names of the collisions, unmodifiable
+    public Set<String> names() {
+        return Collections.unmodifiableSet(collisions.keySet());
     }
 
     @Override
     public boolean isColliding(Collision2D collision) {
+        if (collisions.isEmpty())
+            return false;
+
         return bounds().isColliding(collision);
     }
 
@@ -26,6 +51,7 @@ public class CollisionBoundedVolume2D extends Collision2D {
         switch (b.getShapeType()){
             case Rectangle:
                 ReplaceBoundingVolume2DRectangle(this, (CollisionRectangle)b, direction);
+                break;
             case BoundedVolume2D:
                 ReplaceBoundingVolume2DRectangle(this, b.bounds(), direction);
         }
@@ -39,7 +65,7 @@ public class CollisionBoundedVolume2D extends Collision2D {
 
         this.position.x = x;
 
-        for (Map.Entry<String, Collision2D> entry : Collisions.entrySet()){
+        for (Map.Entry<String, Collision2D> entry : collisions.entrySet()){
             entry.getValue().moveX(diff);
         }
     }
@@ -51,7 +77,7 @@ public class CollisionBoundedVolume2D extends Collision2D {
             return;
 
         this.position.y = y;
-        for (Map.Entry<String, Collision2D> entry : Collisions.entrySet()){
+        for (Map.Entry<String, Collision2D> entry : collisions.entrySet()){
             entry.getValue().moveY(diff);
         }
     }
@@ -61,7 +87,7 @@ public class CollisionBoundedVolume2D extends Collision2D {
         Vector4f bound = null;
         CollisionRectangle temp;
 
-        for (Map.Entry<String, Collision2D> entry : Collisions.entrySet()){
+        for (Map.Entry<String, Collision2D> entry : collisions.entrySet()){
             temp = entry.getValue().bounds();
 
             if (bound == null){
@@ -85,10 +111,11 @@ public class CollisionBoundedVolume2D extends Collision2D {
     public CollisionBoundedVolume2D copy() {
         CollisionBoundedVolume2D temp = new CollisionBoundedVolume2D();
 
-        temp.setX(position.x);
-        temp.setY(position.y);
+        // The parts are copied: moving the copy must not move the original
+        for (Map.Entry<String, Collision2D> entry : collisions.entrySet())
+            temp.collisions.put(entry.getKey(), entry.getValue().copy());
 
-        temp.Collisions.putAll(Collisions);
+        temp.position.set(position);
 
         return temp;
     }

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.scenes.camera.cameraComponents;
 
+import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
@@ -9,7 +10,7 @@ public class DraggingCameraComponent implements IUpdatable {
     protected InputManager inputManager;
     protected MouseManager mouseManager;
 
-    protected int dragActionId;
+    protected InputAction dragActionId;
 
     protected Camera2D controlledCamera;
 
@@ -24,7 +25,7 @@ public class DraggingCameraComponent implements IUpdatable {
         this.controlledCamera = controlledCamera;
     }
 
-    public void initActionId(int dragActionId){
+    public void initActionId(InputAction dragActionId){
         this.dragActionId = dragActionId;
     }
 

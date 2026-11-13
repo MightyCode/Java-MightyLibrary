@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources.models;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 
 import java.util.ArrayList;
@@ -43,6 +44,11 @@ public class Model extends SingleSourceDataType {
         ownedTextures = otherTextures;
     }
 
+    // The Resources the owned textures are added to and released from (the one managing this model)
+    Resources ownedResources() {
+        return resources();
+    }
+
     // Name used as reference on the owned textures
     public String ownerName() {
         return "model:" + dataName;
@@ -77,6 +83,22 @@ public class Model extends SingleSourceDataType {
         return count;
     }
 
+    /**
+     * The vertex and index arrays once read (the textures are counted as dependencies); before, the size of the
+     * file. Nothing on the card: the renderers send the meshes themselves (no GL element shared by the batches).
+     */
+    @Override
+    public long estimatedCpuBytes() {
+        if (meshes.isEmpty())
+            return super.estimatedCpuBytes();
+
+        long total = 0;
+        for (ModelMesh mesh : meshes)
+            total += mesh.byteSize();
+
+        return total;
+    }
+
     @Override
     public boolean internLoad() {
         if (meshes.isEmpty()) {
@@ -102,7 +124,7 @@ public class Model extends SingleSourceDataType {
     private void releaseTextures() {
         for (DataType texture : ownedTextures) {
             removeDependency(texture);
-            resources.releaseOwnedResource(texture, ownerName());
+            resources().releaseOwnedResource(texture, ownerName());
         }
 
         ownedTextures.clear();

@@ -26,12 +26,12 @@ public class WindowInfo {
     String windowName;
     public String getWindowName() { return windowName; }
 
-    boolean fullscreen;
-    // Screen chosen at the creation, null for the primary one
+    EWindowMode mode;
+    public EWindowMode getWindowMode() { return mode; }
+
+    // Screen of the display settings, null for the primary one
     MonitorInfo monitor;
     public MonitorInfo getMonitor() { return monitor; }
-
-    public boolean getFullscreen() { return fullscreen; }
 
     WindowInfo(){
         windowId = 0;
@@ -40,6 +40,6 @@ public class WindowInfo {
         virtualSize = new Vector2i();
         virtualRatio = 0;
         windowName = "";
-        fullscreen = false;
+        mode = EWindowMode.WINDOWED;
     }
 }

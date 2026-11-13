@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.texture.IconLoader;
-import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.IntConsumer;
 
 /**
  * Registry and loading pipeline of the data read from the disk.
@@ -26,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * then loaded again while it was read ends in the wanted state without any special case.
  */
 public class Resources {
-    public static String FOLDER = "resources/";
+    public static final String DEFAULT_FOLDER = "resources/";
 
     // Reference added by loadAllOfType (AllResourcesMethod, batch descriptions)
     private static final String ALL_REFERENCE = "all";
@@ -46,31 +47,9 @@ public class Resources {
         }
     }
 
-    private static Resources singletonInstance = null;
-
-    public static Resources createInstance(LoadingMethod loadingMethod, int maxNumberOfWorkers){
-        if (singletonInstance == null) {
-            singletonInstance = new Resources(loadingMethod, maxNumberOfWorkers);
-        }
-
-        return singletonInstance;
-    }
-
-    public static Resources getInstance(){
-        if (singletonInstance == null){
-            singletonInstance = new Resources(new AllResourcesMethod(), 1);
-        }
-
-        return singletonInstance;
-    }
-
-    // Tests only: replace the singleton by a fresh instance using only the given loaders (no GL loader)
-    static Resources createForTests(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
-        singletonInstance = new Resources(loadingMethod, maxNumberOfWorkers, loaders);
-        return singletonInstance;
-    }
-
-    public final List<ResourceLoader> Loaders;
+    // Fixed at the construction: the mandatory loaders, then those of the project, one per type of data
+    private final List<ResourceLoader> loaders;
+    private final String folder;
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
@@ -91,39 +70,102 @@ public class Resources {
     private boolean initialized;
     private boolean firstLoadDone;
 
-    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers) {
-        this(loadingMethod, maxNumberOfWorkers, null);
+    /**
+     * The mandatory loaders are created (the shaders come from the shader manager: GLSL version and list), then those
+     * of the project are added after them (IProjectLoading.loaders). The list can't change afterwards.
+     * The loaders read their files in the given folder (EngineConfig.setResourcesFolder).
+     */
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, ShaderManager shaderManager,
+                     List<ResourceLoader> projectLoaders) {
+        this(loadingMethod, maxNumberOfWorkers, folder, withMandatoryLoaders(shaderManager, projectLoaders));
     }
 
-    // Without given loaders, the mandatory ones are used
-    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, List<ResourceLoader> loaders) {
+    // Only the given loaders are used (no GL loader): tests
+    Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
+        this.folder = NormalizeFolder(folder);
         resources = new ConcurrentHashMap<>();
-        Loaders = new ArrayList<>();
+        this.loaders = checkedLoaders(loaders);
 
         scheduler = new ResourceScheduler(this, maxNumberOfWorkers);
-
-        if (loaders != null) {
-            Loaders.addAll(loaders);
-        } else {
-            // Mandatory loaders
-            Loaders.add(new ShaderLoader());
-            Loaders.add(new IconLoader());
-            Loaders.add(new TextureDataLoader());
-            Loaders.add(new AnimationDataLoader());
-            Loaders.add(new FontLoader());
-            JSONLoader jsonLoader = new JSONLoader();
-            Loaders.add(jsonLoader);
-
-            Loaders.add(new BatchLoader(jsonLoader));
-        }
 
         initialized = false;
         firstLoadDone = false;
     }
 
+    private static List<ResourceLoader> withMandatoryLoaders(ShaderManager shaderManager,
+                                                             List<ResourceLoader> projectLoaders) {
+        List<ResourceLoader> all = new ArrayList<>();
+        all.add(new ShaderLoader(shaderManager));
+        all.add(new IconLoader());
+        all.add(new TextureDataLoader());
+        all.add(new AnimationDataLoader());
+        all.add(new FontLoader());
+        JSONLoader jsonLoader = new JSONLoader();
+        all.add(jsonLoader);
+        all.add(new BatchLoader(jsonLoader));
+
+        all.addAll(Objects.requireNonNull(projectLoaders, "projectLoaders"));
+        return all;
+    }
+
+    // An unmodifiable copy; two loaders of the same type of data would share (and overwrite) one registry
+    private static List<ResourceLoader> checkedLoaders(List<ResourceLoader> loaders) {
+        Set<Class<? extends DataType>> types = new HashSet<>();
+        for (ResourceLoader loader : loaders) {
+            if (!types.add(loader.getType()))
+                throw new IllegalArgumentException("Two loaders for the type " + loader.getType().getSimpleName()
+                        + " (" + loader.getResourceNameType() + ")");
+        }
+
+        return List.copyOf(loaders);
+    }
+
+    // The loaders, in their order (mandatory then project); unmodifiable
+    List<ResourceLoader> loaders() {
+        return loaders;
+    }
+
+    // Separators turned to '/', with a final '/': loaders concatenate the paths
+    public static String NormalizeFolder(String folder) {
+        String normalized = Objects.requireNonNull(folder, "folder").replace('\\', '/');
+        return normalized.endsWith("/") ? normalized : normalized + "/";
+    }
+
+    /**
+     * Folder read by the loaders, ending with '/' (default "resources/"). Final and set by the constructor: safe to read
+     * from any thread (workers, resource watcher).
+     */
+    public String folder() {
+        return folder;
+    }
+
     public void setStrict(boolean strict) {
         this.strict = strict;
+    }
+
+    // Where the batches hold the GL elements of their data (GLResources); null: nothing is sent to the card
+    private IGLElementSink glElementSink;
+
+    public void setGLElementSink(IGLElementSink glElementSink) {
+        this.glElementSink = glElementSink;
+    }
+
+    IGLElementSink glElementSink() {
+        return glElementSink;
+    }
+
+    // Where a sound buffer is detached from the sources holding it, before it is deleted (SoundManager); none in tests
+    private IntConsumer soundBufferDetacher;
+
+    public void setSoundBufferDetacher(IntConsumer soundBufferDetacher) {
+        this.soundBufferDetacher = soundBufferDetacher;
+    }
+
+    // Before deleting a sound buffer: the sources still holding it let it go
+    public void detachSoundBuffer(int bufferId) {
+        if (soundBufferDetacher != null)
+            soundBufferDetacher.accept(bufferId);
     }
 
     // Reloads reading their new version at the same time (both versions stay in memory); the others wait
@@ -136,9 +178,12 @@ public class Resources {
             return;
 
         // Init all loaders
-        for (ResourceLoader loader : Loaders){
+        for (ResourceLoader loader : loaders){
+            loader.attachTo(this);
             Map<String, DataType> map = new ConcurrentHashMap<>();
             loader.create(map);
+            for (DataType data : map.values())
+                data.attachTo(this);
             resources.put(loader.getType(), map);
             fallbacks.register(loader, map);
         }
@@ -191,7 +236,7 @@ public class Resources {
             loadAllOfType(BatchResources.class);
             loadBatch(((BatchResourcesMethod) loadingMethod).firstBatch);
         } else {
-            for (ResourceLoader loader : Loaders){
+            for (ResourceLoader loader : loaders){
                 loadAllOfType(loader.getType());
             }
         }
@@ -215,7 +260,8 @@ public class Resources {
 
 
     private void finishLoading() {
-        Texture.CreateErrorTexture();
+        if (glElementSink != null)
+            glElementSink.fallbackDataLoaded();
         firstLoadDone = true;
     }
 
@@ -266,6 +312,12 @@ public class Resources {
 
     Map<Class<? extends DataType>, Map<String, DataType>> registry() {
         return resources;
+    }
+
+    // Names of the declared data of a type (loaded or not), empty for an unknown type
+    public List<String> getResourceNames(Class<? extends DataType> type) {
+        Map<String, DataType> ofType = resources.get(type);
+        return ofType == null ? new ArrayList<>() : new ArrayList<>(ofType.keySet());
     }
 
     // ---- Reconciliation, main thread only ----
@@ -480,15 +532,18 @@ public class Resources {
         } else if (preload) {
             data.setPreloaded();
         } else if (result.success) {
-            if (data.loadContinues()) {
-                // Part of the load done: the update below queues the next step
-            } else if (data.reloadOf != null && isWanted(data)) {
+            DataType loaded = data.reloadOf != null && isWanted(data) ? data.reloadOf : data;
+            if (loaded != data) {
                 reloads.commit(data);
             } else {
                 data.loadDone(true);
                 dependencies.wakeWaiters(data);
                 reloads.contentChanged(data);
             }
+
+            // Not the first version: the GL elements that failed with a previous one are tried again
+            if (glElementSink != null && loaded.getVersion() > 1)
+                glElementSink.dataReloaded(loaded);
         } else {
             fail(data, "load returned false");
         }
@@ -503,7 +558,7 @@ public class Resources {
         if (loader != null)
             return loader;
 
-        for (ResourceLoader candidate : Loaders) {
+        for (ResourceLoader candidate : loaders) {
             if (candidate.getType().isInstance(data))
                 return candidate;
         }
@@ -544,8 +599,8 @@ public class Resources {
 
     // ---- Registry ----
 
-    public static Class<? extends DataType> getClassFromName(String name) {
-        for (ResourceLoader resourceLoader : singletonInstance.Loaders) {
+    public Class<? extends DataType> getClassFromName(String name) {
+        for (ResourceLoader resourceLoader : loaders) {
             if (resourceLoader.getResourceNameType().equals(name))
                 return resourceLoader.getType();
         }
@@ -562,7 +617,7 @@ public class Resources {
     }
 
     private ResourceLoader getLoader (Class<? extends DataType> typeOfResource){
-        for (ResourceLoader loader : Loaders){
+        for (ResourceLoader loader : loaders){
             if (typeOfResource.equals(loader.getType()))
                 return loader;
         }
@@ -688,7 +743,7 @@ public class Resources {
      */
     void discoverNewFiles(java.util.function.BiPredicate<Class<? extends DataType>, DataType> accepted) {
         Map<Class<? extends DataType>, Map<String, DataType>> found = new LinkedHashMap<>();
-        for (ResourceLoader loader : new ArrayList<>(Loaders)) {
+        for (ResourceLoader loader : loaders) {
             Map<String, DataType> map = new HashMap<>();
             try {
                 loader.discover(map);
@@ -711,6 +766,7 @@ public class Resources {
                     if (registered.containsKey(entry.getKey()) || !accepted.test(ofType.getKey(), entry.getValue()))
                         continue;
 
+                    entry.getValue().attachTo(this);
                     registered.put(entry.getKey(), entry.getValue());
                     ++added;
                     System.out.println("--Watch: new " + ofType.getKey().getSimpleName() + " " + entry.getKey());
@@ -770,17 +826,10 @@ public class Resources {
 
     // ---- Data added by the code ----
 
-    public void addCategoryAndLoader(Class<? extends DataType> category, ResourceLoader loader) {
-        if (resources.containsKey(category))
-            return;
-
-        resources.put(category, new ConcurrentHashMap<>());
-        Loaders.add(loader);
-    }
-
     // Data created by the code, read by its loader then loaded; referenced as "manually"
     public void addResourceAndSetUp(Class<? extends DataType> type, DataType dataType) {
         runOnMainThread(() -> {
+            dataType.attachTo(this);
             resources.get(type).put(dataType.getDataName(), dataType);
             addReferenceAndUpdate(dataType, "manually");
         });
@@ -790,6 +839,7 @@ public class Resources {
     public void addPreLoadedResource(DataType dataType) {
         runOnMainThread(() -> {
             dataType.preloadedByCode = true;
+            dataType.attachTo(this);
             resources.get(dataType.getClass()).put(dataType.getDataName(), dataType);
             addReferenceAndUpdate(dataType, "manually");
         });
@@ -801,6 +851,8 @@ public class Resources {
      * The owner adds a reference and must call releaseOwnedResource with the same owner name.
      */
     public <T extends DataType> T addOwnedResource(Class<T> type, T dataType, String owner) {
+        // Attached before being visible to other threads; a data given while another one is shared is dropped
+        dataType.attachTo(this);
         DataType registered = resources.get(type).putIfAbsent(dataType.getDataName(), dataType);
         if (registered == null) {
             registered = dataType;

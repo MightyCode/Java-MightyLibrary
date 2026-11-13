@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.FallbackTextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.json.JSONObject;
@@ -26,7 +25,7 @@ public class FontLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString("resources/textures/fonts/fonts.json"));
+        JSONObject obj = new JSONObject(FileMethods.readFileAsString(resources().folder() + FontFace.FONTS_FOLDER + "fonts.json"));
         obj = obj.getJSONObject("fonts");
 
         create(data, obj);
@@ -38,7 +37,7 @@ public class FontLoader extends ResourceLoader {
      */
     @Override
     public DataType createFallback() {
-        TextureData atlas = Resources.getInstance().addOwnedResource(TextureData.class,
+        TextureData atlas = resources().addOwnedResource(TextureData.class,
                 new FallbackTextureData(FALLBACK_ATLAS_NAME, GL_TEXTURE_RECTANGLE), "fallback font");
 
         return new FontFace(atlas, FontFile.CreateBoxes(FallbackTextureData.SIZE));
@@ -65,7 +64,7 @@ public class FontLoader extends ResourceLoader {
             JSONObject values = node.getJSONObject(currentNode);
 
             if (values.length() == 2)
-                data.put(currentNode, new FontFace(currentNode, values.getString("texture"), values.getString("info")));
+                data.put(currentNode, new FontFace(resources(), currentNode, values.getString("texture"), values.getString("info")));
 
         } while(arrayNodes.hasNext());
     }

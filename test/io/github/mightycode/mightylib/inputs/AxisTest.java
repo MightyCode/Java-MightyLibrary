@@ -15,11 +15,13 @@ import static org.lwjgl.glfw.GLFW.*;
 
 // Axes bound to a gamepad (the mouse and the keyboard need a window ; perSecond needs the game time)
 class AxisTest {
-    private static final int STICK = 200;
-    private static final int CURVED = 201;
-    private static final int INVERTED = 202;
-    private static final int BUTTONS = 203;
-    private static final int SUM = 204;
+    // The registry is shared by the whole JVM : identifiers unique to this class
+    private static final InputAxis STICK = InputRegistry.axis("test_axis:stick");
+    private static final InputAxis CURVED = InputRegistry.axis("test_axis:curved");
+    private static final InputAxis INVERTED = InputRegistry.axis("test_axis:inverted");
+    private static final InputAxis BUTTONS = InputRegistry.axis("test_axis:buttons");
+    private static final InputAxis SUM = InputRegistry.axis("test_axis:sum");
+    private static final InputAxis NOT_BOUND = InputRegistry.axis("test_axis:not_bound");
 
     private FakeGamepadSource source;
     private GamepadManager gamepads;
@@ -35,13 +37,13 @@ class AxisTest {
 
         inputManager = new InputManager(null, null, gamepads);
         inputManager.init(new ActionInput[0], new AxisInput[]{
-                new AxisInput(STICK, "STICK", new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X)),
-                new AxisInput(CURVED, "CURVED", new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X).curve(2).scale(10)),
-                new AxisInput(INVERTED, "INVERTED", new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X).scale(-1)),
-                new AxisInput(BUTTONS, "BUTTONS", new AxisButtons(
+                new AxisInput(STICK, new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X)),
+                new AxisInput(CURVED, new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X).curve(2).scale(10)),
+                new AxisInput(INVERTED, new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X).scale(-1)),
+                new AxisInput(BUTTONS, new AxisButtons(
                         new InputGamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_LEFT),
                         new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X, InputGamepadAxis.POSITIVE))),
-                new AxisInput(SUM, "SUM", new AxisSum(
+                new AxisInput(SUM, new AxisSum(
                         new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X),
                         new AxisGamepad(GLFW_GAMEPAD_AXIS_LEFT_X)).scale(2)),
         });
@@ -103,18 +105,18 @@ class AxisTest {
 
     @Test
     void axesAreFoundByNameOrId() {
-        assertEquals(SUM, inputManager.findAxis("sum").axisId());
-        assertEquals(STICK, inputManager.findAxis(String.valueOf(STICK)).axisId());
+        assertEquals(SUM, inputManager.findAxis("SUM").axis());
+        assertEquals(STICK, inputManager.findAxis("test_axis:stick").axis());
         assertNull(inputManager.findAxis("unknown"));
-        assertEquals(0, inputManager.getAxis(999));
-        assertThrows(IllegalArgumentException.class, () -> inputManager.simulateAxis(999, 1, 1));
+        // Registered but not bound in this manager
+        assertNull(inputManager.findAxis("not_bound"));
+        assertEquals(0, inputManager.getAxis(NOT_BOUND));
+        assertThrows(IllegalArgumentException.class, () -> inputManager.simulateAxis(NOT_BOUND, 1, 1));
     }
 
     @Test
-    void anAxisCannotTakeTheIdOfAnAction() {
-        ActionInput[] actions = { new ActionInput(300, "ACTION", new InputGamepadButton(GLFW_GAMEPAD_BUTTON_A)) };
-        AxisInput[] axes = { new AxisInput(300, "AXIS", new AxisGamepad(GLFW_GAMEPAD_AXIS_LEFT_X)) };
-        assertThrows(IllegalArgumentException.class, () -> inputManager.init(actions, axes));
+    void anActionCannotTakeTheIdentifierOfAnAxis() {
+        assertThrows(IllegalArgumentException.class, () -> InputRegistry.action("test_axis:stick"));
     }
 
     @Test

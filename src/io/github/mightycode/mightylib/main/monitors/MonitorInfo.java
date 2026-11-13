@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.main.monitors;
 
 import org.json.JSONObject;
 
+import java.util.List;
+
 /**
  * Description of a connected screen, read with GLFW (Monitors.List).
  * Positions are in the virtual desktop, the work area excludes the task bar.
@@ -16,9 +18,12 @@ public class MonitorInfo {
     private final int width, height;
     private final int refreshRate;
     private final int workX, workY, workWidth, workHeight;
+    // Supported modes, from the smallest to the largest
+    private final List<VideoMode> videoModes;
 
     MonitorInfo(int index, long handle, String name, boolean primary, int x, int y, int width, int height,
-                int refreshRate, int workX, int workY, int workWidth, int workHeight) {
+                int refreshRate, int workX, int workY, int workWidth, int workHeight, List<VideoMode> videoModes) {
+        this.videoModes = List.copyOf(videoModes);
         this.index = index;
         this.handle = handle;
         this.name = name;
@@ -47,6 +52,8 @@ public class MonitorInfo {
     public int getWorkY() { return workY; }
     public int getWorkWidth() { return workWidth; }
     public int getWorkHeight() { return workHeight; }
+    // Resolutions and refresh rates the screen supports, from the smallest to the largest (DisplaySettings.setResolution)
+    public List<VideoMode> getVideoModes() { return videoModes; }
 
     public JSONObject toJson() {
         JSONObject json = new JSONObject();

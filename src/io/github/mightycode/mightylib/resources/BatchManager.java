@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.graphics.GLElement;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -21,12 +22,30 @@ import java.util.regex.Pattern;
  */
 class BatchManager {
     private interface BatchAction {
-        void apply(DataType data);
+        // sentToCard: the GL element of the data is sent with it ("gpu": false in the description to skip it)
+        void apply(DataType data, boolean sentToCard);
+    }
+
+    // What a batch description lists now
+    private static final class BatchContent {
+        final List<DataType> listed = new ArrayList<>();
+        final List<DataType> sentToCard = new ArrayList<>();
+    }
+
+    // One load of a batch: the data it referenced and the GL elements it holds, released by unload
+    private static final class BatchLoad {
+        final List<DataType> listed;
+        final List<GLElement> glElements;
+
+        BatchLoad(List<DataType> listed, List<GLElement> glElements) {
+            this.listed = listed;
+            this.glElements = glElements;
+        }
     }
 
     private final Resources resources;
-    // For each load of a batch (loaded once per load), the data it referenced, released by unload
-    private final Map<String, List<List<DataType>>> loadedBatches = new HashMap<>();
+    // For each load of a batch (loaded once per load), what it holds
+    private final Map<String, List<BatchLoad>> loadedBatches = new HashMap<>();
 
     BatchManager(Resources resources) {
         this.resources = resources;
@@ -45,12 +64,42 @@ class BatchManager {
     private void load(String batchName, String reference) {
         resources.runOnMainThread(() -> {
             System.out.println("--" + (reference.equals(batchName) ? "Load" : "Preload") + " batch: " + batchName);
-            List<DataType> listed = collectBatch(batchName);
-            for (DataType data : listed)
+            BatchContent content = collectBatch(batchName);
+            for (DataType data : content.listed)
                 resources.addReferenceAndUpdate(data, reference);
 
-            loadedBatches.computeIfAbsent(reference, name -> new ArrayList<>()).add(listed);
+            BatchLoad load = new BatchLoad(content.listed, acquireGLElements(content.sentToCard, reference));
+            loadedBatches.computeIfAbsent(reference, name -> new ArrayList<>()).add(load);
         });
+    }
+
+    // A loaded batch wants its GL elements now (loading screen), a preloaded one after the urgent elements
+    private static boolean isUrgent(String reference) {
+        return !reference.startsWith(Resources.PRELOAD_REFERENCE_PREFIX);
+    }
+
+    private List<GLElement> acquireGLElements(List<DataType> sentToCard, String reference) {
+        List<GLElement> elements = new ArrayList<>();
+        IGLElementSink sink = resources.glElementSink();
+        if (sink == null)
+            return elements;
+
+        for (DataType data : sentToCard) {
+            GLElement element = sink.acquire(data, isUrgent(reference));
+            if (element != null)
+                elements.add(element);
+        }
+
+        return elements;
+    }
+
+    private void releaseGLElements(List<GLElement> elements, String reference) {
+        IGLElementSink sink = resources.glElementSink();
+        if (sink == null)
+            return;
+
+        for (GLElement element : elements)
+            sink.release(element, isUrgent(reference));
     }
 
     void unload(String batchName) {
@@ -66,18 +115,19 @@ class BatchManager {
             System.out.println("--" + (reference.equals(batchName) ? "Unload" : "Cancel preload of") + " batch: " + batchName);
 
             // The data referenced by the load, not by the description now (reloaded, new data matching a regex...)
-            List<List<DataType>> loads = loadedBatches.get(reference);
+            List<BatchLoad> loads = loadedBatches.get(reference);
             if (loads == null || loads.isEmpty()) {
                 System.err.println("--Batch " + batchName + " unloaded but not loaded");
                 return;
             }
 
-            List<DataType> listed = loads.remove(loads.size() - 1);
+            BatchLoad load = loads.remove(loads.size() - 1);
             if (loads.isEmpty())
                 loadedBatches.remove(reference);
 
-            for (DataType data : listed)
+            for (DataType data : load.listed)
                 resources.removeReferenceAndUpdate(data, reference);
+            releaseGLElements(load.glElements, reference);
         });
     }
 
@@ -103,26 +153,30 @@ class BatchManager {
 
     private void refresh(String reference) {
         String batchName = batchOf(reference);
-        List<List<DataType>> loads = loadedBatches.get(reference);
+        List<BatchLoad> loads = loadedBatches.get(reference);
         if (loads == null)
             return;
 
-        List<DataType> listed;
+        BatchContent content;
         try {
-            listed = collectBatch(batchName);
+            content = collectBatch(batchName);
         } catch (RuntimeException e) {
             System.err.println("--Batch " + batchName + " kept as loaded: " + e.getMessage());
             return;
         }
 
         for (int i = 0; i < loads.size(); ++i) {
-            // Added before releasing: a data in both lists is never unloaded meanwhile
-            for (DataType data : listed)
+            // Added before releasing: a data (or GL element) in both lists is never unloaded meanwhile
+            for (DataType data : content.listed)
                 resources.addReferenceAndUpdate(data, reference);
-            for (DataType data : loads.get(i))
-                resources.removeReferenceAndUpdate(data, reference);
+            List<GLElement> glElements = acquireGLElements(content.sentToCard, reference);
 
-            loads.set(i, listed);
+            BatchLoad previous = loads.get(i);
+            for (DataType data : previous.listed)
+                resources.removeReferenceAndUpdate(data, reference);
+            releaseGLElements(previous.glElements, reference);
+
+            loads.set(i, new BatchLoad(content.listed, glElements));
         }
     }
 
@@ -137,7 +191,7 @@ class BatchManager {
 
         List<DataType> listed;
         try {
-            listed = collectBatch(batchName);
+            listed = collectBatch(batchName).listed;
         } catch (RuntimeException e) {
             result.put("error", e.getMessage());
             return result;
@@ -204,11 +258,15 @@ class BatchManager {
         return result;
     }
 
-    // Data listed by the batch description now
-    private List<DataType> collectBatch(String batchName) {
-        List<DataType> listed = new ArrayList<>();
-        forEachInBatch(batchName, listed::add);
-        return listed;
+    // Data listed by the batch description now, and those whose GL element is sent with them
+    private BatchContent collectBatch(String batchName) {
+        BatchContent content = new BatchContent();
+        forEachInBatch(batchName, (data, sentToCard) -> {
+            content.listed.add(data);
+            if (sentToCard)
+                content.sentToCard.add(data);
+        });
+        return content;
     }
 
     // Calls the action on every data listed by the batch, by name or by regular expression
@@ -223,6 +281,7 @@ class BatchManager {
 
             Class<? extends DataType> type = getClassFromBatchName(batchName, resource.getString("type"));
             Map<String, DataType> ofType = resources.registry().get(type);
+            boolean sentToCard = resource.optBoolean("gpu", true);
 
             JSONArray resourceFiles = resource.getJSONArray("files");
             for (int i = 0; i < resourceFiles.length(); ++i) {
@@ -232,7 +291,7 @@ class BatchManager {
                 if (dataType == null)
                     throw new RuntimeException("Can't find resource: " + resourceName + " of type: " + type.getName());
 
-                action.apply(dataType);
+                action.apply(dataType, sentToCard);
             }
 
             JSONArray regularExpressions = resource.getJSONArray("regex");
@@ -242,14 +301,14 @@ class BatchManager {
                 for (Map.Entry<String, DataType> entry : ofType.entrySet()) {
                     Matcher matcher = pattern.matcher(entry.getKey());
                     if (matcher.matches())
-                        action.apply(entry.getValue());
+                        action.apply(entry.getValue(), sentToCard);
                 }
             }
         }
     }
 
-    private static Class<? extends DataType> getClassFromBatchName(String batchName, String name) {
-        Class<? extends DataType> type = Resources.getClassFromName(name);
+    private Class<? extends DataType> getClassFromBatchName(String batchName, String name) {
+        Class<? extends DataType> type = resources.getClassFromName(name);
         if (type == null)
             throw new RuntimeException("Unknown resource type: " + name + " in batch: " + batchName);
 

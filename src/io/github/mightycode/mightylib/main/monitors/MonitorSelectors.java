@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.main.monitors;
 
+import java.util.Locale;
+
 /**
  * Common monitor selectors. When the wanted screen doesn't exist, they return null: the primary screen is used.
  */
@@ -37,10 +39,10 @@ public final class MonitorSelectors {
 
     // First screen whose name contains the text, ignoring case
     public static IMonitorSelector Name(String text) {
-        String lower = text.toLowerCase();
+        String lower = text.toLowerCase(Locale.ROOT);
         return monitors -> {
             for (MonitorInfo monitor : monitors) {
-                if (monitor.getName().toLowerCase().contains(lower))
+                if (monitor.getName().toLowerCase(Locale.ROOT).contains(lower))
                     return monitor;
             }
             return null;
@@ -64,7 +66,7 @@ public final class MonitorSelectors {
      */
     public static IMonitorSelector FromText(String text) {
         String value = text.trim();
-        switch (value.toLowerCase()) {
+        switch (value.toLowerCase(Locale.ROOT)) {
             case "primary":
                 return Primary();
             case "secondary":

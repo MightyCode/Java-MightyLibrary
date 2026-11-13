@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.animation;
 
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
@@ -21,6 +22,9 @@ public class Animation {
     // Data given by the last data() call
     private AnimationData usedData;
 
+    // Belongs to the engine of the view that creates it
+    private final Resources resources = Views.engine().resources();
+
     public Animation(){
         this.looping = false;
         this.speed = 1f;
@@ -38,7 +42,7 @@ public class Animation {
 
     // The animation if loaded, otherwise the fallback one (failed or still loading); restarted when it changes
     private AnimationData data() {
-        AnimationData usable = Resources.getInstance().usable(AnimationData.class, animationData);
+        AnimationData usable = resources.usable(AnimationData.class, animationData);
         if (usable != usedData) {
             usedData = usable;
             restart();
@@ -48,8 +52,8 @@ public class Animation {
     }
 
     private TextureData texture() {
-        TextureData texture = Resources.getInstance().getResourceOrFallback(TextureData.class, data().getTextureName());
-        return Resources.getInstance().usable(TextureData.class, texture);
+        TextureData texture = resources.getResourceOrFallback(TextureData.class, data().getTextureName());
+        return resources.usable(TextureData.class, texture);
     }
 
 

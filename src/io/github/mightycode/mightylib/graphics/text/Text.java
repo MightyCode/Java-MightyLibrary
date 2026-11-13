@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.graphics.renderer.Shape;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -26,9 +25,14 @@ public class Text extends Renderer implements Cloneable {
     // Version of the font the characters were placed with (a reloaded font file changes them)
     private int builtWithVersion;
     private String text;
+    // Widest line, 0 = no wrapping (setMaxWidth)
+    private float maxWidth;
 
     private final Vector2f leftUpPosition;
+    // Text and padding : what the reference and size() are about
     private final Vector2f rectangleSize;
+    // Space between the edges of the rectangle and the text : x left, y up, z right, w down
+    private final Vector4f padding;
 
     private EDirection reference;
     private ETextAlignment alignment;
@@ -52,6 +56,7 @@ public class Text extends Renderer implements Cloneable {
         this.alignment = ETextAlignment.Left;
 
         this.rectangleSize = new Vector2f(0, 0);
+        this.padding = new Vector4f(0, 0, 0, 0);
         this.leftUpPosition = new Vector2f(0, 0);
 
         // Dynamic: text content can change every frame (debug info, counters...)
@@ -74,6 +79,10 @@ public class Text extends Renderer implements Cloneable {
         if (used != builtWithFont || used.getVersion() != builtWithVersion)
             computeRightUpPosition();
 
+        if (charPositions != null && charPositions.length >= SIZE_COORDINATES)
+            DrawnTexts.record(text, charPositions[0] + position.x, charPositions[1] + position.y,
+                    rectangleSize.x - padding.x - padding.z, rectangleSize.y - padding.y - padding.w, fontSize);
+
         super.display();
     }
 
@@ -85,7 +94,7 @@ public class Text extends Renderer implements Cloneable {
         }
 
         // Unknown name: the fallback font
-        this.font = Resources.getInstance().getResourceOrFallback(FontFace.class, fontName);
+        this.font = resources.getResourceOrFallback(FontFace.class, fontName);
 
         computeRightUpPosition();
 
@@ -101,6 +110,26 @@ public class Text extends Renderer implements Cloneable {
         this.computeRightUpPosition();
 
         return this;
+    }
+
+    /**
+     * Wraps the text at the spaces so that no line is wider than this (padding not counted; a word longer than that
+     * is cut), the line feeds of the text are kept. text() is still the text given, the characters keep their index
+     * (getPositionOfChar). 0: no wrapping, the default.
+     */
+    public Text setMaxWidth(float maxWidth) {
+        maxWidth = Math.max(0, maxWidth);
+        if (maxWidth == this.maxWidth)
+            return this;
+
+        this.maxWidth = maxWidth;
+        computeRightUpPosition();
+
+        return this;
+    }
+
+    public float getMaxWidth() {
+        return maxWidth;
     }
 
     public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars, String breakLineFirstChar){
@@ -149,6 +178,28 @@ public class Text extends Renderer implements Cloneable {
         this.computeRightUpPosition();
 
         return this;
+    }
+
+    /**
+     * Space kept between the edges of the rectangle and the text. The rectangle (size(), leftUpPosition(), the
+     * reference and the position) includes it : a text with a padding is a bigger box, the text inside.
+     */
+    public Text setPadding(float left, float up, float right, float down) {
+        if (left < 0 || up < 0 || right < 0 || down < 0)
+            throw new IllegalArgumentException("A padding can't be negative : " + left + ", " + up + ", " + right + ", " + down);
+
+        if (padding.x == left && padding.y == up && padding.z == right && padding.w == down)
+            return this;
+
+        padding.set(left, up, right, down);
+        computeRightUpPosition();
+
+        return this;
+    }
+
+    // A copy : x left, y up, z right, w down
+    public Vector4f getPadding() {
+        return new Vector4f(padding);
     }
 
     public EDirection reference() {
@@ -208,9 +259,29 @@ public class Text extends Renderer implements Cloneable {
     }
 
 
+    // Horizontal advance of a character with the font used now and the font size (cutting long lines, cursors)
+    public float charAdvance(char c) {
+        return (float) (usedFont().getFontFile().getCharacter(c).getxAdvance() * fontSize);
+    }
+
+    // Width of one line (no line break) with the font used now, linear in its length
+    public float measureWidth(CharSequence line) {
+        FontFile file = usedFont().getFontFile();
+        double width = 0;
+        for (int i = 0; i < line.length(); ++i)
+            width += file.getCharacter(line.charAt(i)).getxAdvance();
+
+        return (float) (width * fontSize);
+    }
+
+    // Distance between two lines with the font used now
+    public float lineHeight() {
+        return (float) (usedFont().getFontFile().getLineHeight() * fontSize);
+    }
+
     // The font if loaded, otherwise the fallback one (failed or still loading)
     private FontFace usedFont() {
-        return Resources.getInstance().usable(FontFace.class, font);
+        return resources.usable(FontFace.class, font);
     }
 
     private void computeRightUpPosition() {
@@ -228,13 +299,16 @@ public class Text extends Renderer implements Cloneable {
         leftUpPosition.x = position.x;
         leftUpPosition.y = position.y;
 
-        int charNumber = text.replace("\n", "").length();
+        // The line feeds added by the wrapping are not characters: the index of each one is the one of text
+        String laidOut = TextWrap.Wrap(text, maxWidth, this::measureWidth);
+
+        int charNumber = laidOut.replace("\n", "").length();
 
         int[] indices = new int[charNumber * 6];
         float[] texturePosition = new float[charNumber * 8];
         charPositions = new float[charNumber * 8];
 
-        String[] lines = text.split("\n");
+        String[] lines = laidOut.split("\n");
         float[] linesSize = new float[lines.length];
 
         int charCount = 0;
@@ -249,17 +323,26 @@ public class Text extends Renderer implements Cloneable {
         Vector2f textReference = new Vector2f();
         float lineAlignmentOffset = 0;
 
-        rectangleSize.set(usedFont().computeSize(text, fontSize));
-
+        float widestLine = 0;
         for (int j = 0; j < lines.length; ++j) {
+            // A wrapped text: the spaces at the end of a line take no room (alignment, size), like in a text editor
+            int measured = maxWidth > 0 ? TextWrap.TrimmedLength(lines[j]) : lines[j].length();
             for (int i = 0; i < lines[j].length(); i++) {
-                currentCharOffset.x += (float) (usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
+                if (i < measured)
+                    currentCharOffset.x += (float) (usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
                 ++charCount;
             }
 
             linesSize[j] = currentCharOffset.x;
+            widestLine = Math.max(widestLine, linesSize[j]);
             currentCharOffset.x = 0;
         }
+
+        rectangleSize.set(usedFont().computeSize(laidOut, fontSize));
+        if (maxWidth > 0)
+            rectangleSize.x = widestLine;
+        float textWidth = rectangleSize.x;
+        rectangleSize.add(padding.x + padding.z, padding.y + padding.w);
 
         currentCharOffset.x = 0;
         charCount = 0;
@@ -296,10 +379,10 @@ public class Text extends Renderer implements Cloneable {
         for (int j = 0; j < lines.length; ++j) {
             switch(this.alignment){
                 case Center:
-                    lineAlignmentOffset = (rectangleSize.x - linesSize[j]) / 2;
+                    lineAlignmentOffset = (textWidth - linesSize[j]) / 2;
                     break;
                 case Right:
-                    lineAlignmentOffset = rectangleSize.x - linesSize[j];
+                    lineAlignmentOffset = textWidth - linesSize[j];
                     break;
             }
 
@@ -318,8 +401,8 @@ public class Text extends Renderer implements Cloneable {
                 sizeTemp.x = (float)((fontChar.getWidth()) * fontSize);
                 sizeTemp.y = (float)((fontChar.getHeight()) * fontSize);
 
-                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset;
-                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y;
+                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset + padding.x;
+                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y + padding.y;
 
                 temp.x = (posTemp.x);
                 temp.y = (sizeTemp.x + posTemp.x);
@@ -385,9 +468,11 @@ public class Text extends Renderer implements Cloneable {
         text.setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
+                .setPadding(padding.x, padding.y, padding.z, padding.w)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
+                .setMaxWidth(maxWidth)
                 .setText(this.text);
 
         text.setReferenceCamera(referenceCamera);
@@ -400,9 +485,11 @@ public class Text extends Renderer implements Cloneable {
                 .setFont(this.font.getFontName())
                 .setColor(getColor().copy())
                 .setFontSize(fontSize)
+                .setPadding(padding.x, padding.y, padding.z, padding.w)
                 .setPosition(new Vector2f(this.position.x, this.position.y))
                 .setAlignment(alignment)
                 .setReference(this.reference)
+                .setMaxWidth(maxWidth)
                 .setText(this.text);
 
         copy.setReferenceCamera(referenceCamera);

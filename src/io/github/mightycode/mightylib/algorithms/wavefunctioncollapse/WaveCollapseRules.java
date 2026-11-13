@@ -12,7 +12,7 @@ public class WaveCollapseRules extends DataType {
     private JSONFile data;
 
     public static class Rule {
-        public static Vector2i INITIAl_POS = new Vector2i(0, 0);
+        public static final Vector2i INITIAL_POS = new Vector2i(0, 0);
         private final int id;
         private final List<Vector2i> directions;
         
@@ -149,8 +149,8 @@ public class WaveCollapseRules extends DataType {
             } catch (NumberFormatException ignored) {}
         }
 
-        initialRule.addDirection(Rule.INITIAl_POS);
-        initialRule.addAvailableIds(Rule.INITIAl_POS, makeAvailableList(root.getJSONObject("initial")));
+        initialRule.addDirection(Rule.INITIAL_POS);
+        initialRule.addAvailableIds(Rule.INITIAL_POS, makeAvailableList(root.getJSONObject("initial")));
 
         if (info.getString("type").equals("list"))
             parseListIdTypeFile();

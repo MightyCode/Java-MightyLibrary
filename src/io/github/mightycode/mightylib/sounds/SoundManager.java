@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.sounds;
 
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.sound.SoundLoader;
 import io.github.mightycode.mightylib.utils.math.KeyTree;
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
@@ -10,6 +11,7 @@ import org.lwjgl.openal.ALCCapabilities;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static java.sql.Types.NULL;
@@ -17,20 +19,6 @@ import static org.lwjgl.openal.AL10.*;
 import static org.lwjgl.openal.ALC10.*;
 
 public class SoundManager {
-    private static SoundManager instance;
-
-    public static void initSoundManager(String gainTree){
-        instance = new SoundManager(gainTree);
-    }
-
-    public static SoundManager getInstance() {
-        if (instance == null) {
-            throw new RuntimeException("Sound Manager not initialized");
-        }
-
-        return instance;
-    }
-
     private long device;
     private long context;
 
@@ -47,7 +35,12 @@ public class SoundManager {
 
     private final KeyTree<String, Float> gainTree;
 
-    private SoundManager (String gainPath){
+    // The sounds are data of this Resources
+    private final Resources resources;
+
+    public SoundManager(Resources resources, String gainPath){
+        this.resources = resources;
+        resources.setSoundBufferDetacher(this::detachBuffer);
         listener = new SoundListener();
 
         awaitedNewSounds = new ArrayList<>();
@@ -56,7 +49,7 @@ public class SoundManager {
         gainTree = new KeyTree<>();
         // No gain tree: every sound keeps a gain of 1
         if (gainPath != null)
-            SoundLoader.loadGainTree(gainPath, gainTree);
+            SoundLoader.loadGainTree(resources.folder() + gainPath, gainTree);
     }
 
 
@@ -81,7 +74,7 @@ public class SoundManager {
 
     public SoundSource createSoundSource(SoundSourceCreationInfo creationInfo){
         SoundSourceCreationInfo safeInfo = creationInfo.copy();
-        SoundSource source = new SoundSource(safeInfo.gainNode);
+        SoundSource source = new SoundSource(resources, safeInfo.name, safeInfo.gainNode, safeInfo.owned);
         safeInfo.startTimer();
 
         safeInfo.managerId = soundsSource.size();
@@ -112,6 +105,13 @@ public class SoundManager {
         SoundSourceCreationInfo info;
         for (int i = awaitedNewSounds.size() - 1; i >= 0; --i){
             info = awaitedNewSounds.get(i);
+
+            // Released before its delay ended: never created, deleted from the list below
+            if (soundsSource.get(info.managerId).isReleased()) {
+                awaitedNewSounds.remove(i);
+                continue;
+            }
+
             info.updateTimer();
 
             if (info.isTimerFinished()) {
@@ -134,20 +134,37 @@ public class SoundManager {
         for (int i = soundsSource.size() - 1; i >= 0; --i) {
             source = soundsSource.get(i);
 
-            if (source.isStopped() && source.hadPlayed()) {
+            // An owned source lives until released; the others until they stop (hadPlayed first: a source still
+            // waiting for its delay has no OpenAL name to query)
+            if (source.isReleased() || (!source.isOwned() && source.hadPlayed() && source.isStopped()))
                 removeAt(i);
-            }
+            else
+                source.resumeIfLoaded();
         }
     }
 
+
+    // Read-only view, for inspection (command sounds)
+    public List<SoundSource> getSources(){
+        return Collections.unmodifiableList(soundsSource);
+    }
+
+    public List<KeyTreeNode<String, Float>> getGainNodes(){
+        return gainTree.nodes();
+    }
+
+    // Product of the values of the node and its ancestors (1 for an unknown node)
+    public float getNodeGain(String name){
+        return calculateGain(name);
+    }
 
     private float calculateGain(String name){
         float gain = 1.0f;
         KeyTreeNode<String, Float> node = gainTree.getNode(name);
 
         while(node != null){
-            if (node.value != null)
-                gain *= node.value;
+            if (node.getValue() != null)
+                gain *= node.getValue();
 
             //System.out.println(node.getKey());
             node = node.parent();
@@ -182,11 +199,8 @@ public class SoundManager {
     }
 
     // Before deleting a buffer: the sources still holding it let it go
-    public static void DetachBuffer(int bufferId) {
-        if (instance == null)
-            return;
-
-        for (SoundSource source : instance.soundsSource)
+    private void detachBuffer(int bufferId) {
+        for (SoundSource source : soundsSource)
             source.detachBuffer(bufferId);
     }
 
@@ -202,6 +216,9 @@ public class SoundManager {
         for(SoundSource sounds : soundsSource){
             sounds.unload();
         }
+        // Deleted sources: the buffers deleted afterwards must not be detached from them (AL_INVALID_NAME)
+        soundsSource.clear();
+        awaitedNewSounds.clear();
 
         return true;
     }

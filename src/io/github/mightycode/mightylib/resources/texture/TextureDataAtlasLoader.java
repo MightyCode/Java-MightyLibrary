@@ -20,7 +20,7 @@ public class TextureDataAtlasLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, "resources");
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override

@@ -11,8 +11,8 @@ import org.joml.Vector4f;
 public class MatrixRenderer {
 
     /**
-     * HeatMap use a gradiant of color, black to red, red to yellow, then yellow to white
-     * ColorInterval use a gradiant between two given colors
+     * HeatMap use a gradient of color, black to red, red to yellow, then yellow to white
+     * ColorInterval use a gradient between two given colors
      */
     public enum EMatrixRendererMode {
         HeatMap,

@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.utils.LoadingElement;
 import io.github.mightycode.mightylib.utils.math.UUID;
 
@@ -14,9 +16,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * workers only run initWithFile and internLoad on a data that Resources does not touch meanwhile.
  */
 public abstract class DataType extends UUID implements LoadingElement {
-    protected final Resources resources;
 
     protected final String dataName;
+
+    // The Resources managing this data, set when it registers it (see attachTo); null before.
+    // Volatile: owned resources are registered by worker threads
+    private volatile Resources owner;
 
     // Volatile: written by the main thread, read by any thread
     // Step where data are read from disk and dependencies are listed
@@ -64,14 +69,11 @@ public abstract class DataType extends UUID implements LoadingElement {
     public enum TYPE_SET_UP {
         IMMEDIATELY_IN_CURRENT_CONTEXT,
         MAIN_CONTEXT,
-        THREAD_CONTEXT,
-        // Read by a worker (preload), computed on the main thread (load): GL data that read files (shaders)
-        THREAD_PRELOAD_MAIN_LOAD
+        THREAD_CONTEXT
     }
 
     public DataType(TYPE_SET_UP typeSetUp, String dataName){
         super();
-        resources = Resources.getInstance();
 
         this.dataName = dataName;
         this.correctlyLoaded = false;
@@ -81,6 +83,36 @@ public abstract class DataType extends UUID implements LoadingElement {
         references = Collections.synchronizedList(new ArrayList<>());
         dependencies = new CopyOnWriteArrayList<>();
         manuallyCreated = true;
+    }
+
+    // Called by Resources when it registers this data (or creates it as a reload copy): a data has a single owner.
+    // Also by the data that builds another one outside the registry (a map building its atlas)
+    public final void attachTo(Resources resources) {
+        Resources current = owner;
+        if (current == resources)
+            return;
+        if (current != null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + dataName
+                    + " is already managed by another Resources");
+
+        owner = resources;
+    }
+
+    // The Resources managing this data; fails while the data is not registered (created but not added yet)
+    protected final Resources resources() {
+        Resources current = owner;
+        if (current == null)
+            throw new IllegalStateException(getClass().getSimpleName() + " " + dataName
+                    + " is not registered in a Resources");
+
+        return current;
+    }
+
+    // The Resources managing this data, or those of the current view while it is not attached yet: for the data built
+    // by code, which reads other data before being added (an atlas listing textures by name)
+    protected final Resources resourcesOrCurrent() {
+        Resources current = owner;
+        return current != null ? current : Views.engine().resources();
     }
 
     final void setNotManuallyCreated(){
@@ -136,7 +168,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         dependencies.remove(dependency);
     }
 
-    public final boolean canBeLoad(){
+    public final boolean canBeLoaded(){
         for (DataType dependency : dependencies){
             if (!dependency.isLoaded()){
                 return false;
@@ -174,16 +206,6 @@ public abstract class DataType extends UUID implements LoadingElement {
     }
 
     protected abstract boolean internLoad();
-
-    /**
-     * For a load done in several steps (shader compilation): true after an internLoad that returned true but left work.
-     * Resources then runs internLoad again as a new step, so other steps can go between. The data is loaded
-     * when internLoad returns true and this is false. Left unfinished (data no longer wanted), the data is released
-     * by internCancelPreload.
-     */
-    protected boolean loadContinues() {
-        return false;
-    }
 
     // Load step run by Resources (maybe on a worker): the state is set afterward by loadDone, on the main thread
     final boolean runLoad() {
@@ -231,6 +253,23 @@ public abstract class DataType extends UUID implements LoadingElement {
         return 0;
     }
 
+    /**
+     * The GL element a batch listing this data sends to the card during the loading ("gpu": false in the batch to
+     * skip it): its class and name, the key the renderers use to share it, null when the data has none.
+     */
+    public Class<? extends GLElement> glElementType() {
+        return null;
+    }
+
+    public String glElementName() {
+        return dataName;
+    }
+
+    // Called once per element registered (main thread), only when glElementType is not null
+    public GLElement createGLElement() {
+        throw new UnsupportedOperationException(getClass().getSimpleName() + " has no GL element");
+    }
+
     public final int getVersion() {
         return version;
     }
@@ -256,6 +295,12 @@ public abstract class DataType extends UUID implements LoadingElement {
     protected void swapContent(DataType copy) {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " has a reload copy but no swapContent");
     }
+
+    /**
+     * Main thread: the copy could not read or load the new version, this data keeps its content. It can keep what
+     * the copy found out meanwhile (the files to watch: a missing include, ShaderData). Nothing by default.
+     */
+    protected void reloadFailed(DataType copy) {}
 
     // A data managed by its owner outside Resources changed its content (see TextureDataAtlas.replaceContentWith)
     protected final void markContentChanged() {

@@ -14,14 +14,18 @@ import java.util.Set;
 
 public class DebugInfoCamera2D implements IUpdatableDisplayable {
     protected Camera2D camera;
-    public final Text Text;
+    private final Text text;
     private final Set<String> info = new HashSet<>();
 
     private int precision = 2;
 
+    public Text text() {
+        return text;
+    }
+
     public DebugInfoCamera2D(){
-        Text = new Text();
-        Text.setReference(EDirection.LeftUp).setAlignment(ETextAlignment.Left)
+        text = new Text();
+        text.setReference(EDirection.LeftUp).setAlignment(ETextAlignment.Left)
                 .setPosition(new Vector2f(0, 0))
                 .setColor(ColorList.Purple())
                 .setFont("arial").setFontSize(25);
@@ -31,7 +35,7 @@ public class DebugInfoCamera2D implements IUpdatableDisplayable {
 
     public DebugInfoCamera2D(Camera2D camera){
         this();
-        Text.setReferenceCamera(camera);
+        text.setReferenceCamera(camera);
     }
 
     public DebugInfoCamera2D init(Camera2D camera){
@@ -41,7 +45,7 @@ public class DebugInfoCamera2D implements IUpdatableDisplayable {
     public DebugInfoCamera2D init(Camera2D camera, Vector2f position){
         this.camera = camera;
 
-        this.Text.setPosition(position);
+        this.text.setPosition(position);
 
         return this;
     }
@@ -86,17 +90,17 @@ public class DebugInfoCamera2D implements IUpdatableDisplayable {
 
         }
 
-        Text.setText(result.toString());
+        text.setText(result.toString());
     }
 
     @Override
     public void display() {
-        Text.display();
+        text.display();
     }
 
     @Override
     public void unload() {
-        Text.unload();
+        text.unload();
         info.clear();
         info.add("id");
     }

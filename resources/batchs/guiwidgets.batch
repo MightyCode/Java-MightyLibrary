@@ -1,0 +1,12 @@
+{
+    "batchs" : [
+        {
+            "type" : "SoundData",
+            "files" : [
+                "chime"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}

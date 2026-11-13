@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.network;
 
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.Resources;
 
 import java.util.ArrayList;
@@ -19,6 +20,9 @@ public abstract class CommunicationThread extends Thread {
     protected NetworkConfiguration configuration;
 
 
+    // The thread runs apart from the engine: the resources are taken from the view that creates it
+    private final Resources resources = Views.engine().resources();
+
     CommunicationThread(){
         // Named for profilers and thread dumps, daemon so it never keeps the program alive
         super("MightyLibrary-Network");
@@ -29,7 +33,7 @@ public abstract class CommunicationThread extends Thread {
     }
 
     public void setup(String configurationName){
-        configuration = Resources.getInstance().getResource(NetworkConfiguration.class,
+        configuration = resources.getResource(NetworkConfiguration.class,
                 configurationName);
 
         messageIdCounter = 0;

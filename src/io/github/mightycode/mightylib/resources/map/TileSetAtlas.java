@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources.map;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureDataAtlas;
 import org.joml.Vector2i;
 
@@ -38,7 +39,8 @@ public class TileSetAtlas {
     }
 
     // The tilesets are loaded (dependencies of the map), so are their textures or their fallback
-    boolean build() {
+    boolean build(Resources resources) {
+        textureAtlas.attachTo(resources);
         for (TileSet tileset : tilesets)
             textureAtlas.addTexture(tileset.textureData());
 

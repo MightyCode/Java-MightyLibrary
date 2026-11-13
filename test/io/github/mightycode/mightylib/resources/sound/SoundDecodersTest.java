@@ -22,7 +22,7 @@ class SoundDecodersTest {
     }
 
     private static double seconds(SoundLoadInfo info) {
-        return (double) info.Buffer.remaining() / info.Channel / info.SampleRate;
+        return (double) info.getBuffer().remaining() / info.getChannels() / info.getSampleRate();
     }
 
     @Test
@@ -34,16 +34,16 @@ class SoundDecodersTest {
 
         try {
             for (SoundLoadInfo info : new SoundLoadInfo[]{ogg, wav, mp3, flac}) {
-                assertTrue(info.nativeBuffer);
-                assertTrue(info.Channel == 1 || info.Channel == 2);
-                assertTrue(info.SampleRate >= 8000);
-                assertTrue(info.Buffer.remaining() > 0);
-                assertEquals(0, info.Buffer.remaining() % info.Channel, "whole frames");
+                assertTrue(info.isNativeBuffer());
+                assertTrue(info.getChannels() == 1 || info.getChannels() == 2);
+                assertTrue(info.getSampleRate() >= 8000);
+                assertTrue(info.getBuffer().remaining() > 0);
+                assertEquals(0, info.getBuffer().remaining() % info.getChannels(), "whole frames");
                 // Not silent
                 boolean sound = false;
-                while (info.Buffer.hasRemaining())
-                    sound |= Math.abs(info.Buffer.get()) > 100;
-                info.Buffer.rewind();
+                while (info.getBuffer().hasRemaining())
+                    sound |= Math.abs(info.getBuffer().get()) > 100;
+                info.getBuffer().rewind();
                 assertTrue(sound);
             }
 

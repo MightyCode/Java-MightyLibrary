@@ -65,17 +65,17 @@ class SoundDecodingTest {
 
     @Test
     void releaseFreesOnlyNativeBuffers() {
-        SoundLoadInfo info = new SoundLoadInfo();
-        info.Buffer = MemoryUtil.memAllocShort(16);
-        info.nativeBuffer = true;
+        SoundLoadInfo info = new SoundLoadInfo(1, 44100, MemoryUtil.memAllocShort(16), true);
         info.release();
-        assertNull(info.Buffer);
-        assertFalse(info.nativeBuffer);
+        assertNull(info.getBuffer());
+        assertFalse(info.isNativeBuffer());
+        // Released twice: nothing freed twice
+        info.release();
 
         // A GC managed buffer must never be passed to memFree
-        info.Buffer = org.lwjgl.BufferUtils.createShortBuffer(16);
+        info = new SoundLoadInfo(1, 44100, org.lwjgl.BufferUtils.createShortBuffer(16), false);
         info.release();
-        assertNull(info.Buffer);
+        assertNull(info.getBuffer());
     }
 
     @Test

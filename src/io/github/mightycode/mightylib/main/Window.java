@@ -1,40 +1,40 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.resources.texture.Icon;
-import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.Callbacks;
-import org.lwjgl.opengl.GL;
-import org.lwjgl.opengl.GL43;
-import org.lwjgl.opengl.GLCapabilities;
-import org.lwjgl.opengl.GLUtil;
-import org.lwjgl.opengl.KHRDebug;
-import org.lwjgl.system.Callback;
+import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
 
-
 import java.nio.IntBuffer;
+
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
-import static org.lwjgl.opengl.GL13.glActiveTexture;
-import static org.lwjgl.opengl.GL32C.GL_PROGRAM_POINT_SIZE;
 import static org.lwjgl.system.MemoryStack.stackPush;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 /**
- * Class of the game's main structure.
- *
- * @author MightyCode
- * @version of game : 2.2
+ * A GLFW window with its OpenGL context, shown as its DisplaySettings say (windowed, exclusive fullscreen or
+ * borderless). Changing the display keeps the window, its context, its objects and its input callbacks.
  */
 public final class Window {
     private final WindowInfo info;
 
-    // Only set when OpenGL error checks are enabled
-    private Callback debugMessageCallback;
+    private GLContext glContext;
+
+    // Window this one belongs to, 0 for none
+    private long parentWindowId;
+    // Display applied to the window (its own copy)
+    private DisplaySettings display;
+    // Last position in WINDOWED mode, to come back there from another mode; null: centered
+    private Vector2i windowedPosition;
+    // The display was changed while the window was minimized: placed when it is restored
+    private boolean displayWaitsRestore;
+    // Draws the window again from its refresh callback (Context.redrawWindow), null before it joins a context
+    private Runnable redrawAction;
 
     public WindowInfo getInfo() { return info; }
 
@@ -48,116 +48,275 @@ public final class Window {
         info.virtualRatio = 1;
 
         info.windowName = "";
-        info.fullscreen = false;
+        display = new DisplaySettings();
+        info.mode = display.getMode();
     }
 
     Window(WindowCreationInfo wci){
         info = new WindowInfo();
         info.windowId = 0;
 
-        info.size = new Vector2i(wci.Size);
-        info.ratio = (float) info.size.x / (float) info.size.y;
-        info.virtualSize = new Vector2i(wci.VirtualSize);
-        info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
-
         info.windowName = wci.WindowName;
-        info.fullscreen = wci.Fullscreen;
-        info.monitor = wci.Monitor;
+        parentWindowId = wci.ParentWindowId;
+        display = wci.Display.copy();
+        info.mode = display.getMode();
+        info.monitor = display.getMonitor();
+
+        setSizeInfo(display.sizeOn(ScreenSize(monitorHandle())));
+        info.virtualSize = wci.VirtualSize != null ? new Vector2i(wci.VirtualSize) : new Vector2i(info.size);
+        info.virtualRatio = (float) info.virtualSize.x / (float) info.virtualSize.y;
     }
 
-    public void createNewWindow(){
+    // ---- Screen ----
+
+    // Screen of the given settings: the chosen one, else the primary one
+    static long ScreenHandle(DisplaySettings display) {
+        return display.getMonitor() != null ? display.getMonitor().getHandle() : glfwGetPrimaryMonitor();
+    }
+
+    private long monitorHandle() {
+        return ScreenHandle(display);
+    }
+
+    // Current video mode of the screen, null if unknown
+    private static Vector2i ScreenSize(long monitorHandle) {
+        GLFWVidMode mode = monitorHandle == NULL ? null : glfwGetVideoMode(monitorHandle);
+        return mode == null ? null : new Vector2i(mode.width(), mode.height());
+    }
+
+    // Refresh rate asked in fullscreen: the given one, else the current one of the screen
+    private int refreshRate(long monitorHandle) {
+        if (display.getRefreshRate() > 0)
+            return display.getRefreshRate();
+
+        GLFWVidMode mode = monitorHandle == NULL ? null : glfwGetVideoMode(monitorHandle);
+        return mode == null ? GLFW_DONT_CARE : mode.refreshRate();
+    }
+
+    // ---- Creation ----
+
+    /**
+     * Create the window and its OpenGL context, shared with the given one (the engine's hidden root context)
+     * so that textures, buffers and programs are usable here too. On failure the window stays not created.
+     */
+    public void createNewWindow(GLContext shareWith){
         if (info.windowId != 0)
             destroyWindow();
 
+        long monitorHandle = monitorHandle();
+        boolean fullscreen = display.getMode() == EWindowMode.FULLSCREEN;
+
         // Configure GLFW for this window
-        glfwDefaultWindowHints(); // optional, the current window hints are already the default
-
-        glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE); // the window will stay hidden after creation
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        GLContext.applyWindowHints();
+        applyModeHints(display);
+        if (fullscreen)
+            glfwWindowHint(GLFW_REFRESH_RATE, refreshRate(monitorHandle));
 
         // Active AntiAliasing
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        // A debug context lets the driver report OpenGL errors itself, with a readable message
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, Logger.DO_CHECK ? GLFW_TRUE : GLFW_FALSE);
-
-        long monitorHandle = info.monitor != null ? info.monitor.getHandle() : glfwGetPrimaryMonitor();
-
-        if (info.fullscreen)
-            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, monitorHandle, NULL);
-        else
-            info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, NULL, NULL);
-
-        System.out.println("\nWindow with id : " + info.windowId + " created");
+        long share = shareWith != null ? shareWith.getWindowHandle() : NULL;
+        info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, fullscreen ? monitorHandle : NULL, share);
 
         if (info.windowId == NULL) {
-            System.out.println("Window won't created");
+            System.err.println("--Window \"" + info.windowName + "\" can't be created (see the GLFW error above)");
+            return;
         }
 
-        // Get the thread stack and push a new frame
-        try (MemoryStack stack = stackPush()) {
-            IntBuffer pWidth = stack.mallocInt(1); // int*
-            IntBuffer pHeight = stack.mallocInt(1); // int*
+        System.out.println("\nWindow with id : " + info.windowId + " created (" + display + ")");
 
-            // Get the window size passed to glfwCreateWindow
-            glfwGetWindowSize(info.windowId, pWidth, pHeight);
-
-            // Center the window in the work area (without the task bar) of its screen, still hidden
-            IntBuffer areaX = stack.mallocInt(1), areaY = stack.mallocInt(1);
-            IntBuffer areaWidth = stack.mallocInt(1), areaHeight = stack.mallocInt(1);
-            glfwGetMonitorWorkarea(monitorHandle, areaX, areaY, areaWidth, areaHeight);
-
-            if (!info.fullscreen) {
-                glfwSetWindowPos(
-                        info.windowId,
-                        areaX.get(0) + Math.max(0, (areaWidth.get(0) - pWidth.get(0)) / 2),
-                        areaY.get(0) + Math.max(0, (areaHeight.get(0) - pHeight.get(0)) / 2)
-                );
-            }
-            // the stack frame is popped automatically
-        } catch (Error e){
-            info.windowId = 0;
+        // Placed while still hidden (on Wayland the compositor places it)
+        if (!fullscreen && WindowPlatform.CanPlaceWindows()) {
+            Vector2i position = position(monitorHandle);
+            glfwSetWindowPos(info.windowId, position.x, position.y);
         }
 
-        /*new GLFWImage.Buffer();*/
+        // Above its parent, not in the task bar
+        if (parentWindowId != 0)
+            NativeWindowOwner.set(info.windowId, parentWindowId);
 
-        //glfwSetWindowIcon(info.windowId, );
+        // Resized by the user (resizable window) or by the system: the viewport follows on the next frame. The size
+        // is read again, the one given can be older than a change made meanwhile (nested resizing)
+        glfwSetFramebufferSizeCallback(info.windowId, (window, width, height) -> readFramebufferSize());
+        glfwSetWindowIconifyCallback(info.windowId, (window, iconified) -> onIconified(iconified));
+        // The system asks for a new image (resizing, uncovering) while the loop may be waiting
+        glfwSetWindowRefreshCallback(info.windowId, window -> {
+            if (redrawAction != null)
+                redrawAction.run();
+        });
 
-        // Make the OpenGL context current
-        bindWindow();
+        // Make the OpenGL context current, with the default state of the engine's contexts
+        glContext = GLContext.ofWindow(info.windowName, info.windowId);
+        glContext.setVsync(display.isVsync());
 
         // Make the window visible
         glfwShowWindow(info.windowId);
-        GLCapabilities capabilities = GL.createCapabilities();
-        if (Logger.DO_CHECK)
-            setupDebugMessages(capabilities);
 
-        glfwSwapInterval(0);
-
+        readFramebufferSize();
         setViewPort(info.size.x, info.size.y);
-
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
-
-        // Enable antiAliasing
-        glEnable(GL_MULTISAMPLE);
-
-        glEnable(GL_PROGRAM_POINT_SIZE);
-
-        wantExit();
     }
 
+    // Border, resizing and minimizing of a window about to be created
+    private static void applyModeHints(DisplaySettings display) {
+        boolean windowed = display.getMode() == EWindowMode.WINDOWED;
+        glfwWindowHint(GLFW_DECORATED, windowed && display.isDecorated() ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_RESIZABLE, windowed && display.isResizable() ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_AUTO_ICONIFY, display.minimizesOnFocusLoss() ? GLFW_TRUE : GLFW_FALSE);
+    }
+
+    // The same on an existing window
+    private void applyModeAttributes() {
+        boolean windowed = display.getMode() == EWindowMode.WINDOWED;
+        glfwSetWindowAttrib(info.windowId, GLFW_DECORATED, windowed && display.isDecorated() ? GLFW_TRUE : GLFW_FALSE);
+        glfwSetWindowAttrib(info.windowId, GLFW_RESIZABLE, windowed && display.isResizable() ? GLFW_TRUE : GLFW_FALSE);
+        glfwSetWindowAttrib(info.windowId, GLFW_AUTO_ICONIFY, display.minimizesOnFocusLoss() ? GLFW_TRUE : GLFW_FALSE);
+    }
+
+    /**
+     * Position of the window out of exclusive fullscreen: the corner of its screen when borderless; in a window its
+     * last windowed position, else centered on its parent, else centered in the work area (without the task bar).
+     */
+    private Vector2i position(long monitorHandle) {
+        try (MemoryStack stack = stackPush()) {
+            IntBuffer x = stack.mallocInt(1), y = stack.mallocInt(1);
+            IntBuffer width = stack.mallocInt(1), height = stack.mallocInt(1);
+
+            if (display.getMode() == EWindowMode.BORDERLESS) {
+                glfwGetMonitorPos(monitorHandle, x, y);
+                return new Vector2i(x.get(0), y.get(0));
+            }
+
+            if (windowedPosition != null)
+                return new Vector2i(windowedPosition);
+
+            if (parentWindowId != 0) {
+                glfwGetWindowPos(parentWindowId, x, y);
+                glfwGetWindowSize(parentWindowId, width, height);
+                return new Vector2i(x.get(0) + (width.get(0) - info.size.x) / 2, y.get(0) + (height.get(0) - info.size.y) / 2);
+            }
+
+            glfwGetMonitorWorkarea(monitorHandle, x, y, width, height);
+            return new Vector2i(x.get(0) + Math.max(0, (width.get(0) - info.size.x) / 2),
+                    y.get(0) + Math.max(0, (height.get(0) - info.size.y) / 2));
+        }
+    }
+
+    // ---- Display ----
+
+    // A copy of the display applied to the window
+    public DisplaySettings getDisplay() { return display.copy(); }
+
+    /**
+     * Show the window as the settings say, at once: its OpenGL context, its objects and its input callbacks stay
+     * (recreating the window would lose them all). The virtual size doesn't change. Called by
+     * WindowContext.setDisplay, which keeps a single exclusive fullscreen window per screen.
+     */
+    void applyDisplay(DisplaySettings wanted) {
+        DisplaySettings previous = display;
+        display = wanted.copy();
+        info.mode = display.getMode();
+        info.monitor = display.getMonitor();
+
+        long monitorHandle = monitorHandle();
+        setSizeInfo(display.sizeOn(ScreenSize(monitorHandle)));
+
+        if (!info.isWindowCreated())
+            return;
+
+        glContext.setVsync(display.isVsync());
+
+        boolean minimized = glfwGetWindowAttrib(info.windowId, GLFW_ICONIFIED) == GLFW_TRUE;
+
+        // Where the window was, to come back there (a minimized one has no real position); a new screen centers it
+        if (ScreenHandle(previous) != monitorHandle)
+            windowedPosition = null;
+        else if (previous.getMode() == EWindowMode.WINDOWED && !minimized && WindowPlatform.CanPlaceWindows())
+            windowedPosition = currentPosition();
+
+        if (minimized) {
+            // The system gives a restored window its former placement back, after any change made now: the display
+            // is placed once the window is restored (onIconified). An exclusive fullscreen window is minimized
+            // as soon as it loses the focus, so this happens with several windows.
+            displayWaitsRestore = true;
+            glfwRestoreWindow(info.windowId);
+            return;
+        }
+
+        place();
+    }
+
+    // Border, screen, position and size of the window as its display says
+    private void place() {
+        long monitorHandle = monitorHandle();
+        // Computed again: info.size follows the real window, which a restoring changes meanwhile
+        setSizeInfo(display.sizeOn(ScreenSize(monitorHandle)));
+        applyModeAttributes();
+
+        if (display.getMode() == EWindowMode.FULLSCREEN) {
+            glfwSetWindowMonitor(info.windowId, monitorHandle, 0, 0, info.size.x, info.size.y, refreshRate(monitorHandle));
+        } else {
+            // Wayland ignores the position, the parent is not read there
+            Vector2i position = WindowPlatform.CanPlaceWindows() ? position(monitorHandle) : new Vector2i();
+            glfwSetWindowMonitor(info.windowId, NULL, position.x, position.y, info.size.x, info.size.y, GLFW_DONT_CARE);
+        }
+
+        // The screen may give a close resolution only
+        readFramebufferSize();
+        System.out.println("--Window \"" + info.windowName + "\" : " + display + ", " + info.size.x + "x" + info.size.y);
+    }
+
+    // Called while the system restores the window: placed out of it, at the next frame
+    private void onIconified(boolean iconified) {
+        if (iconified || !displayWaitsRestore)
+            return;
+
+        displayWaitsRestore = false;
+        MainThread.execute(() -> {
+            if (info.isWindowCreated())
+                place();
+        });
+    }
+
+    private Vector2i currentPosition() {
+        try (MemoryStack stack = stackPush()) {
+            IntBuffer x = stack.mallocInt(1), y = stack.mallocInt(1);
+            glfwGetWindowPos(info.windowId, x, y);
+            return new Vector2i(x.get(0), y.get(0));
+        }
+    }
+
+    private void readFramebufferSize() {
+        try (MemoryStack stack = stackPush()) {
+            IntBuffer width = stack.mallocInt(1), height = stack.mallocInt(1);
+            glfwGetFramebufferSize(info.windowId, width, height);
+
+            // A minimized window has an empty framebuffer: the last size stays
+            if (width.get(0) > 0 && height.get(0) > 0)
+                setSizeInfo(new Vector2i(width.get(0), height.get(0)));
+        }
+    }
+
+    // In place: scenes and cameras keep the reference of getSizeRef
+    private void setSizeInfo(Vector2i size) {
+        info.size.set(size);
+        info.ratio = (float) size.x / (float) size.y;
+    }
+
+    // ---- Frame ----
+
+    void setRedrawAction(Runnable redrawAction) {
+        this.redrawAction = redrawAction;
+    }
 
     public boolean wantExit(){
         return glfwWindowShouldClose(info.windowId) && info.isWindowCreated();
     }
 
+
+    // The OpenGL context of the window must be current; the events are polled once for all the windows (glfwPollEvents)
+    public void swapBuffers(){
+        glfwSwapBuffers(info.windowId);
+    }
 
     public void swapBuffersAndPollEvents(){
         glfwSwapBuffers(info.windowId);
@@ -172,51 +331,35 @@ public final class Window {
         }
     }
 
-    public void setFullscreen(boolean fullscreen){
-        if (info.isWindowCreated()) {
-            if (info.fullscreen != fullscreen){
-                destroyWindow();
-            }
-        }
-
-        info.fullscreen = fullscreen;
-        if (info.isWindowCreated()) createNewWindow();
-    }
-
     public void setIcon(Icon icon){
+        // Wayland takes the icon from the .desktop file of the application
+        if (!WindowPlatform.CanSetWindowIcon())
+            return;
         glfwSetWindowIcon(info.windowId, icon.getBuffer());
     }
 
+    // The OpenGL context of this window, where the objects that are not shared (vertex arrays, framebuffers) live
+    public GLContext getGLContext() { return glContext; }
+
+    // Make the OpenGL context of this window the current one
     public void bindWindow() {
-        glfwMakeContextCurrent(info.windowId);
+        glContext.makeCurrent();
     }
 
 
     /**
-     * Destroy the current window.
+     * Destroy the current window and its OpenGL context.
      */
-    private void setupDebugMessages(GLCapabilities capabilities) {
-        debugMessageCallback = GLUtil.setupDebugMessageCallback(System.err);
-        if (debugMessageCallback == null) {
-            System.err.println("OpenGL debug messages are not supported by this driver");
-            return;
-        }
-
-        // Notifications are very frequent and not errors: only keep low, medium and high severity messages
-        if (capabilities.OpenGL43)
-            GL43.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL43.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
-        else if (capabilities.GL_KHR_debug)
-            KHRDebug.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, KHRDebug.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
-    }
-
     public void destroyWindow(){
-        if (debugMessageCallback != null) {
-            debugMessageCallback.free();
-            debugMessageCallback = null;
+        Screenshot.cancelRequests(info.windowId);
+
+        if (glContext != null) {
+            glContext.destroy();
+            glContext = null;
         }
 
         if (info.isWindowCreated()) {
-            // Input callbacks (text, scroll) set on this window by the managers: their native part is freed with it
+            // Callbacks set on this window (inputs, framebuffer size): their native part is freed with it
             Callbacks.glfwFreeCallbacks(info.windowId);
             glfwDestroyWindow(info.windowId);
             System.out.println("Window with id : " + info.windowId + " deleted");
@@ -239,13 +382,17 @@ public final class Window {
     }
 
 
+    /** The size in WINDOWED mode: applied now in a window, kept for later in the other modes. */
     public void setSize(int width, int height){
-        info.size.x = width;
-        info.size.y = height;
-        info.ratio = (float) info.size.x / (float) info.size.y;
-        if (info.isWindowCreated())
-            glfwSetWindowSize(info.windowId, info.size.x, info.size.y);
+        display.setWindowedSize(width, height);
+        if (display.getMode() != EWindowMode.WINDOWED)
+            return;
 
+        setSizeInfo(new Vector2i(width, height));
+        if (info.isWindowCreated()) {
+            glfwSetWindowSize(info.windowId, width, height);
+            readFramebufferSize();
+        }
     }
 
 

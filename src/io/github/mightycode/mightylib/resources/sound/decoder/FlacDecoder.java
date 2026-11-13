@@ -47,12 +47,7 @@ public class FlacDecoder implements SoundDecoder {
                 builder.append(interleaved, 0, size * channels);
             }
 
-            SoundLoadInfo info = new SoundLoadInfo();
-            info.Channel = channels;
-            info.SampleRate = stream.sampleRate;
-            info.Buffer = builder.finish();
-            info.nativeBuffer = true;
-            return info;
+            return new SoundLoadInfo(channels, stream.sampleRate, builder.finish(), true);
         } catch (ResourceException | CancellationException e) {
             throw e;
         } catch (Exception e) {

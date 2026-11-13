@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.sounds.SoundDataType;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import org.lwjgl.stb.STBVorbisInfo;
 
+import java.nio.ShortBuffer;
 import java.util.concurrent.CancellationException;
 
 public class OggDecoder implements SoundDecoder {
@@ -16,12 +17,9 @@ public class OggDecoder implements SoundDecoder {
     @Override
     public SoundLoadInfo decode(String path, Runnable checkCancelled) {
         try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-            SoundLoadInfo result = new SoundLoadInfo();
-            result.Buffer = SoundDataType.readVorbis(path, 32 * 1024, info, checkCancelled, SoundDataType.DECODE_CHUNK_SAMPLES);
-            result.nativeBuffer = true;
-            result.Channel = info.channels();
-            result.SampleRate = info.sample_rate();
-            return result;
+            ShortBuffer samples = SoundDataType.readVorbis(path, 32 * 1024, info, checkCancelled,
+                    SoundDataType.DECODE_CHUNK_SAMPLES);
+            return new SoundLoadInfo(info.channels(), info.sample_rate(), samples, true);
         } catch (ResourceException | CancellationException e) {
             throw e;
         } catch (Exception e) {

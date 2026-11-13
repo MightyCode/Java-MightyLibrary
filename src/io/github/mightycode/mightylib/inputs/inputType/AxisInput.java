@@ -1,21 +1,19 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
+import io.github.mightycode.mightylib.inputs.InputAxis;
+
 /**
- * A named axis of the game (MOVE_X, LOOK_X...) and its binding, read with InputManager.getAxis(id).
- * Ids come from InputManager.getAndIncrementId(), like the actions.
+ * Binding of a registered axis (MOVE_X, LOOK_X...) in an InputManager, read with InputManager.getAxis(axis).
  */
 public class AxisInput {
-    private final int axisId;
-    private final String axisName;
-    private final IAxis axis;
+    private final InputAxis axis;
+    private final IAxis binding;
 
-    public AxisInput(int axisId, String axisName, IAxis axis) {
-        this.axisId = axisId;
-        this.axisName = axisName;
+    public AxisInput(InputAxis axis, IAxis binding) {
         this.axis = axis;
+        this.binding = binding;
     }
 
-    public int axisId() { return axisId; }
-    public String axisName() { return axisName; }
-    public IAxis axis() { return axis; }
+    public InputAxis axis() { return axis; }
+    public IAxis axisBinding() { return binding; }
 }

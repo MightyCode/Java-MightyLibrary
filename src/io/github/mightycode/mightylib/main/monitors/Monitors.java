@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main.monitors;
 
+import io.github.mightycode.mightylib.main.WindowPlatform;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;
@@ -46,17 +47,42 @@ public final class Monitors {
 
                 monitors.add(new MonitorInfo(i, handle, name == null ? "monitor" + i : name, handle == primary,
                         x.get(0), y.get(0), width, height, refreshRate,
-                        workX.get(0), workY.get(0), workWidth.get(0), workHeight.get(0)));
+                        workX.get(0), workY.get(0), workWidth.get(0), workHeight.get(0), VideoModes(handle)));
             }
         }
 
         return monitors;
     }
 
+    // Supported modes of a screen, GLFW sorts them from the smallest to the largest
+    private static List<VideoMode> VideoModes(long handle) {
+        GLFWVidMode.Buffer modes = glfwGetVideoModes(handle);
+        if (modes == null)
+            return Collections.emptyList();
+
+        List<VideoMode> list = new ArrayList<>(modes.limit());
+        for (int i = 0; i < modes.limit(); ++i) {
+            GLFWVidMode mode = modes.get(i);
+            list.add(new VideoMode(mode.width(), mode.height(), mode.refreshRate()));
+        }
+
+        return list;
+    }
+
     // Monitor whose area contains the center of the window, null if none (window between screens or not created)
     public static MonitorInfo OfWindow(long windowId, List<MonitorInfo> monitors) {
         if (windowId == NULL)
             return null;
+
+        // Wayland gives no window position: only the screen of a fullscreen window is known
+        if (!WindowPlatform.CanPlaceWindows()) {
+            long monitor = glfwGetWindowMonitor(windowId);
+            for (MonitorInfo info : monitors) {
+                if (info.getHandle() == monitor)
+                    return info;
+            }
+            return null;
+        }
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
             IntBuffer x = stack.mallocInt(1), y = stack.mallocInt(1);

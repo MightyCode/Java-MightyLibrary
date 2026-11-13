@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.sound.decoder.*;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import io.github.mightycode.mightylib.utils.math.KeyTree;
@@ -61,7 +60,7 @@ public class SoundLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, Resources.FOLDER);
+        exploreResourcesFile(data, resources().folder());
     }
 
     @Override
@@ -97,8 +96,8 @@ public class SoundLoader extends ResourceLoader {
             throw new ResourceException("unsupported sound format: " + path);
 
         SoundLoadInfo info = decoder.decode(path, sound::checkCancelled);
-        if (info.Channel != 1 && info.Channel != 2) {
-            int channels = info.Channel;
+        if (info.getChannels() != 1 && info.getChannels() != 2) {
+            int channels = info.getChannels();
             info.release();
             throw new ResourceException("sound with " + channels + " channels (mono or stereo only): " + path);
         }
@@ -107,9 +106,8 @@ public class SoundLoader extends ResourceLoader {
     }
 
 
+    // The path is complete (folder of the resources included)
     public static void loadGainTree(String gainTreePath, KeyTree<String, Float> gainTree){
-        gainTreePath = Resources.FOLDER + gainTreePath;
-
         JSONObject obj = new JSONObject(FileMethods.readFileAsString(gainTreePath));
 
         Iterator<String> arrayNodes = obj.keys();
