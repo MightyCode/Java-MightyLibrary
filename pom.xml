@@ -13,7 +13,7 @@
         <maven.compiler.target>11</maven.compiler.target>
         <lwjgl.version>3.3.6</lwjgl.version>
         <joml.version>1.10.3</joml.version>
-        <json.version>20231013</json.version>
+        <json.version>20260719</json.version>
         <errorprone.version>2.52.0</errorprone.version>
         <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
         <jacoco.version>0.8.16</jacoco.version>
