@@ -66,6 +66,9 @@ python tools/scenario.py "scene Scene2D" wait-loaded "?gl summary" "input ESCAPE
 - Fluidité d'un chargement : `python tools/scenario.py "scene GLLoading" "stats reset" wait-loaded stats` (`reset` après `scene` exclut le tick qui exécute `init`). Préchargement : `scene PreloadScene`, puis `resources batch <batch>` et `input ENTER`.
 - Fuite à la main : `gl` sur une scène, allers-retours, `gl` à nouveau : compteurs et références identiques.
 
+## Intégration continue (GitHub Actions)
+`.github/workflows/ci.yml` : à chaque push (branches de sujet comprises), `mvn -B test` sur Ubuntu avec JDK 21 (environ 45 s) ; une PR affiche le résultat de son dernier commit. Les tests n'ont besoin ni de fenêtre ni de GL, mais le runner n'a que 2 cœurs : un test ne doit pas supposer le nombre de cœurs de la machine (`WorkersTestAccess.ensureThreads`). Échec : `gh run list --branch <branche>` puis `gh run view <id> --log-failed`. Simuler le runner en local : `mvn -o -q test -DargLine=-XX:ActiveProcessorCount=2`. La CI ne remplace pas `scenario.py` (rendu, scènes, fuites).
+
 ## Analyse statique (`tools/analyse.py`)
 `python tools/analyse.py` : profil Maven `analyse` (`mvn -P analyse process-classes`, une sortie à part dans `target/static-analysis`, `target/classes` du jeu intact), environ 30 s. Error Prone s'exécute dans `javac` (forké, avec les `--add-exports` du JDK 17+ ; avertissements dans `target/static-analysis.log`), SpotBugs lit ensuite le bytecode (`spotbugsXml.xml`). Aucun constat ne fait échouer le build.
 - Sortie : nombre de constats par motif et par zone (`lib`/`demo`), les motifs des catégories à risque de `bonnes-pratiques.md` (point 11) en premier (`*`). `--details MOTIF…` : `fichier:ligne | outil motif | message` (préfixe du nom) ; `--details-all` ; `--no-run` relit le dernier résultat.
