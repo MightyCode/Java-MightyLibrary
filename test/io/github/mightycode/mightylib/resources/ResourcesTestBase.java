@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
+import io.github.mightycode.mightylib.main.WorkersTestAccess;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
@@ -38,6 +39,7 @@ abstract class ResourcesTestBase {
     @BeforeEach
     void setUp() throws IOException {
         MainThreadTestAccess.setCurrentAsMain();
+        WorkersTestAccess.ensureThreads(WORKERS);
 
         Files.createDirectories(folder.resolve("batchs"));
 
