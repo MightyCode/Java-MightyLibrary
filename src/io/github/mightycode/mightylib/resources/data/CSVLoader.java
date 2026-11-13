@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.resources.ResourceLoader;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,7 +56,7 @@ public class CSVLoader extends ResourceLoader {
         List<String[]> dataList = new ArrayList<>();
         String[] data;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(csv.path()))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(csv.path(), StandardCharsets.UTF_8))) {
             while ((line = br.readLine()) != null) {
                 data = line.split(csvSplitBy);
 

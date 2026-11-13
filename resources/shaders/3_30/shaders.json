@@ -15,6 +15,13 @@
 			],
 			"tags" : ["2D"]
 		},
+		"customStar2D": {
+			"files": [
+				"2D/complex/customStar2DV.glsl",
+				"2D/complex/customStar2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
 		"colorEllipse2D": {
 			"files": [
 				"2D/essential/colorEllipse2DV.glsl",
@@ -99,8 +106,5 @@
 			],
 			"tags" : ["2D"]
 		}
-	},
-	"library" : {
-		"colorsManipulation" : "utils/colorsManipulation.glsl"
 	}
 }

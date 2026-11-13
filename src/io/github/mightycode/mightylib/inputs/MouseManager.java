@@ -119,19 +119,26 @@ public class MouseManager {
     }
 
     public boolean buttonPressed(int buttonID){
-        return !captured && state[buttonID] && !oldState[buttonID];
+        return !captured && !edgesDropped && state[buttonID] && !oldState[buttonID];
     }
 
     public boolean buttonReleased(int buttonID){
-        return !captured && !state[buttonID] && oldState[buttonID];
+        return !captured && !edgesDropped && !state[buttonID] && oldState[buttonID];
     }
 
-    // ---- Capture (InputManager.setCaptured): the console owns the mouse, the game sees no button, no scroll,
-    // no movement and a cursor out of the window ----
+    // ---- Focus (InputManager.focus()): an owner (the console, a text field) owns the mouse, the game sees no
+    // button, no scroll, no movement and a cursor out of the window ----
     private static final float NOWHERE = -1_000_000f;
     private boolean captured;
+    // The focus changed during this tick: its presses, releases and scroll are for nobody (until postUpdate)
+    private boolean edgesDropped;
 
     void setCaptured(boolean captured) { this.captured = captured; }
+
+    void dropEdges() {
+        edgesDropped = true;
+        mouseScroll.set(0);
+    }
 
     public boolean isCaptured() { return captured; }
 
@@ -143,16 +150,19 @@ public class MouseManager {
     // Position of the cursor in window pixels (origin at the top left, like simulateMove), not the virtual one
     public Vector2f getRawPos() { return new Vector2f(windowPos); }
 
+    // Position of the cursor in virtual coordinates (pos() without the capture): to place it in the GUI of the owner
+    public Vector2f getRawVirtualPos() { return new Vector2f(pos); }
+
     public boolean getRawButton(int buttonId) {
         return isButton(buttonId) && state[buttonId];
     }
 
     public boolean rawButtonPressed(int buttonId) {
-        return isButton(buttonId) && state[buttonId] && !oldState[buttonId];
+        return !edgesDropped && isButton(buttonId) && state[buttonId] && !oldState[buttonId];
     }
 
     public boolean rawButtonReleased(int buttonId) {
-        return isButton(buttonId) && !state[buttonId] && oldState[buttonId];
+        return !edgesDropped && isButton(buttonId) && !state[buttonId] && oldState[buttonId];
     }
 
     private static boolean isButton(int buttonId) {
@@ -276,6 +286,7 @@ public class MouseManager {
     public boolean isBlocked() { return blocked; }
 
     public void postUpdate(){
+        edgesDropped = false;
         oldPos.set(pos);
         mouseUpdate();
         if (blocked) {

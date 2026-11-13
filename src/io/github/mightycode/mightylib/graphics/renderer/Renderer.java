@@ -1,11 +1,10 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
-import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.GLResources;
-import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.graphics.shader.Shader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
@@ -16,36 +15,63 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 
-public class Renderer extends UUID implements IDisplayable {
-    protected GLResources glResources = Views.engine().glResources();
-    protected Resources resources = Views.engine().resources();
+/**
+ * Base of every renderer: transform, program (shader), shader values, OpenGL state of the draw (RenderState),
+ * visibility and reference camera. It has no geometry: MeshRenderer draws one Mesh, ModelRenderer a model.
+ * The program, the values and the state are grouped apart from the transform (a future shareable Material).
+ *
+ * A subclass implements draw() and can redefine the hooks updateShader() and applyRenderState();
+ * display() calls them in this order: applyRenderState, program in use, updateShader, draw.
+ */
+public abstract class Renderer extends UUID implements IDisplayable {
+    // Belong to the engine of the view that creates the renderer
+    private final GLResources glResources = Views.engine().glResources();
+    private final Resources resources = Views.engine().resources();
 
-    protected Camera referenceCamera;
+    private Camera referenceCamera;
 
-    protected Shape shape;
+    private final Vector3f position;
+    private final Vector3f scale;
+    private final Vector3f rotation;
+    private float angle;
 
-    protected final Vector3f position;
-    protected final Vector3f scale;
-    protected final Vector3f rotation;
-    protected float angle;
-
-    protected Matrix4f model;
+    private final Matrix4f model;
 
     private boolean visible;
 
-    // Textures channels
-    protected IRenderTextureBindable mainTexture;
-    protected IRenderTextureBindable[] textures;
+    // Program of the shader, held (urgent reference) until unload
+    private final Shader shader;
+    private boolean shaderReleased;
+    // Depth and culling of each draw, by default from the tag of the shader (2D: no depth)
+    private final RenderState renderState;
 
-    // Colored
-    protected HashMap<String, ShaderValue> shaderValues;
+    /*
+     * Every value this renderer sends, sent again at each draw (filtered by the program, which skips unchanged ones):
+     * the program can change at any time (fallback while loading, hot reload) and has none of them at first.
+     */
+    private final HashMap<String, ShaderValue> shaderValues;
+    // Keys of the values sent only when the current program has their uniform, never reported missing (generic ones)
+    private final HashSet<String> optionalValues;
 
-    public Renderer(String shaderName, boolean useEbo) {
-        shape = new Shape(shaderName, useEbo);
+    /*
+     * Takes the program of the shader (the fallback one while it loads or when it failed); the tag of the shader
+     * chooses the default camera (2D or 3D) and the default depth state (2D: neither test nor write).
+     */
+    protected Renderer(String shaderName) {
+        // Unknown or failed: the fallback data, whose program is linked from the start
+        ShaderData shaderData = resources.getResourceOrFallback(ShaderData.class, shaderName);
+        shader = (Shader) glResources.acquire(shaderData, true);
+        boolean in2D = shaderData.isDimension2DShader();
+
+        renderState = new RenderState(!in2D, !in2D, false);
+
         model = new Matrix4f().identity();
 
         shaderValues = new HashMap<>();
+        optionalValues = new HashSet<>();
 
         visible = true;
 
@@ -53,62 +79,134 @@ public class Renderer extends UUID implements IDisplayable {
         scale = new Vector3f(1f);
         rotation = new Vector3f();
 
-        mainTexture = null;
-
-        referenceCamera = null;
-
-        if (shape.getShader().getLink(ShaderManager.GENERIC_PROJECTION_FIELD_NAME) != -1){
-            if (shape.is2DPurpose())
-                shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
-                        Views.current().camera2D().getProjection());
-            else
-                shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
-                        Views.current().camera3D().getView());
-        }
-
-        if (shape.getShader().getLink(ShaderManager.GENERIC_VIEW_FIELD_NAME) != -1){
-            if (shape.is2DPurpose()) {
-                shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
-                        Views.current().camera2D().getView());
-            }
-            else
-                shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME,
-                        Views.current().camera3D().getProjection());
+        // Generic matrices: sent at each draw when the current program uses them
+        if (in2D) {
+            putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera2D().getProjection());
+            putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera2D().getView());
+        } else {
+            putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera3D().getProjection());
+            putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera3D().getView());
         }
 
         applyModel();
 
-        if (shape.getShader().getLink(ShaderManager.GENERIC_MODEL_FIELD_NAME) != -1) {
-            shaderValues.put(ShaderManager.GENERIC_MODEL_FIELD_NAME,
-                    new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
+        putOptionalValue(ShaderManager.GENERIC_MODEL_FIELD_NAME,
+                new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
+    }
+
+    protected final Resources resources() {
+        return resources;
+    }
+
+    protected final GLResources glResources() {
+        return glResources;
+    }
+
+    // The camera given to setReferenceCamera, null when the default camera of the view is used
+    protected final Camera getReferenceCamera() {
+        return referenceCamera;
+    }
+
+    // A value sent only when the current program has its uniform (not reported missing otherwise)
+    protected void putOptionalValue(String key, ShaderValue value) {
+        shaderValues.put(key, value);
+        optionalValues.add(key);
+    }
+
+    // The program if linked, otherwise the fallback one (failed or still loading), always linked
+    public Shader getShader() {
+        return shader.isLoaded() ? shader : glResources.fallbackShader();
+    }
+
+    // True when the current program of this renderer has this uniform
+    protected boolean hasUniform(String name) {
+        return getShader().getLink(name) != -1;
+    }
+
+    // Send the values of this renderer to the current program (the unchanged ones are skipped by it)
+    protected void sendShaderValues() {
+        for (Map.Entry<String, ShaderValue> entry : shaderValues.entrySet()) {
+            ShaderValue value = entry.getValue();
+            if (optionalValues.contains(entry.getKey()) && !hasUniform(value.getName()))
+                continue;
+
+            sendToShader(value);
         }
     }
 
+    // Not meant to be redefined: redefine the hooks instead (a subclass may still check a condition, then call super)
     public void display(){
         if(visible) {
+            applyRenderState();
+            getShader().use();
             updateShader();
             draw();
+            renderState.restore();
         }
     }
 
+    // Hook: sets the OpenGL state of the draw (depth, culling) before the program is used; call super to keep it
+    protected void applyRenderState() {
+        renderState.apply();
+    }
+
+    public Renderer setDepthTest(boolean depthTest) {
+        renderState.setDepthTest(depthTest);
+        return this;
+    }
+
+    public boolean isDepthTest() {
+        return renderState.isDepthTest();
+    }
+
+    public Renderer setDepthWrite(boolean depthWrite) {
+        renderState.setDepthWrite(depthWrite);
+        return this;
+    }
+
+    public boolean isDepthWrite() {
+        return renderState.isDepthWrite();
+    }
+
+    public Renderer setFaceCulling(boolean faceCulling) {
+        renderState.setFaceCulling(faceCulling);
+        return this;
+    }
+
+    public boolean isFaceCulling() {
+        return renderState.isFaceCulling();
+    }
+
+    /*
+     * Hook called with the program in use, before draw: sends the values of this renderer. A subclass binds its
+     * textures or sends values computed at each draw here, and calls super (or sendShaderValues).
+     */
     public void updateShader(){
-        if (mainTexture != null)
-            mainTexture.bindRenderTexture(0);
-
-        if (textures != null) {
-            for (int i = 0; i < textures.length; ++i) {
-                if (textures[i] != null)
-                    textures[i].bindRenderTexture(i + 1);
-            }
-        }
-
-        for (ShaderValue value : shaderValues.values()){
-            sentToShader(value);
-        }
+        sendShaderValues();
     }
+
+    // Hook: draws the geometry, with the program in use and the values sent (one or several draw calls)
+    public abstract void draw();
 
     public Renderer addShaderValue(String name, Class<?> type, Object object){
         shaderValues.put(name, new ShaderValue(name, type, object));
+        optionalValues.remove(name);
+
+        return this;
+    }
+
+    public boolean hasShaderValue(String name) {
+        return shaderValues.containsKey(name);
+    }
+
+    // The value sent under this name, null when there is none
+    public ShaderValue getShaderValue(String name) {
+        return shaderValues.get(name);
+    }
+
+    public Renderer removeShaderValue(String name) {
+        shaderValues.remove(name);
+        optionalValues.remove(name);
 
         return this;
     }
@@ -125,17 +223,18 @@ public class Renderer extends UUID implements IDisplayable {
                 continue;
 
             other.shaderValues.put(value.getName(), value);
+            if (optionalValues.contains(value.getName()))
+                other.optionalValues.add(value.getName());
+            else
+                other.optionalValues.remove(value.getName());
         }
 
         return other;
     }
 
-    protected void sentToShader(ShaderValue value) {
-        shape.getShader().sendValueToShader(value);
-    }
-
-    public void draw(){
-        shape.display();
+    // Send one value to the current program (skipped by it when unchanged)
+    protected void sendToShader(ShaderValue value) {
+        getShader().sendValueToShader(value);
     }
 
     public void setPosition(Vector3f position){
@@ -231,92 +330,15 @@ public class Renderer extends UUID implements IDisplayable {
         return this;
     }
 
-    public void setMainTextureChannel(String name) {
-        setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(name), name));
-    }
-
-    public void setMainTextureChannel(String name, String nameOfUniform) {
-        shape.getShader().sendValueToShader(
-                new ShaderValue(nameOfUniform, Integer.class, 0)
-        );
-
-        setMainTextureChannel(name);
-    }
-
-    public void setMainTextureChannel(IRenderTextureBindable texture) {
-        if (mainTexture instanceof GLElement) {
-            if (texture instanceof GLElement) {
-                if (mainTexture == texture) {
-                    glResources.releaseResource((GLElement) texture);
-                    return;
-                }
-            }
-
-            glResources.releaseResource((GLElement) mainTexture);
-        }
-
-        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
-        mainTexture = texture;
-    }
-
-    public void addTextureChannel(String name, String nameOfUniform, int channelNumber) {
-        if (textures == null || channelNumber <= 0)
-            return;
-
-        if (channelNumber > textures.length)
-            return;
-
-        addTextureChannel(
-                glResources.addElementOrReturnIfPresent(Texture.class, new Texture(resources, name), name),
-                nameOfUniform, channelNumber);
-    }
-
-    public void addTextureChannel(IRenderTextureBindable texture, String nameOfUniform, int channelNumber) {
-        shape.getShader().sendValueToShader(
-                new ShaderValue(nameOfUniform, Integer.class, channelNumber)
-        );
-
-        shape.enableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
-
-        if (textures == null)
-            textures = new IRenderTextureBindable[30];
-        else {
-            if (textures[channelNumber - 1] instanceof GLElement)
-                glResources.releaseResource((GLElement) textures[channelNumber - 1]);
-        }
-
-        textures[channelNumber - 1] = texture;
-    }
-
-
-    public ShaderValue setColorMode(Color4f color, boolean disableTexture) {
+    public ShaderValue setColorMode(Color4f color) {
         ShaderValue value = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
         shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
-
-        if (disableTexture)
-            shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
 
         return value;
     }
 
-
-    public ShaderValue setColorMode(Color4f color) {
-        return setColorMode(color, true);
-    }
-
     public void setNoColorNoTextureMode() {
-        shape.disableVbo(Shape.COMMON_TEXTURE_POSITION_CHANNEL);
-
-        shaderValues.remove(ShaderManager.GENERIC_COLOR_FIELD_NAME);
-    }
-
-
-    public Shape getShape(){
-        return shape;
-    }
-
-    public void setShape(Shape shape){
-        this.shape = shape;
+        removeShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME);
     }
 
     public Vector3f position(){
@@ -338,21 +360,16 @@ public class Renderer extends UUID implements IDisplayable {
             return;
 
         referenceCamera = camera;
-        shaderValues.put(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, camera.getProjection());
-        shaderValues.put(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
+        putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, camera.getProjection());
+        putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
     }
 
+    // A subclass releases what it created, then calls super (the program)
     public void unload() {
-        shape.unload();
-
-        if (mainTexture instanceof GLElement)
-            glResources.releaseResource((GLElement) mainTexture);
-
-        if (textures != null) {
-            for (IRenderTextureBindable texture : textures) {
-                if (texture instanceof GLElement)
-                    glResources.releaseResource((GLElement) texture);
-            }
+        // Given back once: unload can be called twice
+        if (!shaderReleased) {
+            glResources.releaseResource(shader);
+            shaderReleased = true;
         }
     }
 }

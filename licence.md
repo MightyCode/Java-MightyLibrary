@@ -19,7 +19,7 @@ Le moteur et ses démos sont **gratuits** : tant que c'est le cas, rien de ce qu
 |---|---|---|---|---|
 | LWJGL (core, glfw, opengl, openal, stb, assimp) | 3.3.6 | BSD-3-Clause | fenêtre, GL, son, décodage ogg, modèles | garder l'avis de copyright et la licence |
 | JOML | 1.10.3 | MIT | mathématiques 3D | garder l'avis |
-| org.json | 20231013 | Domaine public (selon le `pom.xml`) | JSON | aucune ; pas la vieille licence « Good, not Evil » de json.org |
+| org.json | 20260719 | Domaine public (selon le `pom.xml`) | JSON | aucune ; pas la vieille licence « Good, not Evil » de json.org |
 | JBox2D (`jbox2d-library`) | 2.2.1.1 | BSD-2-Clause (Daniel Murphy) | physique 2D | garder l'avis |
 | opensimplex (`com.raylabz`) | 1.0.3 | Apache 2.0 | bruit | garder l'avis, le texte de la licence et un éventuel fichier `NOTICE` |
 | JLayer (`javazoom:jlayer`) | 1.0.1 | **LGPL** | décodage mp3 | avis et texte de la LGPL ; l'utilisateur doit pouvoir remplacer le jar, voir ci-dessous |
@@ -49,7 +49,7 @@ Les jars `natives-windows` / `natives-linux` embarquent des bibliothèques C :
 
 ## Outils de test et de build (non distribués)
 
-JUnit 5 (EPL 2.0, tests seulement), Maven et ses plugins (Apache 2.0), Error Prone (Apache 2.0) et SpotBugs (LGPL 2.1), ces deux derniers seulement dans le profil `analyse` (analyse statique, jamais dans le jar). Rien à joindre à un jeu.
+JUnit 5 (EPL 2.0, tests seulement), Maven et ses plugins (Apache 2.0), Error Prone (Apache 2.0) et SpotBugs (LGPL 2.1), seulement dans le profil `analyse` (analyse statique), et JaCoCo (EPL 2.0), seulement dans le profil `coverage` : jamais dans le jar. Rien à joindre à un jeu.
 
 ## Licence du projet : GPL v3
 
@@ -76,6 +76,7 @@ Choix à faire par l'auteur au moment du projet payant, pas avant. Si le modèle
 | `models/weapon`, `models/world/tree`, `models/basicShape` | inconnu | **inconnu** |
 | `textures/world/*.png`, `gui/*`, `shaderEffects/*`, `icon/icon.ico` | inconnu (peut-être créés par l'auteur) | **à confirmer** |
 | `sounds/select*` (ogg, wav, mp3, flac) | inconnu (probablement créés par l'auteur) | **à confirmer** |
+| `sounds/chime.wav` | généré par programme pour le projet (arpège de cloches, mono) | aucune |
 | shaders GLSL (`resources/shaders`) | écrits pour le projet, techniques de LearnOpenGL (`docs/techniquegraphique.md`) | les idées ne sont pas protégées ; vérifier tout code copié |
 
 Tant que le projet reste gratuit et non commercial, ce tableau est informatif. Pour un projet payant : tant que la provenance d'une ressource n'est pas écrite, on ne peut pas dire si elle est redistribuable. Pour une version publique (jar sur JitPack ou Maven Central), les ressources de la démo sont séparées de la bibliothèque : **la bibliothèque seule n'a besoin que des polices et textures dont elle a vraiment besoin au démarrage** (la police de l'écran de chargement, `error`).

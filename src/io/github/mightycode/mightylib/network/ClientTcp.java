@@ -52,7 +52,7 @@ public class ClientTcp {
         try {
             if (socket != null && socket.isConnected()) {
                 OutputStream outputStream = socket.getOutputStream();
-                outputStream.write(message.getBytes());
+                outputStream.write(message.getBytes(StandardCharsets.UTF_8));
                 outputStream.flush();
                 //System.out.println("[Debug] Client sent message: " + message);
             } else {

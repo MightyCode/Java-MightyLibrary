@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.game;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.map.*;
 import io.github.mightycode.mightylib.resources.texture.Texture;
@@ -11,7 +11,7 @@ import org.joml.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TileMapRenderer extends Renderer {
+public class TileMapRenderer extends MeshRenderer {
     // Tile of the map using an animation: where it is in the buffers, to update only its texture position
     private static class AnimatedTileInstance {
         private final int bufferIndex;
@@ -114,13 +114,13 @@ public class TileMapRenderer extends Renderer {
 
         this.leftUpPosition = new Vector2f(0, 0);
 
-        shape.setEboStorage(Shape.STATIC_STORE);
-        shape.setEbo(new int[0]);
+        getMesh().setEboStorage(Mesh.STATIC_STORE);
+        getMesh().setEbo(new int[0]);
 
-        positionIndex = shape.addVboFloat(new float[0],
-                2, (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
-        textureIndex = shape.addVboFloat(new float[0],
-                2,  (willChange) ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE);
+        positionIndex = getMesh().addVboFloat(new float[0],
+                2, (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
+        textureIndex = getMesh().addVboFloat(new float[0],
+                2,  (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
 
         animatedTiles = new ArrayList<>();
 
@@ -147,7 +147,7 @@ public class TileMapRenderer extends Renderer {
         this.tileMapVersion = tilemap.getVersion();
         this.tileSetAtlas = tilemap.tileSetAtlas();
         // The same element as the one a batch listing the map sends during the loading
-        atlasTexture = glResources.addElementOrReturnIfPresent(Texture.class, tilemap.createGLElement(), tilemap.glElementName());
+        atlasTexture = glResources().addElementOrReturnIfPresent(Texture.class, tilemap.createGLElement(), tilemap.glElementName());
         setMainTextureChannel(atlasTexture);
 
         loadGeneralInformation();
@@ -177,8 +177,8 @@ public class TileMapRenderer extends Renderer {
     }
 
     private void loadTileMapInformation() {
-        leftUpPosition.x = position.x;
-        leftUpPosition.y = position.y;
+        leftUpPosition.x = position().x;
+        leftUpPosition.y = position().y;
 
         switch(this.reference){
             case None:
@@ -271,9 +271,9 @@ public class TileMapRenderer extends Renderer {
             }
         }
 
-        shape.setEbo(tilesIndices);
-        shape.updateVbo(tilesTexturePosition, textureIndex);
-        shape.updateVbo(tilesPosition, positionIndex);
+        getMesh().setEbo(tilesIndices);
+        getMesh().updateVbo(tilesTexturePosition, textureIndex);
+        getMesh().updateVbo(tilesPosition, positionIndex);
     }
 
     public void update(){
@@ -304,7 +304,7 @@ public class TileMapRenderer extends Renderer {
         if (tilemap.hasBeenUpdated())
             loadTileMapInformation();
         else if (animationChanged)
-            shape.updateVbo(tilesTexturePosition, textureIndex);
+            getMesh().updateVbo(tilesTexturePosition, textureIndex);
     }
 
     private void updateAnimatedTileTexture(AnimatedTile animatedTile) {
@@ -405,9 +405,9 @@ public class TileMapRenderer extends Renderer {
     public void reset() {
         this.tilemap = null;
         this.tileSetAtlas = null;
-        shape.setEbo(new int[0]);
-        shape.updateVbo(new float[0], positionIndex);
-        shape.updateVbo(new float[0], textureIndex);
+        getMesh().setEbo(new int[0]);
+        getMesh().updateVbo(new float[0], positionIndex);
+        getMesh().updateVbo(new float[0], textureIndex);
 
         animatedTiles.clear();
     }

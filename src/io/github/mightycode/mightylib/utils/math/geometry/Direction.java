@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.utils.math.geometry;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
+import java.util.Locale;
+
 public abstract class Direction {
     public static EDirection addToAnotherDirection(EDirection a, EDirection b) {
         if (a == EDirection.None) return b;
@@ -62,7 +64,7 @@ public abstract class Direction {
     }
 
     public static EDirection strToEDirection(String direction){
-        direction = direction.trim().toLowerCase();
+        direction = direction.trim().toLowerCase(Locale.ROOT);
 
         if (direction.equals("left"))
             return EDirection.Left;
@@ -88,8 +90,8 @@ public abstract class Direction {
     public static EDirection RangedVectorToDirection(Vector2f vector, Vector4f range){
         return NormalizedVectorToDirection(
                 (new Vector2f(
-                        vector.x - range.x / (range.z - range.x),
-                        vector.y - range.y / (range.w - range.y))).mul(2).sub(1, 1)
+                        (vector.x - range.x) / (range.z - range.x),
+                        (vector.y - range.y) / (range.w - range.y))).mul(2).sub(1, 1)
                 );
     }
 

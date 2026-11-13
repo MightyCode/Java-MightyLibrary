@@ -1,12 +1,12 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D.heightMap;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector3f;
 
-public class HeightMapRenderer extends Renderer {
+public class HeightMapRenderer extends MeshRenderer {
     @FunctionalInterface
     public interface IHeightMapper {
         float map(float height, float min, float max);
@@ -40,7 +40,7 @@ public class HeightMapRenderer extends Renderer {
     private final TextureData heightMapTexture;
     public HeightMapRenderer(String heightMapName, boolean willUpdateFrequently) {
         super("multiColoredLighting3D", true);
-        this.heightMapTexture = resources.getResource(TextureData.class, heightMapName);
+        this.heightMapTexture = resources().getResource(TextureData.class, heightMapName);
         heightMapTexture.computeCache();
 
         this.willUpdateFrequently = willUpdateFrequently;
@@ -71,7 +71,7 @@ public class HeightMapRenderer extends Renderer {
             }
         }
 
-        shape.setEbo(indices);
+        getMesh().setEbo(indices);
 
         if (willUpdateFrequently) {
             positions = new float[vertexCount * 3];
@@ -79,11 +79,11 @@ public class HeightMapRenderer extends Renderer {
             normals = new float[vertexCount * 3];
         }
 
-        int store = willUpdateFrequently ? Shape.DYNAMIC_STORE : Shape.STATIC_STORE;
+        int store = willUpdateFrequently ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE;
 
-        shapePosition = shape.addVboFloat(positions, 3, store);
-        colorPosition = shape.addVboInt(colors, 1, store);
-        normalPosition  = shape.addVboFloat(normals, 3, store);
+        shapePosition = getMesh().addVboFloat(positions, 3, store);
+        colorPosition = getMesh().addVboInt(colors, 1, store);
+        normalPosition  = getMesh().addVboFloat(normals, 3, store);
 
         tempColor = new Color4f(1);
     }
@@ -166,9 +166,9 @@ public class HeightMapRenderer extends Renderer {
             }
         }
 
-        shape.updateSubVbo(positions, shapePosition, 0);
-        shape.updateSubVbo(colors, colorPosition, 0);
-        shape.updateSubVbo(normals, normalPosition, 0);
+        getMesh().updateSubVbo(positions, shapePosition, 0);
+        getMesh().updateSubVbo(colors, colorPosition, 0);
+        getMesh().updateSubVbo(normals, normalPosition, 0);
 
         if (!willUpdateFrequently) {
             positions = null;

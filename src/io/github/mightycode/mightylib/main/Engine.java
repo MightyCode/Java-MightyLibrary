@@ -340,8 +340,7 @@ public final class Engine implements IView {
     /** The window the debug commands (input, screenshot, monitors, scene, camera...) work on. */
     public WindowContext commandWindow() {
         // A closed window gives the target back to the main window
-        if (commandWindow != null && !commandWindow.getContext().getWindows().contains(commandWindow)
-                || commandWindow != null && !contexts.getContexts().contains(commandWindow.getContext()))
+        if (commandWindow != null && !isOpen(commandWindow))
             commandWindow = null;
 
         return commandWindow != null ? commandWindow : contexts.getMainWindow();
@@ -349,6 +348,24 @@ public final class Engine implements IView {
 
     public Context commandContext() {
         return commandWindow().getContext();
+    }
+
+    private boolean isOpen(WindowContext window) {
+        return window.getContext().getWindows().contains(window) && contexts.getContexts().contains(window.getContext());
+    }
+
+    /**
+     * The window the command being run works on: the window of the view whose code ran it directly
+     * (Commands.execute from a scene), else the one chosen by the "window" command (console, stdin, debug server).
+     * The commands read their target here, not in commandWindow().
+     */
+    public WindowContext targetWindow() {
+        WindowContext caller = commands.getCallerWindow();
+        return caller != null && isOpen(caller) ? caller : commandWindow();
+    }
+
+    public Context targetContext() {
+        return targetWindow().getContext();
     }
 
     // Null to come back to the main window
@@ -361,7 +378,7 @@ public final class Engine implements IView {
      * one of its context; null if none or several.
      */
     private IView targetedView(List<IView> views) {
-        WindowContext target = commandWindow();
+        WindowContext target = targetWindow();
         IView inContext = null;
         int inContextCount = 0;
         for (IView view : views) {
@@ -476,11 +493,12 @@ public final class Engine implements IView {
             debugServer = null;
         }
 
-        if (soundManager != null)
-            soundManager.unloadSoundSource();
-
         // What every window shows, then the resources, while the OpenGL contexts exist
         contexts.unloadViews();
+
+        // After the scenes (their unload can still stop their sources), before the sound buffers
+        if (soundManager != null)
+            soundManager.unloadSoundSource();
 
         WindowContext mainWindow = contexts.getMainWindow();
         if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated()) {

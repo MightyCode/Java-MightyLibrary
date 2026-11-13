@@ -25,8 +25,10 @@ public enum ECommandLevel {
     /** "user", "cheat" or "dev", case insensitive. @throws IllegalArgumentException otherwise */
     public static ECommandLevel Parse(String text) {
         try {
+            if (text == null)
+                throw new IllegalArgumentException("null");
             return valueOf(text.trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException | NullPointerException e) {
+        } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Unknown command level ->" + text + "<- (user, cheat, dev)");
         }
     }

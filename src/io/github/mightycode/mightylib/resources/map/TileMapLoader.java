@@ -130,6 +130,10 @@ public class TileMapLoader extends ResourceLoader {
         if (layers == null || layerSize == null)
             throw new ResourceException("bad format in " + path + ": missing layerSize or layerNumber");
 
+        for (int i = 0; i < layers.length; ++i)
+            if (layers[i] == null)
+                throw new ResourceException("bad format in " + path + ": layer " + i + " is not described");
+
         tileMap.setInformation(layerSize, layers,
                 layersCategories.toArray(new String[0]),
                 layersCategoriesBeginIndex.stream().mapToInt(i -> i).toArray());

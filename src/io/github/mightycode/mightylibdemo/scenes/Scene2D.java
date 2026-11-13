@@ -48,7 +48,8 @@ public class Scene2D extends Scene {
 
     private EllipseRenderer testEllipseRenderer;
 
-    private PolygonRenderer polygonRenderer;
+    // The same concave polygon, the second one with its vertices in clockwise order
+    private PolygonRenderer polygonRenderer, clockwisePolygonRenderer;
     private int indexVertexReference = 0;
 
     private Camera2D hudCamera;
@@ -200,6 +201,22 @@ public class Scene2D extends Scene {
         polygonRenderer.setSizePix(100, 100);
         polygonRenderer.setPosition(new Vector2f(1500, 300));
         polygonRenderer.setReferenceVertex(indexVertexReference);
+
+        clockwisePolygonRenderer = new PolygonRenderer(
+                "texture2D",
+                Polygon.CreateBuilder()
+                        .addVertex(new Vector2f(0f, 1f))
+                        .addVertex(new Vector2f(1f, 1f))
+                        .addVertex(new Vector2f(1.5f, 0.5f))
+                        .addVertex(new Vector2f(0.5f, 0.5f))
+                        .addVertex(new Vector2f(0.5f, -0.5f))
+                        .addVertex(new Vector2f(0, 0))
+                        .build()
+        );
+
+        clockwisePolygonRenderer.setMainTextureChannel("error");
+        clockwisePolygonRenderer.setSizePix(100, 100);
+        clockwisePolygonRenderer.setPosition(new Vector2f(1500, 500));
     }
 
     public void update() {
@@ -224,6 +241,7 @@ public class Scene2D extends Scene {
         testEllipseRenderer.setRotationZ(rotation.value());
 
         polygonRenderer.setRotationZ(rotation.value());
+        clockwisePolygonRenderer.setRotationZ(rotation.value());
 
         mapRenderer.update();
 
@@ -289,6 +307,7 @@ public class Scene2D extends Scene {
         testEllipseRenderer.display();
 
         polygonRenderer.display();
+        clockwisePolygonRenderer.display();
 
         super.display();
         super.setAndDisplayRealScene();
@@ -307,6 +326,7 @@ public class Scene2D extends Scene {
 
         testEllipseRenderer.unload();
         polygonRenderer.unload();
+        clockwisePolygonRenderer.unload();
 
         mapRenderer.unload();
     }

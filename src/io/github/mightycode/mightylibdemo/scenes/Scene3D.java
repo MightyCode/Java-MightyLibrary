@@ -13,7 +13,7 @@ import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapR
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.inputs.InputManager;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._3D.ModelRenderer;
 import io.github.mightycode.mightylib.resources.models.Model;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
@@ -21,7 +21,7 @@ import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.type.FloatTweening;
 import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
@@ -38,8 +38,8 @@ import java.util.ArrayList;
 
 public class Scene3D extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
-    private Renderer sBlock;
-    private Renderer sphere;
+    private MeshRenderer sBlock;
+    private MeshRenderer sphere;
 
     private ModelRenderer stand;
 
@@ -124,14 +124,15 @@ public class Scene3D extends Scene {
                 .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
 
         // Platform of cubes
-        sBlock = new Renderer("textureDisplacement3D", false);
+        sBlock = new MeshRenderer("textureDisplacement3D", false);
         float[] cratesInfo = createCrates(10);
-        sBlock.getShape().addAllVbo(cratesInfo, new int[]{3, 2}, Shape.STATIC_STORE, Shape.STATIC_STORE);
+        sBlock.getMesh().addAllVbo(cratesInfo, new int[]{3, 2}, Mesh.STATIC_STORE, Mesh.STATIC_STORE);
         sBlock.setMainTextureChannel("container");
         // Displacement texture for cubes/crate
         sBlock.addTextureChannel("dispMap1", "displacementMap", 1);
+        sBlock.addShaderValue("time", Float.class, timeShaderValue.getObjectTyped(Float.class));
 
-        sphere = new Renderer("colorLighting3D", true);
+        sphere = new MeshRenderer("colorLighting3D", true);
         computeSphere(sphere);
         sphere.setScale(new Vector3f(10, 10, 10));
         sphere.setPosition(new Vector3f(20, 10, 10));
@@ -295,7 +296,7 @@ public class Scene3D extends Scene {
         displacementMapTweening.update();
 
         timeShaderValue.setObject(displacementMapTweening.value());
-        sBlock.getShape().getShader().sendValueToShader(timeShaderValue);
+        sBlock.updateShaderValue("time", timeShaderValue.getObjectTyped(Float.class));
 
         rotationTweening.update();
 
@@ -490,7 +491,7 @@ public class Scene3D extends Scene {
         System.arraycopy(value, 0, array, coordStart , value.length);
     }
 
-    private void computeSphere(Renderer renderer){
+    private void computeSphere(MeshRenderer renderer){
         float radius = 1;
         int sector = 70;
         int stack  = 70;
@@ -571,8 +572,8 @@ public class Scene3D extends Scene {
             normals[i++] = (f != null ? f : Float.NaN); // Or whatever default you want.
         }
 
-        renderer.getShape().setEbo(tempIndices.stream().mapToInt(j -> j).toArray());
-        renderer.getShape().addVboFloat(position, 3, Shape.STATIC_STORE);
-        renderer.getShape().addVboFloat(normals, 3, Shape.STATIC_STORE);
+        renderer.getMesh().setEbo(tempIndices.stream().mapToInt(j -> j).toArray());
+        renderer.getMesh().addVboFloat(position, 3, Mesh.STATIC_STORE);
+        renderer.getMesh().addVboFloat(normals, 3, Mesh.STATIC_STORE);
     }
 }

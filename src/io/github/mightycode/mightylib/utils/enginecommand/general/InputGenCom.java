@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.choice;
@@ -51,7 +52,7 @@ public class InputGenCom extends BaseCommand {
     }
 
     private static InputManager inputManager() {
-        return Views.engine().commandWindow().getInputManager();
+        return Views.engine().targetWindow().getInputManager();
     }
 
     // A handler whose mistakes (unknown key or button...) are errors of the command
@@ -336,7 +337,7 @@ public class InputGenCom extends BaseCommand {
         mouseData.put("simulated", mouse.isCursorSimulated());
         // Asked by the game (shown or captured), then what GLFW really does (no capture during the tests)
         mouseData.put("cursorShown", mouse.getCursorState());
-        int cursorMode = GLFW.glfwGetInputMode(Views.engine().commandWindow().getWindow().getInfo().getWindowId(), GLFW.GLFW_CURSOR);
+        int cursorMode = GLFW.glfwGetInputMode(Views.engine().targetWindow().getWindow().getInfo().getWindowId(), GLFW.GLFW_CURSOR);
         mouseData.put("cursorMode", cursorMode == GLFW.GLFW_CURSOR_DISABLED ? "captured" : cursorMode == GLFW.GLFW_CURSOR_HIDDEN ? "hidden" : "normal");
         JSONArray buttons = new JSONArray();
         for (int button = 0; button < MouseManager.MOUSE_BUTTONS; ++button) {
@@ -375,7 +376,7 @@ public class InputGenCom extends BaseCommand {
 
     // left, right, middle or the GLFW number of the button
     static int parseButton(String text) {
-        switch (text.toLowerCase()) {
+        switch (text.toLowerCase(Locale.ROOT)) {
             case "left":
                 return GLFW.GLFW_MOUSE_BUTTON_LEFT;
             case "right":
@@ -394,7 +395,7 @@ public class InputGenCom extends BaseCommand {
     // Name of a GLFW_KEY_ constant without its prefix (ENTER, A, LEFT_SHIFT...) or the GLFW number of the key
     static int parseKey(String text) {
         try {
-            Field field = GLFW.class.getField(KEY_PREFIX + text.toUpperCase());
+            Field field = GLFW.class.getField(KEY_PREFIX + text.toUpperCase(Locale.ROOT));
             if (Modifier.isStatic(field.getModifiers()) && field.getType() == int.class)
                 return field.getInt(null);
         } catch (NoSuchFieldException | IllegalAccessException ignored) {

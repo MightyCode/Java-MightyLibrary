@@ -532,15 +532,18 @@ public class Resources {
         } else if (preload) {
             data.setPreloaded();
         } else if (result.success) {
-            if (data.loadContinues()) {
-                // Part of the load done: the update below queues the next step
-            } else if (data.reloadOf != null && isWanted(data)) {
+            DataType loaded = data.reloadOf != null && isWanted(data) ? data.reloadOf : data;
+            if (loaded != data) {
                 reloads.commit(data);
             } else {
                 data.loadDone(true);
                 dependencies.wakeWaiters(data);
                 reloads.contentChanged(data);
             }
+
+            // Not the first version: the GL elements that failed with a previous one are tried again
+            if (glElementSink != null && loaded.getVersion() > 1)
+                glElementSink.dataReloaded(loaded);
         } else {
             fail(data, "load returned false");
         }

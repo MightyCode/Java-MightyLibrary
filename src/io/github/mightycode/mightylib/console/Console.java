@@ -4,6 +4,9 @@ import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.inputs.text.ClickCounter;
+import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.main.DisplaySettings;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
@@ -69,10 +72,8 @@ public final class Console {
     private ConsoleWindowView windowView;
     private WindowContext window;
 
-    // Window whose inputs the overlay captures
+    // Window whose focus the overlay holds (the key that closes it is not a press for the game: InputFocus)
     private WindowContext captured;
-    // The capture ends after the tick that closed the overlay: the key that closed it is not seen by the game
-    private boolean releaseCapture;
     // Cursor shown by the overlay (a 3D scene may hide it), given back at the end
     private boolean cursorShownBefore = true;
     private boolean displayFailed;
@@ -212,7 +213,7 @@ public final class Console {
             closeWindow();
 
         mode = EMode.CLOSED;
-        releaseCapture = true;
+        releaseNow();
     }
 
     public void toggle() {
@@ -243,8 +244,8 @@ public final class Console {
 
         windowView = view;
         mode = EMode.DETACHED;
-        // The main window gets its inputs back after this tick
-        releaseCapture = true;
+        // The main window gets its inputs back
+        releaseNow();
         focus(window);
     }
 
@@ -255,7 +256,6 @@ public final class Console {
 
         closeWindow();
         mode = EMode.OVERLAY;
-        releaseCapture = false;
         WindowContext main = engine.contexts().getMainWindow();
         capture(main);
         focus(main);
@@ -285,7 +285,7 @@ public final class Console {
         releaseNow();
 
         captured = target;
-        target.getInputManager().setCaptured(true);
+        target.getInputManager().focus().request(this);
         MouseManager mouse = target.getMouseManager();
         cursorShownBefore = mouse.getCursorState();
         if (!cursorShownBefore)
@@ -296,7 +296,7 @@ public final class Console {
         if (captured == null)
             return;
 
-        captured.getInputManager().setCaptured(false);
+        captured.getInputManager().focus().release(this);
         if (!cursorShownBefore)
             captured.getMouseManager().setCursor(false);
         captured = null;
@@ -311,12 +311,6 @@ public final class Console {
 
     /** Beginning of a tick, before the scenes: what is typed is run in this tick. */
     public void update() {
-        if (releaseCapture) {
-            releaseCapture = false;
-            if (mode != EMode.OVERLAY)
-                releaseNow();
-        }
-
         WindowContext main = engine.contexts().getMainWindow();
         InputManager mainInputs = main.getInputManager();
         boolean toggle = mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE);
@@ -416,8 +410,8 @@ public final class Console {
     LogSelection getLogSelection() { return input.getLogSelection(); }
 
     // The clipboard of the system, through the window the console is typed in
-    private static ConsoleInput.IClipboard clipboardOf(WindowContext target) {
-        return new ConsoleInput.IClipboard() {
+    private static IClipboard clipboardOf(WindowContext target) {
+        return new IClipboard() {
             @Override
             public String get() {
                 return target.getSystemInfo().getClipboardContent();

@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.resources.models.Model;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
@@ -12,10 +12,8 @@ import io.github.mightycode.mightylib.utils.Logger;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.*;
-
 /**
- * Display a Model (ModelLoader): one Shape per mesh, sent to the graphic card one mesh per frame
+ * Display a Model (ModelLoader): one Mesh per mesh of the model, sent to the graphic card one mesh per frame
  * within the GLResources budget, meshes are displayed as soon as they are sent.
  * Each mesh binds its diffuse map on unit 0 and its specular map on unit 1.
  */
@@ -28,7 +26,6 @@ public class ModelRenderer extends Renderer {
     private static final int DIFFUSE_UNIT = 0;
     private static final int SPECULAR_UNIT = 1;
 
-    private final String shaderName;
     private final String modelName;
     // The model asked for; the one displayed is its usable version (the fallback cube while it is not loaded)
     private final Model requestedModel;
@@ -37,11 +34,11 @@ public class ModelRenderer extends Renderer {
     private MeshSet pending;
     private String diffuseOverride;
 
-    private boolean bindSpecular;
-    private boolean faceCulling;
+    // Sampler uniforms (specular null when the shader has no specular map), in shaderValues as optional values
+    private String diffuseUniform;
+    private String specularUniform;
 
     private final ShaderValue shininessValue;
-    private final boolean sendShininess;
 
     // Sends the next mesh at each GLResources step
     private final MeshUpload upload;
@@ -51,13 +48,12 @@ public class ModelRenderer extends Renderer {
     }
 
     public ModelRenderer(String shaderName, String modelName) {
-        super(shaderName, true);
-        this.shaderName = shaderName;
+        super(shaderName);
         this.modelName = modelName;
 
         // Unknown, failed or not loaded yet: the fallback cube, replaced once the model is loaded (see rebuildIfChanged)
-        requestedModel = resources.getResourceOrFallback(Model.class, modelName);
-        Model model = resources.usable(Model.class, requestedModel);
+        requestedModel = resources().getResourceOrFallback(Model.class, modelName);
+        Model model = resources().usable(Model.class, requestedModel);
         if (model == null || !model.isLoaded())
             throw new IllegalStateException("Model not loaded : " + modelName + " (load its batch before creating the renderer)");
 
@@ -65,22 +61,21 @@ public class ModelRenderer extends Renderer {
 
         setTextureUniforms(DEFAULT_DIFFUSE_UNIFORM, DEFAULT_SPECULAR_UNIFORM);
 
-        sendShininess = shape.getShader().getLink(SHININESS_UNIFORM) != -1;
         shininessValue = new ShaderValue(SHININESS_UNIFORM, Float.class, 32f);
 
-        faceCulling = true;
+        setFaceCulling(true);
 
-        upload = glResources.addElementOrReturnIfPresent(MeshUpload.class, new MeshUpload(this),
+        upload = glResources().addElementOrReturnIfPresent(MeshUpload.class, new MeshUpload(this),
                 "ModelRenderer/" + modelName + "#" + id());
     }
 
-    // The meshes of one version of the model, each with its own shape, and their textures
+    // The meshes of one version of the model, each with its own Mesh, and their textures
     private final class MeshSet {
         final Model model;
         final int version;
         // A copy: a reloaded model gives its previous list to the copy that unloads it
         final List<ModelMesh> meshes;
-        final Shape[] shapes;
+        final Mesh[] glMeshes;
         final Texture[] diffuseTextures;
         final Texture[] specularTextures;
         int sent;
@@ -89,7 +84,7 @@ public class ModelRenderer extends Renderer {
             this.model = model;
             version = model.getVersion();
             meshes = new ArrayList<>(model.getMeshes());
-            shapes = new Shape[meshes.size()];
+            glMeshes = new Mesh[meshes.size()];
             diffuseTextures = new Texture[meshes.size()];
             specularTextures = new Texture[meshes.size()];
 
@@ -113,15 +108,15 @@ public class ModelRenderer extends Renderer {
                 return true;
 
             ModelMesh mesh = meshes.get(sent);
-            Shape meshShape = new Shape(shaderName, true);
-            meshShape.setEboStorage(Shape.STATIC_STORE);
-            meshShape.addVboFloat(mesh.getPositions(), 3, Shape.STATIC_STORE);
-            meshShape.addVboFloat(mesh.getTextureCoordinates(), 2, Shape.STATIC_STORE);
-            meshShape.addVboFloat(mesh.getNormals(), 3, Shape.STATIC_STORE);
-            meshShape.setEbo(mesh.getIndices());
+            Mesh glMesh = new Mesh(true);
+            glMesh.setEboStorage(Mesh.STATIC_STORE);
+            glMesh.addVboFloat(mesh.getPositions(), 3, Mesh.STATIC_STORE);
+            glMesh.addVboFloat(mesh.getTextureCoordinates(), 2, Mesh.STATIC_STORE);
+            glMesh.addVboFloat(mesh.getNormals(), 3, Mesh.STATIC_STORE);
+            glMesh.setEbo(mesh.getIndices());
             Logger.CheckOpenGLError("Send mesh " + mesh.getName() + " of model " + modelName);
 
-            shapes[sent] = meshShape;
+            glMeshes[sent] = glMesh;
             ++sent;
 
             return complete();
@@ -132,24 +127,24 @@ public class ModelRenderer extends Renderer {
             for (int i = 0; i < diffuseTextures.length; ++i) {
                 Texture previous = diffuseTextures[i];
                 diffuseTextures[i] = takeTexture(textureName);
-                glResources.releaseResource(previous);
+                glResources().releaseResource(previous);
             }
         }
 
         void release() {
             for (int i = 0; i < sent; ++i)
-                shapes[i].unload();
+                glMeshes[i].unload();
 
             for (Texture texture : diffuseTextures)
-                glResources.releaseResource(texture);
+                glResources().releaseResource(texture);
             for (Texture texture : specularTextures)
-                glResources.releaseResource(texture);
+                glResources().releaseResource(texture);
         }
     }
 
     // The model was loaded (the fallback cube was displayed) or reloaded: its meshes are sent apart
     private void rebuildIfChanged() {
-        Model model = resources.usable(Model.class, requestedModel);
+        Model model = resources().usable(Model.class, requestedModel);
         MeshSet latest = pending != null ? pending : shown;
         if (latest.isOf(model))
             return;
@@ -167,7 +162,7 @@ public class ModelRenderer extends Renderer {
         if (name == null)
             name = "error";
 
-        return glResources.addElementOrReturnIfPresent(Texture.class, new Texture(name), name);
+        return glResources().addElementOrReturnIfPresent(Texture.class, new Texture(name), name);
     }
 
     /**
@@ -175,18 +170,21 @@ public class ModelRenderer extends Renderer {
      * Uniforms absent from the shader are ignored.
      */
     public ModelRenderer setTextureUniforms(String diffuseUniform, String specularUniform) {
-        sendSampler(diffuseUniform, DIFFUSE_UNIT);
-        bindSpecular = sendSampler(specularUniform, SPECULAR_UNIT);
+        this.diffuseUniform = setSampler(this.diffuseUniform, diffuseUniform, DIFFUSE_UNIT);
+        this.specularUniform = setSampler(this.specularUniform, specularUniform, SPECULAR_UNIT);
 
         return this;
     }
 
-    private boolean sendSampler(String uniform, int unit) {
-        if (uniform == null || shape.getShader().getLink(uniform) == -1)
-            return false;
+    // The unit of the sampler, sent at each draw when the current program has it
+    private String setSampler(String previous, String uniform, int unit) {
+        if (previous != null)
+            removeShaderValue(previous);
 
-        shape.getShader().sendValueToShader(new ShaderValue(uniform, Integer.class, unit));
-        return true;
+        if (uniform != null)
+            putOptionalValue(uniform, new ShaderValue(uniform, Integer.class, unit));
+
+        return uniform;
     }
 
     // Replace the diffuse map of every mesh (model file without material), kept when the model is reloaded
@@ -200,8 +198,9 @@ public class ModelRenderer extends Renderer {
         return this;
     }
 
+    @Override
     public ModelRenderer setFaceCulling(boolean faceCulling) {
-        this.faceCulling = faceCulling;
+        super.setFaceCulling(faceCulling);
         return this;
     }
 
@@ -237,16 +236,18 @@ public class ModelRenderer extends Renderer {
     public void display() {
         rebuildIfChanged();
 
-        if (!isVisible() || shown.sent == 0)
+        if (shown.sent == 0)
             return;
 
-        for (ShaderValue value : shaderValues.values())
-            sentToShader(value);
+        super.display();
+    }
 
-        boolean sendMeshShininess = sendShininess && !shaderValues.containsKey(SHININESS_UNIFORM);
-
-        if (faceCulling)
-            glEnable(GL_CULL_FACE);
+    // The program of the renderer is used and its values sent once: each mesh only binds its textures
+    @Override
+    public void draw() {
+        // Decided on the current program: it can change (fallback while loading, hot reload)
+        boolean bindSpecular = specularUniform != null && hasUniform(specularUniform);
+        boolean sendMeshShininess = !hasShaderValue(SHININESS_UNIFORM) && hasUniform(SHININESS_UNIFORM);
 
         for (int i = 0; i < shown.sent; ++i) {
             shown.diffuseTextures[i].bindRenderTexture(DIFFUSE_UNIT);
@@ -255,14 +256,12 @@ public class ModelRenderer extends Renderer {
 
             if (sendMeshShininess) {
                 shininessValue.setObject(shown.meshes.get(i).getShininess());
-                sentToShader(shininessValue);
+                sendToShader(shininessValue);
             }
 
-            shown.shapes[i].display();
+            shown.glMeshes[i].bind();
+            shown.glMeshes[i].draw();
         }
-
-        if (faceCulling)
-            glDisable(GL_CULL_FACE);
 
         if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Display model " + modelName);
@@ -270,13 +269,12 @@ public class ModelRenderer extends Renderer {
 
     @Override
     public void unload() {
-        glResources.releaseResource(upload);
+        glResources().releaseResource(upload);
 
         shown.release();
         if (pending != null)
             pending.release();
 
-        // The base shape only gives the shader: no mesh in it
         super.unload();
     }
 
@@ -305,7 +303,7 @@ public class ModelRenderer extends Renderer {
 
         @Override
         public void unload(int remainingMilliseconds) {
-            // The shapes belong to the renderer
+            // The meshes belong to the renderer
         }
     }
 }

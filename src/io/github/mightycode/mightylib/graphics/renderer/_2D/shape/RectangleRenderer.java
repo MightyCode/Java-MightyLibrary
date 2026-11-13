@@ -13,7 +13,7 @@ public class RectangleRenderer extends Shape2DRenderer {
         super(shaderName, true);
 
         face = new RectangularFace();
-        texturePosition = RectangularFace.BasicTexturePosition();
+        setTexturePosition(RectangularFace.BasicTexturePosition());
     }
 
     @Override
@@ -28,7 +28,7 @@ public class RectangleRenderer extends Shape2DRenderer {
 
     @Override
     protected float[] calculateTexturePosition(){
-        return face.textureCornerPosition(texturePosition);
+        return face.textureCornerPosition(getTexturePosition());
     }
 
     public EFlip getTextureFlip() {

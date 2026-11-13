@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.inputs.text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,6 +83,28 @@ public final class CommandLineEditor {
     public void select(int start, int end) {
         selectionAnchor = clamp(start);
         cursor = clamp(end);
+    }
+
+    /** Select the word around the position (a double click), between the separators of Ctrl+Left/Right. */
+    public void selectWordAt(int position) {
+        int index = clamp(position);
+        select(WordStart(text, index), WordEnd(text, index));
+    }
+
+    /** Start of the word around the index (nothing skipped: the index itself on a separator). */
+    public static int WordStart(CharSequence text, int index) {
+        int start = index;
+        while (start > 0 && !IsSeparator(text.charAt(start - 1)))
+            --start;
+        return start;
+    }
+
+    /** End of the word around the index (nothing skipped: the index itself on a separator). */
+    public static int WordEnd(CharSequence text, int index) {
+        int end = index;
+        while (end < text.length() && !IsSeparator(text.charAt(end)))
+            ++end;
+        return end;
     }
 
     /** Remove the selected text: the text that was selected. */
@@ -285,7 +307,7 @@ public final class CommandLineEditor {
     }
 
     // The words are separated by these characters (Ctrl+Left/Right, double click)
-    static boolean IsSeparator(char c) {
+    public static boolean IsSeparator(char c) {
         return Character.isWhitespace(c);
     }
 

@@ -49,7 +49,8 @@ public class WindowContext {
         this.keyboardManager = keyboardManager;
         this.mouseManager = mouseManager;
 
-        this.systemInfo = new SystemInfo(this.window.getInfo());
+        // No window in the tests
+        this.systemInfo = new SystemInfo(this.window == null ? null : this.window.getInfo());
     }
 
     // The context (scene and windows) this window belongs to

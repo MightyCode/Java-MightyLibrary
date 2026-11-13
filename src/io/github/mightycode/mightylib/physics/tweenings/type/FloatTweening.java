@@ -59,6 +59,6 @@ public class FloatTweening extends Tweening<Float> {
 
     @Override
     public Float goalValue() {
-        return null;
+        return endingValue;
     }
 }

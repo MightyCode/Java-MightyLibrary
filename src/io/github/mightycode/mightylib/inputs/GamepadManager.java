@@ -295,7 +295,7 @@ public class GamepadManager {
 
         String content;
         try {
-            content = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+            content = Files.readString(file, StandardCharsets.UTF_8);
         } catch (IOException e) {
             System.err.println("--Gamepad mappings file " + file + " can't be read : " + e.getMessage());
             return false;

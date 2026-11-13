@@ -1,9 +1,9 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
-import io.github.mightycode.mightylib.resources.DataType;
-import io.github.mightycode.mightylib.resources.MultiSourceDataType;
+import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
@@ -13,7 +13,6 @@ import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -22,249 +21,294 @@ import java.util.Set;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
-public class Shader extends MultiSourceDataType {
-    // Uniforms already reported missing, cleared when the program is deleted
-    private Set<String> missingUniforms = new HashSet<>();
-
-    private String vertexContent, fragmentContent;
-    private String geometryContent;
-    private boolean isUsingGeometryShader;
-
-    // The program bound is a state of each OpenGL context (GLContext.currentProgram): the program itself is shared
-
+/**
+ * The program of a ShaderData on the card, compiled and linked in steps (a stage per step, then the link).
+ * A program that does not compile at its first loading makes the element failed (its users get the fallback);
+ * one that does not compile on a hot reload keeps the previous program.
+ * The programs are shared between the windows; the program in use is a state of each context (GLContext).
+ */
+public class Shader extends GLElement {
     // Reused to send matrices without allocating a direct buffer for each uniform
     private static final FloatBuffer MATRIX_BUFFER = BufferUtils.createFloatBuffer(16);
 
-    private int shaderProgram;
-    private final HashMap<String, ShaderValue> lastValues;
+    private final ShaderData data;
+
+    private int program = -1;
+    // Version of the data the program was built from
+    private int programVersion;
+    // Version whose hot reload failed: not tried again until the data changes again
+    private int rejectedVersion = -1;
+    // Program being built (load or reload), from the sources taken at its start
+    private Build build;
+
+    // These belong to the current program: emptied with each new program
+    // Values sent, to skip those unchanged
+    private final HashMap<String, ShaderValue> lastValues = new HashMap<>();
     // Uniform locations never change for a linked program
-    private HashMap<String, Integer> uniformLocations;
+    private final HashMap<String, Integer> uniformLocations = new HashMap<>();
+    // Uniforms already reported missing
+    private final Set<String> missingUniforms = new HashSet<>();
 
-    private int vShader, fShader, gShader;
-
-    private final boolean shader2D;
-
-    public boolean isDimension2DShader(){
-        return shader2D;
+    public Shader(ShaderData data) {
+        this.data = data;
+        addResourceDependency(data);
     }
 
-    public Shader(String name, boolean shader2D, String ... paths){
-        super(TYPE_SET_UP.THREAD_PRELOAD_MAIN_LOAD, name, paths);
-        shaderProgram = -1;
-
-        this.shader2D = shader2D;
-        isUsingGeometryShader = false;
-
-        lastValues = new HashMap<>();
-        uniformLocations = new HashMap<>();
-        vShader = -1;
-        fShader = -1;
-        gShader = -1;
+    public ShaderData getData() {
+        return data;
     }
 
-    @Override
-    protected DataType createReloadCopy() {
-        if (getClass() != Shader.class || !validPaths())
-            return null;
-
-        String[] paths = new String[numberSource()];
-        for (int i = 0; i < paths.length; ++i)
-            paths[i] = getSourcePath(i);
-
-        Shader copy = new Shader(dataName, shader2D, paths);
-        copy.isUsingGeometryShader = isUsingGeometryShader;
-        return copy;
+    public boolean isDimension2DShader() {
+        return data.isDimension2DShader();
     }
 
-    @Override
-    protected void swapContent(DataType copy) {
-        Shader other = (Shader) copy;
+    // ---- Build, in steps ----
 
-        String otherVertex = other.vertexContent, otherFragment = other.fragmentContent, otherGeometry = other.geometryContent;
-        other.vertexContent = vertexContent;
-        other.fragmentContent = fragmentContent;
-        other.geometryContent = geometryContent;
-        vertexContent = otherVertex;
-        fragmentContent = otherFragment;
-        geometryContent = otherGeometry;
+    // The sources and their version taken at the start: never a stage of a version with a stage of another
+    private static final class Build {
+        static final int VERTEX = 0, FRAGMENT = 1, GEOMETRY = 2, LINK = 3;
 
-        int otherProgram = other.shaderProgram, otherV = other.vShader, otherF = other.fShader, otherG = other.gShader;
-        other.shaderProgram = shaderProgram;
-        other.vShader = vShader;
-        other.fShader = fShader;
-        other.gShader = gShader;
-        shaderProgram = otherProgram;
-        vShader = otherV;
-        fShader = otherF;
-        gShader = otherG;
+        final String vertex, fragment, geometry;
+        // Files of the #line ids of each source, to translate the compiler log
+        final List<String> vertexFiles, fragmentFiles, geometryFiles;
+        final int version;
+        int stage = VERTEX;
+        int vertexId = -1, fragmentId = -1, geometryId = -1;
 
-        int otherStage = other.loadStage;
-        other.loadStage = loadStage;
-        loadStage = otherStage;
+        Build(ShaderData data) {
+            vertex = data.getVertexSource();
+            fragment = data.getFragmentSource();
+            geometry = data.getGeometrySource();
+            version = data.getVersion();
+            vertexFiles = data.getStageFiles(0);
+            fragmentFiles = data.getStageFiles(1);
+            geometryFiles = data.getStageFiles(2);
+        }
 
-        HashMap<String, Integer> otherLocations = other.uniformLocations;
-        other.uniformLocations = uniformLocations;
-        uniformLocations = otherLocations;
+        void delete() {
+            vertexId = deleteStage(vertexId);
+            fragmentId = deleteStage(fragmentId);
+            geometryId = deleteStage(geometryId);
+        }
 
-        Set<String> otherMissing = other.missingUniforms;
-        other.missingUniforms = missingUniforms;
-        missingUniforms = otherMissing;
-
-        // The new program has none of the values sent to the previous one (often sent once): sent again
-        List<ShaderValue> sent = new ArrayList<>(lastValues.values());
-        lastValues.clear();
-        for (ShaderValue value : sent)
-            sendValueToShader(value);
+        private static int deleteStage(int id) {
+            if (id != -1)
+                glDeleteShader(id);
+            return -1;
+        }
     }
 
-    public void activateGeometryShader(){
-        isUsingGeometryShader = true;
-    }
+    /**
+     * One step of the build: the compilation of a stage, then the link. The data changed since the start: started
+     * again with its new sources. A source that does not compile or link throws a ResourceException, the build deleted.
+     * @return the linked program, -1 while not done
+     */
+    private int buildStep() {
+        if (build != null && build.version != data.getVersion() && data.isLoaded()) {
+            build.delete();
+            build = null;
+        }
 
-    // Only keeps the source (worker thread): the GL objects are made by internLoad, on the main thread
-    public void setShaderContent(int i, String shaderContent){
-        if (i == 0)
-            vertexContent = shaderContent;
-        else if (i == 1)
-            fragmentContent = shaderContent;
-        else if (i == 2)
-            geometryContent = shaderContent;
-
-        sourceLoaded[i] = true;
-    }
-
-    // Stages of the load, one per internLoad (a step on the main thread each): compile each source, then link
-    private static final int STAGE_VERTEX = 0, STAGE_FRAGMENT = 1, STAGE_GEOMETRY = 2, STAGE_LINK = 3, STAGE_DONE = 4;
-    private int loadStage = STAGE_VERTEX;
-
-    // Called before the first stage, for the shaders whose sources are generated by the code
-    protected void prepareSources() {}
-
-    // Called once the program is linked
-    protected void afterLink() {}
-
-    private int compile(int type, String name, String content) {
-        int id = glCreateShader(type);
-        Logger.CheckOpenGLError("Create " + name + " shader (id : " + id + ")");
-
-        glShaderSource(id, content);
-        Logger.CheckOpenGLError(name + " Shader source (id : " + id + ")");
-
-        glCompileShader(id);
-        Logger.CheckOpenGLError(name + " Shader compile (id : " + id + ")");
+        if (build == null)
+            build = new Build(data);
 
         try {
-            Logger.CheckShaderError(id, name + " Shader (" + getDataName() + ") compile (id : " + id + ")");
-        } catch (RuntimeException e) {
-            glDeleteShader(id);
+            switch (build.stage) {
+                case Build.VERTEX:
+                    build.vertexId = compile(GL_VERTEX_SHADER, "Vertex", build.vertex, build.vertexFiles);
+                    build.stage = Build.FRAGMENT;
+                    return -1;
+                case Build.FRAGMENT:
+                    build.fragmentId = compile(GL_FRAGMENT_SHADER, "Fragment", build.fragment, build.fragmentFiles);
+                    build.stage = build.geometry != null ? Build.GEOMETRY : Build.LINK;
+                    return -1;
+                case Build.GEOMETRY:
+                    build.geometryId = compile(GL_GEOMETRY_SHADER, "Geometry", build.geometry, build.geometryFiles);
+                    build.stage = Build.LINK;
+                    return -1;
+                default:
+                    return link();
+            }
+        } catch (ResourceException e) {
+            build.delete();
+            build = null;
             throw e;
+        }
+    }
+
+    private int compile(int type, String name, String source, List<String> files) {
+        if (source == null)
+            throw new ResourceException(name + " source missing");
+
+        int id = glCreateShader(type);
+        Logger.CheckOpenGLError("Create " + name + " shader of " + getName() + " (id : " + id + ")");
+
+        glShaderSource(id, source);
+        glCompileShader(id);
+        Logger.CheckOpenGLError("Compile " + name + " shader of " + getName() + " (id : " + id + ")");
+
+        if (glGetShaderi(id, GL_COMPILE_STATUS) == GL_FALSE) {
+            String log = ShaderPreprocessor.translateLog(glGetShaderInfoLog(id).trim(), files);
+            glDeleteShader(id);
+            throw new ResourceException(name + " shader does not compile:\n\t" + log);
         }
 
         return id;
     }
 
-    @Override
-    protected boolean loadContinues() {
-        return loadStage != STAGE_DONE;
-    }
+    private int link() {
+        int id = glCreateProgram();
+        Logger.CheckOpenGLError("Create program of " + getName() + " (id : " + id + ")");
 
-    /**
-     * One stage of the load: the compilation of a source, then the link. Each is a step of its own, so a frame never
-     * waits for a whole shader.
-     */
-    @Override
-    protected boolean internLoad() {
-        switch (loadStage) {
-            case STAGE_VERTEX:
-                prepareSources();
-                if (vertexContent == null || fragmentContent == null || (isUsingGeometryShader && geometryContent == null)) {
-                    System.err.println("No enough information to load the shader");
-                    return false;
-                }
-
-                vShader = compile(GL_VERTEX_SHADER, "Vertex", vertexContent);
-                loadStage = STAGE_FRAGMENT;
-                return true;
-            case STAGE_FRAGMENT:
-                fShader = compile(GL_FRAGMENT_SHADER, "Fragment", fragmentContent);
-                loadStage = isUsingGeometryShader ? STAGE_GEOMETRY : STAGE_LINK;
-                return true;
-            case STAGE_GEOMETRY:
-                gShader = compile(GL_GEOMETRY_SHADER, "Geometry", geometryContent);
-                loadStage = STAGE_LINK;
-                return true;
-            case STAGE_LINK:
-                link();
-                loadStage = STAGE_DONE;
-                afterLink();
-                return true;
-            default:
-                return true;
-        }
-    }
-
-    private void link() {
-        shaderProgram = glCreateProgram();
-        Logger.CheckOpenGLError("Create program shader (id : " + shaderProgram + ")");
-
-        glAttachShader(shaderProgram, vShader);
-        if (isUsingGeometryShader)
-            glAttachShader(shaderProgram, gShader);
-        glAttachShader(shaderProgram, fShader);
-        Logger.CheckOpenGLError("Attach shaders to program (id : " + shaderProgram + ")");
-
-        glLinkProgram(shaderProgram);
-        Logger.CheckOpenGLError("Link program shader (id : " + shaderProgram + ")");
-        Logger.CheckProgramError(shaderProgram, "Link program shader (" + getDataName() + ", id : " + shaderProgram + ")");
+        glAttachShader(id, build.vertexId);
+        if (build.geometryId != -1)
+            glAttachShader(id, build.geometryId);
+        glAttachShader(id, build.fragmentId);
+        glLinkProgram(id);
+        Logger.CheckOpenGLError("Link program of " + getName() + " (id : " + id + ")");
 
         // Once linked, the program keeps what it needs
-        glDeleteShader(vShader);
-        glDeleteShader(fShader);
-        if (isUsingGeometryShader)
-            glDeleteShader(gShader);
-        Logger.CheckOpenGLError("Delete shaders of program (id : " + shaderProgram + ")");
+        build.delete();
 
-        vShader = -1;
-        fShader = -1;
-        gShader = -1;
+        if (glGetProgrami(id, GL_LINK_STATUS) == GL_FALSE) {
+            String log = glGetProgramInfoLog(id);
+            glDeleteProgram(id);
+            throw new ResourceException("program does not link:\n\t" + log.trim());
+        }
+
+        return id;
     }
 
+    // The new program replaces the current one: what was sent to the previous one is not in it
+    private void setProgram(int newProgram, int version) {
+        deleteProgram();
+        program = newProgram;
+        programVersion = version;
+        build = null;
+        afterLink();
+    }
+
+    // Called once a new program is in use (first load, hot reload)
+    protected void afterLink() {}
+
+    private void deleteProgram() {
+        if (program != -1) {
+            // The id can be reused by a new program, it must not be considered bound anymore
+            GLContext.forgetProgram(program);
+            glDeleteProgram(program);
+            Logger.CheckOpenGLError("Delete program of " + getName() + " (id : " + program + ")");
+            program = -1;
+        }
+
+        lastValues.clear();
+        uniformLocations.clear();
+        missingUniforms.clear();
+    }
+
+    @Override
+    public boolean load(int remainingMilliseconds) {
+        int built = buildStep();
+        if (built == -1)
+            return false;
+
+        setProgram(built, build.version);
+        return true;
+    }
+
+    // Its data was reloaded: built again by GLResources, the current program is used meanwhile
+    private void checkVersion() {
+        int version = data.getVersion();
+        if (version != programVersion && version != rejectedVersion && data.isLoaded())
+            requestReload();
+    }
+
+    @Override
+    protected boolean reload(int remainingMilliseconds) {
+        // Nothing being built, and the data being read again in place: the current program stays until it is loaded
+        if (build == null) {
+            int version = data.getVersion();
+            if (!data.isLoaded() || version == programVersion || version == rejectedVersion)
+                return true;
+        }
+
+        int built;
+        try {
+            built = buildStep();
+        } catch (ResourceException e) {
+            // The version that failed: buildStep starts again on the current version when the data changed
+            rejectedVersion = data.getVersion();
+            throw e;
+        }
+
+        if (built == -1)
+            return false;
+
+        setProgram(built, build.version);
+        return true;
+    }
+
+    @Override
+    public void unload(int remainingMilliseconds) {
+        if (build != null) {
+            build.delete();
+            build = null;
+        }
+
+        deleteProgram();
+        rejectedVersion = -1;
+    }
+
+    // ---- Use ----
+
     public void use() {
+        checkVersion();
+
         GLContext context = GLContext.current();
-        if (context.currentProgram() == shaderProgram)
+        if (context.currentProgram() == program)
             return;
 
-        glUseProgram(shaderProgram);
-        context.setCurrentProgram(shaderProgram);
+        glUseProgram(program);
+        context.setCurrentProgram(program);
         EngineStats.countProgramBind();
 
         if (Logger.isGLErrorCheck())
-            Logger.CheckOpenGLError("Use program shader (id : " + shaderProgram + ")");
+            Logger.CheckOpenGLError("Use program of " + getName() + " (id : " + program + ")");
     }
 
     public void use(String message) {
-        glUseProgram(shaderProgram);
-        GLContext.current().setCurrentProgram(shaderProgram);
+        glUseProgram(program);
+        GLContext.current().setCurrentProgram(program);
         Logger.CheckOpenGLError(message);
     }
 
-    public int getLink(String valueName){
+    // Location of the uniform in the current program, -1 when absent (or no program)
+    public int getLink(String valueName) {
+        if (program == -1)
+            return -1;
+
         Integer location = uniformLocations.get(valueName);
         if (location == null) {
-            location = glGetUniformLocation(shaderProgram, valueName);
-
-            // Only a linked program gives definitive locations
-            if (shaderProgram != -1)
-                uniformLocations.put(valueName, location);
+            location = glGetUniformLocation(program, valueName);
+            uniformLocations.put(valueName, location);
         }
 
         return location;
     }
 
-    public int getShaderId(){
-        return shaderProgram;
+    public int getShaderId() {
+        return program;
     }
 
+    // False for the fallback: it has none of the uniforms of the shaders it replaces
+    protected boolean reportsMissingUniforms() {
+        return true;
+    }
+
+    /**
+     * Send the value to the current program (skipped when unchanged). Only this program gets it: a new one
+     * (hot reload, fallback) has none of the values sent before, so a renderer keeps its values and sends them
+     * at each draw (Renderer.shaderValues).
+     */
     public void sendValueToShader(ShaderValue value) {
         ShaderValue lastValue = lastValues.get(value.getName());
 
@@ -284,10 +328,10 @@ public class Shader extends MultiSourceDataType {
         if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Get uniform location : " + value.getName());
 
-        // Removed by the GLSL compiler when unused, or absent from the fallback shader: reported once, ignored
+        // Removed by the GLSL compiler when unused: reported once, ignored
         if (link == -1) {
-            if (missingUniforms.add(value.getName()))
-                System.err.println("--Uniform " + value.getName() + " not found in shader " + getDataName()
+            if (reportsMissingUniforms() && missingUniforms.add(value.getName()))
+                System.err.println("--Uniform " + value.getName() + " not found in shader " + getName()
                         + " (unused or absent), its values are ignored");
             return;
         }
@@ -315,46 +359,5 @@ public class Shader extends MultiSourceDataType {
         } else {
             System.err.println("Unknown shader value type : " + value.getType());
         }
-    }
-
-    public void internUnload() {
-        System.out.println("Unloading shader : " + shaderProgram);
-        if (shaderProgram != -1) {
-            // The id can be reused by a new program, it must not be considered bound anymore
-            GLContext.forgetProgram(shaderProgram);
-
-            glDeleteProgram(shaderProgram);
-            Logger.CheckOpenGLError("Delete program shader (id : " + shaderProgram + ")");
-            shaderProgram = -1;
-        }
-
-        if (vShader != -1) {
-            glDeleteShader(vShader);
-            Logger.CheckOpenGLError("Delete vertex shader (id : " + vShader + ")");
-            vShader = -1;
-        }
-
-        if (fShader != -1) {
-            glDeleteShader(fShader);
-            Logger.CheckOpenGLError("Delete fragment shader (id : " + fShader + ")");
-            fShader = -1;
-        }
-
-        if (gShader != -1) {
-            glDeleteShader(gShader);
-            Logger.CheckOpenGLError("Delete geometry shader (id : " + gShader + ")");
-            gShader = -1;
-        }
-
-        loadStage = STAGE_VERTEX;
-        lastValues.clear();
-        uniformLocations.clear();
-        missingUniforms.clear();
-    }
-
-    // Failed to compile or link: delete what was created
-    @Override
-    protected void internCancelPreload() {
-        internUnload();
     }
 }

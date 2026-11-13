@@ -1,22 +1,23 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public abstract class Shape2DRenderer extends Renderer {
+public abstract class Shape2DRenderer extends MeshRenderer {
     private final static Vector4f REFERENCE_RANGE_DIRECTION = new Vector4f(0, 0, 1, 1);
 
     // Reference direction and point are related
     private EDirection referenceDirection;
     private Vector2f referencePoint;
 
-    protected final int positionIndex, textureIndex;
-    protected Vector4f texturePosition;
+    private final int positionIndex, textureIndex;
+    private Vector4f texturePosition;
 
     // The geometry is sent at the next display: subclasses' fields are not set yet in this constructor,
     // and several changes in a tick cost a single upload
@@ -32,24 +33,26 @@ public abstract class Shape2DRenderer extends Renderer {
 
         texturePosition = new Vector4f();
 
-        positionIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
-        textureIndex = shape.addVboFloat(new float[]{}, 2, Shape.STATIC_STORE);
+        Mesh mesh = getMesh();
+        positionIndex = mesh.addVboFloat(new float[]{}, 2, Mesh.STATIC_STORE);
+        textureIndex = mesh.addVboFloat(new float[]{}, 2, Mesh.STATIC_STORE);
     }
 
     private void uploadGeometry() {
+        Mesh mesh = getMesh();
         if (indicesDirty) {
-            shape.setEboStorage(Shape.STATIC_STORE);
-            shape.setEbo(getIndices());
+            mesh.setEboStorage(Mesh.STATIC_STORE);
+            mesh.setEbo(getIndices());
             indicesDirty = false;
         }
 
         if (positionDirty) {
-            shape.updateVbo(calculatePosition(), positionIndex);
+            mesh.updateVbo(calculatePosition(), positionIndex);
             positionDirty = false;
         }
 
         if (textureDirty) {
-            shape.updateVbo(calculateTexturePosition(), textureIndex);
+            mesh.updateVbo(calculateTexturePosition(), textureIndex);
             textureDirty = false;
         }
     }
@@ -100,6 +103,10 @@ public abstract class Shape2DRenderer extends Renderer {
         return this;
     }
 
+    public Vector4f getTexturePosition() {
+        return texturePosition;
+    }
+
     // Set size with size of pixel
     public Shape2DRenderer setSizePix(Vector2f newSize){
         setScale(new Vector3f(newSize.x, newSize.y, 1.0f));
@@ -114,6 +121,7 @@ public abstract class Shape2DRenderer extends Renderer {
     }
 
     public Shape2DRenderer setSizeToTexture() {
+        IRenderTextureBindable mainTexture = getMainTexture();
         if (mainTexture == null)
             return this;
 
@@ -130,7 +138,7 @@ public abstract class Shape2DRenderer extends Renderer {
     }
 
     public Vector2f get2DPosition(){
-        return new Vector2f(position.x, position.y);
+        return new Vector2f(position().x, position().y);
     }
 
     // Sent at the next display

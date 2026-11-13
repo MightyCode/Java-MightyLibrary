@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.utils.math;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class KeyTree<K, V>  {
     public final K NoRoot;
@@ -47,6 +49,11 @@ public class KeyTree<K, V>  {
         }
 
         return null;
+    }
+
+    // The nodes in the order they were added (a parent before its children)
+    public List<KeyTreeNode<K, V>> nodes(){
+        return Collections.unmodifiableList(values);
     }
 
     public void printTree(String nameOfObjet){

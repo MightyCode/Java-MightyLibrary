@@ -13,6 +13,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.main.Context;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.json.JSONObject;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.bool;
@@ -98,7 +99,7 @@ public class WindowGenCom extends BaseCommand {
         // The applied mode may differ: a screen shows one exclusive fullscreen window at most
         JSONObject data = new JSONObject();
         data.put("id", window.getId());
-        data.put("mode", window.getWindow().getInfo().getWindowMode().name().toLowerCase());
+        data.put("mode", window.getWindow().getInfo().getWindowMode().name().toLowerCase(Locale.ROOT));
         data.put("size", window.getWindow().getInfo().getSizeRef().x + "x" + window.getWindow().getInfo().getSizeRef().y);
 
         return CommandResult.ok("Window " + window.getId() + " (" + window.getName() + ") : " + window.getDisplay(), data);

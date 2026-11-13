@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
-import io.github.mightycode.mightylib.graphics.renderer.Shape;
+import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection3D;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;
@@ -10,7 +10,7 @@ import org.joml.Vector3f;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CubeRenderer extends Renderer {
+public class CubeRenderer extends MeshRenderer {
     private static final int FACE_NUMBER = 6;
     private static final int VERTEX_TEXTURE_SIZE = 2;
     private static final int VERTEX_POSITION_SIZE = 3;
@@ -85,7 +85,7 @@ public class CubeRenderer extends Renderer {
                 0, 0, 1,
         };
 
-        positionIndex = shape.addVboFloat(vertices, VERTEX_POSITION_SIZE, Shape.STATIC_STORE);
+        positionIndex = getMesh().addVboFloat(vertices, VERTEX_POSITION_SIZE, Mesh.STATIC_STORE);
 
         int[] ref = RectangularFace.IndicesForSquare();
 
@@ -96,7 +96,7 @@ public class CubeRenderer extends Renderer {
             }
         }
 
-        shape.setEbo(ebo);
+        getMesh().setEbo(ebo);
 
         setPosition(new Vector3f(0));
     }
@@ -113,7 +113,7 @@ public class CubeRenderer extends Renderer {
                     VERTEX_TEXTURE_SIZE * VERTEX_NUMBER * i, vertexTexture.length);
         }
 
-        textureIndex = shape.addVboFloat(table, VERTEX_TEXTURE_SIZE, Shape.STATIC_STORE);
+        textureIndex = getMesh().addVboFloat(table, VERTEX_TEXTURE_SIZE, Mesh.STATIC_STORE);
     }
 
     public void setNormal(){
@@ -127,6 +127,6 @@ public class CubeRenderer extends Renderer {
             }
         }
 
-        normalIndex = shape.addVboFloat(table, VERTEX_NORMAL_SIZE, Shape.STATIC_STORE);
+        normalIndex = getMesh().addVboFloat(table, VERTEX_NORMAL_SIZE, Mesh.STATIC_STORE);
     }
 }

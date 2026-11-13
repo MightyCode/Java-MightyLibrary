@@ -1,22 +1,32 @@
 # Plus tard
 
-Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en cours : `current.md`. Quand il est fini, **discuter** du point en tête de ce fichier avec l'utilisateur, puis le déplacer dans `current.md`.
+Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en cours : `current.md`. Quand il est fini, **discuter** du premier point de la feuille de route (la section qui suit « Écrire `current.md` ») avec l'utilisateur, puis le déplacer dans `current.md` (format ci-dessous).
 
-## Philosophie du moteur : bases simples, implémentations proposées, injection (en premier)
-Philosophie de `decisions.md` : usage courant facile, réimplémentation (presque) complète possible. En premier : chaque commit écrit sans elle ajoute du code à reprendre.
+## Écrire `current.md`
 
-### Écarts relevés dans le code
-- **`Renderer` crée son `Shape`** (`shape = new Shape(shaderName, useEbo)` dans son constructeur) : impossible de lui donner un `Shape` hérité. Ajouter un constructeur qui reçoit un `Shape`, en gardant l'actuel pour l'usage simple.
-- **`Shape` expose son état interne en `protected`** (une quinzaine de champs : `vbos`, `vbosStorage`, `eboStorage`, `vboCount`, `in2D`…) : tout son fonctionnement devient un contrat. Le remplacer par quelques méthodes redéfinissables et sortir de la base l'hypothèse 2D/3D (`in2D`). Même revue pour `Renderer` (`model`, `shaderValues`, `textures`… en `protected`).
-- **Systèmes de l'`Engine` créés en dur** : `Console`, `SceneManager`, `SoundManager`, `ShaderManager` (`Engine.setup`) et `InputManager` (`ContextManager`) ; la configuration ne règle que leurs paramètres, un projet ne peut pas fournir les siens. Les rendre injectables (ci-dessous) ; à décider à la planification : interfaces ou classes de base, et ce qui reste fixe.
-- **Rien n'est choisi comme extensible** (au 2026-11-11 : 247 classes publiques, 49 `final`, du `protected` dans 87 fichiers) : tout est ouvert par défaut (voir **Héritage**).
-- **Aucune démo n'étend le rendu** : une scène avec son propre `Shape`/`Renderer` (ex. `CustomRenderer2D`) valide le contrat et fait apparaître ce qui bloque.
+### But
+`current.md` est le **seul gros point en cours**, découpé en objectifs qu'on peut terminer. Il dit ce qui reste à faire, rien d'autre : l'état présent est dans `architecture.md`, les raisons durables dans `decisions.md`, l'historique dans git, le détail d'un objectif en cours d'implémentation dans `docs/plan/`. Il sert de point d'entrée aux skills : `/planification-ml` part d'un de ses objectifs, `/implement-next-objective` prend sa première puce (ou celle marquée (U)), `/pr-ml` et `/revue-pratiques` vérifient qu'il ne garde aucune trace de ce qui est fini.
 
-### Modèle d'extension validé : le projet injecte, le projet étend
-- **Injection** : un point unique appelé à une phase précise du démarrage (avant l'init des ressources), ex. `register(EngineRegistry)`, registre figé ensuite. Remplace `IProjectLoading.contextLoading` et les points provisoires `IProjectLoading.loaders` (liste de loaders figée à la construction de `Resources`, les mods fourniront les leurs à la même phase) et `IProjectLoading.registerCommands` ; les commandes du moteur et du jeu sont figées après le démarrage, celles des scènes et des vues restent dynamiques. Absorbe `InputRegistry` : actions et axes enregistrés pendant cette phase (aujourd'hui à l'initialisation des classes de constantes, sans gel), avec leurs touches par défaut.
-- **Injectable** : sources de ressources (dossier du jeu, autres jars ; un nom identique remplace celui du moteur), loaders et `DataType`, commandes, scènes par nom, actions et touches par défaut, shaders, scène de chargement par défaut, systèmes de l'`Engine` (console, gestionnaires de scènes, de sons, de shaders, d'entrées), crochets de cycle de vie (démarrage, changement de scène, arrêt), compteurs `stats`, plus tard composants/thèmes GUI.
-- **Héritage** : classes extensibles **choisies explicitement** avec points d'accroche (`Shape`, `Renderer`, `Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…) ; les autres `final` ou package-private (tout `protected` devient un contrat).
-- **API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0) ; même tri que l'héritage (`bonnes-pratiques.md`, point 7).
+### Cycle de vie
+1. `current.md` vide → discuter avec l'utilisateur du point en tête de `later.md` (et des autres documents : un point plus urgent peut exister ailleurs, un prérequis peut manquer).
+2. Écrire le point dans `current.md` (format ci-dessous) et retirer sa section de `later.md` ; ce qui n'entre pas dans le point reste dans `later.md`, rattaché à la section qui le traitera. Mettre à jour les renvois (`CLAUDE.md`, `bonnes-pratiques.md`, autres sections de `later.md`).
+3. Chaque objectif passe par `/planification-ml <objectif>` → `docs/plan/<sujet>.md`, puis implémentation et `/pr-ml`. Un objectif simple (peu de fichiers, aucun choix de conception ni d'API ouvert) peut aller directement à `/implement-next-objective`.
+4. Objectif atteint → supprimer sa puce dans la même branche (ou la réduire à son reste), décrire le nouvel état dans `architecture.md`, supprimer le plan.
+5. Dernière puce supprimée → le fichier ne garde que son en-tête : retour en 1.
+
+### Format
+- **Titre** : `# Gros point actuel — <nom du point>` (le nom de la section de `later.md`).
+- **Paragraphe de règles** (fixe, recopié d'un point à l'autre) : ce qui reste seulement, pas d'historique, propositions à valider avant d'appliquer, changements cassants maintenant, un `/planification-ml` par objectif, signification de (U).
+- **Paragraphe de cadrage** (trois ou quatre phrases) : pourquoi ce point passe avant les autres (ce qui en dépend), et le **critère de fin** du point entier, vérifiable (ex. « la démo compile contre la seule API publique »).
+- **Objectifs** : une puce de premier niveau par objectif, `- **Nom court** : …`, dans l'ordre d'exécution (du moins risqué au plus cassant, prérequis d'abord). Une puce = un objectif planifiable et fusionnable seul (une branche, une PR), ni une tâche de dix minutes ni un point entier. `(U)` sur le plus urgent seulement.
+- **Sous-puces** d'un objectif : les constats précis (classe, méthode, champ, chiffre daté « au AAAA-MM-JJ »), la cible, et ce qui reste **à décider** (marqué « à décider » ou « à discuter avant toute décision ») : la planification part de là. Assez de détail pour que `/planification-ml` n'ait pas à relire `later.md`, pas de solution détaillée (elle va dans le plan).
+- **Dernier objectif = test d'acceptation** du point quand c'est possible (une démo, un module, une scène qui doit fonctionner).
+
+### Ce qui n'y va pas
+- Rien de conditionnel (« si les mesures l'exigent », « si un vrai jeu le demande ») : ces lignes restent dans `later.md` (`bonnes-pratiques.md`, point 6).
+- Aucun « fait », « déjà », « aujourd'hui fait X », aucune date de fin.
+- Pas de bug découvert hors du point : il va dans « Bugs relevés en passant » ou dans `futur-discussion.md`.
+- Pas de second gros point : un objectif qui grossit au point d'en devenir un retourne dans `later.md`.
 
 ## Gamma : rendu linéaire activable et réglable
 LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'écran.
@@ -27,29 +37,35 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - `GammaScene` : dégradés, fondus alpha, éclairage, activé/désactivé côte à côte.
 
 ## Tests de non-régression
-À étendre (base JUnit 5 : `architecture.md`, liste dans `CLAUDE.md`) : JUnit pour la logique pure (`InputSimulation`, tilemaps, maths, algorithmes, parsing) ; scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
+À étendre (liste des tests : `CLAUDE.md`) : scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
+- **Logique pure encore sans test** (`python tools/coverage.py`) : `Animation` / `Animator` (le constructeur de `Animation` lit `Views.engine().resources()` : lui passer `Resources` en paramètre, en gardant le constructeur actuel pour l'usage courant, permettrait de les tester sans moteur) et `FallbackAnimationData` (demande une `Resources`) ; `physics/B2Utils` (conversions JBox2D, à voir avec la physique 2D).
 
 ## Bugs relevés en passant (non corrigés)
-- **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (15) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (6), `VO_VOLATILE_INCREMENT` (2, aussi Error Prone `NonAtomicVolatileUpdate` : `DataType`, `ResourceWatcher`) ; `NP_*` (`FontFile.load`, `ExecGenCom.run`, `EngineConfig.ParseLogsShown`) ; `HE_EQUALS_USE_HASHCODE` / `EqualsHashCode` (`TilePosition`) ; Error Prone `StringCaseLocaleUsage` (22, `toLowerCase()` selon la langue du système : `Locale.ROOT`), `DefaultCharset` / `DM_DEFAULT_ENCODING` (7), `MissingCasesInEnumSwitch` (23), `EmptyCatch` (5), `FutureReturnValueIgnored` (3), `ReferenceEquality` (41), `EnumOrdinal` (20). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
+- **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (15) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (6), `VO_VOLATILE_INCREMENT` (2, aussi Error Prone `NonAtomicVolatileUpdate` : `DataType`, `ResourceWatcher`) ; `NP_*` (`FontFile.load`, `ExecGenCom.run`, `EngineConfig.ParseLogsShown`) ; Error Prone `MissingCasesInEnumSwitch` (23), `EmptyCatch` (5), `FutureReturnValueIgnored` (3), `ReferenceEquality` (41), `EnumOrdinal` (20). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
+- `SoundManager.clearAwaitedSong` (changement de scène) oublie les sons en attente de leur délai mais laisse leurs sources, jamais créées, dans la liste ; et dans `lateUpdate`, une source dont l'`init` échoue est retirée de la liste puis encore réglée et jouée (`managerId` des autres sons en attente non décalés).
+- Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
+- `DataFolder.getFileContent` concatène les lignes lues sans saut de ligne (`Scanner.nextLine`).
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
 - `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
-- **Deux modules Maven** : `mightylib` (jar) et `demo`, qui en dépend comme un projet externe.
 - **Jar léger** : dépendances (LWJGL et natives, JOML, org.json, JBox2D…) déclarées dans le pom, pas embarquées.
 - **Distribution** : `mvn install`, puis JitPack ou GitHub Packages. **Versions** sémantiques par release.
 - **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
+- **Shaders** : includes GLSL lus depuis le classpath (jar) par l'abstraction de sources de `Resources` (aujourd'hui `ShaderLoader` lit le disque) ; shaders injectés par les projets et les mods (leur `shaders.json` ou leurs `ShaderData`, un nom identique remplace celui du moteur) ; variantes par `#define` injectés par le moteur (ubershader) ; `#version` et macros `in`/`out` injectés pour n'avoir qu'un jeu de fichiers au lieu de `1_40`/`3_30`.
   - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources.
   - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
-- Extension et API publique : section « Philosophie du moteur » en tête de ce fichier.
+  - **Shaders `1_40` en grande partie absents** (4 fichiers contre 31 en `3_30`) : un pilote GLSL 1.40 est incompatible avec le contexte 3.3 core demandé ; retirer `resources/shaders/1_40/` et la branche GLSL 140 de `ShaderManager.init`, ne plus y ajouter de shader ; le doublon disparaît de toute façon avec l'injection de `#version` et des macros `in`/`out`.
+  - **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
+- Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
 - Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
 - **Identifiants à espace de noms** (`jeu:slime`, classe `registry/Identifier`, déjà utilisée par les actions, les axes et les commandes) pour ressources et scènes : aujourd'hui noms globaux → collisions.
 - **Commandes d'un mod** : le mod est leur propriétaire (`CommandOwner`), espace = identifiant du mod, niveau `DEV` ; insérer `MODDER` entre `CHEAT` et `DEV` si les outils de mod doivent être séparés de ceux du moteur.
-- La liste des scènes du menu de la démo (`MenuScene.createSceneEntries`) devra venir du registre de scènes par nom, pas d'une liste écrite en dur.
+- Le menu de la démo lit aujourd'hui la complétion de la commande `scene` (`MenuScene`, `SceneChoices`) ; la cible durable reste un registre de scènes par nom (identifiant, description, clé de langue), qui remplacera la recherche par réflexion dans le paquet des scènes et le fichier `menuScenes.json` (scènes cachées, descriptions).
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
 - **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
 - Mods de données (JSON/ressources) et mods de code (jars, sans sandbox : de confiance seulement).
@@ -131,7 +147,7 @@ Le moteur et le jeu exposent des fonctions que des scripts Lua utilisent pour fa
 ## Thème, tailles automatiques et langues
 Dépend du point d'injection (thèmes et langues fournis par le projet et les mods). Dès maintenant, ne pas figer d'API `Text`/GUI qui empêcherait clés de langue et thème.
 - **Langues** (à la Flutter) : `resources/lang/<langue>.json` chargé comme `DataType` ; paramètres `{nom}`, pluriels simples ; langue de repli, log des clés manquantes ; script `tools/` générant des constantes typées ; `Text` liable à une clé, mis à jour au changement de langue ; clés à espace de noms.
-- **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)` dans `EnumSelector`/`StrSelector`).
+- **Thème** : `Theme` en JSON (couleurs, polices, tailles, espacements, styles par composant) géré par `ThemeManager`, lu par les composants GUI au lieu de valeurs en dur (`setFontSize(20)`, `new Color4f(0.5f)`, police `bahnschrift` dans `ValueSelector`).
 - **Tailles automatiques** : unité relative à la résolution virtuelle, ancres et pourcentages, recalcul au redimensionnement.
 - **Padding du texte** : utiliser `Text.setPadding` dans les composants GUI et l'exposer au thème.
 
@@ -146,6 +162,10 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
   - **Batch** (`SpriteBatch`) : sommets transformés sur CPU dans un VBO dynamique ; texte et formes variées.
   - **Instancing** (quad + attributs par instance, `glVertexAttribDivisor`, `glDrawElementsInstanced`) : sprites et particules.
   - Remplissage par frame efficace (`glMapBufferRange`, `glBufferSubData`).
+
+- **`Material` partageable** : programme, valeurs d'uniform et `RenderState` (regroupés dans `Renderer`) extraits en un objet partagé entre renderers, avec une clé de tri pour le regroupement des dessins ; partage d'un `Mesh` entre renderers (possession, compteur de références).
+- **État de dessin à étendre** : blend par renderer, cache des `glEnable`/`glDisable` redondants dans `GLContext` ; attributs nommés (en plus des canaux) si besoin.
+- Bugs connus : `Renderer.updateShaderValue` sur une valeur absente lève une `NullPointerException` ; `Shape2DRenderer.setTexturePosition` ne marque pas la texture à renvoyer (il faut appeler `updateShapeTexture()`).
 
 ## Rendu SVG
 Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et anticrénelage communs).
@@ -169,6 +189,7 @@ Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et antic
 Streaming des musiques longues (tout est décodé en mémoire).
 
 ## Console et GUI en jeu
+- **Focus de la bibliothèque GUI** : `InputFocus` (pile de détenteurs par fenêtre) est la base ; reste la navigation Tab, le focus par composant (un seul `TextField` est prévu : avec plusieurs, un clic sur un champ pendant que l'autre a le focus doit passer de l'un à l'autre sans perdre le clic, aujourd'hui l'ordre de mise à jour décide), le focus au clavier et à la manette (aujourd'hui `MenuScene` code sa navigation champ → liste → Quit, parce que `GUIList` ne sait pas déléguer les flèches à un composant qui en a l'usage, comme `ScrollList` ou un curseur de texte), `ScrollList` qui devienne un `GUI`.
 - **Overlay de debug** (stats, scène, entrées) à côté de la console. S'appuie sur thème, tailles et langues.
 - **Console** : police monospace livrée avec le moteur (aujourd'hui `bahnschrift` du batch `init` du projet, proportionnelle) ; thème (couleurs, hauteur de l'overlay, taille du texte ; la palette de `ConsoleColors` y passera) ; suggestions affichées sous la saisie en plus du Tab bash ; glyphe flèche dans la police (l'indicateur des lignes sous la vue écrit « v N lines » faute de `↓`) ; annuler/refaire (Ctrl+Z/Y) dans la saisie, recherche dans le journal (Ctrl+F), menu clic droit, sélection rectangulaire ; mémoriser l'état de `console logs` avec les réglages du joueur (Fenêtres / réglages) ; filtres par source et autres types exposés par commande (le modèle d'ensemble de types cachés existe, cf. Journal à grande échelle).
 - **Commandes, suite** :

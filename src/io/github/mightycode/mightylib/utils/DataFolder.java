@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class DataFolder {
@@ -16,7 +17,7 @@ public class DataFolder {
         if (!checkDataFolderExists())
             return false;
 
-        try (FileWriter writer = new FileWriter(DATA_FOLDER_PATH + localPath)) {
+        try (FileWriter writer = new FileWriter(DATA_FOLDER_PATH + localPath, StandardCharsets.UTF_8)) {
             writer.write(content);
         } catch (IOException e) {
             Logger.LogException("Can't save the data file " + localPath, e);
@@ -37,14 +38,14 @@ public class DataFolder {
         if (!fileExists(localPath))
             return null;
 
-        try (Scanner reader = new Scanner(new File(DATA_FOLDER_PATH + localPath))) {
+        try (Scanner reader = new Scanner(new File(DATA_FOLDER_PATH + localPath), StandardCharsets.UTF_8)) {
             StringBuilder result = new StringBuilder();
             while (reader.hasNextLine()) {
                 result.append(reader.nextLine());
             }
 
             return result.toString();
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             Logger.LogException("Can't read the data file " + localPath, e);
         }
 
@@ -56,8 +57,8 @@ public class DataFolder {
             return null;
 
         try {
-            return new BufferedReader(new FileReader(DATA_FOLDER_PATH + localPath));
-        } catch (FileNotFoundException e) {
+            return new BufferedReader(new FileReader(DATA_FOLDER_PATH + localPath, StandardCharsets.UTF_8));
+        } catch (IOException e) {
             Logger.LogException("Can't open the data file " + localPath, e);
         }
 

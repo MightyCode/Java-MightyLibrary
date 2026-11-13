@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
@@ -27,6 +28,14 @@ class ResourceLoadersTest {
         assertSame(first, loaders.get(loaders.size() - 2));
         assertSame(second, loaders.get(loaders.size() - 1));
         assertEquals(1, loaders.stream().filter(loader -> loader instanceof BatchLoader).count());
+    }
+
+    // The shader sources are a data like the others (ShaderData), their program a GL element
+    @Test
+    void shaderLoaderServesShaderData() {
+        Resources resources = create(List.of());
+        assertSame(ShaderData.class, resources.getClassFromName("ShaderData"));
+        assertNull(resources.getClassFromName("Shader"));
     }
 
     @Test

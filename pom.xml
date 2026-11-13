@@ -13,9 +13,10 @@
         <maven.compiler.target>11</maven.compiler.target>
         <lwjgl.version>3.3.6</lwjgl.version>
         <joml.version>1.10.3</joml.version>
-        <json.version>20231013</json.version>
+        <json.version>20260719</json.version>
         <errorprone.version>2.52.0</errorprone.version>
         <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
+        <jacoco.version>0.8.16</jacoco.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -108,6 +109,52 @@
                                 <phase>process-classes</phase>
                                 <goals>
                                     <goal>spotbugs</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <!-- Code coverage of the unit tests, never part of the normal build: mvn -P coverage test (see tools/coverage.py) -->
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <version>${jacoco.version}</version>
+                        <configuration>
+                            <!-- Code bound to OpenGL, OpenAL or GLFW (needs a window or a context, never unit tested)
+                                 and the demo itself: left out so the figures only show what a test could cover -->
+                            <excludes>
+                                <exclude>io/github/mightycode/mightylibdemo/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/renderer/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/shader/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/surface/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/lighting/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/debug/**</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/utils/GenDeleteResources*</exclude>
+                                <exclude>io/github/mightycode/mightylib/graphics/utils/Screenshot*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundManager*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundListener*</exclude>
+                                <exclude>io/github/mightycode/mightylib/sounds/SoundSource.*</exclude>
+                                <exclude>io/github/mightycode/mightylib/main/monitors/**</exclude>
+                            </excludes>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>jacoco-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                            <execution>
+                                <id>jacoco-report</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>report</goal>
                                 </goals>
                             </execution>
                         </executions>

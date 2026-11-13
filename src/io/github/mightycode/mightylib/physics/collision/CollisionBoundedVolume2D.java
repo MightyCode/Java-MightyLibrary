@@ -40,6 +40,9 @@ public class CollisionBoundedVolume2D extends Collision2D {
 
     @Override
     public boolean isColliding(Collision2D collision) {
+        if (collisions.isEmpty())
+            return false;
+
         return bounds().isColliding(collision);
     }
 
@@ -48,6 +51,7 @@ public class CollisionBoundedVolume2D extends Collision2D {
         switch (b.getShapeType()){
             case Rectangle:
                 ReplaceBoundingVolume2DRectangle(this, (CollisionRectangle)b, direction);
+                break;
             case BoundedVolume2D:
                 ReplaceBoundingVolume2DRectangle(this, b.bounds(), direction);
         }
@@ -107,10 +111,11 @@ public class CollisionBoundedVolume2D extends Collision2D {
     public CollisionBoundedVolume2D copy() {
         CollisionBoundedVolume2D temp = new CollisionBoundedVolume2D();
 
-        temp.setX(position.x);
-        temp.setY(position.y);
+        // The parts are copied: moving the copy must not move the original
+        for (Map.Entry<String, Collision2D> entry : collisions.entrySet())
+            temp.collisions.put(entry.getKey(), entry.getValue().copy());
 
-        temp.collisions.putAll(collisions);
+        temp.position.set(position);
 
         return temp;
     }

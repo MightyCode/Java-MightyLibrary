@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.inputs.KeyEvent;
+import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
@@ -27,7 +29,7 @@ class ConsoleInputTest {
     // The system clipboard
     private String clipboard;
 
-    private final ConsoleInput.IClipboard fakeClipboard = new ConsoleInput.IClipboard() {
+    private final IClipboard fakeClipboard = new IClipboard() {
         @Override
         public String get() { return clipboard; }
 
@@ -102,6 +104,19 @@ class ConsoleInputTest {
         // A blank line is not run
         handle("   ");
         assertEquals(List.of("SCROLL_END"), handle("", key(GLFW_KEY_ENTER)));
+    }
+
+    @Test
+    void textAndKeysOfATickAreAppliedInTheOrderTheyCame() {
+        // "ab", Left, "c", then Backspace after everything (a simulated key): "acb" without its "c"
+        handle("abc", new KeyEvent(GLFW_KEY_LEFT, 0, 0, false, (char) 0, 2), key(GLFW_KEY_BACKSPACE));
+        assertEquals("ab", editor.getText());
+        editor.setText("");
+
+        // "x", Enter, "y" in one tick: "x" is run, "y" starts the next line
+        assertEquals(List.of("SUBMIT x", "SCROLL_END"),
+                handle("xy", new KeyEvent(GLFW_KEY_ENTER, 0, 0, false, (char) 0, 1)));
+        assertEquals("y", editor.getText());
     }
 
     @Test

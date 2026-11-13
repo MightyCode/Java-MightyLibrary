@@ -1,10 +1,10 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.inputs.text;
 
 /**
  * Counts the clicks of a double or triple click: a press at the same place (within DISTANCE pixels) less than DELAY
  * after the previous one continues the series; after a triple click a new series starts. Time given, no input read.
  */
-final class ClickCounter {
+public final class ClickCounter {
     static final float DISTANCE = 4;
     static final long DELAY_NANOSECONDS = 500_000_000L;
     private static final int MAX_CLICKS = 3;
@@ -18,7 +18,7 @@ final class ClickCounter {
      * A press of the button.
      * @return 1 for a click, 2 for a double click, 3 for a triple click
      */
-    int press(float x, float y, long nanoTime) {
+    public int press(float x, float y, long nanoTime) {
         boolean continues = count > 0 && count < MAX_CLICKS
                 && nanoTime - lastTime < DELAY_NANOSECONDS
                 && Math.abs(x - lastX) <= DISTANCE && Math.abs(y - lastY) <= DISTANCE;
@@ -28,5 +28,10 @@ final class ClickCounter {
         lastY = y;
         lastTime = nanoTime;
         return count;
+    }
+
+    /** Ends the series (a press somewhere else): the next press is a single click. */
+    public void reset() {
+        count = 0;
     }
 }

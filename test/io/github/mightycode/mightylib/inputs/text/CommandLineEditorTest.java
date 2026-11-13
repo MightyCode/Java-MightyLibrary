@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.inputs.text;
 
 import org.junit.jupiter.api.Test;
 
