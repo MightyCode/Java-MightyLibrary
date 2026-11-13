@@ -19,7 +19,7 @@ Le moteur et ses démos sont **gratuits** : tant que c'est le cas, rien de ce qu
 |---|---|---|---|---|
 | LWJGL (core, glfw, opengl, openal, stb, assimp) | 3.3.6 | BSD-3-Clause | fenêtre, GL, son, décodage ogg, modèles | garder l'avis de copyright et la licence |
 | JOML | 1.10.3 | MIT | mathématiques 3D | garder l'avis |
-| org.json | 20231013 | Domaine public (selon le `pom.xml`) | JSON | aucune ; pas la vieille licence « Good, not Evil » de json.org |
+| org.json | 20260719 | Domaine public (selon le `pom.xml`) | JSON | aucune ; pas la vieille licence « Good, not Evil » de json.org |
 | JBox2D (`jbox2d-library`) | 2.2.1.1 | BSD-2-Clause (Daniel Murphy) | physique 2D | garder l'avis |
 | opensimplex (`com.raylabz`) | 1.0.3 | Apache 2.0 | bruit | garder l'avis, le texte de la licence et un éventuel fichier `NOTICE` |
 | JLayer (`javazoom:jlayer`) | 1.0.1 | **LGPL** | décodage mp3 | avis et texte de la LGPL ; l'utilisateur doit pouvoir remplacer le jar, voir ci-dessous |
