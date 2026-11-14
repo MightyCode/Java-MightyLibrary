@@ -39,7 +39,7 @@ class ResourceSelectionTest {
         FakeLoader fakeLoader = new FakeLoader();
         JSONLoader jsonLoader = new JSONLoader();
         resources = new Resources(new Resources.BatchResourcesMethod("unused"), 2, folder.toString(),
-                Arrays.asList(fakeLoader, jsonLoader, new BatchLoader(jsonLoader)));
+                Arrays.asList(fakeLoader, jsonLoader, new BatchLoader()));
 
         grass = new FakeData(THREAD_CONTEXT, "grass");
         sand = new FakeData(THREAD_CONTEXT, "tile_sand");

@@ -1,7 +1,5 @@
 package io.github.mightycode.mightylib.resources;
 
-import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
 
@@ -66,17 +64,11 @@ public class Resources {
     private boolean firstLoadDone;
 
     /**
-     * The loader of the shaders comes first (from the shader manager: GLSL version and list), then the given ones: those
-     * the plugins registered (EngineRegistry.resources), the mandatory ones of the engine first. The list can't change
-     * afterwards. The loaders read their files in the given folder (EngineConfig.setResourcesFolder).
+     * The given loaders, in their order: those the plugins registered (EngineRegistry.resources), the mandatory ones of
+     * the engine first. The list can't change afterwards. The loaders read their files in the given folder
+     * (EngineConfig.setResourcesFolder).
      */
-    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, ShaderManager shaderManager,
-                     List<ResourceLoader> registeredLoaders) {
-        this(loadingMethod, maxNumberOfWorkers, folder, withShaderLoader(shaderManager, registeredLoaders));
-    }
-
-    // Only the given loaders are used (no GL loader): tests
-    Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
         this.folder = NormalizeFolder(folder);
         resources = new ConcurrentHashMap<>();
@@ -86,14 +78,6 @@ public class Resources {
 
         initialized = false;
         firstLoadDone = false;
-    }
-
-    private static List<ResourceLoader> withShaderLoader(ShaderManager shaderManager,
-                                                         List<ResourceLoader> registeredLoaders) {
-        List<ResourceLoader> all = new ArrayList<>();
-        all.add(new ShaderLoader(shaderManager));
-        all.addAll(Objects.requireNonNull(registeredLoaders, "registeredLoaders"));
-        return all;
     }
 
     // An unmodifiable copy; two loaders of the same type of data would share (and overwrite) one registry
@@ -116,7 +100,7 @@ public class Resources {
                 + " in IPlugin.register with registry.resources().add";
     }
 
-    // The loaders, in their order (shaders, then those of the plugins); unmodifiable
+    // The loaders, in their order (those of the plugins, the engine first); unmodifiable
     List<ResourceLoader> loaders() {
         return loaders;
     }

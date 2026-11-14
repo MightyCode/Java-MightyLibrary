@@ -1,16 +1,9 @@
 package io.github.mightycode.mightylib.resources;
 
-import io.github.mightycode.mightylib.resources.data.JSONLoader;
-
 import java.util.Map;
 
+// The batches (resources/batchs/*.batch, JSON): reads its files itself, whatever loader the JSON files have
 public class BatchLoader extends ResourceLoader {
-    private final JSONLoader jsonLoader;
-
-    public BatchLoader(JSONLoader jsonLoader){
-        this.jsonLoader = jsonLoader;
-    }
-
     @Override
     public Class<? extends DataType> getType() {
         return BatchResources.class;
@@ -46,6 +39,7 @@ public class BatchLoader extends ResourceLoader {
         if (!(dataType instanceof BatchResources))
             return;
 
-        jsonLoader.initWithFile(dataType);
+        BatchResources batch = (BatchResources) dataType;
+        batch.setJsonObject(FileMethods.readJSONObject(batch.path()));
     }
 }

@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRulesLoader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
+import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
@@ -14,6 +16,7 @@ import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * The loaders of the library. The engine registers the mandatory ones itself; a game registers the optional ones it
@@ -39,17 +42,18 @@ public final class LibraryLoaders {
 
     /**
      * New instances of the mandatory loaders, registered by the plugin of the engine (a plugin replaces one with
-     * registry.resources().replace). The shaders are not among them: their loader comes from the shader manager.
+     * registry.resources().replace).
+     * @param shaderManager read by the loader of the shaders when it works (the manager is created with the window)
      */
-    public static List<ResourceLoader> mandatory() {
+    public static List<ResourceLoader> mandatory(Supplier<ShaderManager> shaderManager) {
         List<ResourceLoader> loaders = new ArrayList<>();
+        loaders.add(new ShaderLoader(shaderManager));
         loaders.add(new IconLoader());
         loaders.add(new TextureDataLoader());
         loaders.add(new AnimationDataLoader());
         loaders.add(new FontLoader());
-        JSONLoader jsonLoader = new JSONLoader();
-        loaders.add(jsonLoader);
-        loaders.add(new BatchLoader(jsonLoader));
+        loaders.add(new JSONLoader());
+        loaders.add(new BatchLoader());
         return loaders;
     }
 
@@ -59,7 +63,7 @@ public final class LibraryLoaders {
             if (loader.getType().equals(type))
                 return loader.getClass().getSimpleName();
         }
-        for (ResourceLoader loader : mandatory()) {
+        for (ResourceLoader loader : mandatory(() -> null)) {
             if (loader.getType().equals(type))
                 return loader.getClass().getSimpleName();
         }

@@ -191,7 +191,8 @@ public final class Engine implements IView {
         // Before the window: a mistake of a plugin stops the engine before anything is opened
         System.out.println("--Register the plugins.");
         try {
-            registrations = EngineRegistry.Collect(new EnginePlugin(config), config.getPlugins());
+            registrations = EngineRegistry.Collect(new EnginePlugin(config, () -> shaderManager),
+                    config.getPlugins());
         } catch (RuntimeException e) {
             Logger.LogException("--The registration of the plugins failed", e);
             return ListError.PLUGIN_REGISTRATION_FAIL;
@@ -239,7 +240,7 @@ public final class Engine implements IView {
 
         System.out.println("--Create Resources");
         resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
-                config.getResourcesFolder(), shaderManager, registrations.loaders());
+                config.getResourcesFolder(), registrations.loaders());
         resources.setStrict(config.isStrictResources());
         if (config.isStrictResources())
             System.out.println("--Strict resources: a resource that fails stops the program");

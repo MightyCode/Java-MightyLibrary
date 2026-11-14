@@ -12,14 +12,17 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * The shaders listed in shaders.json of the GLSL version (ShaderManager). Their sources are read and preprocessed by
  * the workers (ShaderPreprocessor: #include searched next to the including file, then in the version folder).
  */
 public class ShaderLoader extends ResourceLoader {
-    private final ShaderManager shaderManager;
+    // Read when the loader works: the manager exists once the window does, after the registration of the plugins
+    private final Supplier<ShaderManager> shaderManager;
 
     @Override
     public Class<? extends DataType> getType() {
@@ -27,7 +30,20 @@ public class ShaderLoader extends ResourceLoader {
     }
 
     public ShaderLoader(ShaderManager shaderManager) {
-        this.shaderManager = shaderManager;
+        this(() -> shaderManager);
+    }
+
+    // The plugin of the engine registers it before the shader manager exists (Engine.shaderManager)
+    public ShaderLoader(Supplier<ShaderManager> shaderManager) {
+        this.shaderManager = Objects.requireNonNull(shaderManager, "shaderManager");
+    }
+
+    private ShaderManager manager() {
+        ShaderManager manager = shaderManager.get();
+        if (manager == null)
+            throw new IllegalStateException("The loader of the shaders is used before the shader manager exists");
+
+        return manager;
     }
 
     @Override
@@ -37,12 +53,12 @@ public class ShaderLoader extends ResourceLoader {
 
     @Override
     public DataType createFallback() {
-        return new FallbackShaderData(shaderManager.getVersion());
+        return new FallbackShaderData(manager().getVersion());
     }
 
     @Override
     public void create(Map<String, DataType> data) {
-        JSONObject shadersList = shaderManager.getShadersInfo().getJSONObject("shaders");
+        JSONObject shadersList = manager().getShadersInfo().getJSONObject("shaders");
 
         Iterator<String> arrayShader = shadersList.keys();
         while (arrayShader.hasNext()) {
@@ -55,7 +71,7 @@ public class ShaderLoader extends ResourceLoader {
             JSONArray files = JShader.getJSONArray("files");
             String[] sArrayFiles = new String[files.length()];
             for (int i = 0; i < files.length(); ++i) {
-                sArrayFiles[i] = shaderManager.versionFolder() + files.getString(i);
+                sArrayFiles[i] = manager().versionFolder() + files.getString(i);
             }
 
             JSONArray tags = JShader.getJSONArray("tags");
@@ -116,9 +132,9 @@ public class ShaderLoader extends ResourceLoader {
 
     private String preprocess(String path, Set<String> watched, List<List<String>> stageFiles) {
         // GLSL 140: the line after "#line n" is n + 1 (n from GLSL 330)
-        int lineOffset = "1_40".equals(shaderManager.getVersion()) ? -1 : 0;
+        int lineOffset = "1_40".equals(manager().getVersion()) ? -1 : 0;
         ShaderPreprocessor preprocessor = new ShaderPreprocessor(ShaderLoader::readIfFile,
-                shaderManager.versionFolder(), lineOffset);
+                manager().versionFolder(), lineOffset);
         try {
             String source = preprocessor.process(path);
             stageFiles.add(List.copyOf(preprocessor.files()));

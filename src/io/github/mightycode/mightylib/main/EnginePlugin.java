@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
 import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
@@ -9,6 +10,8 @@ import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.resources.LibraryLoaders;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
+
+import java.util.function.Supplier;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F5;
@@ -21,9 +24,12 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
  */
 final class EnginePlugin implements IPlugin {
     private final EngineConfig config;
+    // Created with the window, after the registration: read by the loader of the shaders when it works
+    private final Supplier<ShaderManager> shaderManager;
 
-    EnginePlugin(EngineConfig config) {
+    EnginePlugin(EngineConfig config, Supplier<ShaderManager> shaderManager) {
         this.config = config;
+        this.shaderManager = shaderManager;
     }
 
     @Override
@@ -33,7 +39,7 @@ final class EnginePlugin implements IPlugin {
 
     @Override
     public void register(EngineRegistry registry) {
-        registry.resources().addAll(LibraryLoaders.mandatory());
+        registry.resources().addAll(LibraryLoaders.mandatory(shaderManager));
 
         // "cheats on|off": the build allows the cheats and the game wants the command
         ECommandLevel maxAccess = config.getMaxCommandAccess();
