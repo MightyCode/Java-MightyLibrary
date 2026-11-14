@@ -47,6 +47,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - `DataFolder.getFileContent` concatène les lignes lues sans saut de ligne (`Scanner.nextLine`).
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
+- `Context` (rafraîchissement d'une fenêtre qui échoue) passe un message commençant par `--` à `Logger.LogException`, qui l'ajoute déjà : la ligne du journal commence par `----`.
 - `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 
 ## Bibliothèque réutilisable
@@ -57,10 +58,10 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Shaders** : includes GLSL lus depuis le classpath (jar) par l'abstraction de sources de `Resources` (aujourd'hui `ShaderLoader` lit le disque) ; shaders injectés par les projets et les mods (leur `shaders.json` ou leurs `ShaderData`, un nom identique remplace celui du moteur) ; variantes par `#define` injectés par le moteur (ubershader) ; `#version` et macros `in`/`out` injectés pour n'avoir qu'un jeu de fichiers au lieu de `1_40`/`3_30`.
   - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources, déclarées par les plugins (`registry` : une racine par plugin) une fois les sources multiples faites.
   - **Shaders injectés par les plugins** (`registry.shaders()`) : un plugin peut remplacer le `ShaderLoader` entier, mais ni ajouter ni remplacer un shader de la liste (`shaders.json` du moteur) aujourd'hui.
-- **Compteurs `stats` injectables** par les plugins (nom, unité, remise à zéro), aujourd'hui fixés par le moteur.
   - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
   - **Shaders `1_40` en grande partie absents** (4 fichiers contre 31 en `3_30`) : un pilote GLSL 1.40 est incompatible avec le contexte 3.3 core demandé ; retirer `resources/shaders/1_40/` et la branche GLSL 140 de `ShaderManager.init`, ne plus y ajouter de shader ; le doublon disparaît de toute façon avec l'injection de `#version` et des macros `in`/`out`.
   - **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
+- **Compteurs `stats` injectables** par les plugins (nom, unité, remise à zéro), aujourd'hui fixés par le moteur.
 - Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
