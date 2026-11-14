@@ -26,11 +26,12 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylibdemo.scenes.DemoScenes;
 import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 
 /**
  * What the demo adds to the engine, like a real game: the loaders it uses, its commands, its actions and axes with
- * their default bindings (in every window of the game, not in the detached console).
+ * their default bindings (in every window of the game, not in the detached console), its scenes (DemoScenes).
  */
 public class DemoPlugin implements IPlugin {
     public static final String NAMESPACE = "demo";
@@ -63,6 +64,7 @@ public class DemoPlugin implements IPlugin {
         });
 
         registerInputs(registry);
+        DemoScenes.Register(registry);
     }
 
     private static void registerInputs(EngineRegistry registry) {

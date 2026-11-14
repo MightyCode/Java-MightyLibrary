@@ -11,10 +11,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The scenes the menu offers, without GL: the names the scene command suggests (relative to the package of the
- * scenes, for example Platformer2D.PlatformerBox2D), minus the hidden ones, sorted by the name shown (or by date, see
- * ESort). The name shown is the short one (PlatformerBox2D), the relative one only when two scenes have the same short
- * name. The relative name stays what the command takes.
+ * The scenes the menu offers, without GL: their names (class names relative to the package of the scenes, for example
+ * Platformer2D.PlatformerBox2D, see DemoScenes.RelativeName), minus the hidden ones, sorted by the name shown (or by
+ * date, see ESort). The name shown is the short one (PlatformerBox2D), the relative one only when two scenes have the
+ * same short name. The relative name stays the key of the scene (dates, descriptions, identifier).
  */
 final class SceneChoices {
     enum ESort {
@@ -36,22 +36,22 @@ final class SceneChoices {
 
 
     static final class Entry {
-        private final String command;
+        private final String name;
         private final String label;
 
-        private Entry(String command, String label) {
-            this.command = command;
+        private Entry(String name, String label) {
+            this.name = name;
             this.label = label;
         }
 
-        /** The name the scene command takes. */
-        String command() { return command; }
+        /** The relative class name: the key of the scene. */
+        String name() { return name; }
 
         /** The name shown in the list. */
         String label() { return label; }
 
         /** The class name without its package. */
-        String shortName() { return ShortName(command); }
+        String shortName() { return ShortName(name); }
     }
 
     private final List<Entry> entries;
@@ -59,8 +59,8 @@ final class SceneChoices {
     private ESort sort = ESort.NAME;
 
     /**
-     * @param candidates the names the scene command suggests
-     * @param hidden     the names (as the command takes them) the menu does not offer
+     * @param candidates the relative class names of the scenes
+     * @param hidden     the names the menu does not offer
      */
     SceneChoices(Collection<String> candidates, Set<String> hidden) {
         Map<String, Integer> shortNameCount = new HashMap<>();
@@ -83,7 +83,7 @@ final class SceneChoices {
         resort();
     }
 
-    /** The dates of the scenes, by the name the command takes (SceneHistory); a scene missing has none. */
+    /** The dates of the scenes, by relative class name (SceneHistory); a scene missing has none. */
     void setDates(Map<String, SceneHistory.Dates> newDates) {
         dates = newDates;
         resort();
@@ -100,7 +100,7 @@ final class SceneChoices {
 
     private void resort() {
         Comparator<Entry> byName = Comparator.comparing((Entry entry) -> entry.label.toLowerCase(Locale.ROOT))
-                .thenComparing(entry -> entry.command);
+                .thenComparing(entry -> entry.name);
         if (sort == ESort.NAME) {
             entries.sort(byName);
             return;
@@ -111,7 +111,7 @@ final class SceneChoices {
     }
 
     private long time(Entry entry) {
-        SceneHistory.Dates entryDates = dates.get(entry.command);
+        SceneHistory.Dates entryDates = dates.get(entry.name);
         if (entryDates == null)
             return Long.MIN_VALUE + 1;
 

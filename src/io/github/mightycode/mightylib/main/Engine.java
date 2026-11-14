@@ -21,6 +21,7 @@ import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.sounds.SoundManager;
@@ -85,6 +86,8 @@ public final class Engine implements IView {
     public Registrations registrations() { return registrations; }
     // The actions and axes declared by the plugins (null before the start)
     public InputRegistry inputs() { return registrations != null ? registrations.inputs() : null; }
+    // The scenes registered by the plugins, by name (null before the start)
+    public SceneRegistry scenes() { return registrations != null ? registrations.scenes() : null; }
 
     public GLResources glResources() { return glResources; }
 

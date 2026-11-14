@@ -23,9 +23,6 @@ public class SceneManager {
     private final Engine engine;
     private final SoundManager soundManager;
 
-    // Package of the first scene, used to find scenes by their simple name
-    private String scenesPackage;
-
     // defaultLoadingScene: displayed while a scene loads, unless the scene overrides createLoadingScene
     // runsCommands: the main context, which runs the pending commands of the engine at each tick
     public SceneManager(Engine engine, Context context, boolean runsCommands, Supplier<TemplateSceneLoading> defaultLoadingScene) {
@@ -41,7 +38,6 @@ public class SceneManager {
     public void init(Scene firstScene, String[] firstArguments){
         System.out.println("--Init SceneManager");
 
-        scenesPackage = firstScene.getClass().getPackage().getName();
         sceneInterface.setNewScene(firstScene, firstArguments);
 
         changeScene();
@@ -136,10 +132,6 @@ public class SceneManager {
 
     public boolean isCurrentSceneLoading() {
         return currentScene != null && currentScene.isWaitingForLoading();
-    }
-
-    public String getScenesPackage() {
-        return scenesPackage;
     }
 
     // The change is done at the beginning of the next tick

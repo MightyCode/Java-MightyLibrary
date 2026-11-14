@@ -17,9 +17,10 @@ import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.type.FloatTweening;
-import io.github.mightycode.mightylib.resources.data.JSONFile;
+import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.scenes.DefaultLoadingScene;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
 import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
@@ -30,12 +31,9 @@ import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -45,11 +43,10 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
 
 /**
  * The menu of the demo: a field that filters the scenes, the list of the scenes, a panel that describes the one
- * chosen, and Quit. It shows how a game talks to the engine with its commands: the scenes are the candidates of the
- * completion of the "scene" command, and a choice runs "scene <name>" (or "exit") through Commands.execute, which
- * works on the window of this scene. A command that fails writes its message in red in the panel.
- *
- * The hidden scenes and the descriptions are data (resources/data/menuScenes.json, batch "menu").
+ * chosen, and Quit. It shows how a game reads the scenes registered by the plugins (Engine.scenes: DemoScenes, with
+ * their descriptions) and talks to the engine with its commands: a choice runs "scene <identifier>" (or "exit")
+ * through Commands.execute, which works on the window of this scene. A command that fails writes its message in red in
+ * the panel.
  * Keys : up and down (W, S) go from the field to the list then Quit, Enter chooses (in the field: starts typing),
  * Escape quits ; in the field Enter launches the first scene of the list, Escape or a click elsewhere give the
  * focus back (InputFocus). Tab, or a click on the button beside the field, changes the sort: by name, last added,
@@ -77,8 +74,9 @@ public class MenuScene extends Scene {
     private static SceneChoices.ESort lastSort = SceneChoices.ESort.NAME;
 
     private SceneChoices choices;
+    // By relative class name (SceneChoices.Entry.name)
     private Map<String, String> descriptions;
-    private String defaultDescription;
+    private Map<String, Identifier> identifiers;
     // The scenes of the list now (the filter applied)
     private List<SceneChoices.Entry> shown;
 
@@ -108,11 +106,6 @@ public class MenuScene extends Scene {
     private Integer lastSelected;
 
     @Override
-    protected String[] getInvolvedBatch() {
-        return new String[]{ "menu" };
-    }
-
-    @Override
     protected TemplateSceneLoading createLoadingScene(String[] args) {
         // Plain grey screen at the start of the program
         if (args.length > 0 && args[0].equals("start"))
@@ -131,20 +124,18 @@ public class MenuScene extends Scene {
 
         /// DATA ///
 
-        JSONObject config = resources.getResource(JSONFile.class, "menuScenes").getObject();
-        Set<String> hidden = new HashSet<>();
-        JSONArray hiddenNames = config.getJSONArray("hidden");
-        for (int i = 0; i < hiddenNames.length(); ++i)
-            hidden.add(hiddenNames.getString(i));
-
+        // The scenes registered by the plugins, but this one: nothing to maintain here when one is added
+        List<String> names = new ArrayList<>();
         descriptions = new HashMap<>();
-        JSONObject descriptionsJson = config.getJSONObject("descriptions");
-        for (String name : descriptionsJson.keySet())
-            descriptions.put(name, descriptionsJson.getString(name));
-        defaultDescription = config.optString("defaultDescription", "No description.");
+        identifiers = new HashMap<>();
+        for (SceneRegistry.Entry entry : engine().scenes().entries()) {
+            String name = DemoScenes.RelativeName(entry.type());
+            names.add(name);
+            descriptions.put(name, entry.description());
+            identifiers.put(name, entry.identifier());
+        }
 
-        // The scenes are the ones the command "scene" suggests: nothing to maintain here when one is added
-        choices = new SceneChoices(engine().commands().complete("scene ").getCandidates(), hidden);
+        choices = new SceneChoices(names, Set.of(DemoScenes.RelativeName(MenuScene.class)));
         choices.setSort(lastSort);
         if (sceneDates != null) {
             choices.setDates(sceneDates);
@@ -393,7 +384,7 @@ public class MenuScene extends Scene {
             return;
         }
 
-        CommandResult result = engine().commands().execute("scene " + entry.command());
+        CommandResult result = engine().commands().execute("scene " + identifiers.get(entry.name()));
         if (!result.isSuccess())
             fail(result.getMessage());
     }
@@ -414,7 +405,7 @@ public class MenuScene extends Scene {
     // The scene the panel is about : the one under the mouse, otherwise the selected one
     private String currentKey() {
         Integer row = sceneList.getActive();
-        return row == null ? "" : shown.get(row).command();
+        return row == null ? "" : shown.get(row).name();
     }
 
     // The part of the menu the keys act on is shown selected
@@ -447,7 +438,7 @@ public class MenuScene extends Scene {
             panelText.setText("No scene matches the filter.");
         } else {
             panelTitle.setText(entry.label());
-            panelText.setText(descriptions.getOrDefault(entry.command(), defaultDescription));
+            panelText.setText(descriptions.get(entry.name()));
         }
     }
 

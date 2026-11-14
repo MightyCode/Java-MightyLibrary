@@ -37,7 +37,7 @@ final class SceneHistory {
 
     private SceneHistory() {}
 
-    /** The dates of the scenes, by the name the scene command takes; empty if git fails. Runs processes: not on the main thread. */
+    /** The dates of the scenes, by relative class name (DemoScenes.RelativeName); empty if git fails. Runs processes: not on the main thread. */
     static Map<String, Dates> Read() {
         String log = Git("log", "--reverse", "-M", "--format=@%ct", "--name-status", "--", SCENES_DIRECTORY);
         if (log == null)
@@ -130,7 +130,7 @@ final class SceneHistory {
         }
     }
 
-    /** The paths of the scene sources become the names the scene command takes (Platformer2D.PlatformerBox2D). */
+    /** The paths of the scene sources become relative class names (Platformer2D.PlatformerBox2D). */
     static Map<String, Dates> ByCommand(Map<String, Dates> byPath) {
         Map<String, Dates> byCommand = new HashMap<>();
         for (Map.Entry<String, Dates> entry : byPath.entrySet()) {

@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.registry;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 
 import java.util.ArrayList;
@@ -19,10 +20,12 @@ public final class Registrations {
             new Entries<>("Loader of", Class::getSimpleName);
     final Entries<Identifier, BaseCommand> commands = new Entries<>("Command", Identifier::toString);
     final Entries<Identifier, InputsSection.Input> inputs = new Entries<>("Input", Identifier::toString);
+    final Entries<Identifier, ScenesSection.SceneEntry> scenes = new Entries<>("Scene", Identifier::toString);
 
     private boolean frozen;
     // Built at the freeze
     private InputRegistry inputRegistry;
+    private SceneRegistry sceneRegistry;
 
     Registrations() {}
 
@@ -39,6 +42,11 @@ public final class Registrations {
                 inputRegistry.declareAxis(input.axis, input.axisBinding);
         }
         inputRegistry.freeze();
+
+        sceneRegistry = new SceneRegistry();
+        for (ScenesSection.SceneEntry scene : scenes.values())
+            sceneRegistry.declare(scene.identifier, scene.type, scene.factory, scene.description);
+        sceneRegistry.freeze();
 
         frozen = true;
     }
@@ -65,6 +73,11 @@ public final class Registrations {
     // The actions and axes of every plugin with their default bindings, frozen; null before the freeze
     public InputRegistry inputs() {
         return inputRegistry;
+    }
+
+    // The scenes of every plugin by name, frozen; null before the freeze
+    public SceneRegistry scenes() {
+        return sceneRegistry;
     }
 
     // The commands the plugin registered or replaced: it owns them
