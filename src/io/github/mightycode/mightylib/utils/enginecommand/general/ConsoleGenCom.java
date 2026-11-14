@@ -31,12 +31,10 @@ public class ConsoleGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "console";
     private static final int DEFAULT_LOG_LINES = 20;
 
-    private final Commands commands;
 
-    public ConsoleGenCom(Commands commands) {
+    public ConsoleGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER,
                 "Drive the in-game console and read its log");
-        this.commands = commands;
     }
 
     @Override
@@ -129,8 +127,8 @@ public class ConsoleGenCom extends BaseCommand {
         Engine engine = Views.engine();
         if (engine.consoleLog() == null)
             return CommandResult.error("No console log: enable the console or the debug mode");
-        if (!commands.getCurrentSource().setFollowLog(on))
-            return CommandResult.error("The source " + commands.getCurrentSource().name() + " can't follow the console log");
+        if (!commands().getCurrentSource().setFollowLog(on))
+            return CommandResult.error("The source " + commands().getCurrentSource().name() + " can't follow the console log");
 
         return CommandResult.ok(on ? "Following the console log" : "Console log no longer followed");
     }

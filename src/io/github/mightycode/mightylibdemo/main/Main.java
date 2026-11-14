@@ -61,6 +61,7 @@ public class Main {
                 .setCheatCommand(true)
                 // Set to true to locate an OpenGL error, it slows down rendering
                 .setOpenGLErrorCheck(false)
+                .addPlugin(new DemoPlugin())
                 .setProjectLoading(new ProjectLoading())
                 //.setResourcesLoadingMethod(new Resources.AllResourcesMethod())
                 .setResourcesLoadingMethod(new Resources.BatchResourcesMethod("init"));

@@ -2,7 +2,6 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONObject;
@@ -16,11 +15,9 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
  */
 public class CheatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "cheats";
-    private final Commands commands;
 
-    public CheatsGenCom(Commands commands) {
+    public CheatsGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER, "Turn the cheats on or off");
-        this.commands = commands;
     }
 
     @Override
@@ -31,16 +28,16 @@ public class CheatsGenCom extends BaseCommand {
     }
 
     private CommandResult set(ECommandLevel level) {
-        if (commands.getSessionLevel() == ECommandLevel.DEV)
+        if (commands().getSessionLevel() == ECommandLevel.DEV)
             return CommandResult.error("Developer mode: the cheats are always on");
 
-        commands.setSessionLevel(level);
+        commands().setSessionLevel(level);
         return state();
     }
 
     private CommandResult state() {
-        boolean on = commands.getSessionLevel().includes(ECommandLevel.CHEAT);
+        boolean on = commands().getSessionLevel().includes(ECommandLevel.CHEAT);
         return CommandResult.ok(on ? "Cheats on" : "Cheats off",
-                new JSONObject().put("level", commands.getSessionLevel().name()));
+                new JSONObject().put("level", commands().getSessionLevel().name()));
     }
 }

@@ -155,7 +155,7 @@ class CommandsTest {
         assertEquals(result.getData().toString(), help.getData().toString());
 
         String list = commands.execute("help").getMessage();
-        assertTrue(list.contains("- test:greet (game) : Greets someone"), list);
+        assertTrue(list.contains("- test:greet (plugin test) : Greets someone"), list);
         assertTrue(list.contains("- mightylib:help (engine)"), list);
     }
 
@@ -344,9 +344,10 @@ class CommandsTest {
 
     // Regression: the commands added by the game were removed at the first scene change
     @Test
-    void gameCommandsSurviveTheScenes() {
+    void pluginCommandsSurviveTheScenes() {
         Commands commands = newCommands();
-        commands.registryFor(CommandOwner.GAME).register(new EchoCommand("gamecommand"));
+        commands.registryFor(CommandOwner.Plugin("test")).register(new EchoCommand("gamecommand"));
+        commands.freezePluginCommands();
 
         // A scene comes and goes, then the next one
         for (int i = 0; i < 2; ++i) {
@@ -357,6 +358,30 @@ class CommandsTest {
 
         assertTrue(commands.execute("gamecommand").isSuccess());
         assertNull(commands.findCommand("scenecommand"));
+    }
+
+    // After the start, only the views add commands: those of the engine and the plugins are fixed
+    @Test
+    void pluginCommandsAreFrozenAfterTheStart() {
+        Commands commands = newCommands();
+        commands.freezePluginCommands();
+
+        assertThrows(IllegalStateException.class,
+                () -> commands.register(new EchoCommand("late"), CommandOwner.Plugin("test")));
+        assertThrows(IllegalStateException.class,
+                () -> commands.register(new EchoCommand("late"), CommandOwner.ENGINE));
+        commands.register(new EchoCommand("late"), CommandOwner.Of(new FakeView(), "scene"));
+    }
+
+    // One owner per plugin namespace, the engine for its own; help shows the namespace
+    @Test
+    void pluginOwnerIsItsNamespace() {
+        assertSame(CommandOwner.ENGINE, CommandOwner.Plugin("mightylib"));
+        assertEquals(CommandOwner.Plugin("demo"), CommandOwner.Plugin("demo"));
+        assertNotEquals(CommandOwner.Plugin("demo"), CommandOwner.Plugin("other"));
+        assertEquals("plugin demo", CommandOwner.Plugin("demo").toString());
+        assertEquals("engine", CommandOwner.ENGINE.toString());
+        assertThrows(IllegalArgumentException.class, () -> CommandOwner.Plugin("Bad Name"));
     }
 
     @Test

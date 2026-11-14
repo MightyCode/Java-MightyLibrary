@@ -14,6 +14,8 @@ import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.main.monitors.Monitors;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
 import io.github.mightycode.mightylib.main.utils.GameTime;
+import io.github.mightycode.mightylib.registry.EngineRegistry;
+import io.github.mightycode.mightylib.registry.Registrations;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
@@ -23,6 +25,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
@@ -49,6 +52,8 @@ public final class Engine implements IView {
 
     private final ContextManager contexts = new ContextManager();
     private ShaderManager shaderManager;
+    // What the plugins registered (the engine first), frozen; null before setup
+    private Registrations registrations;
     private Resources resources;
     private GLResources glResources;
     private SoundManager soundManager;
@@ -76,6 +81,8 @@ public final class Engine implements IView {
     public ShaderManager shaderManager() { return shaderManager; }
 
     public Resources resources() { return resources; }
+    // What the plugins registered, frozen (null before the start)
+    public Registrations registrations() { return registrations; }
 
     public GLResources glResources() { return glResources; }
 
@@ -171,6 +178,16 @@ public final class Engine implements IView {
         }
 
         System.out.println("--Start program.");
+
+        // Before the window: a mistake of a plugin stops the engine before anything is opened
+        System.out.println("--Register the plugins.");
+        try {
+            registrations = EngineRegistry.Collect(new EnginePlugin(config), config.getPlugins());
+        } catch (RuntimeException e) {
+            Logger.LogException("--The registration of the plugins failed", e);
+            return ListError.PLUGIN_REGISTRATION_FAIL;
+        }
+
         System.out.println("--Load libraries.");
 
         if (loadLibraries() == -1)
@@ -210,10 +227,8 @@ public final class Engine implements IView {
         shaderManager.init(config.getShaderVersion());
 
         System.out.println("--Create Resources");
-        IProjectLoading projectLoading = config.getProjectLoading();
         resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
-                config.getResourcesFolder(), shaderManager,
-                projectLoading != null ? projectLoading.loaders() : List.of());
+                config.getResourcesFolder(), shaderManager, registrations.loaders());
         resources.setStrict(config.isStrictResources());
         if (config.isStrictResources())
             System.out.println("--Strict resources: a resource that fails stops the program");
@@ -239,7 +254,14 @@ public final class Engine implements IView {
             System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
 
         commands = new Commands(maxAccess == null ? ECommandLevel.USER : maxAccess,
-                access == null ? ECommandLevel.USER : access, maxAccess != null && config.isCheatCommand());
+                access == null ? ECommandLevel.USER : access);
+        // Each plugin owns its commands (the engine its general ones), fixed for the whole run
+        for (String plugin : registrations.plugins()) {
+            CommandOwner owner = CommandOwner.Plugin(plugin);
+            for (BaseCommand command : registrations.commands(plugin))
+                commands.register(command, owner);
+        }
+        commands.freezePluginCommands();
         commands.setViewChooser(this::targetedView);
         if (consoleLog != null)
             commands.addListener(new CommandEcho(consoleLog));
@@ -253,10 +275,9 @@ public final class Engine implements IView {
             console.setLogsShown(config.isConsoleLogsShown());
         }
 
-        if (projectLoading != null) {
-            projectLoading.registerCommands(commands.registryFor(CommandOwner.GAME));
+        IProjectLoading projectLoading = config.getProjectLoading();
+        if (projectLoading != null)
             projectLoading.contextLoading(mainWindow);
-        }
 
         // Create all resources dependencies
         resources.init();

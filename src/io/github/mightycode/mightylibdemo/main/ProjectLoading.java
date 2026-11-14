@@ -2,7 +2,6 @@ package io.github.mightycode.mightylibdemo.main;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-import io.github.mightycode.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRulesLoader;
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
@@ -18,51 +17,10 @@ import io.github.mightycode.mightylib.inputs.inputType.InputGamepadAxis;
 import io.github.mightycode.mightylib.inputs.inputType.InputGamepadButton;
 import io.github.mightycode.mightylib.inputs.inputType.InputOr;
 import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
-import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
-import io.github.mightycode.mightylib.registry.Identifier;
-import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
-import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
-import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
-import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
-import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
-import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.resources.map.TileMapLoader;
-import io.github.mightycode.mightylib.resources.map.TileSetLoader;
-import io.github.mightycode.mightylib.resources.models.ModelLoader;
-import io.github.mightycode.mightylib.resources.sound.SoundLoader;
-import io.github.mightycode.mightylib.resources.texture.TextureDataAtlasLoader;
-
-import java.util.List;
 
 class ProjectLoading implements IProjectLoading {
-    @Override
-    public List<ResourceLoader> loaders() {
-        return List.of(
-                new TileSetLoader(),
-                new TileMapLoader(),
-                new SoundLoader(),
-                new ModelLoader(),
-                new TextureDataAtlasLoader(),
-                new WaveCollapseRulesLoader());
-    }
-
-    // Commands of the game: kept for the whole run, whatever the scene
-    @Override
-    public void registerCommands(CommandRegistry registry) {
-        registry.register(new BaseCommand(Identifier.of("demo", "menu"), ECommandLevel.USER, "Go back to the menu") {
-            @Override
-            protected void syntax(CommandNode root) {
-                root.executes(context -> {
-                    Views.engine().sceneManager().requestSceneChange(new MenuScene(), new String[]{});
-                    return CommandResult.ok("Back to the menu");
-                });
-            }
-        });
-    }
-
     @Override
     public void contextLoading(WindowContext context){
         InputManager inputManager = context.getInputManager();

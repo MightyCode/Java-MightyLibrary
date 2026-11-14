@@ -25,12 +25,10 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 public class WaitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "wait";
 
-    private final Commands commands;
 
-    public WaitGenCom(Commands commands) {
+    public WaitGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
                 "Answer after some ticks (game time, not real time) or once the current scene is loaded");
-        this.commands = commands;
     }
 
     @Override
@@ -47,13 +45,13 @@ public class WaitGenCom extends BaseCommand {
 
     private CommandResult waitTicks(int ticks, long timeout) {
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
-        long endTick = commands.getTick() + ticks;
+        long endTick = commands().getTick() + ticks;
         // The tasks run at the beginning of each tick, after the tick counter is increased
-        commands.addTickTask(() -> {
+        commands().addTickTask(() -> {
             if (future.isDone())
                 return true;
 
-            if (commands.getTick() < endTick)
+            if (commands().getTick() < endTick)
                 return false;
 
             future.complete(CommandResult.ok(ticks + " tick(s) waited"));
@@ -72,8 +70,8 @@ public class WaitGenCom extends BaseCommand {
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
         // A simulated input of this tick is seen by the next tick, whose scene can then ask a change,
         // done at the beginning of the tick after: start checking two ticks later
-        long startTick = commands.getTick();
-        commands.addTickTask(() -> {
+        long startTick = commands().getTick();
+        commands().addTickTask(() -> {
             if (future.isDone())
                 return true;
 
@@ -83,7 +81,7 @@ public class WaitGenCom extends BaseCommand {
                 return true;
             }
 
-            if (commands.getTick() < startTick + 2 || sceneManager.isSceneChangePending()
+            if (commands().getTick() < startTick + 2 || sceneManager.isSceneChangePending()
                     || sceneManager.isCurrentSceneLoading())
                 return false;
 
