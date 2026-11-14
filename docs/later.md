@@ -55,17 +55,20 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Distribution** : `mvn install`, puis JitPack ou GitHub Packages. **Versions** sémantiques par release.
 - **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
 - **Shaders** : includes GLSL lus depuis le classpath (jar) par l'abstraction de sources de `Resources` (aujourd'hui `ShaderLoader` lit le disque) ; shaders injectés par les projets et les mods (leur `shaders.json` ou leurs `ShaderData`, un nom identique remplace celui du moteur) ; variantes par `#define` injectés par le moteur (ubershader) ; `#version` et macros `in`/`out` injectés pour n'avoir qu'un jeu de fichiers au lieu de `1_40`/`3_30`.
-  - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources.
+  - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources, déclarées par les plugins (`registry` : une racine par plugin) une fois les sources multiples faites.
+  - **Shaders injectés par les plugins** (`registry.shaders()`) : le `ShaderLoader` reste créé par `Resources` avec le `ShaderManager` (GLSL connu après la fenêtre), hors du registre ; un plugin ne peut ni ajouter ni remplacer un shader aujourd'hui.
+- **Compteurs `stats` injectables** par les plugins (nom, unité, remise à zéro), aujourd'hui fixés par le moteur.
   - Lisent encore `resources/` en dur, hors du dossier de `Resources` : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`) et `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
   - **Shaders `1_40` en grande partie absents** (4 fichiers contre 31 en `3_30`) : un pilote GLSL 1.40 est incompatible avec le contexte 3.3 core demandé ; retirer `resources/shaders/1_40/` et la branche GLSL 140 de `ShaderManager.init`, ne plus y ajouter de shader ; le doublon disparaît de toute façon avec l'injection de `#version` et des macros `in`/`out`.
   - **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
 - Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
 
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
-- Le point d'injection accepte **plusieurs modules** : le jeu, puis chaque mod (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre).
-- **Identifiants à espace de noms** (`jeu:slime`, classe `registry/Identifier`, déjà utilisée par les actions, les axes et les commandes) pour ressources et scènes : aujourd'hui noms globaux → collisions.
-- **Commandes d'un mod** : le mod est leur propriétaire (`CommandOwner`), espace = identifiant du mod, niveau `DEV` ; insérer `MODDER` entre `CHEAT` et `DEV` si les outils de mod doivent être séparés de ceux du moteur.
-- Le menu de la démo lit aujourd'hui la complétion de la commande `scene` (`MenuScene`, `SceneChoices`) ; la cible durable reste un registre de scènes par nom (identifiant, description, clé de langue), qui remplacera la recherche par réflexion dans le paquet des scènes et le fichier `menuScenes.json` (scènes cachées, descriptions).
+- Le point d'injection accepte **plusieurs modules** (`EngineConfig.addPlugin`, ordre d'ajout) : reste la découverte des plugins des mods (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre d'`addPlugin`), et une phase `finish` après tous les `register` si des mods dépendent du contenu d'autres mods.
+- **Remplacement de la scène de chargement ou de départ par un mod** : `EngineConfig.setStartScene`/`setLoadingScene` n'ont qu'un propriétaire, le jeu.
+- **Identifiants à espace de noms** (`jeu:slime`, classe `registry/Identifier`, déjà utilisée par les actions, les axes, les commandes et les scènes) pour les ressources : aujourd'hui noms globaux → collisions.
+- **Commandes d'un mod** : le mod (son plugin) est leur propriétaire, niveau `DEV` ; insérer `MODDER` entre `CHEAT` et `DEV` si les outils de mod doivent être séparés de ceux du moteur.
+- **Scènes enregistrées** : clé de langue de la description (aujourd'hui texte anglais, `SceneRegistry`).
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
 - **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
 - Mods de données (JSON/ressources) et mods de code (jars, sans sandbox : de confiance seulement).
@@ -175,12 +178,12 @@ Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et antic
 - `SVGScene` : icônes à plusieurs échelles.
 
 ## Entrées : remappage et manettes
-- Touches modifiables à l'exécution, sauvegardées/chargées depuis un fichier ; scène prefab de changement des touches.
+- Touches modifiables à l'exécution, sauvegardées/chargées depuis un fichier, sur les clés du registre (identifiants stables, `InputRegistry` ; liaisons par défaut déclarées par les plugins) ; scène prefab de changement des touches.
 - **Liaisons des actions du jeu par lettre de la disposition** : la console reconnaît ses raccourcis par `KeyEvent.letter()` ; les liaisons du jeu (`ActionInput`, `ActionId`) restent par position physique (`EngineConfig.setKeyboardLanguage`) : à faire évoluer avec le remappage (lettre de la disposition ou position, au choix de l'action).
 - **Manettes** (base faite : `GamepadManager`, joueurs, `InputGamepadButton`/`InputGamepadAxis`, virtuelles, commande `gamepad`). Reste :
   - **Actions par joueur** (multijoueur local) : aujourd'hui joueur fixe ou `ANY_PLAYER` ; cible `inputManager.getState(action, joueur)`, clavier/souris attribués à un joueur comme une manette.
   - **Ensembles d'actions activables** (« jeu », « menu » : un même stick déplace et navigue, `MOVE_*_2D` et `SELECT_UP/DOWN`) au lieu de verrous par composant (`FreeCamera3DComponent.setLookLocked`).
-  - Sensibilité du regard réglable (aujourd'hui `LOOK_SENSITIVITY` de `ProjectLoading`), séparable souris/manette, avec inversion verticale (`scale` négatif).
+  - Sensibilité du regard réglable (aujourd'hui `LOOK_SENSITIVITY` de `DemoPlugin`), séparable souris/manette, avec inversion verticale (`scale` négatif).
   - Remappage manette sauvegardé avec le clavier (`Gamepad.parseButton`/`buttonName`).
   - Vibrations, gyroscope : absents de GLFW (SDL ou XInput si besoin).
   - Icônes de boutons selon le modèle (Xbox, PlayStation, Switch) d'après nom/GUID.

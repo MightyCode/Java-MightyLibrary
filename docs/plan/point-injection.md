@@ -93,3 +93,28 @@ Pas de nouvelle scène : le sujet est le démarrage. `DemoPlugin` (remplace `Pro
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml point-injection`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait
+- Étapes 1 à 5 sur la branche `point-injection`, un commit chacune (plan, loaders et commandes, entrées, scènes, crochets, docs). Paquet choisi : `registry` (`IPlugin`, `EngineRegistry` et ses sections `resources()`, `commands()`, `inputs()`, `scenes()`, `lifecycle()`, `Registrations` = registre gelé, `LifecycleHooks`, `ISceneChanged`) ; `EnginePlugin` package-private dans `main`.
+- Accès : `engine.registrations()`, `engine.inputs()` (`InputRegistry`), `engine.scenes()` (`SceneRegistry`), `engine.lifecycle()`.
+- Démo : `DemoPlugin` (loaders un par un, `demo:menu`, actions et axes avec touches, `DemoScenes`, crochets et `demo:lifecycle`) ; `ProjectLoading`, `IProjectLoading`, `menuScenes.json` et le batch `menu` supprimés.
+
+### Écarts au plan et raisons
+- **Scènes enregistrées avec leur classe** : `register(Identifier, Class<T>, Supplier<? extends T>, description)` au lieu de `(Identifier, Supplier, description)`. Sans la classe, `scene` sans argument ne peut pas nommer la scène courante créée par le code (`demo:menu`, scène de départ) sans appeler la fabrique. Plusieurs identifiants pour une classe : le premier la nomme.
+- **Loader des shaders hors du registre** : il dépend du `ShaderManager` (version GLSL connue après la fenêtre), donc `Resources` le crée toujours en tête ; `LibraryLoaders.mandatory()` = les autres obligatoires (cohérent avec « shaders hors périmètre », noté dans `later.md`). `BatchLoader` garde le `JSONLoader` créé avec lui : remplacer le loader JSON ne change pas celui des batchs.
+- **Commandes générales sans `Commands` au constructeur** : `help`, `wait`, `exec`, `console`, `as`, `complete`, `cheats` lisent `BaseCommand.commands()` (leur enregistrement) pour être créées par `EnginePlugin` avant l'`Engine`. `Commands(max, session, cheat)` (avec les commandes générales) reste pour les tests et les outils ; l'`Engine` utilise `Commands(max, session)` puis `freezePluginCommands()` (après : seules les vues enregistrent).
+- **Erreur d'enregistrement** : journalisée (`Logger.LogException`) et code `ListError.PLUGIN_REGISTRATION_FAIL` (4), arrêt propre avant GLFW.
+- **Entrées** : `InputManager.bindDefaults(pluginInputs)` à la création de chaque fenêtre ; `init(...)` garde les défauts du moteur. `AxisButtons(InputAction, InputAction)` lit les actions dans l'`InputManager` de la fenêtre, simulation comprise : simuler `demo:move_right` déplace maintenant aussi l'axe `move_right_3d` (avant, l'axe lisait la liaison brute). `SceneRegistry.declare` n'est pas générique (le lien classe/fabrique est vérifié par `ScenesSection.register`).
+- **Crochets** : « mode strict » = `EngineConfig.setStrictResources` (seul mode strict existant). `onSceneChanged` part une fois la nouvelle scène chargée (première frame complète) ; l'« ancienne » est la dernière scène chargée du contexte (une scène quittée pendant son chargement n'est jamais signalée).
+- **Menu** : le menu se masque lui-même par sa classe (plus de liste `hidden`) ; `CustomRenderer2D`, qui n'avait que la description par défaut, en a une ; `help` montre « plugin demo » pour les commandes de la démo ; la complétion de `scene` donne les chemins en minuscules (`scene Sce` → `scene2d`, `scene3d`, `scene3dbis`).
+
+### Vérifié
+- `mvn -o -q test` : 943 tests, 0 échec (nouveaux : `EngineRegistryTest`, `LifecycleHooksTest`, `SceneRegistryTest`, `InputRegistryTest` réécrit, `DemoScenesTest`, cas ajoutés dans `CommandsTest` et `ResourceLoadersTest`).
+- `scenario.py` : `help menu`, `resources` (tous les types chargés) ; `Scene3D` : `input press demo:move_right 20` déplace la caméra ; `input list` dans le second contexte de `MultiWindowScene` (toutes les liaisons) et dans la console détachée (les 3 actions `mightylib` seulement) ; F2 dans la fenêtre de la console la rattache ; `scene Platformer2D.PlatformerBox2D` puis `?scene` (identifiant), `complete "scene Sce"`, `scene MenuScene`, `demo:menu`, `scene nothing` (erreur claire) ; menu (capture : liste et description), lancement de `Box2D` depuis le menu ; `demo:lifecycle` (démarrage 1, changements de scène par contexte, 3 fenêtres ouvertes puis 1 fermée) et ligne du crochet d'arrêt dans le journal. Aucune ligne de problème dans les journaux.
+
+### À vérifier à la main
+- Menu de la démo : liste complète, descriptions de chaque scène, filtre et tris, lancement d'une scène à la souris.
+- Touches : `Scene2D` (déplacements), une scène 3D (`Scene3D` : ZQSD/WASD, souris, Maj, espace/Ctrl), un second contexte (`MultiWindowScene`, touche C) où les touches du jeu marchent.
+- Console : ² ouvre/ferme dans la fenêtre principale, F2 la détache, F2 dans sa fenêtre la rattache ; dans la fenêtre détachée, les touches du jeu n'agissent pas.
+- Fermeture du jeu sans erreur (journal : `--Demo: shutdown after …`, `Exit without error`).
