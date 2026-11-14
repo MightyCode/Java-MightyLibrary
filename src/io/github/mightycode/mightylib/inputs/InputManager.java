@@ -3,19 +3,18 @@ package io.github.mightycode.mightylib.inputs;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
-import io.github.mightycode.mightylib.inputs.inputType.EInputType;
-import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static org.lwjgl.glfw.GLFW.*;
+import java.util.Objects;
 
 /**
- * Inputs of a window : the bindings of the registered actions and axes (InputRegistry), read by handle.
+ * Inputs of a window : the bindings of the actions and axes declared in the InputRegistry of the engine, read by key.
+ * Using a key that is not declared is an error (IllegalStateException); a declared key without binding is never
+ * pressed.
  *
  * @author MightyCode
  * @version 1.0
@@ -33,20 +32,25 @@ public class InputManager {
     private final GamepadManager gamepadManager;
     public GamepadManager getGamepadManager() { return gamepadManager; }
 
+    // The declared actions and axes, shared by all the windows of the engine
+    private final InputRegistry registry;
+    public InputRegistry registry() { return registry; }
+
     private final Map<InputAction, ActionInput> actionConfigurations;
 
-    // Simulated actions (commands, scripts), combined with the real inputs, by InputAction.index()
+    // Simulated actions (commands, scripts), combined with the real inputs, by InputRegistry.index
     private final InputSimulation simulation;
 
 
     /**
-     * Input manager class.
-     * Instance the class, set the input and its types.
+     * Without binding: bindDefaults or init binds the actions and axes.
      */
-    public InputManager(KeyboardManager keyManager, MouseManager mouseManager, GamepadManager gamepadManager){
+    public InputManager(KeyboardManager keyManager, MouseManager mouseManager, GamepadManager gamepadManager,
+                        InputRegistry registry){
         this.keyManager = keyManager;
         this.mouseManager = mouseManager;
         this.gamepadManager = gamepadManager;
+        this.registry = Objects.requireNonNull(registry, "registry");
 
         actionConfigurations = new HashMap<>();
         simulation = new InputSimulation();
@@ -57,20 +61,37 @@ public class InputManager {
     }
 
 
+    /**
+     * The default bindings of the registry: those of the engine (console...), and those of the plugins when the window
+     * has the inputs of the game (WindowConfig.hasProjectInputs; not the detached console).
+     */
+    public void bindDefaults(boolean pluginInputs) {
+        actionConfigurations.clear();
+        axisConfigurations.clear();
+        for (ActionInput actionInput : registry.defaultActions(pluginInputs))
+            actionConfigurations.put(actionInput.action(), actionInput);
+        for (AxisInput axisInput : registry.defaultAxes(pluginInputs))
+            axisConfigurations.put(axisInput.axis(), axisInput);
+    }
+
     public void init(ActionInput[] actionInputs){
         init(actionInputs, new AxisInput[0]);
     }
 
+    /**
+     * The default bindings of the engine, then the given ones (they replace a default one of the same key).
+     * @throws IllegalStateException if a key is not declared in the registry
+     */
     public void init(ActionInput[] actionInputs, AxisInput[] axisInputs){
-        actionConfigurations.clear();
-        axisConfigurations.clear();
-        initLibraryInputs();
+        bindDefaults(false);
 
         for (ActionInput actionInput : actionInputs) {
+            registry.index(actionInput.action());
             this.actionConfigurations.put(actionInput.action(), actionInput);
         }
 
         for (AxisInput axisInput : axisInputs) {
+            registry.index(axisInput.axis());
             this.axisConfigurations.put(axisInput.axis(), axisInput);
         }
     }
@@ -78,7 +99,7 @@ public class InputManager {
     /// Axes : signed values, not bounded, their meaning is given by their bindings (AxisBinding)
 
     private final Map<InputAxis, AxisInput> axisConfigurations;
-    // Simulated axes (commands, scripts) : the value replaces the real one while it is held, by InputAxis.index()
+    // Simulated axes (commands, scripts) : the value replaces the real one while it is held, by InputRegistry.index
     private final InputSimulation axisSimulation;
     private final Map<Integer, Float> pendingAxisValues;
     private final Map<Integer, Float> simulatedAxisValues;
@@ -158,6 +179,7 @@ public class InputManager {
 
     // Value of the axis for this tick, 0 if not bound
     public float getAxis(InputAxis axis){
+        int index = registry.index(axis);
         if (blocked || focus.isHeld())
             return 0;
 
@@ -165,29 +187,30 @@ public class InputManager {
         if (axisInput == null)
             return 0;
 
-        if (axisSimulation.getState(axis.index()))
-            return simulatedAxisValues.getOrDefault(axis.index(), 0f);
+        if (axisSimulation.getState(index))
+            return simulatedAxisValues.getOrDefault(index, 0f);
 
         return axisInput.axisBinding().getAxis(this);
     }
 
     // Set the axis to a value during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
     public void simulateAxis(InputAxis axis, float value, int ticks){
+        int index = registry.index(axis);
         if (!axisConfigurations.containsKey(axis))
             throw new IllegalArgumentException("Axis " + axis + " is not bound");
 
-        axisSimulation.press(axis.index(), ticks);
-        pendingAxisValues.put(axis.index(), value);
+        axisSimulation.press(index, ticks);
+        pendingAxisValues.put(index, value);
     }
 
     public void simulateAxisRelease(InputAxis axis){
-        axisSimulation.release(axis.index());
+        axisSimulation.release(registry.index(axis));
     }
 
     // Bound axes matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
     public List<AxisInput> matchAxes(String name) {
         List<AxisInput> result = new ArrayList<>();
-        for (InputAxis axis : InputRegistry.matchAxes(name)) {
+        for (InputAxis axis : registry.matchAxes(name)) {
             AxisInput axisInput = axisConfigurations.get(axis);
             if (axisInput != null)
                 result.add(axisInput);
@@ -206,6 +229,7 @@ public class InputManager {
     }
 
     public boolean getState(InputAction action){
+        int index = registry.index(action);
         if (hides(action))
             return false;
 
@@ -215,7 +239,7 @@ public class InputManager {
 
         boolean raw = beginRead(action);
         try {
-            return actionInput.getState(this) || simulation.getState(action.index());
+            return actionInput.getState(this) || simulation.getState(index);
         } finally {
             endRead(raw);
         }
@@ -227,6 +251,7 @@ public class InputManager {
      * progressive for a gamepad axis. For a speed, a movement : value * maxSpeed.
      */
     public float getValue(InputAction action){
+        int index = registry.index(action);
         if (hides(action))
             return 0;
 
@@ -236,7 +261,7 @@ public class InputManager {
 
         boolean raw = beginRead(action);
         try {
-            return simulation.getState(action.index()) ? 1 : actionInput.getValue(this);
+            return simulation.getState(index) ? 1 : actionInput.getValue(this);
         } finally {
             endRead(raw);
         }
@@ -244,6 +269,7 @@ public class InputManager {
 
 
     public boolean inputPressed(InputAction action){
+        int index = registry.index(action);
         if (hides(action) || edgesDropped)
             return false;
 
@@ -253,7 +279,7 @@ public class InputManager {
 
         boolean raw = beginRead(action);
         try {
-            return actionInput.actionPressed(this) || simulation.pressed(action.index());
+            return actionInput.actionPressed(this) || simulation.pressed(index);
         } finally {
             endRead(raw);
         }
@@ -261,6 +287,7 @@ public class InputManager {
 
 
     public boolean inputReleased(InputAction action){
+        int index = registry.index(action);
         if (hides(action) || edgesDropped)
             return false;
 
@@ -270,7 +297,7 @@ public class InputManager {
 
         boolean raw = beginRead(action);
         try {
-            return actionInput.actionReleased(this) || simulation.released(action.index());
+            return actionInput.actionReleased(this) || simulation.released(index);
         } finally {
             endRead(raw);
         }
@@ -279,7 +306,10 @@ public class InputManager {
     /** Same as getState (Press, Release) or inputPressed/inputReleased (Pressed, Released), chosen by the enum. */
     public boolean isInput(InputAction action, EInputState state) {
         // An action not bound is never in any state
-        if (action == null || !actionConfigurations.containsKey(action))
+        if (action == null)
+            return false;
+        registry.index(action);
+        if (!actionConfigurations.containsKey(action))
             return false;
 
         switch (state) {
@@ -299,7 +329,7 @@ public class InputManager {
     // Bound actions matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
     public List<ActionInput> matchActions(String name) {
         List<ActionInput> result = new ArrayList<>();
-        for (InputAction action : InputRegistry.matchActions(name)) {
+        for (InputAction action : registry.matchActions(name)) {
             ActionInput actionInput = actionConfigurations.get(action);
             if (actionInput != null)
                 result.add(actionInput);
@@ -319,16 +349,16 @@ public class InputManager {
 
     // Press the action during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
     public void simulatePress(InputAction action, int ticks) {
-        simulation.press(action.index(), ticks);
+        simulation.press(registry.index(action), ticks);
     }
 
     // Release the simulated action from the next tick
     public void simulateRelease(InputAction action) {
-        simulation.release(action.index());
+        simulation.release(registry.index(action));
     }
 
     public boolean isSimulated(InputAction action) {
-        return simulation.isHeld(action.index());
+        return simulation.isHeld(registry.index(action));
     }
 
 
@@ -356,17 +386,5 @@ public class InputManager {
     // Package-private for the tests (no keyboard nor mouse there)
     void updateActionSimulation(){
         simulation.update();
-    }
-
-
-    private void initLibraryInputs(){
-        actionConfigurations.put(EngineActions.TOGGLE_CONSOLE,
-                new ActionInput(EngineActions.TOGGLE_CONSOLE, new InputSimple(GLFW_KEY_GRAVE_ACCENT, EInputType.Keyboard)));
-
-        actionConfigurations.put(EngineActions.DETACH_CONSOLE,
-                new ActionInput(EngineActions.DETACH_CONSOLE, new InputSimple(GLFW_KEY_F2, EInputType.Keyboard)));
-
-        actionConfigurations.put(EngineActions.RELOAD_TEXTURE,
-                new ActionInput(EngineActions.RELOAD_TEXTURE, new InputSimple(GLFW_KEY_F5, EInputType.Keyboard)));
     }
 }

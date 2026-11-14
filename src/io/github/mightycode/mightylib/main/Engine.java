@@ -12,7 +12,7 @@ import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.main.monitors.Monitors;
-import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
+import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.Registrations;
@@ -83,6 +83,8 @@ public final class Engine implements IView {
     public Resources resources() { return resources; }
     // What the plugins registered, frozen (null before the start)
     public Registrations registrations() { return registrations; }
+    // The actions and axes declared by the plugins (null before the start)
+    public InputRegistry inputs() { return registrations != null ? registrations.inputs() : null; }
 
     public GLResources glResources() { return glResources; }
 
@@ -187,6 +189,7 @@ public final class Engine implements IView {
             Logger.LogException("--The registration of the plugins failed", e);
             return ListError.PLUGIN_REGISTRATION_FAIL;
         }
+        contexts.setInputRegistry(registrations.inputs());
 
         System.out.println("--Load libraries.");
 
@@ -275,10 +278,6 @@ public final class Engine implements IView {
             console.setLogsShown(config.isConsoleLogsShown());
         }
 
-        IProjectLoading projectLoading = config.getProjectLoading();
-        if (projectLoading != null)
-            projectLoading.contextLoading(mainWindow);
-
         // Create all resources dependencies
         resources.init();
 
@@ -328,8 +327,6 @@ public final class Engine implements IView {
         if (context == null)
             throw new IllegalStateException("The window of the context " + name + " can't be created");
 
-        initWindowInputs(context.getMainWindow(), windowConfig);
-
         SceneManager manager = new SceneManager(this, context, false, config.getLoadingScene());
         context.setSceneManager(manager);
 
@@ -343,13 +340,6 @@ public final class Engine implements IView {
         else
             contexts.getMainWindow().getWindow().bindWindow();
         return context;
-    }
-
-    // The inputs of the project (IProjectLoading.contextLoading) are bound to each window that asks for them
-    void initWindowInputs(WindowContext window, WindowConfig windowConfig) {
-        IProjectLoading projectLoading = config.getProjectLoading();
-        if (projectLoading != null && windowConfig.hasProjectInputs())
-            projectLoading.contextLoading(window);
     }
 
 

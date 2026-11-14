@@ -2,23 +2,37 @@ package io.github.mightycode.mightylib.inputs;
 
 import io.github.mightycode.mightylib.registry.Identifier;
 
+import java.util.Objects;
+
 /**
- * Handle of a registered axis (move, look...), obtained from InputRegistry.axis.
- * Bound in each InputManager by an AxisInput. One handle per identifier.
+ * Key of an axis (move, look...): its identifier alone, equal to any other key with the same identifier.
+ * Declared by a plugin with its default binding (EngineRegistry.inputs), read with InputManager.getAxis.
  */
 public final class InputAxis {
     private final Identifier identifier;
-    private final int index;
 
-    InputAxis(Identifier identifier, int index) {
-        this.identifier = identifier;
-        this.index = index;
+    private InputAxis(Identifier identifier) {
+        this.identifier = Objects.requireNonNull(identifier, "identifier");
+    }
+
+    public static InputAxis of(Identifier identifier) {
+        return new InputAxis(identifier);
+    }
+
+    // "namespace:path"
+    public static InputAxis of(String identifier) {
+        return new InputAxis(Identifier.parse(identifier));
     }
 
     public Identifier identifier() { return identifier; }
 
-    // Dense number given by the registry, valid only during this launch (never saved)
-    int index() { return index; }
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof InputAxis && identifier.equals(((InputAxis) other).identifier);
+    }
+
+    @Override
+    public int hashCode() { return identifier.hashCode(); }
 
     @Override
     public String toString() { return identifier.toString(); }

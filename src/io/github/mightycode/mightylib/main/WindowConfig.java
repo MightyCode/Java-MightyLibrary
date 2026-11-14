@@ -22,7 +22,7 @@ public final class WindowConfig {
     private boolean persistent;
     // Null: only the main window of the main context stops the engine when closed
     private Boolean closesEngine;
-    // IProjectLoading.contextLoading binds the inputs of the window
+    // The default bindings of the plugins (EngineRegistry.inputs) in this window; those of the engine always are
     private boolean projectInputs = true;
 
     public WindowConfig() {}

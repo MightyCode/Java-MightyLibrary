@@ -16,12 +16,13 @@ import static org.lwjgl.glfw.GLFW.*;
 // Axes bound to a gamepad (the mouse and the keyboard need a window ; perSecond needs the game time)
 class AxisTest {
     // The registry is shared by the whole JVM : identifiers unique to this class
-    private static final InputAxis STICK = InputRegistry.axis("test_axis:stick");
-    private static final InputAxis CURVED = InputRegistry.axis("test_axis:curved");
-    private static final InputAxis INVERTED = InputRegistry.axis("test_axis:inverted");
-    private static final InputAxis BUTTONS = InputRegistry.axis("test_axis:buttons");
-    private static final InputAxis SUM = InputRegistry.axis("test_axis:sum");
-    private static final InputAxis NOT_BOUND = InputRegistry.axis("test_axis:not_bound");
+    private static final InputAxis STICK = InputAxis.of("test_axis:stick");
+    private static final InputAxis CURVED = InputAxis.of("test_axis:curved");
+    private static final InputAxis INVERTED = InputAxis.of("test_axis:inverted");
+    private static final InputAxis BUTTONS = InputAxis.of("test_axis:buttons");
+    private static final InputAxis SUM = InputAxis.of("test_axis:sum");
+    private static final InputAxis NOT_BOUND = InputAxis.of("test_axis:not_bound");
+    private static final InputRegistry REGISTRY = TestInputs.Registry(STICK, CURVED, INVERTED, BUTTONS, SUM, NOT_BOUND);
 
     private FakeGamepadSource source;
     private GamepadManager gamepads;
@@ -35,7 +36,7 @@ class AxisTest {
         source.plug(0, true);
         gamepads.postUpdate();
 
-        inputManager = new InputManager(null, null, gamepads);
+        inputManager = new InputManager(null, null, gamepads, REGISTRY);
         inputManager.init(new ActionInput[0], new AxisInput[]{
                 new AxisInput(STICK, new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X)),
                 new AxisInput(CURVED, new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X).curve(2).scale(10)),
@@ -112,11 +113,6 @@ class AxisTest {
         assertNull(inputManager.findAxis("not_bound"));
         assertEquals(0, inputManager.getAxis(NOT_BOUND));
         assertThrows(IllegalArgumentException.class, () -> inputManager.simulateAxis(NOT_BOUND, 1, 1));
-    }
-
-    @Test
-    void anActionCannotTakeTheIdentifierOfAnAxis() {
-        assertThrows(IllegalArgumentException.class, () -> InputRegistry.action("test_axis:stick"));
     }
 
     @Test

@@ -6,7 +6,6 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLangu
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
-import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -65,7 +64,6 @@ public class EngineConfig {
     private int consoleLogCapacity = ConsoleLog.DEFAULT_CAPACITY;
     private boolean consoleLogsShown = true;
 
-    private IProjectLoading projectLoading;
     private final List<IPlugin> plugins = new ArrayList<>();
 
     private int shaderVersion = -1;
@@ -268,11 +266,6 @@ public class EngineConfig {
         return this;
     }
 
-    public EngineConfig setProjectLoading(IProjectLoading projectLoading) {
-        this.projectLoading = projectLoading;
-        return this;
-    }
-
     // -1 for the newest version
     public EngineConfig setShaderVersion(int shaderVersion) {
         this.shaderVersion = shaderVersion;
@@ -464,7 +457,6 @@ public class EngineConfig {
                 return null;
         }
     }
-    public IProjectLoading getProjectLoading() { return projectLoading; }
     // In the order of addPlugin, read only
     public List<IPlugin> getPlugins() { return Collections.unmodifiableList(plugins); }
     public int getShaderVersion() { return shaderVersion; }

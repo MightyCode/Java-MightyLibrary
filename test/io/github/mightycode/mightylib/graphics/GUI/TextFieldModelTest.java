@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
+import io.github.mightycode.mightylib.inputs.TestInputs;
+import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.inputs.InputFocus;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.KeyEvent;
@@ -14,6 +16,8 @@ import static org.lwjgl.glfw.GLFW.*;
 
 // The inputs of a text field without GL: ten units of width per character
 class TextFieldModelTest {
+    private static final InputRegistry REGISTRY = TestInputs.Registry();
+
     private static final float CHARACTER = 10;
 
     private static final class Clipboard implements IClipboard {
@@ -32,7 +36,7 @@ class TextFieldModelTest {
 
     @BeforeEach
     void setUp() {
-        focus = new InputManager(null, null, null).focus();
+        focus = new InputManager(null, null, null, REGISTRY).focus();
         model = new TextFieldModel("field", text -> text.length() * CHARACTER);
         model.setAvailableWidth(1000);
     }

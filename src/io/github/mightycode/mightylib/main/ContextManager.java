@@ -3,9 +3,9 @@ package io.github.mightycode.mightylib.main;
 import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
 import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
-import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
@@ -25,10 +25,16 @@ public final class ContextManager {
     private Context mainContext;
     private GamepadManager gamepadManager;
     private int lastWindowId;
+    // The actions and axes of the engine (set by the engine before its first context), bound in each window
+    private InputRegistry inputRegistry = new InputRegistry().freeze();
     // Hidden context that every window shares its objects with, created with the first window
     private GLContext rootGLContext;
 
     ContextManager() {}
+
+    void setInputRegistry(InputRegistry inputRegistry) {
+        this.inputRegistry = inputRegistry;
+    }
 
     GLContext rootGLContext() {
         if (rootGLContext == null)
@@ -67,7 +73,8 @@ public final class ContextManager {
         return context;
     }
 
-    // Null when the window can't be created. The inputs of the project are bound by the engine afterward.
+    // Null when the window can't be created. Its inputs are the default bindings of the registry (those of the game
+    // when the window has the inputs of the game: WindowConfig.hasProjectInputs).
     WindowContext createWindowContext(Context owner, String name, boolean closesEngine, WindowView view,
                                       WindowConfig config, long parentWindowId) {
         DisplaySettings display = config.getDisplay();
@@ -85,8 +92,8 @@ public final class ContextManager {
 
         KeyboardManager keyboardManager = new KeyboardManager(window.getInfo(), keyboardLanguage);
         MouseManager mouseManager = new MouseManager(window.getInfo());
-        InputManager inputManager = new InputManager(keyboardManager, mouseManager, getGamepadManager());
-        inputManager.init(new ActionInput[]{});
+        InputManager inputManager = new InputManager(keyboardManager, mouseManager, getGamepadManager(), inputRegistry);
+        inputManager.bindDefaults(config.hasProjectInputs());
 
         WindowContext windowContext = new WindowContext(++lastWindowId, owner, name, closesEngine, view, window,
                 inputManager, keyboardManager, mouseManager);

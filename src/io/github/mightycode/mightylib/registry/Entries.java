@@ -77,4 +77,10 @@ final class Entries<K, V> {
 
         return values;
     }
+
+    // Null if the key is not registered
+    V get(K key) {
+        Entry<V> entry = entries.get(key);
+        return entry == null ? null : entry.value;
+    }
 }

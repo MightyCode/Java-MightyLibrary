@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
@@ -17,8 +18,11 @@ public final class Registrations {
     final Entries<Class<? extends DataType>, ResourceLoader> loaders =
             new Entries<>("Loader of", Class::getSimpleName);
     final Entries<Identifier, BaseCommand> commands = new Entries<>("Command", Identifier::toString);
+    final Entries<Identifier, InputsSection.Input> inputs = new Entries<>("Input", Identifier::toString);
 
     private boolean frozen;
+    // Built at the freeze
+    private InputRegistry inputRegistry;
 
     Registrations() {}
 
@@ -27,6 +31,15 @@ public final class Registrations {
     }
 
     void freeze() {
+        inputRegistry = new InputRegistry();
+        for (InputsSection.Input input : inputs.values()) {
+            if (input.action != null)
+                inputRegistry.declareAction(input.action, input.actionBinding);
+            else
+                inputRegistry.declareAxis(input.axis, input.axisBinding);
+        }
+        inputRegistry.freeze();
+
         frozen = true;
     }
 
@@ -47,6 +60,11 @@ public final class Registrations {
     // The loaders of every plugin, in registration order
     public List<ResourceLoader> loaders() {
         return Collections.unmodifiableList(loaders.values());
+    }
+
+    // The actions and axes of every plugin with their default bindings, frozen; null before the freeze
+    public InputRegistry inputs() {
+        return inputRegistry;
     }
 
     // The commands the plugin registered or replaced: it owns them

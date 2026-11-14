@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
+import io.github.mightycode.mightylib.inputs.TestInputs;
 import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputManager;
@@ -18,10 +19,11 @@ import static org.junit.jupiter.api.Assertions.*;
 // Selection and activation of GUIList and GUI, without window nor GL (fake mouse, fake actions, fake elements)
 class GUIListTest {
     // The registry is shared by the whole JVM : identifiers unique to this class
-    private static final InputAction UP = InputRegistry.action("test_gui_list:up");
-    private static final InputAction DOWN = InputRegistry.action("test_gui_list:down");
-    private static final InputAction VALIDATE = InputRegistry.action("test_gui_list:validate");
-    private static final InputAction NOT_BOUND = InputRegistry.action("test_gui_list:not_bound");
+    private static final InputAction UP = InputAction.of("test_gui_list:up");
+    private static final InputAction DOWN = InputAction.of("test_gui_list:down");
+    private static final InputAction VALIDATE = InputAction.of("test_gui_list:validate");
+    private static final InputAction NOT_BOUND = InputAction.of("test_gui_list:not_bound");
+    private static final InputRegistry REGISTRY = TestInputs.Registry(UP, DOWN, VALIDATE, NOT_BOUND);
 
     // An action whose state is set by the test
     private static class FakeAction implements IAction {
@@ -109,7 +111,7 @@ class GUIListTest {
         up = new FakeAction();
         down = new FakeAction();
         validate = new FakeAction();
-        inputManager = new InputManager(null, null, null);
+        inputManager = new InputManager(null, null, null, REGISTRY);
         inputManager.init(new ActionInput[]{
                 new ActionInput(UP, up),
                 new ActionInput(DOWN, down),

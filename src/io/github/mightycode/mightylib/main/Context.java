@@ -124,7 +124,6 @@ public final class Context implements IView {
         refreshBlocking();
 
         try {
-            engine.initWindowInputs(window, config);
             window.getWindow().bindWindow();
             view.attach(engine, window, args);
         } catch (RuntimeException e) {
