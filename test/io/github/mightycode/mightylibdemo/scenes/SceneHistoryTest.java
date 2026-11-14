@@ -17,7 +17,7 @@ class SceneHistoryTest {
                 + "@200\n\nA\t" + DIR + "Box2D.java\nM\t" + DIR + "Scene2D.java\n\n"
                 + "@300\n\nM\t" + DIR + "Box2D.java\n";
 
-        Map<String, SceneHistory.Dates> dates = SceneHistory.ByCommand(SceneHistory.ParseLog(log));
+        Map<String, SceneHistory.Dates> dates = SceneHistory.ByRelativeName(SceneHistory.ParseLog(log));
 
         assertEquals(100, dates.get("Scene2D").added());
         assertEquals(200, dates.get("Scene2D").modified());
@@ -30,7 +30,7 @@ class SceneHistoryTest {
         String log = "@100\nA\t" + DIR + "Old.java\n"
                 + "@200\nR087\t" + DIR + "Old.java\t" + DIR + "Platformer2D/New.java\n";
 
-        Map<String, SceneHistory.Dates> dates = SceneHistory.ByCommand(SceneHistory.ParseLog(log));
+        Map<String, SceneHistory.Dates> dates = SceneHistory.ByRelativeName(SceneHistory.ParseLog(log));
 
         assertFalse(dates.containsKey("Old"));
         assertEquals(100, dates.get("Platformer2D.New").added());
@@ -50,7 +50,7 @@ class SceneHistoryTest {
         String status = " M " + DIR + "Scene2D.java\n?? " + DIR + "NewScene2D.java\n";
 
         SceneHistory.ApplyStatus(byPath, status, path -> 500);
-        Map<String, SceneHistory.Dates> dates = SceneHistory.ByCommand(byPath);
+        Map<String, SceneHistory.Dates> dates = SceneHistory.ByRelativeName(byPath);
 
         assertEquals(100, dates.get("Scene2D").added());
         assertEquals(500, dates.get("Scene2D").modified());
@@ -62,6 +62,6 @@ class SceneHistoryTest {
     void onlyTheSourcesOfTheScenesCount() {
         String log = "@100\nA\t" + DIR + "notes.txt\nA\tsrc/Other.java\nA\t" + DIR + "Scene2D.java\n";
 
-        assertEquals(1, SceneHistory.ByCommand(SceneHistory.ParseLog(log)).size());
+        assertEquals(1, SceneHistory.ByRelativeName(SceneHistory.ParseLog(log)).size());
     }
 }

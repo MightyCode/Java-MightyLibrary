@@ -48,7 +48,7 @@ final class SceneHistory {
         if (status != null)
             ApplyStatus(byPath, status, path -> new File(path).lastModified() / 1000);
 
-        return ByCommand(byPath);
+        return ByRelativeName(byPath);
     }
 
     /**
@@ -131,18 +131,18 @@ final class SceneHistory {
     }
 
     /** The paths of the scene sources become relative class names (Platformer2D.PlatformerBox2D). */
-    static Map<String, Dates> ByCommand(Map<String, Dates> byPath) {
-        Map<String, Dates> byCommand = new HashMap<>();
+    static Map<String, Dates> ByRelativeName(Map<String, Dates> byPath) {
+        Map<String, Dates> byName = new HashMap<>();
         for (Map.Entry<String, Dates> entry : byPath.entrySet()) {
             String path = entry.getKey();
             if (!path.startsWith(SCENES_DIRECTORY) || !path.endsWith(".java"))
                 continue;
 
             String relative = path.substring(SCENES_DIRECTORY.length(), path.length() - ".java".length());
-            byCommand.put(relative.replace('/', '.'), entry.getValue());
+            byName.put(relative.replace('/', '.'), entry.getValue());
         }
 
-        return byCommand;
+        return byName;
     }
 
     // The output of a git command run from the working directory, null if it fails

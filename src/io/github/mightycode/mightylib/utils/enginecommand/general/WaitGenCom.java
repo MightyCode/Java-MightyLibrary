@@ -25,7 +25,6 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 public class WaitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "wait";
 
-
     public WaitGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
                 "Answer after some ticks (game time, not real time) or once the current scene is loaded");
