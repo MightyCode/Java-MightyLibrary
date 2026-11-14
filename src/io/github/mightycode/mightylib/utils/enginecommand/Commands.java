@@ -88,12 +88,22 @@ public class Commands {
     }
 
     /**
-     * One per engine (Engine.commands), with the general commands.
-     * @param maxLevel     the highest level of the build (EngineConfig.setMaxCommandAccess)
-     * @param sessionLevel level of the player at the start, bounded by maxLevel (EngineConfig.setCommandAccess)
+     * With the general commands, owned by the engine: the tests, a tool.
      * @param cheatCommand adds the command "cheats on|off" when maxLevel allows the cheats
      */
     public Commands(ECommandLevel maxLevel, ECommandLevel sessionLevel, boolean cheatCommand) {
+        this(maxLevel, sessionLevel);
+        ListGeneralCommand.addCommands(registryFor(CommandOwner.ENGINE),
+                cheatCommand && maxLevel.includes(ECommandLevel.CHEAT));
+    }
+
+    /**
+     * One per engine (Engine.commands), without commands: the engine adds those of the plugins (the general commands
+     * come from the plugin of the engine), then freezes them (freezePluginCommands).
+     * @param maxLevel     the highest level of the build (EngineConfig.setMaxCommandAccess)
+     * @param sessionLevel level of the player at the start, bounded by maxLevel (EngineConfig.setCommandAccess)
+     */
+    public Commands(ECommandLevel maxLevel, ECommandLevel sessionLevel) {
         pendingRequests = new ConcurrentLinkedQueue<>();
         tickTasks = new ArrayList<>();
         listeners = new CopyOnWriteArrayList<>();
@@ -102,8 +112,6 @@ public class Commands {
         this.sessionLevel = ECommandLevel.Min(sessionLevel, maxLevel);
 
         commands = new ArrayList<>();
-        ListGeneralCommand.addCommands(registryFor(CommandOwner.ENGINE), this,
-                cheatCommand && maxLevel.includes(ECommandLevel.CHEAT));
     }
 
     /**
@@ -568,10 +576,14 @@ public class Commands {
      * (setViewChooser).
      * @throws IllegalArgumentException if a command with the same identifier already exists (outside of another view),
      *                                  or the command is registered
+     * @throws IllegalStateException    for an owner that is not a view, after freezePluginCommands
      */
     public void register(BaseCommand command, CommandOwner owner) {
         if (owner == null)
             throw new IllegalArgumentException("A command needs an owner");
+        if (pluginCommandsFrozen && owner.view() == null)
+            throw new IllegalStateException("The command " + command.getId() + " of " + owner + " comes too late: the"
+                    + " commands of the plugins are registered in IPlugin.register, those of the views stay dynamic");
         for (BaseCommand existing : commands) {
             if (existing.getId().equals(command.getId()) && !OfOtherViews(existing.getOwner(), owner))
                 throw new IllegalArgumentException("A command ->" + command.getId() + "<- already exists");
@@ -579,6 +591,17 @@ public class Commands {
 
         command.setRegistration(this, owner);
         commands.add(command);
+    }
+
+    // Set by freezePluginCommands
+    private boolean pluginCommandsFrozen;
+
+    /**
+     * Main thread. After the start: only the views (scenes, window views) register commands, those of the engine and
+     * the plugins are fixed.
+     */
+    public void freezePluginCommands() {
+        pluginCommandsFrozen = true;
     }
 
     private static boolean OfOtherViews(CommandOwner first, CommandOwner second) {

@@ -46,7 +46,7 @@ abstract class ResourcesTestBase {
         fakeLoader = new FakeLoader();
         JSONLoader jsonLoader = new JSONLoader();
         resources = new Resources(new Resources.BatchResourcesMethod("unused"), WORKERS, folder.toString(),
-                Arrays.asList(fakeLoader, jsonLoader, new BatchLoader(jsonLoader)));
+                Arrays.asList(fakeLoader, jsonLoader, new BatchLoader()));
     }
 
     // ---- Helpers ----

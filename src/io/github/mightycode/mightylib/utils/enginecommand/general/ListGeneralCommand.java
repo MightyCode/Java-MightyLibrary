@@ -4,17 +4,16 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
-import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 
 public abstract class ListGeneralCommand {
     /**
-     * The general commands, owned by the engine.
+     * The general commands, registered by the plugin of the engine (the engine owns them).
      * @param cheatCommand the command "cheats on|off" (the build allows the cheats and the game wants the command)
      */
-    public static void addCommands(CommandRegistry registry, Commands commands, boolean cheatCommand){
+    public static void addCommands(CommandRegistry registry, boolean cheatCommand){
         registry.register(new ReloadGenCom());
         registry.register(new WatchGenCom());
-        registry.register(new HelpGenCom(commands));
+        registry.register(new HelpGenCom());
         registry.register(new ExitGenCom());
         registry.register(new ChangeSoundGainCom());
         registry.register(new SoundsGenCom());
@@ -30,14 +29,14 @@ public abstract class ListGeneralCommand {
         registry.register(new MonitorsGenCom());
         registry.register(new WindowsGenCom());
         registry.register(new WindowGenCom());
-        registry.register(new WaitGenCom(commands));
-        registry.register(new ExecGenCom(commands));
-        registry.register(new ConsoleGenCom(commands));
-        registry.register(new AsGenCom(commands));
-        registry.register(new CompleteGenCom(commands));
+        registry.register(new WaitGenCom());
+        registry.register(new ExecGenCom());
+        registry.register(new ConsoleGenCom());
+        registry.register(new AsGenCom());
+        registry.register(new CompleteGenCom());
 
         if (cheatCommand)
-            registry.register(new CheatsGenCom(commands));
+            registry.register(new CheatsGenCom());
     }
 
     // Identifier of a general command

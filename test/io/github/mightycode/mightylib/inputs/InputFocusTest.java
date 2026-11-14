@@ -11,8 +11,9 @@ import static org.lwjgl.glfw.GLFW.*;
 
 // While an owner holds the focus, the game sees no action but those of the engine (no keyboard nor mouse here)
 class InputFocusTest {
-    private static final InputAction GAME = InputRegistry.action("test_input_focus:game_action");
-    private static final InputAction ENGINE = InputRegistry.action(Identifier.of(Identifier.ENGINE_NAMESPACE, "test_input_focus"));
+    private static final InputAction GAME = InputAction.of("test_input_focus:game_action");
+    private static final InputAction ENGINE = InputAction.of(Identifier.of(Identifier.ENGINE_NAMESPACE, "test_input_focus"));
+    private static final InputRegistry REGISTRY = TestInputs.Registry(GAME, ENGINE);
 
     private FakeGamepadSource source;
     private GamepadManager gamepads;
@@ -27,7 +28,7 @@ class InputFocusTest {
         source.plug(0, true);
         gamepads.postUpdate();
 
-        inputManager = new InputManager(null, null, gamepads);
+        inputManager = new InputManager(null, null, gamepads, REGISTRY);
         inputManager.init(new ActionInput[]{
                 new ActionInput(GAME, new InputGamepadButton(GLFW_GAMEPAD_BUTTON_A)),
                 new ActionInput(ENGINE, new InputGamepadButton(GLFW_GAMEPAD_BUTTON_A)),
@@ -200,7 +201,7 @@ class InputFocusTest {
     @Test
     void clickElsewhereGivesTheFocusBackWithoutLosingThePress() {
         FakeMouse mouse = new FakeMouse();
-        InputManager manager = new InputManager(null, mouse, gamepads);
+        InputManager manager = new InputManager(null, mouse, gamepads, REGISTRY);
         mouseWithFocusHeld(manager);
         assertFalse(mouse.buttonPressed(GLFW_MOUSE_BUTTON_LEFT));
         assertTrue(mouse.rawButtonPressed(GLFW_MOUSE_BUTTON_LEFT));
@@ -213,7 +214,7 @@ class InputFocusTest {
     @Test
     void otherReleasesLoseThePress() {
         FakeMouse mouse = new FakeMouse();
-        InputManager manager = new InputManager(null, mouse, gamepads);
+        InputManager manager = new InputManager(null, mouse, gamepads, REGISTRY);
         mouseWithFocusHeld(manager);
 
         manager.focus().release("owner");

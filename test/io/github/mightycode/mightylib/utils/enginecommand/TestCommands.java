@@ -14,9 +14,9 @@ public final class TestCommands {
         return Identifier.of("test", path);
     }
 
-    // A command of the game: kept until the end, like in a real game
+    // A command of the plugin "test": kept until the end, like the commands of a real game
     public static void add(Commands commands, BaseCommand command) {
-        commands.register(command, CommandOwner.GAME);
+        commands.register(command, CommandOwner.Plugin("test"));
     }
 
     // A command of the tests declared by its syntax

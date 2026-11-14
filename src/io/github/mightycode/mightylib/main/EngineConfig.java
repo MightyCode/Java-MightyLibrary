@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLangu
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
-import io.github.mightycode.mightylib.main.procedures.IProjectLoading;
+import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.ETextureUpload;
@@ -15,6 +15,9 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
 import org.joml.Vector2i;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -61,7 +64,7 @@ public class EngineConfig {
     private int consoleLogCapacity = ConsoleLog.DEFAULT_CAPACITY;
     private boolean consoleLogsShown = true;
 
-    private IProjectLoading projectLoading;
+    private final List<IPlugin> plugins = new ArrayList<>();
 
     private int shaderVersion = -1;
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
@@ -254,8 +257,12 @@ public class EngineConfig {
         return this;
     }
 
-    public EngineConfig setProjectLoading(IProjectLoading projectLoading) {
-        this.projectLoading = projectLoading;
+    /**
+     * What the game (or a mod) adds to the engine: loaders, commands... registered at the start, in the order of the
+     * calls, after the content of the engine. One plugin per namespace.
+     */
+    public EngineConfig addPlugin(IPlugin plugin) {
+        plugins.add(Objects.requireNonNull(plugin, "plugin"));
         return this;
     }
 
@@ -450,7 +457,8 @@ public class EngineConfig {
                 return null;
         }
     }
-    public IProjectLoading getProjectLoading() { return projectLoading; }
+    // In the order of addPlugin, read only
+    public List<IPlugin> getPlugins() { return Collections.unmodifiableList(plugins); }
     public int getShaderVersion() { return shaderVersion; }
     public Resources.LoadingMethod getResourcesLoadingMethod() { return resourcesLoadingMethod; }
     public String getResourcesFolder() { return resourcesFolder; }

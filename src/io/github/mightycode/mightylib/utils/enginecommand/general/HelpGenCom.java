@@ -15,11 +15,9 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 
 public class HelpGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "help";
-    private final Commands commands;
 
-    public HelpGenCom(Commands commands) {
+    public HelpGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.USER, "List the commands, or tell how to use one");
-        this.commands = commands;
     }
 
     // The name or the identifier of a visible command, completed from the commands the source sees
@@ -32,7 +30,7 @@ public class HelpGenCom extends BaseCommand {
 
             @Override
             public Collection<String> complete(String start, CommandContext context) {
-                return commands.commandNames(start);
+                return commands().commandNames(start);
             }
 
             @Override
@@ -48,7 +46,7 @@ public class HelpGenCom extends BaseCommand {
                 .then(argument("command", commandType(), "Name of the command, or its identifier (namespace:name)")
                         .executes("The same as <command> --help: its description, its usage and its options", context -> {
                             String name = context.get("command");
-                            List<BaseCommand> matching = commands.matchCommands(name);
+                            List<BaseCommand> matching = commands().matchCommands(name);
 
                             if (matching.isEmpty())
                                 return CommandResult.error("Unknown command ->" + name + "<-");
@@ -63,7 +61,7 @@ public class HelpGenCom extends BaseCommand {
 
     private CommandResult list(ECommandLevel level) {
         StringBuilder result = new StringBuilder("Available commands :");
-        for (BaseCommand command : commands.getVisibleCommands()) {
+        for (BaseCommand command : commands().getVisibleCommands()) {
             result.append("\n- ").append(command.getId()).append(" (").append(command.getOwner()).append(')');
             if (command.getDescription() != null)
                 result.append(" : ").append(command.getDescription());

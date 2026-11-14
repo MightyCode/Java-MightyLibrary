@@ -4,7 +4,6 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandScript;
-import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
 
@@ -27,14 +26,12 @@ public class ExecGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "exec";
     public static final long DEFAULT_TIMEOUT_SECONDS = 300;
 
-    private final Commands commands;
     // Scripts running, to refuse a script that runs itself (directly or not)
     private final Set<Path> running;
 
-    public ExecGenCom(Commands commands) {
+    public ExecGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
                 "Run the commands written in a file, one per line, path relative to the working directory");
-        this.commands = commands;
         this.running = ConcurrentHashMap.newKeySet();
     }
 
@@ -61,12 +58,12 @@ public class ExecGenCom extends BaseCommand {
         if (!running.add(path))
             return CommandResult.error(path + " is already running (a script can't run itself)");
 
-        CommandScript script = new CommandScript(commands, path.getFileName().toString(), lines);
+        CommandScript script = new CommandScript(commands(), path.getFileName().toString(), lines);
         script.getResult().whenComplete((result, exception) -> running.remove(path));
 
         // The lines that can run now run in this tick, the others at the next ticks
         if (!script.step())
-            commands.addTickTask(script::step);
+            commands().addTickTask(script::step);
 
         return CommandResult.later(script.getResult(), timeout);
     }

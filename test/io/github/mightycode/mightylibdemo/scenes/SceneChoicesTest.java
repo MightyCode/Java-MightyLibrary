@@ -21,7 +21,7 @@ class SceneChoicesTest {
     private static List<String> commands(List<SceneChoices.Entry> entries) {
         List<String> commands = new ArrayList<>();
         for (SceneChoices.Entry entry : entries)
-            commands.add(entry.command());
+            commands.add(entry.name());
         return commands;
     }
 
@@ -39,7 +39,7 @@ class SceneChoicesTest {
 
         SceneChoices.Entry entry = choices.entries().get(0);
         assertEquals("PlatformerBox2D", entry.label());
-        assertEquals("Platformer2D.PlatformerBox2D", entry.command());
+        assertEquals("Platformer2D.PlatformerBox2D", entry.name());
         assertEquals("PlatformerBox2D", entry.shortName());
     }
 

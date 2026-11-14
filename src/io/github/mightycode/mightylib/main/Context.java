@@ -123,8 +123,9 @@ public final class Context implements IView {
         window.setNode(node);
         refreshBlocking();
 
+        // A hook that fails (strict mode) closes the window like a view that fails
         try {
-            engine.initWindowInputs(window, config);
+            engine.lifecycle().windowOpened(window);
             window.getWindow().bindWindow();
             view.attach(engine, window, args);
         } catch (RuntimeException e) {
@@ -170,6 +171,8 @@ public final class Context implements IView {
     }
 
     private void destroySubWindow(WindowContext window) {
+        engine.lifecycle().windowClosed(window);
+
         // Its view frees its GL objects in the context of its window
         window.getWindow().bindWindow();
         window.getView().unloadByContext();
@@ -324,7 +327,10 @@ public final class Context implements IView {
 
     // The main window and its OpenGL context, once everything it shows is unloaded
     void destroyMainWindow() {
-        if (mainWindow != null)
-            mainWindow.unload();
+        if (mainWindow == null)
+            return;
+
+        engine.lifecycle().windowClosed(mainWindow);
+        mainWindow.unload();
     }
 }

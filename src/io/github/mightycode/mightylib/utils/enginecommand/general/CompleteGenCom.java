@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandCompletion;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
-import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
@@ -21,12 +20,10 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
  */
 public class CompleteGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "complete";
-    private final Commands commands;
 
-    public CompleteGenCom(Commands commands) {
+    public CompleteGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
                 "What the completion (Tab) proposes for the beginning of a command line");
-        this.commands = commands;
     }
 
     @Override
@@ -38,7 +35,7 @@ public class CompleteGenCom extends BaseCommand {
                         .executes("The words Tab proposes for the last word of the line", context -> {
                             ICommandSource source = context.has("as")
                                     ? ICommandSource.Lowered(context.source(), context.get("as")) : context.source();
-                            return answer(commands.complete(context.getOr("line", ""), source));
+                            return answer(commands().complete(context.getOr("line", ""), source));
                         }));
     }
 

@@ -32,6 +32,10 @@ public final class Identifier implements Comparable<Identifier> {
         return new Identifier(namespace, path);
     }
 
+    public static boolean IsNamespace(String namespace) {
+        return namespace != null && NAMESPACE.matcher(namespace).matches();
+    }
+
     // "namespace:path", the namespace is mandatory
     public static Identifier parse(String text) {
         if (text == null)

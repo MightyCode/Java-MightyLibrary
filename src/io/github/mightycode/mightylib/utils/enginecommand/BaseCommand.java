@@ -144,6 +144,11 @@ public abstract class BaseCommand {
         return owner;
     }
 
+    // The commands it is registered in (to run or complete other commands, tick tasks...), null until registered
+    protected final Commands commands() {
+        return registry;
+    }
+
     void setRegistration(Commands registry, CommandOwner owner) {
         if (this.owner != null)
             throw new IllegalArgumentException("The command ->" + commandName + "<- is already registered");

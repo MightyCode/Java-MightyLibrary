@@ -22,9 +22,8 @@ public class SceneManager {
     private final boolean runsCommands;
     private final Engine engine;
     private final SoundManager soundManager;
-
-    // Package of the first scene, used to find scenes by their simple name
-    private String scenesPackage;
+    // The last scene whose loading ended (LifecycleHooks.sceneChanged), null before the first one
+    private Scene lastRunningScene;
 
     // defaultLoadingScene: displayed while a scene loads, unless the scene overrides createLoadingScene
     // runsCommands: the main context, which runs the pending commands of the engine at each tick
@@ -41,7 +40,6 @@ public class SceneManager {
     public void init(Scene firstScene, String[] firstArguments){
         System.out.println("--Init SceneManager");
 
-        scenesPackage = firstScene.getClass().getPackage().getName();
         sceneInterface.setNewScene(firstScene, firstArguments);
 
         changeScene();
@@ -75,7 +73,15 @@ public class SceneManager {
     }
 
     public void display() {
+        boolean wasLoading = currentScene.isWaitingForLoading();
         currentScene.displayByManager();
+
+        // The new scene runs: the plugins are told once, with the last scene that ran in this context
+        if (wasLoading && !currentScene.isWaitingForLoading()) {
+            Scene previous = lastRunningScene;
+            lastRunningScene = currentScene;
+            engine.lifecycle().sceneChanged(context, previous, currentScene);
+        }
     }
 
 
@@ -136,10 +142,6 @@ public class SceneManager {
 
     public boolean isCurrentSceneLoading() {
         return currentScene != null && currentScene.isWaitingForLoading();
-    }
-
-    public String getScenesPackage() {
-        return scenesPackage;
     }
 
     // The change is done at the beginning of the next tick

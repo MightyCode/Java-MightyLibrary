@@ -1,0 +1,93 @@
+package io.github.mightycode.mightylibdemo.scenes;
+
+import io.github.mightycode.mightylib.registry.EngineRegistry;
+import io.github.mightycode.mightylib.registry.Identifier;
+import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylibdemo.main.DemoPlugin;
+import io.github.mightycode.mightylibdemo.scenes.Platformer2D.PlatformerBox2D;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Supplier;
+
+/**
+ * The scenes of the demo, registered by DemoPlugin like the scenes of a real game: what the command scene and the
+ * menu offer. A new scene of the demo is added here (a test checks that none is missing).
+ * Identifier: the class name relative to this package, in lower case (demo:scene2d, demo:platformer2d.platformerbox2d),
+ * so "scene Scene2D" and "scene Platformer2D.PlatformerBox2D" work.
+ */
+public final class DemoScenes {
+    static final class Entry<T extends Scene> {
+        private final Class<T> type;
+        private final Supplier<T> factory;
+        private final String description;
+
+        private Entry(Class<T> type, Supplier<T> factory, String description) {
+            this.type = type;
+            this.factory = factory;
+            this.description = description;
+        }
+
+        Class<T> type() { return type; }
+
+        String description() { return description; }
+
+        private void register(EngineRegistry registry) {
+            registry.scenes().register(IdOf(type), type, factory, description);
+        }
+    }
+
+    private static <T extends Scene> Entry<T> scene(Class<T> type, Supplier<T> factory, String description) {
+        return new Entry<>(type, factory, description);
+    }
+
+    static final List<Entry<?>> ALL = List.of(
+            scene(MenuScene.class, MenuScene::new, "The menu of the demo: the registered scenes, filtered, sorted and described."),
+            scene(Box2D.class, Box2D::new, "Physics with JBox2D: bodies and shapes in a world, with a camera that moves, zooms and drags."),
+            scene(CollisionGridScene2D.class, CollisionGridScene2D::new, "Collision2DGrid: obstacles sorted into the cells of a grid, only the ones near the rectangle that follows the mouse are tested. Grey: ignored, blue: tested, red: colliding."),
+            scene(CommandsScene2D.class, CommandsScene2D::new, "A scene with its own command, spawn, that creates shapes. Open the console with the key left of 1 and try: spawn 3 --color red"),
+            scene(ConsoleFeedScene.class, ConsoleFeedScene::new, "Writes a line of every type in the console at a regular pace, to try scrolling, filters and selection while the log moves."),
+            scene(CustomRenderer2D.class, CustomRenderer2D::new, "Custom geometry with a custom shader: stars drawn by a MeshRenderer subclass and by a Mesh of the scene. D toggles the depth test."),
+            scene(DisplayModesScene.class, DisplayModesScene::new, "Windowed, exclusive fullscreen and borderless modes, a second window, the border and the resizing."),
+            scene(DocumentationScene.class, DocumentationScene::new, "The reference scene: read its source code, each step of the life of a scene and of its resources is explained."),
+            scene(FallbackScene.class, FallbackScene::new, "Resources that can't be used (unknown texture, missing file, unknown font or sound) are replaced by fallbacks instead of crashing the game."),
+            scene(Game3D2D.class, Game3D2D::new, "A 2D animated slime drawn in a 3D scene, next to a textured cube, with a free camera."),
+            scene(GamepadScene.class, GamepadScene::new, "One square per player, moved by the sticks of up to four gamepads, with the list of the buttons and axes."),
+            scene(GLLoading.class, GLLoading::new, "Loads several big generated textures, sent to the GPU by strips with the time left in each frame, so the game keeps running."),
+            scene(GUIWidgetsScene.class, GUIWidgetsScene::new, "Sliders, a selector, a shaking effect and a positional sound that follows a moving square."),
+            scene(MultiWindowScene.class, MultiWindowScene::new, "Several windows: a dialog that blocks the main one, a tool window and a second context with its own scene."),
+            scene(PathfindingScene2D.class, PathfindingScene2D::new, "Graph, Dijkstra and A*: paint walls with the mouse, move the start and the end, and see the shortest path."),
+            scene(PlatformerBox2D.class, PlatformerBox2D::new, "A platformer: a player controlled on JBox2D physics."),
+            scene(PreloadScene.class, PreloadScene::new, "Loads the next scene in advance while this one runs, so Enter switches with a short loading screen."),
+            scene(RopeSimulation2D.class, RopeSimulation2D::new, "A rope simulation driven by the mouse."),
+            scene(Scene2D.class, Scene2D::new, "The main 2D test scene: tile map, animations and texts."),
+            scene(Scene3D.class, Scene3D::new, "The main 3D test scene: cubes and models lit by several lights, with a free camera."),
+            scene(Scene3DBis.class, Scene3DBis::new, "A second 3D test scene with cubes and lights."),
+            scene(SoundFormatsScene.class, SoundFormatsScene::new, "The same sound in each supported format (ogg, wav, mp3, flac), played when the mouse enters its line."),
+            scene(TerrainGeneration3D.class, TerrainGeneration3D::new, "A generated terrain seen with a free camera."),
+            scene(TextFieldScene2D.class, TextFieldScene2D::new, "The TextField and the focus of the window: while the field has the focus, the scene sees no key."),
+            scene(TextPaddingScene.class, TextPaddingScene::new, "The padding of a Text, and a long text wrapped at the spaces with setMaxWidth."),
+            scene(WaveFunctionCollapse2D.class, WaveFunctionCollapse2D::new, "A map generated by the Wave Function Collapse algorithm from the rules of a tile set."));
+
+    private DemoScenes() {}
+
+    // Called by DemoPlugin.register
+    public static void Register(EngineRegistry registry) {
+        for (Entry<?> entry : ALL)
+            entry.register(registry);
+    }
+
+    /**
+     * The class name relative to the package of the scenes (Platformer2D.PlatformerBox2D), the full name for a class
+     * outside of it: the name shown by the menu and the key of the dates of SceneHistory.
+     */
+    public static String RelativeName(Class<?> type) {
+        String prefix = DemoScenes.class.getPackageName() + ".";
+        return type.getName().startsWith(prefix) ? type.getName().substring(prefix.length()) : type.getName();
+    }
+
+    // demo:<relative name in lower case>
+    static Identifier IdOf(Class<?> type) {
+        return Identifier.of(DemoPlugin.NAMESPACE, RelativeName(type).toLowerCase(Locale.ROOT));
+    }
+}

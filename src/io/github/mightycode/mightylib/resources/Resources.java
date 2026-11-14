@@ -1,12 +1,5 @@
 package io.github.mightycode.mightylib.resources;
 
-import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
-import io.github.mightycode.mightylib.graphics.text.FontLoader;
-import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
-import io.github.mightycode.mightylib.resources.data.JSONLoader;
-import io.github.mightycode.mightylib.resources.texture.IconLoader;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
-import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
 
@@ -71,17 +64,11 @@ public class Resources {
     private boolean firstLoadDone;
 
     /**
-     * The mandatory loaders are created (the shaders come from the shader manager: GLSL version and list), then those
-     * of the project are added after them (IProjectLoading.loaders). The list can't change afterwards.
-     * The loaders read their files in the given folder (EngineConfig.setResourcesFolder).
+     * The given loaders, in their order: those the plugins registered (EngineRegistry.resources), the mandatory ones of
+     * the engine first. The list can't change afterwards. The loaders read their files in the given folder
+     * (EngineConfig.setResourcesFolder).
      */
-    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, ShaderManager shaderManager,
-                     List<ResourceLoader> projectLoaders) {
-        this(loadingMethod, maxNumberOfWorkers, folder, withMandatoryLoaders(shaderManager, projectLoaders));
-    }
-
-    // Only the given loaders are used (no GL loader): tests
-    Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
         this.folder = NormalizeFolder(folder);
         resources = new ConcurrentHashMap<>();
@@ -91,22 +78,6 @@ public class Resources {
 
         initialized = false;
         firstLoadDone = false;
-    }
-
-    private static List<ResourceLoader> withMandatoryLoaders(ShaderManager shaderManager,
-                                                             List<ResourceLoader> projectLoaders) {
-        List<ResourceLoader> all = new ArrayList<>();
-        all.add(new ShaderLoader(shaderManager));
-        all.add(new IconLoader());
-        all.add(new TextureDataLoader());
-        all.add(new AnimationDataLoader());
-        all.add(new FontLoader());
-        JSONLoader jsonLoader = new JSONLoader();
-        all.add(jsonLoader);
-        all.add(new BatchLoader(jsonLoader));
-
-        all.addAll(Objects.requireNonNull(projectLoaders, "projectLoaders"));
-        return all;
     }
 
     // An unmodifiable copy; two loaders of the same type of data would share (and overwrite) one registry
@@ -121,7 +92,15 @@ public class Resources {
         return List.copyOf(loaders);
     }
 
-    // The loaders, in their order (mandatory then project); unmodifiable
+    // A type of data without loader: the loader to register (a plugin: registry.resources().add)
+    static String NoLoaderMessage(Class<? extends DataType> type) {
+        String loader = LibraryLoaders.loaderName(type);
+        return "No loader for the type " + type.getSimpleName() + ": register "
+                + (loader != null ? loader + " (or LibraryLoaders.all())" : "its loader")
+                + " in IPlugin.register with registry.resources().add";
+    }
+
+    // The loaders, in their order (those of the plugins, the engine first); unmodifiable
     List<ResourceLoader> loaders() {
         return loaders;
     }
@@ -610,7 +589,7 @@ public class Resources {
 
     public <T extends DataType> T getResource(Class<T> type, String name) {
         if (!resources.containsKey(type)) {
-            throw new RuntimeException("Can't find resource of type: " + type.getName());
+            throw new IllegalStateException(NoLoaderMessage(type));
         }
 
         return type.cast(resources.get(type).get(name));

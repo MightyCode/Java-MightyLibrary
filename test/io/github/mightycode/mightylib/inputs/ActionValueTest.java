@@ -15,12 +15,13 @@ import static org.lwjgl.glfw.GLFW.*;
 // Values of the actions bound to a gamepad (no keyboard nor mouse : they need a window)
 class ActionValueTest {
     // The registry is shared by the whole JVM : identifiers unique to this class
-    private static final InputAction RIGHT = InputRegistry.action("test_action_value:right");
-    private static final InputAction LEFT = InputRegistry.action("test_action_value:left");
-    private static final InputAction RIGHT_OR_A = InputRegistry.action("test_action_value:right_or_a");
-    private static final InputAction A_AND_RIGHT = InputRegistry.action("test_action_value:a_and_right");
-    private static final InputAction TRIGGER = InputRegistry.action("test_action_value:trigger");
-    private static final InputAction NOT_BOUND = InputRegistry.action("test_action_value:not_bound");
+    private static final InputAction RIGHT = InputAction.of("test_action_value:right");
+    private static final InputAction LEFT = InputAction.of("test_action_value:left");
+    private static final InputAction RIGHT_OR_A = InputAction.of("test_action_value:right_or_a");
+    private static final InputAction A_AND_RIGHT = InputAction.of("test_action_value:a_and_right");
+    private static final InputAction TRIGGER = InputAction.of("test_action_value:trigger");
+    private static final InputAction NOT_BOUND = InputAction.of("test_action_value:not_bound");
+    private static final InputRegistry REGISTRY = TestInputs.Registry(RIGHT, LEFT, RIGHT_OR_A, A_AND_RIGHT, TRIGGER, NOT_BOUND);
 
     private FakeGamepadSource source;
     private GamepadManager gamepads;
@@ -34,7 +35,7 @@ class ActionValueTest {
         source.plug(0, true);
         gamepads.postUpdate();
 
-        inputManager = new InputManager(null, null, gamepads);
+        inputManager = new InputManager(null, null, gamepads, REGISTRY);
         IAction right = new InputGamepadAxis(GLFW_GAMEPAD_AXIS_LEFT_X, InputGamepadAxis.POSITIVE);
         IAction a = new InputGamepadButton(GLFW_GAMEPAD_BUTTON_A);
         inputManager.init(new ActionInput[]{
