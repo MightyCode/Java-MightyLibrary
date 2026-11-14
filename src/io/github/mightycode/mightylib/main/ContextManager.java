@@ -70,6 +70,7 @@ public final class ContextManager {
 
         context.setMainWindow(window);
         contexts.add(context);
+        engine.lifecycle().windowOpened(window);
         return context;
     }
 

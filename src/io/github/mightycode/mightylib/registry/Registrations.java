@@ -21,6 +21,7 @@ public final class Registrations {
     final Entries<Identifier, BaseCommand> commands = new Entries<>("Command", Identifier::toString);
     final Entries<Identifier, InputsSection.Input> inputs = new Entries<>("Input", Identifier::toString);
     final Entries<Identifier, ScenesSection.SceneEntry> scenes = new Entries<>("Scene", Identifier::toString);
+    final LifecycleHooks lifecycle = new LifecycleHooks();
 
     private boolean frozen;
     // Built at the freeze
@@ -78,6 +79,11 @@ public final class Registrations {
     // The scenes of every plugin by name, frozen; null before the freeze
     public SceneRegistry scenes() {
         return sceneRegistry;
+    }
+
+    // The hooks of every plugin on the life of the engine, in the order of the plugins
+    public LifecycleHooks lifecycle() {
+        return lifecycle;
     }
 
     // The commands the plugin registered or replaced: it owns them

@@ -15,6 +15,7 @@ import io.github.mightycode.mightylib.main.monitors.Monitors;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.registry.EngineRegistry;
+import io.github.mightycode.mightylib.registry.LifecycleHooks;
 import io.github.mightycode.mightylib.registry.Registrations;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Icon;
@@ -86,6 +87,9 @@ public final class Engine implements IView {
     public Registrations registrations() { return registrations; }
     // The actions and axes declared by the plugins (null before the start)
     public InputRegistry inputs() { return registrations != null ? registrations.inputs() : null; }
+    // The hooks of the plugins on the life of the engine (none before the registration), called by the engine
+    public LifecycleHooks lifecycle() { return registrations != null ? registrations.lifecycle() : NO_HOOKS; }
+    private static final LifecycleHooks NO_HOOKS = new LifecycleHooks();
     // The scenes registered by the plugins, by name (null before the start)
     public SceneRegistry scenes() { return registrations != null ? registrations.scenes() : null; }
 
@@ -193,6 +197,7 @@ public final class Engine implements IView {
             return ListError.PLUGIN_REGISTRATION_FAIL;
         }
         contexts.setInputRegistry(registrations.inputs());
+        registrations.lifecycle().setStrict(config.isStrictResources());
 
         System.out.println("--Load libraries.");
 
@@ -286,6 +291,7 @@ public final class Engine implements IView {
 
         // Load all resources
         resources.load();
+        lifecycle().started();
         sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
         // The standard input and the debug server only exist in debug mode
@@ -502,6 +508,8 @@ public final class Engine implements IView {
 
     // Free everything created by setup (whatever stage it reached), return the status
     int shutdown(int status) {
+        lifecycle().shutdown();
+
         if (debugServer != null) {
             debugServer.stop();
             debugServer = null;

@@ -28,13 +28,23 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylibdemo.scenes.DemoScenes;
 import io.github.mightycode.mightylibdemo.scenes.MenuScene;
+import org.json.JSONObject;
 
 /**
  * What the demo adds to the engine, like a real game: the loaders it uses, its commands, its actions and axes with
- * their default bindings (in every window of the game, not in the detached console), its scenes (DemoScenes).
+ * their default bindings (in every window of the game, not in the detached console), its scenes (DemoScenes), and
+ * hooks on the life of the engine, counted and shown by the command demo:lifecycle.
  */
 public class DemoPlugin implements IPlugin {
     public static final String NAMESPACE = "demo";
+
+    // Events seen by the hooks (main thread)
+    private int started;
+    private int sceneChanges;
+    private String lastScene;
+    private String previousScene;
+    private int windowsOpened;
+    private int windowsClosed;
 
     @Override
     public String namespace() {
@@ -65,6 +75,38 @@ public class DemoPlugin implements IPlugin {
 
         registerInputs(registry);
         DemoScenes.Register(registry);
+        registerLifecycle(registry);
+    }
+
+    private void registerLifecycle(EngineRegistry registry) {
+        registry.lifecycle()
+                .onStarted(() -> ++started)
+                .onSceneChanged((context, previous, next) -> {
+                    ++sceneChanges;
+                    previousScene = previous == null ? null : previous.getClass().getSimpleName();
+                    lastScene = context.getName() + ": " + next.getClass().getSimpleName();
+                })
+                .onWindowOpened(window -> ++windowsOpened)
+                .onWindowClosed(window -> ++windowsClosed)
+                .onShutdown(() -> System.out.println("--Demo: shutdown after " + sceneChanges + " scene change(s)"));
+
+        registry.commands().register(new BaseCommand(registry.id("lifecycle"), ECommandLevel.DEV,
+                "The events of the life of the engine seen by the hooks of the demo") {
+            @Override
+            protected void syntax(CommandNode root) {
+                root.executes(context -> {
+                    JSONObject data = new JSONObject()
+                            .put("started", started)
+                            .put("sceneChanges", sceneChanges)
+                            .put("lastScene", lastScene == null ? JSONObject.NULL : lastScene)
+                            .put("previousScene", previousScene == null ? JSONObject.NULL : previousScene)
+                            .put("windowsOpened", windowsOpened)
+                            .put("windowsClosed", windowsClosed);
+                    return CommandResult.ok("Started " + started + ", " + sceneChanges + " scene change(s), "
+                            + windowsOpened + " window(s) opened, " + windowsClosed + " closed", data);
+                });
+            }
+        });
     }
 
     private static void registerInputs(EngineRegistry registry) {

@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * What a plugin registers, by section (resources, commands, inputs, scenes...), during IPlugin.register only. Each plugin
+ * What a plugin registers, by section (resources, commands, inputs, scenes, lifecycle), during IPlugin.register only. Each plugin
  * gets its own registry, bound to its namespace: it registers identifiers of its namespace only, and replaces those of
  * the others explicitly (replace). Pure data: no GL, no engine.
  */
@@ -17,6 +17,7 @@ public final class EngineRegistry {
     private final CommandsSection commands;
     private final InputsSection inputs;
     private final ScenesSection scenes;
+    private final LifecycleSection lifecycle;
 
     private EngineRegistry(Registrations registrations, String namespace) {
         this.registrations = registrations;
@@ -25,6 +26,7 @@ public final class EngineRegistry {
         commands = new CommandsSection(registrations, this);
         inputs = new InputsSection(registrations, this);
         scenes = new ScenesSection(registrations, this);
+        lifecycle = new LifecycleSection(registrations, namespace);
     }
 
     /**
@@ -94,6 +96,11 @@ public final class EngineRegistry {
     public ScenesSection scenes() {
         registrations.checkOpen();
         return scenes;
+    }
+
+    public LifecycleSection lifecycle() {
+        registrations.checkOpen();
+        return lifecycle;
     }
 
     // A plugin registers the identifiers of its namespace only (replace excepted)
