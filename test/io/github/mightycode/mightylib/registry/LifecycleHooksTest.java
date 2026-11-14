@@ -71,12 +71,46 @@ class LifecycleHooksTest {
     @Test
     void strictModeThrowsAgain() {
         LifecycleHooks hooks = new LifecycleHooks();
-        hooks.addShutdown("game", () -> {
+        hooks.addStarted("game", () -> {
             throw new IllegalStateException("broken on purpose (test)");
         });
         hooks.setStrict(true);
 
-        assertThrows(IllegalStateException.class, hooks::shutdown);
+        assertThrows(IllegalStateException.class, hooks::started);
+    }
+
+    // The engine must still release everything: the failure only changes the exit status
+    @Test
+    void teardownHooksNeverThrowEvenInStrictMode() {
+        List<String> calls = new ArrayList<>();
+        LifecycleHooks hooks = new LifecycleHooks();
+        hooks.addShutdown("game", () -> {
+            throw new IllegalStateException("broken on purpose (test)");
+        });
+        hooks.addShutdown("mod", () -> calls.add("mod shutdown"));
+        hooks.addWindowClosed("game", window -> {
+            throw new IllegalStateException("broken on purpose (test)");
+        });
+        hooks.addWindowClosed("mod", window -> calls.add("mod closed"));
+        hooks.setStrict(true);
+
+        assertFalse(hooks.hasTeardownFailed());
+        hooks.windowClosed(null);
+        hooks.shutdown();
+
+        assertEquals(List.of("mod closed", "mod shutdown"), calls);
+        assertTrue(hooks.hasTeardownFailed());
+    }
+
+    @Test
+    void teardownFailureOutsideStrictModeIsOnlyReported() {
+        LifecycleHooks hooks = new LifecycleHooks();
+        hooks.addShutdown("game", () -> {
+            throw new IllegalStateException("broken on purpose (test)");
+        });
+
+        hooks.shutdown();
+        assertFalse(hooks.hasTeardownFailed());
     }
 
     @Test

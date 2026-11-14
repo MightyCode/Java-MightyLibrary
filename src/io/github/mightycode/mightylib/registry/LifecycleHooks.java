@@ -12,7 +12,9 @@ import java.util.function.Consumer;
 /**
  * The hooks of the plugins on the life of the engine (EngineRegistry.lifecycle), called by the engine on the main
  * thread, in the order of the plugins. A hook that throws is reported (Logger.LogException) and the next ones are
- * called; in strict mode (EngineConfig.setStrictResources) the exception is thrown again.
+ * called; in strict mode (EngineConfig.setStrictResources) the exception is thrown again, except for the hooks of the
+ * teardown (shutdown, windowClosed): the engine must still release everything, so they are only reported and marked
+ * (hasTeardownFailed: the exit status becomes an error).
  */
 public final class LifecycleHooks {
     private static final class Hook<T> {
@@ -31,6 +33,8 @@ public final class LifecycleHooks {
     private final List<Hook<Consumer<WindowContext>>> windowOpened = new ArrayList<>();
     private final List<Hook<Consumer<WindowContext>>> windowClosed = new ArrayList<>();
     private boolean strict;
+    // A hook of the teardown failed in strict mode
+    private boolean teardownFailed;
 
     // ---- Registration (LifecycleSection) ----
 
@@ -49,38 +53,45 @@ public final class LifecycleHooks {
 
     // The resources are loaded, the first scene is about to start
     public void started() {
-        call("started", started, Runnable::run);
+        call("started", started, Runnable::run, false);
     }
 
     // The new scene of the context runs: loaded, its first frame complete
     public void sceneChanged(Context context, Scene previous, Scene next) {
-        call("sceneChanged", sceneChanged, hook -> hook.sceneChanged(context, previous, next));
+        call("sceneChanged", sceneChanged, hook -> hook.sceneChanged(context, previous, next), false);
     }
 
-    // The engine stops, nothing is released yet
+    // The engine stops, nothing is released yet. Never throws: the release goes on.
     public void shutdown() {
-        call("shutdown", shutdown, Runnable::run);
+        call("shutdown", shutdown, Runnable::run, true);
     }
 
     // A window was opened: the main window of a context or a window of a view
     public void windowOpened(WindowContext window) {
-        call("windowOpened", windowOpened, hook -> hook.accept(window));
+        call("windowOpened", windowOpened, hook -> hook.accept(window), false);
     }
 
-    // A window is about to be destroyed
+    // A window is about to be destroyed. Never throws: the release goes on.
     public void windowClosed(WindowContext window) {
-        call("windowClosed", windowClosed, hook -> hook.accept(window));
+        call("windowClosed", windowClosed, hook -> hook.accept(window), true);
     }
 
-    private <T> void call(String event, List<Hook<T>> hooks, Consumer<T> call) {
+    // A hook of the teardown (shutdown, windowClosed) failed in strict mode: the engine exits with an error
+    public boolean hasTeardownFailed() {
+        return teardownFailed;
+    }
+
+    private <T> void call(String event, List<Hook<T>> hooks, Consumer<T> call, boolean teardown) {
         for (Hook<T> hook : hooks) {
             try {
                 call.accept(hook.callback);
             } catch (RuntimeException e) {
-                if (strict)
+                if (strict && !teardown)
                     throw e;
 
-                Logger.LogException("--The hook " + event + " of the plugin " + hook.plugin + " failed", e);
+                Logger.LogException("The hook " + event + " of the plugin " + hook.plugin + " failed", e);
+                if (strict)
+                    teardownFailed = true;
             }
         }
     }

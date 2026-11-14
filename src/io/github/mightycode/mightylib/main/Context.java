@@ -122,9 +122,10 @@ public final class Context implements IView {
         WindowTree.Node<WindowContext> node = windows.add(window, parentNode, config.isModal(), config.isPersistent(), opener);
         window.setNode(node);
         refreshBlocking();
-        engine.lifecycle().windowOpened(window);
 
+        // A hook that fails (strict mode) closes the window like a view that fails
         try {
+            engine.lifecycle().windowOpened(window);
             window.getWindow().bindWindow();
             view.attach(engine, window, args);
         } catch (RuntimeException e) {

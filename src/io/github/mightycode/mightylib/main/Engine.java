@@ -552,6 +552,10 @@ public final class Engine implements IView {
         if (soundManager != null)
             soundManager.unload();
 
+        // Strict mode: a hook that failed while stopping did not stop the release, it fails the exit
+        if (status == ListError.NO_ERROR && lifecycle().hasTeardownFailed())
+            status = ListError.LIFECYCLE_HOOK_FAIL;
+
         if (status != ListError.NO_ERROR)
             System.err.println("Exit with error " + status);
         else
