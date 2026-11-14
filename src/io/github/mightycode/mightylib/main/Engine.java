@@ -194,7 +194,7 @@ public final class Engine implements IView {
             registrations = EngineRegistry.Collect(new EnginePlugin(config, () -> shaderManager),
                     config.getPlugins());
         } catch (RuntimeException e) {
-            Logger.LogException("--The registration of the plugins failed", e);
+            Logger.LogException("The registration of the plugins failed", e);
             return ListError.PLUGIN_REGISTRATION_FAIL;
         }
         contexts.setInputRegistry(registrations.inputs());
