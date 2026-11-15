@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.IGLElementSink;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import static org.lwjgl.opengl.GL11.glFlush;
@@ -275,6 +276,31 @@ public class GLResources implements IGLElementSink {
         }
 
         return null;
+    }
+
+    // Each fallback element: its data type (the type of the loader), element type, when it is loaded and its state
+    public JSONArray describeFallbacks() {
+        JSONArray list = new JSONArray();
+        for (Map.Entry<Class<? extends DataType>, GLElement> entry : fallbackElements.entrySet()) {
+            GLElement element = entry.getValue();
+            JSONObject json = new JSONObject();
+            json.put("dataType", entry.getKey().getSimpleName());
+            json.put("elementType", element.registeredType.getSimpleName());
+            json.put("neededBeforeDrawing", dataOf(element).glElementNeededBeforeDrawing());
+            json.put("state", element.isLoaded() ? "loaded" : element.hasFailed() ? "failed" : "waiting");
+            list.put(json);
+        }
+
+        return list;
+    }
+
+    private DataType dataOf(GLElement fallbackElement) {
+        for (Map.Entry<DataType, GLElement> entry : fallbackElementsByData.entrySet()) {
+            if (entry.getValue() == fallbackElement)
+                return entry.getKey();
+        }
+
+        throw new IllegalStateException("Not a fallback element: " + fallbackElement.getName());
     }
 
     @Override

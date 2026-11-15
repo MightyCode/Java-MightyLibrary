@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.graphics.GLResourcesTest.BreakableElement;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FakeData;
 import io.github.mightycode.mightylib.resources.Resources;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
@@ -137,6 +139,25 @@ class GLResourcesFallbackTest {
 
         // Out of the table by name: an element of that name is another one
         assertNull(glResources.getResource(BreakableElement.class, Resources.FALLBACK_NAME));
+    }
+
+    @Test
+    void theFallbacksAreDescribed() {
+        GLResources glResources = new GLResources(-1);
+        glResources.fallbackDataLoaded(fallbacks(FakeData.class, new FallbackFake(true, false),
+                OtherFake.class, new FallbackFake(false, true)));
+        glResources.process(Long.MAX_VALUE);
+
+        JSONArray list = glResources.describeFallbacks();
+        assertEquals(2, list.length());
+        JSONObject fake = list.getJSONObject(0);
+        assertEquals("FakeData", fake.getString("dataType"));
+        assertEquals("BreakableElement", fake.getString("elementType"));
+        assertTrue(fake.getBoolean("neededBeforeDrawing"));
+        assertEquals("loaded", fake.getString("state"));
+        JSONObject other = list.getJSONObject(1);
+        assertFalse(other.getBoolean("neededBeforeDrawing"));
+        assertEquals("failed", other.getString("state"));
     }
 
     @Test
