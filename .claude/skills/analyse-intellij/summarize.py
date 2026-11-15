@@ -33,7 +33,8 @@ def problems(path):
 
 
 def area(file):
-    if file.startswith("test/"):
+    # Maven modules: <module>/src/test/java for the tests (old layout: test/)
+    if "/src/test/" in file or file.startswith("test/"):
         return "test"
     return "demo" if "mightylibdemo" in file else "lib"
 

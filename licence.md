@@ -82,7 +82,7 @@ Choix à faire par l'auteur au moment du projet payant, pas avant. Si le modèle
 | `layered/hero/*` | généré par programme pour le projet (`tools/generate_layers.py`) | aucune |
 | shaders GLSL (`resources/shaders`) | écrits pour le projet, techniques de LearnOpenGL (`docs/techniquegraphique.md`) | les idées ne sont pas protégées ; vérifier tout code copié |
 
-Les fichiers de test de la bibliothèque (`test-resources/` : `sounds/select*`, `sounds/sounds.gaintree`, `textures/world/container2.png`) sont des copies des fichiers de `resources/` du même nom : même origine, même statut.
+Les fichiers de test de la bibliothèque (`mightylib/src/test/resources/` : `sounds/select*`, `sounds/sounds.gaintree`, `textures/world/container2.png`) sont des copies des fichiers de `resources/` du même nom : même origine, même statut.
 
 Tant que le projet reste gratuit et non commercial, ce tableau est informatif. Pour un projet payant : tant que la provenance d'une ressource n'est pas écrite, on ne peut pas dire si elle est redistribuable. Pour une version publique (jar sur JitPack ou Maven Central), les ressources de la démo sont séparées de la bibliothèque : **la bibliothèque seule n'a besoin que des polices et textures dont elle a vraiment besoin au démarrage** (la police de l'écran de chargement, `error`).
 
