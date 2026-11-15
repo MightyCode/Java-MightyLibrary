@@ -34,7 +34,10 @@ public final class Resources {
     // Name of the fallback of each type (ResourceLoader.createFallback), and the reference keeping it loaded
     public static final String FALLBACK_NAME = "error";
 
-    public static abstract class LoadingMethod{}
+    public static abstract class LoadingMethod{
+        // Package-private: the hierarchy is closed, Resources knows only the methods below
+        LoadingMethod() {}
+    }
     public static final class AllResourcesMethod extends LoadingMethod{}
     public static final class BatchResourcesMethod extends LoadingMethod{
         private final String firstBatch;
