@@ -207,8 +207,6 @@ public class Commands {
     }
 
     // Main thread only
-    // A deferred failure is answered by ResolveDeferred: the stage returned by whenComplete is not needed
-    @SuppressWarnings("FutureReturnValueIgnored")
     public void processPendingCommands() {
         ++tick;
 
@@ -253,8 +251,9 @@ public class Commands {
 
             CommandRequest answered = request;
             if (result.isDeferred()) {
-                result.getDeferred().whenComplete((deferredResult, exception) ->
-                        answer(answered, ResolveDeferred(result, deferredResult, exception)));
+                // A deferred failure is answered by ResolveDeferred: the stage returned by whenComplete is not needed
+                CompletableFuture<CommandResult> ignored = result.getDeferred().whenComplete(
+                        (deferredResult, exception) -> answer(answered, ResolveDeferred(result, deferredResult, exception)));
             } else {
                 answer(answered, result);
             }
