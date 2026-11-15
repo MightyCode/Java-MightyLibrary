@@ -61,6 +61,13 @@ class FontFileTest {
     }
 
     @Test
+    void aNullSizeIsMalformed(@TempDir Path folder) throws IOException {
+        FontFile file = write(folder, HEADER.replace("size=32", "size=0") + "chars count=0\n");
+        ResourceException error = assertThrows(ResourceException.class, file::load);
+        assertTrue(error.getMessage().contains("size 0"), error.getMessage());
+    }
+
+    @Test
     void aValidFileLoads(@TempDir Path folder) throws IOException {
         FontFile file = write(folder, HEADER + "chars count=1\n"
                 + "char id=65 x=0 y=0 width=10 height=10 xoffset=0 yoffset=0 xadvance=10\n");

@@ -67,6 +67,9 @@ public class FontFile {
             size = Integer.parseInt(required(values,"size"));
             if (size < 0)
                 size *= -1;
+            // Every size of the font is divided by it
+            if (size == 0)
+                throw new ResourceException("malformed font file " + path + " (size 0)");
 
             String[] tempPadding = required(values,"padding").split(",");
 
