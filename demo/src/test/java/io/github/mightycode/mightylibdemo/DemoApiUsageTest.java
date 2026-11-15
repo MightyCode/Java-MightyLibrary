@@ -26,7 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * statuses of the library by reflection (@API of apiguardian, kept at run time).
  */
 class DemoApiUsageTest {
-    private static final Path DEMO_SOURCES = Paths.get("src/io/github/mightycode/mightylibdemo");
+    // From the folder of the module, the working directory of its tests
+    private static final Path DEMO_SOURCES = Paths.get("src/main/java/io/github/mightycode/mightylibdemo");
     private static final Pattern QUALIFIED_NAME =
             Pattern.compile("\\bio\\.github\\.mightycode\\.mightylib(?:\\.\\w+)+(?:\\.\\*)?");
 

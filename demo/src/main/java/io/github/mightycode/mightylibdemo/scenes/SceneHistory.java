@@ -40,7 +40,9 @@ final class SceneHistory {
      * The folders the scene sources were ever in, from the root of the repository: the current one, then the old ones.
      * Asking git for all of them lets it see a move between them as a rename, so the dates of addition survive it.
      */
-    static final List<String> SCENES_DIRECTORIES = List.of("src/io/github/mightycode/mightylibdemo/scenes/");
+    static final List<String> SCENES_DIRECTORIES = List.of(
+            "demo/src/main/java/io/github/mightycode/mightylibdemo/scenes/",
+            "src/io/github/mightycode/mightylibdemo/scenes/");
     static final String SCENES_DIRECTORY = SCENES_DIRECTORIES.get(0);
 
     private SceneHistory() {}

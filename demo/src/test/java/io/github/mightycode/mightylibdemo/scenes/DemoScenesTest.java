@@ -21,9 +21,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // Every scene of the demo is registered (DemoScenes), under the identifier the scripts and the docs use
 class DemoScenesTest {
+    private static final String MODULE = "demo/";
+
     // The concrete scenes of the sources of the demo, loading screens excepted (reflection is fine in a test)
     private static Set<Class<?>> sceneClasses() throws IOException {
-        Path root = Paths.get(SceneHistory.SCENES_DIRECTORY);
+        // The tests run from the folder of the module, SceneHistory from the root of the repository
+        assertTrue(SceneHistory.SCENES_DIRECTORY.startsWith(MODULE), SceneHistory.SCENES_DIRECTORY);
+        Path root = Paths.get(SceneHistory.SCENES_DIRECTORY.substring(MODULE.length()));
         String scenesPackage = DemoScenes.class.getPackageName();
         Set<Class<?>> scenes = new HashSet<>();
         List<Path> sources;
