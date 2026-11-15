@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.text;
 
+import io.github.mightycode.mightylib.TestFiles;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -17,7 +18,7 @@ class FontFileTest {
     // A failure of the data: the preload fails on one line and the fallback font replaces it
     @Test
     void aMissingFileIsAResourceFailure() {
-        FontFile file = new FontFile("resources/fonts/missing.fnt");
+        FontFile file = new FontFile(TestFiles.file("fonts/missing.fnt"));
         ResourceException error = assertThrows(ResourceException.class, file::load);
         assertTrue(error.getMessage().contains("missing.fnt"));
     }

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.TestFiles;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -180,9 +181,7 @@ class TextureDataLoaderTest {
 
     @Test
     void textureOfTheRepositoryIsDecodedLikeImageIO() throws IOException {
-        File file = new File("resources/textures/world/container2.png");
-        if (!file.isFile())
-            return;
+        File file = TestFiles.path("textures/world/container2.png").toFile();
 
         BufferedImage reference;
         try (FileInputStream input = new FileInputStream(file)) {

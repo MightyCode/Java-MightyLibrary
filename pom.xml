@@ -220,6 +220,12 @@
                 </configuration>
             </plugin>
         </plugins>
+        <!-- Files of the tests of the library, read from the classpath (TestFiles) -->
+        <testResources>
+            <testResource>
+                <directory>test-resources</directory>
+            </testResource>
+        </testResources>
         <resources>
             <resource>
                 <directory>${basedir}/resources</directory>

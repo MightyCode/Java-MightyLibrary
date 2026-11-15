@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.sounds;
 
+import io.github.mightycode.mightylib.TestFiles;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 
@@ -7,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // The sound without device: sources, their life, the gain tree
 class SilentSoundServiceTest {
-    private static final String GAIN_TREE = "resources/sounds/sounds.gaintree";
+    private static final String GAIN_TREE = TestFiles.file("sounds/sounds.gaintree");
 
     private static SoundSourceCreationInfo info(String name, boolean owned) {
         SoundSourceCreationInfo info = new SoundSourceCreationInfo();

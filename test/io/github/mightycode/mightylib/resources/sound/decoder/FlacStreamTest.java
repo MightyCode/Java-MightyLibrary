@@ -1,10 +1,11 @@
 package io.github.mightycode.mightylib.resources.sound.decoder;
 
+import io.github.mightycode.mightylib.TestFiles;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.Arrays;
 
@@ -15,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * a wrong prediction, residual or stereo decorrelation changes it.
  */
 class FlacStreamTest {
-    private static final String FILE = "resources/sounds/selectflac.flac";
+    private static final Path FILE = TestFiles.path("sounds/selectflac.flac");
 
     // MD5 of the samples as the FLAC format defines it: interleaved, little endian, ceil(bits / 8) bytes each
     static byte[] md5Of(FlacStream stream) throws Exception {
@@ -39,7 +40,7 @@ class FlacStreamTest {
 
     @Test
     void decodedSamplesMatchTheMd5OfTheFile() throws Exception {
-        FlacStream stream = new FlacStream(Files.readAllBytes(Paths.get(FILE)));
+        FlacStream stream = new FlacStream(Files.readAllBytes(FILE));
 
         assertEquals(44100, stream.sampleRate);
         assertTrue(stream.totalSamples > 0);
@@ -50,12 +51,12 @@ class FlacStreamTest {
     @Test
     void rejectsFilesThatAreNotFlac() {
         assertThrows(ResourceException.class, () -> new FlacStream(new byte[]{1, 2, 3, 4, 5, 6, 7, 8}));
-        assertThrows(ResourceException.class, () -> new FlacStream(Files.readAllBytes(Paths.get("resources/sounds/selectwav.wav"))));
+        assertThrows(ResourceException.class, () -> new FlacStream(Files.readAllBytes(TestFiles.path("sounds/selectwav.wav"))));
     }
 
     @Test
     void truncatedFileFailsInsteadOfLooping() throws Exception {
-        byte[] whole = Files.readAllBytes(Paths.get(FILE));
+        byte[] whole = Files.readAllBytes(FILE);
         byte[] cut = Arrays.copyOf(whole, whole.length - 60);
 
         assertThrows(ResourceException.class, () -> md5Of(new FlacStream(cut)));

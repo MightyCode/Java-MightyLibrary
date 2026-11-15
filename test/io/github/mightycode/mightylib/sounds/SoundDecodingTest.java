@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.sounds;
 
+import io.github.mightycode.mightylib.TestFiles;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryUtil;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Decoding of ogg files by chunks (no OpenAL needed): same samples whatever the chunk, stopped between two chunks.
  */
 class SoundDecodingTest {
-    private static final String FILE = "resources/sounds/selectogg.ogg";
+    private static final String FILE = TestFiles.file("sounds/selectogg.ogg");
 
     private static ShortBuffer decode(int chunkSamples, Runnable checkCancelled, int[] channels) throws Exception {
         try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
@@ -58,7 +59,7 @@ class SoundDecodingTest {
     void missingFileFails() {
         assertThrows(Exception.class, () -> {
             try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-                SoundDataType.readVorbis("resources/sounds/missing.ogg", 1024, info, () -> {}, 1000);
+                SoundDataType.readVorbis(TestFiles.file("sounds/missing.ogg"), 1024, info, () -> {}, 1000);
             }
         });
     }
@@ -81,7 +82,7 @@ class SoundDecodingTest {
     @Test
     void aMissingFileGivesAClearError() {
         java.io.FileNotFoundException error = assertThrows(java.io.FileNotFoundException.class,
-                () -> SoundDataType.ioResourceToByteBuffer("resources/sounds/missing.ogg", 1024));
+                () -> SoundDataType.ioResourceToByteBuffer(TestFiles.file("sounds/missing.ogg"), 1024));
         assertTrue(error.getMessage().contains("missing.ogg"));
     }
 }

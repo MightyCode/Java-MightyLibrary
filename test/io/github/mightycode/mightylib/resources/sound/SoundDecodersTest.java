@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.sound;
 
+import io.github.mightycode.mightylib.TestFiles;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.sound.decoder.*;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
@@ -11,14 +12,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The same sound in four formats (resources/sounds/select*): each decoder gives 16 bit samples of about the same
+ * The same sound in four formats (test resources, sounds/select*): each decoder gives 16 bit samples of about the same
  * length, can be stopped, and frees its memory. No OpenAL needed.
  */
 class SoundDecodersTest {
-    private static final String FOLDER = "resources/sounds/";
+    private static String sound(String file) {
+        return TestFiles.file("sounds/" + file);
+    }
 
     private static SoundLoadInfo decode(SoundDecoder decoder, String file) {
-        return decoder.decode(FOLDER + file, () -> {});
+        return decoder.decode(sound(file), () -> {});
     }
 
     private static double seconds(SoundLoadInfo info) {
@@ -67,7 +70,7 @@ class SoundDecodersTest {
         for (int i = 0; i < decoders.length; ++i) {
             AtomicInteger checks = new AtomicInteger();
             SoundDecoder decoder = decoders[i];
-            String file = FOLDER + cases[i][1];
+            String file = sound(cases[i][1]);
 
             assertThrows(CancellationException.class, () -> decoder.decode(file, () -> {
                 if (checks.incrementAndGet() == 2)
@@ -80,9 +83,9 @@ class SoundDecodersTest {
     @Test
     void missingOrInvalidFilesFail() {
         for (SoundDecoder decoder : new SoundDecoder[]{new OggDecoder(), new WavDecoder(), new Mp3Decoder(), new FlacDecoder()}) {
-            assertThrows(ResourceException.class, () -> decoder.decode(FOLDER + "missing" + decoder.extensions()[0], () -> {}));
+            assertThrows(ResourceException.class, () -> decoder.decode(sound("missing" + decoder.extensions()[0]), () -> {}));
             // A file of another format
-            assertThrows(ResourceException.class, () -> decoder.decode(FOLDER + "sounds.gaintree", () -> {}));
+            assertThrows(ResourceException.class, () -> decoder.decode(sound("sounds.gaintree"), () -> {}));
         }
     }
 

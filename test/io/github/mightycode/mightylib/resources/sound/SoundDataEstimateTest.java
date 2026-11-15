@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.sound;
 
+import io.github.mightycode.mightylib.TestFiles;
 import io.github.mightycode.mightylib.resources.sound.decoder.*;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import org.junit.jupiter.api.Test;
@@ -12,13 +13,15 @@ import static org.junit.jupiter.api.Assertions.*;
  * (meant for real sounds) cannot be checked on them. No OpenAL needed.
  */
 class SoundDataEstimateTest {
-    private static final String FOLDER = "resources/sounds/";
+    private static String sound(String file) {
+        return TestFiles.file("sounds/" + file);
+    }
 
     private static void check(SoundDecoder decoder, String file, long ratio) {
-        SoundData sound = new SoundData("estimate-" + file, FOLDER + file);
-        assertEquals(new java.io.File(FOLDER + file).length() * ratio, sound.estimatedCpuBytes(), file);
+        SoundData sound = new SoundData("estimate-" + file, sound(file));
+        assertEquals(new java.io.File(sound(file)).length() * ratio, sound.estimatedCpuBytes(), file);
 
-        SoundLoadInfo info = decoder.decode(FOLDER + file, () -> {});
+        SoundLoadInfo info = decoder.decode(sound(file), () -> {});
         try {
             sound.setSoundLoadInfo(info);
             assertEquals((long) info.getBuffer().capacity() * Short.BYTES, sound.estimatedCpuBytes(), file);
