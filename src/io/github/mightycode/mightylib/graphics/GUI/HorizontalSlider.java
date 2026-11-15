@@ -1,14 +1,14 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector2f;
 
 public class HorizontalSlider extends Slider {
-    public HorizontalSlider(Camera2D referenceCamera, InputManager inputManager, MouseManager mouseManager,
+    public HorizontalSlider(Camera2D referenceCamera, IInputManager inputManager, MouseManager mouseManager,
                             Vector2f position, Vector2f size, float minValue, float maxValue){
         super(referenceCamera, inputManager, mouseManager, position, size, minValue, maxValue, 0);
     }

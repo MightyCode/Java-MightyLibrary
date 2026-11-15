@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.graphics.surface.BasicBindableObject;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -123,7 +123,7 @@ public class Game3D2D extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
 
         float speed2D = 200;
 

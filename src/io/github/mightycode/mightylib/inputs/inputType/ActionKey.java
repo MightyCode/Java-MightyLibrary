@@ -1,11 +1,11 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 
 import java.util.Objects;
 
-// An action read by its key in the InputManager that reads the binding: its binding in that window
+// An action read by its key in the IInputManager that reads the binding: its binding in that window
 final class ActionKey implements IAction {
     private final InputAction action;
 
@@ -14,22 +14,22 @@ final class ActionKey implements IAction {
     }
 
     @Override
-    public boolean getState(InputManager inputManager) {
+    public boolean getState(IInputManager inputManager) {
         return inputManager.getState(action);
     }
 
     @Override
-    public float getValue(InputManager inputManager) {
+    public float getValue(IInputManager inputManager) {
         return inputManager.getValue(action);
     }
 
     @Override
-    public boolean actionPressed(InputManager inputManager) {
+    public boolean actionPressed(IInputManager inputManager) {
         return inputManager.inputPressed(action);
     }
 
     @Override
-    public boolean actionReleased(InputManager inputManager) {
+    public boolean actionReleased(IInputManager inputManager) {
         return inputManager.inputReleased(action);
     }
 

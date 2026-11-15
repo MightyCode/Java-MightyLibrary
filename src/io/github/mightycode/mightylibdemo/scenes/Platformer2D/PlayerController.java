@@ -1,12 +1,12 @@
 package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 
 public class PlayerController {
-    private final InputManager input;
+    private final IInputManager input;
 
-    public PlayerController(InputManager input) {
+    public PlayerController(IInputManager input) {
         this.input = input;
     }
 

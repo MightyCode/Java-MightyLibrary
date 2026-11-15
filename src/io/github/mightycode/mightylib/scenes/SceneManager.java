@@ -4,16 +4,17 @@ package io.github.mightycode.mightylib.scenes;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.MainLoop;
 import io.github.mightycode.mightylib.inputs.EngineActions;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
-import io.github.mightycode.mightylib.sounds.SoundManager;
+import io.github.mightycode.mightylib.sounds.ISoundService;
 
 import java.util.function.Supplier;
 
-public class SceneManager {
+// The scene manager of the engine (ISceneManagerFactory: SceneManager::new)
+public class SceneManager implements ISceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
 
@@ -21,7 +22,7 @@ public class SceneManager {
     // The commands of the engine are run by the scenes of the main context only
     private final boolean runsCommands;
     private final Engine engine;
-    private final SoundManager soundManager;
+    private final ISoundService sound;
     // The last scene whose loading ended (LifecycleHooks.sceneChanged), null before the first one
     private Scene lastRunningScene;
 
@@ -33,10 +34,11 @@ public class SceneManager {
         sceneInterface = new SceneManagerInterface(engine.resources(), defaultLoadingScene);
 
         this.runsCommands = runsCommands;
-        soundManager = engine.soundManager();
+        sound = engine.sound();
     }
 
 
+    @Override
     public void init(Scene firstScene, String[] firstArguments){
         System.out.println("--Init SceneManager");
 
@@ -46,6 +48,7 @@ public class SceneManager {
     }
 
 
+    @Override
     public void update() {
         if (runsCommands)
             updateMain();
@@ -63,7 +66,7 @@ public class SceneManager {
 
     private void updateMain() {
         WindowContext mainWindow = context.getMainWindow();
-        InputManager mainInputManager = mainWindow.getInputManager();
+        IInputManager mainInputManager = mainWindow.getInputManager();
 
         // Commands come from the console, the debug server or the game, never block here
         engine.commands().processPendingCommands();
@@ -72,6 +75,7 @@ public class SceneManager {
             engine.resources().reloadAllOfType(TextureData.class);
     }
 
+    @Override
     public void display() {
         boolean wasLoading = currentScene.isWaitingForLoading();
         currentScene.displayByManager();
@@ -85,6 +89,7 @@ public class SceneManager {
     }
 
 
+    @Override
     public void postUpdate() {
         currentScene.postUpdateByManager();
     }
@@ -96,7 +101,7 @@ public class SceneManager {
             previousScene.unloadByManager();
         }
 
-        soundManager.clearAwaitedSong();
+        sound.clearAwaitedSong();
 
         // Assign the new scene
         currentScene = sceneInterface.getNewScene();
@@ -123,42 +128,51 @@ public class SceneManager {
         sceneInterface.reset();
     }
 
+    @Override
     public boolean isExitRequested() {
         return sceneInterface.WantQuit;
     }
 
+    @Override
     public int getExitStatus() {
         return sceneInterface.ExitStatus;
     }
 
+    @Override
     public Scene getCurrentScene() {
         return currentScene;
     }
 
     // A scene change is asked (by a command or a scene) and will be done at the beginning of the next tick
+    @Override
     public boolean isSceneChangePending() {
         return sceneInterface.isWantingChange();
     }
 
+    @Override
     public boolean isCurrentSceneLoading() {
         return currentScene != null && currentScene.isWaitingForLoading();
     }
 
     // The change is done at the beginning of the next tick
+    @Override
     public void requestSceneChange(Scene scene, String[] args) {
         sceneInterface.setNewScene(scene, args);
     }
 
     // The program stops at the beginning of the next tick
+    @Override
     public void requestExit(int status) {
         sceneInterface.exit(status);
     }
     // The context of this scene manager: its windows and its engine
+    @Override
     public Context getContext() {
         return context;
     }
 
     // The current scene is unloaded; the resources are freed by the engine at its end
+    @Override
     public void unload(){
         System.out.println("--Unload SceneManager");
 
@@ -169,6 +183,7 @@ public class SceneManager {
     }
 
     // The context is closed while the engine goes on: what its scene loaded must not stay loaded
+    @Override
     public void releaseSceneResources() {
         if (currentScene == null)
             return;

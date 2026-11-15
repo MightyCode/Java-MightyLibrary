@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.inputs.EngineActions;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.text.ClickCounter;
@@ -36,12 +36,12 @@ import static org.lwjgl.glfw.GLFW.glfwFocusWindow;
  * window (semi-transparent, the game sees no input meanwhile), F2 moves it to a window of its own and back.
  * It shows the console log lines the level of the session sees (in DEV the program output, the commands of every
  * source) and runs what is typed as commands at that level.
- * Main thread only: update() at the beginning of each tick, displayOverlay() after the scene of the main window.
+ * Main thread only: update() at the beginning of each tick, displayOverlay() after the scene of the main window (service
+ * mightylib:console, see IConsoleService).
  */
-public final class Console {
-    public enum EMode {
-        CLOSED, OVERLAY, DETACHED
-    }
+public final class Console implements IConsoleService {
+    // Over every other overlay
+    public static final int OVERLAY_LAYER = 1000;
 
     private static final float OVERLAY_HEIGHT = 0.45f;
     private static final Color4f OVERLAY_BACKGROUND = new Color4f(0f, 0f, 0f, 0.55f);
@@ -95,11 +95,13 @@ public final class Console {
     }
 
     /** Write a message of the game for the player, seen from USER on. Any thread. */
+    @Override
     public void print(String text) {
         print(text, ECommandLevel.USER);
     }
 
     /** Write a message of the game, seen from the level on (CHEAT: only when the cheats are on). Any thread. */
+    @Override
     public void print(String text, ECommandLevel level) {
         log.add(ConsoleLog.EType.MESSAGE, null, text, level);
     }
@@ -120,6 +122,7 @@ public final class Console {
      * State of the console for the developer (command console): mode, logs shown, scroll ("end", or the line at the
      * bottom of the view and its rows hidden below), selection (null, or where it is).
      */
+    @Override
     public JSONObject stateJson() {
         JSONObject json = new JSONObject().put("mode", mode.name()).put("logsShown", areLogsShown());
 
@@ -147,6 +150,7 @@ public final class Console {
      * Show or hide the program output (stdout, stderr) in the console; the log keeps it (console log, debug server).
      * The view keeps its place: hiding then showing the lines comes back to the same one.
      */
+    @Override
     public void setLogsShown(boolean shown) {
         if (shown) {
             hiddenTypes.remove(ConsoleLog.EType.OUT);
@@ -157,6 +161,7 @@ public final class Console {
         }
     }
 
+    @Override
     public boolean areLogsShown() {
         return !hiddenTypes.contains(ConsoleLog.EType.OUT) || !hiddenTypes.contains(ConsoleLog.EType.ERR);
     }
@@ -167,11 +172,13 @@ public final class Console {
      * @param count lines to copy, 0 or less: every line kept
      * @return the copied text, empty (clipboard unchanged) when there is no line
      */
+    @Override
     public String copyLast(int count, ECommandLevel level, boolean all) {
         return copyLast(count, level, all, Long.MAX_VALUE);
     }
 
     // The same, the lines up to upToId only: a command copies the lines before its own echo (the newest COMMAND line)
+    @Override
     public String copyLast(int count, ECommandLevel level, boolean all, long upToId) {
         Set<ConsoleLog.EType> hidden = all ? Collections.emptySet() : getHiddenTypes();
         String text = LogSelection.LastLinesText(log, level, line -> !hidden.contains(line.getType()), count, upToId);
@@ -183,8 +190,10 @@ public final class Console {
     // The types of lines not shown (read by the panels at each display)
     Set<ConsoleLog.EType> getHiddenTypes() { return Collections.unmodifiableSet(hiddenTypes); }
 
+    @Override
     public ConsoleLog getLog() { return log; }
 
+    @Override
     public EMode getMode() { return mode; }
 
     CommandLineEditor getEditor() { return editor; }
@@ -193,6 +202,7 @@ public final class Console {
 
     // ---- Changes of mode (keys, command console) ----
 
+    @Override
     public void open() {
         if (mode == EMode.OVERLAY)
             return;
@@ -205,6 +215,7 @@ public final class Console {
         capture(engine.contexts().getMainWindow());
     }
 
+    @Override
     public void close() {
         if (mode == EMode.CLOSED)
             return;
@@ -216,6 +227,7 @@ public final class Console {
         releaseNow();
     }
 
+    @Override
     public void toggle() {
         if (mode == EMode.CLOSED)
             open();
@@ -224,6 +236,7 @@ public final class Console {
     }
 
     /** The console in a window of its own; stays on the main window if the window can't be created. */
+    @Override
     public void detach() {
         if (mode == EMode.DETACHED)
             return;
@@ -250,6 +263,7 @@ public final class Console {
     }
 
     /** Back to the main window, open. */
+    @Override
     public void attach() {
         if (mode != EMode.DETACHED)
             return;
@@ -310,9 +324,10 @@ public final class Console {
     // ---- Run by the engine ----
 
     /** Beginning of a tick, before the scenes: what is typed is run in this tick. */
+    @Override
     public void update() {
         WindowContext main = engine.contexts().getMainWindow();
-        InputManager mainInputs = main.getInputManager();
+        IInputManager mainInputs = main.getInputManager();
         boolean toggle = mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE);
 
         switch (mode) {
@@ -424,7 +439,13 @@ public final class Console {
         };
     }
 
+    @Override
+    public int overlayLayer() {
+        return OVERLAY_LAYER;
+    }
+
     /** After the scene of the main window is drawn, with its OpenGL context current. */
+    @Override
     public void displayOverlay() {
         if (mode != EMode.OVERLAY || displayFailed)
             return;
@@ -452,6 +473,7 @@ public final class Console {
     }
 
     /** End of the engine, with the main window's OpenGL context current: what the overlay created is freed. */
+    @Override
     public void unload() {
         releaseNow();
         if (overlay != null) {

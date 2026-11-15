@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 
 public class InputOr implements IAction {
     private final IAction input1;
@@ -12,24 +12,24 @@ public class InputOr implements IAction {
     }
 
     @Override
-    public boolean getState(InputManager inputManager) {
+    public boolean getState(IInputManager inputManager) {
         return input1.getState(inputManager) || input2.getState(inputManager);
     }
 
     // The strongest of the two
     @Override
-    public float getValue(InputManager inputManager) {
+    public float getValue(IInputManager inputManager) {
         return Math.max(input1.getValue(inputManager), input2.getValue(inputManager));
     }
 
     @Override
-    public boolean actionPressed(InputManager inputManager) {
+    public boolean actionPressed(IInputManager inputManager) {
         return (!input1.getState(inputManager) && input2.actionPressed(inputManager))
                 || (!input2.getState(inputManager) && input1.actionPressed(inputManager));
     }
 
     @Override
-    public boolean actionReleased(InputManager inputManager) {
+    public boolean actionReleased(IInputManager inputManager) {
         return (!input1.getState(inputManager) && input2.actionReleased(inputManager))
                 || (!input2.getState(inputManager) && input1.actionReleased(inputManager));
     }

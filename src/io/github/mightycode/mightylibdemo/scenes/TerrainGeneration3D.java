@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
 import io.github.mightycode.mightylib.graphics.renderer._3D.terrain.TerrainRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
@@ -104,7 +104,7 @@ public class TerrainGeneration3D extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
 
 
         if (inputManager.inputPressed(ActionId.TAB)) {

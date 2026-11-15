@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
 
 /**
@@ -23,17 +23,17 @@ public class InputGamepadButton implements IAction {
     public int player() { return player; }
 
     @Override
-    public boolean getState(InputManager inputManager) {
+    public boolean getState(IInputManager inputManager) {
         return inputManager.getGamepadManager().getButton(button, player);
     }
 
     @Override
-    public boolean actionPressed(InputManager inputManager) {
+    public boolean actionPressed(IInputManager inputManager) {
         return inputManager.getGamepadManager().buttonPressed(button, player);
     }
 
     @Override
-    public boolean actionReleased(InputManager inputManager) {
+    public boolean actionReleased(IInputManager inputManager) {
         return inputManager.getGamepadManager().buttonReleased(button, player);
     }
 }

@@ -3,7 +3,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -110,7 +110,7 @@ public class CustomRenderer2D extends Scene {
     public void update() {
         super.update();
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
         KeyboardManager keyboardManager = mainContext.getKeyboardManager();
 
         if (inputManager.inputPressed(ActionId.ESCAPE))

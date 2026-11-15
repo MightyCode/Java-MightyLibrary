@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
-import io.github.mightycode.mightylib.console.Console;
 import io.github.mightycode.mightylib.console.ConsoleLog;
+import io.github.mightycode.mightylib.console.IConsoleService;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
@@ -41,11 +41,11 @@ public class ConsoleGenCom extends BaseCommand {
     protected void syntax(CommandNode root) {
         root.executes("Mode of the in-game console (closed, overlay, detached)",
                         context -> status(Views.engine().console()))
-                .then(drive("open", "The console over the main window (²)", Console::open))
-                .then(drive("close", "Close the console", Console::close))
-                .then(drive("toggle", "Open the console, or close it", Console::toggle))
-                .then(drive("detach", "The console in a window of its own (F2)", Console::detach))
-                .then(drive("attach", "The console back on the main window", Console::attach))
+                .then(drive("open", "The console over the main window (²)", IConsoleService::open))
+                .then(drive("close", "Close the console", IConsoleService::close))
+                .then(drive("toggle", "Open the console, or close it", IConsoleService::toggle))
+                .then(drive("detach", "The console in a window of its own (F2)", IConsoleService::detach))
+                .then(drive("attach", "The console back on the main window", IConsoleService::attach))
                 .then(literal("clear", "Clear the lines of the console").executes(context -> {
                     ConsoleLog log = Views.engine().consoleLog();
                     if (log == null)
@@ -84,9 +84,9 @@ public class ConsoleGenCom extends BaseCommand {
     }
 
     // A sub-command that acts on the console
-    private static CommandNode drive(String word, String description, Consumer<Console> action) {
+    private static CommandNode drive(String word, String description, Consumer<IConsoleService> action) {
         return literal(word, description).executes(context -> {
-            Console console = Views.engine().console();
+            IConsoleService console = Views.engine().console();
             if (console == null)
                 return status(null);
 
@@ -96,7 +96,7 @@ public class ConsoleGenCom extends BaseCommand {
     }
 
     private static CommandResult copy(CommandContext context, int count) {
-        Console console = Views.engine().console();
+        IConsoleService console = Views.engine().console();
         if (console == null)
             return status(null);
 
@@ -114,7 +114,7 @@ public class ConsoleGenCom extends BaseCommand {
 
     // null: switch
     private static CommandResult logs(Boolean shown) {
-        Console console = Views.engine().console();
+        IConsoleService console = Views.engine().console();
         if (console == null)
             return status(null);
 
@@ -133,7 +133,7 @@ public class ConsoleGenCom extends BaseCommand {
         return CommandResult.ok(on ? "Following the console log" : "Console log no longer followed");
     }
 
-    private static CommandResult status(Console console) {
+    private static CommandResult status(IConsoleService console) {
         if (console == null)
             return CommandResult.error("The console is disabled (EngineConfig.setCommandAccess)");
 

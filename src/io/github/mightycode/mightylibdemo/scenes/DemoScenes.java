@@ -50,6 +50,7 @@ public final class DemoScenes {
             scene(CustomRenderer2D.class, CustomRenderer2D::new, "Custom geometry with a custom shader: stars drawn by a MeshRenderer subclass and by a Mesh of the scene. D toggles the depth test."),
             scene(DisplayModesScene.class, DisplayModesScene::new, "Windowed, exclusive fullscreen and borderless modes, a second window, the border and the resizing."),
             scene(DocumentationScene.class, DocumentationScene::new, "The reference scene: read its source code, each step of the life of a scene and of its resources is explained."),
+            scene(EngineServices2D.class, EngineServices2D::new, "The services of the engine and their plugins (command services), the sound in use (OpenAL or silent) and the overlay of the tick_counter service of the demo, under the console."),
             scene(FallbackScene.class, FallbackScene::new, "Resources that can't be used (unknown texture, missing file, unknown font or sound) are replaced by fallbacks instead of crashing the game."),
             scene(Game3D2D.class, Game3D2D::new, "A 2D animated slime drawn in a 3D scene, next to a textured cube, with a free camera."),
             scene(GamepadScene.class, GamepadScene::new, "One square per player, moved by the sticks of up to four gamepads, with the list of the buttons and axes."),

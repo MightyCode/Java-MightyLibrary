@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,7 +20,7 @@ public class AxisSum extends AxisBinding {
     public List<IAxis> axes() { return axes; }
 
     @Override
-    protected float raw(InputManager inputManager) {
+    protected float raw(IInputManager inputManager) {
         float sum = 0;
         for (IAxis axis : axes)
             sum += axis.getAxis(inputManager);

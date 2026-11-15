@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
+import io.github.mightycode.mightylib.inputs.IInputManagerFactory;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
@@ -27,6 +29,8 @@ public final class ContextManager {
     private int lastWindowId;
     // The actions and axes of the engine (set by the engine before its first context), bound in each window
     private InputRegistry inputRegistry = new InputRegistry().freeze();
+    // Creates the input manager of each window (set by the engine from the registry)
+    private IInputManagerFactory inputManagerFactory = InputManager::new;
     // Hidden context that every window shares its objects with, created with the first window
     private GLContext rootGLContext;
 
@@ -34,6 +38,10 @@ public final class ContextManager {
 
     void setInputRegistry(InputRegistry inputRegistry) {
         this.inputRegistry = inputRegistry;
+    }
+
+    void setInputManagerFactory(IInputManagerFactory inputManagerFactory) {
+        this.inputManagerFactory = inputManagerFactory;
     }
 
     GLContext rootGLContext() {
@@ -93,7 +101,8 @@ public final class ContextManager {
 
         KeyboardManager keyboardManager = new KeyboardManager(window.getInfo(), keyboardLanguage);
         MouseManager mouseManager = new MouseManager(window.getInfo());
-        InputManager inputManager = new InputManager(keyboardManager, mouseManager, getGamepadManager(), inputRegistry);
+        IInputManager inputManager = inputManagerFactory.create(keyboardManager, mouseManager, getGamepadManager(),
+                inputRegistry);
         inputManager.bindDefaults(config.hasProjectInputs());
 
         WindowContext windowContext = new WindowContext(++lastWindowId, owner, name, closesEngine, view, window,

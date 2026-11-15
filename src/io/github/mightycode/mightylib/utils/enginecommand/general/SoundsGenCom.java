@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.main.Views;
-import io.github.mightycode.mightylib.sounds.SoundManager;
-import io.github.mightycode.mightylib.sounds.SoundSource;
+import io.github.mightycode.mightylib.sounds.ISoundService;
+import io.github.mightycode.mightylib.sounds.ISoundSource;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -33,12 +33,12 @@ public class SoundsGenCom extends BaseCommand {
     }
 
     private static CommandResult sources() {
-        SoundManager manager = Views.engine().soundManager();
+        ISoundService manager = Views.engine().sound();
 
         JSONArray sources = new JSONArray();
         StringBuilder message = new StringBuilder();
         int owned = 0;
-        for (SoundSource source : manager.getSources()) {
+        for (ISoundSource source : manager.getSources()) {
             if (source.isOwned())
                 ++owned;
 
@@ -80,7 +80,7 @@ public class SoundsGenCom extends BaseCommand {
     }
 
     private static CommandResult gains() {
-        SoundManager manager = Views.engine().soundManager();
+        ISoundService manager = Views.engine().sound();
 
         JSONArray nodes = new JSONArray();
         StringBuilder message = new StringBuilder();

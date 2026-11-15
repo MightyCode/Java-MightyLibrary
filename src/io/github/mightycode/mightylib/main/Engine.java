@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.console.CommandEcho;
-import io.github.mightycode.mightylib.console.Console;
+import io.github.mightycode.mightylib.console.IConsoleService;
 import io.github.mightycode.mightylib.console.ConsoleLog;
 import io.github.mightycode.mightylib.console.LogCapture;
 import io.github.mightycode.mightylib.graphics.GLContext;
@@ -21,11 +21,16 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
-import io.github.mightycode.mightylib.sounds.SoundManager;
+import io.github.mightycode.mightylib.services.EngineServices;
+import io.github.mightycode.mightylib.services.IEngineService;
+import io.github.mightycode.mightylib.services.RunningService;
+import io.github.mightycode.mightylib.services.ServiceKey;
+import io.github.mightycode.mightylib.services.ServiceSet;
+import io.github.mightycode.mightylib.sounds.ISoundService;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
@@ -36,6 +41,7 @@ import org.joml.Vector2i;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -58,13 +64,13 @@ public final class Engine implements IView {
     private Registrations registrations;
     private Resources resources;
     private GLResources glResources;
-    private SoundManager soundManager;
-    private SceneManager sceneManager;
+    private ISceneManager sceneManager;
     private Commands commands;
+    // The services registered by the plugins, created by setup; null before
+    private ServiceSet services;
     private DebugServer debugServer;
     // Program output and commands: null without console nor debug mode
     private ConsoleLog consoleLog;
-    private Console console;
 
     private boolean glfwStarted;
     // A window that stops the engine was closed
@@ -95,19 +101,42 @@ public final class Engine implements IView {
 
     public GLResources glResources() { return glResources; }
 
-    public SoundManager soundManager() { return soundManager; }
+    // The sound (service mightylib:sound)
+    public ISoundService sound() { return service(EngineServices.SOUND); }
 
     // The scenes of the main context
-    public SceneManager sceneManager() { return sceneManager; }
+    public ISceneManager sceneManager() { return sceneManager; }
 
     // The commands of the engine, the game and the views, created by setup
     public Commands commands() { return commands; }
 
-    // The in-game console, null without access to the commands (EngineConfig.setCommandAccess)
-    public Console console() { return console; }
+    // The in-game console (service mightylib:console), null without access to the commands
+    // (EngineConfig.setCommandAccess)
+    public IConsoleService console() {
+        return hasService(EngineServices.CONSOLE) ? service(EngineServices.CONSOLE) : null;
+    }
 
     // What the console shows: program output and commands of every source; null without console nor debug mode
     public ConsoleLog consoleLog() { return consoleLog; }
+
+    /**
+     * The service of this key, as its contract.
+     * @throws IllegalArgumentException if no service has this key: test an optional one with hasService
+     */
+    public <T extends IEngineService> T service(ServiceKey<T> key) {
+        if (services == null)
+            throw new IllegalArgumentException("No service " + key + ": the engine is not started");
+        return services.get(key);
+    }
+
+    public boolean hasService(ServiceKey<?> key) {
+        return services != null && services.has(key);
+    }
+
+    // The services created, in their order of creation (empty before the start)
+    public List<RunningService> services() {
+        return services == null ? Collections.emptyList() : services.running();
+    }
 
     // ---- IView: the code outside any scene runs for the main window, without cameras ----
 
@@ -191,13 +220,14 @@ public final class Engine implements IView {
         // Before the window: a mistake of a plugin stops the engine before anything is opened
         System.out.println("--Register the plugins.");
         try {
-            registrations = EngineRegistry.Collect(new EnginePlugin(config, () -> shaderManager),
+            registrations = EngineRegistry.Collect(new EnginePlugin(config, () -> shaderManager, access != null),
                     config.getPlugins());
         } catch (RuntimeException e) {
             Logger.LogException("The registration of the plugins failed", e);
             return ListError.PLUGIN_REGISTRATION_FAIL;
         }
         contexts.setInputRegistry(registrations.inputs());
+        contexts.setInputManagerFactory(registrations.inputManagerFactory());
         registrations.lifecycle().setStrict(config.isStrictResources());
 
         System.out.println("--Load libraries.");
@@ -255,12 +285,6 @@ public final class Engine implements IView {
         resources.setGLElementSink(glResources);
         TextureUploader.setMode(config.getTextureUpload());
 
-        soundManager = new SoundManager(resources, config.getGainTreePath());
-        if (!soundManager.init()) {
-            System.err.println("SoundManager fail to initialize");
-            return ListError.LIBRARIES_LOAD_FAIL;
-        }
-
         // Before the scenes and the game: they add their commands to it
         if (maxAccess == null && System.getProperty(EngineConfig.COMMAND_ACCESS_PROPERTY) != null)
             System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
@@ -278,14 +302,21 @@ public final class Engine implements IView {
         if (consoleLog != null)
             commands.addListener(new CommandEcho(consoleLog));
 
-        System.out.println("--Create SceneManager");
-        sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
-        mainContext.setSceneManager(sceneManager);
-
-        if (access != null) {
-            console = new Console(this, consoleLog, commands, config.getConsoleFont());
-            console.setLogsShown(config.isConsoleLogsShown());
+        // After the resources and the commands, before the scenes: they can use the services
+        System.out.println("--Create the services");
+        services = new ServiceSet();
+        if (config.isSoundForcedSilent()) {
+            System.out.println("--" + EngineConfig.SOUND_PROPERTY + "=silent: no sound device");
+            services.override(EngineServices.SOUND, EnginePlugin.SilentSound());
         }
+        if (!services.create(this, registrations.services()))
+            return ListError.SERVICE_FAIL;
+        // Before the resources are loaded: the sounds keep their samples in the sound service
+        resources.setSoundBuffers(sound());
+
+        System.out.println("--Create the scene manager");
+        sceneManager = registrations.sceneManagerFactory().create(this, mainContext, true, config.getLoadingScene());
+        mainContext.setSceneManager(sceneManager);
 
         // Create all resources dependencies
         resources.init();
@@ -337,7 +368,8 @@ public final class Engine implements IView {
         if (context == null)
             throw new IllegalStateException("The window of the context " + name + " can't be created");
 
-        SceneManager manager = new SceneManager(this, context, false, config.getLoadingScene());
+        ISceneManager manager = registrations.sceneManagerFactory().create(this, context, false,
+                config.getLoadingScene());
         context.setSceneManager(manager);
 
         try (Views.Scope ignored = Views.enter(context)) {
@@ -461,13 +493,12 @@ public final class Engine implements IView {
     // One tick of every context, then the inputs of every window
     void update() {
         // Before the scenes: the console captures the inputs and runs what is typed in this tick
-        if (console != null)
-            console.update();
+        services.update();
 
         for (Context context : contexts.getContexts())
             context.update();
 
-        soundManager.lateUpdate();
+        services.lateUpdate();
         contexts.postUpdate();
 
         for (Context context : contexts.getContexts())
@@ -477,10 +508,9 @@ public final class Engine implements IView {
     // The frame is drawn and swapped, the events are read: a window can be drawn again from a callback
     boolean isPollingEvents() { return pollingEvents; }
 
-    // The console over the main window, once its scene is drawn
-    void displayConsoleOverlay() {
-        if (console != null)
-            console.displayOverlay();
+    // The overlays of the services (the console on top) over the main window, once its scene is drawn
+    void displayOverlays() {
+        services.displayOverlays();
     }
 
     // Each window shows its view
@@ -519,15 +549,12 @@ public final class Engine implements IView {
         // What every window shows, then the resources, while the OpenGL contexts exist
         contexts.unloadViews();
 
-        // After the scenes (their unload can still stop their sources), before the sound buffers
-        if (soundManager != null)
-            soundManager.unloadSoundSource();
-
         WindowContext mainWindow = contexts.getMainWindow();
         if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated()) {
             mainWindow.getWindow().bindWindow();
-            if (console != null)
-                console.unload();
+            // The sources of the sound, the GL objects of the console
+            if (services != null)
+                services.unload();
         }
 
         if (resources != null)
@@ -549,8 +576,9 @@ public final class Engine implements IView {
             if (callback != null)
                 callback.free();
         }
-        if (soundManager != null)
-            soundManager.unload();
+        // The sound device, once everything is released
+        if (services != null)
+            services.terminate();
 
         // Strict mode: a hook that failed while stopping did not stop the release, it fails the exit
         if (status == ListError.NO_ERROR && lifecycle().hasTeardownFailed())

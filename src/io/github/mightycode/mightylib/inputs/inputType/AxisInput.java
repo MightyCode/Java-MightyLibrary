@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.inputs.inputType;
 import io.github.mightycode.mightylib.inputs.InputAxis;
 
 /**
- * Binding of a registered axis (MOVE_X, LOOK_X...) in an InputManager, read with InputManager.getAxis(axis).
+ * Binding of a registered axis (MOVE_X, LOOK_X...) in an IInputManager, read with IInputManager.getAxis(axis).
  */
 public class AxisInput {
     private final InputAxis axis;

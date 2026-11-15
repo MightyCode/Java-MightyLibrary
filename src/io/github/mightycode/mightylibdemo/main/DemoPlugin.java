@@ -22,6 +22,7 @@ import io.github.mightycode.mightylib.resources.map.TileSetLoader;
 import io.github.mightycode.mightylib.resources.models.ModelLoader;
 import io.github.mightycode.mightylib.resources.sound.SoundLoader;
 import io.github.mightycode.mightylib.resources.texture.TextureDataAtlasLoader;
+import io.github.mightycode.mightylib.services.EngineServices;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -32,8 +33,9 @@ import org.json.JSONObject;
 
 /**
  * What the demo adds to the engine, like a real game: the loaders it uses, its commands, its actions and axes with
- * their default bindings (in every window of the game, not in the detached console), its scenes (DemoScenes), and
- * hooks on the life of the engine, counted and shown by the command demo:lifecycle.
+ * their default bindings (in every window of the game, not in the detached console), its scenes (DemoScenes), a service
+ * (TickCounterService, shown by EngineServices2D), and hooks on the life of the engine, counted and shown by the command
+ * demo:lifecycle.
  */
 public class DemoPlugin implements IPlugin {
     public static final String NAMESPACE = "demo";
@@ -75,6 +77,10 @@ public class DemoPlugin implements IPlugin {
 
         registerInputs(registry);
         DemoScenes.Register(registry);
+        // Requires the sound, after the console when the game has one (it is then created without it otherwise)
+        registry.services().register(TickCounterService.KEY, TickCounterService::new)
+                .requires(EngineServices.SOUND)
+                .after(EngineServices.CONSOLE);
         registerLifecycle(registry);
     }
 

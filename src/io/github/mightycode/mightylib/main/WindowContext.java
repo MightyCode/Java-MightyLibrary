@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
@@ -15,7 +15,7 @@ public class WindowContext {
     private final Context owner;
     private final String name;
     private final Window window;
-    private final InputManager inputManager;
+    private final IInputManager inputManager;
     private final KeyboardManager keyboardManager;
     private final MouseManager mouseManager;
 
@@ -35,7 +35,7 @@ public class WindowContext {
                   boolean closesEngine,
                   WindowView view,
                   Window window,
-                  InputManager inputManager,
+                  IInputManager inputManager,
                   KeyboardManager keyboardManager,
                   MouseManager mouseManager){
 
@@ -83,7 +83,7 @@ public class WindowContext {
         setDisplay(window.getDisplay().setMode(mode));
     }
 
-    public InputManager getInputManager() { return inputManager; }
+    public IInputManager getInputManager() { return inputManager; }
     public KeyboardManager getKeyboardManager() { return keyboardManager; }
     public MouseManager getMouseManager() { return mouseManager; }
 

@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
 
 public class InputSimple implements IAction {
@@ -16,7 +16,7 @@ public class InputSimple implements IAction {
     public EInputType type() { return inputType; }
 
     @Override
-    public boolean getState(InputManager inputManager) {
+    public boolean getState(IInputManager inputManager) {
        switch (inputType){
            case Keyboard:
                return inputManager.getKeyboardManager().getKeyState(inputId);
@@ -30,7 +30,7 @@ public class InputSimple implements IAction {
     }
 
     @Override
-    public boolean actionPressed(InputManager inputManager) {
+    public boolean actionPressed(IInputManager inputManager) {
         switch (inputType){
             case Keyboard:
                 return inputManager.getKeyboardManager().keyPressed(inputId);
@@ -44,7 +44,7 @@ public class InputSimple implements IAction {
     }
 
     @Override
-    public boolean actionReleased(InputManager inputManager) {
+    public boolean actionReleased(IInputManager inputManager) {
         switch (inputType){
             case Keyboard:
                 return inputManager.getKeyboardManager().keyReleased(inputId);

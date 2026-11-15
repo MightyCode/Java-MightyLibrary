@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.graphics.utils.Screenshot;
-import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -27,7 +27,7 @@ public final class Context implements IView {
 
     private final WindowTree<WindowContext> windows = new WindowTree<>();
     private WindowContext mainWindow;
-    private SceneManager sceneManager;
+    private ISceneManager sceneManager;
 
     private boolean closeRequested;
 
@@ -64,7 +64,7 @@ public final class Context implements IView {
 
     public WindowContext getMainWindow() { return mainWindow; }
 
-    public SceneManager getSceneManager() { return sceneManager; }
+    public ISceneManager getSceneManager() { return sceneManager; }
 
     // The windows of the context in the order they were opened, the main window first
     public List<WindowContext> getWindows() {
@@ -85,7 +85,7 @@ public final class Context implements IView {
         window.setNode(windows.addRoot(window));
     }
 
-    void setSceneManager(SceneManager sceneManager) {
+    void setSceneManager(ISceneManager sceneManager) {
         this.sceneManager = sceneManager;
     }
 
@@ -228,11 +228,11 @@ public final class Context implements IView {
         }
     }
 
-    // The scene, then the console over the main window of the main context
+    // The scene, then the overlays of the services (the console) over the main window of the main context
     private void displayMainWindow() {
         sceneManager.display();
         if (main)
-            engine.displayConsoleOverlay();
+            engine.displayOverlays();
     }
 
     /**

@@ -22,7 +22,7 @@ public class ChangeSoundGainCom extends BaseCommand {
     @Override
     protected void syntax(CommandNode root) {
         root.then(literal("list", "List all of the gain nodes and their value").executes(context -> {
-                    Views.engine().soundManager().printGainTree();
+                    Views.engine().sound().printGainTree();
 
                     return CommandResult.ok("Gain tree printed in the program console");
                 }))
@@ -32,7 +32,7 @@ public class ChangeSoundGainCom extends BaseCommand {
                                     String node = context.get("node");
                                     double value = context.get("value");
 
-                                    if (!Views.engine().soundManager().changeGain(node, (float) value))
+                                    if (!Views.engine().sound().changeGain(node, (float) value))
                                         return CommandResult.error("Unknown node called " + node);
 
                                     return CommandResult.ok("Update " + node + " node to a new gain of " + value);

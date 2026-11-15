@@ -107,7 +107,7 @@ public class FallbackScene extends Scene {
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
         if (mainContext.getInputManager().inputPressed(ActionId.ENTER))
-            engine().soundManager().createSoundSource(UNKNOWN_SOUND);
+            engine().sound().createSoundSource(UNKNOWN_SOUND);
 
         unknownAnimation.update();
     }

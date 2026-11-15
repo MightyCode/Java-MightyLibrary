@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
 
 /**
@@ -45,24 +45,24 @@ public class InputGamepadAxis implements IAction {
 
     // For ANY_PLAYER, the axis farthest from 0 among the gamepads decides
     @Override
-    public boolean getState(InputManager inputManager) {
+    public boolean getState(IInputManager inputManager) {
         return beyond(inputManager.getGamepadManager().getAxis(axis, player));
     }
 
     // How far the axis is pushed in the direction, from 0 to 1, without threshold (the dead zone already applies)
     @Override
-    public float getValue(InputManager inputManager) {
+    public float getValue(IInputManager inputManager) {
         return Math.max(0, inputManager.getGamepadManager().getAxis(axis, player) * direction);
     }
 
     @Override
-    public boolean actionPressed(InputManager inputManager) {
+    public boolean actionPressed(IInputManager inputManager) {
         GamepadManager gamepads = inputManager.getGamepadManager();
         return beyond(gamepads.getAxis(axis, player)) && !beyond(gamepads.getOldAxis(axis, player));
     }
 
     @Override
-    public boolean actionReleased(InputManager inputManager) {
+    public boolean actionReleased(IInputManager inputManager) {
         GamepadManager gamepads = inputManager.getGamepadManager();
         return !beyond(gamepads.getAxis(axis, player)) && beyond(gamepads.getOldAxis(axis, player));
     }

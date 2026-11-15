@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
@@ -20,7 +20,7 @@ public abstract class Slider {
     private final Vector2f buttonBoundaries;
     private double minValue, maxValue;
     private double currentValue;
-    private final InputManager inputManager;
+    private final IInputManager inputManager;
     private final MouseManager mouseManager;
     private final Camera2D referenceCamera;
     private boolean isDragging;
@@ -31,7 +31,7 @@ public abstract class Slider {
 
     private InputAction clickActionId;
 
-    public Slider(Camera2D referenceCamera, InputManager inputManager, MouseManager mouseManager,
+    public Slider(Camera2D referenceCamera, IInputManager inputManager, MouseManager mouseManager,
                             Vector2f position, Vector2f size, double minValue, double maxValue,
                   int dimensionComponent){
         this.referenceCamera = referenceCamera;

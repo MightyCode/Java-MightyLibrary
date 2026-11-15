@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.main.utils.FrameEvent;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.TickEvent;
 import io.github.mightycode.mightylib.resources.Resources;
-import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.scenes.ISceneManager;
 
 public final class MainLoop {
     private final static float NANO_IN_SECOND = 1000000000.0f;
@@ -53,7 +53,7 @@ public final class MainLoop {
     @SuppressWarnings("BusyWait")
     private static int loop(Engine engine) {
         EngineConfig config = engine.config();
-        SceneManager sceneManager = engine.sceneManager();
+        ISceneManager sceneManager = engine.sceneManager();
 
         double tickTime = NANO_IN_SECOND / config.getTps();
         double frameTime = NANO_IN_SECOND / config.getFps();

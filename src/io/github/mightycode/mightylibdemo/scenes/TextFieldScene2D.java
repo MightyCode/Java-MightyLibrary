@@ -3,7 +3,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 import io.github.mightycode.mightylib.graphics.GUI.TextField;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -60,7 +60,7 @@ public class TextFieldScene2D extends Scene {
         if (field.getLeftWith() != -1)
             leftWith = KeyName(field.getLeftWith());
 
-        InputManager input = mainContext.getInputManager();
+        IInputManager input = mainContext.getInputManager();
         if (input.inputPressed(ActionId.ENTER))
             ++enterSeenByScene;
 

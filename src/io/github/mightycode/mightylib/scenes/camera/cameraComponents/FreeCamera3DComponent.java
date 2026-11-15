@@ -2,13 +2,13 @@ package io.github.mightycode.mightylib.scenes.camera.cameraComponents;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputAxis;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 
 /**
- * Free flying 3D camera driven by axes (InputManager.getAxis), so by any binding : keys, mouse, gamepad.
+ * Free flying 3D camera driven by axes (IInputManager.getAxis), so by any binding : keys, mouse, gamepad.
  * - Moves : MoveRight, MoveForward, MoveUp from -1 to 1 (AxisButtons, AxisGamepad...), at camera.getSpeed()
  *   units per second, multiplied by quickFactor while QuickSpeed (an action) is held ; no faster diagonal.
  * - Look : LookRight and LookUp in degrees for this tick (sensitivity, curve and per second are in their
@@ -43,14 +43,14 @@ public class FreeCamera3DComponent implements IUpdatable {
         }
     }
 
-    private final InputManager inputManager;
+    private final IInputManager inputManager;
     private final Camera3D camera;
     private final Inputs inputs;
 
     private float quickFactor = DEFAULT_QUICK_FACTOR;
     private boolean lookLocked;
 
-    public FreeCamera3DComponent(InputManager inputManager, Camera3D camera, Inputs inputs) {
+    public FreeCamera3DComponent(IInputManager inputManager, Camera3D camera, Inputs inputs) {
         this.inputManager = inputManager;
         this.camera = camera;
         this.inputs = inputs;

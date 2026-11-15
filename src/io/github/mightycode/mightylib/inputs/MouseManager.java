@@ -126,7 +126,7 @@ public class MouseManager {
         return !captured && !edgesDropped && !state[buttonID] && oldState[buttonID];
     }
 
-    // ---- Focus (InputManager.focus()): an owner (the console, a text field) owns the mouse, the game sees no
+    // ---- Focus (IInputManager.focus()): an owner (the console, a text field) owns the mouse, the game sees no
     // button, no scroll, no movement and a cursor out of the window ----
     private static final float NOWHERE = -1_000_000f;
     private boolean captured;

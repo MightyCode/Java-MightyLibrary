@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 
 /**
@@ -19,10 +19,10 @@ public abstract class AxisBinding implements IAxis {
     private boolean perSecond;
 
     // Raw value of the source
-    protected abstract float raw(InputManager inputManager);
+    protected abstract float raw(IInputManager inputManager);
 
     @Override
-    public final float getAxis(InputManager inputManager) {
+    public final float getAxis(IInputManager inputManager) {
         float value = raw(inputManager);
         if (value == 0)
             return 0;

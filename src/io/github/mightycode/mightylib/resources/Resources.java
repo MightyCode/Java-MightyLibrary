@@ -1,12 +1,12 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
 
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.IntConsumer;
 
 /**
  * Registry and loading pipeline of the data read from the disk.
@@ -134,17 +134,16 @@ public class Resources {
         return glElementSink;
     }
 
-    // Where a sound buffer is detached from the sources holding it, before it is deleted (SoundManager); none in tests
-    private IntConsumer soundBufferDetacher;
+    // Where the sounds keep their samples: the sound service, given by the engine; none in tests
+    private ISoundBuffers soundBuffers;
 
-    public void setSoundBufferDetacher(IntConsumer soundBufferDetacher) {
-        this.soundBufferDetacher = soundBufferDetacher;
+    public void setSoundBuffers(ISoundBuffers soundBuffers) {
+        this.soundBuffers = soundBuffers;
     }
 
-    // Before deleting a sound buffer: the sources still holding it let it go
-    public void detachSoundBuffer(int bufferId) {
-        if (soundBufferDetacher != null)
-            soundBufferDetacher.accept(bufferId);
+    // Null without sound service
+    public ISoundBuffers soundBuffers() {
+        return soundBuffers;
     }
 
     // Reloads reading their new version at the same time (both versions stay in memory); the others wait

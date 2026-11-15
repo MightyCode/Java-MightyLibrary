@@ -189,6 +189,8 @@ public class EngineConfig {
     public static final String COMMAND_ACCESS_PROPERTY = "mightylib.commands.access";
     // shown or hidden: the program output in the console at the start (see setConsoleLogsShown)
     public static final String CONSOLE_LOGS_PROPERTY = "mightylib.console.logs";
+    // silent: the silent sound service, whatever plugin provides the sound (see isSoundForcedSilent)
+    public static final String SOUND_PROPERTY = "mightylib.sound";
 
     // Check OpenGL errors after each call (glGetError): helps to locate an error, but slows down rendering
     public EngineConfig setOpenGLErrorCheck(boolean openGLErrorCheck) {
@@ -457,6 +459,20 @@ public class EngineConfig {
                 return null;
         }
     }
+
+    // Launch option -Dmightylib.sound=silent: no device is opened; another value is ignored, with a line in the log
+    public boolean isSoundForcedSilent() {
+        String property = System.getProperty(SOUND_PROPERTY);
+        if (property == null)
+            return false;
+
+        if (property.trim().equalsIgnoreCase("silent"))
+            return true;
+
+        System.err.println("--" + SOUND_PROPERTY + " : unknown value ->" + property + "<-, expected silent");
+        return false;
+    }
+
     // In the order of addPlugin, read only
     public List<IPlugin> getPlugins() { return Collections.unmodifiableList(plugins); }
     public int getShaderVersion() { return shaderVersion; }

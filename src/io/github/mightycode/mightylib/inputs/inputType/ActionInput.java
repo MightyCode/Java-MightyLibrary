@@ -1,9 +1,9 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 
-// Binding of a registered action in an InputManager
+// Binding of a registered action in an IInputManager
 public class ActionInput implements IAction {
     private final InputAction action;
     private final IAction input;
@@ -17,22 +17,22 @@ public class ActionInput implements IAction {
     public IAction actionInput() { return input; }
 
     @Override
-    public boolean getState(InputManager inputManager) {
+    public boolean getState(IInputManager inputManager) {
         return actionInput().getState(inputManager);
     }
 
     @Override
-    public float getValue(InputManager inputManager) {
+    public float getValue(IInputManager inputManager) {
         return actionInput().getValue(inputManager);
     }
 
     @Override
-    public boolean actionPressed(InputManager inputManager) {
+    public boolean actionPressed(IInputManager inputManager) {
         return actionInput().actionPressed(inputManager);
     }
 
     @Override
-    public boolean actionReleased(InputManager inputManager) {
+    public boolean actionReleased(IInputManager inputManager) {
         return actionInput().actionReleased(inputManager);
     }
 }

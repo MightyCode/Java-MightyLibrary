@@ -19,21 +19,25 @@ import java.util.Objects;
  * @author MightyCode
  * @version 1.0
  */
-public class InputManager {
+public class InputManager implements IInputManager {
 
     private final KeyboardManager keyManager;
 
+    @Override
     public KeyboardManager getKeyboardManager() { return keyManager; }
+    @Override
     public MouseManager getMouseManager() { return mouseManager; }
 
     private final MouseManager mouseManager;
 
     // Shared by all the contexts, updated by the ContextManager
     private final GamepadManager gamepadManager;
+    @Override
     public GamepadManager getGamepadManager() { return gamepadManager; }
 
     // The declared actions and axes, shared by all the windows of the engine
     private final InputRegistry registry;
+    @Override
     public InputRegistry registry() { return registry; }
 
     private final Map<InputAction, ActionInput> actionConfigurations;
@@ -65,6 +69,7 @@ public class InputManager {
      * The default bindings of the registry: those of the engine (console...), and those of the plugins when the window
      * has the inputs of the game (WindowConfig.hasProjectInputs; not the detached console).
      */
+    @Override
     public void bindDefaults(boolean pluginInputs) {
         actionConfigurations.clear();
         axisConfigurations.clear();
@@ -74,6 +79,7 @@ public class InputManager {
             axisConfigurations.put(axisInput.axis(), axisInput);
     }
 
+    @Override
     public void init(ActionInput[] actionInputs){
         init(actionInputs, new AxisInput[0]);
     }
@@ -82,6 +88,7 @@ public class InputManager {
      * The default bindings of the engine, then the given ones (they replace a default one of the same key).
      * @throws IllegalStateException if a key is not declared in the registry
      */
+    @Override
     public void init(ActionInput[] actionInputs, AxisInput[] axisInputs){
         bindDefaults(false);
 
@@ -107,6 +114,7 @@ public class InputManager {
     // A blocked manager (its window waits for a modal window) answers nothing pressed, no value, no axis
     private boolean blocked;
 
+    @Override
     public void setBlocked(boolean blocked) {
         this.blocked = blocked;
         if (keyManager != null)
@@ -115,6 +123,7 @@ public class InputManager {
             mouseManager.setBlocked(blocked);
     }
 
+    @Override
     public boolean isBlocked() { return blocked; }
 
     /*
@@ -130,6 +139,7 @@ public class InputManager {
     // The presses and releases of this tick are not seen (a focus change happened during it)
     private boolean edgesDropped;
 
+    @Override
     public InputFocus focus() { return focus; }
 
     private void focusChanged(boolean mousePressPasses) {
@@ -178,6 +188,7 @@ public class InputManager {
     }
 
     // Value of the axis for this tick, 0 if not bound
+    @Override
     public float getAxis(InputAxis axis){
         int index = registry.index(axis);
         if (blocked || focus.isHeld())
@@ -194,6 +205,7 @@ public class InputManager {
     }
 
     // Set the axis to a value during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
+    @Override
     public void simulateAxis(InputAxis axis, float value, int ticks){
         int index = registry.index(axis);
         if (!axisConfigurations.containsKey(axis))
@@ -203,11 +215,13 @@ public class InputManager {
         pendingAxisValues.put(index, value);
     }
 
+    @Override
     public void simulateAxisRelease(InputAxis axis){
         axisSimulation.release(registry.index(axis));
     }
 
     // Bound axes matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    @Override
     public List<AxisInput> matchAxes(String name) {
         List<AxisInput> result = new ArrayList<>();
         for (InputAxis axis : registry.matchAxes(name)) {
@@ -219,15 +233,18 @@ public class InputManager {
     }
 
     // The only bound axis matching the name, null if unknown or ambiguous
+    @Override
     public AxisInput findAxis(String name) {
         List<AxisInput> axes = matchAxes(name);
         return axes.size() == 1 ? axes.get(0) : null;
     }
 
+    @Override
     public Collection<AxisInput> getAxes() {
         return axisConfigurations.values();
     }
 
+    @Override
     public boolean getState(InputAction action){
         int index = registry.index(action);
         if (hides(action))
@@ -250,6 +267,7 @@ public class InputManager {
      * Strength of the action, from 0 to 1 : 1 when a key or a button is held (or the action is simulated),
      * progressive for a gamepad axis. For a speed, a movement : value * maxSpeed.
      */
+    @Override
     public float getValue(InputAction action){
         int index = registry.index(action);
         if (hides(action))
@@ -268,6 +286,7 @@ public class InputManager {
     }
 
 
+    @Override
     public boolean inputPressed(InputAction action){
         int index = registry.index(action);
         if (hides(action) || edgesDropped)
@@ -286,6 +305,7 @@ public class InputManager {
     }
 
 
+    @Override
     public boolean inputReleased(InputAction action){
         int index = registry.index(action);
         if (hides(action) || edgesDropped)
@@ -304,6 +324,7 @@ public class InputManager {
     }
 
     /** Same as getState (Press, Release) or inputPressed/inputReleased (Pressed, Released), chosen by the enum. */
+    @Override
     public boolean isInput(InputAction action, EInputState state) {
         // An action not bound is never in any state
         if (action == null)
@@ -327,6 +348,7 @@ public class InputManager {
     }
 
     // Bound actions matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    @Override
     public List<ActionInput> matchActions(String name) {
         List<ActionInput> result = new ArrayList<>();
         for (InputAction action : registry.matchActions(name)) {
@@ -338,31 +360,37 @@ public class InputManager {
     }
 
     // The only bound action matching the name, null if unknown or ambiguous
+    @Override
     public ActionInput findAction(String name) {
         List<ActionInput> actions = matchActions(name);
         return actions.size() == 1 ? actions.get(0) : null;
     }
 
+    @Override
     public Collection<ActionInput> getActions() {
         return actionConfigurations.values();
     }
 
     // Press the action during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
+    @Override
     public void simulatePress(InputAction action, int ticks) {
         simulation.press(registry.index(action), ticks);
     }
 
     // Release the simulated action from the next tick
+    @Override
     public void simulateRelease(InputAction action) {
         simulation.release(registry.index(action));
     }
 
+    @Override
     public boolean isSimulated(InputAction action) {
         return simulation.isHeld(registry.index(action));
     }
 
 
     // Compute the inputs of the next tick
+    @Override
     public void postUpdate(){
         resetDroppedEdges();
         keyManager.postUpdate();

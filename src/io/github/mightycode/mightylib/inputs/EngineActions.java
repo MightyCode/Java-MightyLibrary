@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.inputs;
 import io.github.mightycode.mightylib.registry.Identifier;
 
 /**
- * Actions of the engine itself, declared with their keys by the plugin of the engine, bound in every InputManager and
+ * Actions of the engine itself, declared with their keys by the plugin of the engine, bound in every IInputManager and
  * seen even while the console captures the inputs. A plugin changes a key with registry.inputs().replace.
  */
 public final class EngineActions {

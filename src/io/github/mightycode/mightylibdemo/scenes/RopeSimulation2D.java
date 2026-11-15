@@ -3,7 +3,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.IUpdatableDisplayable;
@@ -312,7 +312,7 @@ public class RopeSimulation2D extends Scene {
     public void update() {
         super.update();
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
         KeyboardManager keyboardManager = mainContext.getKeyboardManager();
 
         if (inputManager.inputPressed(ActionId.ESCAPE))
@@ -421,7 +421,7 @@ public class RopeSimulation2D extends Scene {
     }
 
     public void mouseLeftClick() {
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
         KeyboardManager keyboardManager = mainContext.getKeyboardManager();
 
         Vector2f mousePositionInWorld = main2DCamera.transformPosition(inputManager.getMouseManager().pos());

@@ -2,12 +2,10 @@ package io.github.mightycode.mightylib.resources.sound;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
+import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
-import io.github.mightycode.mightylib.sounds.SoundManager;
 
 import java.util.Locale;
-
-import static org.lwjgl.openal.AL10.*;
 
 public class SoundData extends SingleSourceDataType {
     private int bufferId;
@@ -26,7 +24,7 @@ public class SoundData extends SingleSourceDataType {
         return getClass() == SoundData.class ? new SoundData(dataName, path) : null;
     }
 
-    // The sources holding the previous buffer let it go when it is deleted (SoundManager.DetachBuffer)
+    // The sources holding the previous buffer let it go when it is deleted (ISoundBuffers.deleteBuffer)
     @Override
     protected void swapContent(DataType copy) {
         SoundData other = (SoundData) copy;
@@ -80,20 +78,20 @@ public class SoundData extends SingleSourceDataType {
             return false;
         }
 
-        this.bufferId = alGenBuffers();
-        alBufferData(bufferId, tempInfo.getChannels() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16, tempInfo.getBuffer(), tempInfo.getSampleRate());
-        // OpenAL has its own copy
+        ISoundBuffers buffers = resources().soundBuffers();
+        if (buffers == null) {
+            System.err.println("--No sound service to load the sound " + path);
+            return false;
+        }
+
+        this.bufferId = buffers.createBuffer(tempInfo);
+        // The sound service has its own copy
         tempInfo.release();
         tempInfo = null;
 
-        int error = alGetError();
-
-        if (error == AL_NO_ERROR){
-            return bufferId != -1;
-        }
-
-        SoundManager.DisplayError("al buffer data (\" + path + \")\"", error);
-        return false;
+        if (bufferId == -1)
+            System.err.println("--The buffer of the sound " + path + " can't be created");
+        return bufferId != -1;
     }
 
 
@@ -115,11 +113,9 @@ public class SoundData extends SingleSourceDataType {
     @Override
     public void internUnload() {
         if (this.bufferId != -1) {
-            resources().detachSoundBuffer(bufferId);
-            alDeleteBuffers(this.bufferId);
-            int error = alGetError();
-            if (error != AL_NO_ERROR)
-                SoundManager.DisplayError("al delete buffers (" + path + ")", error);
+            ISoundBuffers buffers = resources().soundBuffers();
+            if (buffers != null)
+                buffers.deleteBuffer(bufferId);
             // Loaded again by a reload
             this.bufferId = -1;
         }

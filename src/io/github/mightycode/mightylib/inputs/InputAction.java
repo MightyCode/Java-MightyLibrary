@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /**
  * Key of an action (jump, open menu...): its identifier alone, equal to any other key with the same
- * identifier. Declared by a plugin with its default binding (EngineRegistry.inputs), read in each InputManager.
+ * identifier. Declared by a plugin with its default binding (EngineRegistry.inputs), read in each IInputManager.
  * Constants of a game: public static final InputAction JUMP = InputAction.of("game:jump");
  */
 public final class InputAction {

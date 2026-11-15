@@ -7,14 +7,14 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.graphics.utils.Shaking2D;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
 import io.github.mightycode.mightylib.physics.tweenings.type.FloatTweening;
 import io.github.mightycode.mightylib.physics.tweenings.type.Vector2fTweening;
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.sounds.SoundSource;
+import io.github.mightycode.mightylib.sounds.ISoundSource;
 import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -25,7 +25,7 @@ import org.lwjgl.openal.AL10;
 
 /**
  * GUI widgets, Shaking2D and positional sound. The square goes back and forth with the tweening type chosen in the
- * EnumSelector (top right); a looping chime follows it (SoundListener at the middle of the track: use headphones).
+ * EnumSelector (top right); a looping chime follows it (the listener at the middle of the track: use headphones).
  * The lower horizontal slider sets its size, the upper one the volume of the chime, the vertical slider the amplitude
  * of the shake that Enter starts (Shaking2D driven by a Vector2fTweening going from the amplitude to zero).
  */
@@ -51,7 +51,7 @@ public class GUIWidgetsScene extends Scene {
     private FloatTweening travel;
     private Shaking2D shaking;
 
-    private SoundSource ambience;
+    private ISoundSource ambience;
     private boolean ambienceConfigured;
 
     @Override
@@ -64,7 +64,7 @@ public class GUIWidgetsScene extends Scene {
         setClearColor(0.1f, 0.1f, 0.12f);
         mainContext.getMouseManager().setCursor(true);
 
-        InputManager input = mainContext.getInputManager();
+        IInputManager input = mainContext.getInputManager();
 
         typeSelector = new EnumSelector<>(ETweeningType.values(), mainContext);
         typeSelector.init(ActionId.LEFT_CLICK);
@@ -103,7 +103,7 @@ public class GUIWidgetsScene extends Scene {
         startTravel();
 
         // Positional sound: the listener sits at the middle of the track, the looping chime follows the square
-        engine().soundManager().getListener().setPosition(toSoundSpace(new Vector2f((LEFT + RIGHT) / 2f, TRACK_Y)));
+        engine().sound().getListener().setPosition(toSoundSpace(new Vector2f((LEFT + RIGHT) / 2f, TRACK_Y)));
 
         SoundSourceCreationInfo chime = new SoundSourceCreationInfo();
         chime.name = "chime";
@@ -113,7 +113,7 @@ public class GUIWidgetsScene extends Scene {
         // Kept by the scene until unload, played again if the sound is reloaded
         chime.owned = true;
         chime.position.set(soundPosition());
-        ambience = engine().soundManager().createSoundSource(chime);
+        ambience = engine().sound().createSoundSource(chime);
     }
 
     // Pixels to sound units: the track is 8 units long
@@ -166,7 +166,7 @@ public class GUIWidgetsScene extends Scene {
     public void update() {
         super.update();
 
-        InputManager input = mainContext.getInputManager();
+        IInputManager input = mainContext.getInputManager();
 
         if (input.inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
@@ -251,7 +251,7 @@ public class GUIWidgetsScene extends Scene {
         if (ambience != null)
             ambience.release();
         ambience = null;
-        engine().soundManager().getListener().setPosition(new Vector2f());
+        engine().sound().getListener().setPosition(new Vector2f());
 
         typeSelector.unload();
         sizeSlider.unload();

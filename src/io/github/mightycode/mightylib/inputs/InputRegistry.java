@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 /**
  * The actions and axes of an engine (Engine.inputs), declared by the plugins (EngineRegistry.inputs) with their default
- * bindings, read by every InputManager. An identifier is an action or an axis, not both. Each element gets a dense
+ * bindings, read by every IInputManager. An identifier is an action or an axis, not both. Each element gets a dense
  * index at its declaration, valid during this launch only (simulation of the inputs, never saved).
  * Frozen once built: a key that is not declared is an error wherever it is used.
  */

@@ -86,7 +86,7 @@ public class SoundFormatsScene extends Scene {
         info.name = SOUNDS[index];
         info.gainNode = "noise";
         info.gain = 0.2f;
-        engine().soundManager().createSoundSource(info);
+        engine().sound().createSoundSource(info);
 
         lastPlayed = index;
     }

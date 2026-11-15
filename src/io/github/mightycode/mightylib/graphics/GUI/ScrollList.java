@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyRepeat;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.WindowContext;
@@ -180,7 +180,7 @@ public class ScrollList {
 
     /** Index in the items of the row activated at this tick (clicked, or selected and Enter), null otherwise. */
     public Integer getActivated() {
-        InputManager inputManager = context.getInputManager();
+        IInputManager inputManager = context.getInputManager();
         if (hovered >= 0) {
             BackgroundlessButton row = rows.get(hovered - selection.first());
             if (row.isActivated(inputManager, activationActions))
@@ -215,7 +215,7 @@ public class ScrollList {
     }
 
     public void update() {
-        InputManager inputManager = context.getInputManager();
+        IInputManager inputManager = context.getInputManager();
         Vector2f mouse = camera.transformPosition(context.getMouseManager().pos());
         boolean inArea = mouseInArea(mouse);
         boolean mouseMoved = !context.getMouseManager().oldPos().equals(context.getMouseManager().pos());

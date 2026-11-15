@@ -7,7 +7,8 @@ import org.lwjgl.openal.AL10;
 
 import static org.lwjgl.openal.AL10.alGenSources;
 
-public class SoundSource {
+// A source of the OpenAL service: created by OpenALSoundService.lateUpdate once its delay ended
+public class OpenALSoundSource implements ISoundSource {
     private SoundData soundData;
     private int sourceId;
     // Buffer given to the source: the sound, or the fallback while the sound isn't loaded (0 = none)
@@ -30,7 +31,7 @@ public class SoundSource {
     // Name asked at creation, known before the source is created
     private String soundName;
 
-    SoundSource(Resources resources, String soundName, String gainNode, boolean owned) {
+    OpenALSoundSource(Resources resources, String soundName, String gainNode, boolean owned) {
         this.soundName = soundName;
         this.owned = owned;
         this.resources = resources;
@@ -44,7 +45,7 @@ public class SoundSource {
         this.hadPlayed = false;
     }
 
-    public boolean init(String soundName){
+    boolean init(String soundName){
         this.soundName = soundName;
         this.sourceId = alGenSources();
 
@@ -98,7 +99,8 @@ public class SoundSource {
         play();
     }
 
-    public SoundSource setLoop(boolean value){
+    @Override
+    public OpenALSoundSource setLoop(boolean value){
         this.loop = value;
 
         if (loop){
@@ -110,11 +112,13 @@ public class SoundSource {
         return this;
     }
 
+    @Override
     public boolean isLooping(){
         return this.loop;
     }
 
-    public SoundSource setRelative(boolean value){
+    @Override
+    public OpenALSoundSource setRelative(boolean value){
         this.relative = value;
 
         if (relative) {
@@ -126,27 +130,31 @@ public class SoundSource {
         return this;
     }
 
+    @Override
     public boolean isRelative(){
         return this.relative;
     }
 
-    public SoundSource setPosition(Vector3f position) {
+    @Override
+    public OpenALSoundSource setPosition(Vector3f position) {
         AL10.alSource3f(sourceId, AL10.AL_POSITION, position.x, position.y, position.z);
 
         return this;
     }
 
-    public SoundSource setSpeed(Vector3f speed) {
+    @Override
+    public OpenALSoundSource setSpeed(Vector3f speed) {
         AL10.alSource3f(sourceId, AL10.AL_VELOCITY, speed.x, speed.y, speed.z);
 
         return this;
     }
 
-    public SoundSource setGain(float gain) {
+    @Override
+    public OpenALSoundSource setGain(float gain) {
         return setGain(gain, gainNode);
     }
 
-    SoundSource setGain(float gain, float gainNode) {
+    OpenALSoundSource setGain(float gain, float gainNode) {
         this.gainNode = gainNode;
         this.gain = gain;
 
@@ -155,20 +163,24 @@ public class SoundSource {
         return this;
     }
 
+    @Override
     public float getSelfGain(){
         return gain;
     }
 
+    @Override
     public String getGainNodeName(){
         return gainNodeName;
     }
 
-    public SoundSource setProperty(int param, float value) {
+    @Override
+    public OpenALSoundSource setProperty(int param, float value) {
         AL10.alSourcef(sourceId, param, value);
 
         return this;
     }
 
+    @Override
     public void play() {
         hadPlayed = true;
 
@@ -181,6 +193,7 @@ public class SoundSource {
      * True once the manager has created the OpenAL source (after the delay of its creation info), until the source
      * is released or deleted: the setters and play/stop are only valid meanwhile.
      */
+    @Override
     public boolean isReady() {
         return sourceId != -1 && !released;
     }
@@ -189,6 +202,7 @@ public class SoundSource {
      * Gives an owned source back to the manager, which deletes it at its next update (also valid before the source
      * is ready: it is then never created). The source must not be used afterwards.
      */
+    @Override
     public void release() {
         if (isReady())
             stop();
@@ -200,15 +214,18 @@ public class SoundSource {
         return released;
     }
 
+    @Override
     public boolean isOwned() {
         return owned;
     }
 
+    @Override
     public String getSoundName() {
         return soundName;
     }
 
     // waiting (delay not ended), released, or the OpenAL state: initial, playing, paused, stopped
+    @Override
     public String state() {
         if (released)
             return "released";
@@ -228,6 +245,7 @@ public class SoundSource {
     }
 
     // The buffer given to OpenAL is not the one of the sound: fallback (failed, loading) or none; false while waiting
+    @Override
     public boolean playsFallback() {
         if (sourceId == -1)
             return false;
@@ -236,6 +254,7 @@ public class SoundSource {
     }
 
     // Read from OpenAL; zero while the source is not ready
+    @Override
     public Vector3f getPosition() {
         if (!isReady())
             return new Vector3f();
@@ -248,6 +267,7 @@ public class SoundSource {
     }
 
     // Own gain times the gain of its node in the gain tree (without the distance attenuation)
+    @Override
     public float getFinalGain() {
         return gain * gainNode;
     }
@@ -256,26 +276,32 @@ public class SoundSource {
         return this.hadPlayed;
     }
 
+    @Override
     public boolean isPlaying() {
         return AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE) == AL10.AL_PLAYING;
     }
 
+    @Override
     public boolean inPause() {
         return AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE) == AL10.AL_PAUSED;
     }
 
+    @Override
     public boolean isStopped() {
         return AL10.alGetSourcei(sourceId, AL10.AL_SOURCE_STATE) == AL10.AL_STOPPED;
     }
 
+    @Override
     public void pause() {
         AL10.alSourcePause(sourceId);
     }
 
+    @Override
     public void stop() {
         AL10.alSourceStop(sourceId);
     }
 
+    @Override
     public void reset(){
         stop();
         play();

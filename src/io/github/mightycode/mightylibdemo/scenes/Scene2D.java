@@ -12,7 +12,7 @@ import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import io.github.mightycode.mightylib.resources.animation.Animator;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureDataAtlas;
@@ -225,7 +225,7 @@ public class Scene2D extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
 
         if (inputManager.inputPressed(ActionId.MOVE_LEFT_2D)) {
             map.setTileType(0, 0, 0, 78);
