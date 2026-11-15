@@ -2,7 +2,7 @@
 
 Sujets absents du code et de la feuille de route, **sans ordre** : l'utilisateur décide quand. Après discussion, rattacher le sujet à un point de `later.md` (ou en créer un) et le retirer d'ici.
 
-Déjà dans le moteur (ne pas reproposer) : A*, Dijkstra, tweens, son positionné (`SoundListener`/`SoundSource`), dossier de données utilisateur (`utils/DataFolder`), modes d'affichage fenêtré / plein écran / sans bordure par fenêtre (`DisplaySettings`), rechargement à chaud des ressources et observateur de fichiers, préchargement de la scène suivante.
+Déjà dans le moteur (ne pas reproposer) : A*, Dijkstra, tweens, son positionné (`ISoundListener`/`ISoundSource`, OpenAL ou muet), dossier de données utilisateur (`utils/DataFolder`), modes d'affichage fenêtré / plein écran / sans bordure par fenêtre (`DisplaySettings`), rechargement à chaud des ressources et observateur de fichiers, préchargement de la scène suivante.
 
 ## Jeu 2D
 - **Pixel perfect** : agrandissement entier de la résolution virtuelle, bandes noires, caméra calée sur les pixels.
