@@ -142,7 +142,10 @@ public class WaveCollapseRules extends DataType {
         rules = new TreeMap<>(Comparator.comparingInt(o -> o));
         initialRule = new Rule(-1);
 
-        for (String key : root.keySet()){
+        // The key of each rule ("012" and "12" are the same tile: only the first one in key order is kept, the
+        // order of a JSON object is not stable)
+        Map<Integer, String> ruleKeys = new HashMap<>();
+        for (String key : new TreeSet<>(root.keySet())){
             if (RESERVED_KEYS.contains(key))
                 continue;
 
@@ -153,6 +156,13 @@ public class WaveCollapseRules extends DataType {
                 continue;
             }
 
+            if (ruleKeys.containsKey(id)) {
+                System.err.println("--Wave collapse rules " + getDataName() + ": the key \"" + key
+                        + "\" is the tile " + id + " again (key \"" + ruleKeys.get(id) + "\"), ignored");
+                continue;
+            }
+
+            ruleKeys.put(id, key);
             rules.put(id, new Rule(id));
             ++numberRuledTiles;
         }
@@ -161,27 +171,24 @@ public class WaveCollapseRules extends DataType {
         initialRule.addAvailableIds(Rule.INITIAL_POS, makeAvailableList(root.getJSONObject("initial")));
 
         if (info.getString("type").equals("list"))
-            parseListIdTypeFile();
+            parseListIdTypeFile(ruleKeys);
         else if (info.getString("type").equals("connections"))
-            parseGridTypeFile();
+            parseGridTypeFile(ruleKeys);
         else
             throw new RuntimeException("Unknown type " + info.getString("type"));
 
         return true;
     }
 
-    public void parseListIdTypeFile(){
+    private void parseListIdTypeFile(Map<Integer, String> ruleKeys){
         JSONObject root = data.getObject();
 
         // Add all rules
-        for (String key : root.keySet()){
-            // The keys that are not tile ids were reported when the rules were created
-            Integer id = RESERVED_KEYS.contains(key) ? null : TileId(key);
-            if (id == null)
-                continue;
+        for (Map.Entry<Integer, String> ruleKey : ruleKeys.entrySet()){
+            int id = ruleKey.getKey();
 
             // Add all directions
-            JSONArray dependencyList = root.getJSONObject(key).getJSONArray("list");
+            JSONArray dependencyList = root.getJSONObject(ruleKey.getValue()).getJSONArray("list");
 
             for (int i = 0; i < dependencyList.length(); ++i){
                 JSONObject dependency = dependencyList.getJSONObject(i);
@@ -215,20 +222,20 @@ public class WaveCollapseRules extends DataType {
     // The tile id written in a key, null when the key is not a number
     static Integer TileId(String key) {
         try {
-            return Integer.parseInt(key.trim());
+            return Integer.parseInt(key);
         } catch (NumberFormatException e) {
             return null;
         }
     }
 
 
-    public void parseGridTypeFile() {
+    private void parseGridTypeFile(Map<Integer, String> ruleKeys) {
         JSONObject root = data.getObject();
         Map<Vector2i, Map<Integer, Set<Integer>>> typedRules = new HashMap<>();
 
         for (Integer id : rules.keySet()) {
             Rule rule = rules.get(id);
-            JSONObject jsonRule = root.getJSONObject(id.toString());
+            JSONObject jsonRule = root.getJSONObject(ruleKeys.get(id));
             JSONArray connections = jsonRule.getJSONArray("connections");
 
             for (int i = 0; i < connections.length(); ++i) {

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,6 +78,21 @@ class WaveCollapseRulesParsingTest {
         assertEquals(12, WaveCollapseRules.TileId("12"));
         assertEquals(-3, WaveCollapseRules.TileId("-3"));
         assertNull(WaveCollapseRules.TileId("info"));
+        assertNull(WaveCollapseRules.TileId(" 12"));
+    }
+
+    @Test
+    void twoKeysOfTheSameTileKeepTheFirstInKeyOrder() {
+        // "012" comes before "12": its rule is kept, the other one is reported and ignored
+        WaveCollapseRules rules = rules("{\"info\":{\"tileset\":\"t\",\"type\":\"list\"},\"initial\":{\"all\":true},"
+                + "\"12\":{\"list\":[{\"direction\":[1,0],\"available\":{\"list\":[5]}}]},"
+                + "\"012\":{\"list\":[{\"direction\":[0,1],\"available\":{\"list\":[7]}}]}}");
+        String errors = OutputCapture.errorsOf(() -> assertTrue(rules.internLoad()));
+
+        assertEquals(1, rules.getNumberRuledTiles());
+        assertEquals(1, OutputCapture.lines(errors), errors);
+        assertTrue(errors.contains("\"12\""), errors);
+        assertEquals(List.of(new Vector2i(0, 1)), rules.getRule(12).getDirections());
     }
 
     @Test
