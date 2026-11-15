@@ -32,11 +32,11 @@ public class GLResources implements IGLElementSink {
 
     // State shared by the elements of a type, by its class (see shared)
     private final Map<Class<? extends IGLSharedState>, IGLSharedState> sharedStates = new LinkedHashMap<>();
-    // Elements of the fallback data, by the type of their loader (see fallback), kept for the whole program;
-    // out of the table by name: two fallbacks with elements of the same type and name do not collide
-    private final Map<Class<? extends DataType>, GLElement> fallbackElements = new LinkedHashMap<>();
-    // The same by fallback data, for acquire
-    private final Map<DataType, GLElement> fallbackElementsByData = new IdentityHashMap<>();
+    // The fallback data with a GL element, by the type of their loader (see fallback)
+    private final Map<Class<? extends DataType>, DataType> fallbackData = new LinkedHashMap<>();
+    // Their elements, kept for the whole program; out of the table by name: two fallbacks with elements of the same
+    // type and name do not collide
+    private final Map<DataType, GLElement> fallbackElements = new IdentityHashMap<>();
 
     // Elements waiting to be loaded, in order; an element is in one of them (moved in O(1) when its urgency changes)
     private final LinkedHashSet<GLElement> urgentToLoad = new LinkedHashSet<>();
@@ -235,7 +235,7 @@ public class GLResources implements IGLElementSink {
         for (Map.Entry<Class<? extends DataType>, DataType> entry : fallbacks.entrySet()) {
             DataType data = entry.getValue();
             Class<? extends GLElement> type = data.glElementType();
-            if (type == null || fallbackElements.containsKey(entry.getKey()))
+            if (type == null || fallbackData.containsKey(entry.getKey()))
                 continue;
 
             GLElement element = data.createGLElement();
@@ -248,8 +248,8 @@ public class GLResources implements IGLElementSink {
             element.registeredType = type;
             element.setName(data.glElementName());
             element.addReference(true);
-            fallbackElements.put(entry.getKey(), element);
-            fallbackElementsByData.put(data, element);
+            fallbackData.put(entry.getKey(), data);
+            fallbackElements.put(data, element);
 
             if (!data.glElementNeededBeforeDrawing()) {
                 urgentToLoad.add(element);
@@ -270,9 +270,9 @@ public class GLResources implements IGLElementSink {
      */
     public GLElement fallback(Class<? extends DataType> type) {
         for (Class<?> current = type; current != null && DataType.class.isAssignableFrom(current); current = current.getSuperclass()) {
-            GLElement element = fallbackElements.get(current);
-            if (element != null)
-                return element;
+            DataType data = fallbackData.get(current);
+            if (data != null)
+                return fallbackElements.get(data);
         }
 
         return null;
@@ -281,26 +281,17 @@ public class GLResources implements IGLElementSink {
     // Each fallback element: its data type (the type of the loader), element type, when it is loaded and its state
     public JSONArray describeFallbacks() {
         JSONArray list = new JSONArray();
-        for (Map.Entry<Class<? extends DataType>, GLElement> entry : fallbackElements.entrySet()) {
-            GLElement element = entry.getValue();
+        for (Map.Entry<Class<? extends DataType>, DataType> entry : fallbackData.entrySet()) {
+            GLElement element = fallbackElements.get(entry.getValue());
             JSONObject json = new JSONObject();
             json.put("dataType", entry.getKey().getSimpleName());
             json.put("elementType", element.registeredType.getSimpleName());
-            json.put("neededBeforeDrawing", dataOf(element).glElementNeededBeforeDrawing());
+            json.put("neededBeforeDrawing", entry.getValue().glElementNeededBeforeDrawing());
             json.put("state", element.isLoaded() ? "loaded" : element.hasFailed() ? "failed" : "waiting");
             list.put(json);
         }
 
         return list;
-    }
-
-    private DataType dataOf(GLElement fallbackElement) {
-        for (Map.Entry<DataType, GLElement> entry : fallbackElementsByData.entrySet()) {
-            if (entry.getValue() == fallbackElement)
-                return entry.getKey();
-        }
-
-        throw new IllegalStateException("Not a fallback element: " + fallbackElement.getName());
     }
 
     @Override
@@ -310,7 +301,7 @@ public class GLResources implements IGLElementSink {
             return null;
 
         // A fallback data shares the element made by fallbackDataLoaded
-        GLElement fallbackElement = fallbackElementsByData.get(data);
+        GLElement fallbackElement = fallbackElements.get(data);
         if (fallbackElement != null) {
             addReference(fallbackElement, urgent);
             return fallbackElement;
@@ -466,7 +457,7 @@ public class GLResources implements IGLElementSink {
             element.unloadByResource(150);
         }
         fallbackElements.clear();
-        fallbackElementsByData.clear();
+        fallbackData.clear();
 
         urgentToLoad.clear();
         preloadToLoad.clear();
