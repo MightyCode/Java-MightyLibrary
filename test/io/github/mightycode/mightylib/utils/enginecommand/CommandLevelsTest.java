@@ -214,6 +214,12 @@ class CommandLevelsTest {
         assertEquals(List.of("off", "on"), commands.complete("console logs ", DEVELOPER).getCandidates());
         assertTrue(run(commands, "console logs maybe", DEVELOPER).getMessage().contains("maybe"));
 
+        // The data of the results too
+        assertTrue(run(commands, "console data on", PLAYER).getMessage().startsWith("Unknown argument ->data<-"));
+        assertFalse(commands.complete("console ", PLAYER).getCandidates().contains("data"));
+        assertTrue(commands.complete("console ", DEVELOPER).getCandidates().contains("data"));
+        assertEquals(List.of("off", "on"), commands.complete("console data ", DEVELOPER).getCandidates());
+
         // The player copies what the console shows; --all (the program output too) is for the developer
         assertTrue(commands.complete("console ", PLAYER).getCandidates().contains("copy"));
         assertFalse(commands.complete("console copy --", PLAYER).getCandidates().contains("--all"));
@@ -303,6 +309,9 @@ class CommandLevelsTest {
         assertEquals("--engine line", developer.get(0).getText());
         assertTrue(developer.get(developer.size() - 1).getText().contains("\"detail\""));
         assertEquals(ECommandLevel.DEV, developer.get(developer.size() - 1).getLevel());
+        // A type of its own: the console hides it by default, the message stays a RESULT
+        assertEquals(ConsoleLog.EType.DATA, developer.get(developer.size() - 1).getType());
+        assertEquals(ConsoleLog.EType.RESULT, log.last(1, ECommandLevel.USER).get(0).getType());
 
         // Only the visible lines count in the last ones
         assertEquals(List.of("Readable"), List.of(log.last(1, ECommandLevel.USER).get(0).getText()));

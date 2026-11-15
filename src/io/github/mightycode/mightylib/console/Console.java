@@ -121,12 +121,13 @@ public final class Console implements IConsoleService {
     }
 
     /**
-     * State of the console for the developer (command console): mode, logs shown, scroll ("end", or the line at the
+     * State of the console for the developer (command console): mode, logs and data shown, scroll ("end", or the line at the
      * bottom of the view and its rows hidden below), selection (null, or where it is).
      */
     @Override
     public JSONObject stateJson() {
-        JSONObject json = new JSONObject().put("mode", mode.name()).put("logsShown", areLogsShown());
+        JSONObject json = new JSONObject().put("mode", mode.name()).put("logsShown", areLogsShown())
+                .put("dataShown", isDataShown());
 
         ConsolePanel panel = shownPanel();
         ConsoleLayout.Anchor anchor = panel == null ? null : panel.getLayout().anchor();
@@ -168,9 +169,24 @@ public final class Console implements IConsoleService {
         return !hiddenTypes.contains(ConsoleLog.EType.OUT) || !hiddenTypes.contains(ConsoleLog.EType.ERR);
     }
 
+    /** Show or hide the data of the command results (JSON) in the console; the log keeps it, as setLogsShown. */
+    @Override
+    public void setDataShown(boolean shown) {
+        if (shown)
+            hiddenTypes.remove(ConsoleLog.EType.DATA);
+        else
+            hiddenTypes.add(ConsoleLog.EType.DATA);
+    }
+
+    @Override
+    public boolean isDataShown() {
+        return !hiddenTypes.contains(ConsoleLog.EType.DATA);
+    }
+
     /**
      * Copy the last lines of the console to the clipboard of the system, as Ctrl+C on a selection of them would: the
-     * lines the level sees, without the types hidden by "console logs off" (unless all). Main thread.
+     * lines the level sees, without the types hidden by "console logs off" and "console data off" (unless all). Main
+     * thread.
      * @param count lines to copy, 0 or less: every line kept
      * @return the copied text, empty (clipboard unchanged) when there is no line
      */

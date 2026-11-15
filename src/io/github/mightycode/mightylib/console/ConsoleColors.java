@@ -10,6 +10,7 @@ final class ConsoleColors {
     static final Color4f RESULT = new Color4f(1f, 1f, 1f, 1f);
     static final Color4f ERROR = new Color4f(1f, 0.35f, 0.35f, 1f);
     static final Color4f MESSAGE = new Color4f(0.55f, 0.85f, 1f, 1f);
+    static final Color4f DATA = new Color4f(0.6f, 0.7f, 0.8f, 1f);
     static final Color4f INPUT = new Color4f(1f, 1f, 1f, 1f);
     // Indicator of the lines below the view, and its background
     static final Color4f INDICATOR = new Color4f(1f, 1f, 1f, 1f);
@@ -33,6 +34,8 @@ final class ConsoleColors {
                 return RESULT;
             case MESSAGE:
                 return MESSAGE;
+            case DATA:
+                return DATA;
             default:
                 return OUT;
         }

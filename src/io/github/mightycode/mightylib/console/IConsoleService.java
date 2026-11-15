@@ -40,6 +40,11 @@ public interface IConsoleService extends IEngineService {
 
     boolean areLogsShown();
 
+    // The data of the command results (JSON) among the lines shown
+    void setDataShown(boolean shown);
+
+    boolean isDataShown();
+
     /**
      * Copy the last lines of the console to the clipboard of the system: the lines the level sees, without the hidden
      * types (unless all). Main thread.
