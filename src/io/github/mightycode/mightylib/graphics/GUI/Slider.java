@@ -91,11 +91,22 @@ public abstract class Slider {
 
         if (isDragging){
             setButtonPositionDrag(button, buttonBoundaries, mouseManager.pos());
-            currentValue = returnCurrentValue(button, buttonBoundaries);
-
-            if (maxPrecision >= 0 && maxPrecision <= MAX_DIGIT_PRECISION)
-                currentValue = (float)((int)(currentValue * Math.pow(10, maxPrecision)) * 1.0f / Math.pow(10, maxPrecision));
+            currentValue = RoundToPrecision(returnCurrentValue(button, buttonBoundaries), maxPrecision);
         }
+    }
+
+    // Rounds to the nearest value with this number of digits after the decimal point (negative: no rounding)
+    static double RoundToPrecision(double value, int precision) {
+        if (precision < 0)
+            return value;
+
+        double scale = Math.pow(10, precision);
+        return Math.rint(value * scale) / scale;
+    }
+
+    // A negative value disables the rounding, a too large one is capped
+    static int CapPrecision(int precision) {
+        return precision < 0 ? -1 : Math.min(precision, MAX_DIGIT_PRECISION);
     }
 
 
@@ -134,8 +145,7 @@ public abstract class Slider {
     }
 
     public void setMaxPrecision(int value){
-        // A negative value disables the rounding, a too large one is capped.
-        maxPrecision = value < 0 ? -1 : Math.min(value, MAX_DIGIT_PRECISION);
+        maxPrecision = CapPrecision(value);
     }
 
     public int getMaxPrecision(){
