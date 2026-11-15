@@ -48,6 +48,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
 - `Context` (rafraîchissement d'une fenêtre qui échoue) passe un message commençant par `--` à `Logger.LogException`, qui l'ajoute déjà : la ligne du journal commence par `----`.
+- `MeshRenderer.addTextureChannel(nom, uniform, canal)` ne fait rien tant qu'aucun canal n'a été ajouté par l'autre surcharge (`textures == null` → retour immédiat ; le tableau n'est créé que par `addTextureChannel(IRenderTextureBindable, …)`).
 - `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 
 ## Bibliothèque réutilisable
