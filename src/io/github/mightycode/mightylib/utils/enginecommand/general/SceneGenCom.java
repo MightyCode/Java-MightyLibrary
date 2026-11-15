@@ -18,7 +18,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Argument
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
 // The current scene, or a change to a scene registered by a plugin (EngineRegistry.scenes)
-public class SceneGenCom extends BaseCommand {
+public final class SceneGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "scene";
     public SceneGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,

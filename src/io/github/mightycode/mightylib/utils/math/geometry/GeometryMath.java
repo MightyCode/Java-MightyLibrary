@@ -4,7 +4,7 @@ import org.joml.Vector2f;
 
 import java.util.List;
 
-public class GeometryMath {
+public final class GeometryMath {
     public static float CrossProductLength(float Ax, float Ay, float Bx,
                                            float By, float Cx, float Cy) {
         // Get the vectors' coordinates.

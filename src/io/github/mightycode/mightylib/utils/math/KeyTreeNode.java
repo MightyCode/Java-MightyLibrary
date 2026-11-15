@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.utils.math;
 
-public class KeyTreeNode<K, V> {
+public final class KeyTreeNode<K, V> {
     private final K key;
     private V value;
 

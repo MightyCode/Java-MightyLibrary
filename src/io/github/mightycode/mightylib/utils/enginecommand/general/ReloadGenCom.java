@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 
-public class ReloadGenCom extends BaseCommand {
+public final class ReloadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "reload";
 
     public ReloadGenCom() {

@@ -16,7 +16,7 @@ import java.util.SortedMap;
 /**
  * Display a bunch of rectangles that correspond to roads.
  */
-public class GraphRenderer {
+public final class GraphRenderer {
     private static final int EBO_SHIFT = 6;
     private static final int VBO_SHIFT = 8;
 

@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
-public class FontFile {
+public final class FontFile {
     private static final int SPACE_CHAR_CODE = 32;
     private final String path;
     private Vector4i padding;

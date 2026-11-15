@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.utils.math;
 
-public class ID {
+public final class ID {
     public int id;
 
     public ID(int id){

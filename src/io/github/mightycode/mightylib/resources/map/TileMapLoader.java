@@ -6,7 +6,7 @@ import org.joml.Vector2i;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class TileMapLoader extends ResourceLoader {
+public final class TileMapLoader extends ResourceLoader {
 
     @Override
     public Class<? extends DataType> getType() {

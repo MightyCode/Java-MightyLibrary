@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.network;
 
-public class NetworkMessage {
+public final class NetworkMessage {
     private final int id;
     private final String message;
 

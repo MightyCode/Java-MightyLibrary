@@ -22,7 +22,7 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * next step. A data with a running step is never changed: when the step ends, update runs again, so a data unloaded
  * then loaded again while it was read ends in the wanted state without any special case.
  */
-public class Resources {
+public final class Resources {
     public static final String DEFAULT_FOLDER = "resources/";
 
     // Reference added by loadAllOfType (AllResourcesMethod, batch descriptions)
@@ -35,8 +35,8 @@ public class Resources {
     public static final String FALLBACK_NAME = "error";
 
     public static abstract class LoadingMethod{}
-    public static class AllResourcesMethod extends LoadingMethod{}
-    public static class BatchResourcesMethod extends LoadingMethod{
+    public static final class AllResourcesMethod extends LoadingMethod{}
+    public static final class BatchResourcesMethod extends LoadingMethod{
         private final String firstBatch;
         public BatchResourcesMethod(String firstBatch){
             this.firstBatch = firstBatch;

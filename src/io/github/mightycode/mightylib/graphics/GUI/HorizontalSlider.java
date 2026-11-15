@@ -7,12 +7,13 @@ import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector2f;
 
-public class HorizontalSlider extends Slider {
+public final class HorizontalSlider extends Slider {
     public HorizontalSlider(Camera2D referenceCamera, IInputManager inputManager, MouseManager mouseManager,
                             Vector2f position, Vector2f size, float minValue, float maxValue){
         super(referenceCamera, inputManager, mouseManager, position, size, minValue, maxValue, 0);
     }
 
+    @Override
     protected void setButtonPositionDrag(RectangleRenderer button,
                                          Vector2f buttonBoundaries, Vector2f mousePosition){
         Vector2f newPosition = new Vector2f(

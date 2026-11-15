@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class KeyTree<K, V>  {
+public final class KeyTree<K, V>  {
     public final K NoRoot;
     private final ArrayList<K> keys;
     private final ArrayList<KeyTreeNode<K, V>> values;

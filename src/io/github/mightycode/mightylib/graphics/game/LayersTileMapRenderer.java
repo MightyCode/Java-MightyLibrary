@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LayersTileMapRenderer {
+public final class LayersTileMapRenderer {
     private final Map<String, TileMapRenderer> layerTileMapRenderer;
     private final String shader;
     private final boolean frequentlyUpdate;

@@ -27,7 +27,7 @@ import java.util.function.Supplier;
  * An element wanted now (urgent reference: renderer, loaded batch) is loaded before those only preloaded
  * (preloaded batch), and only the urgent ones keep a loading screen waiting.
  */
-public class GLResources implements IGLElementSink {
+public final class GLResources implements IGLElementSink {
     private static final long NANO_IN_MILLISECOND = 1000000L;
 
     private final long maxNanosPerFrame;

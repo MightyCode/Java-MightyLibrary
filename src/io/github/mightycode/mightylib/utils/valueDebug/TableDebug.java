@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.main.MainLoop;
 
 import java.util.ArrayList;
 
-public class TableDebug {
+public final class TableDebug {
 
     /** Print part of table part with start and size **/
 

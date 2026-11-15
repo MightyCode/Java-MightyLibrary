@@ -12,7 +12,7 @@ import org.joml.Vector2f;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DebugInfoCamera3D implements IUpdatableDisplayable {
+public final class DebugInfoCamera3D implements IUpdatableDisplayable {
     public final static int POSITION = 1;
     public final static int LOOK = 2;
     public final static int SPEED = 3;

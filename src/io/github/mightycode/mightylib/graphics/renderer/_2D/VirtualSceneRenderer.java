@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.main.WindowInfo;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 
-public class VirtualSceneRenderer extends RectangleRenderer {
+public final class VirtualSceneRenderer extends RectangleRenderer {
     private final FrameBuffer frameBuffer;
 
     public VirtualSceneRenderer(WindowInfo info, IGLBindable bindable){

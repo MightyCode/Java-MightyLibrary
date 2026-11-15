@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.main;
 
 import org.lwjgl.glfw.GLFW;
 
-public class SystemInfo {
+public final class SystemInfo {
     private final WindowInfo info;
 
     public SystemInfo(WindowInfo info){

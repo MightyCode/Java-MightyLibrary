@@ -22,7 +22,7 @@ import static org.lwjgl.BufferUtils.createByteBuffer;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.stb.STBVorbis.*;
 
-public class SoundDataType {
+public final class SoundDataType {
 
     // Samples (all channels) decoded between two checks of the cancellation
     public static final int DECODE_CHUNK_SAMPLES = 64 * 1024;

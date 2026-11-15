@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-public class SoundLoader extends ResourceLoader {
+public final class SoundLoader extends ResourceLoader {
     // The file formats supported (SoundDecoder), a decoder added later replaces the one of the same extension
     private final List<SoundDecoder> decoders = new ArrayList<>();
 

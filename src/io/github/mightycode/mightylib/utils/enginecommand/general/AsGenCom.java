@@ -13,7 +13,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
  * "as user help": runs a line at a lower level, to check without the player what he sees (answers, errors, help).
  * The level can only go down: Min(asked, level of the source).
  */
-public class AsGenCom extends BaseCommand {
+public final class AsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "as";
 
     public AsGenCom() {

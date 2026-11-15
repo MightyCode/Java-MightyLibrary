@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.inputs;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
+import io.github.mightycode.mightylib.inputs.inputType.IAction;
 import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
 import io.github.mightycode.mightylib.registry.Identifier;
 import org.junit.jupiter.api.Test;
@@ -118,9 +119,15 @@ class InputRegistryTest {
     void simulationUsesTheIndexOfTheRegistry() {
         InputManager manager = new InputManager(null, null, null, registry());
         manager.init(new ActionInput[]{
-                new ActionInput(JUMP, new InputSimple(2, EInputType.Keyboard) {
+                new ActionInput(JUMP, new IAction() {
                     @Override
                     public boolean getState(IInputManager inputManager) { return false; }
+
+                    @Override
+                    public boolean actionPressed(IInputManager inputManager) { return false; }
+
+                    @Override
+                    public boolean actionReleased(IInputManager inputManager) { return false; }
                 })});
         manager.simulatePress(JUMP, 2);
         manager.updateActionSimulation();

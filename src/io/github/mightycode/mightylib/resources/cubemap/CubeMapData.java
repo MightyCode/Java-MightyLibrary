@@ -29,12 +29,12 @@ public class CubeMapData extends MultiSourceDataType {
     private boolean nativeFaces;
 
     // folder: the folder of the six files, ending with '/'
-    public CubeMapData(String name, String folder) {
+    CubeMapData(String name, String folder) {
         this(name, facePaths(folder));
     }
 
     // The fallback has no file (empty list)
-    protected CubeMapData(String name, List<String> paths) {
+    CubeMapData(String name, List<String> paths) {
         super(TYPE_SET_UP.THREAD_CONTEXT, name, paths);
     }
 

@@ -10,7 +10,7 @@ import org.joml.Vector2i;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Animation2DRenderer extends MeshRenderer {
+public final class Animation2DRenderer extends MeshRenderer {
     private final Vector2f referencePosition;
     private Animator animator;
     private String currentTextureName;

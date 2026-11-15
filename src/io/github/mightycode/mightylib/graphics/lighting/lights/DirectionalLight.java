@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
-public class DirectionalLight extends BasicMaterial {
+public final class DirectionalLight extends BasicMaterial {
     private Vector3f direction;
 
     public DirectionalLight(final Vector3f ambient, final Vector3f diffuse, final Vector3f specular){

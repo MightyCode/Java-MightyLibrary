@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class CSVLoader extends ResourceLoader {
+public final class CSVLoader extends ResourceLoader {
     @Override
     public Class<? extends DataType> getType() {
         return CSVFile.class;

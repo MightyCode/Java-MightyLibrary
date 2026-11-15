@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.physics.tweenings.type;
 import io.github.mightycode.mightylib.physics.tweenings.Tweening;
 import org.joml.Vector2f;
 
-public class Vector2fTweening extends Tweening<Vector2f> {
+public final class Vector2fTweening extends Tweening<Vector2f> {
     private Vector2f beginningValue;
     private Vector2f endingValue;
     private Vector2f valuesRange;

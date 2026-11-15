@@ -11,8 +11,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-public class TileMap extends SingleSourceDataType {
-    public static class TileChange {
+public final class TileMap extends SingleSourceDataType {
+    public static final class TileChange {
         private TilePosition position;
 
         private int from;
@@ -89,7 +89,7 @@ public class TileMap extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == TileMap.class ? new TileMap(getTypeSetUp(), getDataName(), path()) : null;
+        return new TileMap(getTypeSetUp(), getDataName(), path());
     }
 
     // The atlas objects stay the same (used by the renderers): only their content is exchanged.

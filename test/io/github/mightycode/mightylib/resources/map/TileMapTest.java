@@ -190,13 +190,6 @@ class TileMapTest {
     }
 
     @Test
-    void aSubclassHasNoReloadCopy() {
-        TileMap subclass = new TileMap("sub", "sub.tilemap") {
-        };
-        assertNull(subclass.createReloadCopy());
-    }
-
-    @Test
     void reloadExchangesTheContentAndForgetsTheChangesMadeByTheCode() {
         map.setInformation(new Vector2i(2, 2), emptyLayers(1, 2, 2), null, null);
         DataTypeTestAccess.markLoaded(map);

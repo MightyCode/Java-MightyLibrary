@@ -8,13 +8,14 @@ import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector2f;
 
 @SuppressWarnings("SuspiciousNameCombination")
-public class VerticalSlider extends Slider {
+public final class VerticalSlider extends Slider {
     public VerticalSlider(Camera2D referenceCamera, IInputManager inputManager, MouseManager mouseManager,
                             Vector2f position, Vector2f size, float minValue, float maxValue){
         super(referenceCamera, inputManager, mouseManager, position, size, minValue, maxValue,
                 1);
     }
 
+    @Override
     protected void setButtonPositionDrag(RectangleRenderer button,
                                          Vector2f buttonBoundaries, Vector2f mousePosition){
         Vector2f newPosition = new Vector2f(

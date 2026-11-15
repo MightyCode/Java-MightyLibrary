@@ -10,7 +10,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
  * One window of a context with what belongs to it: its OpenGL context, its inputs and its clipboard.
  * The main window of a context is drawn by the scene of the context, the others by a WindowView.
  */
-public class WindowContext {
+public final class WindowContext {
     private final int id;
     private final Context owner;
     private final String name;

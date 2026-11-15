@@ -101,12 +101,12 @@ class WaveCollapseRulesParsingTest {
                 + "\"0\":{\"list\":[]},\"4\":{\"list\":[]}}");
         assertTrue(all.internLoad());
         assertEquals(-1, all.getInitialRule().getElementId());
-        assertEquals(set(0, 4), all.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAL_POS));
+        assertEquals(set(0, 4), all.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.initialPosition()));
 
         WaveCollapseRules some = rules("{\"info\":{\"tileset\":\"t\",\"type\":\"list\"},\"initial\":{\"list\":[4]},"
                 + "\"0\":{\"list\":[]},\"4\":{\"list\":[]}}");
         assertTrue(some.internLoad());
-        assertEquals(set(4), some.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAL_POS));
+        assertEquals(set(4), some.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.initialPosition()));
     }
 
     @Test

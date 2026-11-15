@@ -13,7 +13,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
  * Only registered when the game asks for it (EngineConfig.setCheatCommand) and its build allows the cheats.
  * The developer mode (DEV) is not changed: the cheats are part of it.
  */
-public class CheatsGenCom extends BaseCommand {
+public final class CheatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "cheats";
 
     public CheatsGenCom() {

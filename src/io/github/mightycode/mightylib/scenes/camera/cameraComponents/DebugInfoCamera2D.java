@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
-public class DebugInfoCamera2D implements IUpdatableDisplayable {
+public final class DebugInfoCamera2D implements IUpdatableDisplayable {
     protected Camera2D camera;
     private final Text text;
     private final Set<String> info = new HashSet<>();

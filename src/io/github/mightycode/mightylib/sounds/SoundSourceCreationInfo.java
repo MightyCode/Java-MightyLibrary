@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.sounds;
 import io.github.mightycode.mightylib.utils.Timer;
 import org.joml.Vector3f;
 
-public class SoundSourceCreationInfo {
+public final class SoundSourceCreationInfo {
     public String name;
     public Vector3f position;
     public Vector3f speed;

@@ -11,7 +11,7 @@ import org.joml.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TileMapRenderer extends MeshRenderer {
+public final class TileMapRenderer extends MeshRenderer {
     // Tile of the map using an animation: where it is in the buffers, to update only its texture position
     private static class AnimatedTileInstance {
         private final int bufferIndex;

@@ -20,7 +20,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * console command line (cursor, selection, words, Ctrl+A/C/X/V) and a hint is shown while it is empty.
  * The scene calls update() once per tick, then reads isChanged(), isSubmitted() and getLeftWith().
  */
-public class TextField extends GUI {
+public final class TextField extends GUI {
     private static final float PADDING = 8f;
     private static final long CURSOR_BLINK_NANOSECONDS = 500_000_000L;
 

@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.inputs.CharInputEntry;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class AZERTYKeyboardLanguage extends KeyboardLanguage {
+public final class AZERTYKeyboardLanguage extends KeyboardLanguage {
     private static final KeyboardLanguage instance = new AZERTYKeyboardLanguage();
 
     public static KeyboardLanguage getInstance() { return instance; }

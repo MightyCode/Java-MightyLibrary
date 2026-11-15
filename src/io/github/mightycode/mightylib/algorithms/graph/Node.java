@@ -9,7 +9,7 @@ import java.util.HashMap;
 /**
  * Node can only be connected to object of class that contain Node
  */
-public class Node extends PositionListNode<Node> {
+public final class Node extends PositionListNode<Node> {
     // Geographic position
     protected Vector2f position;
     // If we want to override the distance to a node by a given value

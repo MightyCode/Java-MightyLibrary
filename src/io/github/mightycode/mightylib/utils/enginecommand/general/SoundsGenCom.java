@@ -16,7 +16,7 @@ import java.util.Locale;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
-public class SoundsGenCom extends BaseCommand {
+public final class SoundsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "sounds";
 
     public SoundsGenCom() {

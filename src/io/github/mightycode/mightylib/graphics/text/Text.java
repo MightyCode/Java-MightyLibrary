@@ -9,7 +9,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public class Text extends MeshRenderer implements Cloneable {
+public final class Text extends MeshRenderer implements Cloneable {
     private static final int NUMBER_INDICES = 4;
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;

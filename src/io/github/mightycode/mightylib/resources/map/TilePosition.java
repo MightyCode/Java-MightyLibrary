@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.resources.map;
 
 import java.util.Objects;
 
-public class TilePosition implements Comparable<TilePosition>, Cloneable {
+public final class TilePosition implements Comparable<TilePosition>, Cloneable {
     private int x, y, layer;
 
     public TilePosition(int x, int y, int layer){

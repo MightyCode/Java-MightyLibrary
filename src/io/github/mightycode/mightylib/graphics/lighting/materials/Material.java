@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.graphics.lighting.materials;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
-public class Material extends BasicMaterial {
+public final class Material extends BasicMaterial {
     public float Shininess;
 
     public Material(final Vector3f ambient, final Vector3f diffuse, final Vector3f specular, final float shininess){
@@ -14,7 +14,7 @@ public class Material extends BasicMaterial {
 
     @Override
     public Material clone(){
-        return new Material(Ambient, Diffuse, Specular, Shininess);
+        return new Material(new Vector3f(Ambient), new Vector3f(Diffuse), new Vector3f(Specular), Shininess);
     }
 
     @Override

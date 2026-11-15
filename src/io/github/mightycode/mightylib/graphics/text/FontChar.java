@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.text;
 
-public class FontChar {
+public final class FontChar {
     private int id;
 
     private double xAtlas, yAtlas;

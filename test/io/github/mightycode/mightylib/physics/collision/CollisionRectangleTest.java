@@ -158,10 +158,29 @@ class CollisionRectangleTest {
 
     @Test
     void aShapeThatIsNotKnownDoesNotCollide() {
-        Collision2D unknown = new CollisionRectangle(0, 0, 10, 10) {
+        // CollisionRectangle is final: a shape of the closed hierarchy that no other shape knows
+        Collision2D unknown = new Collision2D() {
             {
                 shapeType = EShapeType.Circle;
             }
+
+            @Override
+            public boolean isColliding(Collision2D collision) { return false; }
+
+            @Override
+            public void replaceComparedTo(Collision2D b, EDirection direction) {}
+
+            @Override
+            public void setX(float x) {}
+
+            @Override
+            public void setY(float y) {}
+
+            @Override
+            public CollisionRectangle bounds() { return new CollisionRectangle(0, 0, 10, 10); }
+
+            @Override
+            public Collision2D copy() { return this; }
         };
         assertFalse(new CollisionRectangle(0, 0, 10, 10).isColliding(unknown));
     }

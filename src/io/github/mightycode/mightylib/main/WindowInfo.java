@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.main;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import org.joml.Vector2i;
 
-public class WindowInfo {
+public final class WindowInfo {
     public boolean isWindowCreated() { return windowId != 0; }
 
     long windowId;

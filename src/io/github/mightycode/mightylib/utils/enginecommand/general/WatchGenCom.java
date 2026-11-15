@@ -14,7 +14,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Argument
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
-public class WatchGenCom extends BaseCommand {
+public final class WatchGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "watch";
 
     public WatchGenCom() {

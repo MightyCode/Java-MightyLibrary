@@ -4,7 +4,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 // The listener of the silent service: keeps its position and speed
-public class SilentSoundListener implements ISoundListener {
+public final class SilentSoundListener implements ISoundListener {
     private final Vector3f position = new Vector3f();
     private final Vector3f speed = new Vector3f();
 

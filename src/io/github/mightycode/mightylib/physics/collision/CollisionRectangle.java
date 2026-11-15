@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.utils.math.EShapeType;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-public class CollisionRectangle extends Collision2D {
+public final class CollisionRectangle extends Collision2D {
     private final Vector2f oppositePosition; // Down Left
     private final Vector2f size;
 

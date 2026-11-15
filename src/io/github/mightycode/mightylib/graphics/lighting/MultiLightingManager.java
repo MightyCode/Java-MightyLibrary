@@ -8,7 +8,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultiLightingManager {
+public final class MultiLightingManager {
     private final List<Renderer> renderers;
 
     private DirectionalLight directionalLight;

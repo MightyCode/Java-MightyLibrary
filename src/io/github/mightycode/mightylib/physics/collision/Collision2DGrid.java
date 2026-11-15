@@ -5,7 +5,7 @@ import org.joml.Vector2i;
 
 import java.util.*;
 
-public class Collision2DGrid {
+public final class Collision2DGrid {
     private final Set<Collision2D> allCollisions;
 
     private final Vector2f mapSize;

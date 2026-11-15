@@ -31,12 +31,13 @@ public class BasicMaterial implements IShaderUniforms {
 
     }
 
+    // A copy with its own vectors: changing the copy leaves this material as it is
     @Override
     public BasicMaterial clone(){
-        return new BasicMaterial(Ambient, Diffuse, Specular);
+        return cloneBasicMaterial();
     }
 
     public final BasicMaterial cloneBasicMaterial(){
-        return new BasicMaterial(Ambient, Diffuse, Specular);
+        return new BasicMaterial(new Vector3f(Ambient), new Vector3f(Diffuse), new Vector3f(Specular));
     }
 }

@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.resources.animation;
 
 import java.util.HashMap;
 
-public class Animator {
+public final class Animator {
     private final HashMap<String, Animation> animations;
     private Animation currentAnimation;
     private String currentAnimationName;

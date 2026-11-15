@@ -31,7 +31,7 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * {"event": "log", "id": n, "type": "OUT|ERR|COMMAND|RESULT|ERROR", "source": "...", "text": "..."}
  */
 @API(status = INTERNAL)
-public class DebugServer {
+public final class DebugServer {
     private static final long STOP_WAIT_MILLISECONDS = 500;
     private static final int MAX_PORT = 65535;
 

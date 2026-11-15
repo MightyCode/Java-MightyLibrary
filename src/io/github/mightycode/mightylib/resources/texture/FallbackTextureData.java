@@ -11,7 +11,7 @@ import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
  * Fallback of the textures: magenta and black checkerboard created in memory, it can't fail.
  * Used in place of a texture that failed, is still loading or has an unknown name.
  */
-public class FallbackTextureData extends TextureData {
+public final class FallbackTextureData extends TextureData {
     public static final int SIZE = 16;
     private static final int CELL = 8;
     private static final int MAGENTA = 0xFFFF00FF;

@@ -43,8 +43,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 ## Bugs relevés en passant (non corrigés)
 - **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (20) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (5) ; `NP_BOOLEAN_RETURN_NULL` (`EngineConfig.ParseShown`) ; Error Prone `MissingCasesInEnumSwitch` (22), `EmptyCatch` (3 : `EngineConfig`, `FileChangeDetector`, `ResourceWatcher`), `ReferenceEquality` (39), `EnumOrdinal` (21) (chiffres de la bibliothèque seule). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
-- `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
-- `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
+- `SpotLight.clone()` renvoie une `PointLight` (perd l'angle et la direction du projecteur) ; `DirectionalLight.clone()` et `PointLight.clone()` partagent peut-être encore leurs vecteurs de direction et de position (3D, non vérifié).
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :

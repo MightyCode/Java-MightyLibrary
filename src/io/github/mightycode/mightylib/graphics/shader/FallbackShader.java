@@ -16,7 +16,7 @@ import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
  * (drawn before the post processing program is linked). It has none of the other uniforms of the shaders it
  * replaces: they are not reported missing.
  */
-public class FallbackShader extends Shader {
+public final class FallbackShader extends Shader {
     private static final String[] MATRICES = {
             ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
             ShaderManager.GENERIC_VIEW_FIELD_NAME,

@@ -24,7 +24,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_JOYSTICK_LAST;
  * Connections are applied in postUpdate, with the state of the next tick : a tick sees a stable set of gamepads.
  * Main thread only.
  */
-public class GamepadManager {
+public final class GamepadManager {
     // Any connected gamepad, assigned or not
     public static final int ANY_PLAYER = -1;
 

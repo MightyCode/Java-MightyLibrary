@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.inputs.CharInputEntry;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-public class QWERTKeyboardLanguage extends KeyboardLanguage {
+public final class QWERTKeyboardLanguage extends KeyboardLanguage {
     private static final KeyboardLanguage instance = new QWERTKeyboardLanguage();
 
     public static KeyboardLanguage getInstance() { return instance; }

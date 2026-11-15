@@ -24,7 +24,7 @@ import static org.lwjgl.assimp.Assimp.*;
  * Read 3D models with Assimp (CPU only, in the resource workers).
  * A model is named after its file name, its textures "modelName/relative/path" (relative to the model folder).
  */
-public class ModelLoader extends ResourceLoader {
+public final class ModelLoader extends ResourceLoader {
     private static final String[] EXTENSIONS = { ".obj", ".fbx", ".gltf", ".glb", ".dae", ".3ds", ".ply", ".stl" };
 
     private static final int IMPORT_FLAGS = aiProcess_Triangulate | aiProcess_FlipUVs

@@ -8,7 +8,7 @@ import org.joml.Vector2i;
 
 import java.util.Map;
 
-public class TileSetLoader extends ResourceLoader {
+public final class TileSetLoader extends ResourceLoader {
 
     @Override
     public Class<? extends DataType> getType() {

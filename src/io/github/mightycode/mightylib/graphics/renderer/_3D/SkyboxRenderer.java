@@ -11,7 +11,7 @@ import io.github.mightycode.mightylib.resources.cubemap.CubeMapTexture;
  * keeps only the rotation of the view: the sky does not move with the camera. While the cubemap is not loaded, its
  * fallback (checkerboards) is shown.
  */
-public class SkyboxRenderer extends MeshRenderer {
+public final class SkyboxRenderer extends MeshRenderer {
     public static final String SHADER = "skybox";
     private static final String SAMPLER = "skybox";
 

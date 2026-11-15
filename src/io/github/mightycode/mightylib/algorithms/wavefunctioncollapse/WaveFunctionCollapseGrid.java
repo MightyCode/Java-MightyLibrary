@@ -6,7 +6,7 @@ import org.joml.Vector2i;
 
 import java.util.*;
 
-public class WaveFunctionCollapseGrid {
+public final class WaveFunctionCollapseGrid {
     private final TileMap map;
     private final Vector2i mapSize;
 
@@ -50,7 +50,7 @@ public class WaveFunctionCollapseGrid {
     }
 
     private void init() {
-        Set<Integer> listOfTile = rule.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAL_POS);
+        Set<Integer> listOfTile = rule.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.initialPosition());
         minimumPossibleTilePositions.clear();
         List<Vector2i> positions = new ArrayList<>();
 

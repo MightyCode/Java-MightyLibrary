@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 
 // Binding of a registered action in an IInputManager
-public class ActionInput implements IAction {
+public final class ActionInput implements IAction {
     private final InputAction action;
     private final IAction input;
 

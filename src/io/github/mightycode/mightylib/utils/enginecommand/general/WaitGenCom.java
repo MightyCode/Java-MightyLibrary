@@ -22,7 +22,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
  * Answer after some ticks, or once the current scene is loaded: used by scripts (exec) and tools
  * to wait in game time instead of real time.
  */
-public class WaitGenCom extends BaseCommand {
+public final class WaitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "wait";
 
     public WaitGenCom() {

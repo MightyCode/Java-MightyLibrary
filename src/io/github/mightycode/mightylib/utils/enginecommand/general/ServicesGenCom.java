@@ -16,7 +16,7 @@ import org.json.JSONObject;
 import java.util.Collection;
 
 // The services of the engine in their order of creation, and the factories of the scene and input managers
-public class ServicesGenCom extends BaseCommand {
+public final class ServicesGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "services";
 
     public ServicesGenCom() {

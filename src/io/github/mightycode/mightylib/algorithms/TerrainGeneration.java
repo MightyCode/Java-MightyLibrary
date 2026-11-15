@@ -6,7 +6,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 // Inspired by Sebastien Lague (https://www.youtube.com/@SebastianLague) : https://www.youtube.com/watch?v=yyJ-hdISgnw
-public class TerrainGeneration {
+public final class TerrainGeneration {
     private final OpenSimplexNoise noiseGen;
     private int layerCount = 5;
     private float lacunarity = 2f;

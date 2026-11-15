@@ -19,7 +19,7 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * Main thread only.
  */
 @API(status = INTERNAL)
-public class InputSimulation {
+public final class InputSimulation {
     // Hold until a release is asked
     public static final int UNTIL_RELEASE = -1;
 

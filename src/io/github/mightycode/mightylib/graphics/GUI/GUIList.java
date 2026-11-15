@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class GUIList {
+public final class GUIList {
     private final IInputManager inputManager;
     private final MouseManager mouseManager;
 

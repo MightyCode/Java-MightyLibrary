@@ -10,7 +10,7 @@ import java.nio.ShortBuffer;
  * Fallback of the sounds: a short strident beep generated in memory, it can't fail and can't go unnoticed.
  * Played in place of a sound that failed, is still loading or has an unknown name.
  */
-public class FallbackSoundData extends SoundData {
+public final class FallbackSoundData extends SoundData {
     private static final int SAMPLE_RATE = 44100;
     private static final int FREQUENCY = 2000;
     private static final float DURATION_SECONDS = 0.25f;

@@ -27,7 +27,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 /**
  * Drive the in-game console and read its log (program output and commands of every source).
  */
-public class ConsoleGenCom extends BaseCommand {
+public final class ConsoleGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "console";
     private static final int DEFAULT_LOG_LINES = 20;
 

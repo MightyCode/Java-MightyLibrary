@@ -19,7 +19,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * @author MightyCode
  * @version 1.0
  */
-public class KeyboardManager {
+public final class KeyboardManager {
 
     private static final int KEYS = 348;
     private static final int BEGIN_KEYS = 32;

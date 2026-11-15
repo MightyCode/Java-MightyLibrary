@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.resources.data.JSONFile;
 import java.util.Locale;
 import java.util.Map;
 
-public class WaveCollapseRulesLoader extends ResourceLoader {
+public final class WaveCollapseRulesLoader extends ResourceLoader {
     public WaveCollapseRulesLoader(){
     }
 

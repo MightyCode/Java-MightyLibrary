@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public class DataFolder {
+public final class DataFolder {
     public static final String DATA_FOLDER_PATH = "data/";
     public static boolean checkDataFolderExists(){
         File file = new File(DATA_FOLDER_PATH);

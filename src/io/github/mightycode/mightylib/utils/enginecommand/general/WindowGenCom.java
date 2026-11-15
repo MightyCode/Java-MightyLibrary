@@ -25,7 +25,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 /**
  * Chooses the window that the commands input, screenshot, monitors, scene, camera and exit work on.
  */
-public class WindowGenCom extends BaseCommand {
+public final class WindowGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "window";
 
     public WindowGenCom() {

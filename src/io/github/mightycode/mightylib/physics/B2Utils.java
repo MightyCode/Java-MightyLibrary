@@ -4,7 +4,7 @@ import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.contacts.Contact;
 import org.joml.Vector2f;
 
-public class B2Utils {
+public final class B2Utils {
 
     private static final Vector2f b2ToEngineVector = new Vector2f(1);
     public static Vector2f getB2ToEngineVector(){ return new Vector2f(b2ToEngineVector);}

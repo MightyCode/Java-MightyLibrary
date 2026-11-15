@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.resources.*;
 import java.util.Map;
 import java.util.Objects;
 
-public class AnimationDataLoader extends ResourceLoader {
+public final class AnimationDataLoader extends ResourceLoader {
     private static final int TEXTURE_POS = 0;
     private static final int SIZE_FRAME_POS = 1;
     private static final int FRAME_ENUM_START_POS = 2;

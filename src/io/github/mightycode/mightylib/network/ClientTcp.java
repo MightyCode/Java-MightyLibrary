@@ -12,7 +12,7 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-public class ClientTcp {
+public final class ClientTcp {
     private final NetworkConfiguration configuration;
     private Socket socket;
 

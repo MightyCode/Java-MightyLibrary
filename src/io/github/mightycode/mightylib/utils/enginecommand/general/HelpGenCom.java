@@ -13,7 +13,7 @@ import java.util.List;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
-public class HelpGenCom extends BaseCommand {
+public final class HelpGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "help";
 
     public HelpGenCom() {

@@ -6,8 +6,8 @@ import org.joml.Vector4f;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Polygon {
-    public static class PolygonBuilder {
+public final class Polygon {
+    public static final class PolygonBuilder {
         private final ArrayList<Vector2f> vertices;
 
         public PolygonBuilder() {

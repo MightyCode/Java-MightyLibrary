@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Vector2f;
 
-public class FontFace extends SingleSourceDataType {
+public final class FontFace extends SingleSourceDataType {
     // Folder of the fonts, in the folder of the resources
     static final String FONTS_FOLDER = "textures/fonts/";
     private final String name;

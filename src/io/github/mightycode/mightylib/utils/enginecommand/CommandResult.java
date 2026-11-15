@@ -7,7 +7,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Result of a command: returned to the console, the debug server or any other caller instead of being printed.
  */
-public class CommandResult {
+public final class CommandResult {
     private final boolean success;
     private final String message;
     private final JSONObject data;

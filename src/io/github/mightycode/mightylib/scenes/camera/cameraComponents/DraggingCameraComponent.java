@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 
-public class DraggingCameraComponent implements IUpdatable {
+public final class DraggingCameraComponent implements IUpdatable {
     protected IInputManager inputManager;
     protected MouseManager mouseManager;
 

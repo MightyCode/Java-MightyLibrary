@@ -26,7 +26,7 @@ import java.util.List;
  * or by setSelected. The list scrolls to keep it shown. The row under the mouse is getHovered() ; a keyboard move
  * or new items hide the hover until the mouse moves again.
  */
-public class ScrollList {
+public final class ScrollList {
     private static final float SCROLLBAR_WIDTH = 6f;
 
     private final WindowContext context;

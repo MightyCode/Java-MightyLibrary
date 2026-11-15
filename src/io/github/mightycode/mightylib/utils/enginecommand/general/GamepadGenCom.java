@@ -28,7 +28,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Argument
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
-public class GamepadGenCom extends BaseCommand {
+public final class GamepadGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "gamepad";
 
     public GamepadGenCom() {

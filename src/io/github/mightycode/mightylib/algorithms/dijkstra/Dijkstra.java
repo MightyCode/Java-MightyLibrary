@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.algorithms.graph.*;
 
 import java.util.*;
 
-public class Dijkstra {
+public final class Dijkstra {
     public static List<Node> findShortestPathReduced(ReducedGraph reducedGraph, Graph correspondingGraph,
                                                      Node startNode, Node endNode){
         return findShortestPathReduced(reducedGraph, correspondingGraph, startNode, endNode, EVerbosity.NONE);

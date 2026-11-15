@@ -18,7 +18,7 @@ public class Model extends SingleSourceDataType {
     // Textures registered by this model, released when it is unloaded
     private List<DataType> ownedTextures;
 
-    public Model(String dataName, String path) {
+    Model(String dataName, String path) {
         super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
 
         meshes = new ArrayList<>();

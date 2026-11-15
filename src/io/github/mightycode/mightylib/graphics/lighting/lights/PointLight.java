@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
-public class PointLight extends BasicMaterial {
+public final class PointLight extends BasicMaterial {
     private Vector3f position;
     private boolean shouldUseDistance;
     private LightDecrease lightDecrease = null;

@@ -4,8 +4,8 @@ import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 
-public class EllipseRenderer extends RectangleRenderer {
-    public static class ShaderEllipseProperty {
+public final class EllipseRenderer extends RectangleRenderer {
+    public static final class ShaderEllipseProperty {
         public String Center = "ellipse.center";
         public String Radius = "ellipse.radius";
         public String Rotation = "ellipse.rotation";

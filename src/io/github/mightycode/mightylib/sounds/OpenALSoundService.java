@@ -18,7 +18,7 @@ import static org.lwjgl.openal.ALC10.*;
 /**
  * The sound with OpenAL: the default device, one context for the process.
  */
-public class OpenALSoundService implements ISoundService {
+public final class OpenALSoundService implements ISoundService {
     private static final long NULL = 0L;
 
     private final long device;

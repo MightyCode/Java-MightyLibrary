@@ -10,7 +10,7 @@ import java.util.List;
  * Several sources of one axis added (the mouse and a stick can be used together), then shaped as a whole :
  * a scale on the sum is a sensitivity shared by all its sources.
  */
-public class AxisSum extends AxisBinding {
+public final class AxisSum extends AxisBinding {
     private final List<IAxis> axes;
 
     public AxisSum(IAxis... axes) {

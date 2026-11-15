@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
  * Lines run in the same tick until one has a deferred result (wait, screenshot, exec...): the next line waits for it.
  * Blank lines and lines starting with # are ignored. The script stops at the first failed line.
  */
-public class CommandScript {
+public final class CommandScript {
     private final Commands commands;
     // Who started the script: every line runs as it, even the ones run later in a tick task (never above its level)
     private final ICommandSource source;

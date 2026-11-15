@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class CollisionBoundedVolume2D extends Collision2D {
+public final class CollisionBoundedVolume2D extends Collision2D {
 
     private final Map<String, Collision2D> collisions;
 

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TextureDataAtlas extends TextureData {
+public final class TextureDataAtlas extends TextureData {
     // Ordered list by texture size
     private List<TextureData> textures;
 

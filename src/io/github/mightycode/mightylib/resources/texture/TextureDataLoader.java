@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
-public class TextureDataLoader extends ResourceLoader {
+public final class TextureDataLoader extends ResourceLoader {
     private static final String LIST_TEXTURES = "textures/textures.json";
     private static final Set<String> IMAGE_EXTENSIONS = new HashSet<>(Arrays.asList("png", "jpg", "jpeg", "bmp", "tga", "gif"));
 

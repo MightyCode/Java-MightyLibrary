@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.graphics.utils;
 import io.github.mightycode.mightylib.physics.tweenings.type.Vector2fTweening;
 import org.joml.Vector2f;
 
-public class Shaking2D {
+public final class Shaking2D {
     private final Vector2fTweening tweening;
     private final Vector2f value;
 

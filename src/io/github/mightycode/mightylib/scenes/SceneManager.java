@@ -14,7 +14,7 @@ import io.github.mightycode.mightylib.sounds.ISoundService;
 import java.util.function.Supplier;
 
 // The scene manager of the engine (ISceneManagerFactory: SceneManager::new)
-public class SceneManager implements ISceneManager {
+public final class SceneManager implements ISceneManager {
     private final SceneManagerInterface sceneInterface;
     private Scene currentScene;
 

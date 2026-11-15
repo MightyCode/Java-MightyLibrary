@@ -9,7 +9,7 @@ import org.joml.Vector4f;
 
 import java.util.Objects;
 
-public class BackgroundlessButton extends GUI {
+public final class BackgroundlessButton extends GUI {
     private final WindowContext context;
     private final Text text, overlapsText;
 

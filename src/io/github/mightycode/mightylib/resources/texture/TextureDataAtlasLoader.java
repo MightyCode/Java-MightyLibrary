@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.resources.ResourceLoader;
 
 import java.util.Map;
 
-public class TextureDataAtlasLoader extends ResourceLoader {
+public final class TextureDataAtlasLoader extends ResourceLoader {
 
     @Override
     public Class<? extends DataType> getType() {

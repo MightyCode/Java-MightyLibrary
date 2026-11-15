@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.inputs.InputAxis;
 /**
  * Binding of a registered axis (MOVE_X, LOOK_X...) in an IInputManager, read with IInputManager.getAxis(axis).
  */
-public class AxisInput {
+public final class AxisInput {
     private final InputAxis axis;
     private final IAxis binding;
 

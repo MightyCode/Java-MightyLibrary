@@ -19,7 +19,7 @@ import java.util.Objects;
  * @author MightyCode
  * @version 1.0
  */
-public class InputManager implements IInputManager {
+public final class InputManager implements IInputManager {
 
     private final KeyboardManager keyManager;
 

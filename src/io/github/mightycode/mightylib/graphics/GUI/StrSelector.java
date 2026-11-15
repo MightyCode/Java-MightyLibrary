@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 import io.github.mightycode.mightylib.main.WindowContext;
 import org.joml.Vector2f;
 
-public class StrSelector extends ValueSelector<String> {
+public final class StrSelector extends ValueSelector<String> {
     /** Selector at the top right of the window (default position). */
     public StrSelector(String[] values, WindowContext context){
         super(values, context);

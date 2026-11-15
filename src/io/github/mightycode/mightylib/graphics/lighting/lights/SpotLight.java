@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;
 
-public class SpotLight extends BasicMaterial {
+public final class SpotLight extends BasicMaterial {
     private Vector3f position, direction;
     private final LightDecrease lightDecrease;
 

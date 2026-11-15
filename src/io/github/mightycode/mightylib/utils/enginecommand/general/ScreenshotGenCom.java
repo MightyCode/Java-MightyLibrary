@@ -21,7 +21,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Argument
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.path;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 
-public class ScreenshotGenCom extends BaseCommand {
+public final class ScreenshotGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "screenshot";
     private static final String DEFAULT_FOLDER = "screenshots";
 

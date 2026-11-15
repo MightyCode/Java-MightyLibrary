@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
  * so the compiler log gives the real line, translated to "file:line" by translateLog.
  * One instance per source: files() and watchedFiles() describe the last process.
  */
-public class ShaderPreprocessor {
+public final class ShaderPreprocessor {
     private static final String INCLUDE = "#include";
     private static final Pattern VERSION = Pattern.compile("^\\s*#\\s*version\\b");
 

@@ -36,5 +36,35 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.physics.tweenings.Tweening"
     );
 
+    /*
+     * Public concrete classes left open because the library (or its tests) extends them, without being a hook
+     * contract for the projects: not in NAMES, their protected members are not documented hooks.
+     */
+    static final List<String> EXTENDED_BY_THE_LIBRARY = List.of(
+            // FallbackShader, FallbackShaderData, FallbackCubeMapData, FallbackModel: the fallback of each type
+            "io.github.mightycode.mightylib.graphics.shader.Shader",
+            "io.github.mightycode.mightylib.graphics.shader.ShaderData",
+            "io.github.mightycode.mightylib.resources.cubemap.CubeMapData",
+            "io.github.mightycode.mightylib.resources.models.Model",
+            // CommandSyntaxException; an exception stays open like the ones of the JDK
+            "io.github.mightycode.mightylib.utils.enginecommand.CommandException",
+            // The fake mice of the tests (no-window constructor)
+            "io.github.mightycode.mightylib.inputs.MouseManager",
+            // FallbackAnimationData, FallbackSoundData, BatchResources
+            "io.github.mightycode.mightylib.resources.animation.AnimationData",
+            "io.github.mightycode.mightylib.resources.sound.SoundData",
+            "io.github.mightycode.mightylib.resources.data.JSONFile",
+            // EllipseRenderer, VirtualSceneRenderer
+            "io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer",
+            // ConsoleView
+            "io.github.mightycode.mightylib.scenes.camera.Camera2D",
+            // The lights and Material (3D)
+            "io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial",
+            // NodeIntersection, NodeSubIntersection
+            "io.github.mightycode.mightylib.algorithms.graph.NodeContainer",
+            // Base of Scene, WindowView, Renderer, DataType, Camera, Collision2D (their id)
+            "io.github.mightycode.mightylib.utils.math.UUID"
+    );
+
     private ExtensibleClasses() {}
 }

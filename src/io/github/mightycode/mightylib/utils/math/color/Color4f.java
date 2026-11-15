@@ -5,7 +5,7 @@ import org.joml.Vector4f;
 
 import java.awt.*;
 
-public class Color4f extends Vector4f {
+public final class Color4f extends Vector4f {
 
     public Color4f() {
         this(1.0f);

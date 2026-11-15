@@ -18,7 +18,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
  * "complete --as user \"stats \"": what Tab gives in the console for the beginning of a line, to check without the
  * player what he is proposed. The level can only go down: Min(asked, level of the source).
  */
-public class CompleteGenCom extends BaseCommand {
+public final class CompleteGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "complete";
 
     public CompleteGenCom() {

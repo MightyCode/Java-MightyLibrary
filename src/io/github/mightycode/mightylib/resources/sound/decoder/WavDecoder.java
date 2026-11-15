@@ -13,7 +13,7 @@ import java.nio.ByteOrder;
 import java.util.concurrent.CancellationException;
 
 /** Wav (and the other encodings of javax.sound.sampled), converted to 16 bit. */
-public class WavDecoder implements SoundDecoder {
+public final class WavDecoder implements SoundDecoder {
     private static final int CHUNK_BYTES = 64 * 1024;
 
     @Override

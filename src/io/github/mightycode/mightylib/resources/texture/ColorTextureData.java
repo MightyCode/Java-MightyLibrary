@@ -5,7 +5,7 @@ import java.awt.image.BufferedImage;
 /**
  * 1x1 texture of a single color, created in memory (no file): default maps of a material without texture.
  */
-public class ColorTextureData extends TextureData {
+public final class ColorTextureData extends TextureData {
     private final int argb;
 
     public ColorTextureData(int argb) {

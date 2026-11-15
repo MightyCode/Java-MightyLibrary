@@ -10,7 +10,7 @@ import org.joml.Vector3f;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CubeRenderer extends MeshRenderer {
+public final class CubeRenderer extends MeshRenderer {
     private static final int FACE_NUMBER = 6;
     private static final int VERTEX_TEXTURE_SIZE = 2;
     private static final int VERTEX_POSITION_SIZE = 3;

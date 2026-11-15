@@ -5,7 +5,7 @@ import org.joml.Vector3f;
 import org.lwjgl.openal.AL10;
 
 // The listener of the OpenAL service
-public class OpenALSoundListener implements ISoundListener {
+public final class OpenALSoundListener implements ISoundListener {
     private final Vector3f position;
     private final Vector3f speed;
 

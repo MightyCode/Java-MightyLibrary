@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.physics.tweenings.tweeningmath;
 
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 
-public class Back {
+public final class Back {
 
     public static final float SWING_BACK_DEFAULT = 1.70158f;
     public static final float SWING_MULTIPLICATOR = 1.525f;

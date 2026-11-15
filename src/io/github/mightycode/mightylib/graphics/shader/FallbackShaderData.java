@@ -9,7 +9,7 @@ import io.github.mightycode.mightylib.resources.Resources;
  * Its program (FallbackShader) is linked as soon as the fallback data exist, before anything is drawn
  * (glElementNeededBeforeDrawing): a renderer always has a linked program to draw with.
  */
-public class FallbackShaderData extends ShaderData {
+public final class FallbackShaderData extends ShaderData {
     private final boolean modernGLSL;
 
     // version: folder of the shaders (ShaderManager.getVersion), "3_30" or "1_40"

@@ -12,7 +12,7 @@ import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
  * GLSL version of the driver and list of the shaders (shaders.json): the same for all the windows of the engine.
  * The cameras belong to the views (IView), not to this class.
  */
-public class ShaderManager {
+public final class ShaderManager {
     public static final String LIST_SHADER_FILE_NAME = "shaders.json";
 
     public static final String GENERIC_PROJECTION_FIELD_NAME = "projection";

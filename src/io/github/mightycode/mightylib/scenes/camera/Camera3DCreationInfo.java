@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.scenes.camera;
 
 import org.joml.Vector3f;
 
-public class Camera3DCreationInfo {
+public final class Camera3DCreationInfo {
     public float fov;
     public Vector3f initialPosition;
 

@@ -6,7 +6,7 @@ import static org.lwjgl.opengl.GL11.*;
  * The OpenGL state a renderer draws with: depth test, depth write and face culling, applied before each draw.
  * The depth mask is left writable between draws (glClear of the depth buffer depends on it).
  */
-public class RenderState {
+public final class RenderState {
     private boolean depthTest;
     private boolean depthWrite;
     private boolean faceCulling;

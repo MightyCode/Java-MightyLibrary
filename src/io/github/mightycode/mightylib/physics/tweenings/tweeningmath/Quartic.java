@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.physics.tweenings.tweeningmath;
 
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 
-public class Quartic {
+public final class Quartic {
     public static float Evaluate(ETweeningBehaviour behaviour,
                                  float t, float b, float c, float d){
         switch(behaviour){

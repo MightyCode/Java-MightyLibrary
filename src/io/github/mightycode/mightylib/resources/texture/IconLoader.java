@@ -10,7 +10,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;
 
-public class IconLoader extends ResourceLoader {
+public final class IconLoader extends ResourceLoader {
 
     @Override
     public Class<? extends DataType> getType() {

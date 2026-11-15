@@ -8,7 +8,7 @@ import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-public class MatrixRenderer {
+public final class MatrixRenderer {
 
     /**
      * HeatMap use a gradient of color, black to red, red to yellow, then yellow to white

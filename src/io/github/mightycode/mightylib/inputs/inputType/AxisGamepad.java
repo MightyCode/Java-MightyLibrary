@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.inputs.IInputManager;
  * A gamepad axis (GLFW_GAMEPAD_AXIS_...) : sticks from -1 to 1 (y positive downward), triggers from 0 to 1,
  * dead zone applied. Of a player, or of any gamepad (the value farthest from 0).
  */
-public class AxisGamepad extends AxisBinding {
+public final class AxisGamepad extends AxisBinding {
     private final int axis;
     private final int player;
 
