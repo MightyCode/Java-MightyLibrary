@@ -5,8 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToLongFunction;
@@ -33,18 +36,23 @@ final class SceneHistory {
         long modified() { return modified; }
     }
 
-    static final String SCENES_DIRECTORY = "src/io/github/mightycode/mightylibdemo/scenes/";
+    /**
+     * The folders the scene sources were ever in, from the root of the repository: the current one, then the old ones.
+     * Asking git for all of them lets it see a move between them as a rename, so the dates of addition survive it.
+     */
+    static final List<String> SCENES_DIRECTORIES = List.of("src/io/github/mightycode/mightylibdemo/scenes/");
+    static final String SCENES_DIRECTORY = SCENES_DIRECTORIES.get(0);
 
     private SceneHistory() {}
 
     /** The dates of the scenes, by relative class name (DemoScenes.RelativeName); empty if git fails. Runs processes: not on the main thread. */
     static Map<String, Dates> Read() {
-        String log = Git("log", "--reverse", "-M", "--format=@%ct", "--name-status", "--", SCENES_DIRECTORY);
+        String log = Git(WithPaths(SCENES_DIRECTORIES, "log", "--reverse", "-M", "--format=@%ct", "--name-status", "--"));
         if (log == null)
             return Collections.emptyMap();
 
         Map<String, Dates> byPath = ParseLog(log);
-        String status = Git("status", "--porcelain", "--untracked-files=all", "--", SCENES_DIRECTORY);
+        String status = Git(WithPaths(SCENES_DIRECTORIES, "status", "--porcelain", "--untracked-files=all", "--"));
         if (status != null)
             ApplyStatus(byPath, status, path -> new File(path).lastModified() / 1000);
 
@@ -143,6 +151,13 @@ final class SceneHistory {
         }
 
         return byName;
+    }
+
+    // The arguments followed by the paths
+    private static String[] WithPaths(List<String> paths, String... arguments) {
+        List<String> all = new ArrayList<>(Arrays.asList(arguments));
+        all.addAll(paths);
+        return all.toArray(new String[0]);
     }
 
     // The output of a git command run from the working directory, null if it fails

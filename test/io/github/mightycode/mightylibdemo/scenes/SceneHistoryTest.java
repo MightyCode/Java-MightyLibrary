@@ -38,6 +38,32 @@ class SceneHistoryTest {
     }
 
     @Test
+    void aMoveFromAnOldFolderKeepsTheDateOfAddition() {
+        String oldDir = "old/folder/scenes/";
+        String log = "@100\nA\t" + oldDir + "Scene2D.java\n"
+                + "@200\nM\t" + oldDir + "Scene2D.java\n"
+                + "@300\nR100\t" + oldDir + "Scene2D.java\t" + DIR + "Scene2D.java\n";
+
+        Map<String, SceneHistory.Dates> dates = SceneHistory.ByRelativeName(SceneHistory.ParseLog(log));
+
+        assertEquals(1, dates.size());
+        assertEquals(100, dates.get("Scene2D").added());
+        assertEquals(300, dates.get("Scene2D").modified());
+    }
+
+    @Test
+    void theStatusOfTheCurrentFolderIsReadAfterAMove() {
+        Map<String, SceneHistory.Dates> byPath = SceneHistory.ParseLog(
+                "@100\nA\told/scenes/Scene2D.java\n@200\nR100\told/scenes/Scene2D.java\t" + DIR + "Scene2D.java\n");
+        SceneHistory.ApplyStatus(byPath, " M " + DIR + "Scene2D.java\n", path -> 500);
+
+        Map<String, SceneHistory.Dates> dates = SceneHistory.ByRelativeName(byPath);
+
+        assertEquals(100, dates.get("Scene2D").added());
+        assertEquals(500, dates.get("Scene2D").modified());
+    }
+
+    @Test
     void aDeletedSceneHasNoDates() {
         String log = "@100\nA\t" + DIR + "Gone.java\n@200\nD\t" + DIR + "Gone.java\n";
 
