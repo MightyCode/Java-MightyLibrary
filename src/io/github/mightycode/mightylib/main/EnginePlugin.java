@@ -9,6 +9,7 @@ import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.resources.LibraryLoaders;
+import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.services.EngineServices;
 import io.github.mightycode.mightylib.services.IServiceFactory;
 import io.github.mightycode.mightylib.sounds.ISoundService;
@@ -59,6 +60,8 @@ final class EnginePlugin implements IPlugin {
                 .action(EngineActions.TOGGLE_CONSOLE, new InputSimple(GLFW_KEY_GRAVE_ACCENT, EInputType.Keyboard))
                 .action(EngineActions.DETACH_CONSOLE, new InputSimple(GLFW_KEY_F2, EInputType.Keyboard))
                 .action(EngineActions.RELOAD_TEXTURE, new InputSimple(GLFW_KEY_F5, EInputType.Keyboard));
+
+        registry.services().sceneManager(SceneManager::new);
 
         registry.services().register(EngineServices.SOUND,
                         engine -> OpenALSoundService.Open(engine.resources(), GainTreeFile(engine)))

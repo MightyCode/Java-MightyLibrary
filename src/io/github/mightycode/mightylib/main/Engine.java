@@ -21,7 +21,7 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import io.github.mightycode.mightylib.scenes.Scene;
-import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
@@ -64,7 +64,7 @@ public final class Engine implements IView {
     private Registrations registrations;
     private Resources resources;
     private GLResources glResources;
-    private SceneManager sceneManager;
+    private ISceneManager sceneManager;
     private Commands commands;
     // The services registered by the plugins, created by setup; null before
     private ServiceSet services;
@@ -105,7 +105,7 @@ public final class Engine implements IView {
     public ISoundService sound() { return service(EngineServices.SOUND); }
 
     // The scenes of the main context
-    public SceneManager sceneManager() { return sceneManager; }
+    public ISceneManager sceneManager() { return sceneManager; }
 
     // The commands of the engine, the game and the views, created by setup
     public Commands commands() { return commands; }
@@ -313,8 +313,8 @@ public final class Engine implements IView {
         // Before the resources are loaded: the sounds keep their samples in the sound service
         resources.setSoundBuffers(sound());
 
-        System.out.println("--Create SceneManager");
-        sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
+        System.out.println("--Create the scene manager");
+        sceneManager = registrations.sceneManagerFactory().create(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
 
         // Create all resources dependencies
@@ -367,7 +367,8 @@ public final class Engine implements IView {
         if (context == null)
             throw new IllegalStateException("The window of the context " + name + " can't be created");
 
-        SceneManager manager = new SceneManager(this, context, false, config.getLoadingScene());
+        ISceneManager manager = registrations.sceneManagerFactory().create(this, context, false,
+                config.getLoadingScene());
         context.setSceneManager(manager);
 
         try (Views.Scope ignored = Views.enter(context)) {

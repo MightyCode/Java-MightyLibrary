@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
-import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
@@ -65,7 +65,7 @@ public class WaitGenCom extends BaseCommand {
         // Of the window targeted when the wait starts
         Engine engine = Views.engine();
         Context context = engine.targetContext();
-        SceneManager sceneManager = context.getSceneManager();
+        ISceneManager sceneManager = context.getSceneManager();
         CompletableFuture<CommandResult> future = new CompletableFuture<>();
         // A simulated input of this tick is seen by the next tick, whose scene can then ask a change,
         // done at the beginning of the tick after: start checking two ticks later

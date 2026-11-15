@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.registry.Identifier;
-import io.github.mightycode.mightylib.scenes.SceneManager;
+import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
 
 public abstract class ListGeneralCommand {
@@ -45,7 +45,7 @@ public abstract class ListGeneralCommand {
     }
 
     // The scenes of the context targeted by the commands (see Engine.targetWindow)
-    static SceneManager targetScenes() {
+    static ISceneManager targetScenes() {
         return Views.engine().targetContext().getSceneManager();
     }
 }

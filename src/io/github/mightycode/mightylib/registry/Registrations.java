@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.registry;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.scenes.ISceneManagerFactory;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.services.ServiceDeclaration;
 import io.github.mightycode.mightylib.services.ServiceKey;
@@ -25,6 +26,7 @@ public final class Registrations {
     final Entries<Identifier, InputsSection.Input> inputs = new Entries<>("Input", Identifier::toString);
     final Entries<Identifier, ScenesSection.SceneEntry> scenes = new Entries<>("Scene", Identifier::toString);
     final Entries<ServiceKey<?>, ServiceDeclaration<?>> services = new Entries<>("Service", ServiceKey::toString);
+    final Replaceable<ISceneManagerFactory> sceneManagerFactory = new Replaceable<>("Scene manager factory");
     final LifecycleHooks lifecycle = new LifecycleHooks();
 
     private boolean frozen;
@@ -91,6 +93,16 @@ public final class Registrations {
     // The services of every plugin in their order of creation (dependencies first), frozen; empty before the freeze
     public List<ServiceDeclaration<?>> services() {
         return serviceOrder;
+    }
+
+    // The factory of the scene managers (the engine's unless a plugin replaced it), null if none set it
+    public ISceneManagerFactory sceneManagerFactory() {
+        return sceneManagerFactory.get();
+    }
+
+    // The plugin whose scene manager factory is used, null if none
+    public String sceneManagerFactoryPlugin() {
+        return sceneManagerFactory.plugin();
     }
 
     // The hooks of every plugin on the life of the engine, in the order of the plugins

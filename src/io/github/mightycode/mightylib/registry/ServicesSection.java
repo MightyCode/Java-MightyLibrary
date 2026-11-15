@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.scenes.ISceneManagerFactory;
 import io.github.mightycode.mightylib.services.IEngineService;
 import io.github.mightycode.mightylib.services.IServiceFactory;
 import io.github.mightycode.mightylib.services.ServiceDeclaration;
@@ -10,7 +11,8 @@ import java.util.Objects;
 /**
  * The services of a plugin (EngineRegistry.services): unique systems of the engine, created once at the start in the
  * order of their dependencies (ServiceOrder). Each register or replace gives the declaration where to chain requires,
- * after and fallback.
+ * after and fallback. Also the factories of the managers of each context (scenes) and each window (inputs), given by
+ * the engine and replaced by a plugin: the last one wins.
  */
 public final class ServicesSection {
     private final Registrations registrations;
@@ -53,5 +55,12 @@ public final class ServicesSection {
                 replaced == null ? null : replaced.plugin());
         registrations.services.replace(registry.namespace(), key, declaration);
         return declaration;
+    }
+
+    // The scene manager of each context, created by this factory (the engine's: SceneManager::new)
+    public ServicesSection sceneManager(ISceneManagerFactory factory) {
+        registrations.checkOpen();
+        registrations.sceneManagerFactory.set(registry.namespace(), factory);
+        return this;
     }
 }

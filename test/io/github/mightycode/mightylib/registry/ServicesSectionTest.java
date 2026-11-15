@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.scenes.ISceneManagerFactory;
 import io.github.mightycode.mightylib.services.IEngineService;
 import io.github.mightycode.mightylib.services.IServiceFactory;
 import io.github.mightycode.mightylib.services.ServiceDeclaration;
@@ -129,6 +130,24 @@ class ServicesSectionTest {
                         List.of(plugin("game", registry -> registry.services()
                                 .register(gameKey("counter"), engine -> new IOther() {}).requires(SOUND)))));
         assertTrue(error.getMessage().contains("requires mightylib:sound"));
+    }
+
+    @Test
+    void theLastPluginGivesTheSceneManagerFactory() {
+        ISceneManagerFactory engineFactory = (engine, context, main, loading) -> null;
+        ISceneManagerFactory gameFactory = (engine, context, main, loading) -> null;
+
+        Registrations engineOnly = EngineRegistry.Collect(plugin(Identifier.ENGINE_NAMESPACE,
+                registry -> registry.services().sceneManager(engineFactory)), List.of());
+        assertSame(engineFactory, engineOnly.sceneManagerFactory());
+        assertEquals("mightylib", engineOnly.sceneManagerFactoryPlugin());
+
+        Registrations replaced = EngineRegistry.Collect(plugin(Identifier.ENGINE_NAMESPACE,
+                        registry -> registry.services().sceneManager(engineFactory)),
+                List.of(plugin("game", registry -> registry.services().sceneManager(gameFactory)),
+                        plugin("mod", registry -> {})));
+        assertSame(gameFactory, replaced.sceneManagerFactory());
+        assertEquals("game", replaced.sceneManagerFactoryPlugin());
     }
 
     @Test
