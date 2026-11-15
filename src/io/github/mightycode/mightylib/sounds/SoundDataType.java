@@ -95,7 +95,7 @@ public class SoundDataType {
             }
         } else {
             // Neither a readable file nor in the classpath: a clear error rather than a NullPointerException
-            InputStream source = SoundSource.class.getResourceAsStream(resource);
+            InputStream source = SoundDataType.class.getResourceAsStream(resource);
             if (source == null)
                 throw new FileNotFoundException("sound file not found: " + resource);
 

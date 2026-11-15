@@ -326,7 +326,7 @@ public class MenuScene extends Scene {
         // A sound when the choice changes, not when the filter changes it
         Integer selected = sceneList.getSelected();
         if (lastZone != null && !filterChanged && (zone != lastZone || !Objects.equals(selected, lastSelected)))
-            engine().soundManager().createSoundSource(CREATION_INFO_SELECT);
+            engine().sound().createSoundSource(CREATION_INFO_SELECT);
         lastZone = zone;
         lastSelected = selected;
     }

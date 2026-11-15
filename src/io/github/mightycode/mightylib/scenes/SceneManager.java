@@ -9,7 +9,7 @@ import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
-import io.github.mightycode.mightylib.sounds.SoundManager;
+import io.github.mightycode.mightylib.sounds.ISoundService;
 
 import java.util.function.Supplier;
 
@@ -21,7 +21,7 @@ public class SceneManager {
     // The commands of the engine are run by the scenes of the main context only
     private final boolean runsCommands;
     private final Engine engine;
-    private final SoundManager soundManager;
+    private final ISoundService sound;
     // The last scene whose loading ended (LifecycleHooks.sceneChanged), null before the first one
     private Scene lastRunningScene;
 
@@ -33,7 +33,7 @@ public class SceneManager {
         sceneInterface = new SceneManagerInterface(engine.resources(), defaultLoadingScene);
 
         this.runsCommands = runsCommands;
-        soundManager = engine.soundManager();
+        sound = engine.sound();
     }
 
 
@@ -96,7 +96,7 @@ public class SceneManager {
             previousScene.unloadByManager();
         }
 
-        soundManager.clearAwaitedSong();
+        sound.clearAwaitedSong();
 
         // Assign the new scene
         currentScene = sceneInterface.getNewScene();

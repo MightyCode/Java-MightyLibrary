@@ -25,11 +25,12 @@ import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
+import io.github.mightycode.mightylib.services.EngineServices;
 import io.github.mightycode.mightylib.services.IEngineService;
 import io.github.mightycode.mightylib.services.RunningService;
 import io.github.mightycode.mightylib.services.ServiceKey;
 import io.github.mightycode.mightylib.services.ServiceSet;
-import io.github.mightycode.mightylib.sounds.SoundManager;
+import io.github.mightycode.mightylib.sounds.ISoundService;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
@@ -63,7 +64,6 @@ public final class Engine implements IView {
     private Registrations registrations;
     private Resources resources;
     private GLResources glResources;
-    private SoundManager soundManager;
     private SceneManager sceneManager;
     private Commands commands;
     // The services registered by the plugins, created by setup; null before
@@ -102,7 +102,8 @@ public final class Engine implements IView {
 
     public GLResources glResources() { return glResources; }
 
-    public SoundManager soundManager() { return soundManager; }
+    // The sound (service mightylib:sound)
+    public ISoundService sound() { return service(EngineServices.SOUND); }
 
     // The scenes of the main context
     public SceneManager sceneManager() { return sceneManager; }
@@ -281,12 +282,6 @@ public final class Engine implements IView {
         resources.setGLElementSink(glResources);
         TextureUploader.setMode(config.getTextureUpload());
 
-        soundManager = new SoundManager(resources, config.getGainTreePath());
-        if (!soundManager.init()) {
-            System.err.println("SoundManager fail to initialize");
-            return ListError.LIBRARIES_LOAD_FAIL;
-        }
-
         // Before the scenes and the game: they add their commands to it
         if (maxAccess == null && System.getProperty(EngineConfig.COMMAND_ACCESS_PROPERTY) != null)
             System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
@@ -307,8 +302,14 @@ public final class Engine implements IView {
         // After the resources and the commands, before the scenes: they can use the services
         System.out.println("--Create the services");
         services = new ServiceSet();
+        if (config.isSoundForcedSilent()) {
+            System.out.println("--" + EngineConfig.SOUND_PROPERTY + "=silent: no sound device");
+            services.override(EngineServices.SOUND, EnginePlugin.SilentSound());
+        }
         if (!services.create(this, registrations.services()))
             return ListError.SERVICE_FAIL;
+        // Before the resources are loaded: the sounds keep their samples in the sound service
+        resources.setSoundBuffers(sound());
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
@@ -500,7 +501,6 @@ public final class Engine implements IView {
         for (Context context : contexts.getContexts())
             context.update();
 
-        soundManager.lateUpdate();
         services.lateUpdate();
         contexts.postUpdate();
 
@@ -554,10 +554,6 @@ public final class Engine implements IView {
         // What every window shows, then the resources, while the OpenGL contexts exist
         contexts.unloadViews();
 
-        // After the scenes (their unload can still stop their sources), before the sound buffers
-        if (soundManager != null)
-            soundManager.unloadSoundSource();
-
         WindowContext mainWindow = contexts.getMainWindow();
         if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated()) {
             mainWindow.getWindow().bindWindow();
@@ -586,10 +582,9 @@ public final class Engine implements IView {
             if (callback != null)
                 callback.free();
         }
+        // The sound device, once everything is released
         if (services != null)
             services.close();
-        if (soundManager != null)
-            soundManager.unload();
 
         // Strict mode: a hook that failed while stopping did not stop the release, it fails the exit
         if (status == ListError.NO_ERROR && lifecycle().hasTeardownFailed())

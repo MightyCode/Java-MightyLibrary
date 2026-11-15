@@ -13,7 +13,7 @@ public class SoundSourceCreationInfo {
     public String gainNode;
     public float delay;
     /*
-     * Owned source (an ambience, a music): kept until its creator calls SoundSource.release(), not deleted when it
+     * Owned source (an ambience, a music): kept until its creator calls ISoundSource.release(), not deleted when it
      * stops, and played again once its sound is reloaded. Otherwise the manager deletes it as soon as it stops.
      */
     public boolean owned;

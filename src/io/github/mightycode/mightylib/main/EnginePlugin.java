@@ -8,6 +8,11 @@ import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.resources.LibraryLoaders;
+import io.github.mightycode.mightylib.services.EngineServices;
+import io.github.mightycode.mightylib.services.IServiceFactory;
+import io.github.mightycode.mightylib.sounds.ISoundService;
+import io.github.mightycode.mightylib.sounds.OpenALSoundService;
+import io.github.mightycode.mightylib.sounds.SilentSoundService;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
 
@@ -19,7 +24,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
 
 /**
  * The content of the engine, registered like the one of any plugin, before them: mandatory loaders, general commands,
- * actions of the console with their keys.
+ * actions of the console with their keys, services (sound).
  * A later plugin replaces an entry with replace.
  */
 final class EnginePlugin implements IPlugin {
@@ -50,5 +55,20 @@ final class EnginePlugin implements IPlugin {
                 .action(EngineActions.TOGGLE_CONSOLE, new InputSimple(GLFW_KEY_GRAVE_ACCENT, EInputType.Keyboard))
                 .action(EngineActions.DETACH_CONSOLE, new InputSimple(GLFW_KEY_F2, EInputType.Keyboard))
                 .action(EngineActions.RELOAD_TEXTURE, new InputSimple(GLFW_KEY_F5, EInputType.Keyboard));
+
+        registry.services().register(EngineServices.SOUND,
+                        engine -> OpenALSoundService.Open(engine.resources(), GainTreeFile(engine)))
+                .fallback(SilentSound());
+    }
+
+    // The silent sound: fallback of the OpenAL one, forced by -Dmightylib.sound=silent
+    static IServiceFactory<ISoundService> SilentSound() {
+        return engine -> new SilentSoundService(GainTreeFile(engine));
+    }
+
+    // Null without gain tree
+    private static String GainTreeFile(Engine engine) {
+        String path = engine.config().getGainTreePath();
+        return path == null ? null : engine.resources().folder() + path;
     }
 }

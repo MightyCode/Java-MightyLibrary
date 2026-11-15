@@ -19,7 +19,17 @@ public final class ServiceSet {
     private final Map<ServiceKey<?>, RunningService> byKey = new HashMap<>();
     // By overlay layer, then order of creation
     private final List<IEngineService> overlays = new ArrayList<>();
+    // Factories used instead of the declared ones (launch options)
+    private final Map<ServiceKey<?>, IServiceFactory<?>> overrides = new HashMap<>();
     private boolean failed;
+
+    /**
+     * Before create: the service of this key is created by this factory, whatever plugin declared it, without
+     * fallback (-Dmightylib.sound=silent).
+     */
+    public <T extends IEngineService> void override(ServiceKey<T> key, IServiceFactory<? extends T> factory) {
+        overrides.put(key, factory);
+    }
 
     /**
      * Creates the services in the given order (sorted). A factory that throws or returns null is replaced by the
@@ -37,9 +47,14 @@ public final class ServiceSet {
                 continue;
             }
 
-            IEngineService service = tryCreate(engine, declaration, declaration.factory(), "");
+            IServiceFactory<?> override = overrides.get(declaration.key());
+            if (override != null)
+                System.out.println("--Service " + declaration + " overridden by a launch option");
+
+            IEngineService service = tryCreate(engine, declaration,
+                    override != null ? override : declaration.factory(), "");
             boolean fallback = false;
-            if (service == null && declaration.fallbackFactory() != null) {
+            if (service == null && override == null && declaration.fallbackFactory() != null) {
                 service = tryCreate(engine, declaration, declaration.fallbackFactory(), "fallback of ");
                 fallback = service != null;
                 if (fallback)
@@ -49,7 +64,8 @@ public final class ServiceSet {
 
             if (service == null) {
                 System.err.println("--Service " + declaration + " failed"
-                        + (declaration.fallbackFactory() == null ? ", without fallback" : ", its fallback too"));
+                        + (override != null || declaration.fallbackFactory() == null ? ", without fallback"
+                        : ", its fallback too"));
                 failed = true;
                 continue;
             }
