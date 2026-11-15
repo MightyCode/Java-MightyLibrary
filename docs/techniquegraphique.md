@@ -4,7 +4,7 @@ LearnOpenGL (Advanced OpenGL, Advanced Lighting, PBR, articles invités), **apr�
 
 ## 1. Simples et utiles
 - **Blinn-Phong** : corrige le Phong actuel (reflets aux angles rasants).
-- **Skybox** (`GL_TEXTURE_CUBE_MAP`) ; cubemaps aussi pour reflets et réfraction.
+- **Reflets et réfraction** par cubemap (`CubeMapData`/`CubeMapTexture` existent, la skybox s'en sert).
 - **Frustum culling** (boîtes englobantes) ; en 2D, ne pas dessiner hors de la `Camera2D`.
 
 ## 2. Rendu plus réaliste
