@@ -128,3 +128,35 @@
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml services-injectables`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait (un commit par étape, branche `services-injectables`)
+1. Modèle : `services/` (`IEngineService`, `ServiceKey`, `IServiceFactory`, `ServiceDeclaration`, `ServiceOrder`), `registry/ServicesSection`, `Registrations.services()`, `ListError.SERVICE_FAIL`.
+2. `ServiceSet` (création, repli, dépendants non créés, phases, overlays par couche, arrêt inverse) branché dans `Engine` (`service`, `hasService`, `services`, `displayOverlays`).
+3. Son : `ISoundService`/`ISoundSource`/`ISoundListener`, `OpenALSound*`, `SilentSound*`, `GainTree` commun, clé `mightylib:sound` avec repli muet, `-Dmightylib.sound=silent`, `engine.sound()`.
+4. Console : `IConsoleService`, clé `mightylib:console` (seulement avec accès), couche 1000.
+5. `ISceneManager`/`ISceneManagerFactory`, `registry.services().sceneManager(...)`.
+6. `IInputManager`/`IInputManagerFactory`, `registry.services().inputManager(...)`.
+7. Commande `services` (DEV), `TickCounterService` (`demo:tick_counter`), scène `EngineServices2D`.
+8. Docs (`architecture.md`, `debug-tools.md`, `decisions.md`, `later.md`, `current.md`, `CLAUDE.md`, `futur-discussion.md`).
+
+### Écarts au plan
+- **Buffers des sons par le service** (`ISoundBuffers`, `Resources.setSoundBuffers`, remplace `setSoundBufferDetacher`/`detachSoundBuffer`) : `SoundData` créait ses buffers OpenAL lui-même, le mode muet aurait appelé OpenAL sans contexte. `ISoundService` étend `ISoundBuffers`.
+- `replace` d'un service avec un autre contrat → `IllegalArgumentException` ; `engine.service(clé)` vérifie le contrat (non prévu, évite un `ClassCastException` loin de la cause).
+- `ServiceSet.override` pour `-Dmightylib.sound=silent` (forme non précisée par le plan).
+- `IConsoleService.EMode` remplace `Console.EMode` (l'énumération fait partie du contrat).
+- `DemoPlugin` n'a pas de fabrique de gestionnaire de scènes (étape 5) : rien à démontrer sans une implémentation différente ; le remplacement est couvert par `ServicesSectionTest`.
+- Étape 6 : deux tests (`GUIListTest`, `InputRegistryTest`) changent le type du paramètre de méthodes redéfinies (`IInputManager`) ; aucun autre changement de test d'entrées.
+- Remplacement mécanique du type `InputManager` → `IInputManager` dans 54 fichiers (commentaires compris).
+- `SilentSoundService.clearAwaitedSong` retire aussi les sources en attente (le bug connu reste dans `OpenALSoundService`, noté dans `later.md`).
+
+### Vérifié
+- `mvn test` : tout passe (nouveaux : `ServiceOrderTest` 9, `ServicesSectionTest` 9, `ServiceSetTest` 8, `SilentSoundServiceTest` 5, `SoundOptionTest` 1).
+- `scenario.py` : `SoundFormatsScene` + `input ENTER` + `sounds` (source OpenAL créée et jouée) ; même chose avec `-D mightylib.sound=silent` (log du service muet, aucune erreur OpenAL) ; `leakcheck SoundFormatsScene` et `leakcheck EngineServices2D 3` sans fuite ; `-D mightylib.commands.access=user "console open" "console"` (mode `OVERLAY`) ; `access=none` → console désactivée ; changements de scène `Scene2D`/`MenuScene` ; second contexte (`MultiWindowScene`, touche C : 2 contextes) ; `input ENTER` vu par `Scene2D` ; `services` dans `EngineServices2D` (OpenAL puis muet) ; capture : overlay de `tick_counter` en bas à droite, assombri sous la console ouverte.
+
+### À vérifier à la main
+- Son audible dans `MenuScene` (son de sélection) et `SoundFormatsScene` (Entrée ou survol d'une ligne).
+- Lancement avec `-Dmightylib.sound=silent` : aucun son, le jeu tourne, `EngineServices2D` affiche « Sound: silent ».
+- `EngineServices2D` : console ouverte (`²`) par-dessus l'overlay du compteur (en bas à droite).
+- Une scène à second contexte : `MultiWindowScene`, touche C.
+- Saisie dans un champ de texte de `GUIWidgetsScene` (non vérifiable par commande).
