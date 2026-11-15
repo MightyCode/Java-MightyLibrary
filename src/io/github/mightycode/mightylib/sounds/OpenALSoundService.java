@@ -57,20 +57,23 @@ public class OpenALSoundService implements ISoundService {
         if (device == NULL)
             throw new IllegalStateException("No OpenAL device can be opened");
 
-        ALCCapabilities deviceCaps = ALC.createCapabilities(device);
-        long context = alcCreateContext(device, (IntBuffer) null);
-        if (context == NULL) {
-            alcCloseDevice(device);
-            throw new IllegalStateException("The OpenAL context can't be created");
-        }
-
-        alcMakeContextCurrent(context);
-        AL.createCapabilities(deviceCaps);
-
+        long context = NULL;
         try {
+            ALCCapabilities deviceCaps = ALC.createCapabilities(device);
+            context = alcCreateContext(device, (IntBuffer) null);
+            if (context == NULL)
+                throw new IllegalStateException("The OpenAL context can't be created");
+
+            alcMakeContextCurrent(context);
+            AL.createCapabilities(deviceCaps);
+
             return new OpenALSoundService(resources, gainTreeFile, device, context);
-        } catch (RuntimeException e) {
-            alcDestroyContext(context);
+        } catch (RuntimeException | LinkageError e) {
+            // The fallback of the key (silent) takes over: nothing stays open
+            if (context != NULL) {
+                alcMakeContextCurrent(NULL);
+                alcDestroyContext(context);
+            }
             alcCloseDevice(device);
             throw e;
         }

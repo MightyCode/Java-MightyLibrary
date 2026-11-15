@@ -32,9 +32,9 @@ public final class ServiceSet {
     }
 
     /**
-     * Creates the services in the given order (sorted). A factory that throws or returns null is replaced by the
-     * fallback of its key; without fallback (or if the fallback fails too) the services that require it are not
-     * created, the others are.
+     * Creates the services in the given order (sorted). A factory that throws (an exception or a LinkageError) or
+     * returns null is replaced by the fallback of its key; without fallback (or if the fallback fails too) the
+     * services that require it are not created, the others are.
      * @return false if a service could not be created (the engine stops: ListError.SERVICE_FAIL)
      */
     public boolean create(Engine engine, List<ServiceDeclaration<?>> declarations) {
@@ -92,7 +92,8 @@ public final class ServiceSet {
         return null;
     }
 
-    // Null if the factory failed (reported)
+    // Null if the factory failed (reported). LinkageError: a native library or a class of a mod that can't be loaded
+    // (OpenAL), a failure of the factory like any other; the other errors (memory...) stop the engine
     private static IEngineService tryCreate(Engine engine, ServiceDeclaration<?> declaration,
                                             IServiceFactory<?> factory, String what) {
         try {
@@ -100,7 +101,7 @@ public final class ServiceSet {
             if (service == null)
                 System.err.println("--The " + what + "factory of the service " + declaration + " returned null");
             return service;
-        } catch (RuntimeException e) {
+        } catch (RuntimeException | LinkageError e) {
             Logger.LogException("The " + what + "factory of the service " + declaration + " failed", e);
             return null;
         }

@@ -93,6 +93,19 @@ class ServiceSetTest {
         assertSame(set.running().get(0).service(), set.get(key("sound")));
     }
 
+    // The native library of OpenAL can't be loaded: the silent sound, not a crash of the engine
+    @Test
+    void aFactoryFailingToLinkUsesTheFallback() {
+        ServiceDeclaration<IFake> sound = new ServiceDeclaration<>(key("sound"), engine -> {
+            throw new UnsatisfiedLinkError("no openal");
+        }, "game", null);
+        sound.fallback(engine -> new Fake("silent", 0));
+        ServiceSet set = new ServiceSet();
+
+        assertTrue(set.create(null, sorted(sound)));
+        assertTrue(set.running().get(0).isFallback());
+    }
+
     @Test
     void aFactoryReturningNullIsAFailure() {
         ServiceDeclaration<IFake> sound = new ServiceDeclaration<>(key("sound"), engine -> null, "game", null);
