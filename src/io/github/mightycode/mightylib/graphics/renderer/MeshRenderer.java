@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.graphics.renderer;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
-import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 
 /**
@@ -54,7 +53,7 @@ public class MeshRenderer extends Renderer {
     }
 
     public void setMainTextureChannel(String name) {
-        setMainTextureChannel(glResources().addElementOrReturnIfPresent(Texture.class, new Texture(name), name));
+        setMainTextureChannel(acquireTexture(name));
     }
 
     public void setMainTextureChannel(String name, String nameOfUniform) {
@@ -86,9 +85,7 @@ public class MeshRenderer extends Renderer {
         if (channelNumber > textures.length)
             return;
 
-        addTextureChannel(
-                glResources().addElementOrReturnIfPresent(Texture.class, new Texture(resources(), name), name),
-                nameOfUniform, channelNumber);
+        addTextureChannel(acquireTexture(name), nameOfUniform, channelNumber);
     }
 
     public void addTextureChannel(IRenderTextureBindable texture, String nameOfUniform, int channelNumber) {

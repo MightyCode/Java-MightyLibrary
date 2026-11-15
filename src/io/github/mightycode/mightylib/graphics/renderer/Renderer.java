@@ -8,6 +8,8 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
+import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.utils.math.UUID;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -102,6 +104,14 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
     protected final GLResources glResources() {
         return glResources;
+    }
+
+    /**
+     * The shared texture of the TextureData of this name, referenced (urgent) until released: an unknown name gives
+     * the fallback element of the textures, shared by every unknown name instead of a copy each.
+     */
+    protected final Texture acquireTexture(String name) {
+        return (Texture) glResources.acquire(resources.getResourceOrFallback(TextureData.class, name), true);
     }
 
     // The camera given to setReferenceCamera, null when the default camera of the view is used
