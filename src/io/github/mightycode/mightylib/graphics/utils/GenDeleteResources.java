@@ -14,7 +14,7 @@ import java.util.function.Function;
 import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.opengl.GL30.*;
 
-public abstract class GenDeleteResources {
+public final class GenDeleteResources {
     private static boolean Initialized = false;
     private static ArrayList<Integer> VBOs;
     private static ArrayList<Integer> EBOs;

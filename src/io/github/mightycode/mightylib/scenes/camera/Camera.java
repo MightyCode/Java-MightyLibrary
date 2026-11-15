@@ -19,7 +19,8 @@ public abstract class Camera extends UUID {
     private boolean shouldUpdateProjection;
     private boolean shouldUpdateView;
 
-    public Camera(WindowInfo windowInfo) {
+    // Package-private: the hierarchy is closed, its subclasses are in this package
+    Camera(WindowInfo windowInfo) {
         cameraId = CAMERA_COUNT++;
         name = "camera" + cameraId;
         this.windowInfo = windowInfo;

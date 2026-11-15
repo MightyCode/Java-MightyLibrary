@@ -5,7 +5,9 @@ import org.joml.Vector4f;
 
 import java.util.Locale;
 
-public abstract class Direction {
+public final class Direction {
+    private Direction() {}
+
     public static EDirection addToAnotherDirection(EDirection a, EDirection b) {
         if (a == EDirection.None) return b;
         else if (b == EDirection.None) return a;

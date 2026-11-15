@@ -14,6 +14,9 @@ import io.github.mightycode.mightylib.main.utils.GameTime;
  * (the stick fully pushed turns like the mouse moved 1500 pixels per second, 0.1 degree per pixel).
  */
 public abstract class AxisBinding implements IAxis {
+    // Package-private: the hierarchy is closed, its subclasses are in this package
+    AxisBinding() {}
+
     private float curve = 1;
     private float scale = 1;
     private boolean perSecond;

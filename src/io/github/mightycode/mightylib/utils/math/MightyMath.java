@@ -13,7 +13,7 @@ import java.util.ArrayList;
  * @author MightyCode
  * @version 1.0
  */
-public abstract class MightyMath {
+public final class MightyMath {
 	private MightyMath() {}
 
 	public static Vector3f LeftVector() { return new Vector3f(0, 0, -1); }

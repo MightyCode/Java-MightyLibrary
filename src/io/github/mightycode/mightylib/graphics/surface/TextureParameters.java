@@ -6,7 +6,9 @@ import static org.lwjgl.opengl.GL12.*;
 import static org.lwjgl.opengl.GL30.glGenerateMipmap;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
-public abstract class TextureParameters {
+public final class TextureParameters {
+    private TextureParameters() {}
+
     public static final int REALISTIC_PARAMETERS = 11848848;
     public static void realisticParameters(IGLBindable bindableObject){
         if (bindableObject.getTextureType() == GL_TEXTURE_RECTANGLE){

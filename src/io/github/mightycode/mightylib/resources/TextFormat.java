@@ -2,7 +2,9 @@ package io.github.mightycode.mightylib.resources;
 
 // Helpers for the line-based formats (.tileset, .tilemap, .anim, .atlas): every error is a
 // ResourceException naming the file and the line (1-based), never a raw NumberFormatException.
-public abstract class TextFormat {
+public final class TextFormat {
+    private TextFormat() {}
+
     public static ResourceException error(String path, int line, String message) {
         return new ResourceException("bad format in " + path + " (line " + line + "): " + message);
     }

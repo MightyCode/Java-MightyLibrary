@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D.heightMap;
 
-public abstract class HeightMapColorFunctions {
+public final class HeightMapColorFunctions {
     private HeightMapColorFunctions(){}
 
     public static HeightMapRenderer.IColorMapper HeightToColorDefault() {

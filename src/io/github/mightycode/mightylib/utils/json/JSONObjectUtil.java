@@ -2,7 +2,9 @@ package io.github.mightycode.mightylib.utils.json;
 
 import org.json.JSONObject;
 
-public abstract class JSONObjectUtil {
+public final class JSONObjectUtil {
+    private JSONObjectUtil() {}
+
     public static String convertJsonObjectToStringValue(JSONObject object, String field){
         Object obj = object.get(field);
         if (obj instanceof String)

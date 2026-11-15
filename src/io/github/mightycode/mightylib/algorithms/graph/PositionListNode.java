@@ -9,7 +9,8 @@ import org.joml.Vector4f;
  */
 public abstract class PositionListNode<T extends ListNode<?>> extends ListNode<T> {
 
-    public PositionListNode(long id) {
+    // Package-private: the hierarchy is closed, its subclasses are in this package
+    PositionListNode(long id) {
         super(id);
     }
 
