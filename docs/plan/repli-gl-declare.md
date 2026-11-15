@@ -98,3 +98,33 @@ Décisions prises :
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml repli-gl-declare`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait (un commit par étape)
+1. `MultiSourceDataType` : liste immuable, `markSourceRead`/`isSourceRead`/`unreadSources`, remise à zéro par `ResourceLoader.read`, échec `not read: …` (loader qui lève) ou `files not read: …` (loader qui oublie de marquer), `sourceFiles` dans `resources <Type> <nom>`.
+2. `IGLSharedState` + `GLResources.shared` ; `TexturePlaceholders` en est un et libère les PBO de `TextureUploader` (`loadingIdle`, `delete`).
+3. `DataType.glElementNeededBeforeDrawing` (vrai pour `FallbackShaderData`), `IGLElementSink.fallbackDataLoaded(Map<type du loader, donnée>)`, table des replis par type de donnée hors table par nom, `GLResources.fallback(type)`, `acquire` d'un repli, `Renderer` en cache ; `GLResources` n'importe plus ni shader ni texture (son constructeur ne prend plus `Resources`).
+4. `gl`/`gl summary` : `fallbacks` dans les `data`, nombre et échecs dans le message.
+5. Démo `LayeredTexture2D` (`mightylibdemo/resources` : `LayeredTextureData`, `LayeredTextureLoader`, `FallbackLayeredTextureData`, `LayeredImage`), batch `layered`, calques par `tools/generate_layers.py`.
+6. `resources/cubemap/` : `CubeMapData`, `CubeMapLoader` (optionnel, `LibraryLoaders.all()` et `DemoPlugin`), `FallbackCubeMapData`, `CubeMapTexture`, `CubeMapPlaceholders`.
+7. `SkyboxRenderer`, shader `skybox` (3_30), batch `skybox`, `tools/generate_skybox.py` et `resources/cubemaps/sky/`, skybox dans `TerrainGeneration3D`.
+8. Documents (ce plan gardé).
+
+### Écarts au plan et raison
+- `fallbackDataLoaded` reçoit une `Map` (type du loader → donnée), pas une `Collection` : la clé est nécessaire pour la règle du parent (la classe de la donnée de repli, `FallbackTextureData`, n'est pas celle du loader).
+- Ajout de `Texture.fallbackDataType()` (protégé) : la texture de l'image possédée par `LayeredTextureData` est une `Texture` sur une `TextureData` ; sans ce point d'accroche, une donnée en calques en échec aurait montré le damier et non ses rayures.
+- `MultiSourceDataType.validPaths()` est faux sans aucun chemin (donnée générée : repli des calques et des cubemaps) ; ajouté à l'étape 5, test dans `MultiSourceDataTest`.
+- Shader `skybox` **en 3_30 seulement** : `architecture.md` et `later.md` disent de ne plus rien ajouter en `1_40` (reste à retirer, contexte 3.3 core toujours demandé, et son `shaders.json` n'a pas de `tags`, que `ShaderLoader` exige). À trancher en discussion B si la version 140 est quand même voulue.
+- Faces de la skybox écrites dans la convention des cubemaps (texte en miroir sur les côtés, retourné dessus et dessous dans les fichiers) : le shader reste standard, les jeux d'images de skybox courants marchent tels quels.
+- Le rectangle de repli des polices lit toujours la donnée de repli de `TextureData` (`TexturePlaceholders.fallbackRectangleId`) : un seul utilisateur, pas de repli rectangle par type.
+
+### Vérifié et comment
+- `mvn -o -q test` : 1014 tests, 0 échec (nouveaux : `MultiSourceDataTest`, `GLResourcesFallbackTest`, tests d'état partagé de `GLResourcesTest`, `CubeMapLoaderTest`, `LayeredTextureLoaderTest`).
+- `scenario.py` : `Scene2D` (`gl summary`, `leakcheck`) ; `FallbackScene` (capture : damier et magenta, `leakcheck`) ; `Scene3D`, `Scene3DBis`, `Game3D2D` chargées sans ligne d'erreur ; `gl summary` liste les replis `CubeMapData`, `LayeredTextureData`, `TextureData`, `ShaderData` (seul `neededBeforeDrawing`) ; `LayeredTexture2D` (capture : personnage, rayures bleues, damier ; `?resources LayeredTextureData` avec `sourceFiles` ; calque remplacé pendant le jeu puis `reload LayeredTextureData hero` : version 2, chapeau changé ; `leakcheck`) ; `TerrainGeneration3D` (captures : horizon, RIGHT → FRONT et LEFT → BACK lisibles, TOP lisible ; face `right` remplacée pendant le jeu puis `reload CubeMapData sky` : version 2, face changée ; `leakcheck`).
+
+### À vérifier à la main
+- `FallbackScene` : damier et magenta comme avant.
+- `LayeredTexture2D` : personnage en calques, rayures bleues pour le nom inconnu, damier pour la texture inconnue ; modifier un calque (`resources/layered/hero/`) puis `reload LayeredTextureData hero` (ou l'observateur de fichiers).
+- `TerrainGeneration3D` : ciel, tourner la caméra (TAB libère la souris) : RIGHT, FRONT, LEFT, BACK dans cet ordre en tournant vers la droite, TOP lisible en regardant en haut ; le dessous est caché par les caisses.
+- `Scene3D`, `Scene3DBis`, `Game3D2D` inchangées.
+- GLSL 1_40 : non testable (contexte 3.3 core toujours demandé), et pas de shader `skybox` en 1_40 (voir écarts).
