@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.console.CommandEcho;
-import io.github.mightycode.mightylib.console.Console;
+import io.github.mightycode.mightylib.console.IConsoleService;
 import io.github.mightycode.mightylib.console.ConsoleLog;
 import io.github.mightycode.mightylib.console.LogCapture;
 import io.github.mightycode.mightylib.graphics.GLContext;
@@ -71,7 +71,6 @@ public final class Engine implements IView {
     private DebugServer debugServer;
     // Program output and commands: null without console nor debug mode
     private ConsoleLog consoleLog;
-    private Console console;
 
     private boolean glfwStarted;
     // A window that stops the engine was closed
@@ -111,8 +110,11 @@ public final class Engine implements IView {
     // The commands of the engine, the game and the views, created by setup
     public Commands commands() { return commands; }
 
-    // The in-game console, null without access to the commands (EngineConfig.setCommandAccess)
-    public Console console() { return console; }
+    // The in-game console (service mightylib:console), null without access to the commands
+    // (EngineConfig.setCommandAccess)
+    public IConsoleService console() {
+        return hasService(EngineServices.CONSOLE) ? service(EngineServices.CONSOLE) : null;
+    }
 
     // What the console shows: program output and commands of every source; null without console nor debug mode
     public ConsoleLog consoleLog() { return consoleLog; }
@@ -218,7 +220,7 @@ public final class Engine implements IView {
         // Before the window: a mistake of a plugin stops the engine before anything is opened
         System.out.println("--Register the plugins.");
         try {
-            registrations = EngineRegistry.Collect(new EnginePlugin(config, () -> shaderManager),
+            registrations = EngineRegistry.Collect(new EnginePlugin(config, () -> shaderManager, access != null),
                     config.getPlugins());
         } catch (RuntimeException e) {
             Logger.LogException("The registration of the plugins failed", e);
@@ -314,11 +316,6 @@ public final class Engine implements IView {
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
-
-        if (access != null) {
-            console = new Console(this, consoleLog, commands, config.getConsoleFont());
-            console.setLogsShown(config.isConsoleLogsShown());
-        }
 
         // Create all resources dependencies
         resources.init();
@@ -494,8 +491,6 @@ public final class Engine implements IView {
     // One tick of every context, then the inputs of every window
     void update() {
         // Before the scenes: the console captures the inputs and runs what is typed in this tick
-        if (console != null)
-            console.update();
         services.update();
 
         for (Context context : contexts.getContexts())
@@ -511,11 +506,9 @@ public final class Engine implements IView {
     // The frame is drawn and swapped, the events are read: a window can be drawn again from a callback
     boolean isPollingEvents() { return pollingEvents; }
 
-    // The overlays of the services over the main window, once its scene is drawn, then the console
+    // The overlays of the services (the console on top) over the main window, once its scene is drawn
     void displayOverlays() {
         services.displayOverlays();
-        if (console != null)
-            console.displayOverlay();
     }
 
     // Each window shows its view
@@ -557,8 +550,7 @@ public final class Engine implements IView {
         WindowContext mainWindow = contexts.getMainWindow();
         if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated()) {
             mainWindow.getWindow().bindWindow();
-            if (console != null)
-                console.unload();
+            // The sources of the sound, the GL objects of the console
             if (services != null)
                 services.unload();
         }

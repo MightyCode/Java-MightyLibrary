@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
-import io.github.mightycode.mightylib.console.Console;
+import io.github.mightycode.mightylib.console.IConsoleService;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -78,7 +78,7 @@ public class ConsoleFeedScene extends Scene {
                 System.err.println("-- Feed " + counter + ": program error (System.err)");
                 break;
             case 2:
-                Console console = engine().console();
+                IConsoleService console = engine().console();
                 if (console != null)
                     console.print("Feed " + counter + ": message of the game");
                 break;

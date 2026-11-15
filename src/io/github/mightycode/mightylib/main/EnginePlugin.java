@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.console.Console;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
@@ -24,17 +25,20 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
 
 /**
  * The content of the engine, registered like the one of any plugin, before them: mandatory loaders, general commands,
- * actions of the console with their keys, services (sound).
+ * actions of the console with their keys, services (sound, console).
  * A later plugin replaces an entry with replace.
  */
 final class EnginePlugin implements IPlugin {
     private final EngineConfig config;
     // Created with the window, after the registration: read by the loader of the shaders when it works
     private final Supplier<ShaderManager> shaderManager;
+    // The player has an access to the commands (EngineConfig.getCommandAccess, resolved once)
+    private final boolean console;
 
-    EnginePlugin(EngineConfig config, Supplier<ShaderManager> shaderManager) {
+    EnginePlugin(EngineConfig config, Supplier<ShaderManager> shaderManager, boolean console) {
         this.config = config;
         this.shaderManager = shaderManager;
+        this.console = console;
     }
 
     @Override
@@ -59,6 +63,14 @@ final class EnginePlugin implements IPlugin {
         registry.services().register(EngineServices.SOUND,
                         engine -> OpenALSoundService.Open(engine.resources(), GainTreeFile(engine)))
                 .fallback(SilentSound());
+
+        if (console) {
+            registry.services().register(EngineServices.CONSOLE, engine -> {
+                Console created = new Console(engine, engine.consoleLog(), engine.commands(), config.getConsoleFont());
+                created.setLogsShown(config.isConsoleLogsShown());
+                return created;
+            });
+        }
     }
 
     // The silent sound: fallback of the OpenAL one, forced by -Dmightylib.sound=silent
