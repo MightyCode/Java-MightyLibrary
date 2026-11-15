@@ -45,7 +45,6 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
-- `MeshRenderer.addTextureChannel(nom, uniform, canal)` ne fait rien tant qu'aucun canal n'a été ajouté par l'autre surcharge (`textures == null` → retour immédiat ; le tableau n'est créé que par `addTextureChannel(IRenderTextureBindable, …)`).
 - `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 
 ## Bibliothèque réutilisable
@@ -180,7 +179,6 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
 
 - **`Material` partageable** : programme, valeurs d'uniform et `RenderState` (regroupés dans `Renderer`) extraits en un objet partagé entre renderers, avec une clé de tri pour le regroupement des dessins ; partage d'un `Mesh` entre renderers (possession, compteur de références).
 - **État de dessin à étendre** : blend par renderer, cache des `glEnable`/`glDisable` redondants dans `GLContext` ; attributs nommés (en plus des canaux) si besoin.
-- Bugs connus : `Renderer.updateShaderValue` sur une valeur absente lève une `NullPointerException` ; `Shape2DRenderer.setTexturePosition` ne marque pas la texture à renvoyer (il faut appeler `updateShapeTexture()`).
 
 ## Rendu SVG
 Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et anticrénelage communs).

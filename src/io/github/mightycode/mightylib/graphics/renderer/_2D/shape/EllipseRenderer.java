@@ -58,6 +58,7 @@ public class EllipseRenderer extends RectangleRenderer {
         return this;
     }
 
+    @Override
     public EllipseRenderer setReferenceDirection(EDirection reference) {
         super.setReferenceDirection(reference);
         updateValues();
