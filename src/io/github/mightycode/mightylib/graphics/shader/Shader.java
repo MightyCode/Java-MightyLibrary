@@ -312,7 +312,7 @@ public class Shader extends GLElement {
     public void sendValueToShader(ShaderValue value) {
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        if (lastValue != null && value.hasSameValue(lastValue) &&!value.shouldForceUpdate())
+        if (lastValue != null && value.hasSameValue(lastValue) && !value.shouldForceUpdate())
             return;
 
         value.resetForceUpdate();
