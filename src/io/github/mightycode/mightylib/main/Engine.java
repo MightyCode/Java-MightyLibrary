@@ -25,6 +25,10 @@ import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
+import io.github.mightycode.mightylib.services.IEngineService;
+import io.github.mightycode.mightylib.services.RunningService;
+import io.github.mightycode.mightylib.services.ServiceKey;
+import io.github.mightycode.mightylib.services.ServiceSet;
 import io.github.mightycode.mightylib.sounds.SoundManager;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
@@ -36,6 +40,7 @@ import org.joml.Vector2i;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -61,6 +66,8 @@ public final class Engine implements IView {
     private SoundManager soundManager;
     private SceneManager sceneManager;
     private Commands commands;
+    // The services registered by the plugins, created by setup; null before
+    private ServiceSet services;
     private DebugServer debugServer;
     // Program output and commands: null without console nor debug mode
     private ConsoleLog consoleLog;
@@ -108,6 +115,25 @@ public final class Engine implements IView {
 
     // What the console shows: program output and commands of every source; null without console nor debug mode
     public ConsoleLog consoleLog() { return consoleLog; }
+
+    /**
+     * The service of this key, as its contract.
+     * @throws IllegalArgumentException if no service has this key: test an optional one with hasService
+     */
+    public <T extends IEngineService> T service(ServiceKey<T> key) {
+        if (services == null)
+            throw new IllegalArgumentException("No service " + key + ": the engine is not started");
+        return services.get(key);
+    }
+
+    public boolean hasService(ServiceKey<?> key) {
+        return services != null && services.has(key);
+    }
+
+    // The services created, in their order of creation (empty before the start)
+    public List<RunningService> services() {
+        return services == null ? Collections.emptyList() : services.running();
+    }
 
     // ---- IView: the code outside any scene runs for the main window, without cameras ----
 
@@ -277,6 +303,12 @@ public final class Engine implements IView {
         commands.setViewChooser(this::targetedView);
         if (consoleLog != null)
             commands.addListener(new CommandEcho(consoleLog));
+
+        // After the resources and the commands, before the scenes: they can use the services
+        System.out.println("--Create the services");
+        services = new ServiceSet();
+        if (!services.create(this, registrations.services()))
+            return ListError.SERVICE_FAIL;
 
         System.out.println("--Create SceneManager");
         sceneManager = new SceneManager(this, mainContext, true, config.getLoadingScene());
@@ -463,11 +495,13 @@ public final class Engine implements IView {
         // Before the scenes: the console captures the inputs and runs what is typed in this tick
         if (console != null)
             console.update();
+        services.update();
 
         for (Context context : contexts.getContexts())
             context.update();
 
         soundManager.lateUpdate();
+        services.lateUpdate();
         contexts.postUpdate();
 
         for (Context context : contexts.getContexts())
@@ -477,8 +511,9 @@ public final class Engine implements IView {
     // The frame is drawn and swapped, the events are read: a window can be drawn again from a callback
     boolean isPollingEvents() { return pollingEvents; }
 
-    // The console over the main window, once its scene is drawn
-    void displayConsoleOverlay() {
+    // The overlays of the services over the main window, once its scene is drawn, then the console
+    void displayOverlays() {
+        services.displayOverlays();
         if (console != null)
             console.displayOverlay();
     }
@@ -528,6 +563,8 @@ public final class Engine implements IView {
             mainWindow.getWindow().bindWindow();
             if (console != null)
                 console.unload();
+            if (services != null)
+                services.unload();
         }
 
         if (resources != null)
@@ -549,6 +586,8 @@ public final class Engine implements IView {
             if (callback != null)
                 callback.free();
         }
+        if (services != null)
+            services.close();
         if (soundManager != null)
             soundManager.unload();
 

@@ -228,11 +228,11 @@ public final class Context implements IView {
         }
     }
 
-    // The scene, then the console over the main window of the main context
+    // The scene, then the overlays of the services (the console) over the main window of the main context
     private void displayMainWindow() {
         sceneManager.display();
         if (main)
-            engine.displayConsoleOverlay();
+            engine.displayOverlays();
     }
 
     /**
