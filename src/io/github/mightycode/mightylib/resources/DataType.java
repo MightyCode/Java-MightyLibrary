@@ -275,7 +275,7 @@ public abstract class DataType extends UUID implements LoadingElement {
     }
 
     // One writer (the main thread): the increment needs no atomic operation
-    @SuppressWarnings("NonAtomicOperationOnVolatileField")
+    @SuppressWarnings({"NonAtomicOperationOnVolatileField", "NonAtomicVolatileUpdate"})
     private void nextVersion() {
         ++version;
     }

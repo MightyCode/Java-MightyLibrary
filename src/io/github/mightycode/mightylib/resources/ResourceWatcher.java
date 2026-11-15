@@ -184,7 +184,9 @@ public final class ResourceWatcher {
         return false;
     }
 
-    // Watcher thread, at every check (changes may be empty): Resources.reload hands over to the main thread
+    // Watcher thread, at every check (changes may be empty): Resources.reload hands over to the main thread.
+    // The watcher thread is the only writer of reloadCount: its increment needs no atomic operation.
+    @SuppressWarnings("NonAtomicVolatileUpdate")
     private void filesChanged(List<Path> files) {
         long now = System.currentTimeMillis();
         Map<Path, List<DataType>> byPath = dataByPath;
