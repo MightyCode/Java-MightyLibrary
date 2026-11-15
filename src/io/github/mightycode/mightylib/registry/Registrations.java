@@ -4,6 +4,9 @@ import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
+import io.github.mightycode.mightylib.services.ServiceDeclaration;
+import io.github.mightycode.mightylib.services.ServiceKey;
+import io.github.mightycode.mightylib.services.ServiceOrder;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 
 import java.util.ArrayList;
@@ -21,12 +24,14 @@ public final class Registrations {
     final Entries<Identifier, BaseCommand> commands = new Entries<>("Command", Identifier::toString);
     final Entries<Identifier, InputsSection.Input> inputs = new Entries<>("Input", Identifier::toString);
     final Entries<Identifier, ScenesSection.SceneEntry> scenes = new Entries<>("Scene", Identifier::toString);
+    final Entries<ServiceKey<?>, ServiceDeclaration<?>> services = new Entries<>("Service", ServiceKey::toString);
     final LifecycleHooks lifecycle = new LifecycleHooks();
 
     private boolean frozen;
     // Built at the freeze
     private InputRegistry inputRegistry;
     private SceneRegistry sceneRegistry;
+    private List<ServiceDeclaration<?>> serviceOrder = Collections.emptyList();
 
     Registrations() {}
 
@@ -48,6 +53,8 @@ public final class Registrations {
         for (ScenesSection.SceneEntry scene : scenes.values())
             sceneRegistry.declare(scene.identifier, scene.type, scene.factory, scene.description);
         sceneRegistry.freeze();
+
+        serviceOrder = ServiceOrder.Sort(services.values());
 
         frozen = true;
     }
@@ -79,6 +86,11 @@ public final class Registrations {
     // The scenes of every plugin by name, frozen; null before the freeze
     public SceneRegistry scenes() {
         return sceneRegistry;
+    }
+
+    // The services of every plugin in their order of creation (dependencies first), frozen; empty before the freeze
+    public List<ServiceDeclaration<?>> services() {
+        return serviceOrder;
     }
 
     // The hooks of every plugin on the life of the engine, in the order of the plugins
