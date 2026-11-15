@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -117,9 +118,23 @@ public abstract class ResourceLoader {
         } else if (dataType instanceof MultiSourceDataType) {
             MultiSourceDataType multiSourceDataType = (MultiSourceDataType) dataType;
             if (multiSourceDataType.validPaths())
-                initWithFile(multiSourceDataType);
+                readSources(multiSourceDataType);
         } else {
             initWithFile(dataType);
         }
+    }
+
+    // Every file must be marked read by the loader: a failure names those it did not read
+    private void readSources(MultiSourceDataType data) {
+        data.resetSourcesRead();
+        try {
+            initWithFile(data);
+        } catch (ResourceException e) {
+            throw new ResourceException(e.getMessage() + " (not read: " + String.join(", ", data.unreadSources()) + ")");
+        }
+
+        List<String> unread = data.unreadSources();
+        if (!unread.isEmpty())
+            throw new ResourceException("files not read: " + String.join(", ", unread));
     }
 }
