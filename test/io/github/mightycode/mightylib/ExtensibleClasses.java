@@ -25,7 +25,15 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.resources.ResourceLoader",
             "io.github.mightycode.mightylib.resources.texture.TextureData",
             "io.github.mightycode.mightylib.graphics.GLElement",
-            "io.github.mightycode.mightylib.resources.texture.Texture"
+            "io.github.mightycode.mightylib.resources.texture.Texture",
+            // Commands and GUI
+            "io.github.mightycode.mightylib.utils.enginecommand.BaseCommand",
+            "io.github.mightycode.mightylib.graphics.GUI.GUI",
+            "io.github.mightycode.mightylib.graphics.GUI.Slider",
+            "io.github.mightycode.mightylib.graphics.GUI.ValueSelector",
+            // Open to the projects, EXPERIMENTAL
+            "io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage",
+            "io.github.mightycode.mightylib.physics.tweenings.Tweening"
     );
 
     private ExtensibleClasses() {}

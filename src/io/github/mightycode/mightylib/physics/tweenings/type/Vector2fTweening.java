@@ -25,7 +25,7 @@ public class Vector2fTweening extends Tweening<Vector2f> {
 
         updateBase();
 
-        if (inverseThisFrame){
+        if (isInverseThisFrame()){
             beginningValue = this.endingValue;
             valuesRange = new Vector2f(valuesRange).mul(-1f);
         }

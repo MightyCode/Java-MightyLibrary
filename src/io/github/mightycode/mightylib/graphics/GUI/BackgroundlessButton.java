@@ -54,7 +54,7 @@ public class BackgroundlessButton extends GUI {
      * turned with the text when it is rotated.
      */
     public boolean GUIMouseSelected(){
-        Vector2f mouse = referenceCamera.transformPosition(context.getMouseManager().pos());
+        Vector2f mouse = referenceCamera().transformPosition(context.getMouseManager().pos());
         Vector3f origin = text.position();
 
         // The mouse relative to the point the text turns around, back in the frame of the unrotated text

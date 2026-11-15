@@ -9,7 +9,10 @@ import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;
 
 /**
- * Abstract slider which can be used to create all customs slider.
+ * A bar and a button dragged along it, between a minimum and a maximum value. A subclass gives the direction
+ * (HorizontalSlider, VerticalSlider): its hooks place and size the bar and the button and convert the position of
+ * the button to a value. The size and position hooks are called by the constructor: the fields of the subclass are
+ * not set yet.
  */
 public abstract class Slider {
     private static final int MAX_DIGIT_PRECISION = 9;
@@ -74,11 +77,11 @@ public abstract class Slider {
         setValue(minValue);
     }
 
-    public void init(InputAction clickActionId){
+    public final void init(InputAction clickActionId){
         this.clickActionId = clickActionId;
     }
 
-    public void update(){
+    public final void update(){
         if (inputManager.inputPressed(clickActionId)){
             Vector2f position = referenceCamera.transformPosition(mouseManager.pos());
 
@@ -111,11 +114,12 @@ public abstract class Slider {
     }
 
 
-    public void display(){
+    public final void display(){
         bar.display();
         button.display();
     }
 
+    // Hooks called by the constructor: size and place the bar and the button from the slider's
     protected abstract void setBarSize(RectangleRenderer bar, Vector2f sliderSize);
 
     protected abstract void setBarPosition(RectangleRenderer bar, Vector2f sliderPosition, Vector2f sliderSize);
@@ -124,20 +128,23 @@ public abstract class Slider {
 
     protected abstract void setBasicButtonPosition(RectangleRenderer button, Vector2f sliderPosition, Vector2f sliderSize);
 
+    // Hook: places the button for getCurrentValue() (setValue, invertMinMax)
     protected abstract void setButtonPositionWithCurrentValue(RectangleRenderer button, Vector2f buttonBoundaries);
 
-    public void setValue(double value){
+    public final void setValue(double value){
         currentValue = Math.min(Math.max(minValue, value), maxValue);
 
         setButtonPositionWithCurrentValue(button, buttonBoundaries);
     }
 
+    // Hook: the value at the position of the button, while it is dragged
     protected abstract double returnCurrentValue(RectangleRenderer button, Vector2f buttonBoundaries);
 
+    // Hook: moves the button to the mouse, within the boundaries, while it is dragged
     protected abstract void setButtonPositionDrag(RectangleRenderer button,
                                                   Vector2f buttonBoundaries, Vector2f mousePosition);
 
-    public void invertMinMax(){
+    public final void invertMinMax(){
         double temp = minValue;
         minValue = maxValue;
         maxValue = temp;
@@ -145,31 +152,31 @@ public abstract class Slider {
         setButtonPositionWithCurrentValue(button, buttonBoundaries);
     }
 
-    public void setMaxPrecision(int value){
+    public final void setMaxPrecision(int value){
         maxPrecision = CapPrecision(value);
     }
 
-    public int getMaxPrecision(){
+    public final int getMaxPrecision(){
         return maxPrecision;
     }
 
-    public double getCurrentValue(){
+    public final double getCurrentValue(){
         return currentValue;
     }
 
-    public double getMaxValue(){
+    public final double getMaxValue(){
         return maxValue;
     }
 
-    public double getMinValue(){
+    public final double getMinValue(){
         return minValue;
     }
 
-    public boolean isGettingDragged() {
+    public final boolean isGettingDragged() {
         return isDragging;
     }
 
-    public void unload(){
+    public final void unload(){
         bar.unload();
         button.unload();
     }

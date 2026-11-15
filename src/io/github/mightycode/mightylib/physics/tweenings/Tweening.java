@@ -2,7 +2,16 @@ package io.github.mightycode.mightylib.physics.tweenings;
 
 import io.github.mightycode.mightylib.utils.Timer;
 import io.github.mightycode.mightylib.physics.tweenings.tweeningmath.*;
+import org.apiguardian.api.API;
 
+import static org.apiguardian.api.API.Status.EXPERIMENTAL;
+
+/**
+ * A value going from a start to an end over a duration, along a curve (type, behaviour) and an option (direct,
+ * mirrored, reversed, loop). A subclass for a type of value has the hooks update (updateBase, then compute), value,
+ * goalValue, initTwoValue and initRangeValue. Open to the projects, its contract may still change (EXPERIMENTAL).
+ */
+@API(status = EXPERIMENTAL)
 public abstract class Tweening<T> {
     /**
      *
@@ -76,8 +85,13 @@ public abstract class Tweening<T> {
     private Float additionalValue1;
     private Float additionalValue2;
 
-    protected float timeValueForFrame;
-    protected boolean inverseThisFrame;
+    private float timeValueForFrame;
+    private boolean inverseThisFrame;
+
+    // The tweening goes back this frame (mirrored option)
+    protected final boolean isInverseThisFrame() {
+        return inverseThisFrame;
+    }
 
     public Tweening(){
         type = ETweeningType.Linear;
@@ -91,7 +105,8 @@ public abstract class Tweening<T> {
     }
 
 
-    protected void updateBase(){
+    // Advances the time; a subclass calls it at the start of update, then reads value() (or isInverseThisFrame())
+    protected final void updateBase(){
         this.timer.update();
 
         if (this.timer.isFinished()){

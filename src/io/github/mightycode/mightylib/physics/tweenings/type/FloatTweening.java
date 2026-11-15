@@ -24,7 +24,7 @@ public class FloatTweening extends Tweening<Float> {
 
        updateBase();
 
-       if (inverseThisFrame){
+       if (isInverseThisFrame()){
            beginningValue = this.endingValue;
            valuesRange = -valuesRange;
        }

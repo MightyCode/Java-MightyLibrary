@@ -126,7 +126,7 @@ public class TextField extends GUI {
 
     // The cursor of the window in the virtual space of the GUI, whatever the focus
     private Vector2f mouse() {
-        return referenceCamera.transformPosition(context.getMouseManager().getRawVirtualPos());
+        return referenceCamera().transformPosition(context.getMouseManager().getRawVirtualPos());
     }
 
     private boolean isInside(Vector2f point) {
@@ -156,7 +156,7 @@ public class TextField extends GUI {
     public boolean GUIMouseSelected() {
         // Hidden by the focus of another owner: not over the field then
         MouseManager mouse = context.getMouseManager();
-        return !mouse.isCaptured() && isInside(referenceCamera.transformPosition(mouse.pos()));
+        return !mouse.isCaptured() && isInside(referenceCamera().transformPosition(mouse.pos()));
     }
 
     @Override
