@@ -9,6 +9,9 @@ import org.json.JSONObject;
 import java.util.*;
 
 public class WaveCollapseRules extends DataType {
+    // The keys of the root that are not tile rules
+    private static final Set<String> RESERVED_KEYS = Set.of("info", "initial");
+
     private JSONFile data;
 
     public static class Rule {
@@ -140,13 +143,18 @@ public class WaveCollapseRules extends DataType {
         initialRule = new Rule(-1);
 
         for (String key : root.keySet()){
-            try {
-                int id = Integer.parseInt(key);
-                Rule rule = new Rule(id);
-                ++numberRuledTiles;
+            if (RESERVED_KEYS.contains(key))
+                continue;
 
-                rules.put(id, rule);
-            } catch (NumberFormatException ignored) {}
+            Integer id = TileId(key);
+            if (id == null) {
+                System.err.println("--Wave collapse rules " + getDataName() + ": the key \"" + key
+                        + "\" is not a tile id, ignored");
+                continue;
+            }
+
+            rules.put(id, new Rule(id));
+            ++numberRuledTiles;
         }
 
         initialRule.addDirection(Rule.INITIAL_POS);
@@ -167,40 +175,49 @@ public class WaveCollapseRules extends DataType {
 
         // Add all rules
         for (String key : root.keySet()){
-            try {
-                int id = Integer.parseInt(key);
+            // The keys that are not tile ids were reported when the rules were created
+            Integer id = RESERVED_KEYS.contains(key) ? null : TileId(key);
+            if (id == null)
+                continue;
 
-                // Add all directions
-                JSONArray dependencyList = root.getJSONObject(key).getJSONArray("list");
+            // Add all directions
+            JSONArray dependencyList = root.getJSONObject(key).getJSONArray("list");
 
-                for (int i = 0; i < dependencyList.length(); ++i){
-                    JSONObject dependency = dependencyList.getJSONObject(i);
-                    List<Vector2i> directions = new ArrayList<>();
+            for (int i = 0; i < dependencyList.length(); ++i){
+                JSONObject dependency = dependencyList.getJSONObject(i);
+                List<Vector2i> directions = new ArrayList<>();
 
-                    if (dependency.keySet().contains("directions")){
-                        JSONArray directionsArray = dependency.getJSONArray("directions");
+                if (dependency.keySet().contains("directions")){
+                    JSONArray directionsArray = dependency.getJSONArray("directions");
 
-                        for (int j = 0; j < directionsArray.length(); ++j){
-                            JSONArray directionObject = directionsArray.getJSONArray(j);
-
-                            directions.add(new Vector2i(directionObject.getInt(0), directionObject.getInt(1)));
-                        }
-                    } else if (dependency.keySet().contains("direction")){
-                        JSONArray directionObject = dependency.getJSONArray("direction");
+                    for (int j = 0; j < directionsArray.length(); ++j){
+                        JSONArray directionObject = directionsArray.getJSONArray(j);
 
                         directions.add(new Vector2i(directionObject.getInt(0), directionObject.getInt(1)));
                     }
+                } else if (dependency.keySet().contains("direction")){
+                    JSONArray directionObject = dependency.getJSONArray("direction");
 
-                    Set<Integer> available = makeAvailableList(dependency.getJSONObject("available"));
-
-                    for (Vector2i directionsPos : directions){
-                        Rule rule = rules.get(id);
-                        rule.addDirection(directionsPos);
-                        rule.addAvailableIds(directionsPos, available);
-                    }
+                    directions.add(new Vector2i(directionObject.getInt(0), directionObject.getInt(1)));
                 }
 
-            } catch (NumberFormatException ignored) {}
+                Set<Integer> available = makeAvailableList(dependency.getJSONObject("available"));
+
+                for (Vector2i directionsPos : directions){
+                    Rule rule = rules.get(id);
+                    rule.addDirection(directionsPos);
+                    rule.addAvailableIds(directionsPos, available);
+                }
+            }
+        }
+    }
+
+    // The tile id written in a key, null when the key is not a number
+    static Integer TileId(String key) {
+        try {
+            return Integer.parseInt(key.trim());
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

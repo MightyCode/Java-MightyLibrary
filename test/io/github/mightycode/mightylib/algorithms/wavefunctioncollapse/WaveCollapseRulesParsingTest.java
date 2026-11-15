@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.algorithms.wavefunctioncollapse;
 
+import io.github.mightycode.mightylib.algorithms.OutputCapture;
 import io.github.mightycode.mightylib.resources.data.JSONFile;
 import org.joml.Vector2i;
 import org.json.JSONObject;
@@ -51,6 +52,31 @@ class WaveCollapseRulesParsingTest {
         assertTrue(rules.getRule(1).getDirections().isEmpty());
         assertEquals(set(0, 2), rules.getRule(2).getAvailableIds(LEFT));
         assertNull(rules.getRule(7), "a tile without rule");
+    }
+
+    @Test
+    void aKeyThatIsNotATileIdIsReportedAndIgnored() {
+        WaveCollapseRules rules = rules("{\"info\":{\"tileset\":\"t\",\"type\":\"list\"},\"initial\":{\"all\":true},"
+                + "\"0\":{\"list\":[]},\"12a\":{\"list\":[]}}");
+        String errors = OutputCapture.errorsOf(() -> assertTrue(rules.internLoad()));
+
+        assertEquals(1, rules.getNumberRuledTiles());
+        assertEquals(1, OutputCapture.lines(errors), errors);
+        assertTrue(errors.contains("\"12a\""), errors);
+    }
+
+    @Test
+    void theReservedKeysAreNotReported() {
+        WaveCollapseRules rules = rules("{\"info\":{\"tileset\":\"t\",\"type\":\"list\"},\"initial\":{\"all\":true},"
+                + "\"0\":{\"list\":[]}}");
+        assertEquals("", OutputCapture.errorsOf(() -> assertTrue(rules.internLoad())));
+    }
+
+    @Test
+    void tileIdsAreReadFromTheKeys() {
+        assertEquals(12, WaveCollapseRules.TileId("12"));
+        assertEquals(-3, WaveCollapseRules.TileId("-3"));
+        assertNull(WaveCollapseRules.TileId("info"));
     }
 
     @Test
