@@ -82,11 +82,14 @@ public final class PointLight extends BasicMaterial {
         }
     }
 
+    // A point light with the same settings and its own vectors (LightDecrease is immutable: shared)
     @Override
     public PointLight clone(){
-        if (this.shouldUseDistance)
-            return new PointLight(super.clone(), lightDecrease);
+        PointLight copy = new PointLight(cloneBasicMaterial(), lightDecrease);
+        copy.position = position == null ? null : new Vector3f(position);
+        copy.shouldUseDistance = shouldUseDistance;
+        copy.currentNumber = currentNumber;
 
-        return new PointLight(super.clone());
+        return copy;
     }
 }

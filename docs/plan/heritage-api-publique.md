@@ -125,7 +125,7 @@ Pas de nouvelle scène : la démo entière est le test (elle compile, n'utilise 
 - Restent redéfinissables des méthodes que des sous-classes de la bibliothèque redéfinissent : `Renderer.setPosition`, `setRotationZ`, `position`, `setColorMode`, `setNoColorNoTextureMode`, `setFaceCulling` ; `Shape2DRenderer.setSizePix(l, h)`, `setPosition(Vector2f)`, `setReferenceDirection` ; `Mesh.unload`.
 - Seconde liste `ExtensibleClasses.EXTENDED_BY_THE_LIBRARY` (non prévue) : classes publiques concrètes que la bibliothèque ou ses tests étendent sans en faire un contrat (replis de `Shader`, `ShaderData`, `CubeMapData`, `Model`, `AnimationData`, `SoundData`, `JSONFile` ; `CommandException` ; `MouseManager` (souris des tests) ; `RectangleRenderer`, `Camera2D`, `BasicMaterial`, `NodeContainer`, `UUID`). Les constructeurs de `Shader`, `CubeMapData`, `Model` sont devenus package-private.
 - Tests adaptés aux classes devenues `final` : `InputRegistryTest` (un `IAction` anonyme), `CollisionRectangleTest` (un `Collision2D` anonyme du même package), `TileMapTest` (test d'une sous-classe de `TileMap` retiré, `createReloadCopy` simplifié).
-- Bug noté dans `later.md`, non corrigé : `SpotLight.clone()` renvoie une `PointLight`.
+- Corrigé en plus, à la demande de l'utilisateur : `SpotLight.clone()` renvoyait une `PointLight` ; les clones de `SpotLight`, `PointLight` et `DirectionalLight` gardent leurs réglages (position, angles, distance, numéro) et ont leurs propres vecteurs (`LightCloneTest`).
 
 ### Vérifié et comment
 - `mvn -o -q test` à chaque étape (1030 tests, tous verts à la fin).
