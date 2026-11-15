@@ -1,0 +1,12 @@
+{
+    "batchs" : [
+        {
+            "type" : "CubeMapData",
+            "files" : [
+                "sky"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}

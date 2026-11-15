@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.graphics.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -11,10 +12,11 @@ import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 /**
- * GL textures bound in place of a texture that is not loaded yet (draws nothing instead of failing) or that failed.
- * Owned by GLResources, created at the first use, deleted with it. Main thread only.
+ * State shared by the textures (GLResources.shared): the GL textures bound in place of a texture that is not loaded
+ * yet (draws nothing instead of failing) or that failed, created at the first use; and the pixel buffers of
+ * TextureUploader, freed once nothing is left to send. Deleted with GLResources. Main thread only.
  */
-public final class TexturePlaceholders {
+public final class TexturePlaceholders implements IGLSharedState {
     private int placeholderId = -1;
     private int fallbackRectangleId = -1;
 
@@ -54,7 +56,15 @@ public final class TexturePlaceholders {
         return fallbackRectangleId;
     }
 
+    @Override
+    public void loadingIdle() {
+        TextureUploader.releaseBuffers();
+    }
+
+    @Override
     public void delete() {
+        TextureUploader.releaseBuffers();
+
         if (placeholderId != -1) {
             GenDeleteResources.DeleteTexture(placeholderId);
             placeholderId = -1;

@@ -24,7 +24,8 @@ public class GLGenCom extends BaseCommand {
 
     public GLGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,
-                "Number of OpenGL objects alive by type, and elements shared by GLResources with their references");
+                "Number of OpenGL objects alive by type, elements shared by GLResources with their references,"
+                        + " and the elements of the fallback data");
     }
 
     @Override
@@ -88,15 +89,36 @@ public class GLGenCom extends BaseCommand {
         }
         data.put("glContexts", glContexts);
         JSONObject shared = Views.engine().glResources().describe();
+        // Data type, element type, neededBeforeDrawing, state ("loaded", "waiting", "failed")
+        JSONArray fallbacks = Views.engine().glResources().describeFallbacks();
+        data.put("fallbacks", fallbacks);
+        String fallbackMessage = describeFallbacks(fallbacks);
 
         if (summary) {
             data.put("sharedElements", summarize(shared));
-            return CommandResult.ok("OpenGL objects alive, shared elements and references by type", data);
+            return CommandResult.ok("OpenGL objects alive, shared elements and references by type; " + fallbackMessage, data);
         }
 
         data.put("sharedElements", shared);
 
-        return CommandResult.ok("OpenGL objects alive and shared elements with their number of references", data);
+        return CommandResult.ok("OpenGL objects alive and shared elements with their number of references; "
+                + fallbackMessage, data);
+    }
+
+    // Their number, and the data types of those that failed
+    private static String describeFallbacks(JSONArray fallbacks) {
+        StringBuilder failed = new StringBuilder();
+        for (int i = 0; i < fallbacks.length(); ++i) {
+            JSONObject fallback = fallbacks.getJSONObject(i);
+            if (!"failed".equals(fallback.getString("state")))
+                continue;
+
+            if (failed.length() > 0)
+                failed.append(", ");
+            failed.append(fallback.getString("dataType"));
+        }
+
+        return fallbacks.length() + " fallback element(s)" + (failed.length() > 0 ? ", failed: " + failed : "");
     }
 
     // By type: "elements/references" instead of every element

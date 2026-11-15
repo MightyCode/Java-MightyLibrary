@@ -43,6 +43,13 @@
 			],
 			"tags" : ["3D"]
 		},
+		"skybox": {
+			"files": [
+				"3D/skybox/skyboxV.glsl",
+				"3D/skybox/skyboxF.glsl"
+			],
+			"tags" : ["3D"]
+		},
 		"texture3D": {
 			"files": [
 				"3D/essential/texture3DV.glsl",

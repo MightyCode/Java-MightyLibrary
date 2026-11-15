@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.models.Model;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
 import io.github.mightycode.mightylib.resources.texture.Texture;
@@ -158,11 +159,9 @@ public class ModelRenderer extends Renderer {
         upload.sendAgain();
     }
 
+    // No texture: the fallback one
     private Texture takeTexture(String name) {
-        if (name == null)
-            name = "error";
-
-        return glResources().addElementOrReturnIfPresent(Texture.class, new Texture(name), name);
+        return acquireTexture(name != null ? name : Resources.FALLBACK_NAME);
     }
 
     /**

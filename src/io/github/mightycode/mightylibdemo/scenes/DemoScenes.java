@@ -56,6 +56,7 @@ public final class DemoScenes {
             scene(GamepadScene.class, GamepadScene::new, "One square per player, moved by the sticks of up to four gamepads, with the list of the buttons and axes."),
             scene(GLLoading.class, GLLoading::new, "Loads several big generated textures, sent to the GPU by strips with the time left in each frame, so the game keeps running."),
             scene(GUIWidgetsScene.class, GUIWidgetsScene::new, "Sliders, a selector, a shaking effect and a positional sound that follows a moving square."),
+            scene(LayeredTexture2D.class, LayeredTexture2D::new, "A data read from several files with its own fallback: a character made of stacked layers, an unknown layered picture (blue stripes, not the checkerboard) and an unknown texture."),
             scene(MultiWindowScene.class, MultiWindowScene::new, "Several windows: a dialog that blocks the main one, a tool window and a second context with its own scene."),
             scene(PathfindingScene2D.class, PathfindingScene2D::new, "Graph, Dijkstra and A*: paint walls with the mouse, move the start and the end, and see the shortest path."),
             scene(PlatformerBox2D.class, PlatformerBox2D::new, "A platformer: a player controlled on JBox2D physics."),

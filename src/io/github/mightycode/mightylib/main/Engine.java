@@ -281,7 +281,7 @@ public final class Engine implements IView {
         }
 
         // The batches send the GL elements of their data (textures) during the loading
-        glResources = new GLResources(resources, config.getMaxGLUploadMillisecondsPerFrame());
+        glResources = new GLResources(config.getMaxGLUploadMillisecondsPerFrame());
         resources.setGLElementSink(glResources);
         TextureUploader.setMode(config.getTextureUpload());
 

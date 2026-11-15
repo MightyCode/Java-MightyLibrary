@@ -8,6 +8,8 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
+import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.utils.math.UUID;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -44,6 +46,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
     // Program of the shader, held (urgent reference) until unload
     private final Shader shader;
+    // Drawn with while shader is not linked, cached at the first use (see getShader)
+    private Shader fallbackShader;
     private boolean shaderReleased;
     // Depth and culling of each draw, by default from the tag of the shader (2D: no depth)
     private final RenderState renderState;
@@ -102,6 +106,14 @@ public abstract class Renderer extends UUID implements IDisplayable {
         return glResources;
     }
 
+    /**
+     * The shared texture of the TextureData of this name, referenced (urgent) until released: an unknown name gives
+     * the fallback element of the textures, shared by every unknown name instead of a copy each.
+     */
+    protected final Texture acquireTexture(String name) {
+        return (Texture) glResources.acquire(resources.getResourceOrFallback(TextureData.class, name), true);
+    }
+
     // The camera given to setReferenceCamera, null when the default camera of the view is used
     protected final Camera getReferenceCamera() {
         return referenceCamera;
@@ -115,7 +127,13 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
     // The program if linked, otherwise the fallback one (failed or still loading), always linked
     public Shader getShader() {
-        return shader.isLoaded() ? shader : glResources.fallbackShader();
+        if (shader.isLoaded())
+            return shader;
+
+        // Fixed once the fallback data are loaded: no lookup at each draw
+        if (fallbackShader == null)
+            fallbackShader = (Shader) glResources.fallback(ShaderData.class);
+        return fallbackShader;
     }
 
     // True when the current program of this renderer has this uniform

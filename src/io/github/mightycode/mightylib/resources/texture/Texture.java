@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
+import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;
 
@@ -91,7 +92,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         // Failed or still loading: the fallback texture instead
         } else {
             // Same target as this texture: a rectangle sampler can't read a 2D texture
-            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? glResources().placeholders().fallbackRectangleId(resources) : -1;
+            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? placeholders().fallbackRectangleId(resources) : -1;
             if (rectangleId != -1)
                 glBindTexture(GL_TEXTURE_RECTANGLE, rectangleId);
             else
@@ -161,13 +162,27 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         }
     }
 
-    // Texture of the fallback data (CreateErrorTexture), transparent until it is sent itself
-    private int getFallbackId() {
-        Texture fallback = glResources().getResource(Texture.class, Resources.FALLBACK_NAME);
-        if (fallback != null && fallback != this && fallback.isLoaded())
-            return fallback.textureId;
+    /**
+     * The data type whose fallback element is bound while this texture is not loaded (see GLResources.fallback):
+     * the type of its data by default. A texture made from a data owned by another one (the picture a data builds)
+     * gives the type of the owner, to show the fallback of the owner.
+     */
+    protected Class<? extends DataType> fallbackDataType() {
+        return data != null ? data.getClass() : TextureData.class;
+    }
 
-        return glResources().placeholders().placeholderId();
+    // Texture of the fallback of its data type (the checkerboard for TextureData), transparent until it is sent itself
+    private int getFallbackId() {
+        GLElement element = glResources().fallback(fallbackDataType());
+        if (element instanceof Texture && element != this && element.isLoaded())
+            return ((Texture) element).textureId;
+
+        return placeholders().placeholderId();
+    }
+
+    // Shared by the textures of the GLResources: placeholders, upload buffers
+    private TexturePlaceholders placeholders() {
+        return glResources().shared(TexturePlaceholders.class, TexturePlaceholders::new);
     }
 
     // Data giving the size: the fallback one while this one is not loaded
@@ -247,6 +262,8 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         int rowBytes = width * 4;
         int sentRows = fromRow;
         long start = System.nanoTime();
+        // Its loadingIdle frees the upload buffers once nothing is left to send
+        placeholders();
 
         do {
             double leftMilliseconds = remainingMilliseconds - (System.nanoTime() - start) / 1e6;

@@ -265,6 +265,15 @@ public abstract class DataType extends UUID implements LoadingElement {
         return dataName;
     }
 
+    /**
+     * For a fallback data (ResourceLoader.createFallback): its GL element is loaded as soon as the fallback data exist,
+     * before anything is drawn (the program the renderers draw with when theirs is not linked), instead of being
+     * sent in the next frames. Its failure stops the program. False by default.
+     */
+    public boolean glElementNeededBeforeDrawing() {
+        return false;
+    }
+
     // Called once per element registered (main thread), only when glElementType is not null
     public GLElement createGLElement() {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " has no GL element");

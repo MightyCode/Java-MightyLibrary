@@ -48,6 +48,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
 - `Context` (rafraîchissement d'une fenêtre qui échoue) passe un message commençant par `--` à `Logger.LogException`, qui l'ajoute déjà : la ligne du journal commence par `----`.
+- `MeshRenderer.addTextureChannel(nom, uniform, canal)` ne fait rien tant qu'aucun canal n'a été ajouté par l'autre surcharge (`textures == null` → retour immédiat ; le tableau n'est créé que par `addTextureChannel(IRenderTextureBindable, …)`).
 - `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 
 ## Bibliothèque réutilisable
@@ -90,6 +91,8 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Shaders** : `GL_KHR_parallel_shader_compile` (lancer toutes les compilations, puis interroger `GL_COMPLETION_STATUS_KHR` aux frames suivantes ; une étape = un `glCompileShader` bloquant) ; pic de frame de ~58 ms au chargement, jugé acceptable.
 - **Priorité plus fine** que courant/préchargement (rechargement à chaud, ressources du premier affichage) ; une donnée garde sa priorité urgente si la référence urgente est retirée avant la préchargée.
 - **Chargement GL** : PBO ou contexte partagé (fenêtre cachée + `glFenceSync`). `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.
+- **Rechargement partiel d'une donnée multi-fichiers** (`MultiSourceDataType`) : aujourd'hui un fichier modifié relit toute la donnée (six faces d'une cubemap, tous les calques) ; ne relire que le fichier changé, avec l'état par fichier déjà tenu.
+- **Données composées de dépendances** à côté de `MultiSourceDataType` (fichiers fixes) : planche de sprites (image + JSON Aseprite/TexturePacker) et matériau (albedo + normal + rugosité), chaque partie une donnée à part entière (partageable, avec son repli), l'ensemble une donnée qui en dépend.
 - **Préchargement GL des modèles 3D** : `MeshUpload` est propre à chaque `ModelRenderer` (créé dans `launch`, exige le modèle chargé) ; le rendre partageable par modèle pour qu'un batch l'envoie pendant le chargement comme les textures (`DataType.createGLElement`).
 
 ## Budget mémoire et chargement en continu (quand un vrai jeu l'exige)

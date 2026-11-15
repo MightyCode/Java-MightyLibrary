@@ -9,8 +9,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GLResourcesTest {
@@ -35,7 +37,7 @@ class GLResourcesTest {
 
     @Test
     void aReloadStepCanReleaseAnElementWaitingToBeReloaded() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeElement model = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "reload-model");
         FakeElement texture = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "reload-texture");
         glResources.process(Long.MAX_VALUE);
@@ -66,7 +68,7 @@ class GLResourcesTest {
 
     @Test
     void preloadedElementsDoNotKeepALoadingScreenWaiting() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         WaitingElement preloaded = glResources.addElementOrReturnIfPresent(WaitingElement.class, new WaitingElement(),
                 "preload-only", false);
         glResources.process(Long.MAX_VALUE);
@@ -91,7 +93,7 @@ class GLResourcesTest {
     // A user unloaded twice (object added as updatable and displayable) must not delete what a batch still holds
     @Test
     void releasingMoreThanReferencedKeepsTheElement() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeElement held = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(),
                 "over-released", false);
         glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "over-released");
@@ -108,7 +110,7 @@ class GLResourcesTest {
 
     @Test
     void urgentElementsAreLoadedBeforePreloadedOnes() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeElement preloaded = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(),
                 "order-preloaded", false);
         FakeElement urgent = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "order-urgent");
@@ -161,7 +163,7 @@ class GLResourcesTest {
 
     @Test
     void aFailedElementIsTriedAgainOnlyWhenItsDataIsReloaded() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeData source = new FakeData(DataType.TYPE_SET_UP.THREAD_CONTEXT, "broken-source");
         BreakableElement element = glResources.addElementOrReturnIfPresent(BreakableElement.class,
                 new BreakableElement(source), "broken");
@@ -202,7 +204,7 @@ class GLResourcesTest {
 
     @Test
     void aReleasedFailedElementIsForgotten() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeData source = new FakeData(DataType.TYPE_SET_UP.THREAD_CONTEXT, "released-source");
         BreakableElement element = glResources.addElementOrReturnIfPresent(BreakableElement.class,
                 new BreakableElement(source), "released-broken");
@@ -218,7 +220,7 @@ class GLResourcesTest {
 
     @Test
     void aFailedReloadKeepsTheLoadedVersion() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         BreakableElement element = new BreakableElement(null);
         element.broken = false;
         glResources.addElementOrReturnIfPresent(BreakableElement.class, element, "reload-broken");
@@ -246,7 +248,7 @@ class GLResourcesTest {
 
     @Test
     void anElementCanBeLoadedNow() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         BreakableElement element = new BreakableElement(null);
         element.broken = false;
 
@@ -255,5 +257,62 @@ class GLResourcesTest {
         assertTrue(glResources.namesWaiting(true).isEmpty());
 
         glResources.releaseResource(element);
+    }
+
+    // Counts what GLResources tells it
+    static class CountingState implements IGLSharedState {
+        int idle, deleted;
+
+        @Override
+        public void loadingIdle() {
+            ++idle;
+        }
+
+        @Override
+        public void delete() {
+            ++deleted;
+        }
+    }
+
+    static class OtherState extends CountingState {}
+
+    @Test
+    void aSharedStateIsCreatedOncePerClass() {
+        GLResources glResources = new GLResources(-1);
+        int[] created = {0};
+        CountingState first = glResources.shared(CountingState.class, () -> { ++created[0]; return new CountingState(); });
+        CountingState second = glResources.shared(CountingState.class, () -> { ++created[0]; return new CountingState(); });
+        OtherState other = glResources.shared(OtherState.class, OtherState::new);
+
+        assertSame(first, second);
+        assertEquals(1, created[0]);
+        assertNotSame(first, other);
+        // A factory giving nothing is a bug of the element type
+        assertThrows(IllegalArgumentException.class, () -> glResources.shared(ThirdState.class, () -> null));
+    }
+
+    static class ThirdState extends CountingState {}
+
+    @Test
+    void aSharedStateIsToldWhenTheQueuesAreEmptyAndDeletedWithGLResources() {
+        GLResources glResources = new GLResources(-1);
+        CountingState state = glResources.shared(CountingState.class, CountingState::new);
+        WaitingElement waiting = glResources.addElementOrReturnIfPresent(WaitingElement.class, new WaitingElement(), "idle");
+
+        glResources.process(Long.MAX_VALUE);
+        assertEquals(0, state.idle);
+
+        waiting.ready = true;
+        glResources.process(Long.MAX_VALUE);
+        assertEquals(1, state.idle);
+        glResources.process(Long.MAX_VALUE);
+        assertEquals(2, state.idle);
+        assertEquals(0, state.deleted);
+
+        glResources.unload();
+        assertEquals(1, state.deleted);
+
+        // A new one after the release
+        assertNotSame(state, glResources.shared(CountingState.class, CountingState::new));
     }
 }

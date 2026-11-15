@@ -125,6 +125,8 @@ class ResourceDescriber {
                 item.put("usingFallback", true);
             if (!data.sourcePaths().isEmpty())
                 item.put("sources", new JSONArray(data.sourcePaths()));
+            if (data instanceof MultiSourceDataType)
+                item.put("sourceFiles", describeSources((MultiSourceDataType) data));
             list.put(item);
         });
 
@@ -135,6 +137,19 @@ class ResourceDescriber {
             result.put("truncatedTo", DESCRIBE_SELECTION_LIMIT);
         result.put("data", list);
         return result;
+    }
+
+    // Each file of the data and whether its last reading read it
+    private static JSONArray describeSources(MultiSourceDataType data) {
+        JSONArray files = new JSONArray();
+        for (int i = 0; i < data.sourceCount(); ++i) {
+            JSONObject file = new JSONObject();
+            file.put("path", String.valueOf(data.sourcePath(i)));
+            file.put("read", data.isSourceRead(i));
+            files.put(file);
+        }
+
+        return files;
     }
 
     private static boolean onlyReferencedAsDependency(DataType data) {

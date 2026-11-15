@@ -239,7 +239,7 @@ public class Resources {
 
     private void finishLoading() {
         if (glElementSink != null)
-            glElementSink.fallbackDataLoaded();
+            glElementSink.fallbackDataLoaded(fallbacks.all());
         firstLoadDone = true;
     }
 

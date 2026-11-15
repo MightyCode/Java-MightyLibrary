@@ -1,0 +1,12 @@
+{
+    "batchs" : [
+        {
+            "type" : "LayeredTextureData",
+            "files" : [
+                "hero"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}
