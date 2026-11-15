@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -47,6 +48,11 @@ class FallbackRegistry {
             for (DataType fallback : fallbacks.values())
                 resources.addReferenceAndUpdate(fallback, FALLBACK_REFERENCE);
         });
+    }
+
+    // The fallbacks by the type of their loader
+    Map<Class<? extends DataType>, DataType> all() {
+        return Collections.unmodifiableMap(fallbacks);
     }
 
     // Fallback of the type, or of its closest parent type with a loader; null without fallback

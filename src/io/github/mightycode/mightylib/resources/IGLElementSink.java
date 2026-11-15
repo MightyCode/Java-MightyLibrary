@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
 
+import java.util.Map;
+
 /**
  * Where the batches hold the GL elements of the data they list (GLResources in the engine, none in the tests
  * without GL): a loaded batch sends them to the graphic card during the loading, a preloaded one after the rest.
@@ -14,8 +16,11 @@ public interface IGLElementSink {
     // Give back a reference added by acquire, with the same urgency
     void release(GLElement element, boolean urgent);
 
-    // The first loading is done, the fallback data exist: the sink creates what it needs from them (error texture)
-    default void fallbackDataLoaded() {}
+    /**
+     * The first loading is done, the fallback data exist (by the type of their loader): the sink creates their GL
+     * elements, kept for the whole program.
+     */
+    default void fallbackDataLoaded(Map<Class<? extends DataType>, DataType> fallbacks) {}
 
     // The data was loaded again (reload, or new load after an unload): the elements that failed with it are tried again
     default void dataReloaded(DataType data) {}

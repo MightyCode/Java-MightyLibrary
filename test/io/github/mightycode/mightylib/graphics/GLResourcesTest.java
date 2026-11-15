@@ -37,7 +37,7 @@ class GLResourcesTest {
 
     @Test
     void aReloadStepCanReleaseAnElementWaitingToBeReloaded() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeElement model = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "reload-model");
         FakeElement texture = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "reload-texture");
         glResources.process(Long.MAX_VALUE);
@@ -68,7 +68,7 @@ class GLResourcesTest {
 
     @Test
     void preloadedElementsDoNotKeepALoadingScreenWaiting() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         WaitingElement preloaded = glResources.addElementOrReturnIfPresent(WaitingElement.class, new WaitingElement(),
                 "preload-only", false);
         glResources.process(Long.MAX_VALUE);
@@ -93,7 +93,7 @@ class GLResourcesTest {
     // A user unloaded twice (object added as updatable and displayable) must not delete what a batch still holds
     @Test
     void releasingMoreThanReferencedKeepsTheElement() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeElement held = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(),
                 "over-released", false);
         glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "over-released");
@@ -110,7 +110,7 @@ class GLResourcesTest {
 
     @Test
     void urgentElementsAreLoadedBeforePreloadedOnes() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeElement preloaded = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(),
                 "order-preloaded", false);
         FakeElement urgent = glResources.addElementOrReturnIfPresent(FakeElement.class, new FakeElement(), "order-urgent");
@@ -163,7 +163,7 @@ class GLResourcesTest {
 
     @Test
     void aFailedElementIsTriedAgainOnlyWhenItsDataIsReloaded() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeData source = new FakeData(DataType.TYPE_SET_UP.THREAD_CONTEXT, "broken-source");
         BreakableElement element = glResources.addElementOrReturnIfPresent(BreakableElement.class,
                 new BreakableElement(source), "broken");
@@ -204,7 +204,7 @@ class GLResourcesTest {
 
     @Test
     void aReleasedFailedElementIsForgotten() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         FakeData source = new FakeData(DataType.TYPE_SET_UP.THREAD_CONTEXT, "released-source");
         BreakableElement element = glResources.addElementOrReturnIfPresent(BreakableElement.class,
                 new BreakableElement(source), "released-broken");
@@ -220,7 +220,7 @@ class GLResourcesTest {
 
     @Test
     void aFailedReloadKeepsTheLoadedVersion() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         BreakableElement element = new BreakableElement(null);
         element.broken = false;
         glResources.addElementOrReturnIfPresent(BreakableElement.class, element, "reload-broken");
@@ -248,7 +248,7 @@ class GLResourcesTest {
 
     @Test
     void anElementCanBeLoadedNow() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         BreakableElement element = new BreakableElement(null);
         element.broken = false;
 
@@ -278,7 +278,7 @@ class GLResourcesTest {
 
     @Test
     void aSharedStateIsCreatedOncePerClass() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         int[] created = {0};
         CountingState first = glResources.shared(CountingState.class, () -> { ++created[0]; return new CountingState(); });
         CountingState second = glResources.shared(CountingState.class, () -> { ++created[0]; return new CountingState(); });
@@ -295,7 +295,7 @@ class GLResourcesTest {
 
     @Test
     void aSharedStateIsToldWhenTheQueuesAreEmptyAndDeletedWithGLResources() {
-        GLResources glResources = new GLResources(null, -1);
+        GLResources glResources = new GLResources(-1);
         CountingState state = glResources.shared(CountingState.class, CountingState::new);
         WaitingElement waiting = glResources.addElementOrReturnIfPresent(WaitingElement.class, new WaitingElement(), "idle");
 

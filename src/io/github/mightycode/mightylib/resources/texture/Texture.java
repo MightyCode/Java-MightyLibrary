@@ -161,11 +161,11 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         }
     }
 
-    // Texture of the fallback data (CreateErrorTexture), transparent until it is sent itself
+    // Texture of the fallback of its data type (the checkerboard for TextureData), transparent until it is sent itself
     private int getFallbackId() {
-        Texture fallback = glResources().getResource(Texture.class, Resources.FALLBACK_NAME);
-        if (fallback != null && fallback != this && fallback.isLoaded())
-            return fallback.textureId;
+        GLElement element = glResources().fallback(data != null ? data.getClass() : TextureData.class);
+        if (element instanceof Texture && element != this && element.isLoaded())
+            return ((Texture) element).textureId;
 
         return placeholders().placeholderId();
     }

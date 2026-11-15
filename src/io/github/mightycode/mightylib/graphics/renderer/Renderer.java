@@ -44,6 +44,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
     // Program of the shader, held (urgent reference) until unload
     private final Shader shader;
+    // Drawn with while shader is not linked, cached at the first use (see getShader)
+    private Shader fallbackShader;
     private boolean shaderReleased;
     // Depth and culling of each draw, by default from the tag of the shader (2D: no depth)
     private final RenderState renderState;
@@ -115,7 +117,13 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
     // The program if linked, otherwise the fallback one (failed or still loading), always linked
     public Shader getShader() {
-        return shader.isLoaded() ? shader : glResources.fallbackShader();
+        if (shader.isLoaded())
+            return shader;
+
+        // Fixed once the fallback data are loaded: no lookup at each draw
+        if (fallbackShader == null)
+            fallbackShader = (Shader) glResources.fallback(ShaderData.class);
+        return fallbackShader;
     }
 
     // True when the current program of this renderer has this uniform
