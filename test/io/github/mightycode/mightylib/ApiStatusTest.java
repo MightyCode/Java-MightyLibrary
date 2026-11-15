@@ -6,9 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Modifier;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -16,8 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,14 +21,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Guard of the API statuses (docs/architecture.md, "API publique"): every package of mightylib declares its status
- * in its package-info (@API of apiguardian), a type or a member only declares a status less stable than the one
- * around it, and the demo, which uses the library as another project would, uses no INTERNAL type or package.
+ * in its package-info (@API of apiguardian), and a type or a member only declares a status less stable than the one
+ * around it. The demo checks on its side that it uses no INTERNAL type or package (DemoApiUsageTest).
  */
 class ApiStatusTest {
     private static final String ROOT = "io.github.mightycode.mightylib";
-    private static final Path DEMO_SOURCES = Paths.get("src/io/github/mightycode/mightylibdemo");
-    private static final Pattern QUALIFIED_NAME =
-            Pattern.compile("\\bio\\.github\\.mightycode\\.mightylib(?:\\.\\w+)+(?:\\.\\*)?");
 
     private static Path classesFolder() throws URISyntaxException {
         return Paths.get(Resources.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -135,73 +128,5 @@ class ApiStatusTest {
 
         assertTrue(problems.isEmpty(), "Statuses more stable than their type or package:\n"
                 + String.join("\n", problems));
-    }
-
-    // The library type named by a qualified name, possibly followed by a member (static import): the longest
-    // prefix that is a class, nested classes included
-    private static Class<?> typeNamed(String qualifiedName) {
-        String[] parts = qualifiedName.split("\\.");
-        for (int end = parts.length; end > 1; end--) {
-            for (int nested = end - 1; nested > 0; nested--) {
-                String name = String.join(".", List.of(parts).subList(0, nested))
-                        + "." + String.join("$", List.of(parts).subList(nested, end));
-                Class<?> type = load(name);
-                if (type != null)
-                    return type;
-            }
-        }
-        return null;
-    }
-
-    private static List<String> internalUses(Path file) throws IOException {
-        List<String> uses = new ArrayList<>();
-        String source = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
-        Matcher matcher = QUALIFIED_NAME.matcher(source);
-        while (matcher.find()) {
-            String name = matcher.group();
-            if (name.endsWith(".*")) {
-                String target = name.substring(0, name.length() - 2);
-                Class<?> type = typeNamed(target);
-                API.Status status = type != null ? status(type) : packageStatus(target);
-                if (status == API.Status.INTERNAL)
-                    uses.add(file.getFileName() + ": " + name);
-                continue;
-            }
-
-            Class<?> type = typeNamed(name);
-            if (type != null && Modifier.isPublic(type.getModifiers()) && status(type) == API.Status.INTERNAL)
-                uses.add(file.getFileName() + ": " + name);
-        }
-        return uses;
-    }
-
-    @Test
-    void demoUsesNoInternalApi() throws Exception {
-        List<String> problems = new ArrayList<>();
-        try (Stream<Path> files = Files.walk(DEMO_SOURCES)) {
-            for (Path file : files.filter(f -> f.toString().endsWith(".java")).collect(Collectors.toList()))
-                problems.addAll(internalUses(file));
-        }
-
-        assertTrue(problems.isEmpty(), "The demo uses INTERNAL types or packages:\n" + String.join("\n", problems));
-    }
-
-    @Test
-    void internalUsesAreDetected() throws Exception {
-        Path file = Files.createTempFile("ApiStatusTest", ".java");
-        try {
-            Files.write(file, List.of(
-                    "import io.github.mightycode.mightylib.console.ConsoleLog;",
-                    "import static io.github.mightycode.mightylib.graphics.GLContext.current;",
-                    "import io.github.mightycode.mightylib.utils.enginecommand.general.*;",
-                    "import io.github.mightycode.mightylib.scenes.Scene;",
-                    "class X { io.github.mightycode.mightylib.resources.BatchLoader loader; }"),
-                    StandardCharsets.UTF_8);
-
-            List<String> uses = internalUses(file);
-            assertEquals(4, uses.size(), uses.toString());
-        } finally {
-            Files.delete(file);
-        }
     }
 }
