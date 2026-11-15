@@ -355,6 +355,8 @@ public final class Console implements IConsoleService {
         }
     }
 
+    // The answer of a submitted line reaches the log through CommandEcho, not through the returned future
+    @SuppressWarnings("FutureReturnValueIgnored")
     private void type(WindowContext target, ConsolePanel panel) {
         KeyboardManager keyboard = target.getKeyboardManager();
         int pageRows = panel == null ? 10 : panel.getVisibleRows();

@@ -46,6 +46,7 @@ public class ExecGenCom extends BaseCommand {
                         .executes(context -> run(context.get("file"), context.get("timeout"))));
     }
 
+    @SuppressWarnings("FutureReturnValueIgnored")
     private CommandResult run(Path file, long timeout) {
         Path path = file.toAbsolutePath().normalize();
         List<String> lines;
@@ -58,7 +59,11 @@ public class ExecGenCom extends BaseCommand {
         if (!running.add(path))
             return CommandResult.error(path + " is already running (a script can't run itself)");
 
-        CommandScript script = new CommandScript(commands(), path.getFileName().toString(), lines);
+        // A root path has no file name (it can't be read as a script, but keep the name safe)
+        Path fileName = path.getFileName();
+        CommandScript script = new CommandScript(commands(), fileName != null ? fileName.toString() : path.toString(),
+                lines);
+        // The returned stage is not needed: a failure stays in the script result, answered to the caller
         script.getResult().whenComplete((result, exception) -> running.remove(path));
 
         // The lines that can run now run in this tick, the others at the next ticks

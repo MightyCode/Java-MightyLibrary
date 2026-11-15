@@ -207,6 +207,8 @@ public class Commands {
     }
 
     // Main thread only
+    // A deferred failure is answered by ResolveDeferred: the stage returned by whenComplete is not needed
+    @SuppressWarnings("FutureReturnValueIgnored")
     public void processPendingCommands() {
         ++tick;
 

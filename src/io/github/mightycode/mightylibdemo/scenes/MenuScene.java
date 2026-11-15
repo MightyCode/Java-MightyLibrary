@@ -23,6 +23,7 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
 import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -147,7 +148,11 @@ public class MenuScene extends Scene {
                     choices.setDates(dates);
                     refilter();
                 }
-            }));
+            })).exceptionally(error -> {
+                // Without dates, the menu keeps its other sorts
+                Logger.LogException("Can't read the dates of the scenes", error);
+                return null;
+            });
         }
         shown = choices.entries();
 
