@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.utils.Logger;
+import org.apiguardian.api.API;
 import org.lwjgl.opengl.GL;
 import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLCapabilities;
@@ -12,6 +13,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
@@ -30,6 +32,7 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * <p>
  * Main thread only. A context is current from makeCurrent until another one is.
  */
+@API(status = INTERNAL)
 public final class GLContext {
     // Contexts alive, the root included
     private static final List<GLContext> LIVE = new ArrayList<>();

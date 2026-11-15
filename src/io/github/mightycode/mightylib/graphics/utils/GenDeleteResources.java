@@ -4,12 +4,14 @@ import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.main.MainThread;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.valueDebug.TableDebug;
+import org.apiguardian.api.API;
 import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.opengl.GL30.*;
 
 public abstract class GenDeleteResources {
@@ -65,6 +67,7 @@ public abstract class GenDeleteResources {
     }
 
     // Deleted at once when the owner is the current context, at its next makeCurrent otherwise
+    @API(status = INTERNAL)
     public static void DeleteVertexArrays(GLContext owner, Integer vao) {
         CheckMainThread("DeleteVertexArrays");
         DeleteInOwner(owner, () -> {
@@ -144,6 +147,7 @@ public abstract class GenDeleteResources {
         return fbo;
     }
 
+    @API(status = INTERNAL)
     public static void DeleteFramebuffers(GLContext owner, Integer fbo) {
         CheckMainThread("DeleteFramebuffers");
         DeleteInOwner(owner, () -> {
@@ -159,6 +163,7 @@ public abstract class GenDeleteResources {
         return rbo;
     }
 
+    @API(status = INTERNAL)
     public static void DeleteRenderBuffers(GLContext owner, Integer rbo) {
         CheckMainThread("DeleteRenderBuffers");
         DeleteInOwner(owner, () -> {

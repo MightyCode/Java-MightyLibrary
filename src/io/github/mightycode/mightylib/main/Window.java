@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.main;
 import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.resources.texture.Icon;
+import org.apiguardian.api.API;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.lwjgl.glfw.Callbacks;
@@ -11,6 +12,7 @@ import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryStack.stackPush;
@@ -99,6 +101,7 @@ public final class Window {
      * Create the window and its OpenGL context, shared with the given one (the engine's hidden root context)
      * so that textures, buffers and programs are usable here too. On failure the window stays not created.
      */
+    @API(status = INTERNAL)
     public void createNewWindow(GLContext shareWith){
         if (info.windowId != 0)
             destroyWindow();
@@ -339,6 +342,7 @@ public final class Window {
     }
 
     // The OpenGL context of this window, where the objects that are not shared (vertex arrays, framebuffers) live
+    @API(status = INTERNAL)
     public GLContext getGLContext() { return glContext; }
 
     // Make the OpenGL context of this window the current one

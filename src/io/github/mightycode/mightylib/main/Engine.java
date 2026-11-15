@@ -37,6 +37,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import org.apiguardian.api.API;
 import org.joml.Vector2i;
 import org.lwjgl.Version;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -45,6 +46,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11C.*;
 import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
@@ -117,6 +119,7 @@ public final class Engine implements IView {
     }
 
     // What the console shows: program output and commands of every source; null without console nor debug mode
+    @API(status = INTERNAL)
     public ConsoleLog consoleLog() { return consoleLog; }
 
     /**

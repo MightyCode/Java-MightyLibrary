@@ -18,6 +18,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import org.apiguardian.api.API;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.json.JSONObject;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
@@ -208,6 +210,7 @@ public final class Console implements IConsoleService {
     // The types of lines not shown (read by the panels at each display)
     Set<ConsoleLog.EType> getHiddenTypes() { return Collections.unmodifiableSet(hiddenTypes); }
 
+    @API(status = INTERNAL)
     @Override
     public ConsoleLog getLog() { return log; }
 

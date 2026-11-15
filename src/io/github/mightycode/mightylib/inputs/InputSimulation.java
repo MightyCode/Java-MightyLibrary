@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.inputs;
 
+import org.apiguardian.api.API;
+
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,12 +10,15 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
+
 /**
  * Simulated presses of ids (actions, keys or mouse buttons) from commands, scripts, later replays,
  * stored then applied when the inputs of the next tick are computed.
  * A simulated press is seen by the whole next tick, exactly like a real one.
  * Main thread only.
  */
+@API(status = INTERNAL)
 public class InputSimulation {
     // Hold until a release is asked
     public static final int UNTIL_RELEASE = -1;

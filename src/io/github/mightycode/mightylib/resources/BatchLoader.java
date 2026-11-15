@@ -1,8 +1,13 @@
 package io.github.mightycode.mightylib.resources;
 
+import org.apiguardian.api.API;
+
 import java.util.Map;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
+
 // The batches (resources/batchs/*.batch, JSON): reads its files itself, whatever loader the JSON files have
+@API(status = INTERNAL)
 public class BatchLoader extends ResourceLoader {
     @Override
     public Class<? extends DataType> getType() {

@@ -2,11 +2,14 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.utils.Logger;
+import org.apiguardian.api.API;
 import org.json.JSONObject;
 
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * Registry and loading pipeline of the data read from the disk.
@@ -126,6 +129,7 @@ public class Resources {
     // Where the batches hold the GL elements of their data (GLResources); null: nothing is sent to the card
     private IGLElementSink glElementSink;
 
+    @API(status = INTERNAL)
     public void setGLElementSink(IGLElementSink glElementSink) {
         this.glElementSink = glElementSink;
     }

@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,10 +12,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
+
 /**
  * Lines shown by the console: the program output (stdout, stderr) and the commands of every source with their result.
  * Ring buffer: the oldest lines are forgotten once the capacity is reached. Thread safe, written from any thread.
  */
+@API(status = INTERNAL)
 public final class ConsoleLog {
     public static final int DEFAULT_CAPACITY = 5000;
 

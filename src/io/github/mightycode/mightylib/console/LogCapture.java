@@ -1,14 +1,19 @@
 package io.github.mightycode.mightylib.console;
 
+import org.apiguardian.api.API;
+
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
+
 /**
  * Copies the program output (System.out and System.err) to a console log, line by line, while it is still written
  * to the real streams. Static: the standard streams belong to the process.
  */
+@API(status = INTERNAL)
 public final class LogCapture {
     private static PrintStream originalOut;
     private static PrintStream originalErr;
