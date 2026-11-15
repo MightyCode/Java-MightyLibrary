@@ -17,6 +17,7 @@ import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.IPlugin;
+import io.github.mightycode.mightylib.resources.cubemap.CubeMapLoader;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
 import io.github.mightycode.mightylib.resources.map.TileSetLoader;
 import io.github.mightycode.mightylib.resources.models.ModelLoader;
@@ -65,6 +66,7 @@ public class DemoPlugin implements IPlugin {
                 .add(new ModelLoader())
                 .add(new TextureDataAtlasLoader())
                 .add(new WaveCollapseRulesLoader())
+                .add(new CubeMapLoader())
                 .add(new LayeredTextureLoader());
 
         // Commands of the game: kept for the whole run, whatever the scene

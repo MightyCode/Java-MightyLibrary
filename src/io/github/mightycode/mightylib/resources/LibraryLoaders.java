@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
+import io.github.mightycode.mightylib.resources.cubemap.CubeMapLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
 import io.github.mightycode.mightylib.resources.map.TileSetLoader;
@@ -27,7 +28,7 @@ public final class LibraryLoaders {
 
     /**
      * New instances of the optional loaders: tile sets, tile maps, sounds, models, texture atlases, rules of the wave
-     * function collapse.
+     * function collapse, cubemaps.
      */
     public static List<ResourceLoader> all() {
         List<ResourceLoader> loaders = new ArrayList<>();
@@ -37,6 +38,7 @@ public final class LibraryLoaders {
         loaders.add(new ModelLoader());
         loaders.add(new TextureDataAtlasLoader());
         loaders.add(new WaveCollapseRulesLoader());
+        loaders.add(new CubeMapLoader());
         return loaders;
     }
 
