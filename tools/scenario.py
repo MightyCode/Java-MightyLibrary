@@ -79,17 +79,20 @@ def run_maven(*goals):
 
 
 def prepare(compile_sources):
-    if compile_sources:
+    poms = [os.path.join(ROOT, folder, "pom.xml") for folder in ("", "mightylib", "demo")]
+    if not os.path.exists(CLASSPATH_FILE) or os.path.getmtime(CLASSPATH_FILE) < max(map(os.path.getmtime, poms)):
+        # Built in the reactor with the compilation: the library is then its classes folder, not a jar of the local
+        # repository (test-compile: the test helpers of the library, a test dependency of the demo, must be resolved
+        # too). Every module of the reactor writes the file, the demo last: its runtime classpath, natives included
+        run_maven("-o", "test-compile", "dependency:build-classpath", "-pl", "demo", "-am",
+                  "-DincludeScope=runtime", "-Dmdep.outputFile=" + CLASSPATH_FILE)
+    elif compile_sources:
         run_maven("-o", "compile")
-
-    pom = os.path.join(ROOT, "pom.xml")
-    if not os.path.exists(CLASSPATH_FILE) or os.path.getmtime(CLASSPATH_FILE) < os.path.getmtime(pom):
-        run_maven("dependency:build-classpath", "-Dmdep.outputFile=" + CLASSPATH_FILE)
 
 
 def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, defines=()):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
-        classpath = os.path.join(ROOT, "target", "classes") + os.pathsep + file.read().strip()
+        classpath = os.path.join(ROOT, "demo", "target", "classes") + os.pathsep + file.read().strip()
 
     if os.path.exists(PORT_FILE):
         os.remove(PORT_FILE)

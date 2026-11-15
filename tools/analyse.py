@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Static analysis in one call: Error Prone (inside javac) and SpotBugs (bytecode) through the Maven profile
-`analyse`, then a text summary. About 30 seconds; the game's target/classes is not touched.
+`analyse`, then a text summary per module (mightylib, demo). About 30 seconds; the game's target/classes is not
+touched (each module writes to its own target/static-analysis).
 
 Usage:
     python tools/analyse.py                          # run both tools, count findings per pattern
@@ -9,7 +10,7 @@ Usage:
     python tools/analyse.py --no-run                 # summarize the output of the last run
 
 Findings the project accepts on purpose are filtered in tools/spotbugs-exclude.xml (SpotBugs) and by the
--Xep:...:OFF options of the profile in pom.xml (Error Prone). Machine specific paths: see tools/scenario.py.
+-Xep:...:OFF options of the profile in the parent pom.xml (Error Prone). Machine specific paths: see tools/scenario.py.
 """
 import argparse
 import collections
@@ -24,9 +25,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scenario  # noqa: E402
 
 ROOT = scenario.ROOT
-OUTPUT = os.path.join(ROOT, "target", "static-analysis")
+# The Maven modules, in the order of the summary
+MODULES = ("mightylib", "demo")
+SOURCES = "src/main/java/"
 LOG = os.path.join(ROOT, "target", "static-analysis.log")
-SPOTBUGS_XML = os.path.join(OUTPUT, "spotbugsXml.xml")
 JAVAC_WARNING = re.compile(r"^\[WARNING\] (.+?\.java):\[(\d+),\d+\] (?:\[(\w+)\] )?(.*)$")
 # Patterns that match the risk categories of docs/bonnes-pratiques.md (point 11): shown first
 RISK = {
@@ -43,14 +45,22 @@ def run_maven():
     # English messages from SpotBugs
     environment["MAVEN_OPTS"] = (environment.get("MAVEN_OPTS", "") + " -Duser.language=en").strip()
     # A recompilation is forced: javac would otherwise skip the sources and Error Prone would report nothing
-    shutil.rmtree(OUTPUT, ignore_errors=True)
-    result = subprocess.run([scenario.MVN, "-B", "-P", "analyse", "process-classes"], cwd=ROOT, env=environment,
+    for module in MODULES:
+        shutil.rmtree(output(module), ignore_errors=True)
+    # process-test-classes, not process-classes: SpotBugs resolves the test dependencies, and in the reactor the test
+    # helpers of the library (a test dependency of the demo) only exist once its tests are compiled. The findings
+    # in the tests are left out (read_error_prone)
+    result = subprocess.run([scenario.MVN, "-B", "-P", "analyse", "process-test-classes"], cwd=ROOT, env=environment,
                             capture_output=True, text=True, encoding="utf-8", errors="replace")
     with open(LOG, "w", encoding="utf-8") as log:
         log.write(result.stdout + result.stderr)
     if result.returncode != 0:
         print("Maven failed (full log: target/static-analysis.log):\n" + (result.stdout + result.stderr)[-3000:])
         sys.exit(1)
+
+
+def output(module):
+    return os.path.join(ROOT, module, "target", "static-analysis")
 
 
 def relative(path):
@@ -68,23 +78,27 @@ def read_error_prone():
             match = JAVAC_WARNING.match(line.rstrip("\n"))
             if match:
                 path, line_number, name, message = match.groups()
+                if "/" + SOURCES not in relative(path):
+                    continue
                 findings.append(("ErrorProne", name or "javac", relative(path), int(line_number), message))
     return findings
 
 
 def read_spotbugs():
     findings = []
-    if not os.path.exists(SPOTBUGS_XML):
-        return findings
-    for bug in ET.parse(SPOTBUGS_XML).getroot().findall("BugInstance"):
-        source = bug.find("SourceLine[@primary='true']")
-        if source is None:
-            source = bug.find("Class/SourceLine")
-        if source is None:
-            source = bug.find("Method/SourceLine")
-        path = "src/" + source.get("sourcepath") if source is not None else "?"
-        line = int(source.get("start", 0)) if source is not None else 0
-        findings.append(("SpotBugs", bug.get("type"), path, line, bug.findtext("LongMessage", "")))
+    for module in MODULES:
+        report = os.path.join(output(module), "spotbugsXml.xml")
+        if not os.path.exists(report):
+            continue
+        for bug in ET.parse(report).getroot().findall("BugInstance"):
+            source = bug.find("SourceLine[@primary='true']")
+            if source is None:
+                source = bug.find("Class/SourceLine")
+            if source is None:
+                source = bug.find("Method/SourceLine")
+            path = module + "/" + SOURCES + source.get("sourcepath") if source is not None else module + "/?"
+            line = int(source.get("start", 0)) if source is not None else 0
+            findings.append(("SpotBugs", bug.get("type"), path, line, bug.findtext("LongMessage", "")))
     return findings
 
 
@@ -92,23 +106,24 @@ def is_risk(name):
     return any(name.startswith(prefix) for prefix in RISK)
 
 
-def zone(path):
-    if "/mightylibdemo/" in path:
-        return "demo"
-    if "/mightylib/" in path:
-        return "lib"
-    return "other"
+# The module of a path relative to the root (its first folder)
+def module_of(path):
+    first = path.split("/", 1)[0]
+    return first if first in MODULES else "other"
 
 
 def summarize(findings):
-    for tool in ("SpotBugs", "ErrorProne"):
-        selected = [f for f in findings if f[0] == tool]
-        print(f"== {tool}: {len(selected)} findings (risk patterns marked *)")
-        counts = collections.Counter(f[1] for f in selected)
-        for name, count in sorted(counts.items(), key=lambda item: (not is_risk(item[0]), -item[1], item[0])):
-            zones = collections.Counter(zone(f[2]) for f in selected if f[1] == name)
-            where = " ".join(f"{z}:{n}" for z, n in sorted(zones.items()))
-            print(f"  {'*' if is_risk(name) else ' '} {count:4d}  {name}  ({where})")
+    for module in MODULES + ("other",):
+        in_module = [f for f in findings if module_of(f[2]) == module]
+        if module == "other" and not in_module:
+            continue
+        print(f"#### {module}")
+        for tool in ("SpotBugs", "ErrorProne"):
+            selected = [f for f in in_module if f[0] == tool]
+            print(f"== {tool}: {len(selected)} findings (risk patterns marked *)")
+            counts = collections.Counter(f[1] for f in selected)
+            for name, count in sorted(counts.items(), key=lambda item: (not is_risk(item[0]), -item[1], item[0])):
+                print(f"  {'*' if is_risk(name) else ' '} {count:4d}  {name}")
 
 
 def main():

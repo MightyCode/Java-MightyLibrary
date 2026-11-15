@@ -117,8 +117,8 @@
                             <threshold>Medium</threshold>
                             <xmlOutput>true</xmlOutput>
                             <failOnError>false</failOnError>
-                            <!-- The modules are one folder below the root -->
-                            <excludeFilterFile>${project.basedir}/../tools/spotbugs-exclude.xml</excludeFilterFile>
+                            <!-- From the root of the build (the parent and its modules share the file) -->
+                            <excludeFilterFile>${maven.multiModuleProjectDirectory}/tools/spotbugs-exclude.xml</excludeFilterFile>
                         </configuration>
                         <executions>
                             <execution>
