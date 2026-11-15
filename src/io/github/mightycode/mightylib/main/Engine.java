@@ -578,7 +578,7 @@ public final class Engine implements IView {
         }
         // The sound device, once everything is released
         if (services != null)
-            services.close();
+            services.terminate();
 
         // Strict mode: a hook that failed while stopping did not stop the release, it fails the exit
         if (status == ListError.NO_ERROR && lifecycle().hasTeardownFailed())

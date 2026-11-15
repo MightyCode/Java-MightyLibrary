@@ -8,8 +8,8 @@ import java.util.List;
 /**
  * The sound of the engine (service mightylib:sound, Engine.sound): sources, listener and gain tree. OpenAL by default
  * (OpenALSoundService), silent when no device can be opened or with -Dmightylib.sound=silent (SilentSoundService).
- * Phases: lateUpdate creates the waiting sources and deletes the ended ones, unload deletes the sources, close the
- * device.
+ * Phases: lateUpdate creates the waiting sources and deletes the ended ones, unload deletes the sources, terminate
+ * the device.
  */
 public interface ISoundService extends IEngineService, ISoundBuffers {
     /**

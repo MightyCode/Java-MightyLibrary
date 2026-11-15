@@ -31,7 +31,10 @@ class ServiceSetTest {
         @Override public void displayOverlay() { calls.add("overlay " + name); }
         @Override public int overlayLayer() { return layer; }
         @Override public void unload() { calls.add("unload " + name); }
-        @Override public void close() { calls.add("close " + name); }
+        @Override public void terminate() { calls.add("terminate " + name); }
+
+        // A method of the service itself, not a phase (the console closes its overlay)
+        public void close() { calls.add("close " + name); }
     }
 
     private static ServiceKey<IFake> key(String path) {
@@ -59,10 +62,11 @@ class ServiceSetTest {
         set.update();
         set.lateUpdate();
         set.unload();
-        set.close();
+        set.terminate();
 
+        // close is not a phase: the engine never calls it
         assertEquals(List.of("create a", "create b", "update a", "update b", "late a", "late b",
-                "unload b", "unload a", "close b", "close a"), calls);
+                "unload b", "unload a", "terminate b", "terminate a"), calls);
         assertTrue(set.running().isEmpty());
     }
 
@@ -120,8 +124,8 @@ class ServiceSetTest {
         // What was created is released at the stop
         calls.clear();
         set.unload();
-        set.close();
-        assertEquals(List.of("unload free", "unload ordered", "close free", "close ordered"), calls);
+        set.terminate();
+        assertEquals(List.of("unload free", "unload ordered", "terminate free", "terminate ordered"), calls);
     }
 
     @Test

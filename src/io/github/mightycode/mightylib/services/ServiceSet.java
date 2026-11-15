@@ -162,14 +162,14 @@ public final class ServiceSet {
         }
     }
 
-    // Reverse order, after unload; the set is then empty
-    public void close() {
+    // Reverse order, after unload and GLFW; the set is then empty
+    public void terminate() {
         for (int i = running.size() - 1; i >= 0; --i) {
             RunningService entry = running.get(i);
             try {
-                entry.service().close();
+                entry.service().terminate();
             } catch (RuntimeException e) {
-                Logger.LogException("The close of the service " + entry.declaration() + " failed", e);
+                Logger.LogException("The termination of the service " + entry.declaration() + " failed", e);
             }
         }
 

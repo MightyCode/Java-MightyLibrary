@@ -227,7 +227,7 @@ public class OpenALSoundService implements ISoundService {
     }
 
     @Override
-    public void close() {
+    public void terminate() {
         alcMakeContextCurrent(NULL);
         alcDestroyContext(context);
         alcCloseDevice(device);
