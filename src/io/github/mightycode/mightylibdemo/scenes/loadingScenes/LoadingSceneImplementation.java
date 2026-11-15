@@ -21,7 +21,7 @@ public class LoadingSceneImplementation extends TemplateSceneLoading {
 
     @Override
     public void launch(String[] args) {
-        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
+        Vector2i windowSize = context().getWindow().getInfo().getSizeCopy();
 
         text = new Text();
         text.setFont("bahnschrift")
@@ -40,7 +40,7 @@ public class LoadingSceneImplementation extends TemplateSceneLoading {
         super.update();
 
         // x / n of the data this loading brings (n grows when a data read adds dependencies)
-        int[] progress = resources.wantedProgress();
+        int[] progress = resources().wantedProgress();
         if (doneAtStart < 0) {
             doneAtStart = progress[0];
         }
@@ -51,8 +51,8 @@ public class LoadingSceneImplementation extends TemplateSceneLoading {
             text.setText("LOADING " + Math.max(0, done) + " / " + total);
 
         // The scene being loaded is left (unloaded or released) when the menu is set
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
     }
 
     @Override

@@ -62,24 +62,24 @@ public class GUIWidgetsScene extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(0.1f, 0.1f, 0.12f);
-        mainContext.getMouseManager().setCursor(true);
+        context().getMouseManager().setCursor(true);
 
-        IInputManager input = mainContext.getInputManager();
+        IInputManager input = context().getInputManager();
 
-        typeSelector = new EnumSelector<>(ETweeningType.values(), mainContext);
+        typeSelector = new EnumSelector<>(ETweeningType.values(), context());
         typeSelector.init(ActionId.LEFT_CLICK);
 
-        sizeSlider = new HorizontalSlider(main2DCamera, input, mainContext.getMouseManager(),
+        sizeSlider = new HorizontalSlider(camera2D(), input, context().getMouseManager(),
                 new Vector2f(LEFT, 600), new Vector2f(RIGHT - LEFT, 60), 20f, 200f);
         sizeSlider.init(ActionId.LEFT_CLICK);
         sizeSlider.setValue(100);
 
-        amplitudeSlider = new VerticalSlider(main2DCamera, input, mainContext.getMouseManager(),
+        amplitudeSlider = new VerticalSlider(camera2D(), input, context().getMouseManager(),
                 new Vector2f(1100, 200), new Vector2f(60, 360), 0f, 40f);
         amplitudeSlider.init(ActionId.LEFT_CLICK);
         amplitudeSlider.setValue(15);
 
-        volumeSlider = new HorizontalSlider(main2DCamera, input, mainContext.getMouseManager(),
+        volumeSlider = new HorizontalSlider(camera2D(), input, context().getMouseManager(),
                 new Vector2f(LEFT, 180), new Vector2f(RIGHT - LEFT, 40), 0f, 1f);
         volumeSlider.init(ActionId.LEFT_CLICK);
         volumeSlider.setValue(DEFAULT_VOLUME);
@@ -166,10 +166,10 @@ public class GUIWidgetsScene extends Scene {
     public void update() {
         super.update();
 
-        IInputManager input = mainContext.getInputManager();
+        IInputManager input = context().getInputManager();
 
         if (input.inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
         typeSelector.update();
         sizeSlider.update();

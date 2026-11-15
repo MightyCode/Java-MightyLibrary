@@ -40,18 +40,18 @@ public class FallbackScene extends Scene {
     @Override
     public void init(String[] args) {
         // Read by their loaders, they fail: missing files
-        resources.addResourceAndSetUp(TextureData.class,
-                new TextureData(BROKEN_TEXTURE, resources.folder() + "textures/missing/brokenTexture.png"));
-        resources.addResourceAndSetUp(ShaderData.class, new ShaderData(BROKEN_SHADER, true,
-                resources.folder() + "shaders/missing/brokenV.glsl", resources.folder() + "shaders/missing/brokenF.glsl"));
+        resources().addResourceAndSetUp(TextureData.class,
+                new TextureData(BROKEN_TEXTURE, resources().folder() + "textures/missing/brokenTexture.png"));
+        resources().addResourceAndSetUp(ShaderData.class, new ShaderData(BROKEN_SHADER, true,
+                resources().folder() + "shaders/missing/brokenV.glsl", resources().folder() + "shaders/missing/brokenF.glsl"));
 
         // Read, then the program does not compile: the data is loaded, its GL element fails
         String versionFolder = engine().shaderManager().versionFolder();
         String vertex = versionFolder + "2D/essential/colorShape2DV.glsl";
-        resources.addResourceAndSetUp(ShaderData.class, new ShaderData(NOT_COMPILING_SHADER, true,
+        resources().addResourceAndSetUp(ShaderData.class, new ShaderData(NOT_COMPILING_SHADER, true,
                 vertex, versionFolder + "fallbackDemo/notCompilingF.glsl"));
         // The include is missing: the data fails while being read
-        resources.addResourceAndSetUp(ShaderData.class, new ShaderData(MISSING_INCLUDE_SHADER, true,
+        resources().addResourceAndSetUp(ShaderData.class, new ShaderData(MISSING_INCLUDE_SHADER, true,
                 vertex, versionFolder + "fallbackDemo/missingIncludeF.glsl"));
     }
 
@@ -66,7 +66,7 @@ public class FallbackScene extends Scene {
         missingIncludeShader = colorSquare(MISSING_INCLUDE_SHADER, 1);
 
         Animator animator = new Animator();
-        animator.addAndInitAnimation("unknown", resources.getResource(AnimationData.class, "missingAnimation"), true);
+        animator.addAndInitAnimation("unknown", resources().getResource(AnimationData.class, "missingAnimation"), true);
         unknownAnimation = new Animation2DRenderer("texture2D");
         unknownAnimation.init(animator);
         unknownAnimation.setScale(new Vector2f(12));
@@ -103,10 +103,10 @@ public class FallbackScene extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ENTER))
+        if (context().getInputManager().inputPressed(ActionId.ENTER))
             engine().sound().createSoundSource(UNKNOWN_SOUND);
 
         unknownAnimation.update();
@@ -145,9 +145,9 @@ public class FallbackScene extends Scene {
 
     @Override
     public void release() {
-        resources.deleteResource(TextureData.class, BROKEN_TEXTURE);
-        resources.deleteResource(ShaderData.class, BROKEN_SHADER);
-        resources.deleteResource(ShaderData.class, NOT_COMPILING_SHADER);
-        resources.deleteResource(ShaderData.class, MISSING_INCLUDE_SHADER);
+        resources().deleteResource(TextureData.class, BROKEN_TEXTURE);
+        resources().deleteResource(ShaderData.class, BROKEN_SHADER);
+        resources().deleteResource(ShaderData.class, NOT_COMPILING_SHADER);
+        resources().deleteResource(ShaderData.class, MISSING_INCLUDE_SHADER);
     }
 }

@@ -12,23 +12,16 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Guard of the extension contract of the classes meant to be inherited: no protected field, their state is
  * reached through chosen and documented methods (a subclass cannot break their invariants, and the fields can
- * change without breaking the subclasses of other projects). The list grows with the objective
- * "Héritage et API publique" (docs/current.md).
+ * change without breaking the subclasses of other projects). The classes are listed in ExtensibleClasses.
  */
 class ExtensionFieldsTest {
-    private static final List<String> EXTENSIBLE_CLASSES = List.of(
-            "io.github.mightycode.mightylib.graphics.renderer.Mesh",
-            "io.github.mightycode.mightylib.graphics.renderer.Renderer",
-            "io.github.mightycode.mightylib.graphics.renderer.MeshRenderer",
-            "io.github.mightycode.mightylib.graphics.renderer._2D.shape.Shape2DRenderer"
-    );
 
     @Test
     void noProtectedField() throws Exception {
         ClassLoader loader = getClass().getClassLoader();
         List<String> problems = new ArrayList<>();
 
-        for (String name : EXTENSIBLE_CLASSES) {
+        for (String name : ExtensibleClasses.NAMES) {
             // Not initialized: no static block runs (GL, OpenAL)
             Class<?> type = Class.forName(name, false, loader);
 

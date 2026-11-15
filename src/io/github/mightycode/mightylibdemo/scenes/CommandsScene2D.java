@@ -69,7 +69,7 @@ public class CommandsScene2D extends Scene {
     public void launch(String[] args) {
         setClearColor(0.12f, 0.12f, 0.16f);
 
-        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
+        Vector2i windowSize = context().getWindow().getInfo().getSizeCopy();
         text = new Text();
         text.setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
@@ -91,8 +91,8 @@ public class CommandsScene2D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
     }
 
     @Override
@@ -124,7 +124,7 @@ public class CommandsScene2D extends Scene {
 
     // A shape at a random place (or at a given one, shifted by its rank): a renderer of the scene, unloaded with it
     private Spawned spawn(String shape, String colorName, float sizeFactor, Vector2f at, int rank) {
-        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
+        Vector2i windowSize = context().getWindow().getInfo().getSizeCopy();
         float size = (40 + random.nextInt(40)) * sizeFactor;
         float width = shape.equals("wide") ? size * 2.5f : size;
         float height = shape.equals("tall") ? size * 2.5f : size;

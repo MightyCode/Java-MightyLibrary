@@ -70,16 +70,16 @@ public class Scene2D extends Scene {
         atlas.addTexture("painting");
         atlas.setPreloaded();
 
-        resources.addPreLoadedResource(atlas);
+        resources().addPreLoadedResource(atlas);
     }
 
     public void launch(String[] args) {
         setClearColor(52, 189, 235, 1f);
         /// SCENE INFORMATION ///
-        hudCamera = main2DCamera.copy();
+        hudCamera = camera2D().copy();
 
         atlasRenderer = new RectangleRenderer("texture2D");
-        atlasRenderer.setMainTextureChannel(glResources.addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));
+        atlasRenderer.setMainTextureChannel(glResources().addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));
         atlasRenderer.setSizePix(atlas.getWidth(), atlas.getHeight());
         atlasRenderer.setPosition(new Vector2f(500, 10));
 
@@ -93,14 +93,14 @@ public class Scene2D extends Scene {
         //slimeRenderer.setVerticalFlip(true);
 
         Animator animator = new Animator();
-        animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
+        animator.addAndInitAnimation("first", resources().getResource(AnimationData.class, "slime"), true);
 
         slimeRenderer.init(animator);
         slimeRenderer.setShiftRotation(EDirection.None);
 
         float scale = 720.f / 30.f / 2;
         slimeRenderer.setScale(new Vector2f(scale));
-        slimeRenderer.setPosition(new Vector2f(400, mainContext.getWindow().getInfo().getSizeCopy().y));
+        slimeRenderer.setPosition(new Vector2f(400, context().getWindow().getInfo().getSizeCopy().y));
         slimeRenderer.setVerticalFlip(false);
 
         slimeTextureTweening = new Vector2fTweening();
@@ -112,7 +112,7 @@ public class Scene2D extends Scene {
 
         text = new Text();
 
-        Vector2i size = mainContext.getWindow().getInfo().getSizeRef();
+        Vector2i size = context().getWindow().getInfo().getSizeRef();
 
         text.setFont("bahnschrift")
                 .setFontSize(60)
@@ -122,7 +122,7 @@ public class Scene2D extends Scene {
                 .setColor(new Color4f(0.5f, 0.4f, 0.3f, 1))
                 .setText("Test d'écriture de texte c'est super cool");
 
-        map = resources.getResource(TileMap.class, "map");
+        map = resources().getResource(TileMap.class, "map");
 
         mapRenderer = new LayersTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(map);
@@ -133,12 +133,12 @@ public class Scene2D extends Scene {
                 .initTwoValue(2, 0f, MightyMath.PI_FLOAT * 2f);
 
         DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
-        draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        draggingSceneComponent.init(context().getInputManager(), context().getMouseManager(), camera2D());
         draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
         addUpdatable(draggingSceneComponent);
 
         MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
+        movingSceneComponent.init(context().getInputManager(), camera2D());
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                         .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -151,20 +151,20 @@ public class Scene2D extends Scene {
         addUpdatable(movingSceneComponent);
 
         ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
-        zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
-                main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
+        zoomingSceneComponent.init(context().getInputManager(), context().getMouseManager(),
+                camera2D(), context().getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
 
         addUpdatable(zoomingSceneComponent);
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera2D(hudCamera).init(main2DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera2D(hudCamera).init(camera2D(), new Vector2f(5, 5))
                         .addInfo("position")
                         .addInfo("rotation")
                         .addInfo("zoom")
         );
 
-        main2DCamera.setZoomLevel(0.5f);
+        camera2D().setZoomLevel(0.5f);
 
         hexagonRenderer1 = new HexagonRenderer("colorShape2D");
         hexagonRenderer1.setColorMode(ColorList.Gold());
@@ -172,9 +172,9 @@ public class Scene2D extends Scene {
         hexagonRenderer1.setPosition(new Vector2f(-100, 400));
 
         hexagonRenderer2 = new HexagonRenderer("texture2D");
-        hexagonRenderer2.setMainTextureChannel(glResources.addElementOrReturnIfPresent(
+        hexagonRenderer2.setMainTextureChannel(glResources().addElementOrReturnIfPresent(
                 Texture.class,
-                new Texture(resources.getResource(TextureData.class,
+                new Texture(resources().getResource(TextureData.class,
                         "hexagon")), "hexagon"));
         hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         hexagonRenderer2.setPosition(new Vector2f(0,0));
@@ -222,10 +222,10 @@ public class Scene2D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        IInputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = context().getInputManager();
 
         if (inputManager.inputPressed(ActionId.MOVE_LEFT_2D)) {
             map.setTileType(0, 0, 0, 78);
@@ -264,7 +264,7 @@ public class Scene2D extends Scene {
 
         slimeRenderer.display();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ENTER)){
+        if (context().getInputManager().inputPressed(ActionId.ENTER)){
             if (testEllipseRenderer.getReferenceDirection() == EDirection.None){
                 testEllipseRenderer.setReferenceDirection(EDirection.Up);
             } else if (testEllipseRenderer.getReferenceDirection() == EDirection.Up){
@@ -333,6 +333,6 @@ public class Scene2D extends Scene {
 
     @Override
     public void release() {
-        resources.deleteResource(TextureDataAtlas.class, "atlas1");
+        resources().deleteResource(TextureDataAtlas.class, "atlas1");
     }
 }

@@ -49,7 +49,7 @@ public class LayeredTexture2D extends Scene {
 
     // The texture of the data (its fallback when the name is unknown), referenced by the renderer that gets it
     private IRenderTextureBindable layeredTexture(String name) {
-        GLElement element = glResources.acquire(resources.getResourceOrFallback(LayeredTextureData.class, name), true);
+        GLElement element = glResources().acquire(resources().getResourceOrFallback(LayeredTextureData.class, name), true);
         return (IRenderTextureBindable) element;
     }
 
@@ -78,8 +78,8 @@ public class LayeredTexture2D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
     }
 
     @Override

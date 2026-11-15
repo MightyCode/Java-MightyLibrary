@@ -4,6 +4,11 @@ import io.github.mightycode.mightylib.utils.LoadingElement;
 
 import java.util.ArrayList;
 
+/**
+ * A scene displayed while another one loads (Scene.createLoadingScene, or the default loading scene of the game).
+ * It is launched at once, without loading scene itself. Its hooks are the ones of Scene; it lasts until the
+ * resources of the loaded scene and the elements added with addElementToLoad are loaded.
+ */
 public abstract class TemplateSceneLoading extends Scene {
     private final ArrayList<LoadingElement> elementToLoad;
 
@@ -19,17 +24,17 @@ public abstract class TemplateSceneLoading extends Scene {
         return null;
     }
 
-    public void addElementToLoad(LoadingElement element) {
+    public final void addElementToLoad(LoadingElement element) {
         elementToLoad.add(element);
     }
 
-    public boolean isFinished() {
+    public final boolean isFinished() {
         for (LoadingElement element : elementToLoad) {
             if (!element.isLoaded()) {
                 return false;
             }
         }
 
-        return resources.finishedCurrentLoading();
+        return resources().finishedCurrentLoading();
     }
 }

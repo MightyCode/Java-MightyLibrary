@@ -84,17 +84,17 @@ public class Scene3D extends Scene {
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
-        mainContext.getMouseManager().setCursor(false);
+        context().getMouseManager().setCursor(false);
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
 
         timeShaderValue = new ShaderValue("time", Float.class, 0f);
-        main3DCamera.setSpeed(new Vector3f(10));
-        cameraComponent = new FreeCamera3DComponent(mainContext.getInputManager(), main3DCamera, AxisId.freeCamera3DInputs());
+        camera3D().setSpeed(new Vector3f(10));
+        cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
         addUpdatable(cameraComponent);
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera3D().init(camera3D(), new Vector2f(5, 5))
                         .addInfo(DebugInfoCamera3D.POSITION)
                         .addInfo(DebugInfoCamera3D.LOOK)
                         .addInfo(DebugInfoCamera3D.SPEED)
@@ -118,7 +118,7 @@ public class Scene3D extends Scene {
                 new Vector3f(0.2f), new Vector3f(0.5f), new Vector3f(1)
         );
 
-        cubeColorLighting.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+        cubeColorLighting.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("worldColor", Vector3f.class, new Vector3f( 0.2f, 0.5f, 0.2f))
                 .addShaderValue("lightPos", Vector3f.class, light.position())
                 .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
@@ -144,7 +144,7 @@ public class Scene3D extends Scene {
         cubeColorMaterial.setNoColorNoTextureMode();
         cubeColorMaterial.setNormal();
 
-        cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+        cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()));
         lightMaterial.addToRenderer(cubeColorMaterial, "light");
         Material.Emerald().addToRenderer(cubeColorMaterial, "material");
@@ -157,7 +157,7 @@ public class Scene3D extends Scene {
         cubeTexturedMaterial.addTextureChannel("container2_specular", "material.specular", 1);
 
         cubeTexturedMaterial
-                .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                .addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()))
                 .addShaderValue("material.shininess", Float.class, 64f);
 
@@ -187,7 +187,7 @@ public class Scene3D extends Scene {
         heightMapRenderer.setPosition(new Vector3f(-4140, -920, -4640));
         heightMapRenderer.setScale(new Vector3f(new Vector3f(10000, 1000, 10000)));
 
-        heightMapRenderer.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+        heightMapRenderer.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("worldColor", Vector3f.class, new Vector3f( 1f, 1f, 1f))
                 .addShaderValue("lightPos", Vector3f.class, light.position())
                 .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
@@ -217,7 +217,7 @@ public class Scene3D extends Scene {
 
     // Model loaded by Assimp with its material, lit by three coloured point lights and a spot light following the camera
     private void createBackpack() {
-        Model data = resources.getResource(Model.class, BACKPACK_MODEL);
+        Model data = resources().getResource(Model.class, BACKPACK_MODEL);
         if (data == null || !data.isLoaded()) {
             String message = "Model '" + BACKPACK_MODEL + "' missing: copy the demonstration package into resources/models/backpack/";
             System.err.println("--Scene3D : " + message);
@@ -233,7 +233,7 @@ public class Scene3D extends Scene {
 
         backpack = new ModelRenderer(BACKPACK_MODEL);
         backpack.setPosition(center);
-        backpack.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef());
+        backpack.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef());
 
         LightDecrease lightDecrease = new LightDecrease(1.0f, 0.09f, 0.032f);
 
@@ -244,7 +244,7 @@ public class Scene3D extends Scene {
 
         backpackLights.setSpotLight(new SpotLight(new BasicMaterial(
                 new Vector3f(0f), new Vector3f(0.6f), new Vector3f(0.8f)), lightDecrease)
-                .setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector())
+                .setPosition(camera3D().getCamPosRef()).setDirection(camera3D().getLookAtVector())
                 .enable());
 
         Vector3f[] offsets = {
@@ -280,18 +280,18 @@ public class Scene3D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        IInputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = context().getInputManager();
 
         // The camera has been moved by its component (super.update)
         if (inputManager.inputPressed(ActionId.TAB)) {
             cameraComponent.toggleLookLocked();
-            mainContext.getMouseManager().invertCursorState();
+            context().getMouseManager().invertCursorState();
         }
 
-        originLabel.setPosition(main3DCamera.worldPositionToScreen(new Vector3f(0), main2DCamera));
+        originLabel.setPosition(camera3D().worldPositionToScreen(new Vector3f(0), camera2D()));
 
         displacementMapTweening.update();
 
@@ -302,22 +302,22 @@ public class Scene3D extends Scene {
 
         light.setX(rotationTweening.value() * 2);
 
-        cubeColorLighting.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeColorLighting.updateShaderValue("viewPos", camera3D().getCamPosRef());
         cubeColorLighting.updateShaderValue("lightPos", light.position());
 
-        cubeColorMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeColorMaterial.updateShaderValue("viewPos", camera3D().getCamPosRef());
         cubeColorMaterial.updateShaderValue("light.vector", RendererUtils.ToLightPosition(light.position()));
 
-        cubeTexturedMaterial.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+        cubeTexturedMaterial.updateShaderValue("viewPos", camera3D().getCamPosRef());
         cubeTexturedMaterial.updateShaderValue("light.vector", RendererUtils.ToLightPosition(light.position()));
 
         if (backpack != null) {
-            backpack.updateShaderValue("viewPos", main3DCamera.getCamPosRef());
-            backpackLights.getSpotLight().setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector());
+            backpack.updateShaderValue("viewPos", camera3D().getCamPosRef());
+            backpackLights.getSpotLight().setPosition(camera3D().getCamPosRef()).setDirection(camera3D().getLookAtVector());
             backpackLights.update();
         }
 
-        main3DCamera.updateView();
+        camera3D().updateView();
     }
 
 

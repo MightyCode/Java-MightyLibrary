@@ -52,49 +52,49 @@ public class Game3D2D extends Scene {
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
-        mainContext.getMouseManager().setCursor(false);
-        cameraComponent = new FreeCamera3DComponent(mainContext.getInputManager(), main3DCamera, AxisId.freeCamera3DInputs());
+        context().getMouseManager().setCursor(false);
+        cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
         addUpdatable(cameraComponent);
         setClearColor(52, 189, 235, 1f);
 
-        main3DCamera.setSpeed(new Vector3f(10));
+        camera3D().setSpeed(new Vector3f(10));
 
-        insideCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0, 0), true);
+        insideCamera = new Camera2D(context().getWindow().getInfo(), new Vector2f(0, 0), true);
 
         /// RENDERERS ///
         game2DRender = new FrameBuffer(
                 new BasicBindableObject().setQualityTexture(TextureParameters.PIXEL_ART_PARAMETERS),
-                mainContext.getWindow().getInfo().getVirtualSizeRef().x,
-                mainContext.getWindow().getInfo().getVirtualSizeRef().y);
+                context().getWindow().getInfo().getVirtualSizeRef().x,
+                context().getWindow().getInfo().getVirtualSizeRef().y);
 
         background = new RectangleRenderer("texture2D");
         background.setReferenceCamera(insideCamera);
         background.setMainTextureChannel("error");
-        background.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x,
-                mainContext.getWindow().getInfo().getVirtualSizeRef().y);
+        background.setSizePix(context().getWindow().getInfo().getVirtualSizeRef().x,
+                context().getWindow().getInfo().getVirtualSizeRef().y);
         background.setPosition(new Vector2f(0, 0));
 
         slimeRenderer = new Animation2DRenderer("texture2D");
         slimeRenderer.setReferenceCamera(insideCamera);
         slimeRenderer.setMainTextureChannel("slime");
         Animator animator = new Animator();
-        animator.addAndInitAnimation("first", resources.getResource(AnimationData.class, "slime"), true);
+        animator.addAndInitAnimation("first", resources().getResource(AnimationData.class, "slime"), true);
         slimeRenderer.init(animator);
         slimeRenderer.setShiftRotation(EDirection.None);
 
         float scale = 720.f / 30.f / 2;
         slimeRenderer.setScale(new Vector2f(scale));
-        slimeRenderer.setPosition(new Vector2f(400, mainContext.getWindow().getInfo().getSizeCopy().y));
+        slimeRenderer.setPosition(new Vector2f(400, context().getWindow().getInfo().getSizeCopy().y));
         slimeRenderer.setVerticalFlip(false);
         slimeRenderer.update();
 
         debugView = new RectangleRenderer("texture2D");
         debugView.setMainTextureChannel(game2DRender);
 
-        Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeRef();
+        Vector2i windowSize = context().getWindow().getInfo().getVirtualSizeRef();
 
-        debugView.setSizePix(mainContext.getWindow().getInfo().getVirtualSizeRef().x * 0.2f,
-                mainContext.getWindow().getInfo().getVirtualSizeRef().y * 0.2f);
+        debugView.setSizePix(context().getWindow().getInfo().getVirtualSizeRef().x * 0.2f,
+                context().getWindow().getInfo().getVirtualSizeRef().y * 0.2f);
 
         debugView.setPosition(new Vector2f(0, windowSize.y - debugView.scale().y));
 
@@ -109,7 +109,7 @@ public class Game3D2D extends Scene {
         gameRenderer.setTexturePosition();
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera3D().init(camera3D(), new Vector2f(5, 5))
                         .addInfo(DebugInfoCamera3D.POSITION)
                         .addInfo(DebugInfoCamera3D.LOOK)
                         .addInfo(DebugInfoCamera3D.SPEED)
@@ -120,10 +120,10 @@ public class Game3D2D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        IInputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = context().getInputManager();
 
         float speed2D = 200;
 
@@ -154,19 +154,19 @@ public class Game3D2D extends Scene {
 
         if(inputManager.inputPressed(ActionId.TAB)) {
             cameraComponent.toggleLookLocked();
-            mainContext.getMouseManager().invertCursorState();
+            context().getMouseManager().invertCursorState();
         }
 
         slimeRenderer.update();
 
-        main3DCamera.updateView();
+        camera3D().updateView();
     }
 
 
     public void display() {
         game2DRender.bindFrameBuffer();
         clear();
-        mainContext.getWindow().setVirtualViewport();
+        context().getWindow().setVirtualViewport();
 
         background.display();
         slimeRenderer.display();

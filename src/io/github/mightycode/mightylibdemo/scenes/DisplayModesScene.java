@@ -54,9 +54,9 @@ public class DisplayModesScene extends Scene {
     public void update() {
         super.update();
 
-        KeyboardManager keyboard = mainContext.getKeyboardManager();
+        KeyboardManager keyboard = context().getKeyboardManager();
         if (keyboard.keyPressed(GLFW_KEY_ESCAPE)) {
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
 
@@ -65,12 +65,12 @@ public class DisplayModesScene extends Scene {
                     .setVirtualSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT), new SecondView());
         }
 
-        ChangeDisplay(mainContext);
+        ChangeDisplay(context());
     }
 
     // A closed window is not in the list of the context any more
     private boolean isOpen(WindowContext window) {
-        return window != null && mainContext.getContext().getWindows().contains(window);
+        return window != null && context().getContext().getWindows().contains(window);
     }
 
     // The keys of the scene, read in the given window
@@ -102,7 +102,7 @@ public class DisplayModesScene extends Scene {
     @Override
     public void display() {
         // Here and not in update: while a border is dragged only the image is drawn (Context.redrawWindow)
-        status.setText(Describe(mainContext));
+        status.setText(Describe(context()));
 
         setVirtualScene();
         clear();

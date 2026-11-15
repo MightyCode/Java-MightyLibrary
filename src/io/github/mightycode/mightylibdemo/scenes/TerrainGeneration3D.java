@@ -50,15 +50,15 @@ public class TerrainGeneration3D extends Scene {
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
-        mainContext.getMouseManager().setCursor(false);
-        cameraComponent = new FreeCamera3DComponent(mainContext.getInputManager(), main3DCamera, AxisId.freeCamera3DInputs());
+        context().getMouseManager().setCursor(false);
+        cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
         addUpdatable(cameraComponent);
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
-        main3DCamera.setSpeed(new Vector3f(10));
+        camera3D().setSpeed(new Vector3f(10));
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera3D().init(camera3D(), new Vector2f(5, 5))
                         .addInfo(DebugInfoCamera3D.POSITION)
                         .addInfo(DebugInfoCamera3D.LOOK)
                         .addInfo(DebugInfoCamera3D.SPEED)
@@ -88,7 +88,7 @@ public class TerrainGeneration3D extends Scene {
         terrainRenderer.setPosition(new Vector3f(0, -30, 0));
         //terrainRenderer.setScale(new Vector3f(new Vector3f(10, 10, 10)));
 
-        terrainRenderer.addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+        terrainRenderer.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("worldColor", Vector3f.class, new Vector3f( 1f, 1f, 1f))
                 .addShaderValue("lightPos", Vector3f.class, new Vector3f(-1f, 10.0f, -4f))
                 .addShaderValue("lightColor", Vector3f.class, lightMaterial.Diffuse);
@@ -107,20 +107,20 @@ public class TerrainGeneration3D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        IInputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = context().getInputManager();
 
 
         if (inputManager.inputPressed(ActionId.TAB)) {
             cameraComponent.toggleLookLocked();
-            mainContext.getMouseManager().invertCursorState();
+            context().getMouseManager().invertCursorState();
         }
 
-        originLabel.setPosition(main3DCamera.worldPositionToScreen(new Vector3f(0), main2DCamera));
+        originLabel.setPosition(camera3D().worldPositionToScreen(new Vector3f(0), camera2D()));
 
-        main3DCamera.updateView();
+        camera3D().updateView();
     }
 
 

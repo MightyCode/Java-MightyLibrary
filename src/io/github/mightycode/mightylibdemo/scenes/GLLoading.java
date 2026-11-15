@@ -37,7 +37,7 @@ public class GLLoading extends Scene {
             TextureData data = new TextureData(textureName(i), "generated");
             data.setBufferedImage(image);
             data.setPreloaded();
-            resources.addPreLoadedResource(data);
+            resources().addPreLoadedResource(data);
         }
     }
 
@@ -45,7 +45,7 @@ public class GLLoading extends Scene {
     public void launch(String[] args) {
         setClearColor(0.1f, 0.1f, 0.1f);
 
-        Vector2f windowSize = new Vector2f(mainContext.getWindow().getInfo().getVirtualSizeRef());
+        Vector2f windowSize = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
         float cellSize = windowSize.x / 3f;
 
         for (int i = 0; i < TEXTURE_COUNT; ++i) {
@@ -61,8 +61,8 @@ public class GLLoading extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
     }
 
     @Override
@@ -89,6 +89,6 @@ public class GLLoading extends Scene {
     @Override
     public void release() {
         for (int i = 0; i < TEXTURE_COUNT; ++i)
-            resources.deleteResource(TextureData.class, textureName(i));
+            resources().deleteResource(TextureData.class, textureName(i));
     }
 }

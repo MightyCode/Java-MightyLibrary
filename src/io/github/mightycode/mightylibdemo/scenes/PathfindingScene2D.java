@@ -59,7 +59,7 @@ public class PathfindingScene2D extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(0.1f, 0.1f, 0.12f);
-        mainContext.getMouseManager().setCursor(true);
+        context().getMouseManager().setCursor(true);
 
         rectangle = new RectangleRenderer("colorShape2D");
 
@@ -80,7 +80,7 @@ public class PathfindingScene2D extends Scene {
                 .setColor(PATH)
                 .setPosition(new Vector2f(20, 55));
 
-        algorithmSelector = new StrSelector(new String[]{DIJKSTRA, ASTAR}, mainContext,
+        algorithmSelector = new StrSelector(new String[]{DIJKSTRA, ASTAR}, context(),
                 new Vector2f(COLUMNS * CELL - 340f, 5f), 330f);
         algorithmSelector.init(ActionId.LEFT_CLICK);
 
@@ -149,16 +149,16 @@ public class PathfindingScene2D extends Scene {
     public void update() {
         super.update();
 
-        IInputManager input = mainContext.getInputManager();
+        IInputManager input = context().getInputManager();
 
         algorithmSelector.update();
         if (algorithmSelector.isUpdated())
             rebuild();
 
         if (input.inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        Vector2f mouse = main2DCamera.transformPosition(mainContext.getMouseManager().pos());
+        Vector2f mouse = camera2D().transformPosition(context().getMouseManager().pos());
         int x = (int) Math.floor(mouse.x / CELL);
         int y = (int) Math.floor((mouse.y - TOP) / CELL);
         boolean inside = x >= 0 && x < COLUMNS && y >= 0 && y < ROWS;

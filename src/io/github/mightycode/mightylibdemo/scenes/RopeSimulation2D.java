@@ -240,12 +240,12 @@ public class RopeSimulation2D extends Scene {
 
         /// SCENE INFORMATION ///
 
-        hudCamera = main2DCamera.copy();
+        hudCamera = camera2D().copy();
 
         textCurrentState = new Text();
         textCurrentState.setReferenceCamera(hudCamera);
 
-        Vector2i size = mainContext.getWindow().getInfo().getSizeRef();
+        Vector2i size = context().getWindow().getInfo().getSizeRef();
         textCurrentState.setFont("bahnschrift")
                 .setFontSize(20)
                 .setReference(EDirection.RightUp)
@@ -275,12 +275,12 @@ public class RopeSimulation2D extends Scene {
                 .setText("i - Wind controlled : " + controlWind + " ");
 
         DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
-        draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        draggingSceneComponent.init(context().getInputManager(), context().getMouseManager(), camera2D());
         draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
         addUpdatable(draggingSceneComponent);
 
         MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
+        movingSceneComponent.init(context().getInputManager(), camera2D());
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                         .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -293,30 +293,30 @@ public class RopeSimulation2D extends Scene {
         addUpdatable(movingSceneComponent);
 
         ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
-        zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
-                main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
+        zoomingSceneComponent.init(context().getInputManager(), context().getMouseManager(),
+                camera2D(), context().getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
 
         addUpdatable(zoomingSceneComponent);
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera2D(hudCamera).init(main2DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera2D(hudCamera).init(camera2D(), new Vector2f(5, 5))
                         .addInfo("position")
                         .addInfo("rotation")
                         .addInfo("zoom")
         );
 
-        main2DCamera.setZoomLevel(0.5f);
+        camera2D().setZoomLevel(0.5f);
     }
 
     public void update() {
         super.update();
 
-        IInputManager inputManager = mainContext.getInputManager();
-        KeyboardManager keyboardManager = mainContext.getKeyboardManager();
+        IInputManager inputManager = context().getInputManager();
+        KeyboardManager keyboardManager = context().getKeyboardManager();
 
         if (inputManager.inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
         if (keyboardManager.keyPressed(GLFW_KEY_SPACE)) {
             simulationWorking = !simulationWorking;
@@ -362,8 +362,8 @@ public class RopeSimulation2D extends Scene {
         if (controlWind) {
             // Wind = 2 time the gravity if mouse on outer border
             // Wind 0 if mouse on center
-            Vector2f mousePosition = main2DCamera.transformPosition(inputManager.getMouseManager().pos());
-            Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
+            Vector2f mousePosition = camera2D().transformPosition(inputManager.getMouseManager().pos());
+            Vector2i windowSize = context().getWindow().getInfo().getSizeCopy();
 
             windForce = new Vector2f(0, 0);
             windForce.x = (mousePosition.x - (float) windowSize.x / 2) / windowSize.x * GRAVITY * 2;
@@ -421,10 +421,10 @@ public class RopeSimulation2D extends Scene {
     }
 
     public void mouseLeftClick() {
-        IInputManager inputManager = mainContext.getInputManager();
-        KeyboardManager keyboardManager = mainContext.getKeyboardManager();
+        IInputManager inputManager = context().getInputManager();
+        KeyboardManager keyboardManager = context().getKeyboardManager();
 
-        Vector2f mousePositionInWorld = main2DCamera.transformPosition(inputManager.getMouseManager().pos());
+        Vector2f mousePositionInWorld = camera2D().transformPosition(inputManager.getMouseManager().pos());
         boolean noOverridePoints;
 
         switch (clickingMode) {

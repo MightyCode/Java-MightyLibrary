@@ -31,7 +31,7 @@ public class ConsoleFeedScene extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(0.15f, 0.15f, 0.2f);
-        Vector2f windowSize = new Vector2f(mainContext.getWindow().getInfo().getVirtualSizeRef());
+        Vector2f windowSize = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
 
         help = new Text();
         help.setFont("bahnschrift")
@@ -48,14 +48,14 @@ public class ConsoleFeedScene extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE)) {
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE)) {
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
 
-        if (mainContext.getInputManager().inputPressed(ActionId.SELECT_UP))
+        if (context().getInputManager().inputPressed(ActionId.SELECT_UP))
             intervalIndex = Math.max(0, intervalIndex - 1);
-        if (mainContext.getInputManager().inputPressed(ActionId.SELECT_DOWN))
+        if (context().getInputManager().inputPressed(ActionId.SELECT_DOWN))
             intervalIndex = Math.min(INTERVALS_MILLISECONDS.length - 1, intervalIndex + 1);
 
         help.setText("One line every " + INTERVALS_MILLISECONDS[intervalIndex] + " ms (UP: faster, DOWN: slower, ESCAPE: menu)");

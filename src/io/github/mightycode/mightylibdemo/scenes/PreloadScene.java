@@ -26,7 +26,7 @@ public class PreloadScene extends Scene {
     public void launch(String[] args) {
         setClearColor(0.1f, 0.1f, 0.1f);
 
-        Vector2i windowSize = mainContext.getWindow().getInfo().getSizeCopy();
+        Vector2i windowSize = context().getWindow().getInfo().getSizeCopy();
         text = new Text();
         text.setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
@@ -39,7 +39,7 @@ public class PreloadScene extends Scene {
 
         // The scene is only built: its batches are loaded, not its objects
         next = new Scene2D();
-        sceneManagerInterface.preloadScene(next);
+        sceneManager().preloadScene(next);
     }
 
     @Override
@@ -49,11 +49,11 @@ public class PreloadScene extends Scene {
         if (++ticks % REFRESH_TICKS == 0)
             text.setText(describePreload() + " | ENTER: Scene2D, ESCAPE: menu");
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ENTER))
-            sceneManagerInterface.setNewScene(next, new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ENTER))
+            sceneManager().setNewScene(next, new String[]{});
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
     }
 
     // Loaded data / data of the batches of the next scene
@@ -61,7 +61,7 @@ public class PreloadScene extends Scene {
         int loaded = 0, total = 0;
         long cpu = 0, gpu = 0;
         for (String batch : next.getInvolvedBatch()) {
-            JSONObject preview = resources.describeBatch(batch);
+            JSONObject preview = resources().describeBatch(batch);
             if (preview.has("error"))
                 continue;
 
