@@ -43,6 +43,8 @@ class MultiSourceDataTest extends ResourcesTestBase {
         final AtomicInteger readings = new AtomicInteger();
         // A loader that forgets to mark its files
         volatile boolean markFiles = true;
+        // A loader that fails once every file is read (bad content)
+        volatile boolean failAfterReading;
 
         @Override
         public Class<? extends DataType> getType() {
@@ -82,6 +84,9 @@ class MultiSourceDataTest extends ResourcesTestBase {
                 if (markFiles)
                     pair.markSourceRead(i);
             }
+
+            if (failAfterReading)
+                throw new ResourceException("bad pair");
         }
     }
 
@@ -181,6 +186,20 @@ class MultiSourceDataTest extends ResourcesTestBase {
         assertFalse(pair.isLoaded());
         assertTrue(pair.hasFailed());
         assertTrue(errors.contains("files not read: " + first + ", " + second), errors);
+    }
+
+    // Every file read: the failure has no empty list of unread files
+    @Test
+    void aFailureAfterReadingEveryFileNamesNone() throws Exception {
+        PairData pair = pair("pair", first, second);
+        pairLoader.failAfterReading = true;
+        start();
+
+        String errors = loadCapturingErrors("pair");
+
+        assertTrue(pair.hasFailed());
+        assertTrue(errors.contains("bad pair"), errors);
+        assertFalse(errors.contains("not read"), errors);
     }
 
     private String captureErrors(Runnable action) throws Exception {

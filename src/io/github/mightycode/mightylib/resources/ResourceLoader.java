@@ -130,7 +130,10 @@ public abstract class ResourceLoader {
         try {
             initWithFile(data);
         } catch (ResourceException e) {
-            throw new ResourceException(e.getMessage() + " (not read: " + String.join(", ", data.unreadSources()) + ")");
+            List<String> unread = data.unreadSources();
+            if (unread.isEmpty())
+                throw e;
+            throw new ResourceException(e.getMessage() + " (not read: " + String.join(", ", unread) + ")");
         }
 
         List<String> unread = data.unreadSources();
