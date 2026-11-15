@@ -43,15 +43,13 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 ## Bugs relevés en passant (non corrigés)
 - **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (20) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (5) ; `NP_BOOLEAN_RETURN_NULL` (`EngineConfig.ParseShown`) ; Error Prone `MissingCasesInEnumSwitch` (22), `EmptyCatch` (3 : `EngineConfig`, `FileChangeDetector`, `ResourceWatcher`), `ReferenceEquality` (39), `EnumOrdinal` (21) (chiffres de la bibliothèque seule). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
-- `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
-- `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
-- `MeshRenderer.addTextureChannel(nom, uniform, canal)` ne fait rien tant qu'aucun canal n'a été ajouté par l'autre surcharge (`textures == null` → retour immédiat ; le tableau n'est créé que par `addTextureChannel(IRenderTextureBindable, …)`).
-- `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 
 ## Bibliothèque réutilisable
 `mightylib` = base des futurs jeux/logiciels ; `mightylibdemo` l'illustre. Cap validé :
 - **Jar léger** : dépendances (LWJGL et natives, JOML, org.json, JBox2D…) déclarées dans le pom, pas embarquées.
 - **Distribution** : `mvn install`, puis JitPack ou GitHub Packages. **Versions** sémantiques par release.
+- **Compatibilité binaire** à partir de la première version publiée : japicmp compare l'API de chaque version à la précédente (les statuts `@API` disent ce qui peut changer).
+- **Modules Java** (JPMS, `module-info`) : n'exporter que les packages non `INTERNAL`, avec la bibliothèque réutilisable.
 - **Ressources** (principal chantier, tout est lu aujourd'hui depuis `resources/` sur disque) : celles du moteur (shaders, texture `error`, polices par défaut) dans le jar, lues depuis le classpath ; celles du jeu dans le dossier du projet ; un **paquet de démonstration** à part (modèles `backpack`, `basicShape`, `weapon`, `world`, non commités, dans `.gitignore`) : la démo fonctionne sans, avec un message clair.
 - **Shaders** : includes GLSL lus depuis le classpath (jar) par l'abstraction de sources de `Resources` (aujourd'hui `ShaderLoader` lit le disque) ; shaders injectés par les projets et les mods (leur `shaders.json` ou leurs `ShaderData`, un nom identique remplace celui du moteur) ; variantes par `#define` injectés par le moteur (ubershader) ; `#version` et macros `in`/`out` injectés pour n'avoir qu'un jeu de fichiers au lieu de `1_40`/`3_30`.
   - **Plusieurs racines** (moteur, jeu, mods ; un nom identique remplace celui du moteur) : le dossier est déjà propre à chaque `Resources` (`EngineConfig.setResourcesFolder`, lu par `resources.folder()`) ; il deviendra une liste de sources, déclarées par les plugins (`registry` : une racine par plugin) une fois les sources multiples faites.
@@ -61,13 +59,13 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
   - **Shaders `1_40` en grande partie absents** (4 fichiers contre 31 en `3_30`) : un pilote GLSL 1.40 est incompatible avec le contexte 3.3 core demandé ; retirer `resources/shaders/1_40/` et la branche GLSL 140 de `ShaderManager.init`, ne plus y ajouter de shader ; le doublon disparaît de toute façon avec l'injection de `#version` et des macros `in`/`out`.
   - **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
 - **Compteurs `stats` injectables** par les plugins (nom, unité, remise à zéro), aujourd'hui fixés par le moteur.
-- Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
+- Deux modules Maven (`mightylib` et `demo`) : `current.md`.
 
 ### Manuel et documentation de l'API (cap proposé, **points précis à discuter avant de commencer**)
 - **But** : un site HTML pour l'utilisateur du jar, distinct de `docs/` (notes internes) : **manuel d'utilisation et d'explication** en **français et anglais** (comment se servir du moteur, et pourquoi il est construit ainsi) ; la documentation de l'API publique est à côté, sur le même site, et liée depuis le manuel.
-- **Moment** : après la discussion « Héritage et API publique » de `current.md` (sinon tout est à réécrire) ; outillage et squelette d'abord, démarrage rapide une fois la démo compilée contre la seule API publique, puis une page par objectif.
+- **Moment** : l'API publique est classée (statuts `@API`, classes extensibles : `architecture.md`) ; outillage et squelette d'abord, démarrage rapide une fois la démo compilée contre la seule API publique, puis une page par objectif.
 - **Outil proposé** : sources Markdown `manual/fr/…` et `manual/en/…`, site généré par MkDocs Material + mkdocs-static-i18n (sélecteur de langue, recherche, thème sombre), versions par tag `vX.Y.Z` (`mike`), publication GitHub Pages par la CI (`futur-discussion.md`). Autre option : petit générateur Python dans `tools/`.
-- **API** : Javadoc de l'API publique (anglais seulement, commune aux deux langues) générée par `mvn javadoc:javadoc`, copiée dans `site/api/` et liée depuis la navigation ; style rapproché par `-stylesheetfile`. Suppose de revenir sur la convention « peu de Javadoc » pour l'API publique.
+- **API** : Javadoc de l'API publique (anglais seulement, commune aux deux langues) générée par `mvn javadoc:javadoc`, copiée dans `site/api/` et liée depuis la navigation ; style rapproché par `-stylesheetfile`. Les accroches des classes extensibles ont déjà leur Javadoc courte ; le reste de l'API publique suppose de revenir sur la convention « peu de Javadoc ».
 - **Contre la péremption** : exemples de code inclus depuis des fichiers Java compilés (jamais recopiés) ; pages générées (commandes depuis leur syntaxe déclarée, scènes depuis `DemoScenes`) ; liens `[[api:Classe#méthode]]` résolus par un hook MkDocs, build en échec si la cible n'existe plus ; script de vérification FR/EN (mêmes pages, titres, inclusions), ajouté à `bonnes-pratiques.md` et à la règle de fin d'objectif de `CLAUDE.md`.
 - **À discuter** : MkDocs ou générateur maison ; langue de rédaction de référence et traduction ; plan du manuel (démarrage, concepts, extension, référence, recettes) ; étendue de la Javadoc requise ; versions publiées (toutes ou la dernière) ; texte des descriptions de commandes dans les deux langues (lié aux clés de langue).
 
@@ -180,7 +178,6 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
 
 - **`Material` partageable** : programme, valeurs d'uniform et `RenderState` (regroupés dans `Renderer`) extraits en un objet partagé entre renderers, avec une clé de tri pour le regroupement des dessins ; partage d'un `Mesh` entre renderers (possession, compteur de références).
 - **État de dessin à étendre** : blend par renderer, cache des `glEnable`/`glDisable` redondants dans `GLContext` ; attributs nommés (en plus des canaux) si besoin.
-- Bugs connus : `Renderer.updateShaderValue` sur une valeur absente lève une `NullPointerException` ; `Shape2DRenderer.setTexturePosition` ne marque pas la texture à renvoyer (il faut appeler `updateShapeTexture()`).
 
 ## Rendu SVG
 Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et anticrénelage communs).

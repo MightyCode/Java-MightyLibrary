@@ -8,7 +8,7 @@ import io.github.mightycode.mightylib.inputs.GamepadManager;
  * direction (stick up : LEFT_Y with NEGATIVE, y is positive downward ; trigger : POSITIVE).
  * The analog value is read with GamepadManager.getAxis or Gamepad.getAxis.
  */
-public class InputGamepadAxis implements IAction {
+public final class InputGamepadAxis implements IAction {
     public static final int POSITIVE = 1;
     public static final int NEGATIVE = -1;
     public static final float DEFAULT_THRESHOLD = 0.5f;

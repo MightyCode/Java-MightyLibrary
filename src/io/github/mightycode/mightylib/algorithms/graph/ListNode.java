@@ -14,7 +14,8 @@ public abstract class ListNode<T extends ListNode<?>>{
     private final ArrayList<Long> ids;
     private final SortedMap<Long, T> nodes;
 
-    public ListNode(long id){
+    // Package-private: the hierarchy is closed, its subclasses are in this package
+    ListNode(long id){
         this.id = id;
         objectId = ID++;
 

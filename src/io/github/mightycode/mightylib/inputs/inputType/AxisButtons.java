@@ -9,7 +9,7 @@ import io.github.mightycode.mightylib.inputs.IInputManager;
  * new AxisButtons(MOVE_LEFT, MOVE_RIGHT) from two actions, read in the input manager of the window (their bindings
  * there, simulation included).
  */
-public class AxisButtons extends AxisBinding {
+public final class AxisButtons extends AxisBinding {
     private final IAction negative;
     private final IAction positive;
 

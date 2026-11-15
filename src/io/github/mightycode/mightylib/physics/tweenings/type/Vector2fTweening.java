@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.physics.tweenings.type;
 import io.github.mightycode.mightylib.physics.tweenings.Tweening;
 import org.joml.Vector2f;
 
-public class Vector2fTweening extends Tweening<Vector2f> {
+public final class Vector2fTweening extends Tweening<Vector2f> {
     private Vector2f beginningValue;
     private Vector2f endingValue;
     private Vector2f valuesRange;
@@ -25,7 +25,7 @@ public class Vector2fTweening extends Tweening<Vector2f> {
 
         updateBase();
 
-        if (inverseThisFrame){
+        if (isInverseThisFrame()){
             beginningValue = this.endingValue;
             valuesRange = new Vector2f(valuesRange).mul(-1f);
         }

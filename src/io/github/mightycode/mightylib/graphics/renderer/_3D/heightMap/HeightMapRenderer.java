@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector3f;
 
-public class HeightMapRenderer extends MeshRenderer {
+public final class HeightMapRenderer extends MeshRenderer {
     @FunctionalInterface
     public interface IHeightMapper {
         float map(float height, float min, float max);

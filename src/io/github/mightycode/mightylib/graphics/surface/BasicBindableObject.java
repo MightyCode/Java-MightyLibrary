@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.graphics.surface;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 
-public class BasicBindableObject implements IGLBindable{
+public final class BasicBindableObject implements IGLBindable{
     private int qualityType;
     private int textureType;
 

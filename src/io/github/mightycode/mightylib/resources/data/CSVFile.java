@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CSVFile extends SingleSourceDataType {
+public final class CSVFile extends SingleSourceDataType {
     private String[][] data;
     private boolean containsHeader;
     private String[] names;
@@ -22,7 +22,7 @@ public class CSVFile extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == CSVFile.class ? new CSVFile(dataName, path) : null;
+        return getClass() == CSVFile.class ? new CSVFile(getDataName(), path()) : null;
     }
 
     @Override

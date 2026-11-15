@@ -5,7 +5,9 @@ import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandRegistry;
 
-public abstract class ListGeneralCommand {
+public final class ListGeneralCommand {
+    private ListGeneralCommand() {}
+
     /**
      * The general commands, registered by the plugin of the engine (the engine owns them).
      * @param cheatCommand the command "cheats on|off" (the build allows the cheats and the game wants the command)

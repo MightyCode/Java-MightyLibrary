@@ -13,5 +13,5 @@ import jdk.jfr.Name;
 @Label("Frame")
 @Category("MightyLibrary")
 @Description("Display of a frame, buffer swap excluded")
-public class FrameEvent extends jdk.jfr.Event {
+public final class FrameEvent extends jdk.jfr.Event {
 }

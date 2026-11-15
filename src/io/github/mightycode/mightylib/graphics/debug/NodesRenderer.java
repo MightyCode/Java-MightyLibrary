@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * Display a bunch of rectangles that correspond to node position.
  */
-public class NodesRenderer {
+public final class NodesRenderer {
     private static final int EBO_SHIFT = 6;
     private static final int VBO_SHIFT = 8;
 

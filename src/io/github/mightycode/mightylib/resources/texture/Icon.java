@@ -8,7 +8,7 @@ import org.lwjgl.glfw.GLFWImage;
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
 
-public class Icon extends SingleSourceDataType {
+public final class Icon extends SingleSourceDataType {
     private int width;
     private int height;
 
@@ -24,7 +24,7 @@ public class Icon extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == Icon.class ? new Icon(dataName, path) : null;
+        return getClass() == Icon.class ? new Icon(getDataName(), path()) : null;
     }
 
     @Override

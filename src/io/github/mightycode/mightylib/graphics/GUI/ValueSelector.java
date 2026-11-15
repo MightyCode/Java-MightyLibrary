@@ -88,11 +88,11 @@ public abstract class ValueSelector<T> {
         return context.getWindow().getInfo().getVirtualSizeCopy().x * 0.165f;
     }
 
-    public void init(InputAction clickActionId){
+    public final void init(InputAction clickActionId){
         this.clickActionId = clickActionId;
     }
 
-    public void update()
+    public final void update()
     {
         if (chooseLeft.GUIMouseSelected() && inputManager.inputPressed(clickActionId)){
             setSelected(selected - 1);
@@ -103,11 +103,11 @@ public abstract class ValueSelector<T> {
         }
     }
 
-    public boolean isUpdated(){
+    public final boolean isUpdated(){
         return updated;
     }
 
-    public void display(){
+    public final void display(){
         updated = false;
         background.display();
         chooseLeft.display();
@@ -115,13 +115,13 @@ public abstract class ValueSelector<T> {
         typeSelectedName.display();
     }
 
-    public ValueSelector<T> setCanLoop(){
+    public final ValueSelector<T> setCanLoop(){
         canLoop = true;
 
         return setIndex(selected);
     }
 
-    public ValueSelector<T> setIndex(int i){
+    public final ValueSelector<T> setIndex(int i){
         setSelected(i);
 
         return this;
@@ -145,25 +145,26 @@ public abstract class ValueSelector<T> {
         typeSelectedName.setText(getSelectedName());
     }
 
-    public int size() {
+    public final int size() {
         return values.length;
     }
 
-    public T getSelected(){
+    public final T getSelected(){
         return values[selected];
     }
 
-    public String getSelectedName(){
+    public final String getSelectedName(){
         return nameOf(values[selected]);
     }
 
+    // Hook: the text shown for a value
     protected abstract String nameOf(T value);
 
-    public T[] getValues(){
+    public final T[] getValues(){
         return values;
     }
 
-    public void unload(){
+    public final void unload(){
         background.unload();
         chooseLeft.unload();
         chooseRight.unload();

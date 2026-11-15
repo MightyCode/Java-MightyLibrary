@@ -86,33 +86,48 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
 
     // ---- Life of the view, to override ----
 
-    // Surface on which the view is drawn before being displayed on its window
+    /**
+     * Hook called when the window opens, before launch: the surface on which the view is drawn (setVirtualScene)
+     * before being scaled to its window (setAndDisplayRealScene). Unloaded by super.unload().
+     */
     protected IGLBindable createVirtualSceneBindable() {
         return new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS);
     }
 
-    /** Called once the window exists: create the renderers here. The cameras and the virtual surface exist. */
+    /**
+     * Hook called once the window exists, with its OpenGL context current: create the renderers here. The cameras
+     * and the virtual surface exist. No need to call super.
+     */
     protected void launch(String[] args) {}
 
+    // Hook called at each update. Call super.update() to update the objects added with addUpdatable.
     @Override
     public void update() {
         for (IUpdatable updatable : updatables)
             updatable.update();
     }
 
+    // Hook called after update. Call super.postUpdate() to post-update the objects added with addUpdatable.
     @Override
     public void postUpdate() {
         for (IUpdatable updatable : updatables)
             updatable.postUpdate();
     }
 
+    /**
+     * Hook called at each frame, with the OpenGL context of the window current. Usually setVirtualScene(), clear(),
+     * the drawing, then setAndDisplayRealScene(). super.display() draws the objects added with addDisplayable.
+     */
     @Override
     public void display() {
         for (IDisplayable displayable : displayables)
             displayable.display();
     }
 
-    /** Called when the window closes: release what launch() created. Call super.unload(). */
+    /**
+     * Hook called when the window closes: release what launch() created. Call super.unload() (it unloads the
+     * virtual surface and the added objects).
+     */
     @Override
     public void unload() {
         if (scRenderer != null)
@@ -141,28 +156,28 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
         engine().commands().register(command, CommandOwner.Of(this, "window"));
     }
 
-    public void addUpdatable(IUpdatable updatable) {
+    public final void addUpdatable(IUpdatable updatable) {
         updatables.add(updatable);
     }
 
-    public void addDisplayable(IDisplayable displayable) {
+    public final void addDisplayable(IDisplayable displayable) {
         displayables.add(displayable);
     }
 
-    public void addUpdatableAndDisplayable(IUpdatableDisplayable object) {
+    public final void addUpdatableAndDisplayable(IUpdatableDisplayable object) {
         addUpdatable(object);
         addDisplayable(object);
     }
 
-    public void removeUpdatable(IUpdatable updatable) {
+    public final void removeUpdatable(IUpdatable updatable) {
         updatables.remove(updatable);
     }
 
-    public void removeDisplayable(IDisplayable displayable) {
+    public final void removeDisplayable(IDisplayable displayable) {
         displayables.remove(displayable);
     }
 
-    public void removeUpdatableAndDisplayable(IUpdatableDisplayable object) {
+    public final void removeUpdatableAndDisplayable(IUpdatableDisplayable object) {
         removeUpdatable(object);
         removeDisplayable(object);
     }
@@ -174,29 +189,29 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
 
     // ---- Drawing helpers, like Scene ----
 
-    protected void setVirtualScene() {
+    protected final void setVirtualScene() {
         scRenderer.bindFrameBuff();
         windowContext.getWindow().setVirtualViewport();
     }
 
-    protected void setAndDisplayRealScene() {
+    protected final void setAndDisplayRealScene() {
         scRenderer.unbindFrameBuff();
         windowContext.getWindow().setRealViewport();
 
         scRenderer.display();
     }
 
-    protected void clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+    protected final void clear() { glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
     // The clear color is a state of the OpenGL context of the window, applied again before each display
-    protected void setClearColor(Color4f color) { setClearColor(color.getR(), color.getG(), color.getB(), color.getA()); }
+    protected final void setClearColor(Color4f color) { setClearColor(color.getR(), color.getG(), color.getB(), color.getA()); }
 
-    protected void setClearColor(float color1, float color2, float color3, float alpha) {
+    protected final void setClearColor(float color1, float color2, float color3, float alpha) {
         clearColor = new float[]{color1, color2, color3, alpha};
         glClearColor(color1, color2, color3, alpha);
     }
 
-    protected void setClearColor(float color1, float color2, float color3) {
+    protected final void setClearColor(float color1, float color2, float color3) {
         setClearColor(color1, color2, color3, 1f);
     }
 

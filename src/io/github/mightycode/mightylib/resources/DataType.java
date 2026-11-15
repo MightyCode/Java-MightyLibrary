@@ -14,10 +14,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Data read from the disk (preload) then computed (load), managed by Resources.
  * States and references are changed by the main thread only (Resources is their single owner);
  * workers only run initWithFile and internLoad on a data that Resources does not touch meanwhile.
+ * A new type extends SingleSourceDataType (one file), MultiSourceDataType (several files) or this class (no file),
+ * with its ResourceLoader. Hooks: internLoad, internUnload, internCancelPreload, the GL element (glElementType,
+ * glElementName, createGLElement), the memory estimates and the hot reload (createReloadCopy, swapContent,
+ * reloadFailed). The other methods are final.
  */
 public abstract class DataType extends UUID implements LoadingElement {
 
-    protected final String dataName;
+    private final String dataName;
 
     // The Resources managing this data, set when it registers it (see attachTo); null before.
     // Volatile: owned resources are registered by worker threads
@@ -31,7 +35,8 @@ public abstract class DataType extends UUID implements LoadingElement {
     private volatile boolean correctlyLoaded;
 
     // Names of what uses this data (batches, "manually"...), the same name can appear several times
-    protected final List<String> references;
+    // Read by Resources and ResourceDescriber (package)
+    final List<String> references;
 
     // Filled while preloading in a worker thread, read from the main thread
     private final CopyOnWriteArrayList<DataType> dependencies;
@@ -205,6 +210,10 @@ public abstract class DataType extends UUID implements LoadingElement {
         correctlyPreLoaded = true;
     }
 
+    /**
+     * Hook called after the preload (ResourceLoader.initWithFile), maybe on a worker, never with GL: compute what
+     * the data needs from what was read. False (or a ResourceException) when it failed.
+     */
     protected abstract boolean internLoad();
 
     // Load step run by Resources (maybe on a worker): the state is set afterward by loadDone, on the main thread
@@ -261,6 +270,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         return null;
     }
 
+    // The name of the GL element, the name of the data by default
     public String glElementName() {
         return dataName;
     }
@@ -340,7 +350,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         correctlyLoaded = false;
     }
 
-    // Preloaded but no longer wanted before being loaded: release what initWithFile kept (decoded files, owned resources)
+    // Hook: preloaded but no longer wanted before being loaded: release what initWithFile kept (decoded files, owned resources)
     protected void internCancelPreload() {}
 
     // Compute again a loaded data (its content changed)
@@ -367,6 +377,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         correctlyLoaded = false;
     }
 
+    // Hook called on the main thread when the data is unloaded (no longer referenced, reload, end): release its content
     protected abstract void internUnload();
 
     public final boolean isPreLoaded() {

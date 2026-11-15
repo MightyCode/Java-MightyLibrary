@@ -8,7 +8,7 @@ import org.lwjgl.openal.AL10;
 import static org.lwjgl.openal.AL10.alGenSources;
 
 // A source of the OpenAL service: created by OpenALSoundService.lateUpdate once its delay ended
-public class OpenALSoundSource implements ISoundSource {
+public final class OpenALSoundSource implements ISoundSource {
     private SoundData soundData;
     private int sourceId;
     // Buffer given to the source: the sound, or the fallback while the sound isn't loaded (0 = none)

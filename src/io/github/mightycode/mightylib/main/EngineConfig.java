@@ -26,7 +26,7 @@ import java.util.function.Supplier;
  * Startup configuration of the engine, filled by the project and given to MainLoop.run.
  * Only the start scene is required, every other value has a default.
  */
-public class EngineConfig {
+public final class EngineConfig {
     public static final int DEFAULT_DEBUG_SERVER_PORT = 7777;
 
     private Supplier<Scene> startScene;

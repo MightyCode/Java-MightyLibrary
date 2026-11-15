@@ -22,6 +22,7 @@ Le moteur et ses démos sont **gratuits** : tant que c'est le cas, rien de ce qu
 | org.json | 20260719 | Domaine public (selon le `pom.xml`) | JSON | aucune ; pas la vieille licence « Good, not Evil » de json.org |
 | JBox2D (`jbox2d-library`) | 2.2.1.1 | BSD-2-Clause (Daniel Murphy) | physique 2D | garder l'avis |
 | opensimplex (`com.raylabz`) | 1.0.3 | Apache 2.0 | bruit | garder l'avis, le texte de la licence et un éventuel fichier `NOTICE` |
+| apiguardian (`org.apiguardian:apiguardian-api`) | 1.1.2 | Apache 2.0 | annotation `@API` (statut de stabilité de l'API) | garder l'avis, le texte de la licence et un éventuel fichier `NOTICE` |
 | JLayer (`javazoom:jlayer`) | 1.0.1 | **LGPL** | décodage mp3 | avis et texte de la LGPL ; l'utilisateur doit pouvoir remplacer le jar, voir ci-dessous |
 
 Code écrit pour le moteur, sans dépendance : décodeur FLAC (`FlacStream`, contrôlé par le MD5 du fichier), `SoundDecoder` et les autres décodeurs. Le wav utilise `javax.sound.sampled` (JDK). `SoundDataType.readVorbis` et `ioResourceToByteBuffer` ressemblent à l'exemple audio de LWJGL (BSD-3) : si elles en viennent, l'avis de LWJGL couvre ce cas, à vérifier si la provenance compte.

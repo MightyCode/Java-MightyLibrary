@@ -37,7 +37,7 @@ public class SoundFormatsScene extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(0.2f, 0.2f, 0.2f);
-        Vector2f windowSize = new Vector2f(mainContext.getWindow().getInfo().getVirtualSizeRef());
+        Vector2f windowSize = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
 
         for (int i = 0; i < SOUNDS.length; ++i)
             lines.add(createText(new Vector2f(windowSize.x / 2, windowSize.y * (0.25f + 0.12f * i)), 40));
@@ -59,7 +59,7 @@ public class SoundFormatsScene extends Scene {
     }
 
     private String state(int index) {
-        SoundData data = resources.getResource(SoundData.class, SOUNDS[index]);
+        SoundData data = resources().getResource(SoundData.class, SOUNDS[index]);
         // Ascii only: the font may not have accents
         String state = data.hasFailed() ? " (ECHEC)" : data.isLoaded() ? "" : " (chargement)";
         return (index == lastPlayed ? "> " : "") + "Jouer son " + FORMATS[index] + state;
@@ -67,7 +67,7 @@ public class SoundFormatsScene extends Scene {
 
     // Same test as BackgroundlessButton: the box of the text with a margin, in the coordinates of the 2D camera
     private int lineUnderMouse() {
-        Vector2f mouse = main2DCamera.transformPosition(mainContext.getMouseManager().pos());
+        Vector2f mouse = camera2D().transformPosition(context().getMouseManager().pos());
 
         for (int i = 0; i < lines.size(); ++i) {
             Vector2f position = lines.get(i).leftUpPosition();
@@ -95,12 +95,12 @@ public class SoundFormatsScene extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE)) {
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE)) {
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ENTER)) {
+        if (context().getInputManager().inputPressed(ActionId.ENTER)) {
             play(next);
             next = (next + 1) % SOUNDS.length;
         }

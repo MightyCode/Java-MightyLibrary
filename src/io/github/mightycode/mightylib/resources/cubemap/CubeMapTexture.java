@@ -18,7 +18,7 @@ import static org.lwjgl.opengl.GL13.glActiveTexture;
  * fallback of its data type is bound (checkerboard), or a transparent cubemap until that one is sent.
  * When its data is reloaded, the new faces are sent in another texture which replaces it once complete.
  */
-public class CubeMapTexture extends GLElement {
+public final class CubeMapTexture extends GLElement {
     private final CubeMapData data;
     private int textureId = -1;
     private int sentFaces;
@@ -30,7 +30,7 @@ public class CubeMapTexture extends GLElement {
 
     public CubeMapTexture(CubeMapData data) {
         this.data = data;
-        resourceDependencies.add(data);
+        addResourceDependency(data);
     }
 
     // Bound to the texture unit, for a samplerCube

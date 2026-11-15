@@ -4,8 +4,4 @@
 
 Philosophie de `decisions.md` : usage courant facile (niveau Processing), réimplémentation (presque) complète possible par héritage + injection. Prérequis de la bibliothèque réutilisable, du modding, du thème et des langues, de Lua et de la physique injectable : chaque commit écrit sans elle ajoute du code à reprendre. Fin du point : la démo, module Maven à part, compile contre la seule API publique.
 
-- **Héritage et API publique** : **à discuter avant toute décision** (périmètre, changements cassants avant une 1.0 ; `bonnes-pratiques.md`, point 7).
-  - Rien n'est choisi comme extensible (au 2026-11-12 : 308 classes publiques, 55 `final`, du `protected` dans 93 fichiers) : tout est ouvert par défaut, chaque `protected` devient un contrat.
-  - Classes extensibles **choisies explicitement** avec leurs points d'accroche (`Mesh`, `Renderer`, `MeshRenderer`, `Shape2DRenderer`, `Scene`, `DataType`/`ResourceLoader`, `BaseCommand`, composants GUI…), les autres `final` ou package-private. `ExtensionFieldsTest` garde déjà l'absence de `protected` de `Mesh`, `Renderer`, `MeshRenderer`, `Shape2DRenderer` : y ajouter chaque classe choisie.
-  - Classement de chaque package de `mightylib` (API promise, expérimental, à retirer). Pour rester terminable : traiter en entier ce qui est déclaré extensible ou injectable, classer le reste par package sans tout verrouiller d'un coup.
 - **Démo en module Maven séparé** (test d'acceptation du point) : deux modules, `mightylib` (jar) et `demo` qui en dépend comme un projet externe ; tout accès package-private ou création en dur qui bloque apparaît à la compilation. Sans les ressources lues depuis le classpath (chantier de la bibliothèque réutilisable, point suivant) : la démo garde son dossier `resources/`.

@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
 import io.github.mightycode.mightylib.utils.math.geometry.ERotation;
 import org.joml.Vector4f;
 
-public class RectangularFace {
+public final class RectangularFace {
     private EFlip flip;
     private ERotation rotation;
 

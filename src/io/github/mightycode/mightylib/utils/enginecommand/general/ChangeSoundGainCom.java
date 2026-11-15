@@ -12,7 +12,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Argument
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
-public class ChangeSoundGainCom extends BaseCommand {
+public final class ChangeSoundGainCom extends BaseCommand {
     public static final String COMMAND_NAME = "changegain";
 
     public ChangeSoundGainCom() {

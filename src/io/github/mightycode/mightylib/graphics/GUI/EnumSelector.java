@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 import io.github.mightycode.mightylib.main.WindowContext;
 import org.joml.Vector2f;
 
-public class EnumSelector<T extends Enum<?>> extends ValueSelector<T> {
+public final class EnumSelector<T extends Enum<?>> extends ValueSelector<T> {
     /** Selector at the top right of the window (default position). */
     public EnumSelector(T[] values, WindowContext context){
         super(values, context);

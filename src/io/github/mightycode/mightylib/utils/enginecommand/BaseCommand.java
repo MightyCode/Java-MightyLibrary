@@ -45,7 +45,7 @@ public abstract class BaseCommand {
     }
 
     /**
-     * Declares the syntax of the command on its root, called once at its first registration (a mistake of the syntax
+     * Hook: declares the syntax of the command on its root, called once at its first registration (a mistake of the syntax
      * is an IllegalStateException then): the fields it uses must be set by the constructor. Each branch ends with
      * executes(handler):
      * root.then(literal("mode", "...").then(argument("mode", choice("poll", "service"), "...")
@@ -54,7 +54,7 @@ public abstract class BaseCommand {
      */
     protected abstract void syntax(CommandNode root);
 
-    public String getDescription() {
+    public final String getDescription() {
         return description;
     }
 
@@ -114,7 +114,7 @@ public abstract class BaseCommand {
      * Main thread. The help the current source sees: help <cmd> and <cmd> --help. The generated help, with the visible
      * tree of the syntax in JSON in the data. A command not registered yet declares its syntax first.
      */
-    public CommandResult helpResult() {
+    public final CommandResult helpResult() {
         if (owner == null) {
             buildSyntax();
             return helpNow();
@@ -126,21 +126,21 @@ public abstract class BaseCommand {
         return parser.help(id.toString(), level, newContext(commandName));
     }
 
-    public Identifier getId() {
+    public final Identifier getId() {
         return id;
     }
 
     // The path of the identifier: the short name
-    public String getName() {
+    public final String getName() {
         return commandName;
     }
 
-    public ECommandLevel getLevel() {
+    public final ECommandLevel getLevel() {
         return level;
     }
 
     // Null until registered
-    public CommandOwner getOwner() {
+    public final CommandOwner getOwner() {
         return owner;
     }
 

@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.resources.Resources;
 
 import java.util.function.Supplier;
 
-public class SceneManagerInterface {
+public final class SceneManagerInterface {
     private String[] changeArgs;
     private Scene newScene;
 

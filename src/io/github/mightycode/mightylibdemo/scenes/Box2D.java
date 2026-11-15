@@ -83,13 +83,13 @@ public class Box2D extends Scene {
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
-        hudCamera = main2DCamera.copy();
+        hudCamera = camera2D().copy();
 
-        main3DCamera.setPos(new Vector3f());
-        main2DCamera.setPos(new Vector2f());
-        main2DCamera.setZoomReference(EDirection.LeftUp);
-        main2DCamera.setZoomLevel(30);
-        main2DCamera.setX(-10f);
+        camera3D().setPos(new Vector3f());
+        camera2D().setPos(new Vector2f());
+        camera2D().setZoomReference(EDirection.LeftUp);
+        camera2D().setZoomLevel(30);
+        camera2D().setX(-10f);
         setClearColor(52, 189, 235, 1f);
 
         ground = new RectangleRenderer("colorShape2D");
@@ -123,12 +123,12 @@ public class Box2D extends Scene {
         }
 
         DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
-        draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        draggingSceneComponent.init(context().getInputManager(), context().getMouseManager(), camera2D());
         draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
         addUpdatable(draggingSceneComponent);
 
         MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
+        movingSceneComponent.init(context().getInputManager(), camera2D());
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                 .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -141,14 +141,14 @@ public class Box2D extends Scene {
         addUpdatable(movingSceneComponent);
 
         ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
-        zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
-                main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
+        zoomingSceneComponent.init(context().getInputManager(), context().getMouseManager(),
+                camera2D(), context().getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
 
         addUpdatable(zoomingSceneComponent);
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera2D(hudCamera).init(main2DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera2D(hudCamera).init(camera2D(), new Vector2f(5, 5))
                         .addInfo("position")
                         .addInfo("rotation")
                         .addInfo("zoom")
@@ -159,14 +159,14 @@ public class Box2D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
         world.step(GameTime.FixedDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
-        MouseManager mouseManager = mainContext.getMouseManager();
-        IInputManager inputManager = mainContext.getInputManager();
-        Camera2D mapCamera = main2DCamera;
+        MouseManager mouseManager = context().getMouseManager();
+        IInputManager inputManager = context().getInputManager();
+        Camera2D mapCamera = camera2D();
 
         if (inputManager.inputPressed(ActionId.LEFT_CLICK)){
             boxes.add(

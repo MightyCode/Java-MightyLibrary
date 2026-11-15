@@ -18,7 +18,7 @@ import java.util.List;
  * within the GLResources budget, meshes are displayed as soon as they are sent.
  * Each mesh binds its diffuse map on unit 0 and its specular map on unit 1.
  */
-public class ModelRenderer extends Renderer {
+public final class ModelRenderer extends Renderer {
     public static final String DEFAULT_SHADER = "textureMultipleLights3D";
     public static final String DEFAULT_DIFFUSE_UNIFORM = "material.diffuse";
     public static final String DEFAULT_SPECULAR_UNIFORM = "material.specular";
@@ -278,7 +278,7 @@ public class ModelRenderer extends Renderer {
     }
 
     // Not shared: one per renderer, its loading is the sending of the meshes
-    public static class MeshUpload extends GLElement {
+    public static final class MeshUpload extends GLElement {
         private final ModelRenderer renderer;
 
         MeshUpload(ModelRenderer renderer) {

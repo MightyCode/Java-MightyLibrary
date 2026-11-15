@@ -39,7 +39,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Argument
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
-public class InputGenCom extends BaseCommand {
+public final class InputGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "input";
 
     private static final String KEY_PREFIX = "GLFW_KEY_";

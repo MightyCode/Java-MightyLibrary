@@ -38,7 +38,7 @@ public class GamepadScene extends Scene {
     public void launch(String[] args) {
         setClearColor(0.15f, 0.15f, 0.2f);
 
-        Vector2i size = mainContext.getWindow().getInfo().getVirtualSizeCopy();
+        Vector2i size = context().getWindow().getInfo().getVirtualSizeCopy();
         squares = new RectangleRenderer[PLAYERS];
         positions = new Vector2f[PLAYERS];
         for (int player = 0; player < PLAYERS; ++player) {
@@ -61,13 +61,13 @@ public class GamepadScene extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE)) {
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE)) {
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
 
-        GamepadManager gamepads = mainContext.getInputManager().getGamepadManager();
-        Vector2i size = mainContext.getWindow().getInfo().getVirtualSizeCopy();
+        GamepadManager gamepads = context().getInputManager().getGamepadManager();
+        Vector2i size = context().getWindow().getInfo().getVirtualSizeCopy();
 
         for (int player = 0; player < PLAYERS; ++player) {
             Gamepad gamepad = gamepads.getPlayerGamepad(player);
@@ -133,7 +133,7 @@ public class GamepadScene extends Scene {
         setVirtualScene();
         clear();
 
-        GamepadManager gamepads = mainContext.getInputManager().getGamepadManager();
+        GamepadManager gamepads = context().getInputManager().getGamepadManager();
         for (int player = 0; player < PLAYERS; ++player) {
             if (gamepads.getPlayerGamepad(player) != null)
                 squares[player].display();

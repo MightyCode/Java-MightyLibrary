@@ -7,11 +7,11 @@ import java.util.*;
 /**
  * Class that can only have intersection nodes
  */
-public class ReducedGraph extends ListNode<NodeIntersection> {
+public final class ReducedGraph extends ListNode<NodeIntersection> {
     /**
      * Subclass that contains a reference to all sub intersection nodes.
      */
-    public static class ReducedGraphSubNode extends ListNode<NodeSubIntersection>{
+    public static final class ReducedGraphSubNode extends ListNode<NodeSubIntersection>{
         public ReducedGraphSubNode() {
             super(-1);
         }
@@ -25,7 +25,7 @@ public class ReducedGraph extends ListNode<NodeIntersection> {
         subNodeGraph = new ReducedGraphSubNode();
     }
 
-    protected void init(Graph graph, EVerbosity verbosity) {
+    private void init(Graph graph, EVerbosity verbosity) {
         subNodeGraph.clear();
 
         Queue<Node> nodeToCheck = new LinkedList<>();

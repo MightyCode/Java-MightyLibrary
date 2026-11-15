@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.inputs.MouseManager;
  * Movement of the mouse during the tick, in window pixels (y positive downward), or the scroll (y positive up).
  * Already a movement for this tick : no perSecond.
  */
-public class AxisMouse extends AxisBinding {
+public final class AxisMouse extends AxisBinding {
     public static final int X = 0;
     public static final int Y = 1;
     public static final int SCROLL_X = 2;

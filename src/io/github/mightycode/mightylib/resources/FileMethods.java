@@ -8,7 +8,9 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 
-public abstract class FileMethods {
+public final class FileMethods {
+    private FileMethods() {}
+
     public static boolean copy(File source, File dest) {
         try (InputStream sourceFile = new FileInputStream(source);
              OutputStream destinationFile = new FileOutputStream(dest)) {

@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.inputs;
 
 import java.util.HashMap;
 
-public class CharInputEntry {
+public final class CharInputEntry {
     public static final int CAPSLOCK = 0;
     public static final int ALT = CAPSLOCK + 1;
     public static final int FINAL_ID = ALT;

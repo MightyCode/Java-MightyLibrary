@@ -49,7 +49,8 @@ public class Shader extends GLElement {
     // Uniforms already reported missing
     private final Set<String> missingUniforms = new HashSet<>();
 
-    public Shader(ShaderData data) {
+    // Created by its ShaderData (createGLElement); package-private: FallbackShader is the only subclass
+    Shader(ShaderData data) {
         this.data = data;
         addResourceDependency(data);
     }

@@ -4,7 +4,7 @@ package io.github.mightycode.mightylib.resources.models;
  * Geometry and material of one mesh of a model, already in the model space (node transformations applied).
  * Texture names are names of TextureData registered in Resources.
  */
-public class ModelMesh {
+public final class ModelMesh {
     private final String name;
 
     private final float[] positions;

@@ -2,11 +2,14 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.utils.Logger;
+import org.apiguardian.api.API;
 import org.json.JSONObject;
 
 import java.util.*;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * Registry and loading pipeline of the data read from the disk.
@@ -19,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * next step. A data with a running step is never changed: when the step ends, update runs again, so a data unloaded
  * then loaded again while it was read ends in the wanted state without any special case.
  */
-public class Resources {
+public final class Resources {
     public static final String DEFAULT_FOLDER = "resources/";
 
     // Reference added by loadAllOfType (AllResourcesMethod, batch descriptions)
@@ -31,9 +34,12 @@ public class Resources {
     // Name of the fallback of each type (ResourceLoader.createFallback), and the reference keeping it loaded
     public static final String FALLBACK_NAME = "error";
 
-    public static abstract class LoadingMethod{}
-    public static class AllResourcesMethod extends LoadingMethod{}
-    public static class BatchResourcesMethod extends LoadingMethod{
+    public static abstract class LoadingMethod{
+        // Package-private: the hierarchy is closed, Resources knows only the methods below
+        LoadingMethod() {}
+    }
+    public static final class AllResourcesMethod extends LoadingMethod{}
+    public static final class BatchResourcesMethod extends LoadingMethod{
         private final String firstBatch;
         public BatchResourcesMethod(String firstBatch){
             this.firstBatch = firstBatch;
@@ -126,6 +132,7 @@ public class Resources {
     // Where the batches hold the GL elements of their data (GLResources); null: nothing is sent to the card
     private IGLElementSink glElementSink;
 
+    @API(status = INTERNAL)
     public void setGLElementSink(IGLElementSink glElementSink) {
         this.glElementSink = glElementSink;
     }

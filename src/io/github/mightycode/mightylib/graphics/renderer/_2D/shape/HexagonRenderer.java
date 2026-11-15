@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
-public class HexagonRenderer extends Shape2DRenderer {
+public final class HexagonRenderer extends Shape2DRenderer {
     public static final float STRETCH_RATIO = (float)Math.sqrt(3.f) / 2;
 
     public HexagonRenderer(String shaderName) {
@@ -20,6 +20,7 @@ public class HexagonRenderer extends Shape2DRenderer {
         setReferenceDirection(EDirection.None);
     }
 
+    @Override
     protected int[] getIndices(){
         return new int[]{ 0, 1, 2, 2, 3, 4, 4, 5, 0, 0, 2, 4 };
     }

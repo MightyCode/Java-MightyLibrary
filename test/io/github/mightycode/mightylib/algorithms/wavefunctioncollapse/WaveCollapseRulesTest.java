@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.algorithms.wavefunctioncollapse;
 
 import io.github.mightycode.mightylib.resources.data.JSONFile;
+import org.joml.Vector2i;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
@@ -38,7 +39,7 @@ class WaveCollapseRulesTest {
         assertEquals("new", current.getRecommendedTileset());
         assertEquals(3, current.getNumberRuledTiles());
         assertNotNull(current.getRule(2));
-        assertEquals(3, current.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.INITIAL_POS).size());
+        assertEquals(3, current.getInitialRule().getAvailableIds(WaveCollapseRules.Rule.initialPosition()).size());
         assertEquals("old", newVersion.getRecommendedTileset(), "the copy gets the previous version");
     }
 
@@ -48,5 +49,13 @@ class WaveCollapseRulesTest {
         WaveCollapseRules rules = load(rules("tiles", 4));
         assertTrue(rules.internLoad());
         assertEquals(4, rules.getNumberRuledTiles());
+    }
+
+    // The key of the initial rule can't be changed by a caller (it was a shared public Vector2i)
+    @Test
+    void initialPositionIsNotShared() {
+        Vector2i position = WaveCollapseRules.Rule.initialPosition();
+        position.set(5, 5);
+        assertEquals(new Vector2i(0, 0), WaveCollapseRules.Rule.initialPosition());
     }
 }

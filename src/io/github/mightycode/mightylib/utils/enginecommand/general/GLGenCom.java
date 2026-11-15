@@ -18,7 +18,7 @@ import org.json.JSONObject;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
-public class GLGenCom extends BaseCommand {
+public final class GLGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "gl";
     private static final String CONTAINS = "contains";
 

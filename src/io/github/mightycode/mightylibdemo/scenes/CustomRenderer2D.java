@@ -51,7 +51,7 @@ public class CustomRenderer2D extends Scene {
     public void launch(String[] args) {
         setClearColor(20, 20, 40, 1f);
 
-        Vector2i size = mainContext.getWindow().getInfo().getSizeRef();
+        Vector2i size = context().getWindow().getInfo().getSizeRef();
         float centerX = size.x / 2f;
         float centerY = size.y / 2f;
 
@@ -110,11 +110,11 @@ public class CustomRenderer2D extends Scene {
     public void update() {
         super.update();
 
-        IInputManager inputManager = mainContext.getInputManager();
-        KeyboardManager keyboardManager = mainContext.getKeyboardManager();
+        IInputManager inputManager = context().getInputManager();
+        KeyboardManager keyboardManager = context().getKeyboardManager();
 
         if (inputManager.inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
         if (keyboardManager.keyPressed(GLFW_KEY_D)) {
             depthTest = !depthTest;

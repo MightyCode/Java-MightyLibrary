@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class NetworkConfigurationLoader extends ResourceLoader {
+public final class NetworkConfigurationLoader extends ResourceLoader {
     private static final String CONFIG_FOLDER = "resources/networkConfigs";
 
     @Override

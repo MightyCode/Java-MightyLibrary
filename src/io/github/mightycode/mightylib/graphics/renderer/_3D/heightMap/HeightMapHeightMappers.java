@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D.heightMap;
 
-public abstract class HeightMapHeightMappers {
+public final class HeightMapHeightMappers {
     private HeightMapHeightMappers(){}
 
     public static HeightMapRenderer.IHeightMapper GetHeightMapperDefault() {

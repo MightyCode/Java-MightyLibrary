@@ -30,7 +30,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 /**
  * Inspect and drive the cameras registered in the current scene (Scene.registerCamera), by id or name.
  */
-public class CameraGenCom extends BaseCommand {
+public final class CameraGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "camera";
     public CameraGenCom() {
         super(ListGeneralCommand.Id(COMMAND_NAME), ECommandLevel.DEV,

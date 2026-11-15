@@ -6,6 +6,12 @@ import io.github.mightycode.mightylib.utils.LoadingElement;
 
 import java.util.ArrayList;
 
+/**
+ * What a data needs on the card (a texture, a program, a mesh upload), created by its data (DataType.createGLElement)
+ * or by the code, registered in a GLResources which loads it on the main thread with the time left in each frame.
+ * Hooks: load (in steps), reload (the data changed, the current version stays in use) and unload. The other methods
+ * are final.
+ */
 public abstract class GLElement implements LoadingElement {
     private String name;
     private boolean loaded;
@@ -13,7 +19,7 @@ public abstract class GLElement implements LoadingElement {
     // The first loading threw a ResourceException: waits for one of its data to be reloaded (GLResources.dataReloaded)
     private boolean failed;
 
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
@@ -52,8 +58,8 @@ public abstract class GLElement implements LoadingElement {
     // References wanting the element now (renderers, loaded batches), the others only preload it
     private int urgentReference;
 
-    protected ArrayList<DataType> resourceDependencies;
-    protected ArrayList<GLElement> glElementDependencies;
+    private final ArrayList<DataType> resourceDependencies;
+    private final ArrayList<GLElement> glElementDependencies;
 
     public GLElement(){
         reference = 0;
@@ -91,11 +97,11 @@ public abstract class GLElement implements LoadingElement {
         return urgentReference != 0;
     }
 
-    public int getNumberReference() {
+    public final int getNumberReference() {
         return reference;
     }
 
-    public int getNumberUrgentReference() {
+    public final int getNumberUrgentReference() {
         return urgentReference;
     }
 
@@ -107,12 +113,12 @@ public abstract class GLElement implements LoadingElement {
     public abstract boolean load(int remainingMilliseconds);
 
     @Override
-    public boolean isLoaded(){
+    public final boolean isLoaded(){
         return loaded;
     }
 
     // Its first loading failed (ResourceException): its users get the fallback until one of its data is reloaded
-    public boolean hasFailed() {
+    public final boolean hasFailed() {
         return failed;
     }
 
@@ -214,6 +220,7 @@ public abstract class GLElement implements LoadingElement {
         return done;
     }
 
+    // Hook called on the main thread when no one references the element any more: delete its OpenGL objects
     public abstract void unload(int remainingMilliseconds);
 
     void unloadByResource(int remainingMilliseconds) {

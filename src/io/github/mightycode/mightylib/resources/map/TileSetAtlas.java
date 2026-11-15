@@ -8,7 +8,7 @@ import org.joml.Vector2i;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TileSetAtlas {
+public final class TileSetAtlas {
     // Content of the map, built with it and never registered in Resources (its textures are the map's dependencies)
     private final TextureDataAtlas textureAtlas;
     private List<TileSet> tilesets;

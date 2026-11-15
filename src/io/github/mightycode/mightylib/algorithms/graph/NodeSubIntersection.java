@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.algorithms.graph;
 /**
  * Class that represent, in a context of a reduced graph, a sub node
  */
-public class NodeSubIntersection extends NodeContainer<Node, NodeIntersection> {
+public final class NodeSubIntersection extends NodeContainer<Node, NodeIntersection> {
 
     // Neighbour can be null;
     public NodeSubIntersection(Node node, NodeIntersection parent1, NodeIntersection parent2) {

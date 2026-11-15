@@ -1,7 +1,10 @@
 package io.github.mightycode.mightylib.main;
 
+import org.apiguardian.api.API;
+
 import java.util.Locale;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
@@ -11,6 +14,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * The system property PROPERTY (-Dmightylib.glfw.platform=x11|wayland|win32|cocoa|null) chooses the platform,
  * otherwise GLFW takes the best one (Wayland in a Wayland session).
  */
+@API(status = INTERNAL)
 public final class WindowPlatform {
     public static final String PROPERTY = "mightylib.glfw.platform";
 

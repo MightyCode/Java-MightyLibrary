@@ -13,5 +13,5 @@ import jdk.jfr.Name;
 @Label("Tick")
 @Category("MightyLibrary")
 @Description("Update of the scene (commands, resources, scene update and postUpdate)")
-public class TickEvent extends jdk.jfr.Event {
+public final class TickEvent extends jdk.jfr.Event {
 }

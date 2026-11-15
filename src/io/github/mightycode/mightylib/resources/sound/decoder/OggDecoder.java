@@ -8,7 +8,7 @@ import org.lwjgl.stb.STBVorbisInfo;
 import java.nio.ShortBuffer;
 import java.util.concurrent.CancellationException;
 
-public class OggDecoder implements SoundDecoder {
+public final class OggDecoder implements SoundDecoder {
     @Override
     public String[] extensions() {
         return new String[]{".ogg"};

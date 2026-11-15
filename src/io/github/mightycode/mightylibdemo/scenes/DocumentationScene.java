@@ -58,7 +58,7 @@ public class DocumentationScene extends Scene {
      * Constructor: called by the code that asks for the scene, e.g. new DocumentationScene() in MenuScene.
      * The scene is not active yet and the previous scene is still displayed:
      * only store parameters here, never load or create GL objects.
-     * The parent constructor already gives access to resources, glResources and mainContext.
+     * The parent constructor already gives access to resources(), glResources() and context().
      */
     public DocumentationScene() {
         super();
@@ -105,12 +105,12 @@ public class DocumentationScene extends Scene {
         data.setPreloaded();
 
         // Adds the reference "manually": the data stays loaded until deleteResource in release()
-        resources.addPreLoadedResource(data);
+        resources().addPreLoadedResource(data);
     }
 
     /*
      * Second step, called once every resource of the batches and of init is loaded (CPU side).
-     * The cameras (main2DCamera, main3DCamera) and the virtual scene exist: create here the renderers, texts
+     * The cameras (camera2D(), camera3D()) and the virtual scene exist: create here the renderers, texts
      * and other objects displayed. Their GL objects are sent to the GPU over the next frames, the loading scene
      * stays displayed until they are all sent: the first frame of the scene is complete.
      * No need to call super.launch.
@@ -118,7 +118,7 @@ public class DocumentationScene extends Scene {
     @Override
     public void launch(String[] args) {
         // The configuration comes from the JSON resource of the batch: change the file, not the code
-        JSONObject config = resources.getResource(JSONFile.class, "documentationScene").getObject();
+        JSONObject config = resources().getResource(JSONFile.class, "documentationScene").getObject();
 
         JSONArray background = config.getJSONArray("backgroundColor");
         // The clear color is kept by the scene and applied before each of its frames
@@ -126,7 +126,7 @@ public class DocumentationScene extends Scene {
 
         JSONArray textColor = config.getJSONArray("textColor");
         Color4f color = new Color4f(textColor.getFloat(0), textColor.getFloat(1), textColor.getFloat(2), 1f);
-        Vector2f windowSize = new Vector2f(mainContext.getWindow().getInfo().getVirtualSizeRef());
+        Vector2f windowSize = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
 
         // Fonts and shaders come from the batch "init", loaded for the whole game
         title = new Text();
@@ -179,13 +179,13 @@ public class DocumentationScene extends Scene {
         super.update();
 
         // inputPressed: true only during the tick where the key goes down (getState: as long as it is held)
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE)) {
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE)) {
             // The current scene is unloaded and released, then MenuScene is initialized
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ENTER))
+        if (context().getInputManager().inputPressed(ActionId.ENTER))
             rotationPaused = !rotationPaused;
 
         if (!rotationPaused)
@@ -249,6 +249,6 @@ public class DocumentationScene extends Scene {
      */
     @Override
     public void release() {
-        resources.deleteResource(TextureData.class, GENERATED_TEXTURE);
+        resources().deleteResource(TextureData.class, GENERATED_TEXTURE);
     }
 }

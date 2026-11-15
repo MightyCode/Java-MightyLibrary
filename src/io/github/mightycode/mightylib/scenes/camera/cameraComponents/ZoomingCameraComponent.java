@@ -9,7 +9,7 @@ import org.joml.Vector2f;
 import org.joml.Vector2i;
 
 // Same as MovingSceneComponent and DraggingSceneComponent
-public class ZoomingCameraComponent implements IUpdatable {
+public final class ZoomingCameraComponent implements IUpdatable {
 
     protected IInputManager inputManager;
     protected MouseManager mouseManager;

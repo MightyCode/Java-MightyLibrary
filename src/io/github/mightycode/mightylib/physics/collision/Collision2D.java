@@ -9,7 +9,8 @@ public abstract class Collision2D extends UUID {
     protected final Vector2f position;
     protected EShapeType shapeType;
 
-    public Collision2D(){
+    // Package-private: the hierarchy is closed, its subclasses are in this package
+    Collision2D(){
         this.shapeType = EShapeType.Undefined;
         position = new Vector2f();
     }

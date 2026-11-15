@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.utils;
 
 import static org.lwjgl.opengl.GL20.*;
 
-public class Logger {
+public final class Logger {
     // glGetError after the sensitive GL calls, GL objects created on the main thread only (EngineConfig.setOpenGLErrorCheck).
     // Read from any thread (GenDeleteResources checks the calling thread)
     private static volatile boolean glErrorCheck = true;

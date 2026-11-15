@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Vector2f;
 
-public class FontFace extends SingleSourceDataType {
+public final class FontFace extends SingleSourceDataType {
     // Folder of the fonts, in the folder of the resources
     static final String FONTS_FOLDER = "textures/fonts/";
     private final String name;
@@ -15,11 +15,11 @@ public class FontFace extends SingleSourceDataType {
 
     // Reload copy: same atlas, the font file read again
     private FontFace(FontFace original) {
-        super(TYPE_SET_UP.THREAD_CONTEXT, original.dataName, original.path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, original.getDataName(), original.path());
         name = original.name;
         fontAtlas = original.fontAtlas;
         addDependency(fontAtlas);
-        fontFile = new FontFile(original.path);
+        fontFile = new FontFile(original.path());
     }
 
     @Override
@@ -42,7 +42,7 @@ public class FontFace extends SingleSourceDataType {
         fontAtlas = resources.getResource(TextureData.class, textureName);
         addDependency(fontAtlas);
 
-        fontFile = new FontFile(path);
+        fontFile = new FontFile(path());
     }
 
     // Fallback font (FontLoader.createFallback): no file, the characters are given

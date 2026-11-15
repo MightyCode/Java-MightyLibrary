@@ -60,11 +60,11 @@ public class MultiWindowScene extends Scene {
     public void update() {
         super.update();
 
-        KeyboardManager keyboard = mainContext.getKeyboardManager();
-        status.setText(mainContext.getInputManager().isBlocked() ? "This window waits for the dialog" : "This window is free");
+        KeyboardManager keyboard = context().getKeyboardManager();
+        status.setText(context().getInputManager().isBlocked() ? "This window waits for the dialog" : "This window is free");
 
         if (keyboard.keyPressed(GLFW_KEY_ESCAPE)) {
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
 
@@ -90,7 +90,7 @@ public class MultiWindowScene extends Scene {
 
     // A closed window is not in the list of the context any more
     private boolean isOpen(WindowContext window) {
-        return window != null && mainContext.getContext().getWindows().contains(window);
+        return window != null && context().getContext().getWindows().contains(window);
     }
 
     @Override

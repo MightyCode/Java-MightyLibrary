@@ -5,18 +5,21 @@ import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
 import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.inputs.text.LineEditKeys;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandCompletion;
+import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * Turns what is typed in the console (text and keys of a tick) into edits of its command line and into requests
  * (run a line, close, scroll...). No GL, no window: the console gives it the inputs of the window it is shown in.
  */
+@API(status = INTERNAL)
 public final class ConsoleInput {
     public enum ERequest {
         SUBMIT, CLOSE, SCROLL, SCROLL_TOP, SCROLL_END, CLEAR

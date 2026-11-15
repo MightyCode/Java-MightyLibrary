@@ -4,7 +4,9 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public abstract class RendererUtils {
+public final class RendererUtils {
+    private RendererUtils() {}
+
     public static float [] calculatePositionForSquare(Vector2f size, Vector2f reference){
         float [] temp = new float[]{
                 0, size.y,

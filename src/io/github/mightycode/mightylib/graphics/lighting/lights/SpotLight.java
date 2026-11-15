@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;
 
-public class SpotLight extends BasicMaterial {
+public final class SpotLight extends BasicMaterial {
     private Vector3f position, direction;
     private final LightDecrease lightDecrease;
 
@@ -89,7 +89,7 @@ public class SpotLight extends BasicMaterial {
         renderer.addShaderValue(structureName + ".position", Vector3f.class, position);
         renderer.addShaderValue(structureName + ".direction", Vector3f.class, direction);
 
-        renderer.addShaderValue(structureName + ".useDistance", Integer.class, enabled ? 1 : 0);
+        renderer.addShaderValue(structureName + ".useDistance", Integer.class, shouldUseDistance ? 1 : 0);
         lightDecrease.addToRenderer(renderer, structureName);
     }
 
@@ -113,11 +113,17 @@ public class SpotLight extends BasicMaterial {
         }
     }
 
+    // A spot light with the same settings and its own vectors (LightDecrease is immutable: shared)
     @Override
-    public PointLight clone(){
-        if (this.shouldUseDistance)
-            return new PointLight(super.clone(), lightDecrease);
+    public SpotLight clone(){
+        SpotLight copy = new SpotLight(cloneBasicMaterial(), lightDecrease);
+        copy.position = position == null ? null : new Vector3f(position);
+        copy.direction = direction == null ? null : new Vector3f(direction);
+        copy.cutOff = cutOff;
+        copy.outerCutOff = outerCutOff;
+        copy.shouldUseDistance = shouldUseDistance;
+        copy.enabled = enabled;
 
-        return new PointLight(super.clone());
+        return copy;
     }
 }

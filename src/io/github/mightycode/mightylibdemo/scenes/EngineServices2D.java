@@ -26,7 +26,7 @@ public class EngineServices2D extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(0.12f, 0.16f, 0.2f);
-        Vector2f windowSize = new Vector2f(mainContext.getWindow().getInfo().getVirtualSizeRef());
+        Vector2f windowSize = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
 
         tickCounter = engine().service(TickCounterService.KEY);
         tickCounter.setOverlayShown(true);
@@ -70,8 +70,8 @@ public class EngineServices2D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE)) {
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE)) {
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
 

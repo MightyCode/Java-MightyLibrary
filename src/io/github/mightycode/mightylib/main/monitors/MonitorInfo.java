@@ -8,7 +8,7 @@ import java.util.List;
  * Description of a connected screen, read with GLFW (Monitors.List).
  * Positions are in the virtual desktop, the work area excludes the task bar.
  */
-public class MonitorInfo {
+public final class MonitorInfo {
     private final int index;
     private final long handle;
     private final String name;

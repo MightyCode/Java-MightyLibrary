@@ -19,7 +19,8 @@ import static org.lwjgl.opengl.GL40.GL_PATCHES;
  * Geometry only: vertex buffers (one per attribute, each on a channel = attribute location in the shader),
  * an optional element buffer, the draw mode, and one vertex array per OpenGL context. The program and the
  * OpenGL state of the draw belong to the renderer (MeshRenderer) which owns the mesh.
- * Hook: draw() can be overridden (instanced draw for example), it is called with the vertex array bound.
+ * Hooks: draw() (instanced draw for example), called with the vertex array bound; unload() (release what the
+ * subclass created, then call super). The other methods are final.
  */
 public class Mesh {
     public static final int STATIC_STORE = GL_STATIC_DRAW;
@@ -90,12 +91,12 @@ public class Mesh {
     }
 
     // Add a float attribute on the next free channel, returns the index of its vbo (for updateVbo)
-    public int addVboFloat(float[] vertices, int vertexSize, int storage) {
+    public final int addVboFloat(float[] vertices, int vertexSize, int storage) {
         return addVboFloat(nextFreeChannel(), vertices, vertexSize, storage);
     }
 
     // Add a float attribute on the given channel (location in the shader), returns the index of its vbo (for updateVbo)
-    public int addVboFloat(int channel, float[] vertices, int vertexSize, int storage) {
+    public final int addVboFloat(int channel, float[] vertices, int vertexSize, int storage) {
         checkChannelFree(channel);
 
         bind();
@@ -118,12 +119,12 @@ public class Mesh {
     }
 
     // Add an integer attribute on the next free channel, returns the index of its vbo (for updateVbo)
-    public int addVboInt(int[] vertices, int vertexSize, int storage){
+    public final int addVboInt(int[] vertices, int vertexSize, int storage){
         return addVboInt(nextFreeChannel(), vertices, vertexSize, storage);
     }
 
     // Add an integer attribute on the given channel (location in the shader), returns the index of its vbo
-    public int addVboInt(int channel, int[] vertices, int vertexSize, int storage){
+    public final int addVboInt(int channel, int[] vertices, int vertexSize, int storage){
         checkChannelFree(channel);
 
         bind();
@@ -169,7 +170,7 @@ public class Mesh {
     }
 
 
-    public void updateVbo(float[] vertices, int vboPosition){
+    public final void updateVbo(float[] vertices, int vboPosition){
         EngineStats.countBufferUpload((long) vertices.length * Float.BYTES);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
@@ -183,7 +184,7 @@ public class Mesh {
         }
     }
 
-    public void updateVbo(int[] vertices, int vboPosition){
+    public final void updateVbo(int[] vertices, int vboPosition){
         EngineStats.countBufferUpload((long) vertices.length * Integer.BYTES);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
@@ -198,13 +199,13 @@ public class Mesh {
     }
 
 
-    public void updateSubVbo(float[] vertices, int vboPosition, int startIndex){
+    public final void updateSubVbo(float[] vertices, int vboPosition, int startIndex){
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
     }
 
-    public void updateSubVbo(int[] vertices, int vboPosition, int startIndex){
+    public final void updateSubVbo(int[] vertices, int vboPosition, int startIndex){
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
@@ -212,7 +213,7 @@ public class Mesh {
 
 
     // Stop feeding the attribute of this channel (no effect when the mesh has none on it)
-    public void disableVbo(int channel){
+    public final void disableVbo(int channel){
         int index = vbosChannel.indexOf(channel);
         if (index == -1)
             return;
@@ -226,7 +227,7 @@ public class Mesh {
     }
 
     // Feed again the attribute of this channel (no effect when the mesh has none on it)
-    public void enableVbo(int channel){
+    public final void enableVbo(int channel){
         int index = vbosChannel.indexOf(channel);
         if (index == -1)
             return;
@@ -240,12 +241,12 @@ public class Mesh {
         }
     }
 
-    public boolean isEnableVbo(int channel) {
+    public final boolean isEnableVbo(int channel) {
         int index = vbosChannel.indexOf(channel);
         return index != -1 && vbosEnable.get(index);
     }
 
-    public void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
+    public final void addAllVbo(float[] vertices, int[] vertexSizes, int ... storage){
         int oneLineSize = MightyMath.Sum(vertexSizes);
         int currentSum = 0;
 
@@ -264,7 +265,7 @@ public class Mesh {
     }
 
 
-    public void setUseEbo(boolean state){
+    public final void setUseEbo(boolean state){
         if (this.useEbo && ebo != 0)
             GenDeleteResources.DeleteBuffersEBO(this.ebo);
 
@@ -277,15 +278,15 @@ public class Mesh {
     }
 
 
-    public void setEboStorage(int eboStorage){
+    public final void setEboStorage(int eboStorage){
         this.eboStorage = eboStorage;
     }
 
-    public void setEbo(int[] indices){
+    public final void setEbo(int[] indices){
         setEbo(indices, indices.length);
     }
 
-    public void setEbo(int[] indices, int indicesSize){
+    public final void setEbo(int[] indices, int indicesSize){
         bind();
         this.indicesSize = indicesSize;
 
@@ -298,11 +299,11 @@ public class Mesh {
         Logger.CheckOpenGLError("Buffer ebo data");
     }
 
-    public void setEboNumberIndex(int newIndexSize) {
+    public final void setEboNumberIndex(int newIndexSize) {
         this.indicesSize = newIndexSize;
     }
 
-    public void updateEbo(int[] newArray, int startIndex) {
+    public final void updateEbo(int[] newArray, int startIndex) {
         bind();
         if (!useEbo) {
             System.err.print(">(Mesh.java) Trying to update array without using EBO !");
@@ -318,7 +319,7 @@ public class Mesh {
      * context has its own, created at the first bind and rebuilt from the layout (buffers, attributes, element
      * buffer) when it changed. The buffers themselves are shared.
      */
-    public void bind(){
+    public final void bind(){
         GLContext context = GLContext.current();
         VaoEntry entry = lastEntry;
         if (entry == null || entry.context != context)
@@ -386,7 +387,7 @@ public class Mesh {
     }
 
 
-    public void unbind(){
+    public final void unbind(){
         glBindVertexArray(0);
     }
 
@@ -402,12 +403,12 @@ public class Mesh {
     }
 
 
-    public void printStatus(){
+    public final void printStatus(){
         System.out.println("ebo" +  ebo + " vaos  " + vaoEntries.size() + " size " + indicesSize);
     }
 
 
-    public void setDrawMode(EDrawMode drawMode) {
+    public final void setDrawMode(EDrawMode drawMode) {
         this.drawMode = drawMode;
 
         switch (drawMode){
@@ -447,30 +448,30 @@ public class Mesh {
         }
     }
 
-    public EDrawMode getDrawMode(){
+    public final EDrawMode getDrawMode(){
         return drawMode;
     }
 
     // Number of vertex buffers (attributes)
-    public int getVboCount() {
+    public final int getVboCount() {
         return vbos.size();
     }
 
     // Vertices drawn without element buffer (from the last vbo added)
-    public int getVertexCount() {
+    public final int getVertexCount() {
         return verticesToDraw;
     }
 
     // Indices drawn with the element buffer
-    public int getIndexCount() {
+    public final int getIndexCount() {
         return indicesSize;
     }
 
-    public boolean isUsingEbo() {
+    public final boolean isUsingEbo() {
         return useEbo;
     }
 
-    public void unloadVBO() {
+    public final void unloadVBO() {
         for (int vbo : vbos){
             GenDeleteResources.DeleteBuffers(vbo);
         }

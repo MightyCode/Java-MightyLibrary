@@ -7,8 +7,8 @@ import io.github.mightycode.mightylib.main.utils.IUpdatable;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import org.joml.Vector2f;
 
-public class MovingCameraComponent implements IUpdatable {
-    public static class Inputs {
+public final class MovingCameraComponent implements IUpdatable {
+    public static final class Inputs {
         public InputAction MoveLeft, MoveRight, MoveUp, MoveDown, QuickSpeed;
 
         public Inputs setMoveLeft(InputAction moveLeft) {

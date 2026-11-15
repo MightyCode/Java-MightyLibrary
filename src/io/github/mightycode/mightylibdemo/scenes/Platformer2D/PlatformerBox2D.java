@@ -40,8 +40,8 @@ public class PlatformerBox2D extends Scene {
         staticBoxes.add(createStaticBox(new Vec2(20, -10), new Vec2(30, 5), ColorList.Black()));
 
         // === Player ===
-        PlayerController controller = new PlayerController(mainContext.getInputManager());
-        player = new PlayerManager(world, controller, new Vec2(0, 5), main2DCamera, mainContext.getWindow().getInfo().getSizeCopy());
+        PlayerController controller = new PlayerController(context().getInputManager());
+        player = new PlayerManager(world, controller, new Vec2(0, 5), camera2D(), context().getWindow().getInfo().getSizeCopy());
 
         setContactListener();
     }
@@ -59,8 +59,8 @@ public class PlatformerBox2D extends Scene {
 
         player.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
     }
 
 

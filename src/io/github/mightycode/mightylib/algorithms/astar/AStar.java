@@ -10,7 +10,7 @@ import java.util.*;
  * A* on a Graph. The heuristic is the straight-line distance between node positions, so the path is the shortest
  * one as long as no link was given a fixed distance shorter than that straight line (Node.add(neighbour, distance)).
  */
-public class AStar {
+public final class AStar {
     public static List<Node> findShortestPath(Graph graph, Node startNode, Node endNode) {
         return findShortestPath(graph, startNode, endNode, EVerbosity.NONE);
     }

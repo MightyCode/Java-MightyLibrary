@@ -17,7 +17,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Argument
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
 
-public class StatsGenCom extends BaseCommand {
+public final class StatsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "stats";
     // The only statistic of the player (USER), the others are for the developer
     private static final String FPS = "fps";

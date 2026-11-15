@@ -9,6 +9,11 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
+/**
+ * A 2D shape drawn by a MeshRenderer: positions and texture coordinates computed by the subclass (hooks
+ * getIndices, calculatePosition, calculateTexturePosition), sent at the next display when they changed.
+ * A subclass calls updateShapePosition or updateShapeTexture when what they compute changes.
+ */
 public abstract class Shape2DRenderer extends MeshRenderer {
     private final static Vector4f REFERENCE_RANGE_DIRECTION = new Vector4f(0, 0, 1, 1);
 
@@ -57,6 +62,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         }
     }
 
+    // Hook (call super): sends the changed geometry, then draws
     @Override
     public void display() {
         uploadGeometry();
@@ -64,10 +70,14 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         super.display();
     }
 
+    // Hook: the indices of the triangles, asked once at the first display
     protected abstract int[] getIndices();
+    // Hook: the positions of the vertices (2 floats each), asked again after updateShapePosition
     protected abstract float[] calculatePosition();
+    // Hook: the texture coordinates of the vertices (2 floats each), asked again after updateShapeTexture
     protected abstract float[] calculateTexturePosition();
 
+    // Hook (call super): the point of the shape placed at its position; a subclass that follows it redefines it
     public Shape2DRenderer setReferenceDirection(EDirection reference){
         if (reference == EDirection.Undef)
             return this;
@@ -80,11 +90,11 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         return this;
     }
 
-    public EDirection getReferenceDirection(){
+    public final EDirection getReferenceDirection(){
         return referenceDirection;
     }
 
-    public Shape2DRenderer setReferencePoint(Vector2f reference){
+    public final Shape2DRenderer setReferencePoint(Vector2f reference){
         referencePoint = reference;
         referenceDirection = Direction.RangedVectorToDirection(reference, REFERENCE_RANGE_DIRECTION);
 
@@ -93,34 +103,35 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         return this;
     }
 
-    public Vector2f getReferencePoint() {
+    public final Vector2f getReferencePoint() {
         return referencePoint;
     }
 
-    public Shape2DRenderer setTexturePosition(Vector4f newTexturePosition){
+    // The part of the texture drawn (x, y, x2, y2 in 0..1), sent at the next display
+    public final Shape2DRenderer setTexturePosition(Vector4f newTexturePosition){
         texturePosition = newTexturePosition;
+        textureDirty = true;
 
         return this;
     }
 
-    public Vector4f getTexturePosition() {
+    public final Vector4f getTexturePosition() {
         return texturePosition;
     }
 
     // Set size with size of pixel
-    public Shape2DRenderer setSizePix(Vector2f newSize){
-        setScale(new Vector3f(newSize.x, newSize.y, 1.0f));
-
-        return this;
+    public final Shape2DRenderer setSizePix(Vector2f newSize){
+        return setSizePix(newSize.x, newSize.y);
     }
 
+    // Hook (call super): a subclass that follows the size redefines it
     public Shape2DRenderer setSizePix(float width, float height){
         setScale(new Vector3f(width, height, 1.0f));
 
         return this;
     }
 
-    public Shape2DRenderer setSizeToTexture() {
+    public final Shape2DRenderer setSizeToTexture() {
         IRenderTextureBindable mainTexture = getMainTexture();
         if (mainTexture == null)
             return this;
@@ -131,25 +142,26 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     }
 
 
+    // Hook (call super): a subclass that follows the position redefines it
     public Shape2DRenderer setPosition(Vector2f position){
         super.setPosition(new Vector3f(position.x, position.y, 0.0f));
 
         return this;
     }
 
-    public Vector2f get2DPosition(){
+    public final Vector2f get2DPosition(){
         return new Vector2f(position().x, position().y);
     }
 
     // Sent at the next display
-    public Shape2DRenderer updateShapeTexture(){
+    public final Shape2DRenderer updateShapeTexture(){
         textureDirty = true;
 
         return this;
     }
 
     // Sent at the next display
-    public Shape2DRenderer updateShapePosition(){
+    public final Shape2DRenderer updateShapePosition(){
         positionDirty = true;
 
         return this;

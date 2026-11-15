@@ -21,12 +21,16 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * Base of every renderer: transform, program (shader), shader values, OpenGL state of the draw (RenderState),
- * visibility and reference camera. It has no geometry: MeshRenderer draws one Mesh, ModelRenderer a model.
- * The program, the values and the state are grouped apart from the transform (a future shareable Material).
+ * Base of every renderer: draws something with a shader program. Holds the program (its fallback while it loads
+ * or when it failed), the values sent to it, the transform (model matrix), the reference camera, the visibility and
+ * the OpenGL state of the draw (RenderState). It has no geometry: MeshRenderer draws one Mesh, ModelRenderer a
+ * model. The program, the values and the state are grouped apart from the transform (a future shareable Material).
  *
- * A subclass implements draw() and can redefine the hooks updateShader() and applyRenderState();
+ * Hooks of a subclass: draw (the geometry), updateShader (bind and send before draw), applyRenderState, display
+ * (a condition, then super), unload (release, then super), and the setters whose change it must follow
+ * (setPosition, setRotationZ, position, setColorMode, setNoColorNoTextureMode, setFaceCulling: call super).
  * display() calls them in this order: applyRenderState, program in use, updateShader, draw.
+ * The state of the renderer is reached through methods only.
  */
 public abstract class Renderer extends UUID implements IDisplayable {
     // Belong to the engine of the view that creates the renderer
@@ -120,13 +124,13 @@ public abstract class Renderer extends UUID implements IDisplayable {
     }
 
     // A value sent only when the current program has its uniform (not reported missing otherwise)
-    protected void putOptionalValue(String key, ShaderValue value) {
+    protected final void putOptionalValue(String key, ShaderValue value) {
         shaderValues.put(key, value);
         optionalValues.add(key);
     }
 
     // The program if linked, otherwise the fallback one (failed or still loading), always linked
-    public Shader getShader() {
+    public final Shader getShader() {
         if (shader.isLoaded())
             return shader;
 
@@ -137,12 +141,12 @@ public abstract class Renderer extends UUID implements IDisplayable {
     }
 
     // True when the current program of this renderer has this uniform
-    protected boolean hasUniform(String name) {
+    protected final boolean hasUniform(String name) {
         return getShader().getLink(name) != -1;
     }
 
     // Send the values of this renderer to the current program (the unchanged ones are skipped by it)
-    protected void sendShaderValues() {
+    protected final void sendShaderValues() {
         for (Map.Entry<String, ShaderValue> entry : shaderValues.entrySet()) {
             ShaderValue value = entry.getValue();
             if (optionalValues.contains(entry.getKey()) && !hasUniform(value.getName()))
@@ -152,7 +156,11 @@ public abstract class Renderer extends UUID implements IDisplayable {
         }
     }
 
-    // Not meant to be redefined: redefine the hooks instead (a subclass may still check a condition, then call super)
+    /**
+     * Hook called by the scene at each frame: applies the render state, uses the program, then updateShader and
+     * draw. A subclass rather redefines those; it may check a condition or prepare its geometry, then call super.
+     */
+    @Override
     public void display(){
         if(visible) {
             applyRenderState();
@@ -168,30 +176,31 @@ public abstract class Renderer extends UUID implements IDisplayable {
         renderState.apply();
     }
 
-    public Renderer setDepthTest(boolean depthTest) {
+    public final Renderer setDepthTest(boolean depthTest) {
         renderState.setDepthTest(depthTest);
         return this;
     }
 
-    public boolean isDepthTest() {
+    public final boolean isDepthTest() {
         return renderState.isDepthTest();
     }
 
-    public Renderer setDepthWrite(boolean depthWrite) {
+    public final Renderer setDepthWrite(boolean depthWrite) {
         renderState.setDepthWrite(depthWrite);
         return this;
     }
 
-    public boolean isDepthWrite() {
+    public final boolean isDepthWrite() {
         return renderState.isDepthWrite();
     }
 
+    // Hook (call super): a subclass may redefine it to return its own type
     public Renderer setFaceCulling(boolean faceCulling) {
         renderState.setFaceCulling(faceCulling);
         return this;
     }
 
-    public boolean isFaceCulling() {
+    public final boolean isFaceCulling() {
         return renderState.isFaceCulling();
     }
 
@@ -206,36 +215,42 @@ public abstract class Renderer extends UUID implements IDisplayable {
     // Hook: draws the geometry, with the program in use and the values sent (one or several draw calls)
     public abstract void draw();
 
-    public Renderer addShaderValue(String name, Class<?> type, Object object){
+    public final Renderer addShaderValue(String name, Class<?> type, Object object){
         shaderValues.put(name, new ShaderValue(name, type, object));
         optionalValues.remove(name);
 
         return this;
     }
 
-    public boolean hasShaderValue(String name) {
+    public final boolean hasShaderValue(String name) {
         return shaderValues.containsKey(name);
     }
 
     // The value sent under this name, null when there is none
-    public ShaderValue getShaderValue(String name) {
+    public final ShaderValue getShaderValue(String name) {
         return shaderValues.get(name);
     }
 
-    public Renderer removeShaderValue(String name) {
+    public final Renderer removeShaderValue(String name) {
         shaderValues.remove(name);
         optionalValues.remove(name);
 
         return this;
     }
 
-    public Renderer updateShaderValue(String name, Object object) {
-        shaderValues.get(name).setObject(object);
+    // Change the object of a value added with addShaderValue
+    public final Renderer updateShaderValue(String name, Object object) {
+        ShaderValue value = shaderValues.get(name);
+        if (value == null)
+            throw new IllegalArgumentException("No shader value " + name + " in " + getClass().getSimpleName()
+                    + ": add it first with addShaderValue(name, type, object)");
+
+        value.setObject(object);
 
         return this;
     }
 
-    public Renderer copyShaderValuesTo(Renderer other, boolean eraseExisting){
+    public final Renderer copyShaderValuesTo(Renderer other, boolean eraseExisting){
         for (ShaderValue value : shaderValues.values()) {
             if (other.shaderValues.containsKey(value.getName()) && !eraseExisting)
                 continue;
@@ -251,10 +266,11 @@ public abstract class Renderer extends UUID implements IDisplayable {
     }
 
     // Send one value to the current program (skipped by it when unchanged)
-    protected void sendToShader(ShaderValue value) {
+    protected final void sendToShader(ShaderValue value) {
         getShader().sendValueToShader(value);
     }
 
+    // Hook (call super): a subclass that follows the position redefines it
     public void setPosition(Vector3f position){
         this.position.x = position.x;
         this.position.y = position.y;
@@ -263,25 +279,25 @@ public abstract class Renderer extends UUID implements IDisplayable {
         applyModel();
     }
 
-    public void setX(float x){
+    public final void setX(float x){
         this.position.x = x;
 
         applyModel();
     }
 
-    public void setY(float y){
+    public final void setY(float y){
         this.position.y = y;
 
         applyModel();
     }
 
-    public void setZ(float z){
+    public final void setZ(float z){
         this.position.z = z;
 
         applyModel();
     }
 
-    public void setScale(Vector3f scale){
+    public final void setScale(Vector3f scale){
         this.scale.x = scale.x;
         this.scale.y = scale.y;
         this.scale.z = scale.z;
@@ -289,7 +305,7 @@ public abstract class Renderer extends UUID implements IDisplayable {
         applyModel();
     }
 
-    public void setRotation(float angle, Vector3f rotation){
+    public final void setRotation(float angle, Vector3f rotation){
         this.rotation.x = rotation.x;
         this.rotation.y = rotation.y;
         this.rotation.z = rotation.z;
@@ -300,7 +316,7 @@ public abstract class Renderer extends UUID implements IDisplayable {
     }
 
 
-    public void setRotation(Renderer other){
+    public final void setRotation(Renderer other){
         this.rotation.x = other.rotation.x;
         this.rotation.y = other.rotation.y;
         this.rotation.z = other.rotation.z;
@@ -310,12 +326,13 @@ public abstract class Renderer extends UUID implements IDisplayable {
         applyModel();
     }
 
-    public void setRotationAngle(float angle){
+    public final void setRotationAngle(float angle){
         this.angle = angle;
 
         applyModel();
     }
 
+    // Hook (call super): a subclass that follows the rotation redefines it
     public void setRotationZ(float angle){
         this.angle = angle;
 
@@ -326,7 +343,7 @@ public abstract class Renderer extends UUID implements IDisplayable {
         applyModel();
     }
 
-    public void applyModel(){
+    public final void applyModel(){
         this.model.identity();
 
         this.model.translate(this.position);
@@ -334,20 +351,21 @@ public abstract class Renderer extends UUID implements IDisplayable {
         this.model.scale(this.scale);
     }
 
-    public Renderer setVisible(boolean visible) {
+    public final Renderer setVisible(boolean visible) {
         this.visible = visible;
         return this;
     }
 
-    public boolean isVisible() {
+    public final boolean isVisible() {
         return visible;
     }
 
-    public Renderer toggleVisible() {
+    public final Renderer toggleVisible() {
         visible = !visible;
         return this;
     }
 
+    // Hook (call super): draws in this color; a subclass also stops its textures there
     public ShaderValue setColorMode(Color4f color) {
         ShaderValue value = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
         shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
@@ -355,25 +373,27 @@ public abstract class Renderer extends UUID implements IDisplayable {
         return value;
     }
 
+    // Hook (call super): neither color nor texture
     public void setNoColorNoTextureMode() {
         removeShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME);
     }
 
+    // Hook: the position of the drawn object, a subclass may compute it (an animation with its own reference)
     public Vector3f position(){
         return position;
     }
 
-    public Vector3f scale() { return scale; }
+    public final Vector3f scale() { return scale; }
 
-    public Vector3f rotationAxis() { return rotation; }
+    public final Vector3f rotationAxis() { return rotation; }
 
-    public float getRotationAngle() { return angle; }
+    public final float getRotationAngle() { return angle; }
 
-    public Matrix4f getModel(){
+    public final Matrix4f getModel(){
         return new Matrix4f(model);
     }
 
-    public void setReferenceCamera(Camera camera){
+    public final void setReferenceCamera(Camera camera){
         if (camera == null)
             return;
 
@@ -382,7 +402,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
         putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
     }
 
-    // A subclass releases what it created, then calls super (the program)
+    // Hook called when the renderer is no longer used: a subclass releases what it created, then calls super
+    @Override
     public void unload() {
         // Given back once: unload can be called twice
         if (!shaderReleased) {

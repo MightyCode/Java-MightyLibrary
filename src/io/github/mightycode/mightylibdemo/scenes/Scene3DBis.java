@@ -53,16 +53,16 @@ public class Scene3DBis extends Scene {
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
-        mainContext.getMouseManager().setCursor(false);
-        cameraComponent = new FreeCamera3DComponent(mainContext.getInputManager(), main3DCamera, AxisId.freeCamera3DInputs());
+        context().getMouseManager().setCursor(false);
+        cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
         addUpdatable(cameraComponent);
-        main3DCamera.setSpeed(new Vector3f(8));
+        camera3D().setSpeed(new Vector3f(8));
         cameraComponent.setQuickFactor(2);
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera3D().init(main3DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera3D().init(camera3D(), new Vector2f(5, 5))
                         .addInfo(DebugInfoCamera3D.POSITION)
                         .addInfo(DebugInfoCamera3D.LOOK)
                         .addInfo(DebugInfoCamera3D.SPEED)
@@ -112,7 +112,7 @@ public class Scene3DBis extends Scene {
             this.cubeTexturedMaterialsDirectional[i] = cubeTexturedMaterial;
 
             cubeTexturedMaterial
-                    .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                    .addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                     .addShaderValue("light.vector", Vector4f.class,
                             RendererUtils.ToLightDirection(directionalLight.getDirection()))
                     .addShaderValue("material.shininess", Float.class, 64f);
@@ -144,7 +144,7 @@ public class Scene3DBis extends Scene {
             this.cubeTexturedMaterialsPoint[i] = cubeTexturedMaterial;
 
             cubeTexturedMaterial
-                    .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                    .addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                     .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(lightPoint.position()))
                     .addShaderValue("material.shininess", Float.class, 64f)
                     .addShaderValue("light.useDistance", Integer.class, 1);
@@ -169,7 +169,7 @@ public class Scene3DBis extends Scene {
         lightManager.setDirectionalLight(directionalLight.clone());
         lightManager.setSpotLight(
                 new SpotLight(spotLightReference, lightDecrease)
-                        .setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector())
+                        .setPosition(camera3D().getCamPosRef()).setDirection(camera3D().getLookAtVector())
                         .enable()
         );
 
@@ -203,7 +203,7 @@ public class Scene3DBis extends Scene {
             this.cubeMultiLights[i] = cubeTexturedMaterial;
 
             cubeTexturedMaterial
-                    .addShaderValue("viewPos", Vector3f.class, main3DCamera.getCamPosRef())
+                    .addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                     .addShaderValue("material.shininess", Float.class, 64f);
 
             lightManager.addRenderer(cubeTexturedMaterial);
@@ -214,30 +214,30 @@ public class Scene3DBis extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        IInputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = context().getInputManager();
 
 
         if (inputManager.inputPressed(ActionId.TAB)) {
             cameraComponent.toggleLookLocked();
-            mainContext.getMouseManager().invertCursorState();
+            context().getMouseManager().invertCursorState();
         }
 
         for (int i = 0; i < cubeTexturedMaterialsDirectional.length; ++i) {
-            cubeTexturedMaterialsDirectional[i].updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+            cubeTexturedMaterialsDirectional[i].updateShaderValue("viewPos", camera3D().getCamPosRef());
             //cubeTexturedMaterial.updateShaderValue("light.position", light.position());
 
-            cubeTexturedMaterialsPoint[i].updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+            cubeTexturedMaterialsPoint[i].updateShaderValue("viewPos", camera3D().getCamPosRef());
 
-            cubeMultiLights[i].updateShaderValue("viewPos", main3DCamera.getCamPosRef());
+            cubeMultiLights[i].updateShaderValue("viewPos", camera3D().getCamPosRef());
         }
 
-        lightManager.getSpotLight().setPosition(main3DCamera.getCamPosRef()).setDirection(main3DCamera.getLookAtVector());
+        lightManager.getSpotLight().setPosition(camera3D().getCamPosRef()).setDirection(camera3D().getLookAtVector());
         lightManager.update();
 
-        main3DCamera.updateView();
+        camera3D().updateView();
     }
 
 

@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.inputs.inputType;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
 
-public class InputSimple implements IAction {
+public final class InputSimple implements IAction {
     private final int inputId;
     private final EInputType inputType;
 

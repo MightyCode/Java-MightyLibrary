@@ -15,11 +15,11 @@ import io.github.mightycode.mightylib.scenes.camera.Camera3D;
  *   bindings), ignored while the look is locked (menu, cursor shown).
  * The view is updated at the end of update : add it with Scene.addUpdatable, the scene sees the new view.
  */
-public class FreeCamera3DComponent implements IUpdatable {
+public final class FreeCamera3DComponent implements IUpdatable {
     public static final float DEFAULT_QUICK_FACTOR = 3;
 
     // Axes, except QuickSpeed (an action) ; null : not used
-    public static class Inputs {
+    public static final class Inputs {
         public InputAxis MoveRight, MoveForward, MoveUp;
         public InputAxis LookRight, LookUp;
         public InputAction QuickSpeed;

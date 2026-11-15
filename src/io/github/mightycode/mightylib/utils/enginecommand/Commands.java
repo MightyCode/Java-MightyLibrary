@@ -39,7 +39,7 @@ import java.util.function.Supplier;
  * Commands can be submitted from any thread (console, debug server...), they are executed on the main thread
  * at the beginning of the next tick, so the game is never blocked while waiting for a command.
  */
-public class Commands {
+public final class Commands {
     // Default time given to a deferred result before it becomes an error
     public static final long COMMAND_TIMEOUT_SECONDS = 30;
 

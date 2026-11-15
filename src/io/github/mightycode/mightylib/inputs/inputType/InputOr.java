@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.inputs.inputType;
 
 import io.github.mightycode.mightylib.inputs.IInputManager;
 
-public class InputOr implements IAction {
+public final class InputOr implements IAction {
     private final IAction input1;
     private final IAction input2;
 

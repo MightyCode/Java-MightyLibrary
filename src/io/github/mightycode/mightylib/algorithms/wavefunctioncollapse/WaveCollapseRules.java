@@ -8,14 +8,19 @@ import org.json.JSONObject;
 
 import java.util.*;
 
-public class WaveCollapseRules extends DataType {
+public final class WaveCollapseRules extends DataType {
     // The keys of the root that are not tile rules
     private static final Set<String> RESERVED_KEYS = Set.of("info", "initial");
 
     private JSONFile data;
 
-    public static class Rule {
-        public static final Vector2i INITIAL_POS = new Vector2i(0, 0);
+    public static final class Rule {
+        private static final Vector2i INITIAL_POS = new Vector2i(0, 0);
+
+        // The key of the initial rule (a new vector each time: the shared one can't be changed)
+        public static Vector2i initialPosition() {
+            return new Vector2i(INITIAL_POS);
+        }
         private final int id;
         private final List<Vector2i> directions;
         
@@ -167,8 +172,8 @@ public class WaveCollapseRules extends DataType {
             ++numberRuledTiles;
         }
 
-        initialRule.addDirection(Rule.INITIAL_POS);
-        initialRule.addAvailableIds(Rule.INITIAL_POS, makeAvailableList(root.getJSONObject("initial")));
+        initialRule.addDirection(Rule.initialPosition());
+        initialRule.addAvailableIds(Rule.initialPosition(), makeAvailableList(root.getJSONObject("initial")));
 
         if (info.getString("type").equals("list"))
             parseListIdTypeFile(ruleKeys);

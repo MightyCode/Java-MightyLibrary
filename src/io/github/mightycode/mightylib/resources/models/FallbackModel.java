@@ -8,7 +8,7 @@ import java.util.Collections;
  * Fallback of the models: a unit cube with the fallback texture, created by the code.
  * Displayed in place of a model that failed, is still loading or has an unknown name.
  */
-public class FallbackModel extends Model {
+public final class FallbackModel extends Model {
     // For each face: normal, then the two axes of the face plane
     private static final float[][] FACES = {
             { 0, 0, 1,   1, 0, 0,   0, 1, 0 },

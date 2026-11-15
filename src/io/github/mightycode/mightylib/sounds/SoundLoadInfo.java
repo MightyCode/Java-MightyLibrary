@@ -6,7 +6,7 @@ import java.nio.ShortBuffer;
 import java.util.Objects;
 
 // Decoded samples of a sound, until they are sent to OpenAL
-public class SoundLoadInfo {
+public final class SoundLoadInfo {
     private final int channels;
     private final int sampleRate;
     private ShortBuffer buffer;

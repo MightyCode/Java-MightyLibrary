@@ -19,7 +19,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * Triggers : 0 (released) to 1 (fully pressed), dead zone applied.
  * Main thread only.
  */
-public class Gamepad {
+public final class Gamepad {
     public static final int BUTTONS = GLFW_GAMEPAD_BUTTON_LAST + 1;
     public static final int AXES = GLFW_GAMEPAD_AXIS_LAST + 1;
 

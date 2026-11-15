@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.main.utils;
 
-public class GameTime {
+public final class GameTime {
     private static GameTime gametime;
 
     private long currentTime;

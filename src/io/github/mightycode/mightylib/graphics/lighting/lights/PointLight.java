@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
-public class PointLight extends BasicMaterial {
+public final class PointLight extends BasicMaterial {
     private Vector3f position;
     private boolean shouldUseDistance;
     private LightDecrease lightDecrease = null;
@@ -82,11 +82,14 @@ public class PointLight extends BasicMaterial {
         }
     }
 
+    // A point light with the same settings and its own vectors (LightDecrease is immutable: shared)
     @Override
     public PointLight clone(){
-        if (this.shouldUseDistance)
-            return new PointLight(super.clone(), lightDecrease);
+        PointLight copy = new PointLight(cloneBasicMaterial(), lightDecrease);
+        copy.position = position == null ? null : new Vector3f(position);
+        copy.shouldUseDistance = shouldUseDistance;
+        copy.currentNumber = currentNumber;
 
-        return new PointLight(super.clone());
+        return copy;
     }
 }

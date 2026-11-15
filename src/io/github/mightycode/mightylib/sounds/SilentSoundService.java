@@ -11,7 +11,7 @@ import java.util.List;
  * gain tree is the real one. A sound that is not owned ends at once (deleted the tick after it played). Used when no
  * device can be opened, or with -Dmightylib.sound=silent.
  */
-public class SilentSoundService implements ISoundService {
+public final class SilentSoundService implements ISoundService {
     private final List<SilentSoundSource> sources = new ArrayList<>();
     private final SilentSoundListener listener = new SilentSoundListener();
     private final GainTree gainTree;

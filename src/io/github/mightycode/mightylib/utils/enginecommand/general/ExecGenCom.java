@@ -23,7 +23,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 /**
  * Run the commands written in a file, one per line (see CommandScript).
  */
-public class ExecGenCom extends BaseCommand {
+public final class ExecGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "exec";
     public static final long DEFAULT_TIMEOUT_SECONDS = 300;
 

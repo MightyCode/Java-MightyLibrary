@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.inputs.GamepadManager;
 /**
  * A gamepad button (GLFW_GAMEPAD_BUTTON_...) of a player, or of any gamepad (GamepadManager.ANY_PLAYER).
  */
-public class InputGamepadButton implements IAction {
+public final class InputGamepadButton implements IAction {
     private final int button;
     private final int player;
 

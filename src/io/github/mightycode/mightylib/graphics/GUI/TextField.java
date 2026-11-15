@@ -20,7 +20,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * console command line (cursor, selection, words, Ctrl+A/C/X/V) and a hint is shown while it is empty.
  * The scene calls update() once per tick, then reads isChanged(), isSubmitted() and getLeftWith().
  */
-public class TextField extends GUI {
+public final class TextField extends GUI {
     private static final float PADDING = 8f;
     private static final long CURSOR_BLINK_NANOSECONDS = 500_000_000L;
 
@@ -126,7 +126,7 @@ public class TextField extends GUI {
 
     // The cursor of the window in the virtual space of the GUI, whatever the focus
     private Vector2f mouse() {
-        return referenceCamera.transformPosition(context.getMouseManager().getRawVirtualPos());
+        return referenceCamera().transformPosition(context.getMouseManager().getRawVirtualPos());
     }
 
     private boolean isInside(Vector2f point) {
@@ -156,7 +156,7 @@ public class TextField extends GUI {
     public boolean GUIMouseSelected() {
         // Hidden by the focus of another owner: not over the field then
         MouseManager mouse = context.getMouseManager();
-        return !mouse.isCaptured() && isInside(referenceCamera.transformPosition(mouse.pos()));
+        return !mouse.isCaptured() && isInside(referenceCamera().transformPosition(mouse.pos()));
     }
 
     @Override

@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TextureDataAtlas extends TextureData {
+public final class TextureDataAtlas extends TextureData {
     // Ordered list by texture size
     private List<TextureData> textures;
 
@@ -41,7 +41,7 @@ public class TextureDataAtlas extends TextureData {
         if (getClass() != TextureDataAtlas.class)
             return null;
 
-        TextureDataAtlas copy = new TextureDataAtlas(getTypeSetUp(), dataName, path);
+        TextureDataAtlas copy = new TextureDataAtlas(getTypeSetUp(), getDataName(), path());
         copy.copySettingsFrom(this);
         if (!validPath()) {
             for (TextureData texture : textures) {
@@ -158,13 +158,12 @@ public class TextureDataAtlas extends TextureData {
             currentX += textureWidth;
         }
 
-        width = atlasWidth;
-        height = currentY + maxHeightInRow;
+        setSize(atlasWidth, currentY + maxHeightInRow);
     }
 
     public boolean constructTexture(){
         // fill an array with black pixels
-        atlas = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        atlas = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 
         for (TextureData texture : textures) {
             Vector2i position = texturesPosition.get(texture.getDataName());

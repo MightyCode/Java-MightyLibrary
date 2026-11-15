@@ -16,9 +16,14 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 
+/**
+ * A picture read from a file (stb_image), sent to the card as a Texture. A subtype that makes its pixels itself
+ * (an atlas, a plain color) redefines internLoad and, if it reads no file, loadBufferedImage; it gives its own
+ * createReloadCopy and swapContent when it adds content, and calls super in internUnload and internCancelPreload.
+ */
 public class TextureData extends SingleSourceDataType {
-    protected int width;
-    protected int height;
+    private int width;
+    private int height;
 
     private int[] pixelCache = null;
 
@@ -53,7 +58,7 @@ public class TextureData extends SingleSourceDataType {
         if (getClass() != TextureData.class)
             return null;
 
-        TextureData copy = new TextureData(getTypeSetUp(), dataName, path);
+        TextureData copy = new TextureData(getTypeSetUp(), getDataName(), path());
         copy.copySettingsFrom(this);
         return copy;
     }
@@ -87,7 +92,7 @@ public class TextureData extends SingleSourceDataType {
         pixelCache = otherCache;
     }
 
-    public void setBufferedImage(BufferedImage img) {
+    public final void setBufferedImage(BufferedImage img) {
         tempBufferedImage = img;
     }
 
@@ -160,45 +165,51 @@ public class TextureData extends SingleSourceDataType {
 
     // The pixels once read; before, a guess: a compressed file is about four times smaller than its pixels
     @Override
-    public long estimatedCpuBytes() {
+    public final long estimatedCpuBytes() {
         long decoded = decodedPixelBytes();
         return decoded > 0 ? decoded : super.estimatedCpuBytes() * 4;
     }
 
     // Without mipmaps
     @Override
-    public long estimatedGpuBytes() {
+    public final long estimatedGpuBytes() {
         return estimatedCpuBytes();
     }
 
     // The texture the renderers share under the name of the data
     @Override
-    public Class<? extends GLElement> glElementType() {
+    public final Class<? extends GLElement> glElementType() {
         return Texture.class;
     }
 
     @Override
-    public GLElement createGLElement() {
+    public final GLElement createGLElement() {
         return new Texture(this);
     }
 
-    public ByteBuffer getData() {
+    public final ByteBuffer getData() {
         return byteBuffer;
     }
 
-    public int getWidth() {
+    public final int getWidth() {
         return width;
     }
 
-    public int getHeight() {
+    public final int getHeight() {
         return height;
     }
 
-    public void setDefaultAspectTexture(int defaultAspectTexture) {
+    // For a subtype that makes its pixels itself (an atlas): the size of the picture
+    protected final void setSize(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
+    public final void setDefaultAspectTexture(int defaultAspectTexture) {
         this.defaultAspectTexture = defaultAspectTexture;
     }
 
-    public void setDefaultTextureType(int defaultTextureType) {
+    public final void setDefaultTextureType(int defaultTextureType) {
         this.defaultTextureType = defaultTextureType;
     }
 
@@ -232,7 +243,7 @@ public class TextureData extends SingleSourceDataType {
     }
 
 
-    public void computeCache() {
+    public final void computeCache() {
         if (pixelCache != null)
             return;
 
@@ -246,15 +257,15 @@ public class TextureData extends SingleSourceDataType {
         }
     }
 
-    public int getPixelCached(int x, int y) {
+    public final int getPixelCached(int x, int y) {
         return getPixelCached(y * width + x);
     }
 
-    public int getPixelCached(int index) {
+    public final int getPixelCached(int index) {
         return pixelCache[index];
     }
 
-    public int getPixel(int x, int y) {
+    public final int getPixel(int x, int y) {
         if (byteBuffer == null || x < 0 || y < 0 || x >= width || y >= height) {
             throw new IllegalArgumentException("Invalid coordinates or texture not loaded.");
         }
@@ -262,7 +273,7 @@ public class TextureData extends SingleSourceDataType {
         return getPixel(y * width + x);
     }
 
-    public int getPixel(int index) {
+    public final int getPixel(int index) {
         byte r = byteBuffer.get(index * 4);
         byte g = byteBuffer.get(index * 4 + 1);
         byte b = byteBuffer.get(index * 4 + 2);

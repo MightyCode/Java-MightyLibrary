@@ -4,7 +4,7 @@ package io.github.mightycode.mightylib.algorithms.graph;
  * Class that also represent, in a context of a reduced graph, a connection between two intersection
  * and its sub nodes that create the path between them.
  */
-public class NodeIntersectionList extends ListNode<NodeSubIntersection> {
+public final class NodeIntersectionList extends ListNode<NodeSubIntersection> {
     private final NodeIntersection from;
     private final NodeIntersection to;
     public NodeIntersectionList(NodeIntersection from, NodeIntersection to) {

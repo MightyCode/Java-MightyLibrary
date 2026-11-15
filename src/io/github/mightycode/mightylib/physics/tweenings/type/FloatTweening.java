@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.physics.tweenings.type;
 
 import io.github.mightycode.mightylib.physics.tweenings.Tweening;
 
-public class FloatTweening extends Tweening<Float> {
+public final class FloatTweening extends Tweening<Float> {
     private float beginningValue;
     private float endingValue;
     private float valuesRange;
@@ -24,7 +24,7 @@ public class FloatTweening extends Tweening<Float> {
 
        updateBase();
 
-       if (inverseThisFrame){
+       if (isInverseThisFrame()){
            beginningValue = this.endingValue;
            valuesRange = -valuesRange;
        }

@@ -21,7 +21,7 @@ import java.util.Map;
  * The cubemaps: one per folder of resources/cubemaps, named after it, its faces the files right, left, top, bottom,
  * front and back (.png), found without description. A missing or bad face makes the cubemap fail, naming the face.
  */
-public class CubeMapLoader extends ResourceLoader {
+public final class CubeMapLoader extends ResourceLoader {
     public static final String FOLDER = "cubemaps";
 
     @Override

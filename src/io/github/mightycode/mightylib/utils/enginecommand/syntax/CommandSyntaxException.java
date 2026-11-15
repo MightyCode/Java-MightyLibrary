@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
  * (expected(...): the parser adds the name of the argument and the word), and by the parser itself, with the usage of
  * the branch reached.
  */
-public class CommandSyntaxException extends CommandException {
+public final class CommandSyntaxException extends CommandException {
     // What the type expected ("an integer between 1 and 100"), null for a complete message
     private final String expected;
 

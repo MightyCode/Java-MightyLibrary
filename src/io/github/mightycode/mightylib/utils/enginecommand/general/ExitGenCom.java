@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 
-public class ExitGenCom extends BaseCommand {
+public final class ExitGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "exit";
 
     public ExitGenCom(){

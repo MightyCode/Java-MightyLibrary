@@ -118,9 +118,9 @@ public class MenuScene extends Scene {
     public void launch(String[] args) {
         /// SCENE INFORMATION ///
 
-        mainContext.getMouseManager().setCursor(true);
+        context().getMouseManager().setCursor(true);
 
-        main3DCamera.setPos(new Vector3f(0, 0, 0));
+        camera3D().setPos(new Vector3f(0, 0, 0));
         setClearColor(52, 189, 235, 1f);
 
         /// DATA ///
@@ -158,7 +158,7 @@ public class MenuScene extends Scene {
 
         /// RENDERERS ///
 
-        Vector2i windowSize = mainContext.getWindow().getInfo().getVirtualSizeCopy();
+        Vector2i windowSize = context().getWindow().getInfo().getVirtualSizeCopy();
 
         title = new Text();
         title.setFont("bahnschrift")
@@ -176,10 +176,10 @@ public class MenuScene extends Scene {
         float bottom = windowSize.y * 0.86f;
 
         float sortWidth = 230f;
-        field = new TextField(mainContext, left, top, listWidth - sortWidth - 10f, fieldHeight, "bahnschrift", 30);
+        field = new TextField(context(), left, top, listWidth - sortWidth - 10f, fieldHeight, "bahnschrift", 30);
         field.setHint("Filter the scenes...");
 
-        sceneList = new ScrollList(mainContext, left, listTop, listWidth, bottom - listTop, 50f, "bahnschrift", 30);
+        sceneList = new ScrollList(context(), left, listTop, listWidth, bottom - listTop, 50f, "bahnschrift", 30);
         sceneList.setupActivationActions(ActionId.LEFT_CLICK);
         sceneList.setItems(labelsOf(shown));
 
@@ -209,7 +209,7 @@ public class MenuScene extends Scene {
                 .setMaxWidth(panelWidth - 2 * padding)
                 .setPosition(new Vector2f(panelLeft + padding, top + padding + 70f));
 
-        buttonQuit = new BackgroundlessButton(mainContext);
+        buttonQuit = new BackgroundlessButton(context());
         buttonQuit.text().setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
@@ -219,7 +219,7 @@ public class MenuScene extends Scene {
         buttonQuit.text().copyTo(buttonQuit.overlapsText());
         buttonQuit.overlapsText().setColor(new Color4f(0.3f)).setText("->Quit<-");
 
-        buttonSort = new BackgroundlessButton(mainContext);
+        buttonSort = new BackgroundlessButton(context());
         buttonSort.text().setFont("bahnschrift")
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
@@ -270,8 +270,8 @@ public class MenuScene extends Scene {
     public void update() {
         super.update();
 
-        IInputManager input = mainContext.getInputManager();
-        MouseManager mouse = mainContext.getMouseManager();
+        IInputManager input = context().getInputManager();
+        MouseManager mouse = context().getMouseManager();
 
         // While the field has the focus the scene sees no input: only the field and the mouse position work
         field.update();

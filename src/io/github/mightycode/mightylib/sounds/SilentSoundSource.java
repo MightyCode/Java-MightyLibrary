@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.sounds;
 import org.joml.Vector3f;
 
 // A source of the silent service: keeps its settings and its state, plays nothing
-public class SilentSoundSource implements ISoundSource {
+public final class SilentSoundSource implements ISoundSource {
     private final String soundName;
     private final String gainNodeName;
     private final boolean owned;

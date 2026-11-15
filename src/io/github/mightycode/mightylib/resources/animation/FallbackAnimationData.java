@@ -8,7 +8,7 @@ import io.github.mightycode.mightylib.resources.texture.TextureData;
  * Fallback of the animations: a single frame showing the whole fallback texture, created by the code.
  * Played in place of an animation that failed, is still loading or has an unknown name.
  */
-public class FallbackAnimationData extends AnimationData {
+public final class FallbackAnimationData extends AnimationData {
     public FallbackAnimationData(Resources resources) {
         super(Resources.FALLBACK_NAME, null);
         // The fallback texture: a dependency, so this animation is loaded after it

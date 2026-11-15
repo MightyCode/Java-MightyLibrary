@@ -8,7 +8,7 @@ import io.github.mightycode.mightylib.utils.Logger;
 
 import static org.lwjgl.opengl.GL30.*;
 
-public class FrameBuffer implements IRenderTextureBindable {
+public final class FrameBuffer implements IRenderTextureBindable {
     // Framebuffers are not shared between contexts: it is used and deleted in the context that created it
     private final GLContext owner = GLContext.current();
     private int fbo;
@@ -35,7 +35,7 @@ public class FrameBuffer implements IRenderTextureBindable {
         unbindFrameBuffer();
     }
 
-    protected void update(IGLBindable bindable){
+    private void update(IGLBindable bindable){
         renderTextureId = GenDeleteResources.GenTexture();
 
         glBindTexture(GL_TEXTURE_2D, renderTextureId);

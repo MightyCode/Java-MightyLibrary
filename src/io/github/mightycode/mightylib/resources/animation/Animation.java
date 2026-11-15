@@ -8,7 +8,7 @@ import org.joml.Vector2i;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
 
-public class Animation {
+public final class Animation {
     private AnimationData animationData;
 
     private float elapsedTime;

@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.resources.ResourceLoader;
 
 import java.util.Map;
 
-public class JSONLoader extends ResourceLoader {
+public final class JSONLoader extends ResourceLoader {
     @Override
     public Class<? extends DataType> getType() {
         return JSONFile.class;

@@ -10,7 +10,7 @@ import java.util.Collections;
  * Fallback of the cubemaps: the magenta and black checkerboard of the textures on each face, created in memory,
  * it can't fail. Its own element (a CubeMapTexture) is sent in the frames following the first loading.
  */
-public class FallbackCubeMapData extends CubeMapData {
+public final class FallbackCubeMapData extends CubeMapData {
     private static final int SIZE = 16;
     private static final int CELL = 8;
 

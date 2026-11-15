@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.resources.TextFormat;
 import org.joml.Vector2i;
 import org.joml.Vector4i;
 
-public class FrameData {
+public final class FrameData {
     private static final int PART_NUMBER = 7;
 
     // 4 coordinates

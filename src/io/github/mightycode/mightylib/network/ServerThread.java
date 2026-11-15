@@ -5,7 +5,8 @@ public abstract class ServerThread extends CommunicationThread{
     private final boolean listening;
     private final boolean serverConnected = false;
 
-    public ServerThread() {
+    // Package-private: the hierarchy is closed, its subclasses are in this package
+    ServerThread() {
         this.running = true;listening = true;
     }
 

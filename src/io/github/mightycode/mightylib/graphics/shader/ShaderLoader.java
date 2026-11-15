@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  * The shaders listed in shaders.json of the GLSL version (ShaderManager). Their sources are read and preprocessed by
  * the workers (ShaderPreprocessor: #include searched next to the including file, then in the version folder).
  */
-public class ShaderLoader extends ResourceLoader {
+public final class ShaderLoader extends ResourceLoader {
     // Read when the loader works: the manager exists once the window does, after the registration of the plugins
     private final Supplier<ShaderManager> shaderManager;
 

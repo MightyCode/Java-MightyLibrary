@@ -21,7 +21,7 @@ import static org.lwjgl.glfw.GLFW.glfwGetWindowAttrib;
  * The contexts and their windows: parent, modal, blocked by a modal window, focus, size, OpenGL objects owned by
  * the OpenGL context of each window. The window that the other commands work on is marked "target".
  */
-public class WindowsGenCom extends BaseCommand {
+public final class WindowsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "windows";
 
     public WindowsGenCom() {

@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.graphics.lighting.lights;
 import io.github.mightycode.mightylib.graphics.lighting.IShaderUniforms;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 
-public class LightDecrease implements IShaderUniforms {
+public final class LightDecrease implements IShaderUniforms {
     private final float constant;
     private final float linear;
     private final float quadratic;

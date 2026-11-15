@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.CancellationException;
 
 /** Mp3, decoded frame by frame with JLayer. */
-public class Mp3Decoder implements SoundDecoder {
+public final class Mp3Decoder implements SoundDecoder {
     @Override
     public String[] extensions() {
         return new String[]{".mp3"};

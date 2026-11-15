@@ -20,7 +20,7 @@ import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandN
 /**
  * Connected screens with their resolution, and the one showing the window.
  */
-public class MonitorsGenCom extends BaseCommand {
+public final class MonitorsGenCom extends BaseCommand {
     public static final String COMMAND_NAME = "monitors";
 
     public MonitorsGenCom() {

@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.utils.math.geometry.Polygon;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-public class PolygonRenderer extends Shape2DRenderer {
+public final class PolygonRenderer extends Shape2DRenderer {
     private final Polygon polygon;
 
     public PolygonRenderer (String shaderName, Polygon polygon){

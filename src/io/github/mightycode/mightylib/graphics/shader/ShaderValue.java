@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.graphics.shader;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.*;
 
-public class ShaderValue implements Cloneable {
+public final class ShaderValue implements Cloneable {
     protected final String name;
     protected Object object;
 

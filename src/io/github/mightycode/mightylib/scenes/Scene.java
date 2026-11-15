@@ -32,15 +32,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
 
+/**
+ * A screen of the game: what the engine updates and displays in a window, one scene at a time per window.
+ * Extend it and override its hooks: getInvolvedBatch, init (declare the resources), launch (create the objects),
+ * update, postUpdate, display, unload and release. The state of the scene is reached through methods: context(),
+ * resources(), glResources(), camera2D(), camera3D(), sceneManager(), args().
+ */
 public abstract class Scene extends UUID implements IUpdatableDisplayable, IView {
     private final Engine engine;
-    protected final Resources resources;
-    protected final GLResources glResources;
+    private final Resources resources;
+    private final GLResources glResources;
 
-    protected final WindowContext mainContext;
-    protected Camera3D main3DCamera;
-    protected Camera2D main2DCamera;
-    protected SceneManagerInterface sceneManagerInterface;
+    private final WindowContext mainContext;
+    private Camera3D main3DCamera;
+    private Camera2D main2DCamera;
+    private SceneManagerInterface sceneManagerInterface;
     private VirtualSceneRenderer scRenderer;
 
     // Copy on write: objects can be added or removed while the lists are iterated (update, display...)
@@ -59,7 +65,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     // Null until the scene sets one
     private float[] clearColor = null;
 
-    protected String[] args;
+    private String[] args;
 
     private final Camera3DCreationInfo cameraParameters;
 
@@ -121,6 +127,20 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         return main3DCamera;
     }
 
+    // The resources of the engine (CPU side: declare, reference, read)
+    protected final Resources resources() { return resources; }
+
+    // The GL elements of the engine (GPU side of the resources)
+    protected final GLResources glResources() { return glResources; }
+
+    // Changes the scene of the window, preloads the next one or quits the game; null before init()
+    protected final SceneManagerInterface sceneManager() { return sceneManagerInterface; }
+
+    // A copy of the arguments the scene was set with (scene command, setNewScene), empty before init()
+    protected final String[] args() {
+        return args == null ? new String[0] : args.clone();
+    }
+
     private void initGlobalParameters(){
         main3DCamera = mainContext.createCamera(cameraParameters);
         main2DCamera = new Camera2D(mainContext.getWindow().getInfo(), new Vector2f(0,0));
@@ -158,23 +178,31 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     }
 
     /**
-     * Called when the scene is set, before its resources are loaded: declare what the scene needs here.
-     * The cameras and the virtual scene do not exist yet. No need to call super.
+     * Hook called when the scene is set, after getInvolvedBatch and createLoadingScene, before its resources are
+     * loaded: declare or reference what the scene needs here. The cameras and the virtual scene do not exist yet.
+     * No need to call super.
      */
     public void init(String[] args) {}
 
     /**
-     * Called once the resources are loaded: create the renderers here.
-     * The cameras and the virtual scene already exist. No need to call super.
+     * Hook called once the resources are loaded: create the renderers and objects here. The cameras and the
+     * virtual scene exist. The scene is displayed once the GL elements it asked for are loaded. No need to call
+     * super.
      */
     public void launch(String[] args) {}
 
-    // Scene displayed while this scene loads, null to display nothing
+    /**
+     * Hook called when the scene is set, before init: the scene displayed while this one loads (the loading scene
+     * of the game by default), null to display nothing. The engine launches and unloads it.
+     */
     protected TemplateSceneLoading createLoadingScene(String[] args) {
         return sceneManagerInterface.createDefaultLoadingScene();
     }
 
-    // Surface on which the scene is drawn before being displayed on the window
+    /**
+     * Hook called before launch: the surface on which the scene is drawn (setVirtualScene) before being scaled to
+     * the window (setAndDisplayRealScene). Unloaded by super.unload().
+     */
     protected IGLBindable createVirtualSceneBindable() {
         return new BasicBindableObject().setQualityTexture(TextureParameters.REALISTIC_PARAMETERS);
     }
@@ -211,28 +239,28 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         }
     }
 
-    public void addUpdatable(IUpdatable updatable){
+    public final void addUpdatable(IUpdatable updatable){
         updatables.add(updatable);
     }
 
-    public void addDisplayable(IDisplayable displayable){
+    public final void addDisplayable(IDisplayable displayable){
         displayables.add(displayable);
     }
 
-    public void addUpdatableAndDisplayable(IUpdatableDisplayable object){
+    public final void addUpdatableAndDisplayable(IUpdatableDisplayable object){
         addUpdatable(object);
         addDisplayable(object);
     }
 
-    public void removeUpdatable(IUpdatable updatable){
+    public final void removeUpdatable(IUpdatable updatable){
         updatables.remove(updatable);
     }
 
-    public void removeDisplayable(IDisplayable displayable){
+    public final void removeDisplayable(IDisplayable displayable){
         displayables.remove(displayable);
     }
 
-    public void removeUpdatableAndDisplayable(IUpdatableDisplayable object){
+    public final void removeUpdatableAndDisplayable(IUpdatableDisplayable object){
         removeUpdatable(object);
         removeDisplayable(object);
     }
@@ -257,7 +285,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         engine.commands().register(command, CommandOwner.Of(this, "scene"));
     }
 
-    public void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface) {
+    final void setSceneManagerInterface(SceneManagerInterface sceneManagerInterface) {
         this.sceneManagerInterface = sceneManagerInterface;
     }
 
@@ -274,6 +302,11 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         }
     }
 
+    /**
+     * Hook called at each update once the scene is displayed. Call super.update() to update the objects added
+     * with addUpdatable.
+     */
+    @Override
     public void update() {
         for (IUpdatable updatable : updatables) {
             updatable.update();
@@ -293,6 +326,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         }
     }
 
+    // Hook called after update. Call super.postUpdate() to post-update the objects added with addUpdatable.
+    @Override
     public void postUpdate() {
         for (IUpdatable updatable : updatables) {
             updatable.postUpdate();
@@ -351,38 +386,46 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         }
     }
 
+    /**
+     * Hook called at each frame once the scene is loaded, with the OpenGL context of its window current. Usually
+     * setVirtualScene(), clear(), the drawing, then setAndDisplayRealScene(). super.display() draws the objects
+     * added with addDisplayable.
+     */
+    @Override
     public void display() {
         for (IDisplayable displayable : displayables)
             displayable.display();
     }
 
-    protected void setVirtualScene(){
+    // Draw on the virtual scene (createVirtualSceneBindable), at its resolution
+    protected final void setVirtualScene(){
         scRenderer.bindFrameBuff();
         mainContext.getWindow().setVirtualViewport();
     }
 
-    protected void setAndDisplayRealScene(){
+    // Draw on the window again and display the virtual scene on it, scaled
+    protected final void setAndDisplayRealScene(){
         scRenderer.unbindFrameBuff();
         mainContext.getWindow().setRealViewport();
 
         scRenderer.display();
     }
 
-    protected void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+    protected final void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
 
     // The clear color is a global GL state: kept by the scene and applied again before each of its displays,
     // so the loading scene (displayed after launch) or another scene can't replace it
-    protected void setClearColor(Color4f color) { setClearColor(color.getR(), color.getG(), color.getB(), color.getA());}
-    protected void setClearColor(float color1, float color2, float color3, float alpha){
+    protected final void setClearColor(Color4f color) { setClearColor(color.getR(), color.getG(), color.getB(), color.getA());}
+    protected final void setClearColor(float color1, float color2, float color3, float alpha){
         clearColor = new float[]{color1, color2, color3, alpha};
         glClearColor(color1, color2, color3, alpha); }
-    protected void setClearColor(int color1, int color2, int color3, float alpha){
+    protected final void setClearColor(int color1, int color2, int color3, float alpha){
         setClearColor((float)color1/255, (float)color2/255, (float)color3/255, alpha); }
-    protected void setClearColor(float color1, float color2, float color3){
+    protected final void setClearColor(float color1, float color2, float color3){
         setClearColor(color1, color2, color3, 1f);}
-    protected void setClearColor(float color, float alpha){
+    protected final void setClearColor(float color, float alpha){
         setClearColor(color, color, color, alpha);}
-    protected void setClearColor(float color){
+    protected final void setClearColor(float color){
         setClearColor(color, color, color, 1f);}
 
     private void applyClearColor() {
@@ -390,15 +433,20 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
             glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
     }
 
-    // Resources
+    /**
+     * Hook called when the scene is set, before init: the batches (resources/batch files) the scene needs, loaded
+     * before launch and kept while a scene needs them.
+     */
     protected String[] getInvolvedBatch(){
         return new String[]{};
     }
 
     /**
-     * Called when the scene is left, only if launch() was called: release what launch() created. Call super.unload().
-     * The scene can be left while it is still loading: then only release() is called.
+     * Hook called when the scene is left, only if launch() was called: release what launch() created. Call
+     * super.unload() (it unloads the virtual scene and the added objects). The scene can be left while it is still
+     * loading: then only release() is called.
      */
+    @Override
     public void unload() {
         if (scRenderer != null)
             scRenderer.unload();
@@ -417,7 +465,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     }
 
     /**
-     * Called when the scene is left, after unload(), launched or not: release what init() created
+     * Hook called when the scene is left, after unload(), launched or not: release what init() created
      * (resources added or referenced by the scene). No need to call super.
      */
     public void release() {}

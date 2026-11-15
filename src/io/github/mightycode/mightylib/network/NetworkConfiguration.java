@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.network;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 
-public class NetworkConfiguration extends SingleSourceDataType {
+public final class NetworkConfiguration extends SingleSourceDataType {
     private String address;
     private String id;
     private int port;

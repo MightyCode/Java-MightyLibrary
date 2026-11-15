@@ -40,7 +40,7 @@ public class WaveFunctionCollapse2D extends Scene {
     public void launch(String[] args) {
         /// SCENE INFORMATION ///
 
-        hudCamera = main2DCamera.copy();
+        hudCamera = camera2D().copy();
 
         setClearColor(52, 189, 235, 1f);
         //setClearColor(0, 0, 0, 1f);
@@ -53,28 +53,28 @@ public class WaveFunctionCollapse2D extends Scene {
 
         //rule.printRules();
 
-        WaveCollapseRules rule = resources.getResource(WaveCollapseRules.class, "waveCollapseTest");
+        WaveCollapseRules rule = resources().getResource(WaveCollapseRules.class, "waveCollapseTest");
 
         map = new TileMap(DataType.TYPE_SET_UP.IMMEDIATELY_IN_CURRENT_CONTEXT, "waveCollapseTest", "none");
-        map.addTileset(resources.getResource(TileSet.class, rule.getRecommendedTileset()), 0);
+        map.addTileset(resources().getResource(TileSet.class, rule.getRecommendedTileset()), 0);
         map.addDependency(rule);
         map.setPreloaded();
 
         waveFunctionCollapseGrid = new WaveFunctionCollapseGrid(rule, map, mapSize);
-        resources.addPreLoadedResource(map);
+        resources().addPreLoadedResource(map);
 
         waveFunctionCollapseGrid.waveFunctionAlgorithmStep(1);
         System.out.println(map.tileSetAtlas().getTextureAtlas().isLoaded());
         mapRenderer.setTileMap(map);
 
         DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
-        draggingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(), main2DCamera);
+        draggingSceneComponent.init(context().getInputManager(), context().getMouseManager(), camera2D());
         draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
 
         addUpdatable(draggingSceneComponent);
 
         MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(mainContext.getInputManager(), main2DCamera);
+        movingSceneComponent.init(context().getInputManager(), camera2D());
         movingSceneComponent.initActionIds(
                 new MovingCameraComponent.Inputs()
                         .setMoveLeft(ActionId.MOVE_LEFT_2D)
@@ -87,14 +87,14 @@ public class WaveFunctionCollapse2D extends Scene {
         addUpdatable(movingSceneComponent);
 
         ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
-        zoomingSceneComponent.init(mainContext.getInputManager(), mainContext.getMouseManager(),
-                main2DCamera, mainContext.getWindow().getInfo().getSizeRef());
+        zoomingSceneComponent.init(context().getInputManager(), context().getMouseManager(),
+                camera2D(), context().getWindow().getInfo().getSizeRef());
         zoomingSceneComponent.initActionId(ActionId.SHIFT);
 
         addUpdatable(zoomingSceneComponent);
 
         addUpdatableAndDisplayable(
-                new DebugInfoCamera2D(hudCamera).init(main2DCamera, new Vector2f(5, 5))
+                new DebugInfoCamera2D(hudCamera).init(camera2D(), new Vector2f(5, 5))
                         .addInfo("position").addInfo("rotation").addInfo("zoom")
         );
 
@@ -107,10 +107,10 @@ public class WaveFunctionCollapse2D extends Scene {
     public void update() {
         super.update();
 
-        if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+        if (context().getInputManager().inputPressed(ActionId.ESCAPE))
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        IInputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = context().getInputManager();
 
         if (inputManager.inputPressed(ActionId.TAB)){
             waveFunctionCollapseGrid.reset();
@@ -160,6 +160,6 @@ public class WaveFunctionCollapse2D extends Scene {
         super.unload();
 
         mapRenderer.unload();
-        resources.deleteResource(map);
+        resources().deleteResource(map);
     }
 }

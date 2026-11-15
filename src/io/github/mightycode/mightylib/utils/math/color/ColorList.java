@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.utils.math.color;
 
-public class ColorList {
+public final class ColorList {
     private static final Color4f WHITE = new Color4f(1.0f, 1.0f, 1.0f, 1.0f);
     public static Color4f White() { return WHITE.copy();}
     private static final Color4f LIGHT_GREY = new Color4f(0.75f, 0.75f, 0.75f, 1.0f);

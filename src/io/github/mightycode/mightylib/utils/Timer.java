@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.utils;
 
 import io.github.mightycode.mightylib.main.utils.GameTime;
 
-public class Timer {
+public final class Timer {
     /**
      * Time of activation.
      */

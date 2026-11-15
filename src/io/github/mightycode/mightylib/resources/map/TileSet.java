@@ -9,14 +9,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TileSet extends SingleSourceDataType {
+public final class TileSet extends SingleSourceDataType {
     private String texture;
     private TextureData textureData;
     private final Vector2i tileSize;
     private final Vector2i tileNumber;
     private boolean useRotation, useFlip;
 
-    public static class TileAnimation {
+    public static final class TileAnimation {
         int refId;
         int[] ids;
         float[] times;
@@ -61,7 +61,7 @@ public class TileSet extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return new TileSet(dataName, path);
+        return new TileSet(getDataName(), path());
     }
 
     @Override

@@ -31,9 +31,9 @@ public class TextFieldScene2D extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(0.1f, 0.1f, 0.12f);
-        mainContext.getMouseManager().setCursor(true);
+        context().getMouseManager().setCursor(true);
 
-        field = new TextField(mainContext, 340, 200, 600, 56, "bahnschrift", 30);
+        field = new TextField(context(), 340, 200, 600, 56, "bahnschrift", 30);
         field.setHint("Type something...");
 
         info = new Text();
@@ -60,12 +60,12 @@ public class TextFieldScene2D extends Scene {
         if (field.getLeftWith() != -1)
             leftWith = KeyName(field.getLeftWith());
 
-        IInputManager input = mainContext.getInputManager();
+        IInputManager input = context().getInputManager();
         if (input.inputPressed(ActionId.ENTER))
             ++enterSeenByScene;
 
         if (input.inputPressed(ActionId.ESCAPE))
-            sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
     }
 
     private static String KeyName(int key) {

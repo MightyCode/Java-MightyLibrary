@@ -2,7 +2,9 @@ package io.github.mightycode.mightylib.algorithms.graph;
 
 import java.util.*;
 
-public abstract class GraphUtil {
+public final class GraphUtil {
+    private GraphUtil() {}
+
     /**
      * Be sure that the majority (> 50 %) of nodes are connected with each others
      * @param graph The graph

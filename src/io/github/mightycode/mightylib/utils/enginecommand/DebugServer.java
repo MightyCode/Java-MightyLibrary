@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
 import io.github.mightycode.mightylib.console.ConsoleLog;
+import org.apiguardian.api.API;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -20,6 +21,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
+
 /**
  * Local server to send commands to the running program from another process (scripts, tools...).
  * It only listens on the loopback address, so it is not reachable from another computer.
@@ -27,7 +30,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A client following the console log ("console follow on") also receives, between the answers, one line per log line :
  * {"event": "log", "id": n, "type": "OUT|ERR|COMMAND|RESULT|ERROR", "source": "...", "text": "..."}
  */
-public class DebugServer {
+@API(status = INTERNAL)
+public final class DebugServer {
     private static final long STOP_WAIT_MILLISECONDS = 500;
     private static final int MAX_PORT = 65535;
 

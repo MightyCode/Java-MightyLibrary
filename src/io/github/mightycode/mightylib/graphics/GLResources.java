@@ -2,9 +2,11 @@ package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.IGLElementSink;
+import org.apiguardian.api.API;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.opengl.GL11.glFlush;
 
 import java.util.ArrayDeque;
@@ -25,7 +27,7 @@ import java.util.function.Supplier;
  * An element wanted now (urgent reference: renderer, loaded batch) is loaded before those only preloaded
  * (preloaded batch), and only the urgent ones keep a loading screen waiting.
  */
-public class GLResources implements IGLElementSink {
+public final class GLResources implements IGLElementSink {
     private static final long NANO_IN_MILLISECOND = 1000000L;
 
     private final long maxNanosPerFrame;
@@ -209,6 +211,7 @@ public class GLResources implements IGLElementSink {
      * The state shared by the elements of a type, created by the factory at the first call (main thread), one per
      * class, told when the loading is idle and deleted with GLResources.
      */
+    @API(status = INTERNAL)
     public <T extends IGLSharedState> T shared(Class<T> type, Supplier<T> factory) {
         IGLSharedState state = sharedStates.get(type);
         if (state == null) {
