@@ -64,8 +64,8 @@ public class ConsoleGenCom extends BaseCommand {
                                 "Number of lines (" + DEFAULT_LOG_LINES + " by default)")
                                 .executes(context -> log(Views.engine().consoleLog(), context.get("count"), null))))
                 .then(literal("copy", "Copy the last lines of the console to the clipboard, as shown"
-                        + " (the program output only when it is shown)")
-                        .option(Option.of("all", "Copy the program output too, even when the console hides it")
+                        + " (the program output and the data only when they are shown)")
+                        .option(Option.of("all", "Copy the program output and the data too, even when the console hides them")
                                 .level(ECommandLevel.DEV))
                         .executes("Copy every line of the console", context -> copy(context, 0))
                         .then(argument("count", integer(1, Integer.MAX_VALUE), "Number of lines, the last ones")
@@ -76,6 +76,12 @@ public class ConsoleGenCom extends BaseCommand {
                         .executes(context -> logs(null))
                         .then(argument("state", choice("on", "off"), "Show the program output or hide it")
                                 .executes(context -> logs(context.get("state").equals("on")))))
+                // The data of the results is seen in DEV only
+                .then(literal("data", "Show or hide the data of the command results (JSON) in the console")
+                        .level(ECommandLevel.DEV)
+                        .executes(context -> data(null))
+                        .then(argument("state", choice("on", "off"), "Show the data or hide it")
+                                .executes(context -> data(context.get("state").equals("on")))))
                 .then(literal("follow", "Receive every new line of the log (debug server, see DebugServer)")
                         .level(ECommandLevel.DEV)
                         .executes(context -> follow(true))
@@ -121,6 +127,17 @@ public class ConsoleGenCom extends BaseCommand {
         console.setLogsShown(shown == null ? !console.areLogsShown() : shown);
         return CommandResult.ok(console.areLogsShown() ? "Logs shown" : "Logs hidden",
                 new JSONObject().put("logsShown", console.areLogsShown()));
+    }
+
+    // null: switch
+    private static CommandResult data(Boolean shown) {
+        IConsoleService console = Views.engine().console();
+        if (console == null)
+            return status(null);
+
+        console.setDataShown(shown == null ? !console.isDataShown() : shown);
+        return CommandResult.ok(console.isDataShown() ? "Data shown" : "Data hidden",
+                new JSONObject().put("dataShown", console.isDataShown()));
     }
 
     private CommandResult follow(boolean on) {

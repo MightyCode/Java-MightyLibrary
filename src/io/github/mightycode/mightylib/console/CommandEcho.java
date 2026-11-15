@@ -12,7 +12,7 @@ import java.util.List;
  * Writes every submitted command and its result in the console log, whatever its source (in-game console, standard
  * input, debug server): what is typed elsewhere is seen in the game, and followed by the debug server clients.
  * The command and its message are seen from the level of the source on (the lower one when the command lowered it,
- * cheats off), the data (details for the developer) by DEV.
+ * cheats off), the data (details for the developer) by DEV, as DATA lines (the console hides them by default).
  */
 public final class CommandEcho implements ICommandListener {
     private final ConsoleLog log;
@@ -42,6 +42,6 @@ public final class CommandEcho implements ICommandListener {
             log.add(type, source.name(), message, level);
 
         if (result.getData() != null)
-            log.add(type, source.name(), result.getData().toString(2), ECommandLevel.DEV);
+            log.add(ConsoleLog.EType.DATA, source.name(), result.getData().toString(2), ECommandLevel.DEV);
     }
 }

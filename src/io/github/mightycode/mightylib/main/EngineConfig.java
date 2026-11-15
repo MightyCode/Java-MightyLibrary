@@ -63,6 +63,7 @@ public class EngineConfig {
     private String consoleFont = "bahnschrift";
     private int consoleLogCapacity = ConsoleLog.DEFAULT_CAPACITY;
     private boolean consoleLogsShown = true;
+    private boolean consoleDataShown;
 
     private final List<IPlugin> plugins = new ArrayList<>();
 
@@ -189,6 +190,8 @@ public class EngineConfig {
     public static final String COMMAND_ACCESS_PROPERTY = "mightylib.commands.access";
     // shown or hidden: the program output in the console at the start (see setConsoleLogsShown)
     public static final String CONSOLE_LOGS_PROPERTY = "mightylib.console.logs";
+    // shown or hidden: the data of the command results in the console at the start (see setConsoleDataShown)
+    public static final String CONSOLE_DATA_PROPERTY = "mightylib.console.data";
     // silent: the silent sound service, whatever plugin provides the sound (see isSoundForcedSilent)
     public static final String SOUND_PROPERTY = "mightylib.sound";
 
@@ -256,6 +259,15 @@ public class EngineConfig {
      */
     public EngineConfig setConsoleLogsShown(boolean consoleLogsShown) {
         this.consoleLogsShown = consoleLogsShown;
+        return this;
+    }
+
+    /**
+     * The data of the command results (JSON) shown in the console at the start (false by default; seen in DEV only),
+     * the command "console data on|off" changes it. The option -Dmightylib.console.data=shown|hidden overrides it.
+     */
+    public EngineConfig setConsoleDataShown(boolean consoleDataShown) {
+        this.consoleDataShown = consoleDataShown;
         return this;
     }
 
@@ -434,22 +446,31 @@ public class EngineConfig {
 
     // The launch option wins; an unknown value keeps the configuration, with a line in the log
     public boolean isConsoleLogsShown() {
-        String property = System.getProperty(CONSOLE_LOGS_PROPERTY);
-        if (property == null)
-            return consoleLogsShown;
+        return ShownOption(CONSOLE_LOGS_PROPERTY, consoleLogsShown);
+    }
 
-        Boolean shown = ParseLogsShown(property);
+    // The launch option wins; an unknown value keeps the configuration, with a line in the log
+    public boolean isConsoleDataShown() {
+        return ShownOption(CONSOLE_DATA_PROPERTY, consoleDataShown);
+    }
+
+    // A launch option shown|hidden, or the configured value when it is absent or unknown (with a line in the log)
+    private static boolean ShownOption(String name, boolean configured) {
+        String property = System.getProperty(name);
+        if (property == null)
+            return configured;
+
+        Boolean shown = ParseShown(property);
         if (shown == null) {
-            System.err.println("--" + CONSOLE_LOGS_PROPERTY + " : unknown value ->" + property
-                    + "<-, expected shown or hidden");
-            return consoleLogsShown;
+            System.err.println("--" + name + " : unknown value ->" + property + "<-, expected shown or hidden");
+            return configured;
         }
 
         return shown;
     }
 
     // shown: true, hidden: false, anything else: null
-    static Boolean ParseLogsShown(String value) {
+    static Boolean ParseShown(String value) {
         switch (value.trim().toLowerCase(Locale.ROOT)) {
             case "shown":
                 return Boolean.TRUE;

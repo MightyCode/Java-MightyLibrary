@@ -72,6 +72,7 @@ final class EnginePlugin implements IPlugin {
             registry.services().register(EngineServices.CONSOLE, engine -> {
                 Console created = new Console(engine, engine.consoleLog(), engine.commands(), config.getConsoleFont());
                 created.setLogsShown(config.isConsoleLogsShown());
+                created.setDataShown(config.isConsoleDataShown());
                 return created;
             });
         }

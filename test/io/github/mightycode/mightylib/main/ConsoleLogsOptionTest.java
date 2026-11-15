@@ -9,14 +9,15 @@ class ConsoleLogsOptionTest {
     @AfterEach
     void clearProperty() {
         System.clearProperty(EngineConfig.CONSOLE_LOGS_PROPERTY);
+        System.clearProperty(EngineConfig.CONSOLE_DATA_PROPERTY);
     }
 
     @Test
     void parse() {
-        assertEquals(Boolean.TRUE, EngineConfig.ParseLogsShown("shown"));
-        assertEquals(Boolean.FALSE, EngineConfig.ParseLogsShown(" HIDDEN "));
-        assertNull(EngineConfig.ParseLogsShown("off"));
-        assertNull(EngineConfig.ParseLogsShown(""));
+        assertEquals(Boolean.TRUE, EngineConfig.ParseShown("shown"));
+        assertEquals(Boolean.FALSE, EngineConfig.ParseShown(" HIDDEN "));
+        assertNull(EngineConfig.ParseShown("off"));
+        assertNull(EngineConfig.ParseShown(""));
     }
 
     @Test
@@ -30,5 +31,21 @@ class ConsoleLogsOptionTest {
         assertTrue(config.isConsoleLogsShown());
         System.setProperty(EngineConfig.CONSOLE_LOGS_PROPERTY, "visible");
         assertFalse(config.isConsoleLogsShown());
+    }
+
+    @Test
+    void theDataIsHiddenByDefaultAndHasItsOwnOption() {
+        EngineConfig config = new EngineConfig();
+        assertFalse(config.isConsoleDataShown());
+        config.setConsoleDataShown(true);
+        assertTrue(config.isConsoleDataShown());
+
+        System.setProperty(EngineConfig.CONSOLE_DATA_PROPERTY, "hidden");
+        assertFalse(config.isConsoleDataShown());
+        // The option of the logs doesn't change the data
+        System.setProperty(EngineConfig.CONSOLE_LOGS_PROPERTY, "shown");
+        assertFalse(config.isConsoleDataShown());
+        System.setProperty(EngineConfig.CONSOLE_DATA_PROPERTY, "visible");
+        assertTrue(config.isConsoleDataShown());
     }
 }

@@ -22,6 +22,8 @@ public final class ConsoleLog {
         // Program output (System.out, System.err): for the developer only
         OUT, ERR,
         COMMAND, RESULT, ERROR,
+        // Data of a command result (JSON, for the developer), hidden by the console by default
+        DATA,
         // Written by the game for the player (Console.print)
         MESSAGE
     }
