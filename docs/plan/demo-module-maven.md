@@ -131,3 +131,33 @@ Aucune.
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml demo-module-maven`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Vérifications manuelles du « Bilan » : réimport IntelliJ et configuration de lancement, tri du menu par date d'ajout, une scène 3D.
+
+## Bilan
+### Fait
+- Étape 1 (`ab50f87`) : `SceneHistory.SCENES_DIRECTORIES` (dossier actuel, puis anciens), `git log`/`git status` sur tous ; tests du renommage `R100` depuis un ancien dossier et du statut lu après déplacement.
+- Étape 2 (`807382e`) : `DemoApiUsageTest` (démo) reprend la lecture des sources et lit `@API` par réflexion ; `ApiStatusTest` ne garde que ses deux autres vérifications. Un import de `ConsoleLog` ajouté exprès dans la démo le fait échouer (vérifié, puis retiré).
+- Étape 3 (`1091cb9`) : fichiers de test copiés (`sounds/select*`, `sounds.gaintree`, `textures/world/container2.png`), aide `TestFiles` (`path`, `file`), les 7 tests passent par elle ; `licence.md` le signale.
+- Étape 4 (`89ac4b2`) : pom parent `mightylib-parent`, modules `mightylib` et `mightylib-demo`, déplacements par `git mv` (670 renommages, tous à 100 % sauf `SceneHistory`, `DemoApiUsageTest` et `DemoScenesTest`, les trois fichiers qui portent des chemins). CI en `mvn -B verify`, `.idea/compiler.xml` renommé.
+- Étape 5 (`1bf7c52`) : `scenario.py`, `coverage.py` et `analyse.py` adaptés.
+- Étape 6 : documents ; et les scripts des skills `revue-pratiques/collect.py` et `analyse-intellij/summarize.py`, qui lisaient `src/` et `test/`.
+
+### Écarts au plan, et pourquoi
+- **Jar `tests` de `mightylib`, limité aux `*TestAccess`** (décidé avec l'utilisateur pendant l'implémentation) : `LayeredTextureLoaderTest` (démo) utilise `MainThreadTestAccess` et `WorkersTestAccess`, des sources de test de la bibliothèque. La démo en dépend en portée `test`. Le plan excluait un test-jar seulement pour la lecture de `@API`. Décision dans `decisions.md`, kit de test pour les jeux dans `later.md`.
+- **`test-compile` au lieu de `compile`** pour le classpath de `scenario.py`, et **`process-test-classes` au lieu de `process-classes`** pour `analyse.py` : dans le réacteur de Maven 3, le jar `tests` ne se résout qu'une fois les tests de la bibliothèque compilés, et `dependency:build-classpath` comme SpotBugs résolvent les dépendances de test. `analyse.py` ignore les avertissements d'Error Prone sur les tests. Le classpath du jeu est pris en portée `runtime` (ni JUnit ni classes de test).
+- **Filtre SpotBugs par `${maven.multiModuleProjectDirectory}`** : le pom parent (packaging `pom`) lance aussi SpotBugs, un chemin relatif au module ne lui convient pas. Les commandes se lancent donc depuis la racine (déjà la règle).
+- **`DemoScenesTest`** lit les sources depuis le dossier du module : il retire `demo/` de `SceneHistory.SCENES_DIRECTORY` et vérifie ce préfixe, ce qui garde les deux chemins liés.
+- **`src/META-INF/MANIFEST.MF` supprimé** (et sa ligne de `.gitignore`) : un manifeste d'artefact IntelliJ qui ne servait plus (aucun `.idea/artifacts`, l'assembly de la démo donne déjà `Main-Class`).
+- **`<resource>` vers `target/resources` retirée** : rien ne la lisait (le jeu lit `resources/` depuis la racine).
+- Natives de la bibliothèque en `test` : seulement `lwjgl` et `lwjgl-stb` (les seuls chargés par ses tests). Versions des plugins jar (3.4.1) et assembly (3.7.1) fixées dans le pom parent (avertissement de Maven sinon).
+
+### Vérifié, et comment
+- `mvn -o -q compile`, `mvn -o -q test` (1007 tests de la bibliothèque, 28 de la démo) et `mvn -o package` depuis la racine. Avec `-X`, le classpath de test de la démo contient `mightylib-1.1-SNAPSHOT.jar` et `mightylib-1.1-SNAPSHOT-tests.jar`, pas `mightylib/target/classes`. Le jar `tests` ne contient que les 4 classes `*TestAccess`.
+- Les tests de la bibliothèque passent avec `resources/sounds` et `container2.png` retirés temporairement de `resources/` (fichiers bien lus par le classpath).
+- Dates des scènes après le déplacement (même lecture que `SceneHistory`, sur l'historique réel) : 37 scènes, aucune n'a la date du commit de déplacement, et l'ancien dossier ne laisse rien.
+- `scenario.py` : `Scene2D` (`gl summary`), `leakcheck Scene2D` (pas de fuite), `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` et `MenuScene` chargées, 0 ligne de problème dans le journal.
+- `python tools/coverage.py` (bibliothèque seule) et `python tools/analyse.py` (mightylib : 81 SpotBugs, 189 Error Prone ; demo : 11 et 53).
+
+### À vérifier à la main par l'utilisateur
+- IntelliJ : réimporter le projet Maven (trois modules : `mightylib-parent`, `mightylib`, `mightylib-demo`). La configuration de lancement doit utiliser le module `mightylib-demo`, le dossier de travail = la racine du dépôt (sinon `resources/` est introuvable). Lancer les tests depuis l'IDE (dossier de travail = celui du module, la valeur par défaut avec Maven).
+- Le menu de la démo trié par date d'ajout (Tab ou « Sort ») : les dates d'avant le déplacement (`Scene2D` parmi les plus anciennes, `LayeredTexture2D` et `EngineServices2D` le 2026-11-15).
+- Une scène 3D (`Scene3D`) à l'œil.
