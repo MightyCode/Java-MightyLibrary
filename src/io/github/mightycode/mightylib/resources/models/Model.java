@@ -28,7 +28,7 @@ public class Model extends SingleSourceDataType {
     // The copy registers the textures again with the same owner name: the previous ones are released with it
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == Model.class ? new Model(dataName, path) : null;
+        return getClass() == Model.class ? new Model(getDataName(), path()) : null;
     }
 
     @Override
@@ -51,7 +51,7 @@ public class Model extends SingleSourceDataType {
 
     // Name used as reference on the owned textures
     public String ownerName() {
-        return "model:" + dataName;
+        return "model:" + getDataName();
     }
 
     void setMeshes(List<ModelMesh> meshes) {

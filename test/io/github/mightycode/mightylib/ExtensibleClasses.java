@@ -17,7 +17,15 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.graphics.renderer.Mesh",
             "io.github.mightycode.mightylib.graphics.renderer.Renderer",
             "io.github.mightycode.mightylib.graphics.renderer.MeshRenderer",
-            "io.github.mightycode.mightylib.graphics.renderer._2D.shape.Shape2DRenderer"
+            "io.github.mightycode.mightylib.graphics.renderer._2D.shape.Shape2DRenderer",
+            // Resources
+            "io.github.mightycode.mightylib.resources.DataType",
+            "io.github.mightycode.mightylib.resources.SingleSourceDataType",
+            "io.github.mightycode.mightylib.resources.MultiSourceDataType",
+            "io.github.mightycode.mightylib.resources.ResourceLoader",
+            "io.github.mightycode.mightylib.resources.texture.TextureData",
+            "io.github.mightycode.mightylib.graphics.GLElement",
+            "io.github.mightycode.mightylib.resources.texture.Texture"
     );
 
     private ExtensibleClasses() {}

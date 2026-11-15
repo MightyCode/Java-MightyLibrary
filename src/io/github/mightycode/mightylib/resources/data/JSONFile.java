@@ -17,7 +17,7 @@ public class JSONFile extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == JSONFile.class ? new JSONFile(getTypeSetUp(), dataName, path) : null;
+        return getClass() == JSONFile.class ? new JSONFile(getTypeSetUp(), getDataName(), path()) : null;
     }
 
     @Override

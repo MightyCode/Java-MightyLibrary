@@ -13,6 +13,6 @@ public class BatchResources extends JSONFile {
 
     @Override
     protected DataType createReloadCopy() {
-        return new BatchResources(dataName, path);
+        return new BatchResources(getDataName(), path());
     }
 }

@@ -16,6 +16,11 @@ import java.nio.ByteBuffer;
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
+/**
+ * The OpenGL texture of a TextureData, sent in strips for a big one, sent again when its data is reloaded, replaced
+ * by the fallback texture while it loads or when it failed. A subclass for another data (a layered texture) redefines
+ * the hooks fallbackDataType, getWidth and getHeight, and if needed load, reload and unload (calling super).
+ */
 public class Texture extends GLElement implements IGLBindable, IRenderTextureBindable {
     // 2D textures bigger than this are sent in several steps, by strips of rows, so a frame never waits for a whole texture
     private static final int BIG_TEXTURE_BYTES = 4 * 1024 * 1024;
@@ -64,21 +69,21 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         this.resources = resources;
         this.data = data;
         if (data != null)
-            resourceDependencies.add(data);
+            addResourceDependency(data);
 
         textureId = -1;
     }
 
-    public void setAspectTexture(int aspectTexture){
+    public final void setAspectTexture(int aspectTexture){
         this.qualityType = aspectTexture;
     }
 
-    public void bindRenderTexture() {
+    public final void bindRenderTexture() {
         bindRenderTexture(0);
     }
 
     @Override
-    public void bindRenderTexture(int texturePos) {
+    public final void bindRenderTexture(int texturePos) {
         // Active the texture to right position
         glActiveTexture(GL_TEXTURE0 + texturePos);
         if (isLoaded()){
@@ -300,20 +305,20 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             glTexParameteri(this.textureType, param, value);
     }
 
-    public int getQualityType(){
+    public final int getQualityType(){
         return qualityType;
     }
 
-    public void setTextureType(int textureType){
+    public final void setTextureType(int textureType){
         this.textureType = textureType;
     }
 
-    public int getTextureType(){
+    public final int getTextureType(){
         return this.textureType;
     }
 
     @Override
-    public int getRenderTextureId() {
+    public final int getRenderTextureId() {
         if (!isLoaded())
             return getFallbackId();
 
@@ -330,7 +335,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
      * Shown with the latest version of its data (false while the new version is sent, or not loaded yet).
      * What is computed from the texture (texture coordinates, sizes) waits for it, not for the data.
      */
-    public boolean isUpToDate() {
+    public final boolean isUpToDate() {
         return isLoaded() && data.getVersion() == uploadedVersion;
     }
 

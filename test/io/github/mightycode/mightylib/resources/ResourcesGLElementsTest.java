@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
+import io.github.mightycode.mightylib.graphics.GLElementTestAccess;
 import io.github.mightycode.mightylib.graphics.shader.FallbackShader;
 import io.github.mightycode.mightylib.graphics.shader.FallbackShaderData;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
@@ -33,7 +34,7 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         public GLElement acquire(DataType data, boolean urgent) {
             int[] counts = references.computeIfAbsent(data.getDataName(), name -> new int[2]);
             ++counts[urgent ? 0 : 1];
-            return elements.computeIfAbsent(data.getDataName(), name -> new GLElement() {
+            return elements.computeIfAbsent(data.getDataName(), name -> GLElementTestAccess.named(new GLElement() {
                 @Override
                 public boolean load(int remainingMilliseconds) {
                     return true;
@@ -41,12 +42,7 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
 
                 @Override
                 public void unload(int remainingMilliseconds) {}
-
-                @Override
-                public String getName() {
-                    return name;
-                }
-            });
+            }, name));
         }
 
         // Names of the data given to dataReloaded, in order

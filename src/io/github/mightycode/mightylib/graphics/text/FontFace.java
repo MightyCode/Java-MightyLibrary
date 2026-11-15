@@ -15,11 +15,11 @@ public class FontFace extends SingleSourceDataType {
 
     // Reload copy: same atlas, the font file read again
     private FontFace(FontFace original) {
-        super(TYPE_SET_UP.THREAD_CONTEXT, original.dataName, original.path);
+        super(TYPE_SET_UP.THREAD_CONTEXT, original.getDataName(), original.path());
         name = original.name;
         fontAtlas = original.fontAtlas;
         addDependency(fontAtlas);
-        fontFile = new FontFile(original.path);
+        fontFile = new FontFile(original.path());
     }
 
     @Override
@@ -42,7 +42,7 @@ public class FontFace extends SingleSourceDataType {
         fontAtlas = resources.getResource(TextureData.class, textureName);
         addDependency(fontAtlas);
 
-        fontFile = new FontFile(path);
+        fontFile = new FontFile(path());
     }
 
     // Fallback font (FontLoader.createFallback): no file, the characters are given

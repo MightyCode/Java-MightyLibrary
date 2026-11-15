@@ -21,7 +21,7 @@ public class SoundData extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == SoundData.class ? new SoundData(dataName, path) : null;
+        return getClass() == SoundData.class ? new SoundData(getDataName(), path()) : null;
     }
 
     // The sources holding the previous buffer let it go when it is deleted (ISoundBuffers.deleteBuffer)
@@ -46,7 +46,7 @@ public class SoundData extends SingleSourceDataType {
         if (decodedBytes > 0)
             return decodedBytes;
 
-        return super.estimatedCpuBytes() * CompressionRatio(path);
+        return super.estimatedCpuBytes() * CompressionRatio(path());
     }
 
     static long CompressionRatio(String path) {
@@ -80,7 +80,7 @@ public class SoundData extends SingleSourceDataType {
 
         ISoundBuffers buffers = resources().soundBuffers();
         if (buffers == null) {
-            System.err.println("--No sound service to load the sound " + path);
+            System.err.println("--No sound service to load the sound " + path());
             return false;
         }
 
@@ -90,7 +90,7 @@ public class SoundData extends SingleSourceDataType {
         tempInfo = null;
 
         if (bufferId == -1)
-            System.err.println("--The buffer of the sound " + path + " can't be created");
+            System.err.println("--The buffer of the sound " + path() + " can't be created");
         return bufferId != -1;
     }
 

@@ -61,7 +61,7 @@ public class TileSet extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return new TileSet(dataName, path);
+        return new TileSet(getDataName(), path());
     }
 
     @Override

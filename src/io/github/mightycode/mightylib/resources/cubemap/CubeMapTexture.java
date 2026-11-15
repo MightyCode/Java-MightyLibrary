@@ -30,7 +30,7 @@ public class CubeMapTexture extends GLElement {
 
     public CubeMapTexture(CubeMapData data) {
         this.data = data;
-        resourceDependencies.add(data);
+        addResourceDependency(data);
     }
 
     // Bound to the texture unit, for a samplerCube

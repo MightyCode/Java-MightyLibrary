@@ -1,14 +1,19 @@
 package io.github.mightycode.mightylib.resources;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Finds the data of one type (DataType) in the files and reads them (preload, maybe on a worker). Registered by a
+ * plugin (registry), attached to one Resources. Hooks: getType, getResourceNameType, create (the data of the files,
+ * usually through exploreResourcesFile, filterFile and fileDetected), discover, createFallback and initWithFile.
+ */
 public abstract class ResourceLoader {
-    protected static final String[] IGNORE_FOLDERS = {
-            "batchs"
-    };
+    // Folders skipped by exploreResourcesFile(data, path), at any depth
+    private static final List<String> DEFAULT_IGNORED_FOLDERS = List.of("batchs");
 
     // The Resources registering the data of this loader, set by Resources.init (a loader serves one Resources)
     private volatile Resources owner;
@@ -35,10 +40,16 @@ public abstract class ResourceLoader {
         return resources;
     }
 
+    // Hook: the class of the data this loader creates (one loader per type)
     public abstract Class<? extends DataType> getType();
 
+    // Hook: the name of the type in the logs and the commands ("Texture", "Sound"...)
     public abstract String getResourceNameType();
 
+    /**
+     * Hook called by Resources.init: put the data of this type in the map, by name, without reading them (usually
+     * exploreResourcesFile on the resource folder). The data are read later by initWithFile.
+     */
     public abstract void create(Map<String, DataType> data);
 
     /**
@@ -58,8 +69,10 @@ public abstract class ResourceLoader {
         return null;
     }
 
+    // Hook called by exploreResourcesFile for each file kept by filterFile: put its data in the map under this name
     public abstract void fileDetected(Map<String, DataType> data, String currentPath, String name);
 
+    // Hook called by exploreResourcesFile for each file: the name of its data, null when this loader ignores it
     public abstract String filterFile(String path);
 
     public final String getFileName(String path){
@@ -75,21 +88,17 @@ public abstract class ResourceLoader {
         return path.substring(index);
     }
 
+    // Every file under currentPath (or this file), the batch folders skipped
     public final void exploreResourcesFile(Map<String, DataType> data, String currentPath){
-        exploreResourcesFile(data, currentPath, IGNORE_FOLDERS);
+        exploreResourcesFile(data, currentPath, DEFAULT_IGNORED_FOLDERS);
     }
 
-    protected final boolean isIgnoredFolder(String[] ignoreFolders, String folderName){
-        for (String ignoreFolder : ignoreFolders){
-            if (ignoreFolder.equals(folderName))
-                return true;
-        }
-
-        return false;
-    }
-
+    /**
+     * Every file under currentPath (or this file) given to filterFile, then to fileDetected when kept. The folders
+     * with one of these names are skipped, at any depth (currentPath itself included).
+     */
     public final void exploreResourcesFile(Map<String, DataType> data, String currentPath,
-                                           String[] ignoreFolders){
+                                           Collection<String> ignoredFolders){
         File file = new File(currentPath);
 
         if (file.isFile()){
@@ -98,14 +107,18 @@ public abstract class ResourceLoader {
                 fileDetected(data, currentPath, result);
             }
         } else if (file.isDirectory()) {
-            if (isIgnoredFolder(ignoreFolders, file.getName()))
+            if (ignoredFolders.contains(file.getName()))
                 return;
 
             for (String childPath : Objects.requireNonNull(file.list()))
-                exploreResourcesFile(data, currentPath + "/" + childPath);
+                exploreResourcesFile(data, currentPath + "/" + childPath, ignoredFolders);
         }
     }
 
+    /**
+     * Hook called to read a data (preload, maybe on a worker, never with GL): read its file(s) and fill it, or
+     * throw a ResourceException. A MultiSourceDataType marks each file it read (markSourceRead).
+     */
     protected abstract void initWithFile(DataType dataType);
 
     // Preload step run by Resources (maybe on a worker): the state is set afterward, on the main thread

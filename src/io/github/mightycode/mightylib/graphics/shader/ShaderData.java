@@ -121,7 +121,7 @@ public class ShaderData extends DataType {
         if (getClass() != ShaderData.class || !validPaths())
             return null;
 
-        return new ShaderData(dataName, shader2D, paths);
+        return new ShaderData(getDataName(), shader2D, paths);
     }
 
     @Override

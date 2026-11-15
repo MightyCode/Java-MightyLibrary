@@ -17,7 +17,7 @@ public class AnimationData extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == AnimationData.class ? new AnimationData(dataName, path) : null;
+        return getClass() == AnimationData.class ? new AnimationData(getDataName(), path()) : null;
     }
 
     @Override

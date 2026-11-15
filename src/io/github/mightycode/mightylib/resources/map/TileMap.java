@@ -89,7 +89,7 @@ public class TileMap extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == TileMap.class ? new TileMap(getTypeSetUp(), dataName, path) : null;
+        return getClass() == TileMap.class ? new TileMap(getTypeSetUp(), getDataName(), path()) : null;
     }
 
     // The atlas objects stay the same (used by the renderers): only their content is exchanged.

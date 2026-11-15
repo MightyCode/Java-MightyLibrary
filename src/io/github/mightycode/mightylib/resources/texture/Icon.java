@@ -24,7 +24,7 @@ public class Icon extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == Icon.class ? new Icon(dataName, path) : null;
+        return getClass() == Icon.class ? new Icon(getDataName(), path()) : null;
     }
 
     @Override
