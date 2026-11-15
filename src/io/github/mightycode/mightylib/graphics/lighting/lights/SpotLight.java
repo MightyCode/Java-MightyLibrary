@@ -89,7 +89,7 @@ public final class SpotLight extends BasicMaterial {
         renderer.addShaderValue(structureName + ".position", Vector3f.class, position);
         renderer.addShaderValue(structureName + ".direction", Vector3f.class, direction);
 
-        renderer.addShaderValue(structureName + ".useDistance", Integer.class, enabled ? 1 : 0);
+        renderer.addShaderValue(structureName + ".useDistance", Integer.class, shouldUseDistance ? 1 : 0);
         lightDecrease.addToRenderer(renderer, structureName);
     }
 
