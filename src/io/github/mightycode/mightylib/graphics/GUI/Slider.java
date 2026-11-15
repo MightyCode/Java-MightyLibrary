@@ -95,13 +95,14 @@ public abstract class Slider {
         }
     }
 
-    // Rounds to the nearest value with this number of digits after the decimal point (negative: no rounding)
+    // Rounds to the nearest value with this number of digits after the decimal point, a tie upwards
+    // (negative: no rounding)
     static double RoundToPrecision(double value, int precision) {
         if (precision < 0)
             return value;
 
         double scale = Math.pow(10, precision);
-        return Math.rint(value * scale) / scale;
+        return Math.floor(value * scale + 0.5) / scale;
     }
 
     // A negative value disables the rounding, a too large one is capped

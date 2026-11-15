@@ -27,6 +27,14 @@ class SliderPrecisionTest {
     }
 
     @Test
+    void aTieRoundsUpwards() {
+        // Not to the even digit: 0.125 is exact in binary, a tie
+        assertEquals(0.13, Slider.RoundToPrecision(0.125, 2));
+        assertEquals(3.0, Slider.RoundToPrecision(2.5, 0));
+        assertEquals(-2.0, Slider.RoundToPrecision(-2.5, 0));
+    }
+
+    @Test
     void largeValuesDoNotOverflow() {
         // The former rounding went through an int: 5 * 10^9 overflowed
         assertEquals(5.5, Slider.RoundToPrecision(5.5, 9));
