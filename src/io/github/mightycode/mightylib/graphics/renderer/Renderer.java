@@ -21,19 +21,15 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * Base of every renderer: transform, program (shader), shader values, OpenGL state of the draw (RenderState),
- * visibility and reference camera. It has no geometry: MeshRenderer draws one Mesh, ModelRenderer a model.
- * The program, the values and the state are grouped apart from the transform (a future shareable Material).
+ * Base of every renderer: draws something with a shader program. Holds the program (its fallback while it loads
+ * or when it failed), the values sent to it, the transform (model matrix), the reference camera, the visibility and
+ * the OpenGL state of the draw (RenderState). It has no geometry: MeshRenderer draws one Mesh, ModelRenderer a
+ * model. The program, the values and the state are grouped apart from the transform (a future shareable Material).
  *
- * A subclass implements draw() and can redefine the hooks updateShader() and applyRenderState();
- * display() calls them in this order: applyRenderState, program in use, updateShader, draw.
- */
-/**
- * Draws something with a shader program: holds the program (its fallback while it loads or when it failed), the
- * values sent to it, the transform (model matrix), the camera and the OpenGL state of the draw.
  * Hooks of a subclass: draw (the geometry), updateShader (bind and send before draw), applyRenderState, display
  * (a condition, then super), unload (release, then super), and the setters whose change it must follow
  * (setPosition, setRotationZ, position, setColorMode, setNoColorNoTextureMode, setFaceCulling: call super).
+ * display() calls them in this order: applyRenderState, program in use, updateShader, draw.
  * The state of the renderer is reached through methods only.
  */
 public abstract class Renderer extends UUID implements IDisplayable {
