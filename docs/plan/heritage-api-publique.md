@@ -105,3 +105,35 @@ Pas de nouvelle scène : la démo entière est le test (elle compile, n'utilise 
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml heritage-api-publique`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait (un commit par étape)
+1. Ce plan.
+2. apiguardian 1.1.2 (`pom.xml`, `licence.md`) ; 62 `package-info` selon le classement ; `INTERNAL` : `GLContext`, `IGLSharedState`, `IGLElementSink`, `WindowPlatform`, `InputSimulation`, `BatchLoader`, `BatchResources`, `ResourceArguments`, `DebugServer`, `ConsoleLog`, `ConsoleInput`, `LogCapture`, `CommandEcho`, et les membres publics qui les exposent ; `ApiStatusTest`.
+3. `Scene` : champs privés, accesseurs `resources()`, `glResources()`, `sceneManager()`, `args()` (copie) à côté de `context()`, `camera2D()`, `camera3D()` ; démo migrée (288 accès, script local guidé par les erreurs de javac) ; aides `final`, `setSceneManagerInterface` package-private ; Javadoc des accroches de `Scene`, `WindowView`, `TemplateSceneLoading` ; `ExtensibleClasses`.
+4. Rendu : accroches de `Mesh`, `Renderer`, `MeshRenderer`, `Shape2DRenderer`, le reste `final` ; `updateShaderValue` absente → `IllegalArgumentException` qui la nomme ; `addTextureChannel(nom, …)` crée le tableau, canal hors de 1..`MAX_TEXTURE_CHANNELS` refusé (test) ; `setTexturePosition` marque la texture ; `setSizePix(Vector2f)` passe par l'accroche `setSizePix(l, h)`.
+5. Ressources : accroches documentées, champs `protected` devenus privés (`getDataName()`, `path()`, `addResourceDependency`, `TextureData.setSize`) ; `exploreResourcesFile` prend une `Collection` et l'applique à toute profondeur, liste par défaut privée (test sur dossier temporaire) ; `GLElementTestAccess` pour nommer un élément dans les tests.
+6. `BaseCommand`, `GUI` (`referenceCamera()`), `Slider`, `ValueSelector`, `KeyboardLanguage` (`addInputEntry`), `Tweening` (`isInverseThisFrame()`, `@API(EXPERIMENTAL)`).
+7. Hiérarchies fermées (constructeur package-private) : `Camera`, `Collision2D`, `AxisBinding`, `ListNode`, `PositionListNode`, `ServerThread` ; 14 utilitaires statiques `final` à constructeur privé.
+8. 220 classes publiques concrètes `final` (script local) ; garde dans `ExtensionFieldsTest` ; `Rule.initialPosition()` (nouveau vecteur, test) ; clones profonds de `BasicMaterial`/`Material` (test).
+9. Documents : `architecture.md` (section « API publique », cycle de vie), `decisions.md`, `bonnes-pratiques.md` (point 7), `CLAUDE.md`, `later.md`, `current.md`.
+
+### Écarts au plan et raison
+- `MainLoop` (candidat `INTERNAL`) utilisé par la démo : laissé `STABLE` sans demander, c'est le point d'entrée (`MainLoop.run`). `Context`, `ContextManager`, `SystemInfo`, `ResourceWatcher`, `ResourceSelection` restent `STABLE` : renvoyés par des méthodes publiques de l'API (`Engine.openContext`, `Engine.contexts`, `WindowContext.getSystemInfo`, `Resources.watcher`, `EngineConfig`). `DebugServer`, hors des candidats, est `INTERNAL` (son constructeur prend un `ConsoleLog`).
+- Accesseur `mainContext()` non ajouté : `Scene.context()` existait déjà (`IView`). Les nouveaux accesseurs sont `protected final`.
+- `Box2DActor` est une classe de la démo : rien à ouvrir dans la bibliothèque, absente d'`ExtensibleClasses`.
+- Restent redéfinissables des méthodes que des sous-classes de la bibliothèque redéfinissent : `Renderer.setPosition`, `setRotationZ`, `position`, `setColorMode`, `setNoColorNoTextureMode`, `setFaceCulling` ; `Shape2DRenderer.setSizePix(l, h)`, `setPosition(Vector2f)`, `setReferenceDirection` ; `Mesh.unload`.
+- Seconde liste `ExtensibleClasses.EXTENDED_BY_THE_LIBRARY` (non prévue) : classes publiques concrètes que la bibliothèque ou ses tests étendent sans en faire un contrat (replis de `Shader`, `ShaderData`, `CubeMapData`, `Model`, `AnimationData`, `SoundData`, `JSONFile` ; `CommandException` ; `MouseManager` (souris des tests) ; `RectangleRenderer`, `Camera2D`, `BasicMaterial`, `NodeContainer`, `UUID`). Les constructeurs de `Shader`, `CubeMapData`, `Model` sont devenus package-private.
+- Tests adaptés aux classes devenues `final` : `InputRegistryTest` (un `IAction` anonyme), `CollisionRectangleTest` (un `Collision2D` anonyme du même package), `TileMapTest` (test d'une sous-classe de `TileMap` retiré, `createReloadCopy` simplifié).
+- Bug noté dans `later.md`, non corrigé : `SpotLight.clone()` renvoie une `PointLight`.
+
+### Vérifié et comment
+- `mvn -o -q test` à chaque étape (1030 tests, tous verts à la fin).
+- `scenario.py` : toutes les scènes de `DemoScenes` ouvertes une à une (étapes 3 et 8), sans ligne de problème ; `leakcheck` sans fuite sur `Scene2D`, `LayeredTexture2D`, `CustomRenderer2D`, `GUIWidgetsScene`, `Scene3D`, `WaveFunctionCollapse2D` ; `reload` de `LayeredTextureData`, `TextureData` et du shader `texture2D` ; commande `resources` ; capture de `Scene2D` après la correction de `setTexturePosition`.
+
+### À vérifier à la main
+- Toutes les scènes du menu s'ouvrent et se ferment (Échap vers le menu).
+- `CustomRenderer2D` dessine l'étoile.
+- `GUIWidgetsScene` : glisser les curseurs (horizontal, vertical), changer les sélecteurs (les actions de `input` n'ont pas été trouvées par le scénario).
+- `FallbackScene` : texture et son de repli.
+- Scènes 3D intactes : `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` (matériaux et lumières, clones devenus profonds).
