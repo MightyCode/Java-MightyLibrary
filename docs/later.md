@@ -64,6 +64,14 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Compteurs `stats` injectables** par les plugins (nom, unité, remise à zéro), aujourd'hui fixés par le moteur.
 - Deux modules Maven (`mightylib` et `demo`), extension et API publique : `current.md`.
 
+### Manuel et documentation de l'API (cap proposé, **points précis à discuter avant de commencer**)
+- **But** : un site HTML pour l'utilisateur du jar, distinct de `docs/` (notes internes) : **manuel d'utilisation et d'explication** en **français et anglais** (comment se servir du moteur, et pourquoi il est construit ainsi) ; la documentation de l'API publique est à côté, sur le même site, et liée depuis le manuel.
+- **Moment** : après la discussion « Héritage et API publique » de `current.md` (sinon tout est à réécrire) ; outillage et squelette d'abord, démarrage rapide une fois la démo compilée contre la seule API publique, puis une page par objectif.
+- **Outil proposé** : sources Markdown `manual/fr/…` et `manual/en/…`, site généré par MkDocs Material + mkdocs-static-i18n (sélecteur de langue, recherche, thème sombre), versions par tag `vX.Y.Z` (`mike`), publication GitHub Pages par la CI (`futur-discussion.md`). Autre option : petit générateur Python dans `tools/`.
+- **API** : Javadoc de l'API publique (anglais seulement, commune aux deux langues) générée par `mvn javadoc:javadoc`, copiée dans `site/api/` et liée depuis la navigation ; style rapproché par `-stylesheetfile`. Suppose de revenir sur la convention « peu de Javadoc » pour l'API publique.
+- **Contre la péremption** : exemples de code inclus depuis des fichiers Java compilés (jamais recopiés) ; pages générées (commandes depuis leur syntaxe déclarée, scènes depuis `DemoScenes`) ; liens `[[api:Classe#méthode]]` résolus par un hook MkDocs, build en échec si la cible n'existe plus ; script de vérification FR/EN (mêmes pages, titres, inclusions), ajouté à `bonnes-pratiques.md` et à la règle de fin d'objectif de `CLAUDE.md`.
+- **À discuter** : MkDocs ou générateur maison ; langue de rédaction de référence et traduction ; plan du manuel (démarrage, concepts, extension, référence, recettes) ; étendue de la Javadoc requise ; versions publiées (toutes ou la dernière) ; texte des descriptions de commandes dans les deux langues (lié aux clés de langue).
+
 ### Modding (secondaire, ne rien décider qui l'empêche ; pas à implémenter maintenant)
 - Le point d'injection accepte **plusieurs modules** (`EngineConfig.addPlugin`, ordre d'ajout) : reste la découverte des plugins des mods (jars de `mods/` via `ServiceLoader`, descripteur id/version/dépendances fixant l'ordre d'`addPlugin`), et une phase `finish` après tous les `register` si des mods dépendent du contenu d'autres mods.
 - **Remplacement de la scène de chargement ou de départ par un mod** : `EngineConfig.setStartScene`/`setLoadingScene` n'ont qu'un propriétaire, le jeu.
