@@ -70,7 +70,11 @@ public abstract class MultiSourceDataType extends DataType {
         return validPaths();
     }
 
+    // At least one path, none empty: otherwise nothing is read (a data built by the code)
     public final boolean validPaths() {
+        if (sources.isEmpty())
+            return false;
+
         for (String path : sources) {
             if (path == null || path.isEmpty())
                 return false;

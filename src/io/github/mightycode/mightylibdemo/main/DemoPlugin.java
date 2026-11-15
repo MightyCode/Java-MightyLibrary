@@ -27,6 +27,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import io.github.mightycode.mightylibdemo.resources.LayeredTextureLoader;
 import io.github.mightycode.mightylibdemo.scenes.DemoScenes;
 import io.github.mightycode.mightylibdemo.scenes.MenuScene;
 import org.json.JSONObject;
@@ -55,14 +56,16 @@ public class DemoPlugin implements IPlugin {
 
     @Override
     public void register(EngineRegistry registry) {
-        // The optional loaders of the library the demo uses: all of them (LibraryLoaders.all() does the same)
+        // The optional loaders of the library the demo uses: all of them (LibraryLoaders.all() does the same),
+        // then those of the demo
         registry.resources()
                 .add(new TileSetLoader())
                 .add(new TileMapLoader())
                 .add(new SoundLoader())
                 .add(new ModelLoader())
                 .add(new TextureDataAtlasLoader())
-                .add(new WaveCollapseRulesLoader());
+                .add(new WaveCollapseRulesLoader())
+                .add(new LayeredTextureLoader());
 
         // Commands of the game: kept for the whole run, whatever the scene
         registry.commands().register(new BaseCommand(registry.id("menu"), ECommandLevel.USER, "Go back to the menu") {

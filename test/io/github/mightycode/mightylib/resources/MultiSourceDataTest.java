@@ -132,6 +132,15 @@ class MultiSourceDataTest extends ResourcesTestBase {
         assertEquals(0, pairLoader.readings.get());
     }
 
+    // Built by the code: nothing to read
+    @Test
+    void aDataWithoutPathHasNoSource() {
+        PairData generated = new PairData("generated");
+        assertFalse(generated.validPaths());
+        assertFalse(generated.hasSource());
+        assertTrue(generated.sourcePaths().isEmpty());
+    }
+
     @Test
     void eachFileIsMarkedThenResetBeforeTheNextReading() throws Exception {
         PairData pair = pair("pair", first, second);
