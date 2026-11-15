@@ -27,26 +27,30 @@ public class OpenALSoundSource implements ISoundSource {
     private boolean released;
     // Owned source stopped while playing because its buffer was deleted (reload): played again once loaded
     private boolean resumeWhenLoaded;
+    // Settings applied when the delay ends (the OpenAL source is created then); null once started
+    SoundSourceCreationInfo waiting;
 
     // Name asked at creation, known before the source is created
     private String soundName;
 
-    OpenALSoundSource(Resources resources, String soundName, String gainNode, boolean owned) {
-        this.soundName = soundName;
-        this.owned = owned;
+    OpenALSoundSource(Resources resources, SoundSourceCreationInfo info) {
+        this.waiting = info;
+        this.soundName = info.name;
+        this.owned = info.owned;
         this.resources = resources;
         this.soundData = null;
         this.sourceId  = -1;
         this.gain = 1;
-        this.gainNodeName = gainNode;
+        this.gainNodeName = info.gainNode;
         this.gainNode = 1;
         this.loop = false;
         this.relative = false;
         this.hadPlayed = false;
     }
 
-    boolean init(String soundName){
-        this.soundName = soundName;
+    // The delay ended: the OpenAL source is created; false if the sound has no data (the caller deletes the source)
+    boolean init(){
+        waiting = null;
         this.sourceId = alGenSources();
 
         return setSoundData(soundName);

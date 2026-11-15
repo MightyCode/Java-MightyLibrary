@@ -42,12 +42,9 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 
 ## Bugs relevés en passant (non corrigés)
 - **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (20) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (5) ; `NP_BOOLEAN_RETURN_NULL` (`EngineConfig.ParseShown`) ; Error Prone `MissingCasesInEnumSwitch` (22), `EmptyCatch` (3 : `EngineConfig`, `FileChangeDetector`, `ResourceWatcher`), `ReferenceEquality` (39), `EnumOrdinal` (21) (chiffres de la bibliothèque seule). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
-- `OpenALSoundService.clearAwaitedSong` (changement de scène) oublie les sons en attente de leur délai mais laisse leurs sources, jamais créées, dans la liste ; et dans `lateUpdate`, une source dont l'`init` échoue est retirée de la liste puis encore réglée et jouée (`managerId` des autres sons en attente non décalés).
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
-- `DataFolder.getFileContent` concatène les lignes lues sans saut de ligne (`Scanner.nextLine`).
 - `BasicMaterial.clone()` / `Material.clone()` partagent leurs `Vector3f` (copie superficielle) : modifier la couleur d'un clone change l'original (3D).
 - `WaveCollapseRules.Rule.INITIAL_POS` est un `Vector2i` public partagé, modifiable par n'importe qui (champ `final`, objet mutable).
-- `Context` (rafraîchissement d'une fenêtre qui échoue) passe un message commençant par `--` à `Logger.LogException`, qui l'ajoute déjà : la ligne du journal commence par `----`.
 - `MeshRenderer.addTextureChannel(nom, uniform, canal)` ne fait rien tant qu'aucun canal n'a été ajouté par l'autre surcharge (`textures == null` → retour immédiat ; le tableau n'est créé que par `addTextureChannel(IRenderTextureBindable, …)`).
 - `ResourceLoader.exploreResourcesFile` : les sous-dossiers sont explorés avec `IGNORE_FOLDERS` au lieu de la liste de dossiers ignorés reçue (sans effet aujourd'hui, seul `BatchLoader` en donne une).
 

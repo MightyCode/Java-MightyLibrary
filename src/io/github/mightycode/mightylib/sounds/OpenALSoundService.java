@@ -26,8 +26,6 @@ public class OpenALSoundService implements ISoundService {
 
     private final OpenALSoundListener listener;
 
-    private final List<SoundSourceCreationInfo> awaitedNewSounds;
-
     private final List<OpenALSoundSource> soundsSource;
 
     private final GainTree gainTree;
@@ -41,7 +39,6 @@ public class OpenALSoundService implements ISoundService {
         this.context = context;
         listener = new OpenALSoundListener();
 
-        awaitedNewSounds = new ArrayList<>();
         soundsSource = new ArrayList<>();
 
         gainTree = new GainTree(gainTreeFile);
@@ -87,58 +84,41 @@ public class OpenALSoundService implements ISoundService {
     @Override
     public OpenALSoundSource createSoundSource(SoundSourceCreationInfo creationInfo) {
         SoundSourceCreationInfo safeInfo = creationInfo.copy();
-        OpenALSoundSource source = new OpenALSoundSource(resources, safeInfo.name, safeInfo.gainNode, safeInfo.owned);
         safeInfo.startTimer();
 
-        safeInfo.managerId = soundsSource.size();
-        awaitedNewSounds.add(safeInfo);
+        OpenALSoundSource source = new OpenALSoundSource(resources, safeInfo);
         soundsSource.add(source);
 
         return source;
     }
 
     private void removeAt(int i) {
-        OpenALSoundSource source = soundsSource.get(i);
-        source.unload();
-
-        soundsSource.remove(i);
-        updateAwaitedList(i);
-    }
-
-    private void updateAwaitedList(int id) {
-        for (SoundSourceCreationInfo info : awaitedNewSounds) {
-            if (info.managerId > id)
-                --info.managerId;
-        }
+        soundsSource.remove(i).unload();
     }
 
     @Override
     public void lateUpdate() {
-        SoundSourceCreationInfo info;
-        for (int i = awaitedNewSounds.size() - 1; i >= 0; --i) {
-            info = awaitedNewSounds.get(i);
+        for (int i = soundsSource.size() - 1; i >= 0; --i) {
+            OpenALSoundSource sound = soundsSource.get(i);
+            SoundSourceCreationInfo info = sound.waiting;
 
-            // Released before its delay ended: never created, deleted from the list below
-            if (soundsSource.get(info.managerId).isReleased()) {
-                awaitedNewSounds.remove(i);
+            // Already started, or released before its delay ended (never created, deleted by the loop below)
+            if (info == null || sound.isReleased())
+                continue;
+
+            info.updateTimer();
+            if (!info.isTimerFinished())
+                continue;
+
+            if (!sound.init()) {
+                System.err.println("--Sound source not created, no data for the sound: " + info.name);
+                removeAt(i);
                 continue;
             }
 
-            info.updateTimer();
-
-            if (info.isTimerFinished()) {
-                OpenALSoundSource sound = soundsSource.get(info.managerId);
-                if (!sound.init(info.name)) {
-                    soundsSource.remove(info.managerId);
-                    System.err.println("Fail to initEntity sound name : " + info.name);
-                }
-
-                sound.setPosition(info.position).setSpeed(info.speed);
-                sound.setGain(info.gain, gainTree.gain(info.gainNode)).setLoop(info.loop).setRelative(info.relative);
-                sound.play();
-
-                awaitedNewSounds.remove(i);
-            }
+            sound.setPosition(info.position).setSpeed(info.speed);
+            sound.setGain(info.gain, gainTree.gain(info.gainNode)).setLoop(info.loop).setRelative(info.relative);
+            sound.play();
         }
 
         OpenALSoundSource source;
@@ -181,9 +161,10 @@ public class OpenALSoundService implements ISoundService {
         return true;
     }
 
+    // The waiting sources are never created: no OpenAL source to delete
     @Override
     public void clearAwaitedSong() {
-        awaitedNewSounds.clear();
+        soundsSource.removeIf(source -> source.waiting != null);
     }
 
     @Override
@@ -226,7 +207,6 @@ public class OpenALSoundService implements ISoundService {
 
         // Deleted sources: the buffers deleted afterwards must not be detached from them (AL_INVALID_NAME)
         soundsSource.clear();
-        awaitedNewSounds.clear();
     }
 
     @Override

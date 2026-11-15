@@ -2,7 +2,8 @@ package io.github.mightycode.mightylib.utils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class DataFolder {
     public static final String DATA_FOLDER_PATH = "data/";
@@ -38,13 +39,9 @@ public class DataFolder {
         if (!fileExists(localPath))
             return null;
 
-        try (Scanner reader = new Scanner(new File(DATA_FOLDER_PATH + localPath), StandardCharsets.UTF_8)) {
-            StringBuilder result = new StringBuilder();
-            while (reader.hasNextLine()) {
-                result.append(reader.nextLine());
-            }
-
-            return result.toString();
+        // The content as written by saveFile, line breaks included
+        try {
+            return Files.readString(Path.of(DATA_FOLDER_PATH + localPath), StandardCharsets.UTF_8);
         } catch (IOException e) {
             Logger.LogException("Can't read the data file " + localPath, e);
         }

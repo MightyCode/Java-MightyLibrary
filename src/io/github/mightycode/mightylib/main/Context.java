@@ -254,7 +254,7 @@ public final class Context implements IView {
 
             window.getWindow().swapBuffers();        } catch (RuntimeException e) {
             // Thrown into a GLFW callback, it would stop the reading of the events
-            Logger.LogException("--Redraw of window " + window.getName() + " failed", e);
+            Logger.LogException("Redraw of window " + window.getName() + " failed", e);
         } finally {
             restore(previous);
         }
