@@ -21,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Guard of the extension contract (docs/architecture.md, "API publique"): only the classes chosen to be inherited
- * (ExtensibleClasses) are open, every other public concrete class is final; the chosen ones have no protected
- * field, their state is reached through chosen and documented methods (a subclass cannot break their invariants,
+ * (ExtensibleClasses) are open, every other public concrete class is final; the open ones (chosen or extended by
+ * the library) have no protected field, their state is reached through chosen and documented methods (a subclass cannot break their invariants,
  * and the fields can change without breaking the subclasses of other projects).
  */
 class ExtensionFieldsTest {
@@ -57,14 +57,17 @@ class ExtensionFieldsTest {
     void noProtectedField() throws Exception {
         List<String> problems = new ArrayList<>();
 
-        for (String name : ExtensibleClasses.NAMES) {
-            for (Field field : load(name).getDeclaredFields()) {
-                if (Modifier.isProtected(field.getModifiers()) && !field.isSynthetic())
-                    problems.add(name + "." + field.getName());
+        // The classes extended by the library too: a project can extend them as well (public constructor)
+        for (List<String> list : List.of(ExtensibleClasses.NAMES, ExtensibleClasses.EXTENDED_BY_THE_LIBRARY)) {
+            for (String name : list) {
+                for (Field field : load(name).getDeclaredFields()) {
+                    if (Modifier.isProtected(field.getModifiers()) && !field.isSynthetic())
+                        problems.add(name + "." + field.getName());
+                }
             }
         }
 
-        assertTrue(problems.isEmpty(), "Protected fields in extensible classes (use methods):\n"
+        assertTrue(problems.isEmpty(), "Protected fields in open classes (use methods):\n"
                 + String.join("\n", problems));
     }
 

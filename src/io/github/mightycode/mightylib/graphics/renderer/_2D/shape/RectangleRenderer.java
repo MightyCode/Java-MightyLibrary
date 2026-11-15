@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.utils.math.geometry.ERotation;
 import org.joml.Vector2f;
 
 public class RectangleRenderer extends Shape2DRenderer {
-    protected RectangularFace face;
+    private final RectangularFace face;
 
     public RectangleRenderer(String shaderName) {
         super(shaderName, true);

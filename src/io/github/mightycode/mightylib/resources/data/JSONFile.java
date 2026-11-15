@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import org.json.JSONObject;
 
 public class JSONFile extends SingleSourceDataType {
-    protected JSONObject object;
+    private JSONObject object;
     public JSONFile(String dataName, String path) {
         super(TYPE_SET_UP.THREAD_CONTEXT, dataName, path);
     }
