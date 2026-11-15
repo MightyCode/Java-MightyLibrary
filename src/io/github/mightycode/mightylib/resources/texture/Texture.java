@@ -91,7 +91,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         // Failed or still loading: the fallback texture instead
         } else {
             // Same target as this texture: a rectangle sampler can't read a 2D texture
-            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? glResources().placeholders().fallbackRectangleId(resources) : -1;
+            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? placeholders().fallbackRectangleId(resources) : -1;
             if (rectangleId != -1)
                 glBindTexture(GL_TEXTURE_RECTANGLE, rectangleId);
             else
@@ -167,7 +167,12 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         if (fallback != null && fallback != this && fallback.isLoaded())
             return fallback.textureId;
 
-        return glResources().placeholders().placeholderId();
+        return placeholders().placeholderId();
+    }
+
+    // Shared by the textures of the GLResources: placeholders, upload buffers
+    private TexturePlaceholders placeholders() {
+        return glResources().shared(TexturePlaceholders.class, TexturePlaceholders::new);
     }
 
     // Data giving the size: the fallback one while this one is not loaded
@@ -247,6 +252,8 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         int rowBytes = width * 4;
         int sentRows = fromRow;
         long start = System.nanoTime();
+        // Its loadingIdle frees the upload buffers once nothing is left to send
+        placeholders();
 
         do {
             double leftMilliseconds = remainingMilliseconds - (System.nanoTime() - start) / 1e6;

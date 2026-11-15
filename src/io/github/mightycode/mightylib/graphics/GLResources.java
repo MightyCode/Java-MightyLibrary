@@ -6,8 +6,6 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.IGLElementSink;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Texture;
-import io.github.mightycode.mightylib.resources.texture.TexturePlaceholders;
-import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import org.json.JSONObject;
 
 import static org.lwjgl.opengl.GL11.glFlush;
@@ -16,10 +14,12 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.function.Supplier;
 
 /**
  * Shared GL elements (textures...), sent to the graphic card by the main loop with the time left in each frame.
@@ -34,7 +34,8 @@ public class GLResources implements IGLElementSink {
 
     // The CPU data these elements are made from (null in the tests without data)
     private final Resources cpuResources;
-    private final TexturePlaceholders placeholders = new TexturePlaceholders();
+    // State shared by the elements of a type, by its class (see shared)
+    private final Map<Class<? extends IGLSharedState>, IGLSharedState> sharedStates = new LinkedHashMap<>();
     private Shader fallbackShader;
 
     // Elements waiting to be loaded, in order; an element is in one of them (moved in O(1) when its urgency changes)
@@ -81,9 +82,11 @@ public class GLResources implements IGLElementSink {
             stepDone = true;
         }
 
-        // Nothing left to send: the pixel buffers are not kept
-        if (urgentToLoad.isEmpty() && preloadToLoad.isEmpty() && elementToReload.isEmpty())
-            TextureUploader.releaseBuffers();
+        // Nothing left to send: what is only needed while sending is not kept (pixel buffers)
+        if (urgentToLoad.isEmpty() && preloadToLoad.isEmpty() && elementToReload.isEmpty()) {
+            for (IGLSharedState state : sharedStates.values())
+                state.loadingIdle();
+        }
 
         // What was sent here is shared with the other windows: their contexts only see it once the commands are issued
         if (stepDone && GLContext.hasSeveralWindows())
@@ -199,9 +202,21 @@ public class GLResources implements IGLElementSink {
             urgentToLoad.add(element);
     }
 
-    // Textures bound while a texture is not loaded
-    public TexturePlaceholders placeholders() {
-        return placeholders;
+    /**
+     * The state shared by the elements of a type, created by the factory at the first call (main thread), one per
+     * class, told when the loading is idle and deleted with GLResources.
+     */
+    public <T extends IGLSharedState> T shared(Class<T> type, Supplier<T> factory) {
+        IGLSharedState state = sharedStates.get(type);
+        if (state == null) {
+            state = factory.get();
+            if (!type.isInstance(state))
+                throw new IllegalArgumentException("The factory of " + type.getSimpleName() + " made a "
+                        + (state == null ? "null" : state.getClass().getSimpleName()));
+            sharedStates.put(type, state);
+        }
+
+        return type.cast(state);
     }
 
     // ---- IGLElementSink: the GL elements held by the batches ----
@@ -374,7 +389,8 @@ public class GLResources implements IGLElementSink {
         preloadToLoad.clear();
         elementToReload.clear();
         failedElements.clear();
-        TextureUploader.releaseBuffers();
-        placeholders.delete();
+        for (IGLSharedState state : sharedStates.values())
+            state.delete();
+        sharedStates.clear();
     }
 }

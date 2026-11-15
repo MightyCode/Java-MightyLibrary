@@ -9,8 +9,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GLResourcesTest {
@@ -255,5 +257,62 @@ class GLResourcesTest {
         assertTrue(glResources.namesWaiting(true).isEmpty());
 
         glResources.releaseResource(element);
+    }
+
+    // Counts what GLResources tells it
+    static class CountingState implements IGLSharedState {
+        int idle, deleted;
+
+        @Override
+        public void loadingIdle() {
+            ++idle;
+        }
+
+        @Override
+        public void delete() {
+            ++deleted;
+        }
+    }
+
+    static class OtherState extends CountingState {}
+
+    @Test
+    void aSharedStateIsCreatedOncePerClass() {
+        GLResources glResources = new GLResources(null, -1);
+        int[] created = {0};
+        CountingState first = glResources.shared(CountingState.class, () -> { ++created[0]; return new CountingState(); });
+        CountingState second = glResources.shared(CountingState.class, () -> { ++created[0]; return new CountingState(); });
+        OtherState other = glResources.shared(OtherState.class, OtherState::new);
+
+        assertSame(first, second);
+        assertEquals(1, created[0]);
+        assertNotSame(first, other);
+        // A factory giving nothing is a bug of the element type
+        assertThrows(IllegalArgumentException.class, () -> glResources.shared(ThirdState.class, () -> null));
+    }
+
+    static class ThirdState extends CountingState {}
+
+    @Test
+    void aSharedStateIsToldWhenTheQueuesAreEmptyAndDeletedWithGLResources() {
+        GLResources glResources = new GLResources(null, -1);
+        CountingState state = glResources.shared(CountingState.class, CountingState::new);
+        WaitingElement waiting = glResources.addElementOrReturnIfPresent(WaitingElement.class, new WaitingElement(), "idle");
+
+        glResources.process(Long.MAX_VALUE);
+        assertEquals(0, state.idle);
+
+        waiting.ready = true;
+        glResources.process(Long.MAX_VALUE);
+        assertEquals(1, state.idle);
+        glResources.process(Long.MAX_VALUE);
+        assertEquals(2, state.idle);
+        assertEquals(0, state.deleted);
+
+        glResources.unload();
+        assertEquals(1, state.deleted);
+
+        // A new one after the release
+        assertNotSame(state, glResources.shared(CountingState.class, CountingState::new));
     }
 }
