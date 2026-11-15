@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
-import io.github.mightycode.mightylib.console.IConsoleService;
 import io.github.mightycode.mightylib.console.ConsoleLog;
+import io.github.mightycode.mightylib.console.IConsoleService;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
