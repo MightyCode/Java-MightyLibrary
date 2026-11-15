@@ -12,7 +12,7 @@ import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapC
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._3D.ModelRenderer;
 import io.github.mightycode.mightylib.resources.models.Model;
@@ -283,7 +283,7 @@ public class Scene3D extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
 
         // The camera has been moved by its component (super.update)
         if (inputManager.inputPressed(ActionId.TAB)) {

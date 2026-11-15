@@ -115,9 +115,9 @@ public class KeyboardManager {
 
     // ---- Focus: the owner of the keyboard (the console, a text field) reads it, the game sees nothing ----
 
-    // Set by InputManager when its focus is held
+    // Set by IInputManager when its focus is held
     private boolean captured;
-    // Engine actions are read while the keyboard is captured (InputManager)
+    // Engine actions are read while the keyboard is captured (IInputManager)
     private boolean rawRead;
     // The focus changed during this tick: what was typed or pressed in it is for nobody (until postUpdate)
     private boolean edgesDropped;

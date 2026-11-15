@@ -227,6 +227,7 @@ public final class Engine implements IView {
             return ListError.PLUGIN_REGISTRATION_FAIL;
         }
         contexts.setInputRegistry(registrations.inputs());
+        contexts.setInputManagerFactory(registrations.inputManagerFactory());
         registrations.lifecycle().setStrict(config.isStrictResources());
 
         System.out.println("--Load libraries.");

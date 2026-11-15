@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.main.Views;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputAxis;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.InputSimulation;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
@@ -51,7 +51,7 @@ public class InputGenCom extends BaseCommand {
                         + " the next tick are computed");
     }
 
-    private static InputManager inputManager() {
+    private static IInputManager inputManager() {
         return Views.engine().targetWindow().getInputManager();
     }
 
@@ -261,7 +261,7 @@ public class InputGenCom extends BaseCommand {
         return CommandResult.ok("Key " + keyName(key) + " pressed from the next tick during " + ticks + " tick(s)");
     }
 
-    private static InputAxis findAxis(InputManager inputManager, String name) {
+    private static InputAxis findAxis(IInputManager inputManager, String name) {
         List<AxisInput> matches = inputManager.matchAxes(name);
         if (matches.size() != 1)
             throw new IllegalArgumentException(notFound("axis", name,
@@ -280,7 +280,7 @@ public class InputGenCom extends BaseCommand {
         return CommandResult.ok(axis + " at " + value + " from the next tick during " + ticks + " tick(s)");
     }
 
-    private static CommandResult press(InputManager inputManager, String actionName, int ticks) {
+    private static CommandResult press(IInputManager inputManager, String actionName, int ticks) {
         List<ActionInput> matches = inputManager.matchActions(actionName);
         if (matches.size() != 1)
             return notFound("action", actionName, matches.stream().map(action -> action.action().toString()).collect(Collectors.toList()));
@@ -292,7 +292,7 @@ public class InputGenCom extends BaseCommand {
                 + (ticks == InputSimulation.UNTIL_RELEASE ? " until -> input release " + action + " <-" : " during " + ticks + " tick(s)"));
     }
 
-    private static CommandResult release(InputManager inputManager, String actionName) {
+    private static CommandResult release(IInputManager inputManager, String actionName) {
         List<ActionInput> matches = inputManager.matchActions(actionName);
         if (matches.size() != 1)
             return notFound("action", actionName, matches.stream().map(action -> action.action().toString()).collect(Collectors.toList()));
@@ -312,7 +312,7 @@ public class InputGenCom extends BaseCommand {
     }
 
     // Identifiers of the bound actions and axes, sorted
-    private static CommandResult list(InputManager inputManager) {
+    private static CommandResult list(IInputManager inputManager) {
         JSONObject data = new JSONObject();
 
         JSONArray actions = new JSONArray();
@@ -327,7 +327,7 @@ public class InputGenCom extends BaseCommand {
     }
 
     // Inputs seen by the current tick
-    private static CommandResult state(InputManager inputManager) {
+    private static CommandResult state(IInputManager inputManager) {
         MouseManager mouse = inputManager.getMouseManager();
         KeyboardManager keyboard = inputManager.getKeyboardManager();
         JSONObject data = new JSONObject();
@@ -410,7 +410,7 @@ public class InputGenCom extends BaseCommand {
     }
 
     // Full identifiers and their paths alone (accepted when unique)
-    private static List<String> actionNames(InputManager inputManager) {
+    private static List<String> actionNames(IInputManager inputManager) {
         List<String> names = new ArrayList<>();
         for (ActionInput action : inputManager.getActions()) {
             names.add(action.action().toString());
@@ -420,7 +420,7 @@ public class InputGenCom extends BaseCommand {
     }
 
     // Full identifiers of the axes and their paths alone (accepted when unique)
-    private static List<String> axisNames(InputManager inputManager) {
+    private static List<String> axisNames(IInputManager inputManager) {
         List<String> names = new ArrayList<>();
         for (AxisInput axis : inputManager.getAxes()) {
             names.add(axis.axis().toString());

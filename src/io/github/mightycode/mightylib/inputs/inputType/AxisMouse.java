@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 
 /**
@@ -25,7 +25,7 @@ public class AxisMouse extends AxisBinding {
     public int source() { return source; }
 
     @Override
-    protected float raw(InputManager inputManager) {
+    protected float raw(IInputManager inputManager) {
         MouseManager mouse = inputManager.getMouseManager();
         switch (source) {
             case X:

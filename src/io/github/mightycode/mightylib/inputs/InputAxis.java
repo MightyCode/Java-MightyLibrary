@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /**
  * Key of an axis (move, look...): its identifier alone, equal to any other key with the same identifier.
- * Declared by a plugin with its default binding (EngineRegistry.inputs), read with InputManager.getAxis.
+ * Declared by a plugin with its default binding (EngineRegistry.inputs), read with IInputManager.getAxis.
  */
 public final class InputAxis {
     private final Identifier identifier;

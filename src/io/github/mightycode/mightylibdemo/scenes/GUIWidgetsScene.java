@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.graphics.utils.Shaking2D;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningBehaviour;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningOption;
 import io.github.mightycode.mightylib.physics.tweenings.ETweeningType;
@@ -64,7 +64,7 @@ public class GUIWidgetsScene extends Scene {
         setClearColor(0.1f, 0.1f, 0.12f);
         mainContext.getMouseManager().setCursor(true);
 
-        InputManager input = mainContext.getInputManager();
+        IInputManager input = mainContext.getInputManager();
 
         typeSelector = new EnumSelector<>(ETweeningType.values(), mainContext);
         typeSelector.init(ActionId.LEFT_CLICK);
@@ -166,7 +166,7 @@ public class GUIWidgetsScene extends Scene {
     public void update() {
         super.update();
 
-        InputManager input = mainContext.getInputManager();
+        IInputManager input = mainContext.getInputManager();
 
         if (input.inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});

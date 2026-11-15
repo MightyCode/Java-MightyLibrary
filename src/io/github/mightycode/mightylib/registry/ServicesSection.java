@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.inputs.IInputManagerFactory;
 import io.github.mightycode.mightylib.scenes.ISceneManagerFactory;
 import io.github.mightycode.mightylib.services.IEngineService;
 import io.github.mightycode.mightylib.services.IServiceFactory;
@@ -61,6 +62,13 @@ public final class ServicesSection {
     public ServicesSection sceneManager(ISceneManagerFactory factory) {
         registrations.checkOpen();
         registrations.sceneManagerFactory.set(registry.namespace(), factory);
+        return this;
+    }
+
+    // The input manager of each window, created by this factory (the engine's: InputManager::new)
+    public ServicesSection inputManager(IInputManagerFactory factory) {
+        registrations.checkOpen();
+        registrations.inputManagerFactory.set(registry.namespace(), factory);
         return this;
     }
 }

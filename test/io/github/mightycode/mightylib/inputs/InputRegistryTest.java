@@ -120,7 +120,7 @@ class InputRegistryTest {
         manager.init(new ActionInput[]{
                 new ActionInput(JUMP, new InputSimple(2, EInputType.Keyboard) {
                     @Override
-                    public boolean getState(InputManager inputManager) { return false; }
+                    public boolean getState(IInputManager inputManager) { return false; }
                 })});
         manager.simulatePress(JUMP, 2);
         manager.updateActionSimulation();

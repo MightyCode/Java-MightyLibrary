@@ -4,7 +4,7 @@ package io.github.mightycode.mightylib.scenes;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.MainLoop;
 import io.github.mightycode.mightylib.inputs.EngineActions;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.Engine;
@@ -66,7 +66,7 @@ public class SceneManager implements ISceneManager {
 
     private void updateMain() {
         WindowContext mainWindow = context.getMainWindow();
-        InputManager mainInputManager = mainWindow.getInputManager();
+        IInputManager mainInputManager = mainWindow.getInputManager();
 
         // Commands come from the console, the debug server or the game, never block here
         engine.commands().processPendingCommands();

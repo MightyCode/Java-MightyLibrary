@@ -7,7 +7,7 @@ import io.github.mightycode.mightylib.graphics.GUI.TextField;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyRepeat;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.main.MainThread;
@@ -265,7 +265,7 @@ public class MenuScene extends Scene {
     public void update() {
         super.update();
 
-        InputManager input = mainContext.getInputManager();
+        IInputManager input = mainContext.getInputManager();
         MouseManager mouse = mainContext.getMouseManager();
 
         // While the field has the focus the scene sees no input: only the field and the mouse position work

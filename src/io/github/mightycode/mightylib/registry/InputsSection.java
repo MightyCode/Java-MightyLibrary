@@ -36,7 +36,7 @@ public final class InputsSection {
         this.registry = registry;
     }
 
-    // Not bound by default: the game binds it later (InputManager.init)
+    // Not bound by default: the game binds it later (IInputManager.init)
     public InputsSection action(InputAction action) {
         return action(action, null);
     }

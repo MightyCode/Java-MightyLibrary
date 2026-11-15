@@ -8,7 +8,7 @@ import io.github.mightycode.mightylib.graphics.GUI.StrSelector;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -149,7 +149,7 @@ public class PathfindingScene2D extends Scene {
     public void update() {
         super.update();
 
-        InputManager input = mainContext.getInputManager();
+        IInputManager input = mainContext.getInputManager();
 
         algorithmSelector.update();
         if (algorithmSelector.isUpdated())

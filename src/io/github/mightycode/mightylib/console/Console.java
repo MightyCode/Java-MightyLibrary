@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.inputs.EngineActions;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.text.ClickCounter;
@@ -327,7 +327,7 @@ public final class Console implements IConsoleService {
     @Override
     public void update() {
         WindowContext main = engine.contexts().getMainWindow();
-        InputManager mainInputs = main.getInputManager();
+        IInputManager mainInputs = main.getInputManager();
         boolean toggle = mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE);
 
         switch (mode) {

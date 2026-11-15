@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.scenes.camera.cameraComponents;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -11,7 +11,7 @@ import org.joml.Vector2i;
 // Same as MovingSceneComponent and DraggingSceneComponent
 public class ZoomingCameraComponent implements IUpdatable {
 
-    protected InputManager inputManager;
+    protected IInputManager inputManager;
     protected MouseManager mouseManager;
 
     protected Camera2D controlledCamera;
@@ -25,7 +25,7 @@ public class ZoomingCameraComponent implements IUpdatable {
         quickZoomActionId = null;
     }
 
-    public void init(InputManager inputManager, MouseManager mouseManager, Camera2D controlledCamera,
+    public void init(IInputManager inputManager, MouseManager mouseManager, Camera2D controlledCamera,
                      Vector2i windowSize){
         this.inputManager = inputManager;
         this.mouseManager = mouseManager;

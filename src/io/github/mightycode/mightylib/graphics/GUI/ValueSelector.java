@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
@@ -25,7 +25,7 @@ public abstract class ValueSelector<T> {
     private final RectangleRenderer background;
     private final BackgroundlessButton chooseLeft, chooseRight;
 
-    private final InputManager inputManager;
+    private final IInputManager inputManager;
 
     private InputAction clickActionId;
 

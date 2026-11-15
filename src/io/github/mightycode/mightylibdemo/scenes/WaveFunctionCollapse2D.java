@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.graphics.game.LayersTileMapRenderer;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.map.TileLayer;
 import io.github.mightycode.mightylib.resources.map.TileMap;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.resources.map.TileSet;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -110,7 +110,7 @@ public class WaveFunctionCollapse2D extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
 
         if (inputManager.inputPressed(ActionId.TAB)){
             waveFunctionCollapseGrid.reset();

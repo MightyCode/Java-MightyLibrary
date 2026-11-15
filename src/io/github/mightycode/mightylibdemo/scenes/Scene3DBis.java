@@ -9,7 +9,7 @@ import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
 import io.github.mightycode.mightylib.graphics.lighting.lights.PointLight;
 import io.github.mightycode.mightylib.graphics.lighting.materials.Material;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
@@ -217,7 +217,7 @@ public class Scene3DBis extends Scene {
         if (mainContext.getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManagerInterface.setNewScene(new MenuScene(), new String[]{});
 
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
 
 
         if (inputManager.inputPressed(ActionId.TAB)) {

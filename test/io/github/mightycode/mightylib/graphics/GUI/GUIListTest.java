@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.GUI;
 import io.github.mightycode.mightylib.inputs.TestInputs;
 import io.github.mightycode.mightylib.inputs.EInputState;
 import io.github.mightycode.mightylib.inputs.InputAction;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.inputs.MouseManager;
@@ -30,17 +31,17 @@ class GUIListTest {
         boolean held, pressed, released;
 
         @Override
-        public boolean getState(InputManager inputManager) {
+        public boolean getState(IInputManager inputManager) {
             return held;
         }
 
         @Override
-        public boolean actionPressed(InputManager inputManager) {
+        public boolean actionPressed(IInputManager inputManager) {
             return pressed;
         }
 
         @Override
-        public boolean actionReleased(InputManager inputManager) {
+        public boolean actionReleased(IInputManager inputManager) {
             return released;
         }
 

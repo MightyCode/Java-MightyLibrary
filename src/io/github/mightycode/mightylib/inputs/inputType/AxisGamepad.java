@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.inputs.inputType;
 
 import io.github.mightycode.mightylib.inputs.GamepadManager;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 
 /**
  * A gamepad axis (GLFW_GAMEPAD_AXIS_...) : sticks from -1 to 1 (y positive downward), triggers from 0 to 1,
@@ -24,7 +24,7 @@ public class AxisGamepad extends AxisBinding {
     public int player() { return player; }
 
     @Override
-    protected float raw(InputManager inputManager) {
+    protected float raw(IInputManager inputManager) {
         return inputManager.getGamepadManager().getAxis(axis, player);
     }
 }

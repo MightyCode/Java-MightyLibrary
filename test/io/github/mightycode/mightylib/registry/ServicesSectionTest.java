@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.inputs.IInputManagerFactory;
+import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.scenes.ISceneManagerFactory;
 import io.github.mightycode.mightylib.services.IEngineService;
 import io.github.mightycode.mightylib.services.IServiceFactory;
@@ -148,6 +150,22 @@ class ServicesSectionTest {
                         plugin("mod", registry -> {})));
         assertSame(gameFactory, replaced.sceneManagerFactory());
         assertEquals("game", replaced.sceneManagerFactoryPlugin());
+    }
+
+    @Test
+    void theLastPluginGivesTheInputManagerFactory() {
+        IInputManagerFactory engineFactory = InputManager::new;
+        IInputManagerFactory modFactory = (keyboard, mouse, gamepads, registry) -> null;
+
+        Registrations registrations = EngineRegistry.Collect(plugin(Identifier.ENGINE_NAMESPACE,
+                        registry -> registry.services().inputManager(engineFactory)),
+                List.of(plugin("game", registry -> {}),
+                        plugin("mod", registry -> registry.services().inputManager(modFactory))));
+        assertSame(modFactory, registrations.inputManagerFactory());
+        assertEquals("mod", registrations.inputManagerFactoryPlugin());
+
+        // The engine's creates the managers the input tests use
+        assertNotNull(engineFactory.create(null, null, null, registrations.inputs()));
     }
 
     @Test

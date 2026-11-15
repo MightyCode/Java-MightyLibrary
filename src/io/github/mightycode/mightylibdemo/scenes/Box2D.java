@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.IUpdatableDisplayable;
@@ -165,7 +165,7 @@ public class Box2D extends Scene {
         world.step(GameTime.FixedDeltaTime(), VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
         MouseManager mouseManager = mainContext.getMouseManager();
-        InputManager inputManager = mainContext.getInputManager();
+        IInputManager inputManager = mainContext.getInputManager();
         Camera2D mapCamera = main2DCamera;
 
         if (inputManager.inputPressed(ActionId.LEFT_CLICK)){

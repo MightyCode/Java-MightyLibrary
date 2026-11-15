@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.inputs.IInputManagerFactory;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
@@ -27,6 +28,7 @@ public final class Registrations {
     final Entries<Identifier, ScenesSection.SceneEntry> scenes = new Entries<>("Scene", Identifier::toString);
     final Entries<ServiceKey<?>, ServiceDeclaration<?>> services = new Entries<>("Service", ServiceKey::toString);
     final Replaceable<ISceneManagerFactory> sceneManagerFactory = new Replaceable<>("Scene manager factory");
+    final Replaceable<IInputManagerFactory> inputManagerFactory = new Replaceable<>("Input manager factory");
     final LifecycleHooks lifecycle = new LifecycleHooks();
 
     private boolean frozen;
@@ -103,6 +105,16 @@ public final class Registrations {
     // The plugin whose scene manager factory is used, null if none
     public String sceneManagerFactoryPlugin() {
         return sceneManagerFactory.plugin();
+    }
+
+    // The factory of the input managers (the engine's unless a plugin replaced it), null if none set it
+    public IInputManagerFactory inputManagerFactory() {
+        return inputManagerFactory.get();
+    }
+
+    // The plugin whose input manager factory is used, null if none
+    public String inputManagerFactoryPlugin() {
+        return inputManagerFactory.plugin();
     }
 
     // The hooks of every plugin on the life of the engine, in the order of the plugins

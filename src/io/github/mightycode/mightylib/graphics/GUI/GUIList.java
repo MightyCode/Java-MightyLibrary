@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.GUI;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 
 import java.util.Collections;
@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class GUIList {
-    private final InputManager inputManager;
+    private final IInputManager inputManager;
     private final MouseManager mouseManager;
 
     private GUI selected;
@@ -29,7 +29,7 @@ public class GUIList {
 
     private boolean looping = true;
 
-    public GUIList(InputManager inputManager, MouseManager mouseManager) {
+    public GUIList(IInputManager inputManager, MouseManager mouseManager) {
         this.mouseManager = mouseManager;
         this.inputManager = inputManager;
 

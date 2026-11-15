@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.scenes.camera.cameraComponents;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
-import io.github.mightycode.mightylib.inputs.InputManager;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.utils.IUpdatable;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -42,7 +42,7 @@ public class MovingCameraComponent implements IUpdatable {
 
     protected float moveSpeed, quickSpeed;
 
-    protected InputManager inputManager;
+    protected IInputManager inputManager;
     protected Camera2D controlledCamera;
 
     protected Inputs inputs;
@@ -58,7 +58,7 @@ public class MovingCameraComponent implements IUpdatable {
         this(MOVE_SPEED, QUICK_SPEED);
     }
 
-    public void init(InputManager inputManager, Camera2D controlledCamera){
+    public void init(IInputManager inputManager, Camera2D controlledCamera){
         this.inputManager = inputManager;
         this.controlledCamera = controlledCamera;
     }

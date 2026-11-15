@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
-/** Behaviour asked to {@link InputManager#isInput(int, EInputState)}. */
+/** Behaviour asked to {@link IInputManager#isInput(int, EInputState)}. */
 public enum EInputState {
     /** Held down during this tick. */
     Press,
