@@ -13,8 +13,8 @@ Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill 
    *Vérification* : les changements de rendu, d'entrées ou de fenêtre de la semaine ont été lancés en jeu.
 
 ## Cap
-5. **Un vrai jeu guide les priorités** : un petit jeu, dans un projet séparé qui utilise le jar, révèle ce qui manque et teste la bibliothèque comme un tiers l'utiliserait.
-   *Vérification* : ce jeu existe-t-il ? Les points de `current.md` viennent-ils d'un besoin réel (jeu, mesure) ou d'une envie de perfection ? Tant qu'il n'existe pas : le signaler.
+5. **La démo est le banc d'essai de la bibliothèque** : elle illustre chaque fonctionnalité nécessaire et l'utilise comme un tiers le ferait (une fois en module Maven séparé : seulement par l'API publique). Les priorités viennent d'un besoin réel : une scène de démo qui en manque, une mesure, un futur jeu de l'utilisateur.
+   *Vérification* : chaque fonctionnalité ajoutée a sa scène de démo (`DemoScenes`) ; les points de `current.md` viennent d'un besoin réel (démo, mesure, jeu) plutôt que d'une envie de perfection ; une fois la démo en module séparé, elle n'accède à rien de package-private.
 6. **`current.md` = un seul gros point, qu'on peut terminer.** Rien de conditionnel (« si les mesures l'exigent », « si un vrai jeu le demande ») : ces lignes vont dans `later.md`.
    *Vérification* : `grep -n -i -E "si les mesures|si un vrai jeu|seulement si" docs/current.md` est vide ; le point en cours avance d'une revue à l'autre.
 7. **Surface de l'API décidée avant le premier jar** : chaque package de `mightylib` est classé (API promise, expérimental, à retirer), après discussion (cf. `current.md`, « Héritage et API publique »). Tout ce qui est public est un engagement.
@@ -37,5 +37,5 @@ Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill 
     *Vérification* : la comparaison d'images existe-t-elle ? Sinon, les changements de rendu de la semaine ont-ils eu leur capture ?
 
 ## Rythme
-13. **Prendre du recul régulièrement et limiter les chantiers ouverts** : finir avant d'ouvrir. La cadence est élevée ; la revue sert aussi à vérifier que l'infrastructure ne passe pas avant le jeu.
+13. **Prendre du recul régulièrement et limiter les chantiers ouverts** : finir avant d'ouvrir. La cadence est élevée ; la revue sert aussi à vérifier que l'infrastructure ne passe pas avant les besoins réels (point 5).
     *Vérification* : nombre de branches non fusionnées et de lignes de `current.md` (pas en hausse sans raison) ; part des commits de la semaine qui ferment un point plutôt qu'en ouvrir un.

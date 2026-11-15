@@ -18,7 +18,7 @@ description: Revue hebdomadaire des bonnes pratiques du projet (docs/bonnes-prat
 
 ## 2. Juger
 - Un drapeau du script n'est pas une faute : un correctif impossible à tester sans GL, un commit sans effet sur l'architecture sans doc, un fichier rendu ouvert à l'appelant sont acceptables. Le dire.
-- Points de jugement (vrai jeu, surface de l'API, vérifications en jeu, recul) : répondre d'après l'historique et ce que l'utilisateur a dit ; à défaut, « à confirmer » avec la question précise, jamais une supposition.
+- Points de jugement (besoin réel, surface de l'API, vérifications en jeu, recul) : répondre d'après l'historique et ce que l'utilisateur a dit ; à défaut, « à confirmer » avec la question précise, jamais une supposition.
 - Comparer avec la revue précédente si elle est dans la conversation ou si l'utilisateur la rappelle ; l'état n'est jamais écrit dans `bonnes-pratiques.md`.
 
 ## 3. Répondre
