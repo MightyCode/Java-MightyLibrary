@@ -439,12 +439,12 @@ public final class Console implements IConsoleService {
         };
     }
 
-    /** After the scene of the main window is drawn, with its OpenGL context current. */
     @Override
     public int overlayLayer() {
         return OVERLAY_LAYER;
     }
 
+    /** After the scene of the main window is drawn, with its OpenGL context current. */
     @Override
     public void displayOverlay() {
         if (mode != EMode.OVERLAY || displayFailed)
