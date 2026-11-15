@@ -13,6 +13,7 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowConfig;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
@@ -25,6 +26,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_SHIFT;
@@ -370,9 +372,11 @@ public final class Console implements IConsoleService {
 
         for (ConsoleInput.Request request : requests) {
             switch (request.getType()) {
-                case SUBMIT:
-                    commands.submit(request.getLine(), source);
+                case SUBMIT: {
+                    // The answer reaches the log through CommandEcho, not through the returned future
+                    CompletableFuture<CommandResult> ignored = commands.submit(request.getLine(), source);
                     break;
+                }
                 case CLOSE:
                     // Escape closes the overlay; the window is closed by F2 or its own button
                     if (mode == EMode.OVERLAY)

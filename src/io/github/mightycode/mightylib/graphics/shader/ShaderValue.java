@@ -16,7 +16,8 @@ public class ShaderValue implements Cloneable {
         this.type = type;
     }
 
-    public boolean equals(final ShaderValue value){
+    // Same name, type and value (not an override of equals: a value is mutable, it isn't a map key)
+    public boolean hasSameValue(final ShaderValue value){
         if (value == null)
             return false;
 

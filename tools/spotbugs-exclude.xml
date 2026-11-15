@@ -10,4 +10,13 @@
     <Match>
         <Bug pattern="NM_METHOD_NAMING_CONVENTION,NM_FIELD_NAMING_CONVENTION"/>
     </Match>
+    <!-- Volatile counters with a single writer thread, read by other threads: the increment needs no atomic
+         operation (comment at each increment). -->
+    <Match>
+        <Or>
+            <And><Class name="io.github.mightycode.mightylib.resources.DataType"/><Field name="version"/></And>
+            <And><Class name="io.github.mightycode.mightylib.resources.ResourceWatcher"/><Field name="reloadCount"/></And>
+        </Or>
+        <Bug pattern="VO_VOLATILE_INCREMENT,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"/>
+    </Match>
 </FindBugsFilter>

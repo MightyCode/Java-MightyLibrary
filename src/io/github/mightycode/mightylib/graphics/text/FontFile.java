@@ -58,17 +58,20 @@ public class FontFile {
             Map<String, String> values = new HashMap<>();
 
             do {
-                line = bufferedReader.readLine();
+                line = readLine(bufferedReader);
                 Map<String, String> test = decodeLine(line);
                 values.putAll(test);
 
             } while(!values.containsKey("count"));
 
-            size = Integer.parseInt(values.get("size"));
+            size = Integer.parseInt(required(values,"size"));
             if (size < 0)
                 size *= -1;
+            // Every size of the font is divided by it
+            if (size == 0)
+                throw new ResourceException("malformed font file " + path + " (size 0)");
 
-            String[] tempPadding = values.get("padding").split(",");
+            String[] tempPadding = required(values,"padding").split(",");
 
 
             // 0 top, 1 right, 2 bottom, 3 left
@@ -77,33 +80,33 @@ public class FontFile {
                                     Integer.parseInt(tempPadding[2]),
                                     Integer.parseInt(tempPadding[3]));
 
-            lineHeight = (Integer.parseInt(values.get("lineHeight"))) * 1.0 / size;
+            lineHeight = (Integer.parseInt(required(values,"lineHeight"))) * 1.0 / size;
 
-            atlasWidth = Integer.parseInt(values.get("scaleW"));
-            atlasHeight = Integer.parseInt(values.get("scaleH"));
+            atlasWidth = Integer.parseInt(required(values,"scaleW"));
+            atlasHeight = Integer.parseInt(required(values,"scaleH"));
 
-            numChars = Integer.parseInt(values.get("count"));
+            numChars = Integer.parseInt(required(values,"count"));
 
             characters = new HashMap<>(numChars);
 
             for (int i = 0; i < numChars; i++) {
-                line = bufferedReader.readLine();
+                line = readLine(bufferedReader);
                 values = decodeLine(line);
 
                 FontChar fontChar = new FontChar();
 
-                int id = Integer.parseInt(values.get("id"));
+                int id = Integer.parseInt(required(values,"id"));
 
                 fontChar.setId(id)
-                        .setxAtlas(Integer.parseInt(values.get("x")) + padding.w /*/ atlasWidth*/)
-                        .setyAtlas(Integer.parseInt(values.get("y")) + padding.x /*/ atlasHeight*/)
-                        .setWidth((double) (Integer.parseInt(values.get("width")) - padding.w - padding.y) / size)
-                        .setHeight((double) (Integer.parseInt(values.get("height")) - padding.x - padding.z) / size)
-                        .setWidthAtlas(Integer.parseInt(values.get("width")) - padding.w - padding.y /*/ atlasWidth*/)
-                        .setHeightAtlas(Integer.parseInt(values.get("height")) - padding.x - padding.z /*/ atlasHeight*/)
-                        .setxOffset((double) (Integer.parseInt(values.get("xoffset"))) / size)
-                        .setyOffset((double) (Integer.parseInt(values.get("yoffset"))) / size)
-                        .setxAdvance((double) (Integer.parseInt(values.get("xadvance"))) / size);
+                        .setxAtlas(Integer.parseInt(required(values,"x")) + padding.w /*/ atlasWidth*/)
+                        .setyAtlas(Integer.parseInt(required(values,"y")) + padding.x /*/ atlasHeight*/)
+                        .setWidth((double) (Integer.parseInt(required(values,"width")) - padding.w - padding.y) / size)
+                        .setHeight((double) (Integer.parseInt(required(values,"height")) - padding.x - padding.z) / size)
+                        .setWidthAtlas(Integer.parseInt(required(values,"width")) - padding.w - padding.y /*/ atlasWidth*/)
+                        .setHeightAtlas(Integer.parseInt(required(values,"height")) - padding.x - padding.z /*/ atlasHeight*/)
+                        .setxOffset((double) (Integer.parseInt(required(values,"xoffset"))) / size)
+                        .setyOffset((double) (Integer.parseInt(required(values,"yoffset"))) / size)
+                        .setxAdvance((double) (Integer.parseInt(required(values,"xadvance"))) / size);
 
                 if (fontChar.getxOffset() < 0)
                     fontChar.setxOffset(-fontChar.getxOffset());
@@ -116,7 +119,26 @@ public class FontFile {
 
         } catch (IOException e) {
             throw new ResourceException("can't read the font file " + path, e);
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+            // A malformed value: the file is not a valid font, not a bug of the engine
+            throw new ResourceException("malformed font file " + path + " (" + e.getMessage() + ")", e);
         }
+    }
+
+    private String required(Map<String, String> values, String key) {
+        String value = values.get(key);
+        if (value == null)
+            throw new ResourceException("malformed font file " + path + " (no " + key + ")");
+
+        return value;
+    }
+
+    private String readLine(BufferedReader reader) throws IOException {
+        String line = reader.readLine();
+        if (line == null)
+            throw new ResourceException("truncated font file " + path);
+
+        return line;
     }
 
     private Map<String, String> decodeLine(String line) {

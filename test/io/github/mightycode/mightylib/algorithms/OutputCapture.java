@@ -20,6 +20,18 @@ public final class OutputCapture {
         return out.toString();
     }
 
+    public static String errorsOf(Runnable run) {
+        PrintStream old = System.err;
+        ByteArrayOutputStream err = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(err));
+        try {
+            run.run();
+        } finally {
+            System.setErr(old);
+        }
+        return err.toString();
+    }
+
     public static int lines(String text) {
         return text.isEmpty() ? 0 : text.split("\n").length;
     }

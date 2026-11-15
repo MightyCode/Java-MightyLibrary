@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.longValue;
@@ -58,8 +59,13 @@ public class ExecGenCom extends BaseCommand {
         if (!running.add(path))
             return CommandResult.error(path + " is already running (a script can't run itself)");
 
-        CommandScript script = new CommandScript(commands(), path.getFileName().toString(), lines);
-        script.getResult().whenComplete((result, exception) -> running.remove(path));
+        // A root path has no file name (it can't be read as a script, but keep the name safe)
+        Path fileName = path.getFileName();
+        CommandScript script = new CommandScript(commands(), fileName != null ? fileName.toString() : path.toString(),
+                lines);
+        // The returned stage is not needed: a failure stays in the script result, answered to the caller
+        CompletableFuture<CommandResult> ignored = script.getResult().whenComplete(
+                (result, exception) -> running.remove(path));
 
         // The lines that can run now run in this tick, the others at the next ticks
         if (!script.step())
