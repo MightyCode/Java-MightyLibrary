@@ -22,7 +22,7 @@ import java.util.List;
  * Only the visible rows exist as GL objects (a fixed pool re-filled on scroll),
  * so the number of items does not matter.
  *
- * One row is selected (ListSelection) : by the keyboard (setupKeyboardActions), by the mouse moving over a row,
+ * <p>One row is selected (ListSelection) : by the keyboard (setupKeyboardActions), by the mouse moving over a row,
  * or by setSelected. The list scrolls to keep it shown. The row under the mouse is getHovered() ; a keyboard move
  * or new items hide the hover until the mouse moves again.
  */

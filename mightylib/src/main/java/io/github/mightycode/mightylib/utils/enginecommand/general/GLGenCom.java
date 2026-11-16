@@ -76,18 +76,7 @@ public final class GLGenCom extends BaseCommand {
 
         data.put("glObjects", glObjects);
 
-        // What each OpenGL context owns (vertex arrays and framebuffers are not shared between windows)
-        JSONArray glContexts = new JSONArray();
-        for (GLContext context : GLContext.live()) {
-            JSONObject json = new JSONObject();
-            json.put("name", context.getName());
-            json.put("VertexArrayBuffer", context.vertexArrays().size());
-            json.put("FramebufferObject", context.framebuffers().size());
-            json.put("RenderBufferObject", context.renderbuffers().size());
-            json.put("pendingDeletions", context.pendingDeletions());
-            glContexts.put(json);
-        }
-        data.put("glContexts", glContexts);
+        data.put("glContexts", describeContexts());
         JSONObject shared = Views.engine().glResources().describe();
         // Data type, element type, neededBeforeDrawing, state ("loaded", "waiting", "failed")
         JSONArray fallbacks = Views.engine().glResources().describeFallbacks();
@@ -106,6 +95,21 @@ public final class GLGenCom extends BaseCommand {
     }
 
     // Their number, and the data types of those that failed
+    // What each OpenGL context owns (vertex arrays and framebuffers are not shared between windows)
+    private static JSONArray describeContexts() {
+        JSONArray glContexts = new JSONArray();
+        for (GLContext context : GLContext.live()) {
+            JSONObject json = new JSONObject();
+            json.put("name", context.getName());
+            json.put("VertexArrayBuffer", context.vertexArrays().size());
+            json.put("FramebufferObject", context.framebuffers().size());
+            json.put("RenderBufferObject", context.renderbuffers().size());
+            json.put("pendingDeletions", context.pendingDeletions());
+            glContexts.put(json);
+        }
+        return glContexts;
+    }
+
     private static String describeFallbacks(JSONArray fallbacks) {
         StringBuilder failed = new StringBuilder();
         for (int i = 0; i < fallbacks.length(); ++i) {

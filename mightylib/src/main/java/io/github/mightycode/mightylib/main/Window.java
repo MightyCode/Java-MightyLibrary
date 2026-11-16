@@ -140,9 +140,13 @@ public final class Window {
 
         // Resized by the user (resizable window) or by the system: the viewport follows on the next frame. The size
         // is read again, the one given can be older than a change made meanwhile (nested resizing)
+        // The callbacks are freed with the window (Callbacks.glfwFreeCallbacks), there is no previous one to free
+        //noinspection AutoCloseableResource
         glfwSetFramebufferSizeCallback(info.windowId, (window, width, height) -> readFramebufferSize());
+        //noinspection AutoCloseableResource
         glfwSetWindowIconifyCallback(info.windowId, (window, iconified) -> onIconified(iconified));
         // The system asks for a new image (resizing, uncovering) while the loop may be waiting
+        //noinspection AutoCloseableResource
         glfwSetWindowRefreshCallback(info.windowId, window -> {
             if (redrawAction != null)
                 redrawAction.run();

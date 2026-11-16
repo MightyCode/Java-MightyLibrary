@@ -10,6 +10,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCom
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -432,11 +433,11 @@ public final class Commands {
                         result = CommandResult.error(e.getCause().toString());
                     }
 
-                    // Already in the console log: written for the terminal only
-                    if (result.isSuccess())
-                        LogCapture.rawOut().println(result);
-                    else
-                        LogCapture.rawErr().println(result);
+                    // Already in the console log: written for the terminal only (the streams of the process,
+                    // never closed)
+                    //noinspection AutoCloseableResource
+                    PrintStream terminal = result.isSuccess() ? LogCapture.rawOut() : LogCapture.rawErr();
+                    terminal.println(result);
                 }
             } catch (IOException e) {
                 System.err.println("Console commands stopped : " + e);

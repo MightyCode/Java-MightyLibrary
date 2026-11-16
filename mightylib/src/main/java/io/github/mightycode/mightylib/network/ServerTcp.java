@@ -48,6 +48,8 @@ public final class ServerTcp {
     public void waitForConnection() {
         while (!hasClient()) {
             try {
+                // Polled until a client connects (old network code, see later.md)
+                //noinspection BusyWait
                 Thread.sleep(100);
             } catch (InterruptedException e) {
                 // Asked to stop waiting: keep the interrupted state for the caller

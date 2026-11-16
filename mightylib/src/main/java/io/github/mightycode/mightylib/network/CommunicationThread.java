@@ -71,9 +71,5 @@ public abstract class CommunicationThread extends Thread {
         return messageIdCounter++;
     }
 
-    public final boolean didProcessedMessage() {
-        return false;
-    }
-
     public abstract void doStop();
 }

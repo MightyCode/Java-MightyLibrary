@@ -8,7 +8,7 @@ import java.util.List;
  * owner reads the raw values (KeyboardManager.getRawKeyEvents, MouseManager.getRawPos...), the scene sees nothing
  * while the stack is not empty (except through the engine actions, see IInputManager).
  *
- * A change of the top owner is told to the IInputManager, which hides from the new holder what was pressed during
+ * <p>A change of the top owner is told to the IInputManager, which hides from the new holder what was pressed during
  * the current tick (an Escape that gives the focus back is not an Escape for the scene).
  *
  * @author MightyCode

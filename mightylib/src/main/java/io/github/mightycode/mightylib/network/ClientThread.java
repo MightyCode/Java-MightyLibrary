@@ -52,6 +52,8 @@ public final class ClientThread extends CommunicationThread {
 
         try {
             while (this.running){
+                // Period of the connection attempts
+                //noinspection BusyWait
                 Thread.sleep(SLEEP_TIME);
                 //System.out.println(messageProcessed + " " + messageReceived + " " + messageToSend.size());
 

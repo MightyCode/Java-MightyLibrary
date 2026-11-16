@@ -14,11 +14,11 @@ import static org.apiguardian.api.API.Status.INTERNAL;
 /**
  * Registry and loading pipeline of the data read from the disk.
  *
- * Single owner: references and states of the data are changed by the main thread only. Calls from other threads
+ * <p>Single owner: references and states of the data are changed by the main thread only. Calls from other threads
  * (owned resources registered by a worker) are posted to the main thread. Workers only run the preload (initWithFile)
  * and, for THREAD_CONTEXT data, the load (internLoad), on a data that the main thread does not touch meanwhile.
  *
- * Reconciliation: for each data, update compares what is wanted (referenced or not) with its state and starts the
+ * <p>Reconciliation: for each data, update compares what is wanted (referenced or not) with its state and starts the
  * next step. A data with a running step is never changed: when the step ends, update runs again, so a data unloaded
  * then loaded again while it was read ends in the wanted state without any special case.
  */
@@ -233,6 +233,8 @@ public final class Resources {
                 break;
 
             try {
+                // Synchronous first load: the main thread runs the steps the workers give back, at most 1 ms late
+                //noinspection BusyWait
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();

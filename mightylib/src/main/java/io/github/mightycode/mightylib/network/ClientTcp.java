@@ -119,6 +119,8 @@ public final class ClientTcp {
             }
 
             try {
+                // Heartbeat period: the loop sends and checks at this rhythm
+                //noinspection BusyWait
                 Thread.sleep(HEARTBEAT_INTERVAL_MS);
             } catch (InterruptedException e) {
                 // Asked to stop: keep the interrupted state for the thread owner

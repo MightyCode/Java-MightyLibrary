@@ -162,8 +162,13 @@ final class FileChangeDetector {
                 if (currentService != null)
                     events = waitEvents(currentService, wait);
                 else
+                    // Polling period when the system gives no watch service
+                    //noinspection BusyWait
                     Thread.sleep(wait);
-            } catch (InterruptedException | ClosedWatchServiceException e) {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (ClosedWatchServiceException e) {
                 break;
             }
 

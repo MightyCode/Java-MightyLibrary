@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.graphics.text;
 /**
  * Word wrapping without GL: the width of a line is given by the caller (Text.measureWidth in the game).
  *
- * The breaks are line feeds added after the space that ends a word, so the characters keep their index (the line
+ * <p>The breaks are line feeds added after the space that ends a word, so the characters keep their index (the line
  * feeds do not count as characters in a Text: cursors and selections of the original text still match). A word
  * longer than a line is cut where the line is full, one character at least per line. The explicit line feeds of the
  * text are kept.

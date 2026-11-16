@@ -15,13 +15,13 @@ import static org.lwjgl.glfw.GLFW.GLFW_JOYSTICK_LAST;
 /**
  * All the gamepads, shared by every context (gamepads don't belong to a window).
  *
- * Slots : one per GLFW joystick id (0 to GLFW_JOYSTICK_LAST), then the virtual gamepads (commands, tests,
+ * <p>Slots : one per GLFW joystick id (0 to GLFW_JOYSTICK_LAST), then the virtual gamepads (commands, tests,
  * several players with a single real gamepad).
  * Players : a connected mapped gamepad takes the lowest free player (auto assignment, can be disabled for a
  * "press a button to join" screen, then assignPlayer). A gamepad that reconnects takes back its player if it
  * is still free. A disconnected gamepad keeps its last player in getPlayer() but frees the player slot.
  *
- * Connections are applied in postUpdate, with the state of the next tick : a tick sees a stable set of gamepads.
+ * <p>Connections are applied in postUpdate, with the state of the next tick : a tick sees a stable set of gamepads.
  * Main thread only.
  */
 public final class GamepadManager {
