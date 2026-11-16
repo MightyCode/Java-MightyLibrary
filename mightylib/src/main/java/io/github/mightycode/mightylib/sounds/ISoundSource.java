@@ -44,7 +44,7 @@ public interface ISoundSource {
 
     /**
      * Gives an owned source back to the service, which deletes it at its next update (also valid before the source is
-     * ready: it is then never created). The source must not be used afterwards.
+     * ready: it is then never created). The source must not be used afterward.
      */
     void release();
 

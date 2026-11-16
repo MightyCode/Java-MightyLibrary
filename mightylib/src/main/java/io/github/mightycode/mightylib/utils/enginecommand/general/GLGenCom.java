@@ -94,7 +94,7 @@ public final class GLGenCom extends BaseCommand {
                 + fallbackMessage, data);
     }
 
-    // Their number, and the data types of those that failed
+    // Their number and the data types of those that failed
     // What each OpenGL context owns (vertex arrays and framebuffers are not shared between windows)
     private static JSONArray describeContexts() {
         JSONArray glContexts = new JSONArray();

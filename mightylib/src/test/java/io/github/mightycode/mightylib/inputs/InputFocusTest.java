@@ -39,7 +39,7 @@ class InputFocusTest {
         gamepads.postUpdate();
     }
 
-    // The tick after: the button is held, nothing is pressed any more
+    // The tick after: the button is held, nothing is pressed anymore
     private void nextTick() {
         gamepads.postUpdate();
         inputManager.updateActionSimulation();

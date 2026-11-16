@@ -12,7 +12,7 @@ public final class EngineServices {
     public static final ServiceKey<ISoundService> SOUND =
             ServiceKey.of(Identifier.of(Identifier.ENGINE_NAMESPACE, "sound"), ISoundService.class);
 
-    // Only when the player has an access to the commands (EngineConfig.setCommandAccess): test it with hasService
+    // Only when the player has access to the commands (EngineConfig.setCommandAccess): test it with hasService
     public static final ServiceKey<IConsoleService> CONSOLE =
             ServiceKey.of(Identifier.of(Identifier.ENGINE_NAMESPACE, "console"), IConsoleService.class);
 }

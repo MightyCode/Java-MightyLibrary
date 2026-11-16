@@ -83,7 +83,7 @@ public final class SceneRegistry {
             throw new IllegalArgumentException("The scene " + identifier + " needs a description");
     }
 
-    // Nothing can be registered afterwards
+    // Nothing can be registered afterward
     public SceneRegistry freeze() {
         frozen = true;
         return this;

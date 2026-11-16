@@ -97,7 +97,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     /**
      * Open a window drawn by the view, belonging to this scene: closed when the scene is left unless the
-     * configuration makes it persistent. By default its parent is the window of the scene.
+     * configuration makes it persistent. By default, its parent is the window of the scene.
      */
     protected final WindowContext openWindow(WindowConfig config, WindowView view, String... args) {
         return mainContext.getContext().openWindow(config, view, args);

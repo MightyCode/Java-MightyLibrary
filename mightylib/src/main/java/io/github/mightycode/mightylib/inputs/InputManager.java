@@ -220,7 +220,7 @@ public final class InputManager implements IInputManager {
         axisSimulation.release(registry.index(axis));
     }
 
-    // Bound axes matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    // Bound axes matching the name (full identifier, or path alone case-insensitive) : one = found, several = ambiguous
     @Override
     public List<AxisInput> matchAxes(String name) {
         List<AxisInput> result = new ArrayList<>();
@@ -347,7 +347,7 @@ public final class InputManager implements IInputManager {
         }
     }
 
-    // Bound actions matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    // Bound actions matching the name (full identifier, or path alone case-insensitive) : one = found, several = ambiguous
     @Override
     public List<ActionInput> matchActions(String name) {
         List<ActionInput> result = new ArrayList<>();

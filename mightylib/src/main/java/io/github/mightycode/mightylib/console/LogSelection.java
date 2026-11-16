@@ -86,7 +86,7 @@ final class LogSelection {
     }
 
     /**
-     * The last lines the viewer sees (and the filter shows), as copied like a selection: joined by line breaks.
+     * The last lines the viewer sees (and the filter shows), copied the same way as a selection: joined by line breaks.
      * Empty when there is no line. The command "console copy".
      * @param count lines to copy, 0 or less: every line kept
      * @param upToId the newest line that may be copied (Long.MAX_VALUE: the end of the log)

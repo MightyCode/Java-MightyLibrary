@@ -216,7 +216,7 @@ public class Scene3D extends Scene {
         originLabel.setColor(ColorList.Red());
     }
 
-    // Model loaded by Assimp with its material, lit by three coloured point lights and a spot light following the camera
+    // Model loaded by Assimp with its material, lit by three colored point lights and a spotlight following the camera
     private void createBackpack() {
         Model data = resources().getResource(Model.class, BACKPACK_MODEL);
         if (data == null || !data.isLoaded()) {

@@ -12,7 +12,7 @@ import java.util.Objects;
 /**
  * The services of a plugin (EngineRegistry.services): unique systems of the engine, created once at the start in the
  * order of their dependencies (ServiceOrder). Each register or replace gives the declaration where to chain requires,
- * after and fallback. Also the factories of the managers of each context (scenes) and each window (inputs), given by
+ * after and fallback. Also, the factories of the managers of each context (scenes) and each window (inputs), given by
  * the engine and replaced by a plugin: the last one wins.
  */
 public final class ServicesSection {

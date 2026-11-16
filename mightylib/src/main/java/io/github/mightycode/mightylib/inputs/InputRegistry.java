@@ -56,7 +56,7 @@ public final class InputRegistry {
         return this;
     }
 
-    // Nothing can be declared afterwards
+    // Nothing can be declared afterward
     public InputRegistry freeze() {
         frozen = true;
         return this;
@@ -128,7 +128,7 @@ public final class InputRegistry {
     }
 
     /**
-     * Actions matching the name : the full identifier, or else the path alone (case insensitive) in any namespace.
+     * Actions matching the name : the full identifier, or else the path alone (case-insensitive) in any namespace.
      * One element = found, several = ambiguous, none = unknown.
      */
     public List<InputAction> matchActions(String name) {

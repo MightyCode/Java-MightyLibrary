@@ -456,7 +456,7 @@ public final class Engine implements IView {
     }
 
     /**
-     * A window by its number, its title (case insensitive), or the name of a context (its main window); null if none.
+     * A window by its number, its title (case-insensitive), or the name of a context (its main window); null if none.
      */
     public WindowContext findWindow(String reference) {
         try {

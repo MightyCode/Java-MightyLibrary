@@ -515,7 +515,7 @@ class CommandsTest {
             try (firstView) {
                 commands.execute("outer");
             }
-            // outer was run by the view of first, where by outer: first stays the target
+            // outer was run under the view of first, so first stays the target
             assertSame(first, where.seen);
         }
     }

@@ -60,7 +60,7 @@ public final class GUIList {
         return this;
     }
 
-    // Removes the element; the selected one is unselected first, so it can't be activated any more
+    // Removes the element; the selected one is unselected first, so it can't be activated anymore
     public GUI remove(int id) {
         GUI removed = GUIs.remove(id);
         if (this.id != null && this.id == id) {

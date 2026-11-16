@@ -154,7 +154,7 @@ public final class ScrollList {
 
     /**
      * Up and down held move the selection again and again : after the delay, one row at each interval (seconds).
-     * By default the repeat of the keyboards of the system (0.5 s, then 30 rows a second).
+     * By default, the repeat of the keyboards of the system (0.5 s, then 30 rows a second).
      */
     public void setKeyRepeat(float delay, float interval) {
         repeatUp.setRepeat(delay, interval);

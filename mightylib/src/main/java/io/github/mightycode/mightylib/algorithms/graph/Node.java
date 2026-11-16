@@ -46,7 +46,7 @@ public final class Node extends PositionListNode<Node> {
 
     /**
      * Reimplementation of add method with distances
-     * @param neighbour new neighbour node
+     * @param neighbour new neighbor node
      * @param distance fixed distance to the new node
      */
     public void add(Node neighbour, float distance){

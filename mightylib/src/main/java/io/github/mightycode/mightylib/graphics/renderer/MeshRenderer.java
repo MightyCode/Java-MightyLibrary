@@ -113,7 +113,7 @@ public class MeshRenderer extends Renderer {
                     + " (unit 0 is the main texture: setMainTextureChannel)");
     }
 
-    // The color, and the texture coordinates cut when disableTexture
+    // The color and the texture coordinates cut when disableTexture
     public final ShaderValue setColorMode(Color4f color, boolean disableTexture) {
         ShaderValue value = super.setColorMode(color);
 

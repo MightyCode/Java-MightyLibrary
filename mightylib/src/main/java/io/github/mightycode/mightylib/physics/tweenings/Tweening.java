@@ -7,7 +7,7 @@ import org.apiguardian.api.API;
 import static org.apiguardian.api.API.Status.EXPERIMENTAL;
 
 /**
- * A value going from a start to an end over a duration, along a curve (type, behaviour) and an option (direct,
+ * A value going from a start to an end over a duration, along a curve (type, behavior) and an option (direct,
  * mirrored, reversed, loop). A subclass for a type of value has the hooks update (updateBase, then compute), value,
  * goalValue, initTwoValue and initRangeValue. Open to the projects, its contract may still change (EXPERIMENTAL).
  */
@@ -16,7 +16,7 @@ public abstract class Tweening<T> {
     /**
      *
      * @param type Type of extrapolation
-     * @param behaviour Behaviour of curves we want
+     * @param behaviour Behavior of curves we want
      * @param t Current Time
      * @param b Beginning value
      * @param c Change in value - range
@@ -31,7 +31,7 @@ public abstract class Tweening<T> {
     /**
      *
      * @param type Type of extrapolation
-     * @param behaviour Behaviour of curves we want
+     * @param behaviour Behavior of curves we want
      * @param t Current Time
      * @param b Beginning value
      * @param c Change in value - range

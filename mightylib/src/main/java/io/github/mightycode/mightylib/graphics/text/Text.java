@@ -426,7 +426,7 @@ public final class Text extends MeshRenderer {
                 charPositions[charCount * SIZE_COORDINATES + 7] = temp.z;
 
                 // Inset by half a texel: with linear filtering, sampling exactly on the glyph border
-                // blends the neighbour glyph of the atlas when there is no spacing between them
+                // blends the neighbor glyph of the atlas when there is no spacing between them
                 temp.x = (float)(fontChar.getxAtlas()) + HALF_TEXEL;
                 temp.y = (float)(fontChar.getxAtlas() + fontChar.getWidthAtlas()) - HALF_TEXEL;
                 temp.z = (float)(fontChar.getyAtlas()) + HALF_TEXEL;

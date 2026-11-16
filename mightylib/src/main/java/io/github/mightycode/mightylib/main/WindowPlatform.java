@@ -11,7 +11,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * The windowing system GLFW runs on, and what it allows. Wayland lets the compositor place the windows: a program
  * can neither read nor set their position, nor make one float above the others, nor give it an icon (GLFW reports
  * GLFW_FEATURE_UNAVAILABLE). The engine asks here before such calls instead of letting them fail.
- * The system property PROPERTY (-Dmightylib.glfw.platform=x11|wayland|win32|cocoa|null) chooses the platform,
+ * The system property named by PROPERTY (-Dmightylib.glfw.platform=x11|wayland|win32|cocoa|null) chooses the platform,
  * otherwise GLFW takes the best one (Wayland in a Wayland session).
  */
 @API(status = INTERNAL)

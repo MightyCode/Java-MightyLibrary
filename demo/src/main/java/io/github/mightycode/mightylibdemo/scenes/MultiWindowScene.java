@@ -88,7 +88,7 @@ public class MultiWindowScene extends Scene {
         }
     }
 
-    // A closed window is not in the list of the context any more
+    // A closed window is not in the list of the context anymore
     private boolean isOpen(WindowContext window) {
         return window != null && context().getContext().getWindows().contains(window);
     }

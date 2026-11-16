@@ -1,78 +1,223 @@
 <component name="ProjectDictionaryState">
   <dictionary name="project">
     <words>
+      <w>abcd</w>
       <w>abcde</w>
+      <w>abcdef</w>
+      <w>abcdefgh</w>
       <w>abcdefghij</w>
+      <w>abcdefghijklm</w>
       <w>abcdefghijklmnopqrstuvwxy</w>
       <w>abspath</w>
+      <w>aequo</w>
+      <w>affero</w>
       <w>apiguardian</w>
+      <w>apos</w>
+      <w>ascii</w>
+      <w>aseprite</w>
       <w>assimp</w>
+      <w>autoassign</w>
+      <w>backgroundless</w>
+      <w>backgroundlessbutton</w>
       <w>bahnschrift</w>
+      <w>bfix</w>
       <w>blinn</w>
+      <w>cdefgh</w>
+      <w>cdefghijklmnopqrstuv</w>
+      <w>ceil</w>
+      <w>changegain</w>
       <w>chnl</w>
+      <w>coord</w>
+      <w>coords</w>
+      <w>couvrable</w>
+      <w>ctor</w>
       <w>cubemap</w>
       <w>cubemaps</w>
+      <w>d'apiguardian</w>
+      <w>d'enum</w>
+      <w>d'initialiseur</w>
       <w>d'overlay</w>
       <w>d'uniform</w>
+      <w>decl</w>
+      <w>defaultdict</w>
       <w>dest</w>
+      <w>directmirrored</w>
+      <w>directreversed</w>
       <w>dirname</w>
+      <w>disp</w>
       <w>displayables</w>
       <w>dispmap</w>
       <w>dpad</w>
+      <w>ello</w>
+      <w>enchaînables</w>
+      <w>endswith</w>
+      <w>enginecommand</w>
+      <w>etree</w>
+      <w>expanduser</w>
+      <w>fabmax</w>
+      <w>fbos</w>
+      <w>findall</w>
+      <w>finditer</w>
+      <w>fqname</w>
+      <w>gamecommand</w>
+      <w>gametime</w>
+      <w>gedik</w>
+      <w>getrawpos</w>
+      <w>getroot</w>
       <w>getx</w>
+      <w>gety</w>
       <w>glfw</w>
       <w>glsl</w>
+      <w>gudzpoz</w>
       <w>guid</w>
+      <w>guiwidgets</w>
+      <w>horiz</w>
+      <w>idat</w>
+      <w>iend</w>
+      <w>ihdr</w>
+      <w>iibbbbb</w>
+      <w>illum</w>
+      <w>imageheight</w>
+      <w>imagewidth</w>
+      <w>initialiseurs</w>
+      <w>isdir</w>
+      <w>isspace</w>
+      <w>iter</w>
       <w>jacoco</w>
+      <w>javajdk</w>
       <w>jbox</w>
+      <w>kernings</w>
+      <w>keyboardlanguage</w>
       <w>klmnopqrst</w>
+      <w>l'enum</w>
+      <w>l'include</w>
       <w>l'overlay</w>
+      <w>l'uniform</w>
       <w>leakcheck</w>
+      <w>leftdown</w>
+      <w>leftup</w>
+      <w>lerp</w>
       <w>lightpos</w>
+      <w>listdir</w>
+      <w>litcrates</w>
+      <w>logf</w>
       <w>lookat</w>
+      <w>loopmirrored</w>
+      <w>loopreversed</w>
+      <w>lstrip</w>
       <w>lwjgl</w>
+      <w>makedirs</w>
+      <w>mapd</w>
+      <w>mapf</w>
       <w>mightycode</w>
       <w>mightylib</w>
       <w>mightylibdemo</w>
+      <w>mkdocs</w>
+      <w>modder</w>
+      <w>modders</w>
+      <w>moddeur</w>
+      <w>modela</w>
+      <w>mtllib</w>
+      <w>newmtl</w>
+      <w>nimport</w>
       <w>noqa</w>
+      <w>npackage</w>
+      <w>offvuser</w>
+      <w>ofwindow</w>
       <w>openal</w>
+      <w>oppy</w>
+      <w>partb</w>
+      <w>partd</w>
+      <w>partf</w>
+      <w>pathlib</w>
+      <w>pbos</w>
+      <w>pind</w>
       <w>pixelart</w>
+      <w>positivez</w>
       <w>poussables</w>
       <w>prec</w>
+      <w>printb</w>
+      <w>printd</w>
       <w>printi</w>
+      <w>prétraitées</w>
+      <w>r'class</w>
+      <w>r'extends</w>
+      <w>r'private</w>
+      <w>r'public</w>
+      <w>ragdolls</w>
+      <w>raycasts</w>
+      <w>rbos</w>
+      <w>readline</w>
+      <w>recalcul</w>
+      <w>redistribuable</w>
+      <w>refname</w>
+      <w>relicencier</w>
+      <w>relpath</w>
       <w>remappage</w>
+      <w>renderbuffer</w>
       <w>renderbuffers</w>
       <w>renderdoc</w>
+      <w>returncode</w>
+      <w>rglob</w>
       <w>rightdown</w>
+      <w>rightup</w>
+      <w>rmtree</w>
+      <w>rsplit</w>
+      <w>rstrip</w>
       <w>scenecommand</w>
       <w>selectflac</w>
       <w>selectmp</w>
       <w>selectogg</w>
       <w>selectwav</w>
+      <w>sendall</w>
+      <w>setdefault</w>
+      <w>settimeout</w>
       <w>setx</w>
       <w>sety</w>
+      <w>sfinal</w>
       <w>skybox</w>
       <w>soundformats</w>
+      <w>spaw</w>
+      <w>splitlines</w>
       <w>spotbugs</w>
+      <w>spublic</w>
       <w>srcedit</w>
+      <w>srcs</w>
       <w>startswith</w>
       <w>streaminfo</w>
+      <w>surchargeables</w>
+      <w>temurin</w>
+      <w>testrotationflip</w>
       <w>textureupload</w>
+      <w>threadé</w>
+      <w>tilecount</w>
+      <w>tiledversion</w>
+      <w>tileheight</w>
       <w>tilesize</w>
+      <w>tilewidth</w>
+      <w>tweened</w>
       <w>tweening</w>
+      <w>tweeningmath</w>
       <w>tweenings</w>
+      <w>tweens</w>
+      <w>ubershader</w>
       <w>unpreload</w>
       <w>updatables</w>
       <w>updatevbo</w>
+      <w>usemtl</w>
       <w>uvwxy</w>
       <w>vaos</w>
       <w>vbos</w>
       <w>viewpos</w>
       <w>wavecollapse</w>
       <w>wayland</w>
+      <w>wbmp</w>
+      <w>widthxheight</w>
+      <w>worl</w>
       <w>xadvance</w>
       <w>xoffset</w>
       <w>yoffset</w>
+      <w>zsabreblend</w>
       <w>zzalone</w>
       <w>zzbroken</w>
       <w>zzcheat</w>
@@ -88,6 +233,7 @@
       <w>zzunique</w>
       <w>zzuser</w>
       <w>zzview</w>
+      <w>zzzzzz</w>
       <w>échap</w>
     </words>
   </dictionary>

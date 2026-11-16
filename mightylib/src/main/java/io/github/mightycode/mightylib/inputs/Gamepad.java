@@ -58,7 +58,7 @@ public final class Gamepad {
         return Arrays.asList(AXIS_NAMES);
     }
 
-    // Name of buttonName (case insensitive), CROSS/CIRCLE/SQUARE/TRIANGLE, or the id
+    // Name of buttonName (case-insensitive), CROSS/CIRCLE/SQUARE/TRIANGLE, or the id
     public static int parseButton(String text) {
         String upper = text.toUpperCase(Locale.ROOT);
         for (int button = 0; button < BUTTONS; ++button) {
@@ -78,7 +78,7 @@ public final class Gamepad {
         }
     }
 
-    // Name of axisName (case insensitive) or the id
+    // Name of axisName (case-insensitive) or the id
     public static int parseAxis(String text) {
         String upper = text.toUpperCase(Locale.ROOT);
         for (int axis = 0; axis < AXES; ++axis) {

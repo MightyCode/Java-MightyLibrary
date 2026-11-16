@@ -113,7 +113,7 @@ public final class SpotLight extends BasicMaterial {
         }
     }
 
-    // A spot light with the same settings and its own vectors (LightDecrease is immutable: shared)
+    // A spotlight with the same settings and its own vectors (LightDecrease is immutable: shared)
     @Override
     public SpotLight copy(){
         SpotLight copy = new SpotLight(copyBasicMaterial(), lightDecrease);

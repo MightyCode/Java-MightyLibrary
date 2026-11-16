@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * Graph, Dijkstra and A* : a grid of cells is turned into a Graph (one Node per free cell, linked to its four
- * neighbours), then the algorithm chosen in the StrSelector (top right) looks for the shortest path between the
+ * neighbors), then the algorithm chosen in the StrSelector (top right) looks for the shortest path between the
  * start and the end cells.
  * Left click paints or erases walls, shift + left click moves the start, right click moves the end.
  */

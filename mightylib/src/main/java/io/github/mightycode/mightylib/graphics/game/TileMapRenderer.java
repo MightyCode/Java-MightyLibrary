@@ -284,7 +284,7 @@ public final class TileMapRenderer extends MeshRenderer {
 
     public void update(){
         // Reloaded: built again from the new version (same atlas objects), once the atlas texture shows it.
-        // Meanwhile the previous tiles stay with the previous texture, the animations wait.
+        // Meanwhile, the previous tiles stay with the previous texture, the animations wait.
         if (tilemap.getVersion() != tileMapVersion) {
             if (atlasTexture.isLoaded() && !atlasTexture.isUpToDate())
                 return;

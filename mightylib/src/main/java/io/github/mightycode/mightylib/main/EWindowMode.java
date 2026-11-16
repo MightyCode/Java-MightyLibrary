@@ -11,7 +11,7 @@ public enum EWindowMode {
     // A window without border covering its whole screen, at the resolution of the screen
     BORDERLESS;
 
-    // Case insensitive, null if unknown
+    // Case-insensitive, null if unknown
     public static EWindowMode FromText(String text) {
         for (EWindowMode mode : values()) {
             if (mode.name().equalsIgnoreCase(text))

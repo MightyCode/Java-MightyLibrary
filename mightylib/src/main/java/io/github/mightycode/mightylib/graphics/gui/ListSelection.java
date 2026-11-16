@@ -34,7 +34,7 @@ final class ListSelection<T> {
     /**
      * Replaces the items. The selection stays on the same item (equals) if it is still there, otherwise it goes to
      * the first one.
-     * @return true if the selected item is not the same any more
+     * @return true if the selected item is not the same anymore
      */
     boolean setItems(List<? extends T> newItems) {
         T before = selectedItem();

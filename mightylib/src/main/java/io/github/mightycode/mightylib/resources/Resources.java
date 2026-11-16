@@ -71,7 +71,7 @@ public final class Resources {
 
     /**
      * The given loaders, in their order: those the plugins registered (EngineRegistry.resources), the mandatory ones of
-     * the engine first. The list can't change afterwards. The loaders read their files in the given folder
+     * the engine first. The list can't change afterward. The loaders read their files in the given folder
      * (EngineConfig.setResourcesFolder).
      */
     public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
@@ -562,7 +562,7 @@ public final class Resources {
         requestUpdate(data);
     }
 
-    // True when the steps of the data go before the preload ones: wanted now, or not wanted any more (skipped quickly)
+    // True when the steps of the data go before the preload ones: wanted now, or not wanted anymore (skipped quickly)
     boolean isUrgent(DataType data) {
         DataType original = data.reloadOf != null ? data.reloadOf : data;
         return data.urgent || original.urgent || !isWanted(data);

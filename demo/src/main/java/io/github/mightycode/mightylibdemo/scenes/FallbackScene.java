@@ -50,7 +50,7 @@ public class FallbackScene extends Scene {
         String vertex = versionFolder + "2D/essential/colorShape2DV.glsl";
         resources().addResourceAndSetUp(ShaderData.class, new ShaderData(NOT_COMPILING_SHADER, true,
                 vertex, versionFolder + "fallbackDemo/notCompilingF.glsl"));
-        // The include is missing: the data fails while being read
+        // The included file is missing: the data fails while being read
         resources().addResourceAndSetUp(ShaderData.class, new ShaderData(MISSING_INCLUDE_SHADER, true,
                 vertex, versionFolder + "fallbackDemo/missingIncludeF.glsl"));
     }

@@ -205,7 +205,7 @@ public final class OpenALSoundService implements ISoundService {
         for (OpenALSoundSource sound : soundsSource)
             sound.unload();
 
-        // Deleted sources: the buffers deleted afterwards must not be detached from them (AL_INVALID_NAME)
+        // Deleted sources: the buffers deleted afterward must not be detached from them (AL_INVALID_NAME)
         soundsSource.clear();
     }
 

@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.concurrent.CancellationException;
 
-/** Flac (4 to 24 bits), decoded frame by frame by FlacStream and converted to 16 bit. */
+/** Flac (4 to 24 bits), decoded frame by frame (FlacStream) and converted to 16 bit. */
 public final class FlacDecoder implements SoundDecoder {
     @Override
     public String[] extensions() {

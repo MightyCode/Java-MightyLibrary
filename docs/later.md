@@ -101,7 +101,7 @@ Modèle solids/actors/riders (Celeste, TowerFall) étendu aux poussables empilé
 - **Deux phases** : calculer jusqu'où la chaîne peut aller (la poussée se propage, s'arrête au premier mur), puis déplacer toute la chaîne du même delta dans le même pas.
 - Les porteurs emportent ce qu'ils portent (récursif, du bas vers le haut).
 - **Écrasement** → événement, le jeu décide.
-- Aussi : tilemaps, plateformes traversables par dessous, pentes (option), zones de déclenchement, catégories par nom (déclarées par le projet), raycasts, événements de contact, visualisation.
+- Aussi : tilemaps, plateformes traversables par-dessous, pentes (option), zones de déclenchement, catégories par nom (déclarées par le projet), raycasts, événements de contact, visualisation.
 
 ### Corps rigides (bibliothèque derrière `IPhysicsWorld2D`)
 Pour rotation, empilement libre, articulations (ponts, cordes, ragdolls).

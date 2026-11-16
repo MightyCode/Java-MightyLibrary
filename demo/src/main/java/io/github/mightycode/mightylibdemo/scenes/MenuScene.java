@@ -108,7 +108,7 @@ public class MenuScene extends Scene {
 
     @Override
     protected TemplateSceneLoading createLoadingScene(String[] args) {
-        // Plain grey screen at the start of the program
+        // Plain gray screen at the start of the program
         if (args.length > 0 && args[0].equals("start"))
             return new DefaultLoadingScene();
 

@@ -38,7 +38,7 @@ public final class TextureUploadBench {
             for (int i = 0; i < pixels.capacity(); ++i)
                 pixels.put(i, (byte) (i * 31 + (i >> 8)));
 
-            // Warm up each way once, then the repeats go through the ways in turn so that none is favoured
+            // Warm up each way once, then the repeats go through the ways in turn so that none is favored
             List<List<Double>> calls = new ArrayList<>();
             List<List<Double>> totals = new ArrayList<>();
             for (TextureUploader.Variant variant : variants) {

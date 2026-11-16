@@ -234,7 +234,7 @@ class ConsoleLayoutTest {
 
         assertEquals(List.of("seen"), shown(layout));
         assertTrue(panel.redraws());
-        // A line the viewer doesn't see changes nothing
+        // A line hidden from the viewer changes nothing
         assertFalse(panel.redraws());
         log.add(ConsoleLog.EType.OUT, null, "more output");
         assertFalse(panel.redraws());

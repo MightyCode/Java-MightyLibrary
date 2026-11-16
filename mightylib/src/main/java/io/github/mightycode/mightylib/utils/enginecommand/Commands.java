@@ -452,7 +452,7 @@ public final class Commands {
 
     /**
      * The commands a typed name gives among the ones the current source sees: the one with this identifier
-     * (namespace:path), or those with this path. Case insensitive. When several views have the command, only the
+     * (namespace:path), or those with this path. Case-insensitive. When several views have the command, only the
      * one of the targeted view is kept (setViewChooser), all of them if none is targeted.
      */
     public List<BaseCommand> matchCommands(String name) {
@@ -576,7 +576,7 @@ public final class Commands {
      * Main thread. The command belongs to the owner: removed with removeOwnedBy, run under its view.
      * Two views can have a command with the same identifier (a scene shown in two windows): the targeted one runs it
      * (setViewChooser).
-     * @throws IllegalArgumentException if a command with the same identifier already exists (outside of another view),
+     * @throws IllegalArgumentException if a command with the same identifier already exists (outside another view),
      *                                  or the command is registered
      * @throws IllegalStateException    for an owner that is not a view, after freezePluginCommands
      */

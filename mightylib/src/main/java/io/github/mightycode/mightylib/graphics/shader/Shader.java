@@ -22,7 +22,7 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
 /**
- * The program of a ShaderData on the card, compiled and linked in steps (a stage per step, then the link).
+ * The program of a ShaderData on the card, compiled and linked step by step (a stage per step, then the link).
  * A program that does not compile at its first loading makes the element failed (its users get the fallback);
  * one that does not compile on a hot reload keeps the previous program.
  * The programs are shared between the windows; the program in use is a state of each context (GLContext).

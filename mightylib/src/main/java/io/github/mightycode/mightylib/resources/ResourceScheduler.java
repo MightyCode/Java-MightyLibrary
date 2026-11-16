@@ -75,10 +75,6 @@ class ResourceScheduler {
             return !urgent.isEmpty();
         }
 
-        boolean isEmpty() {
-            return urgent.isEmpty() && background.isEmpty();
-        }
-
         int size() {
             return urgent.size() + background.size();
         }

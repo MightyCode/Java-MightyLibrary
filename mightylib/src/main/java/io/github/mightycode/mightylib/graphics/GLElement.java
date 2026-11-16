@@ -213,7 +213,7 @@ public abstract class GLElement implements LoadingElement {
         return done;
     }
 
-    // Hook called on the main thread when no one references the element any more: delete its OpenGL objects
+    // Hook called on the main thread when no one references the element anymore: delete its OpenGL objects
     public abstract void unload(int remainingMilliseconds);
 
     void unloadByResource(int remainingMilliseconds) {

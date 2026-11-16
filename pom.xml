@@ -62,7 +62,7 @@
         </profile>
         <!-- Static analysis, never part of the normal build: mvn -P analyse process-test-classes (see tools/analyse.py).
              Error Prone runs inside javac (forked: JDK 17+ needs the add-exports and add-opens options below),
-             SpotBugs reads the bytecode afterwards. All findings are reported, none fails the build. -->
+             SpotBugs reads the bytecode afterward. All findings are reported, none fails the build. -->
         <profile>
             <id>analyse</id>
             <build>

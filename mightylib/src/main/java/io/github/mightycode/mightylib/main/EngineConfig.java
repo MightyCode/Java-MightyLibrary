@@ -211,7 +211,7 @@ public final class EngineConfig {
 
     /**
      * Level of the player at the start, bounded by setMaxCommandAccess; null: no access, no in-game console.
-     * By default DEV in debug mode, none in release: a released game opens the access itself (USER for a chat or
+     * By default, DEV in debug mode, none in release: a released game opens the access itself (USER for a chat or
      * the options, CHEAT...). The console opens with ², F2 puts it in a window of its own.
      * The option -Dmightylib.commands.access=none|user|cheat|dev overrides it (a developer mode for the modders),
      * still bounded by the maximum.
@@ -223,7 +223,7 @@ public final class EngineConfig {
     }
 
     /**
-     * Highest level of the build: the session never goes above it (Commands.setSessionLevel). By default DEV in debug
+     * Highest level of the build: the session never goes above it (Commands.setSessionLevel). By default, DEV in debug
      * mode, USER in release: a game raises it to CHEAT for cheats, to DEV for a developer mode; a competitive game
      * keeps USER. Null: no access at all, whatever the access and the launch option (no console in the game).
      */
@@ -439,7 +439,7 @@ public final class EngineConfig {
         return mode == EEngineMode.DEBUG ? ECommandLevel.DEV : null;
     }
 
-    // The in-game console exists when the player has an access to the commands
+    // The in-game console exists when the player has access to the commands
     public boolean isConsoleEnabled() { return getCommandAccess() != null; }
 
     public boolean isCheatCommand() { return cheatCommand; }
