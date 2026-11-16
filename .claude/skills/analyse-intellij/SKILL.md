@@ -26,14 +26,18 @@ Présenter trois listes à l'utilisateur et attendre son accord :
   - Champs écrits jamais lus, code mort, code commenté : supprimer ce qui est mort ; garder les interrupteurs de debug.
   - `ThrowablePrintStackTrace` → `Logger.LogException` ; échec attendu de ressource → `ResourceException` ; `InterruptedException` → remettre le drapeau et s'arrêter.
   - `EmptyStatementBody`, `LossyConversionCompoundAssignment`, `DefaultNotLastCaseInSwitch`, `UNCHECKED_WARNING` (un helper annoté par tableau générique), `ClassEscapesItsScope` (visibilité).
-- **Ne pas faire** : orthographe (`SpellCheckingInspection`, Grazie), `PackageName` (renommer des packages), méthodes/classes publiques « inutilisées » de `mightylib` (API de la bibliothèque), `BusyWait` volontaires, `CanBeFinal` sur des champs publics, cosmétique (`IfCanBeSwitch`, Javadoc, tableaux Markdown), 3D au-delà du strictement mécanique, faux positifs connus (format construit dynamiquement, buffers Assimp bornés par leurs compteurs).
+- **Déjà réglé par configuration** (ne doit plus apparaître ; s'il apparaît, le profil n'a pas été pris : le signaler) : membres publics et protégés « inutilisés » (API de la bibliothèque, `unused` limité au package-private), `SameParameterValue`, `BooleanMethodIsAlwaysInverted`, `UnusedReturnValue` (API fluide), `BusyWait` et `DataFlowIssue` dans les tests (un `null` y fait échouer le test), numérotation et tableaux Markdown (les numéros de `bonnes-pratiques.md` sont des identifiants cités ailleurs). Profil : `.idea/inspectionProfiles/Project_Default.xml`.
+- **Orthographe** : un mot du projet (identifiant, nom de bibliothèque, terme technique, mot français des docs) va dans `.idea/dictionaries/project.xml` (en minuscules, ordre alphabétique) ; une vraie faute se corrige. **Grammaire** (Grazie) : corriger le texte, sauf faux positif évident sur du code cité.
+- **Cas isolé voulu** (sommeil d'une boucle de sondage, rappel GLFW libéré avec sa fenêtre, buffers Assimp nuls seulement avec un compteur à 0) : `//noinspection Nom` précédé d'un commentaire qui dit pourquoi.
+- **Ne pas faire** : 3D au-delà du strictement mécanique.
 
 ## 4. Corriger
 - Branche dédiée depuis `dev` (jamais dev ni master), un commit par thème, `Co-Authored-By` demandé par le système.
+- Ne jamais lancer `mvn clean` à la racine : il efface `target/analyse` (l'export). Nettoyer les modules seuls : `-pl mightylib,demo clean`.
 - Les numéros de ligne de l'export sont ceux d'avant les modifications : éditer par contenu (Edit), et supprimer les lignes d'un même fichier du bas vers le haut.
 - Après chaque thème : compiler, `mvn -o -q test`, et `tools/scenario.py` sur les scènes touchées (prévenir l'utilisateur qu'une fenêtre s'ouvre).
 - Un bug existant découvert mais hors sujet : le noter dans `docs/later.md` ou `docs/futur-discussion.md`, pas le corriger en douce.
-- Docs dans le même commit (`architecture.md`, conventions de `CLAUDE.md` si une règle naît).
+- Docs dans le même commit (`architecture.md`, conventions de `CLAUDE.md` si une règle naît). Une nouvelle sorte de constat corrigée devient une règle du point 14 de `docs/bonnes-pratiques.md` (pour ne pas la réécrire) ; une sorte acceptée devient une ligne de configuration avec sa raison.
 
 ## 5. Rendre compte
 Par thème : ce qui est corrigé, les vrais bugs trouvés (avec leur test), ce qui est laissé volontairement et pourquoi, ce qui n'a pas été vérifié.

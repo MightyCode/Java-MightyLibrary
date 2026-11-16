@@ -21,7 +21,9 @@ resources/models/world/
 .idea/**/workspace.xml
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml
-.idea/**/dictionaries
+# The project dictionary is shared (words of the engine for the spell checker), the personal ones are not
+.idea/**/dictionaries/*
+!.idea/dictionaries/project.xml
 .idea/**/shelf
 
 # AWS User-specific

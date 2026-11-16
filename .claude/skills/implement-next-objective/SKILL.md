@@ -1,6 +1,6 @@
 ---
 name: implement-next-objective
-description: Implémente un objectif donné par l'utilisateur, ou à défaut le prochain de docs/current.md, quand il est assez petit pour ne pas demander de plan : branche depuis dev, code, tests, vérification en jeu, docs, puis s'arrête avant la PR et propose la commande /pr-ml à copier. Redirige vers /planification-ml si le point est gros ou demande des choix de conception. À utiliser quand l'utilisateur dit /implement-next-objective [objectif].
+description: "Implémente un objectif donné par l'utilisateur, ou à défaut le prochain de docs/current.md, quand il est assez petit pour ne pas demander de plan : branche depuis dev, code, tests, vérification en jeu, docs, puis s'arrête avant la PR et propose la commande /pr-ml à copier. Redirige vers /planification-ml si le point est gros ou demande des choix de conception. À utiliser quand l'utilisateur dit /implement-next-objective [objectif]."
 disable-model-invocation: true
 ---
 

@@ -42,7 +42,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Logique pure encore sans test** (`python tools/coverage.py`) : `Animation` / `Animator` (le constructeur de `Animation` lit `Views.engine().resources()` : lui passer `Resources` en paramètre, en gardant le constructeur actuel pour l'usage courant, permettrait de les tester sans moteur) et `FallbackAnimationData` (demande une `Resources`) ; `physics/B2Utils` (conversions JBox2D, à voir avec la physique 2D).
 
 ## Bugs relevés en passant (non corrigés)
-- **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (20) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (5) ; `NP_BOOLEAN_RETURN_NULL` (`EngineConfig.ParseShown`) ; Error Prone `MissingCasesInEnumSwitch` (22), `EmptyCatch` (3 : `EngineConfig`, `FileChangeDetector`, `ResourceWatcher`), `ReferenceEquality` (39), `EnumOrdinal` (21) (chiffres de la bibliothèque seule). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
+- **`network` n'est pas sûr entre threads** : les drapeaux sont `volatile` et le compteur de messages atomique, mais `receivedMessages` et `messageToSend` (listes et table ordinaires) sont lus et écrits par le thread réseau et par le moteur sans verrou. À reprendre avec le réseau (file concurrente entre les deux), pas avant.
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
 
 ## Manuel et documentation de l'API (cap proposé, **points précis à discuter avant de commencer**)
