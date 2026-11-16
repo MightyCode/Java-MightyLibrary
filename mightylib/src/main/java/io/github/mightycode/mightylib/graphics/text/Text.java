@@ -354,6 +354,9 @@ public final class Text extends MeshRenderer {
             case RightUp:
                 textReference.x = rectangleSize.x;
                 break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         switch(this.reference){
@@ -367,6 +370,9 @@ public final class Text extends MeshRenderer {
             case RightDown:
                 textReference.y = rectangleSize.y;
                 break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         leftUpPosition.x -= textReference.x;
@@ -379,6 +385,9 @@ public final class Text extends MeshRenderer {
                     break;
                 case Right:
                     lineAlignmentOffset = textWidth - linesSize[j];
+                    break;
+                default:
+                    // Nothing to do for the other values
                     break;
             }
 

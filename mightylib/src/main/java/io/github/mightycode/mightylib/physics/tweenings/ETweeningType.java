@@ -18,18 +18,19 @@ public enum ETweeningType {
     public ETweeningType fromString(String txt){
         String lowerCase = txt.trim().toLowerCase(Locale.ROOT);
 
-        if (lowerCase.equals("linear")) return Linear;
-        if (lowerCase.equals("quadratic")) return Quadratic;
-        if (lowerCase.equals("cubic")) return Cubic;
-        if (lowerCase.equals("quartic")) return Quartic;
-        if (lowerCase.equals("quintic")) return Quintic;
-        if (lowerCase.equals("sinusoidal")) return Sinusoidal;
-        if (lowerCase.equals("exponential")) return Exponential;
-        if (lowerCase.equals("circular")) return Circular;
-        if (lowerCase.equals("elastic")) return Elastic;
-        if (lowerCase.equals("back")) return Back;
-        if (lowerCase.equals("bounce")) return Bounce;
-
-        return null;
+        switch (lowerCase) {
+            case "linear": return Linear;
+            case "quadratic": return Quadratic;
+            case "cubic": return Cubic;
+            case "quartic": return Quartic;
+            case "quintic": return Quintic;
+            case "sinusoidal": return Sinusoidal;
+            case "exponential": return Exponential;
+            case "circular": return Circular;
+            case "elastic": return Elastic;
+            case "back": return Back;
+            case "bounce": return Bounce;
+            default: return null;
+        }
     }
 }

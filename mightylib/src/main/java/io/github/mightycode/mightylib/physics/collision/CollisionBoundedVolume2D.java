@@ -54,6 +54,10 @@ public final class CollisionBoundedVolume2D extends Collision2D {
                 break;
             case BoundedVolume2D:
                 ReplaceBoundingVolume2DRectangle(this, b.bounds(), direction);
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
     }
 
@@ -133,6 +137,10 @@ public final class CollisionBoundedVolume2D extends Collision2D {
             case LeftDown:
             case LeftUp:
                 toReplace.setX(reference.x() - temp.w());
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         switch(direction){
@@ -145,6 +153,10 @@ public final class CollisionBoundedVolume2D extends Collision2D {
             case LeftDown:
             case RightDown:
                 toReplace.setY(reference.oppY());
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
     }
 }

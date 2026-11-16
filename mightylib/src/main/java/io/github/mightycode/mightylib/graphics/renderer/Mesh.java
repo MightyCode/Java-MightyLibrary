@@ -445,6 +445,9 @@ public class Mesh {
             case Patches:
                 glDrawMode = GL_PATCHES;
                 break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
     }
 

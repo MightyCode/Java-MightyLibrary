@@ -111,6 +111,9 @@ public final class DebugInfoCamera3D implements IUpdatableDisplayable {
                             .append(prec(camera.getSpeed().z))
                             .append(")\n");
                     break;
+                default:
+                    // Nothing to do for the other values
+                    break;
             }
         }
 

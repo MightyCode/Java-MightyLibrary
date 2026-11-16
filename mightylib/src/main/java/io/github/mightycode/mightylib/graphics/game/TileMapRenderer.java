@@ -191,6 +191,9 @@ public final class TileMapRenderer extends MeshRenderer {
             case RightUp:
                 leftUpPosition.x = -realMapSize.x;
                 break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         switch(this.reference){
@@ -203,6 +206,9 @@ public final class TileMapRenderer extends MeshRenderer {
             case Down:
             case RightDown:
                 leftUpPosition.y = -realMapSize.y;
+                break;
+            default:
+                // Nothing to do for the other values
                 break;
         }
 

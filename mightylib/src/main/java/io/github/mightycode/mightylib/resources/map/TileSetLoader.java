@@ -63,43 +63,55 @@ public final class TileSetLoader extends ResourceLoader {
             String[] lineParts = line.split(" ");
             int lineNumber = lineIndex + 1;
 
-            if (lineParts[0].equals("texture")) {
-                texture = TextFormat.word(lineParts, 1, path, lineNumber, "texture name");
-            } else if (lineParts[0].equals("tilesize")) {
-                tileSize = new Vector2i(
-                        TextFormat.integer(lineParts, 1, path, lineNumber, "tile width"),
-                        TextFormat.integer(lineParts, 2, path, lineNumber, "tile height"));
-            } else if (lineParts[0].equals("animation")) {
-                int numberAnimation = TextFormat.integer(lineParts, 1, path, lineNumber, "number of animations");
-
-                for (int i = 0; i < numberAnimation; ++i){
-                    lineIndex += 1;
-                    if (lineIndex >= parts.length)
-                        throw TextFormat.error(path, parts.length, "expected " + numberAnimation
-                                + " animations, found " + i);
-                    lineNumber = lineIndex + 1;
-                    lineParts = parts[lineIndex].trim().split(" ");
-
-                    // Each information is tileId, then pairs of (tileId, duration)
-                    if ((lineParts.length - 1) % 2 != 0)
-                        throw TextFormat.error(path, lineNumber, "an animation is a tile id then (tile id, duration) pairs");
-
-                    TileSet.TileAnimation tileAnimation = new TileSet.TileAnimation(
-                            TextFormat.integer(lineParts, 0, path, lineNumber, "animated tile id"),
-                            (lineParts.length - 1) / 2
-                    );
-
-                    for (int j = 1; j < lineParts.length; j += 2){
-                        tileAnimation.ids[j / 2] = TextFormat.integer(lineParts, j, path, lineNumber, "frame tile id");
-                        tileAnimation.times[j / 2] = TextFormat.decimal(lineParts, j + 1, path, lineNumber, "frame duration");
-                    }
-
-                    tileset.addAnimation(tileAnimation.refId, tileAnimation);
+            switch (lineParts[0]) {
+                case "texture": {
+                    texture = TextFormat.word(lineParts, 1, path, lineNumber, "texture name");
+                    break;
                 }
-            } else if (lineParts[0].equals("parameter")){
-                TextFormat.word(lineParts, 2, path, lineNumber, "rotation and flip flags");
-                parameterRotation = Boolean.parseBoolean(lineParts[1]);
-                parameterFlip = Boolean.parseBoolean(lineParts[2]);
+                case "tilesize": {
+                    tileSize = new Vector2i(
+                            TextFormat.integer(lineParts, 1, path, lineNumber, "tile width"),
+                            TextFormat.integer(lineParts, 2, path, lineNumber, "tile height"));
+                    break;
+                }
+                case "animation": {
+                    int numberAnimation = TextFormat.integer(lineParts, 1, path, lineNumber, "number of animations");
+
+                    for (int i = 0; i < numberAnimation; ++i){
+                        lineIndex += 1;
+                        if (lineIndex >= parts.length)
+                            throw TextFormat.error(path, parts.length, "expected " + numberAnimation
+                                    + " animations, found " + i);
+                        lineNumber = lineIndex + 1;
+                        lineParts = parts[lineIndex].trim().split(" ");
+
+                        // Each information is tileId, then pairs of (tileId, duration)
+                        if ((lineParts.length - 1) % 2 != 0)
+                            throw TextFormat.error(path, lineNumber, "an animation is a tile id then (tile id, duration) pairs");
+
+                        TileSet.TileAnimation tileAnimation = new TileSet.TileAnimation(
+                                TextFormat.integer(lineParts, 0, path, lineNumber, "animated tile id"),
+                                (lineParts.length - 1) / 2
+                        );
+
+                        for (int j = 1; j < lineParts.length; j += 2){
+                            tileAnimation.ids[j / 2] = TextFormat.integer(lineParts, j, path, lineNumber, "frame tile id");
+                            tileAnimation.times[j / 2] = TextFormat.decimal(lineParts, j + 1, path, lineNumber, "frame duration");
+                        }
+
+                        tileset.addAnimation(tileAnimation.refId, tileAnimation);
+                    }
+                    break;
+                }
+                case "parameter": {
+                    TextFormat.word(lineParts, 2, path, lineNumber, "rotation and flip flags");
+                    parameterRotation = Boolean.parseBoolean(lineParts[1]);
+                    parameterFlip = Boolean.parseBoolean(lineParts[2]);
+                    break;
+                }
+                default:
+                    // Unknown lines are ignored
+                    break;
             }
 
             ++lineIndex;

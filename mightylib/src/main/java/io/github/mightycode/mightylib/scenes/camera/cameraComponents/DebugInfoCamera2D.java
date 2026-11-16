@@ -74,21 +74,28 @@ public final class DebugInfoCamera2D implements IUpdatableDisplayable {
         result.append("camera2D ").append(camera.getName()).append(" id : ").append(camera.getCameraId()).append("\n");
 
         for (String info : this.info) {
-            if (info.equals("position"))
-                result.append("Position: x(")
-                        .append(prec(camera.getCamPosRef().x))
-                        .append(") y(")
-                        .append(prec(camera.getCamPosRef().y))
-                        .append(")\n");
-            else if (info.equals("rotation"))
-                result.append("Rotation: ").append(camera.getRotation()).append("\n");
-            else if (info.equals("zoom"))
-                result.append("Zoom: x(")
-                        .append(prec(camera.getZoomLevel().x))
-                        .append(") y(")
-                        .append(prec(camera.getZoomLevel().y))
-                        .append(")\n");
-
+            switch (info) {
+                case "position":
+                    result.append("Position: x(")
+                            .append(prec(camera.getCamPosRef().x))
+                            .append(") y(")
+                            .append(prec(camera.getCamPosRef().y))
+                            .append(")\n");
+                    break;
+                case "rotation":
+                    result.append("Rotation: ").append(camera.getRotation()).append("\n");
+                    break;
+                case "zoom":
+                    result.append("Zoom: x(")
+                            .append(prec(camera.getZoomLevel().x))
+                            .append(") y(")
+                            .append(prec(camera.getZoomLevel().y))
+                            .append(")\n");
+                    break;
+                default:
+                    // Unknown information: nothing shown
+                    break;
+            }
         }
 
         text.setText(result.toString());

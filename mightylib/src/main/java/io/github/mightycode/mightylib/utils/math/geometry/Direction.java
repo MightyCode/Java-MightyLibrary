@@ -43,8 +43,6 @@ public final class Direction {
                 return EDirection.LeftUp;
             } else if (b == EDirection.Right) {
                 return EDirection.RightUp;
-            } else if (b == EDirection.Down) {
-                return EDirection.None;
             } else {
                 return EDirection.None;
             }
@@ -68,24 +66,17 @@ public final class Direction {
     public static EDirection strToEDirection(String direction){
         direction = direction.trim().toLowerCase(Locale.ROOT);
 
-        if (direction.equals("left"))
-            return EDirection.Left;
-        if (direction.equals("right"))
-            return EDirection.Right;
-        if (direction.equals("up"))
-            return EDirection.Up;
-        if (direction.equals("down"))
-            return EDirection.Down;
-        if (direction.equals("leftup"))
-            return EDirection.LeftUp;
-        if (direction.equals("rightup"))
-            return EDirection.RightUp;
-        if (direction.equals("leftdown"))
-            return EDirection.LeftDown;
-        if (direction.equals("rightdown"))
-            return EDirection.RightDown;
-
-        return EDirection.None;
+        switch (direction) {
+            case "left": return EDirection.Left;
+            case "right": return EDirection.Right;
+            case "up": return EDirection.Up;
+            case "down": return EDirection.Down;
+            case "leftup": return EDirection.LeftUp;
+            case "rightup": return EDirection.RightUp;
+            case "leftdown": return EDirection.LeftDown;
+            case "rightdown": return EDirection.RightDown;
+            default: return EDirection.None;
+        }
     }
 
     // range -> x from, y from, x to, y to
@@ -137,6 +128,10 @@ public final class Direction {
             case RightDown:
             case RightUp:
                 vectorDirection.x = 1;
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         switch (direction){
@@ -149,6 +144,10 @@ public final class Direction {
             case RightDown:
             case LeftDown:
                 vectorDirection.y = 1;
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         return vectorDirection;

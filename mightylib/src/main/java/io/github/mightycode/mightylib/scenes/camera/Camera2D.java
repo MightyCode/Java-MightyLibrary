@@ -78,6 +78,9 @@ public class Camera2D extends Camera {
             case RightDown:
                 setZoomReferenceX(1f);
                 break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         switch (direction){
@@ -95,6 +98,9 @@ public class Camera2D extends Camera {
             case LeftDown:
             case Down:
                 setZoomReferenceY(1f);
+                break;
+            default:
+                // Nothing to do for the other values
                 break;
         }
     }

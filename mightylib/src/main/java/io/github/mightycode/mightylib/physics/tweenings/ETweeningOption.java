@@ -13,13 +13,14 @@ public enum ETweeningOption {
     public ETweeningOption fromString(String txt){
         String lowerCase = txt.trim().toLowerCase(Locale.ROOT);
 
-        if (lowerCase.equals("direct")) return Direct;
-        if (lowerCase.equals("directmirrored")) return DirectMirrored;
-        if (lowerCase.equals("directreversed")) return DirectReversed;
-        if (lowerCase.equals("loop")) return Loop;
-        if (lowerCase.equals("loopmirrored")) return LoopMirrored;
-        if (lowerCase.equals("loopreversed")) return LoopReversed;
-
-        return null;
+        switch (lowerCase) {
+            case "direct": return Direct;
+            case "directmirrored": return DirectMirrored;
+            case "directreversed": return DirectReversed;
+            case "loop": return Loop;
+            case "loopmirrored": return LoopMirrored;
+            case "loopreversed": return LoopReversed;
+            default: return null;
+        }
     }
 }
