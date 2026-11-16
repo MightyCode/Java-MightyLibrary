@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
+package io.github.mightycode.mightylibdemo.scenes.platformer2d;
 
 import io.github.mightycode.mightylib.physics.B2Utils;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;

@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylibdemo.main.DemoPlugin;
-import io.github.mightycode.mightylibdemo.scenes.Platformer2D.PlatformerBox2D;
+import io.github.mightycode.mightylibdemo.scenes.platformer2d.PlatformerBox2D;
 
 import java.util.List;
 import java.util.Locale;
@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  * The scenes of the demo, registered by DemoPlugin like the scenes of a real game: what the command scene and the
  * menu offer. A new scene of the demo is added here (a test checks that none is missing).
  * Identifier: the class name relative to this package, in lower case (demo:scene2d, demo:platformer2d.platformerbox2d),
- * so "scene Scene2D" and "scene Platformer2D.PlatformerBox2D" work.
+ * so "scene Scene2D" and "scene platformer2d.PlatformerBox2D" work.
  */
 public final class DemoScenes {
     static final class Entry<T extends Scene> {
@@ -80,7 +80,7 @@ public final class DemoScenes {
     }
 
     /**
-     * The class name relative to the package of the scenes (Platformer2D.PlatformerBox2D), the full name for a class
+     * The class name relative to the package of the scenes (platformer2d.PlatformerBox2D), the full name for a class
      * outside of it: the name shown by the menu and the key of the dates of SceneHistory.
      */
     public static String RelativeName(Class<?> type) {

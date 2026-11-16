@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.inputs.EInputState;

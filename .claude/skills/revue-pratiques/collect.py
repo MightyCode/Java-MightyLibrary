@@ -19,7 +19,7 @@ if "--since" in sys.argv:
 
 # The Maven modules (sources in <module>/src/main/java, tests in <module>/src/test/java)
 MODULES = ("mightylib", "demo")
-LEGACY = ("network/", "graphics/GUI/", "utils/DataFolder", "algorithms/", "resources/data/", "graphics/text/FontFile")
+LEGACY = ("network/", "graphics/gui/", "utils/DataFolder", "algorithms/", "resources/data/", "graphics/text/FontFile")
 
 
 def git(*args):

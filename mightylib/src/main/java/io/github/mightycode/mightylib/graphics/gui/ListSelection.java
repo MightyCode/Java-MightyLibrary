@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import java.util.ArrayList;
 import java.util.Collections;

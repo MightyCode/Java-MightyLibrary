@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
-import io.github.mightycode.mightylib.graphics.GUI.EnumSelector;
-import io.github.mightycode.mightylib.graphics.GUI.HorizontalSlider;
-import io.github.mightycode.mightylib.graphics.GUI.VerticalSlider;
+import io.github.mightycode.mightylib.graphics.gui.EnumSelector;
+import io.github.mightycode.mightylib.graphics.gui.HorizontalSlider;
+import io.github.mightycode.mightylib.graphics.gui.VerticalSlider;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;

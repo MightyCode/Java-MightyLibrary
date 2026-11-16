@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.main.WindowContext;
 import org.joml.Vector2f;

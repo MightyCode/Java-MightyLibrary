@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
+package io.github.mightycode.mightylibdemo.scenes.platformer2d;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.main.utils.GameTime;

@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.inputs.TestInputs;
 import io.github.mightycode.mightylib.inputs.InputRegistry;

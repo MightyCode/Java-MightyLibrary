@@ -27,7 +27,7 @@ class SceneChoicesTest {
 
     @Test
     void sortsByTheShortNameIgnoringTheCase() {
-        SceneChoices choices = new SceneChoices(List.of("Scene3D", "GLLoading", "Box2D", "gamepadScene", "Platformer2D.PlatformerBox2D"),
+        SceneChoices choices = new SceneChoices(List.of("Scene3D", "GLLoading", "Box2D", "gamepadScene", "platformer2d.PlatformerBox2D"),
                 Set.of());
 
         assertEquals(List.of("Box2D", "gamepadScene", "GLLoading", "PlatformerBox2D", "Scene3D"), labels(choices.entries()));
@@ -35,11 +35,11 @@ class SceneChoicesTest {
 
     @Test
     void theCommandKeepsTheRelativeName() {
-        SceneChoices choices = new SceneChoices(List.of("Platformer2D.PlatformerBox2D"), Set.of());
+        SceneChoices choices = new SceneChoices(List.of("platformer2d.PlatformerBox2D"), Set.of());
 
         SceneChoices.Entry entry = choices.entries().get(0);
         assertEquals("PlatformerBox2D", entry.label());
-        assertEquals("Platformer2D.PlatformerBox2D", entry.name());
+        assertEquals("platformer2d.PlatformerBox2D", entry.name());
         assertEquals("PlatformerBox2D", entry.shortName());
     }
 
@@ -77,10 +77,10 @@ class SceneChoicesTest {
 
     @Test
     void filterLooksAtTheShortNameOnly() {
-        SceneChoices choices = new SceneChoices(List.of("Platformer2D.PlatformerBox2D", "Scene2D"), Set.of());
+        SceneChoices choices = new SceneChoices(List.of("platformer2d.PlatformerBox2D", "Scene2D"), Set.of());
 
-        // Not "Platformer2D": it is the package, not the short name
-        assertTrue(choices.filter("Platformer2D").isEmpty());
+        // Not "platformer2d": it is the package, not the short name
+        assertTrue(choices.filter("platformer2d").isEmpty());
         assertEquals(List.of("PlatformerBox2D"), labels(choices.filter("platformer")));
         assertTrue(choices.filter("2D.").isEmpty());
     }

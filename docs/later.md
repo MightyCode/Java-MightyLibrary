@@ -89,7 +89,7 @@ D'après LearnOpenGL « 2D Game » (Breakout).
 
 ## Physique 2D : remplacer JBox2D
 Exigences : 2D au pixel près, cas complexes compris ; 3D compatible plus tard. Une boîte poussée **reste collée** au joueur (aucun écart, aucun tremblement). Un projet C++ précédent a échoué sur le test ci-dessous.
-- Constat : JBox2D 2.2.1.1 non maintenu (seulement `physics/B2Utils`, `Box2D`, `Platformer2D`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`, `CollisionVisualisation`), base de la physique arcade.
+- Constat : JBox2D 2.2.1.1 non maintenu (seulement `physics/B2Utils`, `Box2D`, `platformer2d`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`), base de la physique arcade.
 
 ### Test d'acceptation : `PhysicsCratesScene`
 Trois caisses empilées sur une plateforme mobile (horizontale et verticale) ; pousser celle du bas (la pile suit), puis celle du haut (elle seule bouge et tombe du bord) ; une caisse écrasée contre un mur. Aucun écart d'un pixel, aucun retard d'une frame, aucun tremblement.

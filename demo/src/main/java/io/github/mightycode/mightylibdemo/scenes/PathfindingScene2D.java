@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.algorithms.astar.AStar;
 import io.github.mightycode.mightylib.algorithms.dijkstra.Dijkstra;
 import io.github.mightycode.mightylib.algorithms.graph.Graph;
 import io.github.mightycode.mightylib.algorithms.graph.Node;
-import io.github.mightycode.mightylib.graphics.GUI.StrSelector;
+import io.github.mightycode.mightylib.graphics.gui.StrSelector;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;

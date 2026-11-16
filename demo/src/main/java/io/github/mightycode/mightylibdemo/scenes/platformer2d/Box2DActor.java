@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
+package io.github.mightycode.mightylibdemo.scenes.platformer2d;
 
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.Vec2;

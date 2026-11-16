@@ -1,9 +1,9 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
-import io.github.mightycode.mightylib.graphics.GUI.BackgroundlessButton;
-import io.github.mightycode.mightylib.graphics.GUI.GUI;
-import io.github.mightycode.mightylib.graphics.GUI.ScrollList;
-import io.github.mightycode.mightylib.graphics.GUI.TextField;
+import io.github.mightycode.mightylib.graphics.gui.BackgroundlessButton;
+import io.github.mightycode.mightylib.graphics.gui.GUI;
+import io.github.mightycode.mightylib.graphics.gui.ScrollList;
+import io.github.mightycode.mightylib.graphics.gui.TextField;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;

@@ -2,7 +2,7 @@ package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.TemplateSceneLoading;
-import io.github.mightycode.mightylibdemo.scenes.Platformer2D.PlatformerBox2D;
+import io.github.mightycode.mightylibdemo.scenes.platformer2d.PlatformerBox2D;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -67,13 +67,13 @@ class DemoScenesTest {
         assertEquals(DemoScenes.ALL.size(), registered.size(), "A scene is listed twice in DemoScenes");
     }
 
-    // The relative class name in lower case: "scene Scene2D" and "scene Platformer2D.PlatformerBox2D" still work
+    // The relative class name in lower case: "scene Scene2D" and "scene platformer2d.PlatformerBox2D" still work
     @Test
     void identifierIsTheRelativeClassName() {
         assertEquals("demo:scene2d", DemoScenes.IdOf(Scene2D.class).toString());
         assertEquals("demo:platformer2d.platformerbox2d",
                 DemoScenes.IdOf(PlatformerBox2D.class).toString());
-        assertEquals("Platformer2D.PlatformerBox2D",
+        assertEquals("platformer2d.PlatformerBox2D",
                 DemoScenes.RelativeName(PlatformerBox2D.class));
         assertEquals(String.class.getName(), DemoScenes.RelativeName(String.class));
     }

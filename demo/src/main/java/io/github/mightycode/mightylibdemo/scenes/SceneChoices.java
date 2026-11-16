@@ -12,7 +12,7 @@ import java.util.Set;
 
 /**
  * The scenes the menu offers, without GL: their names (class names relative to the package of the scenes, for example
- * Platformer2D.PlatformerBox2D, see DemoScenes.RelativeName), minus the hidden ones, sorted by the name shown (or by
+ * platformer2d.PlatformerBox2D, see DemoScenes.RelativeName), minus the hidden ones, sorted by the name shown (or by
  * date, see ESort). The name shown is the short one (PlatformerBox2D), the relative one only when two scenes have the
  * same short name. The relative name stays the key of the scene (dates, descriptions, identifier).
  */
