@@ -91,27 +91,6 @@ public final class WaveFunctionCollapseGrid {
         setTileAt(x, y, tileId);
     }
 
-    private void printMinimumPossibleTilePositions(){
-        System.out.println("Minimum possible tile positions : ");
-        for (Map.Entry<Integer, List<Vector2i>> entry : minimumPossibleTilePositions.entrySet()){
-            System.out.print("Key : " + entry.getKey());
-            for (Vector2i pos : entry.getValue()){
-                System.out.print("(" + pos.x + ", " + pos.y + ")");
-            }
-            System.out.println();
-        }
-    }
-
-    private void printMatricesOfAvailableSize(){
-        System.out.println("Matrices of available size : ");
-        for (int y = 0; y < mapSize.y; ++y) {
-            for (int x = 0; x < mapSize.x; ++x) {
-                System.out.print(availableTiles[y][x].size() + " ");
-            }
-            System.out.println();
-        }
-    }
-
     private void setTileAt(int x, int y, int tileId){
         map.setTileType(0, x, y, tileId);
 

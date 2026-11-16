@@ -465,27 +465,6 @@ public class Scene3D extends Scene {
     }
 
 
-    public void placeNormal(float[] array, int index){
-        for(int i = 0; i < 6; i ++){
-            placeValueToCoords(array, new float[]{0.0f, 0.0f, -1.0f}, index + (i) * lineSize + 5);
-        }
-        for(int i = 0; i < 6; i ++){
-            placeValueToCoords(array, new float[]{0.0f, 0.0f, 1.0f}, index + (i) * lineSize + 5 + faceSize);
-        }
-        for(int i = 0; i < 6; i ++){
-            placeValueToCoords(array, new float[]{-1.0f, 0.0f, 0.0f}, index + (i) * lineSize + 5 + 2 * faceSize);
-        }
-        for(int i = 0; i < 6; i ++){
-            placeValueToCoords(array, new float[]{1.0f, 0.0f, 0.0f}, index + (i) * lineSize + 5 + 3 * faceSize);
-        }
-        for(int i = 0; i < 6; i ++){
-            placeValueToCoords(array, new float[]{0.0f, -1.0f, 0.0f}, index + (i) * lineSize + 5 + 4 * faceSize);
-        }
-        for(int i = 0; i < 6; i ++){
-            placeValueToCoords(array, new float[]{0.0f, 1.0f, 0.0f}, index + (i) * lineSize + 5 + 5 * faceSize);
-        }
-    }
-
 
     public void placeValueToCoords(float[] array, float[] value, int coordStart){
         System.arraycopy(value, 0, array, coordStart , value.length);

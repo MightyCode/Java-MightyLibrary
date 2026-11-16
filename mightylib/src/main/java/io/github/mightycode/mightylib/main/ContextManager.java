@@ -157,9 +157,18 @@ public final class ContextManager {
 
     public Context getMainContext() { return mainContext; }
 
-    // The main window of the main context
+    // The main window of the main context, null before the engine opens it
     public WindowContext getMainWindow() {
         return mainContext == null ? null : mainContext.getMainWindow();
+    }
+
+    // The main window, for the code that runs once the engine is started (services, loop, scenes)
+    public WindowContext requireMainWindow() {
+        WindowContext main = getMainWindow();
+        if (main == null)
+            throw new IllegalStateException("No main window: the engine is not started");
+
+        return main;
     }
 
     public Context getContext(String name) {

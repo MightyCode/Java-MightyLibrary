@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
 
-import org.jbox2d.collision.shapes.CircleShape;
 import org.jbox2d.collision.shapes.PolygonShape;
 import org.jbox2d.common.MathUtils;
 import org.jbox2d.common.Vec2;
@@ -45,53 +44,10 @@ public class Box2DActor {
         fixtureDef.shape = rect;
     }
 
-    public void setShapeCircle(Vec2 pos, float radius) {
-        bodyDef.position.set(pos);
-
-        CircleShape circle = new CircleShape();
-        circle.setRadius(radius / 2f);
-        fixtureDef.shape = circle;
-    }
-
     public void setPhysicsProperties(float density, float friction, float restitution) {
         fixtureDef.density = density;
         fixtureDef.friction = friction;
         fixtureDef.restitution = restitution;
-    }
-
-    public float getDensity() {
-        return fixtureDef.density;
-    }
-
-    public float getFriction() {
-        return fixtureDef.friction;
-    }
-
-    public float getRestitution() {
-        return fixtureDef.restitution;
-    }
-
-    public float getMaxSpeed() {
-        return maxSpeed;
-    }
-
-    public void setMaxSpeed(float f) {
-        maxSpeed = f;
-    }
-
-    public float getMaxSpeedX() {
-        return maxSpeedX;
-    }
-
-    public void setMaxSpeedX(float f) {
-        maxSpeedX = f;
-    }
-
-    public float getMaxSpeedY() {
-        return maxSpeedY;
-    }
-    public void setMaxSpeedY(float f) {
-        maxSpeedY = f;
     }
 
     public Vec2 getVelocity() {
@@ -100,10 +56,6 @@ public class Box2DActor {
 
     public float getSpeed() {
         return getVelocity().length();
-    }
-
-    public void setVelocity(float vx, float vy) {
-       this.setVelocity(new Vec2(vx, vy));
     }
 
     public void setVelocity(Vec2 v) {
@@ -120,13 +72,6 @@ public class Box2DActor {
         Fixture f = body.createFixture(fixtureDef);
         f.setUserData("main");
         body.setUserData(this);
-    }
-
-    public Body getBody() {
-        return body;
-    }
-    public FixtureDef getFixtureDef() {
-        return fixtureDef;
     }
 
     public void applyForce(Vec2 force) {

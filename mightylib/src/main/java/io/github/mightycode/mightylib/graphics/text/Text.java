@@ -307,8 +307,6 @@ public final class Text extends MeshRenderer {
         String[] lines = laidOut.split("\n");
         float[] linesSize = new float[lines.length];
 
-        int charCount = 0;
-
         FontChar fontChar;
         Vector4f currentCharOffset = new Vector4f();
 
@@ -326,7 +324,6 @@ public final class Text extends MeshRenderer {
             for (int i = 0; i < lines[j].length(); i++) {
                 if (i < measured)
                     currentCharOffset.x += (float) (usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
-                ++charCount;
             }
 
             linesSize[j] = currentCharOffset.x;
@@ -341,7 +338,7 @@ public final class Text extends MeshRenderer {
         rectangleSize.add(padding.x + padding.z, padding.y + padding.w);
 
         currentCharOffset.x = 0;
-        charCount = 0;
+        int charCount = 0;
 
         switch(this.reference){
             case None:

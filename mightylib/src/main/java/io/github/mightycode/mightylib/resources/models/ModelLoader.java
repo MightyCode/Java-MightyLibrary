@@ -83,7 +83,8 @@ public final class ModelLoader extends ResourceLoader {
         Model model = (Model) dataType;
 
         AIScene scene = aiImportFile(model.path(), IMPORT_FLAGS);
-        if (scene == null || scene.mRootNode() == null) {
+        AINode root = scene == null ? null : scene.mRootNode();
+        if (root == null) {
             String error = aiGetErrorString();
             if (scene != null)
                 aiReleaseImport(scene);
@@ -99,7 +100,7 @@ public final class ModelLoader extends ResourceLoader {
             float[] materialsShininess = readShininess(scene);
 
             List<ModelMesh> meshes = new ArrayList<>();
-            readNode(model, scene, scene.mRootNode(), new Matrix4f(), materialsTextures, materialsShininess, meshes);
+            readNode(model, scene, root, new Matrix4f(), materialsTextures, materialsShininess, meshes);
             model.setMeshes(meshes);
         } finally {
             aiReleaseImport(scene);
@@ -113,6 +114,8 @@ public final class ModelLoader extends ResourceLoader {
         PointerBuffer materials = scene.mMaterials();
 
         for (int i = 0; i < count; ++i) {
+            // Assimp gives a null buffer only with a count of 0, the loop does not run then
+            //noinspection DataFlowIssue
             AIMaterial material = AIMaterial.create(materials.get(i));
 
             String diffuse = readTexture(model, material, aiTextureType_DIFFUSE, folder);
@@ -138,6 +141,8 @@ public final class ModelLoader extends ResourceLoader {
         float[] value = new float[1];
         int[] max = new int[]{ 1 };
         for (int i = 0; i < count; ++i) {
+            // Assimp gives a null buffer only with a count of 0, the loop does not run then
+            //noinspection DataFlowIssue
             AIMaterial material = AIMaterial.create(materials.get(i));
             max[0] = 1;
             if (aiGetMaterialFloatArray(material, AI_MATKEY_SHININESS, aiTextureType_NONE, 0, value, max) == aiReturn_SUCCESS
@@ -207,6 +212,8 @@ public final class ModelLoader extends ResourceLoader {
         for (int i = 0; i < node.mNumMeshes(); ++i) {
             // A mesh copy is the costly unit of a big model
             model.checkCancelled();
+            // Assimp gives a null buffer only with a count of 0, the loop does not run then
+            //noinspection DataFlowIssue
             AIMesh mesh = AIMesh.create(sceneMeshes.get(meshIndices.get(i)));
             ModelMesh modelMesh = readMesh(mesh, transform, materialsTextures, materialsShininess);
             if (modelMesh != null)
@@ -215,6 +222,8 @@ public final class ModelLoader extends ResourceLoader {
 
         PointerBuffer children = node.mChildren();
         for (int i = 0; i < node.mNumChildren(); ++i)
+            // Assimp gives a null buffer only with a count of 0, the loop does not run then
+            //noinspection DataFlowIssue
             readNode(model, scene, AINode.create(children.get(i)), transform, materialsTextures, materialsShininess, meshes);
     }
 

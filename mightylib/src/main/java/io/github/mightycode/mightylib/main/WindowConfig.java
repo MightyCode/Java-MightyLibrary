@@ -129,7 +129,6 @@ public final class WindowConfig {
         info.Display = display.copy();
         info.VirtualSize = getVirtualSize();
         info.WindowName = title;
-        info.KeyboardLanguage = keyboardLanguage;
         info.ParentWindowId = parentWindowId;
         return info;
     }

@@ -6,7 +6,6 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public final class ServerTcp {
@@ -18,8 +17,6 @@ public final class ServerTcp {
     public ServerTcp(NetworkConfiguration configuration){
         this.configuration = configuration;
     }
-
-    private final static Charset ENCODING = StandardCharsets.UTF_8;
 
     public void tryCreateConnection(){
         System.out.println(configuration.getPort());

@@ -5,6 +5,7 @@ import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 
 public final class Polygon {
     public static final class PolygonBuilder {
@@ -92,9 +93,9 @@ public final class Polygon {
         return vertices.length / 2;
     }
 
+    // A copy of the vertex: an index out of the polygon is an IndexOutOfBoundsException, as for a list
     public Vector2f get(int index) {
-        if (index < 0 || index >= vertices.length / 2)
-            return null;
+        Objects.checkIndex(index, size());
 
         return new Vector2f(vertices[index * 2], vertices[index * 2 + 1]);
     }

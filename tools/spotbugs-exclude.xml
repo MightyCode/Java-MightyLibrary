@@ -19,4 +19,10 @@
         </Or>
         <Bug pattern="VO_VOLATILE_INCREMENT,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"/>
     </Match>
+    <!-- A future kept in a local named "ignored" says its result is not needed: Error Prone
+         (FutureReturnValueIgnored) wants the value used, the variable is that use. -->
+    <Match>
+        <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
+        <Local name="ignored"/>
+    </Match>
 </FindBugsFilter>

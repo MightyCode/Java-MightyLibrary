@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandParser;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.ICommandHandler;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -98,10 +99,11 @@ public abstract class BaseCommand {
     // Main thread, under the owner. Parses the words (args[0] = name typed) and runs the branch, or gives the help
     CommandResult run(String[] args) {
         CommandParser.Parsed parsed = parser.parse(Arrays.copyOfRange(args, 1, args.length), newContext(args[0]));
-        if (parsed.isHelp())
+        ICommandHandler handler = parsed.getHandler();
+        if (handler == null)
             return helpNow();
 
-        CommandResult result = parsed.getHandler().run(parsed.getContext());
+        CommandResult result = handler.run(parsed.getContext());
         return result == null ? CommandResult.error("The command " + commandName + " answered nothing") : result;
     }
 

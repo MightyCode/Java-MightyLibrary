@@ -36,10 +36,6 @@ public class RopeSimulation2D extends Scene {
         private final Vector2f previousPosition;
         private final boolean locked;
 
-        public Point(Vector2f position) {
-            this(position, false);
-        }
-
         public Point(Vector2f position, boolean locked) {
             this.previousPosition = new Vector2f(position);
             this.position = position;

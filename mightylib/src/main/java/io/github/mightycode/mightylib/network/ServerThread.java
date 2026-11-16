@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.network;
 public abstract class ServerThread extends CommunicationThread{
     private ServerTcp server;
     private final boolean listening;
-    private final boolean serverConnected = false;
 
     // Package-private: the hierarchy is closed, its subclasses are in this package
     ServerThread() {
