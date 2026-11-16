@@ -13,7 +13,7 @@ public final class Material extends BasicMaterial {
     }
 
     @Override
-    public Material clone(){
+    public Material copy(){
         return new Material(new Vector3f(Ambient), new Vector3f(Diffuse), new Vector3f(Specular), Shininess);
     }
 

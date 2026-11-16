@@ -320,7 +320,7 @@ public class Shader extends GLElement {
 
         // Remember the sent value, in place when possible to avoid allocating
         if (lastValue == null || !lastValue.copyValueFrom(value))
-            lastValues.put(value.getName(), value.clone());
+            lastValues.put(value.getName(), value.copy());
 
         use();
         EngineStats.countUniformUpload();

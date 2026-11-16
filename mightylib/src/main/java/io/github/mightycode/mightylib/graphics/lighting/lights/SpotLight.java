@@ -115,8 +115,8 @@ public final class SpotLight extends BasicMaterial {
 
     // A spot light with the same settings and its own vectors (LightDecrease is immutable: shared)
     @Override
-    public SpotLight clone(){
-        SpotLight copy = new SpotLight(cloneBasicMaterial(), lightDecrease);
+    public SpotLight copy(){
+        SpotLight copy = new SpotLight(copyBasicMaterial(), lightDecrease);
         copy.position = position == null ? null : new Vector3f(position);
         copy.direction = direction == null ? null : new Vector3f(direction);
         copy.cutOff = cutOff;

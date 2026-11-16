@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // A clone of a light is a light of the same class, with the same settings and its own vectors
 // (SpotLight.clone gave a PointLight, the clones lost their position and shared their vectors)
-class LightCloneTest {
+class LightCopyTest {
     // The lights have no getter for every setting: read the fields
     private static Object field(Object light, String name) throws ReflectiveOperationException {
         Field field = light.getClass().getDeclaredField(name);
@@ -27,7 +27,7 @@ class LightCloneTest {
                 .setPosition(position).setDirection(direction).setCutOff(0.9f).setOuterCutOff(0.8f)
                 .disableDistance().enable();
 
-        SpotLight copy = original.clone();
+        SpotLight copy = original.copy();
 
         assertEquals(position, field(copy, "position"));
         assertNotSame(position, field(copy, "position"));
@@ -47,7 +47,7 @@ class LightCloneTest {
                 .setPosition(new Vector3f(4, 5, 6)).disableDistance();
         original.setLightCurrentNumber(2);
 
-        PointLight copy = original.clone();
+        PointLight copy = original.copy();
 
         assertEquals(new Vector3f(4, 5, 6), field(copy, "position"));
         assertNotSame(field(original, "position"), field(copy, "position"));
@@ -62,7 +62,7 @@ class LightCloneTest {
         DirectionalLight original = new DirectionalLight(new Vector3f(0.1f), new Vector3f(0.5f), new Vector3f(1))
                 .setDirection(new Vector3f(-0.2f, -1, -0.3f));
 
-        DirectionalLight copy = original.clone();
+        DirectionalLight copy = original.copy();
         copy.getDirection().set(0);
 
         assertEquals(new Vector3f(-0.2f, -1, -0.3f), original.getDirection());

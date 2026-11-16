@@ -117,7 +117,7 @@ public class Scene3DBis extends Scene {
                             RendererUtils.ToLightDirection(directionalLight.getDirection()))
                     .addShaderValue("material.shininess", Float.class, 64f);
 
-            directionalLight.cloneBasicMaterial().addToRenderer(cubeTexturedMaterial, "light");
+            directionalLight.copyBasicMaterial().addToRenderer(cubeTexturedMaterial, "light");
         }
 
         Vector3f shiftToPreviousChunk = new Vector3f(20, 0, 0);
@@ -166,7 +166,7 @@ public class Scene3DBis extends Scene {
                 "dirLight", "pointLights", "spotLight"
         );
 
-        lightManager.setDirectionalLight(directionalLight.clone());
+        lightManager.setDirectionalLight(directionalLight.copy());
         lightManager.setSpotLight(
                 new SpotLight(spotLightReference, lightDecrease)
                         .setPosition(camera3D().getCamPosRef()).setDirection(camera3D().getLookAtVector())
