@@ -52,6 +52,8 @@ def run_maven():
     # in the tests are left out (read_error_prone)
     result = subprocess.run([scenario.MVN, "-B", "-P", "analyse", "process-test-classes"], cwd=ROOT, env=environment,
                             capture_output=True, text=True, encoding="utf-8", errors="replace")
+    # The root target/ belongs to no module: Maven does not create it
+    os.makedirs(os.path.dirname(LOG), exist_ok=True)
     with open(LOG, "w", encoding="utf-8") as log:
         log.write(result.stdout + result.stderr)
     if result.returncode != 0:
