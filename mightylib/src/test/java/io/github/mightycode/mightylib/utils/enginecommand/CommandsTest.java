@@ -511,7 +511,8 @@ class CommandsTest {
                     root.executes(context -> commands.execute("where"));
                 }
             });
-            try (Views.Scope inner = Views.enter(new WindowedView(first))) {
+            Views.Scope firstView = Views.enter(new WindowedView(first));
+            try (firstView) {
                 commands.execute("outer");
             }
             // outer was run by the view of first, where by outer: first stays the target

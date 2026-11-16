@@ -28,11 +28,12 @@ class GUIListTest {
 
     // An action whose state is set by the test
     private static class FakeAction implements IAction {
-        boolean held, pressed, released;
+        boolean pressed, released;
 
+        // GUIList reads the presses and releases only
         @Override
         public boolean getState(IInputManager inputManager) {
-            return held;
+            return false;
         }
 
         @Override

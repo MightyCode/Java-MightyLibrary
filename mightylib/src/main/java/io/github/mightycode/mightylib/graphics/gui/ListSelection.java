@@ -23,8 +23,6 @@ final class ListSelection<T> {
 
     int count() { return items.size(); }
 
-    int visibleRows() { return visibleRows; }
-
     /** Index of the first item shown. */
     int first() { return first; }
 

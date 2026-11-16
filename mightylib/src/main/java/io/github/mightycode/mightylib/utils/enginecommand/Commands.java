@@ -435,7 +435,7 @@ public final class Commands {
 
                     // Already in the console log: written for the terminal only (the streams of the process,
                     // never closed)
-                    //noinspection AutoCloseableResource
+                    //noinspection resource
                     PrintStream terminal = result.isSuccess() ? LogCapture.rawOut() : LogCapture.rawErr();
                     terminal.println(result);
                 }

@@ -32,9 +32,6 @@ class ServiceSetTest {
         @Override public int overlayLayer() { return layer; }
         @Override public void unload() { calls.add("unload " + name); }
         @Override public void terminate() { calls.add("terminate " + name); }
-
-        // A method of the service itself, not a phase (the console closes its overlay)
-        public void close() { calls.add("close " + name); }
     }
 
     private static ServiceKey<IFake> key(String path) {

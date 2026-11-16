@@ -110,8 +110,6 @@ final class ConsolePanel {
         return text;
     }
 
-    ConsoleView getView() { return view; }
-
     // Rows shown at once: the scroll of Page Up / Page Down
     int getVisibleRows() { return Math.max(1, visibleRows); }
 

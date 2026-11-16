@@ -80,11 +80,6 @@ final class ConsoleLayout {
 
         int end() { return start + text.length(); }
 
-        // Index of the row in its line, and number of rows of the line
-        int part() { return part; }
-
-        int parts() { return parts; }
-
         boolean isLastPart() { return part == parts - 1; }
     }
 
@@ -172,10 +167,6 @@ final class ConsoleLayout {
         dirty = true;
     }
 
-    int visibleRows() { return visibleRows; }
-
-    float rowHeight() { return rowHeight; }
-
     // ---- Rows ----
 
     /** Compute the rows again if the log (what the viewer sees), the scroll or the settings changed. */
@@ -200,9 +191,6 @@ final class ConsoleLayout {
 
     // null: the view follows the end of the log
     Anchor anchor() { return anchor; }
-
-    // The bottom of what is shown (null: nothing shown), whatever the anchor
-    Anchor bottom() { return bottom; }
 
     // Nothing visible below the view
     boolean isAtEnd() { return atEnd; }

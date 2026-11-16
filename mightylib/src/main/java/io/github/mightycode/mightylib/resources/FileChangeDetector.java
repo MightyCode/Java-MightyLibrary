@@ -100,10 +100,6 @@ final class FileChangeDetector {
         this.onChanged = onChanged;
     }
 
-    Mode mode() {
-        return mode;
-    }
-
     synchronized void start() {
         if (running)
             return;
@@ -353,7 +349,4 @@ final class FileChangeDetector {
         return tracked.size();
     }
 
-    synchronized int pendingCount() {
-        return pending.size();
-    }
 }

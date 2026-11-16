@@ -581,7 +581,7 @@ public final class Engine implements IView {
         if (glfwStarted) {
             glfwTerminate();
             // Freed just below (Callback.free is its close)
-            //noinspection AutoCloseableResource
+            //noinspection resource
             GLFWErrorCallback callback = glfwSetErrorCallback(null);
             if (callback != null)
                 callback.free();
