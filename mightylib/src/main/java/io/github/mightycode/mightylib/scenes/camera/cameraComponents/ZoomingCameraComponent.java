@@ -11,14 +11,14 @@ import org.joml.Vector2i;
 // Same as MovingSceneComponent and DraggingSceneComponent
 public final class ZoomingCameraComponent implements IUpdatable {
 
-    protected IInputManager inputManager;
-    protected MouseManager mouseManager;
+    private IInputManager inputManager;
+    private MouseManager mouseManager;
 
-    protected Camera2D controlledCamera;
+    private Camera2D controlledCamera;
 
-    protected Vector2i windowSize;
+    private Vector2i windowSize;
 
-    protected InputAction quickZoomActionId;
+    private InputAction quickZoomActionId;
 
     public ZoomingCameraComponent(){
         // No quick zoom action until initActionId is called

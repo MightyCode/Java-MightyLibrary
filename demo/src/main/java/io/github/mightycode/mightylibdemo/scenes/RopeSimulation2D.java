@@ -196,7 +196,7 @@ public class RopeSimulation2D extends Scene {
     private boolean isDrawingStick, isDrawingPoint;
     private boolean controlWind;
     private ClickingMode clickingMode = ClickingMode.ADD_POINT;
-    private final int numberIteration = 1;
+    private static final int NUMBER_ITERATION = 1;
 
     private Point selectedPoint;
     private Vector2f windForce;
@@ -204,7 +204,6 @@ public class RopeSimulation2D extends Scene {
     private ArrayList<Point> points;
     private ArrayList<Stick> sticks;
 
-    private Camera2D hudCamera;
     private Text textCurrentState;
     private Text textCurrentModeClicking;
     private Text textIsDrawingPoint;
@@ -240,7 +239,7 @@ public class RopeSimulation2D extends Scene {
 
         /// SCENE INFORMATION ///
 
-        hudCamera = camera2D().copy();
+        Camera2D hudCamera = camera2D().copy();
 
         textCurrentState = new Text();
         textCurrentState.setReferenceCamera(hudCamera);
@@ -392,7 +391,7 @@ public class RopeSimulation2D extends Scene {
         }
 
         // Update using sticks
-        for (int i = 0; i < numberIteration; ++i) {
+        for (int i = 0; i < NUMBER_ITERATION; ++i) {
             for (Stick stick : sticks) {
                 Point pointA = stick.getPointA();
                 Point pointB = stick.getPointB();

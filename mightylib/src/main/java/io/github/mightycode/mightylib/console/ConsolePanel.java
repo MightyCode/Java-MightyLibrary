@@ -29,7 +29,6 @@ final class ConsolePanel {
     private static final Color4f FLASH_COLOR = new Color4f(0.45f, 0.45f, 0.45f, 0.8f);
 
     private final ConsoleView view;
-    private final ConsoleLog log;
     private final CommandLineEditor editor;
     private final String fontName;
 
@@ -77,7 +76,7 @@ final class ConsolePanel {
     ConsolePanel(ConsoleView view, Console console, Color4f backgroundColor, Color4f inputBackgroundColor) {
         this.view = view;
         this.console = console;
-        this.log = console.getLog();
+        ConsoleLog log = console.getLog();
         this.editor = console.getEditor();
         this.fontName = console.getFontName();
 

@@ -21,6 +21,7 @@ class IdentifiersTest {
 
         assertTrue(second.id() > first.id());
         assertTrue(third.id() > second.id());
-        assertEquals(first.id(), first.id(), "stable");
+        int id = first.id();
+        assertEquals(id, first.id(), "stable");
     }
 }

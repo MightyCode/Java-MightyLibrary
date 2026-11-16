@@ -52,7 +52,6 @@ public class Scene2D extends Scene {
     private PolygonRenderer polygonRenderer, clockwisePolygonRenderer;
     private int indexVertexReference = 0;
 
-    private Camera2D hudCamera;
 
     private TextureDataAtlas atlas;
 
@@ -76,7 +75,7 @@ public class Scene2D extends Scene {
     public void launch(String[] args) {
         setClearColor(52, 189, 235, 1f);
         /// SCENE INFORMATION ///
-        hudCamera = camera2D().copy();
+        Camera2D hudCamera = camera2D().copy();
 
         atlasRenderer = new RectangleRenderer("texture2D");
         atlasRenderer.setMainTextureChannel(glResources().addElementOrReturnIfPresent(Texture.class, new Texture(atlas), atlas.getDataName()));

@@ -87,7 +87,7 @@ public final class TextFieldModel {
 
     public void setAvailableWidth(float available) { this.available = Math.max(1, available); }
 
-    public void update(InputFocus focus, Tick tick) {
+    void update(InputFocus focus, Tick tick) {
         changed = false;
         submitted = false;
         leftWith = -1;

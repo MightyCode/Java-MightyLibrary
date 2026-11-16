@@ -13,11 +13,12 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class DebugInfoCamera2D implements IUpdatableDisplayable {
-    protected Camera2D camera;
+    private Camera2D camera;
     private final Text text;
     private final Set<String> info = new HashSet<>();
 
-    private int precision = 2;
+    // Format of the numbers shown, from the precision
+    private String numberFormat = "%.2f";
 
     public Text text() {
         return text;
@@ -56,12 +57,12 @@ public final class DebugInfoCamera2D implements IUpdatableDisplayable {
     }
 
     public DebugInfoCamera2D setPrecision(int precision){
-        this.precision = precision;
+        numberFormat = "%." + Math.max(0, precision) + "f";
         return this;
     }
 
     public String prec(float value){
-        return String.format("%." + precision + "f", value);
+        return String.format(numberFormat, value);
     }
 
     @Override

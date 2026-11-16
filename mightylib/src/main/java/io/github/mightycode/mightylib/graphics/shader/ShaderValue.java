@@ -4,10 +4,10 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.*;
 
 public final class ShaderValue implements Cloneable {
-    protected final String name;
-    protected Object object;
+    private final String name;
+    private Object object;
 
-    protected final Class<?> type;
+    private final Class<?> type;
     private boolean shouldForceUpdate;
 
     public ShaderValue(final String a, final Class<?> type, final Object object){

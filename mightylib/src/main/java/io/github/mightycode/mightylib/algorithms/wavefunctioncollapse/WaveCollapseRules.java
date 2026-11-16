@@ -108,7 +108,7 @@ public final class WaveCollapseRules extends DataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == WaveCollapseRules.class ? new WaveCollapseRules(getDataName()) : null;
+        return new WaveCollapseRules(getDataName());
     }
 
     @Override

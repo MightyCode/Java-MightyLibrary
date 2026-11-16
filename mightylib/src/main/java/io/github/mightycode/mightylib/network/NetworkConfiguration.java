@@ -20,7 +20,7 @@ public final class NetworkConfiguration extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == NetworkConfiguration.class ? new NetworkConfiguration(getDataName(), path()) : null;
+        return new NetworkConfiguration(getDataName(), path());
     }
 
     @Override

@@ -47,7 +47,7 @@ public final class Polygon {
         }
     }
 
-    protected float[] vertices;
+    private final float[] vertices;
 
     // x from, y from, x to, y to
     private final Vector4f boundingBox;

@@ -17,9 +17,9 @@ public final class TileSet extends SingleSourceDataType {
     private boolean useRotation, useFlip;
 
     public static final class TileAnimation {
-        int refId;
-        int[] ids;
-        float[] times;
+        final int refId;
+        final int[] ids;
+        final float[] times;
 
         public TileAnimation(int tileId, int frames){
             refId = tileId;

@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +45,7 @@ public class LayeredTextureLoader extends ResourceLoader {
             if (files == null || files.length == 0)
                 continue;
 
-            Arrays.sort(files, (first, second) -> first.getName().compareTo(second.getName()));
+            Arrays.sort(files, Comparator.comparing(File::getName));
             List<String> layers = new ArrayList<>();
             for (File file : files)
                 layers.add(resources().folder() + FOLDER + "/" + folder.getName() + "/" + file.getName());

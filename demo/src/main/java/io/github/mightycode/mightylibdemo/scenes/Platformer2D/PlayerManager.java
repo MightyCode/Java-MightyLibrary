@@ -15,7 +15,7 @@ public class PlayerManager extends Box2DActor{
     private final Vector2i windowSize;
 
     // Camera follow smoothness
-    private final float cameraFollowLerp = 0.1f;
+    private static final float CAMERA_FOLLOW_LERP = 0.1f;
 
     public PlayerManager(World world, PlayerController controller, Vec2 spawnPos, Camera2D baseCamera, Vector2i windowSize) {
         this.windowSize = windowSize;
@@ -61,7 +61,7 @@ public class PlayerManager extends Box2DActor{
         newCameraPos.x -= windowSize.x / (2f * camera.getZoomLevel().x);
         newCameraPos.y -= windowSize.y /  (2f * camera.getZoomLevel().y);
 
-        camPos.lerp(newCameraPos, cameraFollowLerp);
+        camPos.lerp(newCameraPos, CAMERA_FOLLOW_LERP);
         camera.setPos(camPos);
 
         renderer.update();

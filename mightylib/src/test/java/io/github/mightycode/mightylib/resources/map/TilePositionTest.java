@@ -39,7 +39,10 @@ class TilePositionTest {
         assertNotEquals(new TilePosition(9, 2, 3), position);
         assertNotEquals(new TilePosition(1, 9, 3), position);
         assertNotEquals(new TilePosition(1, 2, 9), position);
+        // The receiver is the object under test: its equals refuses null and other types
+        //noinspection MisorderedAssertEqualsArguments,AssertBetweenInconvertibleTypes
         assertNotEquals(position, null);
+        //noinspection MisorderedAssertEqualsArguments,AssertBetweenInconvertibleTypes
         assertNotEquals(position, "1,2,3");
     }
 

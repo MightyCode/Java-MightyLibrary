@@ -5,9 +5,9 @@ import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
 public class BasicMaterial implements IShaderUniforms {
-    public Vector3f Ambient;
-    public Vector3f Diffuse;
-    public Vector3f Specular;
+    public final Vector3f Ambient;
+    public final Vector3f Diffuse;
+    public final Vector3f Specular;
 
     public BasicMaterial(final Vector3f ambient, final Vector3f diffuse, final Vector3f specular){
         this.Ambient = ambient;

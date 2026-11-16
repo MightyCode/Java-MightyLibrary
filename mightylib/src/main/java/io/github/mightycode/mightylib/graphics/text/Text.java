@@ -135,32 +135,28 @@ public final class Text extends MeshRenderer implements Cloneable {
     public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars, String breakLineFirstChar){
         String clean = (removeEscapeChars) ? text.replace("\n", "") : text;
 
-        String result = "";
-        String temp;
-
+        StringBuilder result = new StringBuilder();
         Vector2f sizeTaken = new Vector2f();
 
         for (char c : clean.toCharArray()){
-            temp = result + c;
-
             if (c == '\n'){
                 if (sizeTaken.y > boxSize.y){
                     break;
                 }
 
-                result = temp;
+                result.append(c);
             } else {
-                sizeTaken = usedFont().computeSize(temp, fontSize);
+                result.append(c);
+                sizeTaken = usedFont().computeSize(result.toString(), fontSize);
 
                 if (sizeTaken.x > boxSize.x){
-                    result = result + "\n" + breakLineFirstChar + c;
-                } else {
-                    result = temp;
+                    result.setLength(result.length() - 1);
+                    result.append('\n').append(breakLineFirstChar).append(c);
                 }
             }
         }
 
-        setText(result);
+        setText(result.toString());
 
         return this;
     }

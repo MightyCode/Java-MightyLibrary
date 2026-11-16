@@ -31,7 +31,7 @@ public final class OpenALSoundSource implements ISoundSource {
     SoundSourceCreationInfo waiting;
 
     // Name asked at creation, known before the source is created
-    private String soundName;
+    private final String soundName;
 
     OpenALSoundSource(Resources resources, SoundSourceCreationInfo info) {
         this.waiting = info;

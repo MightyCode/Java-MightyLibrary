@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.github.mightycode.mightylib.algorithms.OutputCapture.lines;
 import static io.github.mightycode.mightylib.algorithms.graph.GraphFixtures.*;
 import static org.junit.jupiter.api.Assertions.*;
 

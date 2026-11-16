@@ -28,7 +28,6 @@ public class Game3D2D extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
 
     //// 2D World ////
-    private Camera2D insideCamera;
     private RectangleRenderer background;
     private Animation2DRenderer slimeRenderer;
     private FrameBuffer game2DRender;
@@ -59,7 +58,7 @@ public class Game3D2D extends Scene {
 
         camera3D().setSpeed(new Vector3f(10));
 
-        insideCamera = new Camera2D(context().getWindow().getInfo(), new Vector2f(0, 0), true);
+        Camera2D insideCamera = new Camera2D(context().getWindow().getInfo(), new Vector2f(0, 0), true);
 
         /// RENDERERS ///
         game2DRender = new FrameBuffer(

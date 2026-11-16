@@ -91,7 +91,7 @@ public final class SceneRegistry {
 
     // In registration order
     public List<Entry> entries() {
-        return Collections.unmodifiableList(new ArrayList<>(entries.values()));
+        return List.copyOf(entries.values());
     }
 
     /**

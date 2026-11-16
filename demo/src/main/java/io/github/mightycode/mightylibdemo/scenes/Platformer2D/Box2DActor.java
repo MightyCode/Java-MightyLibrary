@@ -8,8 +8,8 @@ import org.jbox2d.dynamics.*;
 
 public class Box2DActor {
     protected Body body;
-    protected BodyDef bodyDef;
-    protected FixtureDef fixtureDef;
+    protected final BodyDef bodyDef;
+    protected final FixtureDef fixtureDef;
 
     protected Float maxSpeed;
     protected Float maxSpeedX;

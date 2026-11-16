@@ -34,11 +34,6 @@ public final class CubeRenderer extends MeshRenderer {
 
     private final Map<EDirection3D, RectangularFace> faces;
 
-    private boolean includeTextures;
-    private boolean includeNormal;
-    private final int positionIndex;
-    private int textureIndex;
-    private int normalIndex;
 
     public CubeRenderer(String shaderName){
         super(shaderName, true);
@@ -85,7 +80,7 @@ public final class CubeRenderer extends MeshRenderer {
                 0, 0, 1,
         };
 
-        positionIndex = getMesh().addVboFloat(vertices, VERTEX_POSITION_SIZE, Mesh.STATIC_STORE);
+        getMesh().addVboFloat(vertices, VERTEX_POSITION_SIZE, Mesh.STATIC_STORE);
 
         int[] ref = RectangularFace.IndicesForSquare();
 
@@ -113,7 +108,7 @@ public final class CubeRenderer extends MeshRenderer {
                     VERTEX_TEXTURE_SIZE * VERTEX_NUMBER * i, vertexTexture.length);
         }
 
-        textureIndex = getMesh().addVboFloat(table, VERTEX_TEXTURE_SIZE, Mesh.STATIC_STORE);
+        getMesh().addVboFloat(table, VERTEX_TEXTURE_SIZE, Mesh.STATIC_STORE);
     }
 
     public void setNormal(){
@@ -127,6 +122,6 @@ public final class CubeRenderer extends MeshRenderer {
             }
         }
 
-        normalIndex = getMesh().addVboFloat(table, VERTEX_NORMAL_SIZE, Mesh.STATIC_STORE);
+        getMesh().addVboFloat(table, VERTEX_NORMAL_SIZE, Mesh.STATIC_STORE);
     }
 }

@@ -24,8 +24,8 @@ import java.util.ArrayList;
 
 public class Box2D extends Scene {
     public static class Box implements IUpdatableDisplayable {
-        RectangleRenderer renderer;
-        Body box;
+        final RectangleRenderer renderer;
+        final Body box;
         public Box(World world, Vector2f position, Vector2f size){
             renderer = new RectangleRenderer("colorShape2D");
             renderer.setColorMode(ColorList.Grey());
@@ -77,13 +77,12 @@ public class Box2D extends Scene {
     private final static int POSITION_ITERATIONS = 2;
     private World world;
 
-    private Camera2D hudCamera;
 
     @Override
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
-        hudCamera = camera2D().copy();
+        Camera2D hudCamera = camera2D().copy();
 
         camera3D().setPos(new Vector3f());
         camera2D().setPos(new Vector2f());

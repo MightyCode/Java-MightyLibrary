@@ -59,12 +59,10 @@ public abstract class GLElement implements LoadingElement {
     private int urgentReference;
 
     private final ArrayList<DataType> resourceDependencies;
-    private final ArrayList<GLElement> glElementDependencies;
 
     public GLElement(){
         reference = 0;
         resourceDependencies = new ArrayList<>();
-        glElementDependencies = new ArrayList<>();
     }
 
     // The element also waits for this data (and is blocked by its failure)
@@ -145,11 +143,6 @@ public abstract class GLElement implements LoadingElement {
             }
         }
 
-        for (GLElement element : glElementDependencies){
-            if (!element.isLoaded()){
-                return false;
-            }
-        }
 
         // Only printed once the dependencies are ready and once per element, even if loaded in several steps
         if (!loadStarted) {

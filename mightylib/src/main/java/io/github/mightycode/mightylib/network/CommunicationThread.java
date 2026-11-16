@@ -13,9 +13,9 @@ public abstract class CommunicationThread extends Thread {
     protected int receivedMessageNumber;
 
     protected volatile boolean running;
-    protected ArrayList<NetworkMessage> receivedMessages;
+    protected final ArrayList<NetworkMessage> receivedMessages;
 
-    protected HashMap<Integer, String> messageToSend;
+    protected final HashMap<Integer, String> messageToSend;
 
     protected NetworkConfiguration configuration;
 

@@ -8,9 +8,6 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 // Draws a generated mesh (TerrainGeneration), colored by its normals
 public final class TerrainRenderer extends MeshRenderer {
     private final boolean willUpdateFrequently;
-    private int shapePosition;
-    private int colorPosition;
-    private int normalPosition;
 
     private final ModelMesh mesh;
 
@@ -31,8 +28,8 @@ public final class TerrainRenderer extends MeshRenderer {
 
         int store = willUpdateFrequently ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE;
 
-        shapePosition = getMesh().addVboFloat(mesh.getPositions(), 3, store);
-        colorPosition = getMesh().addVboInt(colors, 1, store);
-        normalPosition = getMesh().addVboFloat(normals, 3, store);
+        getMesh().addVboFloat(mesh.getPositions(), 3, store);
+        getMesh().addVboInt(colors, 1, store);
+        getMesh().addVboFloat(normals, 3, store);
     }
 }

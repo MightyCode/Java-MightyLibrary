@@ -22,7 +22,7 @@ public final class CSVFile extends SingleSourceDataType {
 
     @Override
     protected DataType createReloadCopy() {
-        return getClass() == CSVFile.class ? new CSVFile(getDataName(), path()) : null;
+        return new CSVFile(getDataName(), path());
     }
 
     @Override

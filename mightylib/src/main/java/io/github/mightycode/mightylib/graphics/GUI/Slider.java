@@ -17,7 +17,6 @@ import org.joml.Vector2f;
 public abstract class Slider {
     private static final int MAX_DIGIT_PRECISION = 9;
 
-    private final Vector2f referencePosition, referenceSize;
     private final RectangleRenderer bar;
     private final RectangleRenderer button;
     private final Vector2f buttonBoundaries;
@@ -43,8 +42,8 @@ public abstract class Slider {
         this.minValue = minValue;
         this.maxValue = maxValue;
 
-        referencePosition = new Vector2f(position);
-        referenceSize = new Vector2f(size);
+        Vector2f referencePosition = new Vector2f(position);
+        Vector2f referenceSize = new Vector2f(size);
 
         maxPrecision = -1;
 
