@@ -38,9 +38,6 @@ public final class TextureDataAtlas extends TextureData {
     // Read again from its file, or built again from the same textures (atlas built by the code)
     @Override
     protected DataType createReloadCopy() {
-        if (getClass() != TextureDataAtlas.class)
-            return null;
-
         TextureDataAtlas copy = new TextureDataAtlas(getTypeSetUp(), getDataName(), path());
         copy.copySettingsFrom(this);
         if (!validPath()) {

@@ -53,6 +53,10 @@ public final class TextureParameters {
                 break;
             case PIXEL_ART_PARAMETERS:
                 pixelArtParameters(bindableObject);
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
     }
 }

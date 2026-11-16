@@ -109,8 +109,6 @@ public final class WindowContext {
 
     void setNode(WindowTree.Node<WindowContext> node) { this.node = node; }
 
-    WindowTree.Node<WindowContext> getNode() { return node; }
-
     /** Ask to close the window: done by the engine at the end of the current frame, with the windows below it. */
     public void requestClose() { closeRequested = true; }
 

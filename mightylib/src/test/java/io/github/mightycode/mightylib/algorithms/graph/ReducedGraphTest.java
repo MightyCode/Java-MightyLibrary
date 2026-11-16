@@ -89,7 +89,7 @@ class ReducedGraphTest {
         link(a, c);
         link(b, c);
 
-        // every node has two neighbours: no intersection to start from
+        // every node has two neighbors: no intersection to start from
         ReducedGraph loop = ReducedGraph.constructFrom(graph);
         assertEquals(0, loop.size());
         assertEquals(0, loop.getSubNodeGraph().size());

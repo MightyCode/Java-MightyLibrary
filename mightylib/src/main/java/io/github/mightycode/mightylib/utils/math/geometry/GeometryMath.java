@@ -30,20 +30,23 @@ public final class GeometryMath {
     }
 
     // A vertex is an ear when its corner is convex (the polygon is counter-clockwise) and no other vertex is in the
-    // triangle made with its two neighbours (the edges count as inside)
+    // triangle made with its two neighbors (the edges count as inside)
     public static boolean isEar(int index, List<Vector2f> polygon) {
+        int previous = index > 0 ? index - 1 : polygon.size() - 1;
+        int next = (index + 1) % polygon.size();
         Vector2f vertex = polygon.get(index);
-        Vector2f prevVertex = index > 0 ? polygon.get(index - 1) : polygon.get(polygon.size() - 1);
-        Vector2f nextVertex = polygon.get((index + 1) % polygon.size());
+        Vector2f prevVertex = polygon.get(previous);
+        Vector2f nextVertex = polygon.get(next);
 
         if (!IsConvex(prevVertex, vertex, nextVertex))
             return false;
 
-        for (Vector2f other : polygon) {
-            if (other == prevVertex || other == vertex || other == nextVertex)
+        for (int other = 0; other < polygon.size(); ++other) {
+            // The corner itself, not another vertex at the same place
+            if (other == previous || other == index || other == next)
                 continue;
 
-            if (isInsideTriangle(other, prevVertex, vertex, nextVertex))
+            if (isInsideTriangle(polygon.get(other), prevVertex, vertex, nextVertex))
                 return false;
         }
 

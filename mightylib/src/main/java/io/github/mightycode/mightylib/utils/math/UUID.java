@@ -1,11 +1,14 @@
 package io.github.mightycode.mightylib.utils.math;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class UUID {
-    private static int COUNT = 0;
+    // Objects are also created by the workers (data types): the counter is atomic
+    private static final AtomicInteger COUNT = new AtomicInteger();
     private final int id;
 
     public UUID(){
-        id = COUNT++;
+        id = COUNT.getAndIncrement();
     }
 
     public int id(){

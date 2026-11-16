@@ -22,7 +22,7 @@ import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL32C.GL_GEOMETRY_SHADER;
 
 /**
- * The program of a ShaderData on the card, compiled and linked in steps (a stage per step, then the link).
+ * The program of a ShaderData on the card, compiled and linked step by step (a stage per step, then the link).
  * A program that does not compile at its first loading makes the element failed (its users get the fallback);
  * one that does not compile on a hot reload keeps the previous program.
  * The programs are shared between the windows; the program in use is a state of each context (GLContext).
@@ -313,14 +313,14 @@ public class Shader extends GLElement {
     public void sendValueToShader(ShaderValue value) {
         ShaderValue lastValue = lastValues.get(value.getName());
 
-        if (lastValue != null && value.hasSameValue(lastValue) && !value.shouldForceUpdate())
+        if (value.hasSameValue(lastValue) && !value.shouldForceUpdate())
             return;
 
         value.resetForceUpdate();
 
         // Remember the sent value, in place when possible to avoid allocating
         if (lastValue == null || !lastValue.copyValueFrom(value))
-            lastValues.put(value.getName(), value.clone());
+            lastValues.put(value.getName(), value.copy());
 
         use();
         EngineStats.countUniformUpload();

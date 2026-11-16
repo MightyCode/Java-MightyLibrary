@@ -66,8 +66,11 @@ class PolygonTest {
     }
 
     @Test
-    void indexPastTheEndGivesNull() {
-        assertNull(new Polygon(SQUARE).get(4));
+    void indexOutOfThePolygonIsRefused() {
+        Polygon square = new Polygon(SQUARE);
+
+        assertThrows(IndexOutOfBoundsException.class, () -> square.get(4));
+        assertThrows(IndexOutOfBoundsException.class, () -> square.get(-1));
     }
 
     @Test

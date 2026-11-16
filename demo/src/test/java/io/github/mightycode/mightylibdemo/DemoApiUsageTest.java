@@ -78,7 +78,7 @@ class DemoApiUsageTest {
 
     private static List<String> internalUses(Path file) throws IOException {
         List<String> uses = new ArrayList<>();
-        String source = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
+        String source = Files.readString(file);
         Matcher matcher = QUALIFIED_NAME.matcher(source);
         while (matcher.find()) {
             String name = matcher.group();

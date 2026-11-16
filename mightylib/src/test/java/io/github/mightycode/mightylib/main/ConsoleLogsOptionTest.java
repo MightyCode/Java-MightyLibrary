@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.main;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ConsoleLogsOptionTest {
@@ -14,10 +16,10 @@ class ConsoleLogsOptionTest {
 
     @Test
     void parse() {
-        assertEquals(Boolean.TRUE, EngineConfig.ParseShown("shown"));
-        assertEquals(Boolean.FALSE, EngineConfig.ParseShown(" HIDDEN "));
-        assertNull(EngineConfig.ParseShown("off"));
-        assertNull(EngineConfig.ParseShown(""));
+        assertEquals(Optional.of(true), EngineConfig.ParseShown("shown"));
+        assertEquals(Optional.of(false), EngineConfig.ParseShown(" HIDDEN "));
+        assertTrue(EngineConfig.ParseShown("off").isEmpty());
+        assertTrue(EngineConfig.ParseShown("").isEmpty());
     }
 
     @Test

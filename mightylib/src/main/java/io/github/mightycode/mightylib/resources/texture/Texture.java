@@ -235,7 +235,8 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                     glTexImage2D(this.textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getData());
                     Logger.CheckOpenGLError("Set texture data : " + data.getDataName());
 
-                    return finishLoad();
+                    finishLoad();
+                    return true;
                 }
 
                 // Memory reserved now, filled by the strips
@@ -250,7 +251,8 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             if (uploadedRows < data.getHeight())
                 return false;
 
-            return finishLoad();
+            finishLoad();
+            return true;
         } catch (Exception e) {
             Logger.LogException("Can't create the texture " + data.path(), e);
             GenDeleteResources.DeleteTexture(textureId);
@@ -292,19 +294,12 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         return sentRows;
     }
 
-    private boolean finishLoad() {
+    private void finishLoad() {
         TextureParameters.applyParameters(this);
         Logger.CheckOpenGLError("Set texture parameters : " + data.getDataName());
-
-        return true;
     }
 
-    private void setTextParam(int param, int value) {
-        bindRenderTexture();
-        if (data.isLoaded())
-            glTexParameteri(this.textureType, param, value);
-    }
-
+    @Override
     public final int getQualityType(){
         return qualityType;
     }
@@ -313,6 +308,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         this.textureType = textureType;
     }
 
+    @Override
     public final int getTextureType(){
         return this.textureType;
     }

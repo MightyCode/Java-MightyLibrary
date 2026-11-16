@@ -22,7 +22,8 @@ public final class ClientTcp {
 
     private volatile boolean running = true;
 
-    private boolean TryingConnection;
+    // Written by the connection thread, read by the engine
+    private volatile boolean TryingConnection;
 
     public ClientTcp(NetworkConfiguration configuration){
         this.configuration = configuration;
@@ -119,6 +120,8 @@ public final class ClientTcp {
             }
 
             try {
+                // Heartbeat period: the loop sends and checks at this rhythm
+                //noinspection BusyWait
                 Thread.sleep(HEARTBEAT_INTERVAL_MS);
             } catch (InterruptedException e) {
                 // Asked to stop: keep the interrupted state for the thread owner

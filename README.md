@@ -26,7 +26,7 @@ A library to create a game.
 - Animation 2D, animator et chargement du fichier associé ✅
 
 **3D :**
-- Cube texturé paramétrable, utilisation normal ✅
+- Cube texturé paramétrable, utilisation normale ✅
 - Sphere normalisé ✅
 - Texture 3D ✅
 - Utilisation model simple 3D .obj ✅
@@ -42,7 +42,7 @@ A library to create a game.
 **Entrées :**
 - Interface clavier / souris complète ✅
 - Interface manette ✅
-- Chargement des inputs utilisées par l'app via fichier ❌
+- Chargement des inputs utilisés par l'app via fichier ❌
 - Prefab scene pour changer les touches ❌
 
 **Son :**

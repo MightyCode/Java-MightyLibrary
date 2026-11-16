@@ -12,8 +12,9 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.decimal;
@@ -57,7 +58,7 @@ public final class ScreenshotGenCom extends BaseCommand {
     private static CommandResult shoot(CommandContext context, File chosen) {
         File file = chosen;
         if (file == null) {
-            String date = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss-SSS").format(new Date());
+            String date = LocalDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss-SSS"));
             file = new File(DEFAULT_FOLDER, "screenshot_" + date + ".png");
         }
 

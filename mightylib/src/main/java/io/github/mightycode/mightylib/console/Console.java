@@ -203,7 +203,7 @@ public final class Console implements IConsoleService {
         Set<ConsoleLog.EType> hidden = all ? Collections.emptySet() : getHiddenTypes();
         String text = LogSelection.LastLinesText(log, level, line -> !hidden.contains(line.getType()), count, upToId);
         if (!text.isEmpty())
-            engine.contexts().getMainWindow().getSystemInfo().setClipboardContent(text);
+            engine.contexts().requireMainWindow().getSystemInfo().setClipboardContent(text);
         return text;
     }
 
@@ -270,7 +270,7 @@ public final class Console implements IConsoleService {
                 .setProjectInputs(false);
 
         try {
-            window = engine.contexts().getMainWindow().getContext().openWindow(config, view);
+            window = engine.contexts().requireMainWindow().getContext().openWindow(config, view);
         } catch (RuntimeException e) {
             Logger.LogException("The console window can't be opened", e);
             return;
@@ -347,7 +347,7 @@ public final class Console implements IConsoleService {
     /** Beginning of a tick, before the scenes: what is typed is run in this tick. */
     @Override
     public void update() {
-        WindowContext main = engine.contexts().getMainWindow();
+        WindowContext main = engine.contexts().requireMainWindow();
         IInputManager mainInputs = main.getInputManager();
         boolean toggle = mainInputs.inputPressed(EngineActions.TOGGLE_CONSOLE);
 
@@ -473,7 +473,7 @@ public final class Console implements IConsoleService {
         if (mode != EMode.OVERLAY || displayFailed)
             return;
 
-        WindowContext main = engine.contexts().getMainWindow();
+        WindowContext main = engine.contexts().requireMainWindow();
         try {
             if (overlay == null) {
                 overlayView = new ConsoleView(engine, main);

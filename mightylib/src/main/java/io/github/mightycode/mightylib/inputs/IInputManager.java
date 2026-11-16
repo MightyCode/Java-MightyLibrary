@@ -55,7 +55,7 @@ public interface IInputManager {
 
     void simulateAxisRelease(InputAxis axis);
 
-    // Bound axes matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    // Bound axes matching the name (full identifier, or path alone case-insensitive) : one = found, several = ambiguous
     List<AxisInput> matchAxes(String name);
 
     // The only bound axis matching the name, null if unknown or ambiguous
@@ -78,7 +78,7 @@ public interface IInputManager {
     /** Same as getState (Press, Release) or inputPressed/inputReleased (Pressed, Released), chosen by the enum. */
     boolean isInput(InputAction action, EInputState state);
 
-    // Bound actions matching the name (full identifier, or path alone case insensitive) : one = found, several = ambiguous
+    // Bound actions matching the name (full identifier, or path alone case-insensitive) : one = found, several = ambiguous
     List<ActionInput> matchActions(String name);
 
     // The only bound action matching the name, null if unknown or ambiguous

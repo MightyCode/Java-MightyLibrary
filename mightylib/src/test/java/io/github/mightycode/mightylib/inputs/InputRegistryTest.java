@@ -30,7 +30,8 @@ class InputRegistryTest {
         assertEquals(JUMP, InputAction.of("game:jump"));
         assertEquals(JUMP.hashCode(), InputAction.of(Identifier.of("game", "jump")).hashCode());
         assertNotEquals(JUMP, MOD_JUMP);
-        assertNotEquals(InputAxis.of("game:jump"), JUMP);
+        Object axis = InputAxis.of("game:jump");
+        assertNotEquals(JUMP, axis);
         assertTrue(registry().isDeclared(InputAction.of("game:jump")));
     }
 

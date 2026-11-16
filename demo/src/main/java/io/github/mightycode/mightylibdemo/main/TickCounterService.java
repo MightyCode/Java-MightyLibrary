@@ -73,7 +73,7 @@ public final class TickCounterService implements IEngineService {
             return;
 
         if (overlayView == null)
-            overlayView = new OverlayView(engine, engine.contexts().getMainWindow());
+            overlayView = new OverlayView(engine, engine.contexts().requireMainWindow());
 
         try (Views.Scope ignored = Views.enter(overlayView)) {
             if (overlay == null) {

@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -210,7 +211,7 @@ public final class EngineConfig {
 
     /**
      * Level of the player at the start, bounded by setMaxCommandAccess; null: no access, no in-game console.
-     * By default DEV in debug mode, none in release: a released game opens the access itself (USER for a chat or
+     * By default, DEV in debug mode, none in release: a released game opens the access itself (USER for a chat or
      * the options, CHEAT...). The console opens with ², F2 puts it in a window of its own.
      * The option -Dmightylib.commands.access=none|user|cheat|dev overrides it (a developer mode for the modders),
      * still bounded by the maximum.
@@ -222,7 +223,7 @@ public final class EngineConfig {
     }
 
     /**
-     * Highest level of the build: the session never goes above it (Commands.setSessionLevel). By default DEV in debug
+     * Highest level of the build: the session never goes above it (Commands.setSessionLevel). By default, DEV in debug
      * mode, USER in release: a game raises it to CHEAT for cheats, to DEV for a developer mode; a competitive game
      * keeps USER. Null: no access at all, whatever the access and the launch option (no console in the game).
      */
@@ -392,7 +393,8 @@ public final class EngineConfig {
         if (property != null) {
             try {
                 return Long.parseLong(property.trim());
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                System.err.println("--" + WATCH_INTERVAL_PROPERTY + " : not a number ->" + property + "<-, the configured interval is kept");
             }
         }
         return watchResourcesInterval;
@@ -437,7 +439,7 @@ public final class EngineConfig {
         return mode == EEngineMode.DEBUG ? ECommandLevel.DEV : null;
     }
 
-    // The in-game console exists when the player has an access to the commands
+    // The in-game console exists when the player has access to the commands
     public boolean isConsoleEnabled() { return getCommandAccess() != null; }
 
     public boolean isCheatCommand() { return cheatCommand; }
@@ -460,24 +462,24 @@ public final class EngineConfig {
         if (property == null)
             return configured;
 
-        Boolean shown = ParseShown(property);
-        if (shown == null) {
+        Optional<Boolean> shown = ParseShown(property);
+        if (shown.isEmpty()) {
             System.err.println("--" + name + " : unknown value ->" + property + "<-, expected shown or hidden");
             return configured;
         }
 
-        return shown;
+        return shown.get();
     }
 
-    // shown: true, hidden: false, anything else: null
-    static Boolean ParseShown(String value) {
+    // shown: true, hidden: false, anything else: empty
+    static Optional<Boolean> ParseShown(String value) {
         switch (value.trim().toLowerCase(Locale.ROOT)) {
             case "shown":
-                return Boolean.TRUE;
+                return Optional.of(true);
             case "hidden":
-                return Boolean.FALSE;
+                return Optional.of(false);
             default:
-                return null;
+                return Optional.empty();
         }
     }
 

@@ -40,12 +40,12 @@ public final class MovingCameraComponent implements IUpdatable {
     public static final float MOVE_SPEED = 600;
     public static final float QUICK_SPEED = MOVE_SPEED * 2f;
 
-    protected float moveSpeed, quickSpeed;
+    private float moveSpeed, quickSpeed;
 
-    protected IInputManager inputManager;
-    protected Camera2D controlledCamera;
+    private IInputManager inputManager;
+    private Camera2D controlledCamera;
 
-    protected Inputs inputs;
+    private Inputs inputs;
 
     private final Vector2f direction = new Vector2f();
 
@@ -67,6 +67,7 @@ public final class MovingCameraComponent implements IUpdatable {
         this.inputs = inputs;
     }
 
+    @Override
     public void update(){
         float speed = inputManager.getState(inputs.QuickSpeed) ? quickSpeed : moveSpeed;
 

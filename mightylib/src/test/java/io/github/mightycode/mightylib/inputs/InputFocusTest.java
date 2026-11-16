@@ -39,7 +39,7 @@ class InputFocusTest {
         gamepads.postUpdate();
     }
 
-    // The tick after: the button is held, nothing is pressed any more
+    // The tick after: the button is held, nothing is pressed anymore
     private void nextTick() {
         gamepads.postUpdate();
         inputManager.updateActionSimulation();
@@ -187,7 +187,7 @@ class InputFocusTest {
     }
 
     // A tick in which the button of the mouse goes down, the focus being held since the tick before
-    private FakeMouse mouseWithFocusHeld(InputManager manager) {
+    private void mouseWithFocusHeld(InputManager manager) {
         FakeMouse mouse = (FakeMouse) manager.getMouseManager();
         mouse.postUpdate();
         manager.focus().request("owner");
@@ -195,7 +195,6 @@ class InputFocusTest {
         manager.resetDroppedEdges();
         mouse.left = true;
         mouse.postUpdate();
-        return mouse;
     }
 
     @Test

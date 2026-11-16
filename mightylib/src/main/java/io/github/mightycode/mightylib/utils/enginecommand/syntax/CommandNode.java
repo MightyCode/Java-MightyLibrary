@@ -174,8 +174,6 @@ public final class CommandNode {
     boolean isArgument() { return kind == Kind.ARGUMENT; }
     boolean isGreedy() { return type != null && type.isGreedy(); }
     ICommandHandler handler() { return handler; }
-    ECommandLevel getLevel() { return level; }
-
     // Its level and hidden conditions let the source see it (not its parents)
     boolean isVisible(CommandContext context) {
         return CommandCondition.Visible(level, conditions, context);

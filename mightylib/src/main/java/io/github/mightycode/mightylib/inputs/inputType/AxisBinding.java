@@ -8,7 +8,7 @@ import io.github.mightycode.mightylib.main.utils.GameTime;
  * curve (sign kept, |v|^exponent : 2 gives precision near the center of a stick), scale (negative to invert),
  * per second (multiplied by the duration of the tick : a speed becomes a movement for this tick).
  *
- * Example, look of a camera in degrees for this tick, the mouse and the right stick at the same sensitivity :
+ * <p>Example, look of a camera in degrees for this tick, the mouse and the right stick at the same sensitivity :
  * new AxisSum(new AxisMouse(AxisMouse.X), new AxisGamepad(GLFW_GAMEPAD_AXIS_RIGHT_X).curve(2).scale(1500).perSecond())
  *         .scale(0.1f)
  * (the stick fully pushed turns like the mouse moved 1500 pixels per second, 0.1 degree per pixel).

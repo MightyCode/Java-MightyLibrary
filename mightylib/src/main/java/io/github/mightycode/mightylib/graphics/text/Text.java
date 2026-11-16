@@ -9,7 +9,7 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
-public final class Text extends MeshRenderer implements Cloneable {
+public final class Text extends MeshRenderer {
     private static final int NUMBER_INDICES = 4;
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;
@@ -71,6 +71,7 @@ public final class Text extends MeshRenderer implements Cloneable {
         return font == null || text == null || text.trim().isEmpty();
     }
 
+    @Override
     public void display(){
         if (shouldNotDrawText())
             return;
@@ -135,32 +136,29 @@ public final class Text extends MeshRenderer implements Cloneable {
     public Text fitText(String text, Vector2f boxSize, boolean removeEscapeChars, String breakLineFirstChar){
         String clean = (removeEscapeChars) ? text.replace("\n", "") : text;
 
-        String result = "";
-        String temp;
-
+        StringBuilder result = new StringBuilder();
         Vector2f sizeTaken = new Vector2f();
 
-        for (char c : clean.toCharArray()){
-            temp = result + c;
-
+        for (int index = 0; index < clean.length(); ++index){
+            char c = clean.charAt(index);
             if (c == '\n'){
                 if (sizeTaken.y > boxSize.y){
                     break;
                 }
 
-                result = temp;
+                result.append(c);
             } else {
-                sizeTaken = usedFont().computeSize(temp, fontSize);
+                result.append(c);
+                sizeTaken = usedFont().computeSize(result.toString(), fontSize);
 
                 if (sizeTaken.x > boxSize.x){
-                    result = result + "\n" + breakLineFirstChar + c;
-                } else {
-                    result = temp;
+                    result.setLength(result.length() - 1);
+                    result.append('\n').append(breakLineFirstChar).append(c);
                 }
             }
         }
 
-        setText(result);
+        setText(result.toString());
 
         return this;
     }
@@ -208,7 +206,7 @@ public final class Text extends MeshRenderer implements Cloneable {
 
 
     public Text setPosition(Vector2f position){
-        if (position == null || position.x == position().x && position.y == position().y)
+        if (position == null || (position.x == position().x && position.y == position().y))
             return this;
 
         super.setPosition(new Vector3f(position.x, position.y, 0.0f));
@@ -311,8 +309,6 @@ public final class Text extends MeshRenderer implements Cloneable {
         String[] lines = laidOut.split("\n");
         float[] linesSize = new float[lines.length];
 
-        int charCount = 0;
-
         FontChar fontChar;
         Vector4f currentCharOffset = new Vector4f();
 
@@ -330,7 +326,6 @@ public final class Text extends MeshRenderer implements Cloneable {
             for (int i = 0; i < lines[j].length(); i++) {
                 if (i < measured)
                     currentCharOffset.x += (float) (usedFont().getFontFile().getCharacter(lines[j].charAt(i)).getxAdvance() * fontSize);
-                ++charCount;
             }
 
             linesSize[j] = currentCharOffset.x;
@@ -345,7 +340,7 @@ public final class Text extends MeshRenderer implements Cloneable {
         rectangleSize.add(padding.x + padding.z, padding.y + padding.w);
 
         currentCharOffset.x = 0;
-        charCount = 0;
+        int charCount = 0;
 
         switch(this.reference){
             case None:
@@ -357,6 +352,9 @@ public final class Text extends MeshRenderer implements Cloneable {
             case Right:
             case RightUp:
                 textReference.x = rectangleSize.x;
+                break;
+            default:
+                // Nothing to do for the other values
                 break;
         }
 
@@ -371,6 +369,9 @@ public final class Text extends MeshRenderer implements Cloneable {
             case RightDown:
                 textReference.y = rectangleSize.y;
                 break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         leftUpPosition.x -= textReference.x;
@@ -383,6 +384,9 @@ public final class Text extends MeshRenderer implements Cloneable {
                     break;
                 case Right:
                     lineAlignmentOffset = textWidth - linesSize[j];
+                    break;
+                default:
+                    // Nothing to do for the other values
                     break;
             }
 
@@ -422,7 +426,7 @@ public final class Text extends MeshRenderer implements Cloneable {
                 charPositions[charCount * SIZE_COORDINATES + 7] = temp.z;
 
                 // Inset by half a texel: with linear filtering, sampling exactly on the glyph border
-                // blends the neighbour glyph of the atlas when there is no spacing between them
+                // blends the neighbor glyph of the atlas when there is no spacing between them
                 temp.x = (float)(fontChar.getxAtlas()) + HALF_TEXEL;
                 temp.y = (float)(fontChar.getxAtlas() + fontChar.getWidthAtlas()) - HALF_TEXEL;
                 temp.z = (float)(fontChar.getyAtlas()) + HALF_TEXEL;
@@ -497,8 +501,7 @@ public final class Text extends MeshRenderer implements Cloneable {
         return copy;
     }
 
-    @Override
-    public Text clone() {
+    public Text copy() {
         return copyTo(new Text());
     }
 }

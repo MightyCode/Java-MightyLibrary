@@ -1,9 +1,9 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
-import io.github.mightycode.mightylib.graphics.GUI.BackgroundlessButton;
-import io.github.mightycode.mightylib.graphics.GUI.GUI;
-import io.github.mightycode.mightylib.graphics.GUI.ScrollList;
-import io.github.mightycode.mightylib.graphics.GUI.TextField;
+import io.github.mightycode.mightylib.graphics.gui.BackgroundlessButton;
+import io.github.mightycode.mightylib.graphics.gui.GUI;
+import io.github.mightycode.mightylib.graphics.gui.ScrollList;
+import io.github.mightycode.mightylib.graphics.gui.TextField;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
@@ -108,13 +108,14 @@ public class MenuScene extends Scene {
 
     @Override
     protected TemplateSceneLoading createLoadingScene(String[] args) {
-        // Plain grey screen at the start of the program
+        // Plain gray screen at the start of the program
         if (args.length > 0 && args[0].equals("start"))
             return new DefaultLoadingScene();
 
         return super.createLoadingScene(args);
     }
 
+    @Override
     public void launch(String[] args) {
         /// SCENE INFORMATION ///
 

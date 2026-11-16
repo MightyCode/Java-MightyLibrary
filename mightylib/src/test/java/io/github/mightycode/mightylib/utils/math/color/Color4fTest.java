@@ -134,6 +134,8 @@ class Color4fTest {
 
     private static void assertColor(float r, float g, float b, float a, Color4f color, String message) {
         assertEquals(r, color.getR(), EPS, message);
+        assertEquals(g, color.getG(), EPS, message);
+        assertEquals(b, color.getB(), EPS, message);
         assertEquals(a, color.getA(), EPS, message);
     }
 

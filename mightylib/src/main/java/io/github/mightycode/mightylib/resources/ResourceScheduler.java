@@ -75,10 +75,6 @@ class ResourceScheduler {
             return !urgent.isEmpty();
         }
 
-        boolean isEmpty() {
-            return urgent.isEmpty() && background.isEmpty();
-        }
-
         int size() {
             return urgent.size() + background.size();
         }
@@ -188,12 +184,6 @@ class ResourceScheduler {
         }
 
         return true;
-    }
-
-    // True when nothing at all is queued or running, preloads included
-    boolean isCompletelyIdle() {
-        return inbox.isEmpty() && toUpdate.isEmpty() && mainContextSteps.isEmpty() && workerSteps.isEmpty()
-                && runningWorkerSteps == 0;
     }
 
     void describe(JSONObject pipeline) {

@@ -13,11 +13,12 @@ import java.util.Locale;
 import java.util.Set;
 
 public final class DebugInfoCamera2D implements IUpdatableDisplayable {
-    protected Camera2D camera;
+    private Camera2D camera;
     private final Text text;
     private final Set<String> info = new HashSet<>();
 
-    private int precision = 2;
+    // Format of the numbers shown, from the precision
+    private String numberFormat = "%.2f";
 
     public Text text() {
         return text;
@@ -56,12 +57,12 @@ public final class DebugInfoCamera2D implements IUpdatableDisplayable {
     }
 
     public DebugInfoCamera2D setPrecision(int precision){
-        this.precision = precision;
+        numberFormat = "%." + Math.max(0, precision) + "f";
         return this;
     }
 
     public String prec(float value){
-        return String.format("%." + precision + "f", value);
+        return String.format(numberFormat, value);
     }
 
     @Override
@@ -73,21 +74,28 @@ public final class DebugInfoCamera2D implements IUpdatableDisplayable {
         result.append("camera2D ").append(camera.getName()).append(" id : ").append(camera.getCameraId()).append("\n");
 
         for (String info : this.info) {
-            if (info.equals("position"))
-                result.append("Position: x(")
-                        .append(prec(camera.getCamPosRef().x))
-                        .append(") y(")
-                        .append(prec(camera.getCamPosRef().y))
-                        .append(")\n");
-            else if (info.equals("rotation"))
-                result.append("Rotation: ").append(camera.getRotation()).append("\n");
-            else if (info.equals("zoom"))
-                result.append("Zoom: x(")
-                        .append(prec(camera.getZoomLevel().x))
-                        .append(") y(")
-                        .append(prec(camera.getZoomLevel().y))
-                        .append(")\n");
-
+            switch (info) {
+                case "position":
+                    result.append("Position: x(")
+                            .append(prec(camera.getCamPosRef().x))
+                            .append(") y(")
+                            .append(prec(camera.getCamPosRef().y))
+                            .append(")\n");
+                    break;
+                case "rotation":
+                    result.append("Rotation: ").append(camera.getRotation()).append("\n");
+                    break;
+                case "zoom":
+                    result.append("Zoom: x(")
+                            .append(prec(camera.getZoomLevel().x))
+                            .append(") y(")
+                            .append(prec(camera.getZoomLevel().y))
+                            .append(")\n");
+                    break;
+                default:
+                    // Unknown information: nothing shown
+                    break;
+            }
         }
 
         text.setText(result.toString());

@@ -34,7 +34,7 @@ final class EnginePlugin implements IPlugin {
     private final EngineConfig config;
     // Created with the window, after the registration: read by the loader of the shaders when it works
     private final Supplier<ShaderManager> shaderManager;
-    // The player has an access to the commands (EngineConfig.getCommandAccess, resolved once)
+    // The player has access to the commands (EngineConfig.getCommandAccess, resolved once)
     private final boolean console;
 
     EnginePlugin(EngineConfig config, Supplier<ShaderManager> shaderManager, boolean console) {

@@ -13,7 +13,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// The two rule formats ("list" of neighbours and "connections" by side types) and the lists of available tiles
+// The two rule formats ("list" of neighbors and "connections" by side types) and the lists of available tiles
 class WaveCollapseRulesParsingTest {
     private static final Vector2i RIGHT = new Vector2i(1, 0), LEFT = new Vector2i(-1, 0), UP = new Vector2i(0, 1);
 

@@ -72,7 +72,7 @@ public final class MainLoop {
 
         long start = System.nanoTime();
 
-        WindowContext mainContext = engine.contexts().getMainWindow();
+        WindowContext mainContext = engine.contexts().requireMainWindow();
 
         Window window = mainContext.getWindow();
         GLResources glResources = engine.glResources();

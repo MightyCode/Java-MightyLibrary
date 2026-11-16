@@ -42,7 +42,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Logique pure encore sans test** (`python tools/coverage.py`) : `Animation` / `Animator` (le constructeur de `Animation` lit `Views.engine().resources()` : lui passer `Resources` en paramètre, en gardant le constructeur actuel pour l'usage courant, permettrait de les tester sans moteur) et `FallbackAnimationData` (demande une `Resources`) ; `physics/B2Utils` (conversions JBox2D, à voir avec la physique 2D).
 
 ## Bugs relevés en passant (non corrigés)
-- **Premier passage de `tools/analyse.py` (2026-11-11) à trier** (`python tools/analyse.py --details <motif>`), par ordre de risque : SpotBugs `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` (20) et `AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE` (5) ; `NP_BOOLEAN_RETURN_NULL` (`EngineConfig.ParseShown`) ; Error Prone `MissingCasesInEnumSwitch` (22), `EmptyCatch` (3 : `EngineConfig`, `FileChangeDetector`, `ResourceWatcher`), `ReferenceEquality` (39), `EnumOrdinal` (21) (chiffres de la bibliothèque seule). Corriger par thème, comme avec `/analyse-intellij` ; ce qui est voulu va dans `tools/spotbugs-exclude.xml` ou les `-Xep:…:OFF` du profil `analyse`.
+- **`network` n'est pas sûr entre threads** : les drapeaux sont `volatile` et le compteur de messages atomique, mais `receivedMessages` et `messageToSend` (listes et table ordinaires) sont lus et écrits par le thread réseau et par le moteur sans verrou. À reprendre avec le réseau (file concurrente entre les deux), pas avant.
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
 
 ## Manuel et documentation de l'API (cap proposé, **points précis à discuter avant de commencer**)
@@ -89,7 +89,7 @@ D'après LearnOpenGL « 2D Game » (Breakout).
 
 ## Physique 2D : remplacer JBox2D
 Exigences : 2D au pixel près, cas complexes compris ; 3D compatible plus tard. Une boîte poussée **reste collée** au joueur (aucun écart, aucun tremblement). Un projet C++ précédent a échoué sur le test ci-dessous.
-- Constat : JBox2D 2.2.1.1 non maintenu (seulement `physics/B2Utils`, `Box2D`, `Platformer2D`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`, `CollisionVisualisation`), base de la physique arcade.
+- Constat : JBox2D 2.2.1.1 non maintenu (seulement `physics/B2Utils`, `Box2D`, `platformer2d`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`), base de la physique arcade.
 
 ### Test d'acceptation : `PhysicsCratesScene`
 Trois caisses empilées sur une plateforme mobile (horizontale et verticale) ; pousser celle du bas (la pile suit), puis celle du haut (elle seule bouge et tombe du bord) ; une caisse écrasée contre un mur. Aucun écart d'un pixel, aucun retard d'une frame, aucun tremblement.
@@ -101,7 +101,7 @@ Modèle solids/actors/riders (Celeste, TowerFall) étendu aux poussables empilé
 - **Deux phases** : calculer jusqu'où la chaîne peut aller (la poussée se propage, s'arrête au premier mur), puis déplacer toute la chaîne du même delta dans le même pas.
 - Les porteurs emportent ce qu'ils portent (récursif, du bas vers le haut).
 - **Écrasement** → événement, le jeu décide.
-- Aussi : tilemaps, plateformes traversables par dessous, pentes (option), zones de déclenchement, catégories par nom (déclarées par le projet), raycasts, événements de contact, visualisation.
+- Aussi : tilemaps, plateformes traversables par-dessous, pentes (option), zones de déclenchement, catégories par nom (déclarées par le projet), raycasts, événements de contact, visualisation.
 
 ### Corps rigides (bibliothèque derrière `IPhysicsWorld2D`)
 Pour rotation, empilement libre, articulations (ponts, cordes, ragdolls).

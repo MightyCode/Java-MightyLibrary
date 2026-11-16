@@ -23,12 +23,10 @@ import org.joml.Vector3f;
 public class WaveFunctionCollapse2D extends Scene {
     private TileMap map;
     private LayersTileMapRenderer mapRenderer;
-    private Vector2i mapSize;
     private WaveFunctionCollapseGrid waveFunctionCollapseGrid;
     private boolean immediateConstruction;
     private Timer timer;
 
-    private Camera2D hudCamera;
 
     @Override
     protected String[] getInvolvedBatch() {
@@ -37,17 +35,18 @@ public class WaveFunctionCollapse2D extends Scene {
         };
     }
 
+    @Override
     public void launch(String[] args) {
         /// SCENE INFORMATION ///
 
-        hudCamera = camera2D().copy();
+        Camera2D hudCamera = camera2D().copy();
 
         setClearColor(52, 189, 235, 1f);
         //setClearColor(0, 0, 0, 1f);
 
         /// RENDERERS ///
 
-        mapSize = new Vector2i(100, 100);
+        Vector2i mapSize = new Vector2i(100, 100);
 
         mapRenderer = new LayersTileMapRenderer("texture2D", true);
 
@@ -104,6 +103,7 @@ public class WaveFunctionCollapse2D extends Scene {
     }
 
 
+    @Override
     public void update() {
         super.update();
 
@@ -139,6 +139,7 @@ public class WaveFunctionCollapse2D extends Scene {
     }
 
 
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();

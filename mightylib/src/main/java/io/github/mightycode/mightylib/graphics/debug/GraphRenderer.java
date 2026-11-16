@@ -8,8 +8,7 @@ import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
@@ -57,7 +56,7 @@ public final class GraphRenderer {
      * Only the position in scene will change in time, precompute the fixed order of vertex to draw.
      * @param nodes Ordered list of connected nodes
      */
-    public void init(SortedMap<Vector2f, Long> nodes, HashMap<Vector2f, ArrayList<Vector2f>> connections){
+    public void init(SortedMap<Vector2f, Long> nodes, Map<Vector2f, List<Vector2f>> connections){
         edgeNumber = 0;
         for (Map.Entry<Vector2f, Long> entry: nodes.entrySet()){
             for (Vector2f neighbour : connections.get(entry.getKey())){
@@ -96,7 +95,7 @@ public final class GraphRenderer {
      * @param zoomLevel current camera zoom level
      */
     public void updateRoads(SortedMap<Vector2f, Long> nodes,
-                            HashMap<Vector2f, ArrayList<Vector2f>> connections,
+                            Map<Vector2f, List<Vector2f>> connections,
                             Vector4f boundaries, Vector4f displayBoundaries, float zoomLevel){
         float roadSize = this.edgeSize / zoomLevel;
 

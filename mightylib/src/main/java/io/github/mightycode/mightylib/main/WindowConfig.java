@@ -85,7 +85,7 @@ public final class WindowConfig {
         return this;
     }
 
-    /** By default a window is closed when the scene that opened it is left; a persistent one stays until closed. */
+    /** By default, a window is closed when the scene that opened it is left; a persistent one stays until closed. */
     public WindowConfig setPersistent(boolean persistent) {
         this.persistent = persistent;
         return this;
@@ -129,7 +129,6 @@ public final class WindowConfig {
         info.Display = display.copy();
         info.VirtualSize = getVirtualSize();
         info.WindowName = title;
-        info.KeyboardLanguage = keyboardLanguage;
         info.ParentWindowId = parentWindowId;
         return info;
     }

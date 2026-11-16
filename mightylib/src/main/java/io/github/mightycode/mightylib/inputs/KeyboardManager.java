@@ -257,11 +257,7 @@ public final class KeyboardManager {
             mainKey = -1;
             wasMain.clear();
         } else {
-            for (int index = wasMain.size() - 1; index >= 0; --index) {
-                if (!getRawKeyState(wasMain.get(index))) {
-                    wasMain.remove(index);
-                }
-            }
+            wasMain.removeIf(key -> !getRawKeyState(key));
 
             wasMain.add(mainKey);
         }
@@ -287,6 +283,6 @@ public final class KeyboardManager {
     public boolean isCapsLock() { return capsLockActivated; }
 
     public int getMainKeyPressed() { return hidden() ? -1 : mainKey; }
-    public char getCorrespondingCharMainKeyPressed() { return hidden() ? (char) -1 : language.translateKeyTo(mainKey); }
+    public char getCorrespondingCharMainKeyPressed() { return hidden() ? Character.MAX_VALUE : language.translateKeyTo(mainKey); }
     public int getNumberKeyPressed(){ return hidden() ? 0 : numberKeyPressed; }
 }

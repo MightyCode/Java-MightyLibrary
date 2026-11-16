@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.main.WindowContext;
@@ -48,11 +48,11 @@ public final class BackgroundlessButton extends GUI {
         }
     }
 
-    @Override
     /**
-     * True when the mouse is over the text as it is drawn : the rectangle of the text itself (padding excluded),
+     * True when the mouse is over the text as it is drawn: the rectangle of the text itself (padding excluded),
      * turned with the text when it is rotated.
      */
+    @Override
     public boolean GUIMouseSelected(){
         Vector2f mouse = referenceCamera().transformPosition(context.getMouseManager().pos());
         Vector3f origin = text.position();

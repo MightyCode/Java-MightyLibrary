@@ -3,11 +3,11 @@ package io.github.mightycode.mightylib.graphics.shader;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.*;
 
-public final class ShaderValue implements Cloneable {
-    protected final String name;
-    protected Object object;
+public final class ShaderValue {
+    private final String name;
+    private Object object;
 
-    protected final Class<?> type;
+    private final Class<?> type;
     private boolean shouldForceUpdate;
 
     public ShaderValue(final String a, final Class<?> type, final Object object){
@@ -72,7 +72,7 @@ public final class ShaderValue implements Cloneable {
 
     /**
      * Copy the value of source into this value without allocating, for mutable types.
-     * @return false if the copy can't be done in place, a clone must be used instead
+     * @return false if the copy can't be done in place, a copy must be used instead
      */
     public boolean copyValueFrom(ShaderValue source) {
         if (type != source.type || object == null || source.object == null)
@@ -96,8 +96,7 @@ public final class ShaderValue implements Cloneable {
         return true;
     }
 
-    @Override
-    public ShaderValue clone() {
+    public ShaderValue copy() {
         if (type == Float.class || type == float.class) {
             return new ShaderValue(name, type, getObjectTyped(Float.class));
         } else if (type == Vector2f.class) {

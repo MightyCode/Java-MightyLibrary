@@ -29,7 +29,6 @@ final class ConsolePanel {
     private static final Color4f FLASH_COLOR = new Color4f(0.45f, 0.45f, 0.45f, 0.8f);
 
     private final ConsoleView view;
-    private final ConsoleLog log;
     private final CommandLineEditor editor;
     private final String fontName;
 
@@ -77,7 +76,7 @@ final class ConsolePanel {
     ConsolePanel(ConsoleView view, Console console, Color4f backgroundColor, Color4f inputBackgroundColor) {
         this.view = view;
         this.console = console;
-        this.log = console.getLog();
+        ConsoleLog log = console.getLog();
         this.editor = console.getEditor();
         this.fontName = console.getFontName();
 
@@ -110,8 +109,6 @@ final class ConsolePanel {
         text.setFontSize(fontSize > 0 ? fontSize : 1);
         return text;
     }
-
-    ConsoleView getView() { return view; }
 
     // Rows shown at once: the scroll of Page Up / Page Down
     int getVisibleRows() { return Math.max(1, visibleRows); }
@@ -154,8 +151,8 @@ final class ConsolePanel {
         // A line hidden from the viewer (program output for the player) rebuilds nothing
         layout.refresh();
         // The layout also builds on a scroll or a mouse read between two displays
-        if (layout.buildCount() != builtLayout || rowsDirty || width != builtWidth || height != builtHeight || x != builtX || y != builtY
-                || fontSize != builtFontSize)
+        if (layout.buildCount() != builtLayout || rowsDirty || Changed(width, builtWidth) || Changed(height, builtHeight)
+                || Changed(x, builtX) || Changed(y, builtY) || Changed(fontSize, builtFontSize))
             buildRows(x, y, width, height, inputTop);
 
         background.setSizePix(width, height);
@@ -190,11 +187,16 @@ final class ConsolePanel {
     float originY() { return originY; }
 
     // Font size giving rows of ROW_HEIGHT pixels with the metrics of the font used now
+    // A size or a position is compared exactly: any change rebuilds
+    private static boolean Changed(float value, float built) {
+        return Float.compare(value, built) != 0;
+    }
+
     private void updateFontSize() {
         // Height of a row for a font size of 1 (changing the size of a text rebuilds it: measured, not set)
         float unit = inputText.lineHeight() / inputText.getFontSize();
         float wanted = unit > 0 ? ROW_HEIGHT / unit : ROW_HEIGHT;
-        if (wanted != fontSize) {
+        if (Changed(wanted, fontSize)) {
             fontSize = wanted;
             for (Text row : rows)
                 row.setFontSize(fontSize);

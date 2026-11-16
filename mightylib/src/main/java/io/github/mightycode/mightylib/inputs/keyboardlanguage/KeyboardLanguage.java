@@ -48,7 +48,7 @@ public abstract class KeyboardLanguage {
             return charInputEntry.getChar();
         }
 
-        return (char)-1;
+        return Character.MAX_VALUE;
     }
 
     public final void setManager(KeyboardManager m) {

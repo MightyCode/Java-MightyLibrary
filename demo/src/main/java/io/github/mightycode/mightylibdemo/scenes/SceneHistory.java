@@ -140,7 +140,7 @@ final class SceneHistory {
         }
     }
 
-    /** The paths of the scene sources become relative class names (Platformer2D.PlatformerBox2D). */
+    /** The paths of the scene sources become relative class names (platformer2d.PlatformerBox2D). */
     static Map<String, Dates> ByRelativeName(Map<String, Dates> byPath) {
         Map<String, Dates> byName = new HashMap<>();
         for (Map.Entry<String, Dates> entry : byPath.entrySet()) {

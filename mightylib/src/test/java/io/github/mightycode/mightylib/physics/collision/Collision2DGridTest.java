@@ -113,7 +113,7 @@ class Collision2DGridTest {
 
         grid.clear();
 
-        // no cell any more: any query is outside the grid or hits no cell
+        // no cell anymore: any query is outside the grid or hits no cell
         assertTrue(grid.getCollisionNear(new CollisionRectangle(1000, 1000, 1, 1)).isEmpty());
     }
 

@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.algorithms.astar.AStar;
 import io.github.mightycode.mightylib.algorithms.dijkstra.Dijkstra;
 import io.github.mightycode.mightylib.algorithms.graph.Graph;
 import io.github.mightycode.mightylib.algorithms.graph.Node;
-import io.github.mightycode.mightylib.graphics.GUI.StrSelector;
+import io.github.mightycode.mightylib.graphics.gui.StrSelector;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * Graph, Dijkstra and A* : a grid of cells is turned into a Graph (one Node per free cell, linked to its four
- * neighbours), then the algorithm chosen in the StrSelector (top right) looks for the shortest path between the
+ * neighbors), then the algorithm chosen in the StrSelector (top right) looks for the shortest path between the
  * start and the end cells.
  * Left click paints or erases walls, shift + left click moves the start, right click moves the end.
  */
@@ -43,8 +43,6 @@ public class PathfindingScene2D extends Scene {
     private int startX = 2, startY = 2;
     private int endX = COLUMNS - 3, endY = ROWS - 3;
 
-    private Node[][] nodes;
-    private Graph graph;
     private List<Node> path = new ArrayList<>();
 
     private RectangleRenderer rectangle;
@@ -95,8 +93,8 @@ public class PathfindingScene2D extends Scene {
 
     /** Builds the graph from the free cells and computes the path again. */
     private void rebuild() {
-        graph = new Graph();
-        nodes = new Node[ROWS][COLUMNS];
+        Graph graph = new Graph();
+        Node[][] nodes = new Node[ROWS][COLUMNS];
 
         for (int y = 0; y < ROWS; ++y) {
             for (int x = 0; x < COLUMNS; ++x) {

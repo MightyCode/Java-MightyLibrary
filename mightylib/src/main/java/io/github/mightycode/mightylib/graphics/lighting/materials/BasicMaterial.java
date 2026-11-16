@@ -5,9 +5,9 @@ import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
 public class BasicMaterial implements IShaderUniforms {
-    public Vector3f Ambient;
-    public Vector3f Diffuse;
-    public Vector3f Specular;
+    public final Vector3f Ambient;
+    public final Vector3f Diffuse;
+    public final Vector3f Specular;
 
     public BasicMaterial(final Vector3f ambient, final Vector3f diffuse, final Vector3f specular){
         this.Ambient = ambient;
@@ -18,12 +18,14 @@ public class BasicMaterial implements IShaderUniforms {
     /**
      * Assuming that the shader contains struct Material with attributes
      */
+    @Override
     public void addToRenderer(Renderer renderer, String structureName){
         renderer.addShaderValue(structureName + ".ambient", Vector3f.class, Ambient)
                 .addShaderValue(structureName + ".diffuse", Vector3f.class, Diffuse)
                 .addShaderValue(structureName + ".specular", Vector3f.class, Specular);
     }
 
+    @Override
     public void updateRenderer(Renderer renderer, String structureName){
         renderer.updateShaderValue(structureName + ".ambient", Ambient)
                 .updateShaderValue(structureName + ".diffuse", Diffuse)
@@ -32,12 +34,11 @@ public class BasicMaterial implements IShaderUniforms {
     }
 
     // A copy with its own vectors: changing the copy leaves this material as it is
-    @Override
-    public BasicMaterial clone(){
-        return cloneBasicMaterial();
+    public BasicMaterial copy(){
+        return copyBasicMaterial();
     }
 
-    public final BasicMaterial cloneBasicMaterial(){
+    public final BasicMaterial copyBasicMaterial(){
         return new BasicMaterial(new Vector3f(Ambient), new Vector3f(Diffuse), new Vector3f(Specular));
     }
 }

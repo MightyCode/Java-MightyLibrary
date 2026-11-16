@@ -3,7 +3,7 @@ package io.github.mightycode.mightylib.resources.sound.decoder;
 import io.github.mightycode.mightylib.resources.ResourceException;
 
 /**
- * Frame by frame decoder of a FLAC stream held in memory (format: https://xiph.org/flac/format.html).
+ * Frame by frame decoder of a FLAC stream held in memory (format: <a href="https://xiph.org/flac/format.html">FLAC format</a>).
  * Written for this engine, no external code. The CRCs are not checked: the MD5 of the STREAMINFO block lets a test
  * check the whole decoding. Samples keep the bit depth of the file (8 to 24 bits).
  */

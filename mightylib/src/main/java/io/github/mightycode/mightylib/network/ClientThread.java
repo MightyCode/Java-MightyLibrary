@@ -10,9 +10,9 @@ public final class ClientThread extends CommunicationThread {
     public static final String HEADER_SEPARATION = "|";
 
     public ClientTcp client;
-    public boolean shouldTryConnection;
+    public volatile boolean shouldTryConnection;
 
-    public float timeOutCounter;
+    public volatile float timeOutCounter;
 
     public ClientThread() {
         timeOutCounter = GameTime.currentTime();
@@ -34,6 +34,7 @@ public final class ClientThread extends CommunicationThread {
         return this.client;
     }
 
+    @Override
     public void reset(){
         super.reset();
 
@@ -52,6 +53,8 @@ public final class ClientThread extends CommunicationThread {
 
         try {
             while (this.running){
+                // Period of the connection attempts
+                //noinspection BusyWait
                 Thread.sleep(SLEEP_TIME);
                 //System.out.println(messageProcessed + " " + messageReceived + " " + messageToSend.size());
 

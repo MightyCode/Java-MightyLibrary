@@ -87,7 +87,7 @@ class ResourcesBatchTest extends ResourcesTestBase {
         assertConsistent();
     }
 
-    // Batch unloaded then loaded again before the unload was processed (scene left and entered again)
+    // Batch unloaded then loaded again before the unloading was processed (scene left and entered again)
     @Test
     void unloadThenLoadBeforeProcessingKeepsDataLoaded() throws Exception {
         fake(THREAD_CONTEXT, "worker");

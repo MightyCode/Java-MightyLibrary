@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.inputs.InputFocus;
 import io.github.mightycode.mightylib.inputs.KeyEvent;
@@ -87,7 +87,7 @@ public final class TextFieldModel {
 
     public void setAvailableWidth(float available) { this.available = Math.max(1, available); }
 
-    public void update(InputFocus focus, Tick tick) {
+    void update(InputFocus focus, Tick tick) {
         changed = false;
         submitted = false;
         leftWith = -1;

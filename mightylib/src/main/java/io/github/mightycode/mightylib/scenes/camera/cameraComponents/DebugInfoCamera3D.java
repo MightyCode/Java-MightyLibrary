@@ -18,11 +18,12 @@ public final class DebugInfoCamera3D implements IUpdatableDisplayable {
     public final static int SPEED = 3;
 
 
-    protected Camera3D camera;
+    private Camera3D camera;
     private final Text text;
     private final Set<Integer> info = new HashSet<>();
 
-    private int precision = 2;
+    // Format of the numbers shown, from the precision
+    private String numberFormat = "%.2f";
 
     public Text text() {
         return text;
@@ -54,12 +55,12 @@ public final class DebugInfoCamera3D implements IUpdatableDisplayable {
     }
 
     public DebugInfoCamera3D setPrecision(int precision){
-        this.precision = precision;
+        numberFormat = "%." + Math.max(0, precision) + "f";
         return this;
     }
 
     public String prec(float value){
-        return String.format("%."+precision+"f", value);
+        return String.format(numberFormat, value);
     }
 
     public DebugInfoCamera3D addInfo(int info){
@@ -109,6 +110,9 @@ public final class DebugInfoCamera3D implements IUpdatableDisplayable {
                             .append(") z(")
                             .append(prec(camera.getSpeed().z))
                             .append(")\n");
+                    break;
+                default:
+                    // Nothing to do for the other values
                     break;
             }
         }

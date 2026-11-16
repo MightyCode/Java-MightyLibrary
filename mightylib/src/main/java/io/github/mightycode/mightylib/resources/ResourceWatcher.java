@@ -137,11 +137,14 @@ public final class ResourceWatcher {
                 return;
 
             for (String source : data.sourcePaths()) {
+                Path path;
                 try {
-                    Path path = Paths.get(source).toAbsolutePath().normalize();
-                    byPath.computeIfAbsent(path, p -> new ArrayList<>(1)).add(data);
-                } catch (InvalidPathException ignored) {
+                    path = Paths.get(source).toAbsolutePath().normalize();
+                } catch (InvalidPathException e) {
+                    // A source that is not a file path (generated data): nothing to watch
+                    continue;
                 }
+                byPath.computeIfAbsent(path, p -> new ArrayList<>(1)).add(data);
             }
         });
 

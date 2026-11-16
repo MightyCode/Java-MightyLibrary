@@ -29,8 +29,7 @@ public final class LightDecrease implements IShaderUniforms {
 
     }
 
-    @Override
-    public LightDecrease clone(){
+    public LightDecrease copy(){
         return new LightDecrease(constant, linear, quadratic);
     }
 }

@@ -5,7 +5,7 @@ package io.github.mightycode.mightylib.algorithms.graph;
  */
 public final class NodeSubIntersection extends NodeContainer<Node, NodeIntersection> {
 
-    // Neighbour can be null;
+    // Neighbor can be null;
     public NodeSubIntersection(Node node, NodeIntersection parent1, NodeIntersection parent2) {
         super(node);
 

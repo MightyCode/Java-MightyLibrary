@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.json.JSONObject;
 
 /**
- * The in-game console (service mightylib:console, Engine.console): registered by the engine only when the player has an
+ * The in-game console (service mightylib:console, Engine.console): registered by the engine only when the player has
  * access to the commands (EngineConfig.setCommandAccess). A plugin that uses it declares after(EngineServices.CONSOLE)
  * and tests Engine.hasService.
  */

@@ -26,7 +26,7 @@ public class CustomRenderer2D extends Scene {
     private static class StarRenderer extends MeshRenderer {
         private float time;
 
-        public StarRenderer(float innerRatio) {
+        StarRenderer(float innerRatio) {
             super(SHADER, false);
 
             Mesh star = getMesh();
@@ -36,7 +36,7 @@ public class CustomRenderer2D extends Scene {
             addShaderValue("time", Float.class, 0f);
         }
 
-        public void advance(float delta) {
+        void advance(float delta) {
             time += delta;
             updateShaderValue("time", time);
         }

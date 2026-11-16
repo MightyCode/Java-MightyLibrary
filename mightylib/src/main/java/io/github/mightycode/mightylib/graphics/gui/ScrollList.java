@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.main.Views;
@@ -22,7 +22,7 @@ import java.util.List;
  * Only the visible rows exist as GL objects (a fixed pool re-filled on scroll),
  * so the number of items does not matter.
  *
- * One row is selected (ListSelection) : by the keyboard (setupKeyboardActions), by the mouse moving over a row,
+ * <p>One row is selected (ListSelection) : by the keyboard (setupKeyboardActions), by the mouse moving over a row,
  * or by setSelected. The list scrolls to keep it shown. The row under the mouse is getHovered() ; a keyboard move
  * or new items hide the hover until the mouse moves again.
  */
@@ -154,7 +154,7 @@ public final class ScrollList {
 
     /**
      * Up and down held move the selection again and again : after the delay, one row at each interval (seconds).
-     * By default the repeat of the keyboards of the system (0.5 s, then 30 rows a second).
+     * By default, the repeat of the keyboards of the system (0.5 s, then 30 rows a second).
      */
     public void setKeyRepeat(float delay, float interval) {
         repeatUp.setRepeat(delay, interval);

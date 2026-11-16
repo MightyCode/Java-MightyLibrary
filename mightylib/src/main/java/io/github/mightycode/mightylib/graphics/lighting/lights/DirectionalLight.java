@@ -26,8 +26,8 @@ public final class DirectionalLight extends BasicMaterial {
     }
 
     @Override
-    public DirectionalLight clone(){
-        return new DirectionalLight(cloneBasicMaterial())
+    public DirectionalLight copy(){
+        return new DirectionalLight(copyBasicMaterial())
                 .setDirection(direction == null ? null : new Vector3f(direction));
     }
 

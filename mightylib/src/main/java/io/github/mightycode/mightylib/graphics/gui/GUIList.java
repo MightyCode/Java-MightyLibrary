@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.IInputManager;
@@ -60,7 +60,7 @@ public final class GUIList {
         return this;
     }
 
-    // Removes the element; the selected one is unselected first, so it can't be activated any more
+    // Removes the element; the selected one is unselected first, so it can't be activated anymore
     public GUI remove(int id) {
         GUI removed = GUIs.remove(id);
         if (this.id != null && this.id == id) {

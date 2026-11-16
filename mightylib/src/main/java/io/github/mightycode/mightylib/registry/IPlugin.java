@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.registry;
 
 /**
  * What a game, a tool or a mod adds to the engine (EngineConfig.addPlugin): loaders, commands... registered once, at
- * the start of the engine, before the window exists. The registry is frozen afterwards.
+ * the start of the engine, before the window exists. The registry is frozen afterward.
  * The engine registers its own content the same way, first, with the namespace "mightylib".
  */
 public interface IPlugin {

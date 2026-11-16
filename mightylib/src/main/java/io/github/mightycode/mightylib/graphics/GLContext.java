@@ -11,7 +11,9 @@ import org.lwjgl.system.Callback;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
@@ -49,9 +51,10 @@ public final class GLContext {
     // Program bound in this context, -1 when unknown: avoids sending glUseProgram again
     private int currentProgram = -1;
 
-    private final List<Integer> vaos = new ArrayList<>();
-    private final List<Integer> fbos = new ArrayList<>();
-    private final List<Integer> rbos = new ArrayList<>();
+    // GL ids are unique: a set, removed in constant time
+    private final Set<Integer> vaos = new LinkedHashSet<>();
+    private final Set<Integer> fbos = new LinkedHashSet<>();
+    private final Set<Integer> rbos = new LinkedHashSet<>();
     // Deletions asked while another context was current
     private final List<Runnable> deferred = new ArrayList<>();
 
@@ -216,21 +219,21 @@ public final class GLContext {
 
     public void addVertexArray(int vao) { vaos.add(vao); }
 
-    public void removeVertexArray(Integer vao) { vaos.remove(vao); }
+    public void removeVertexArray(int vao) { vaos.remove(vao); }
 
     public void addFramebuffer(int fbo) { fbos.add(fbo); }
 
-    public void removeFramebuffer(Integer fbo) { fbos.remove(fbo); }
+    public void removeFramebuffer(int fbo) { fbos.remove(fbo); }
 
     public void addRenderbuffer(int rbo) { rbos.add(rbo); }
 
-    public void removeRenderbuffer(Integer rbo) { rbos.remove(rbo); }
+    public void removeRenderbuffer(int rbo) { rbos.remove(rbo); }
 
-    public List<Integer> vertexArrays() { return vaos; }
+    public Set<Integer> vertexArrays() { return vaos; }
 
-    public List<Integer> framebuffers() { return fbos; }
+    public Set<Integer> framebuffers() { return fbos; }
 
-    public List<Integer> renderbuffers() { return rbos; }
+    public Set<Integer> renderbuffers() { return rbos; }
 
     // The deletion is done at the next makeCurrent of this context
     public void deleteLater(Runnable deletion) {

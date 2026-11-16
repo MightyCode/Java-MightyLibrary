@@ -28,6 +28,7 @@ public final class CSVLoader extends ResourceLoader {
         exploreResourcesFile(data, resources().folder());
     }
 
+    @Override
     public String filterFile(String path) {
         String ending = getFileExtension(path);
 
@@ -96,7 +97,8 @@ public final class CSVLoader extends ResourceLoader {
         boolean inQuotes = false;
         StringBuilder fieldBuilder = new StringBuilder();
 
-        for (char c : line.toCharArray()) {
+        for (int index = 0; index < line.length(); ++index) {
+            char c = line.charAt(index);
             if (c == '"') {
                 inQuotes = !inQuotes;
             } else if (c == separator && !inQuotes) {

@@ -66,64 +66,78 @@ public final class TileMapLoader extends ResourceLoader {
             if (linePart.length == 0)
                 continue;
 
-            if (linePart[0].equals("tileset")) {
-                String tilesetName = TextFormat.word(linePart, 1, path, lineNumber, "tileset name");
-                TileSet tileset = resources().getResource(TileSet.class, tilesetName);
-                int startId = 0;
+            switch (linePart[0]) {
+                case "tileset": {
+                    String tilesetName = TextFormat.word(linePart, 1, path, lineNumber, "tileset name");
+                    TileSet tileset = resources().getResource(TileSet.class, tilesetName);
+                    int startId = 0;
 
-                if (linePart.length >= 3)
-                    startId = TextFormat.integer(linePart, 2, path, lineNumber, "first tile id") - 1;
+                    if (linePart.length >= 3)
+                        startId = TextFormat.integer(linePart, 2, path, lineNumber, "first tile id") - 1;
 
-                tileMap.addTileset(tileset, startId);
-            } else if (linePart[0].equals("layerSize")) {
-                layerSize = new Vector2i(
-                        TextFormat.integer(linePart, 1, path, lineNumber, "map width"),
-                        TextFormat.integer(linePart, 2, path, lineNumber, "map height"));
-                if (layerSize.x < 0 || layerSize.y < 0)
-                    throw TextFormat.error(path, lineNumber, "the map size can't be negative");
-            } else if (linePart[0].equals("layerNumber")) {
-                numberOfBackLayers = TextFormat.integer(linePart, 1, path, lineNumber, "number of back layers");
-                numberOfForLayers = TextFormat.integer(linePart, 2, path, lineNumber, "number of front layers");
-                if (numberOfBackLayers < 0 || numberOfForLayers < 0)
-                    throw TextFormat.error(path, lineNumber, "the number of layers can't be negative");
-
-                layers = new TileLayer[numberOfBackLayers + numberOfForLayers];
-            } else if (linePart[0].equals("layerCategory")) {
-                layersCategories.add(TextFormat.word(linePart, 1, path, lineNumber, "category name"));
-                if (linePart.length >= 3)
-                    layersCategoriesBeginIndex.add(TextFormat.integer(linePart, 2, path, lineNumber, "category first layer"));
-                else
-                    layersCategoriesBeginIndex.add(0);
-
-            } else if (linePart[0].equals("layer")) {
-                int layerNumber = TextFormat.integer(linePart, 1, path, lineNumber, "layer number");
-
-                if (layers == null || layerSize == null)
-                    throw TextFormat.error(path, lineNumber,
-                            "the map size and the number of layers must come before the layers");
-                if (layerNumber < 0 || layerNumber >= layers.length)
-                    throw TextFormat.error(path, lineNumber, "layer " + layerNumber
-                            + " is out of range (" + layers.length + " layers)");
-
-                layers[layerNumber] = new TileLayer(layerSize);
-
-                for (int y = 0; y < layerSize.y; ++y) {
-                    if (lineIndex >= parts.length)
-                        throw TextFormat.error(path, parts.length, "layer " + layerNumber
-                                + " needs " + layerSize.y + " rows, found " + y);
-
-                    String[] Xs = parts[lineIndex].trim().split(" ");
-                    if (Xs.length < layerSize.x)
-                        throw TextFormat.error(path, lineIndex + 1, "row needs " + layerSize.x
-                                + " tiles, found " + Xs.length);
-
-                    for (int x = 0; x < layerSize.x; ++x) {
-                        layers[layerNumber].setTileType(x, y,
-                                TextFormat.integer(Xs, x, path, lineIndex + 1, "tile id") - 1);
-                    }
-
-                    lineIndex += 1;
+                    tileMap.addTileset(tileset, startId);
+                    break;
                 }
+                case "layerSize": {
+                    layerSize = new Vector2i(
+                            TextFormat.integer(linePart, 1, path, lineNumber, "map width"),
+                            TextFormat.integer(linePart, 2, path, lineNumber, "map height"));
+                    if (layerSize.x < 0 || layerSize.y < 0)
+                        throw TextFormat.error(path, lineNumber, "the map size can't be negative");
+                    break;
+                }
+                case "layerNumber": {
+                    numberOfBackLayers = TextFormat.integer(linePart, 1, path, lineNumber, "number of back layers");
+                    numberOfForLayers = TextFormat.integer(linePart, 2, path, lineNumber, "number of front layers");
+                    if (numberOfBackLayers < 0 || numberOfForLayers < 0)
+                        throw TextFormat.error(path, lineNumber, "the number of layers can't be negative");
+
+                    layers = new TileLayer[numberOfBackLayers + numberOfForLayers];
+                    break;
+                }
+                case "layerCategory": {
+                    layersCategories.add(TextFormat.word(linePart, 1, path, lineNumber, "category name"));
+                    if (linePart.length >= 3)
+                        layersCategoriesBeginIndex.add(TextFormat.integer(linePart, 2, path, lineNumber, "category first layer"));
+                    else
+                        layersCategoriesBeginIndex.add(0);
+
+                    break;
+                }
+                case "layer": {
+                    int layerNumber = TextFormat.integer(linePart, 1, path, lineNumber, "layer number");
+
+                    if (layers == null || layerSize == null)
+                        throw TextFormat.error(path, lineNumber,
+                                "the map size and the number of layers must come before the layers");
+                    if (layerNumber < 0 || layerNumber >= layers.length)
+                        throw TextFormat.error(path, lineNumber, "layer " + layerNumber
+                                + " is out of range (" + layers.length + " layers)");
+
+                    layers[layerNumber] = new TileLayer(layerSize);
+
+                    for (int y = 0; y < layerSize.y; ++y) {
+                        if (lineIndex >= parts.length)
+                            throw TextFormat.error(path, parts.length, "layer " + layerNumber
+                                    + " needs " + layerSize.y + " rows, found " + y);
+
+                        String[] Xs = parts[lineIndex].trim().split(" ");
+                        if (Xs.length < layerSize.x)
+                            throw TextFormat.error(path, lineIndex + 1, "row needs " + layerSize.x
+                                    + " tiles, found " + Xs.length);
+
+                        for (int x = 0; x < layerSize.x; ++x) {
+                            layers[layerNumber].setTileType(x, y,
+                                    TextFormat.integer(Xs, x, path, lineIndex + 1, "tile id") - 1);
+                        }
+
+                        lineIndex += 1;
+                    }
+                    break;
+                }
+                default:
+                    // Unknown lines are ignored
+                    break;
             }
         }
 

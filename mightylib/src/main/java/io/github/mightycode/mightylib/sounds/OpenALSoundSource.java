@@ -31,7 +31,7 @@ public final class OpenALSoundSource implements ISoundSource {
     SoundSourceCreationInfo waiting;
 
     // Name asked at creation, known before the source is created
-    private String soundName;
+    private final String soundName;
 
     OpenALSoundSource(Resources resources, SoundSourceCreationInfo info) {
         this.waiting = info;
@@ -204,7 +204,7 @@ public final class OpenALSoundSource implements ISoundSource {
 
     /**
      * Gives an owned source back to the manager, which deletes it at its next update (also valid before the source
-     * is ready: it is then never created). The source must not be used afterwards.
+     * is ready: it is then never created). The source must not be used afterward.
      */
     @Override
     public void release() {

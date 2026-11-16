@@ -28,9 +28,9 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.resources.texture.Texture",
             // Commands and GUI
             "io.github.mightycode.mightylib.utils.enginecommand.BaseCommand",
-            "io.github.mightycode.mightylib.graphics.GUI.GUI",
-            "io.github.mightycode.mightylib.graphics.GUI.Slider",
-            "io.github.mightycode.mightylib.graphics.GUI.ValueSelector",
+            "io.github.mightycode.mightylib.graphics.gui.GUI",
+            "io.github.mightycode.mightylib.graphics.gui.Slider",
+            "io.github.mightycode.mightylib.graphics.gui.ValueSelector",
             // Open to the projects, EXPERIMENTAL
             "io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage",
             "io.github.mightycode.mightylib.physics.tweenings.Tweening"

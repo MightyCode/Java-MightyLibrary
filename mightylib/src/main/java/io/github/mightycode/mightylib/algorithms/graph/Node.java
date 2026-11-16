@@ -11,7 +11,7 @@ import java.util.HashMap;
  */
 public final class Node extends PositionListNode<Node> {
     // Geographic position
-    protected Vector2f position;
+    private final Vector2f position;
     // If we want to override the distance to a node by a given value
     private final HashMap<Node, Float> overrideDistances;
 
@@ -46,7 +46,7 @@ public final class Node extends PositionListNode<Node> {
 
     /**
      * Reimplementation of add method with distances
-     * @param neighbour new neighbour node
+     * @param neighbour new neighbor node
      * @param distance fixed distance to the new node
      */
     public void add(Node neighbour, float distance){

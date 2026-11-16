@@ -17,7 +17,7 @@ public final class TileMapRenderer extends MeshRenderer {
         private final int bufferIndex;
         private final int tileSetIndex;
 
-        public AnimatedTileInstance(int bufferIndex, int tileSetIndex) {
+        AnimatedTileInstance(int bufferIndex, int tileSetIndex) {
             this.bufferIndex = bufferIndex;
             this.tileSetIndex = tileSetIndex;
         }
@@ -31,7 +31,7 @@ public final class TileMapRenderer extends MeshRenderer {
 
         private final TileSet.TileAnimation animation;
 
-        public AnimatedTile(TileSet.TileAnimation animation) {
+        AnimatedTile(TileSet.TileAnimation animation) {
             this.animation = animation;
             concernedTiles = new ArrayList<>();
 
@@ -40,23 +40,23 @@ public final class TileMapRenderer extends MeshRenderer {
             oldTileId = -1;
         }
 
-        public void addConcernedTile(AnimatedTileInstance tile){
+        void addConcernedTile(AnimatedTileInstance tile){
             concernedTiles.add(tile);
         }
 
-        public void clearConcernedTiles(){
+        void clearConcernedTiles(){
             concernedTiles.clear();
         }
 
-        public List<AnimatedTileInstance> getConcernedTiles(){
+        List<AnimatedTileInstance> getConcernedTiles(){
             return concernedTiles;
         }
 
-        public TileSet.TileAnimation getAnimationData(){
+        TileSet.TileAnimation getAnimationData(){
             return animation;
         }
 
-        public void update(){
+        void update(){
             countTime += GameTime.DeltaTime();
             oldTileId = animation.getTileId(currentFrame);
 
@@ -72,11 +72,11 @@ public final class TileMapRenderer extends MeshRenderer {
             }
         }
 
-        public boolean hasBeenUpdated(){
+        boolean hasBeenUpdated(){
             return oldTileId != animation.getTileId(currentFrame);
         }
 
-        public int getCurrentTileId(){
+        int getCurrentTileId(){
             return animation.getTileId(currentFrame);
         }
     }
@@ -191,6 +191,9 @@ public final class TileMapRenderer extends MeshRenderer {
             case RightUp:
                 leftUpPosition.x = -realMapSize.x;
                 break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         switch(this.reference){
@@ -203,6 +206,9 @@ public final class TileMapRenderer extends MeshRenderer {
             case Down:
             case RightDown:
                 leftUpPosition.y = -realMapSize.y;
+                break;
+            default:
+                // Nothing to do for the other values
                 break;
         }
 
@@ -278,7 +284,7 @@ public final class TileMapRenderer extends MeshRenderer {
 
     public void update(){
         // Reloaded: built again from the new version (same atlas objects), once the atlas texture shows it.
-        // Meanwhile the previous tiles stay with the previous texture, the animations wait.
+        // Meanwhile, the previous tiles stay with the previous texture, the animations wait.
         if (tilemap.getVersion() != tileMapVersion) {
             if (atlasTexture.isLoaded() && !atlasTexture.isUpToDate())
                 return;

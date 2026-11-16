@@ -20,7 +20,7 @@ import java.util.Set;
 
 /**
  * Collision2DGrid : the static obstacles are sorted into the cells of a grid once, then only the obstacles of the
- * cells touched by the moving rectangle (it follows the mouse) are tested against it. Grey : obstacles ignored by the
+ * cells touched by the moving rectangle (it follows the mouse) are tested against it. Gray : obstacles ignored by the
  * grid, blue : tested, red : tested and colliding.
  */
 public class CollisionGridScene2D extends Scene {
@@ -110,10 +110,10 @@ public class CollisionGridScene2D extends Scene {
         clear();
 
         // The cells of the grid
-        for (float x = CELL; x < WIDTH; x += CELL)
-            draw(new CollisionRectangle(x, 0, 1, HEIGHT), GRID_LINE);
-        for (float y = CELL; y < HEIGHT; y += CELL)
-            draw(new CollisionRectangle(0, y, WIDTH, 1), GRID_LINE);
+        for (int column = 1; column * CELL < WIDTH; ++column)
+            draw(new CollisionRectangle(column * CELL, 0, 1, HEIGHT), GRID_LINE);
+        for (int row = 1; row * CELL < HEIGHT; ++row)
+            draw(new CollisionRectangle(0, row * CELL, WIDTH, 1), GRID_LINE);
 
         for (CollisionRectangle obstacle : obstacles) {
             Color4f color = IGNORED;

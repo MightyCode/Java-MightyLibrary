@@ -19,6 +19,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -38,7 +39,7 @@ public final class GLResources implements IGLElementSink {
     private final Map<Class<? extends DataType>, DataType> fallbackData = new LinkedHashMap<>();
     // Their elements, kept for the whole program; out of the table by name: two fallbacks with elements of the same
     // type and name do not collide
-    private final Map<DataType, GLElement> fallbackElements = new IdentityHashMap<>();
+    private final IdentityHashMap<DataType, GLElement> fallbackElements = new IdentityHashMap<>();
 
     // Elements waiting to be loaded, in order; an element is in one of them (moved in O(1) when its urgency changes)
     private final LinkedHashSet<GLElement> urgentToLoad = new LinkedHashSet<>();
@@ -95,7 +96,7 @@ public final class GLResources implements IGLElementSink {
     }
 
     // Each waiting element of the set is tried at most once: unfinished ones go back at its end
-    private boolean loadFrom(LinkedHashSet<GLElement> waiting, long deadline, boolean stepDone) {
+    private boolean loadFrom(Set<GLElement> waiting, long deadline, boolean stepDone) {
         int elementsToTry = waiting.size();
         while (elementsToTry > 0 && !waiting.isEmpty() && (!stepDone || System.nanoTime() < deadline)) {
             --elementsToTry;
@@ -125,7 +126,7 @@ public final class GLResources implements IGLElementSink {
         return stepDone;
     }
 
-    private LinkedHashSet<GLElement> waitingSetOf(GLElement element) {
+    private Set<GLElement> waitingSetOf(GLElement element) {
         return element.isUrgent() ? urgentToLoad : preloadToLoad;
     }
 
@@ -175,13 +176,13 @@ public final class GLResources implements IGLElementSink {
      * it is loaded by process() in the next frames, never during this call.
      * Either way an urgent reference is added: call releaseResource once the element isn't used anymore.
      */
-    public <T extends GLElement> T addElementOrReturnIfPresent(Class<T> type, T T, String name) {
-        return addElementOrReturnIfPresent(type, T, name, true);
+    public <T extends GLElement> T addElementOrReturnIfPresent(Class<T> type, T added, String name) {
+        return addElementOrReturnIfPresent(type, added, name, true);
     }
 
     // urgent false: only preloaded, loaded after the urgent elements and not waited by a loading screen
-    public <T extends GLElement> T addElementOrReturnIfPresent(Class<T> type, T T, String name, boolean urgent) {
-        if (T.isLoaded())
+    public <T extends GLElement> T addElementOrReturnIfPresent(Class<T> type, T added, String name, boolean urgent) {
+        if (added.isLoaded())
             throw new RuntimeException("Element is already loaded!");
 
         T element = getResource(type, name);
@@ -190,14 +191,14 @@ public final class GLResources implements IGLElementSink {
             return element;
         }
 
-        T.attachTo(this);
-        T.registeredType = type;
-        resources.computeIfAbsent(type, key -> new HashMap<>()).put(name, T);
-        T.setName(name);
-        T.addReference(urgent);
-        waitingSetOf(T).add(T);
+        added.attachTo(this);
+        added.registeredType = type;
+        resources.computeIfAbsent(type, key -> new HashMap<>()).put(name, added);
+        added.setName(name);
+        added.addReference(urgent);
+        waitingSetOf(added).add(added);
 
-        return T;
+        return added;
     }
 
     private void addReference(GLElement element, boolean urgent) {

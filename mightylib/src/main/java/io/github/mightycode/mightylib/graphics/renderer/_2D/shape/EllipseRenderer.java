@@ -80,6 +80,10 @@ public final class EllipseRenderer extends RectangleRenderer {
             case RightUp:
             case RightDown:
                 pos.x -= scale().x / 2;
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         switch (getReferenceDirection()){
@@ -92,6 +96,10 @@ public final class EllipseRenderer extends RectangleRenderer {
             case LeftDown:
             case RightDown:
                 pos.y -= scale().y / 2;
+                break;
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         updateShaderValue(shaderProperty.Center, pos);

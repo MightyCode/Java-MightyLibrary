@@ -40,20 +40,6 @@ public final class Window {
 
     public WindowInfo getInfo() { return info; }
 
-    Window() {
-        info = new WindowInfo();
-        info.windowId = 0;
-
-        info.size = new Vector2i(1, 1);
-        info.ratio = 1;
-        info.virtualSize = new Vector2i(1,1);
-        info.virtualRatio = 1;
-
-        info.windowName = "";
-        display = new DisplaySettings();
-        info.mode = display.getMode();
-    }
-
     Window(WindowCreationInfo wci){
         info = new WindowInfo();
         info.windowId = 0;
@@ -140,9 +126,13 @@ public final class Window {
 
         // Resized by the user (resizable window) or by the system: the viewport follows on the next frame. The size
         // is read again, the one given can be older than a change made meanwhile (nested resizing)
+        // The callbacks are freed with the window (Callbacks.glfwFreeCallbacks), there is no previous one to free
+        //noinspection resource
         glfwSetFramebufferSizeCallback(info.windowId, (window, width, height) -> readFramebufferSize());
+        //noinspection resource
         glfwSetWindowIconifyCallback(info.windowId, (window, iconified) -> onIconified(iconified));
         // The system asks for a new image (resizing, uncovering) while the loop may be waiting
+        //noinspection resource
         glfwSetWindowRefreshCallback(info.windowId, window -> {
             if (redrawAction != null)
                 redrawAction.run();

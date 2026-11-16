@@ -30,7 +30,7 @@ class LayeredTextureLoaderTest {
     private Path layered;
 
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() {
         MainThreadTestAccess.setCurrentAsMain();
         WorkersTestAccess.ensureThreads(2);
         layered = folder.resolve(LayeredTextureLoader.FOLDER);

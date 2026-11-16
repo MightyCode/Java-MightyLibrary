@@ -8,7 +8,7 @@ import java.util.*;
 
 /**
  * A* on a Graph. The heuristic is the straight-line distance between node positions, so the path is the shortest
- * one as long as no link was given a fixed distance shorter than that straight line (Node.add(neighbour, distance)).
+ * one as long as no link was given a fixed distance shorter than that straight line (Node.add(neighbor, distance)).
  */
 public final class AStar {
     public static List<Node> findShortestPath(Graph graph, Node startNode, Node endNode) {
@@ -71,14 +71,15 @@ public final class AStar {
     }
 
     private static List<Node> reconstructPath(Map<Node, Node> previousNodes, Node endNode) {
-        LinkedList<Node> path = new LinkedList<>();
+        List<Node> path = new ArrayList<>();
         Node currentNode = endNode;
 
         while (currentNode != null) {
-            path.addFirst(currentNode);
+            path.add(currentNode);
             currentNode = previousNodes.get(currentNode);
         }
 
-        return new ArrayList<>(path);
+        Collections.reverse(path);
+        return path;
     }
 }

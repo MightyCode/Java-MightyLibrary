@@ -24,6 +24,9 @@ public final class InputSimple implements IAction {
                return inputManager.getMouseManager().getState(inputId);
            case Controller:
                return inputManager.getGamepadManager().getButton(inputId, GamepadManager.ANY_PLAYER);
+           default:
+               // Nothing to do for the other values
+               break;
        }
 
        return false;
@@ -38,6 +41,9 @@ public final class InputSimple implements IAction {
                 return inputManager.getMouseManager().buttonPressed(inputId);
             case Controller:
                 return inputManager.getGamepadManager().buttonPressed(inputId, GamepadManager.ANY_PLAYER);
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         return false;
@@ -52,6 +58,9 @@ public final class InputSimple implements IAction {
                 return inputManager.getMouseManager().buttonReleased(inputId);
             case Controller:
                 return inputManager.getGamepadManager().buttonReleased(inputId, GamepadManager.ANY_PLAYER);
+            default:
+                // Nothing to do for the other values
+                break;
         }
 
         return false;

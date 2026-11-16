@@ -32,6 +32,7 @@ public class NodeContainer <K extends PositionListNode<?>, T extends ListNode<?>
         return node.getPositionInBoundaries(boundaries, rendererDest);
     }
 
+    @Override
     public NodeContainer<K, T> copy(){
         return new NodeContainer<>(node);
     }

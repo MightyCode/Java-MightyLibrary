@@ -1,6 +1,6 @@
 ---
 name: revue-pratiques
-description: Revue hebdomadaire des bonnes pratiques du projet (docs/bonnes-pratiques.md), point par point avec preuves. À utiliser quand l'utilisateur demande si le projet respecte toujours ses bonnes pratiques, ou lance /revue-pratiques (argument optionnel : période, ex. « depuis le 2026-11-01 »).
+description: "Revue hebdomadaire des bonnes pratiques du projet (docs/bonnes-pratiques.md), point par point avec preuves. À utiliser quand l'utilisateur demande si le projet respecte toujours ses bonnes pratiques, ou lance /revue-pratiques (argument optionnel : période, ex. « depuis le 2026-11-01 »)."
 ---
 
 # Revue des bonnes pratiques

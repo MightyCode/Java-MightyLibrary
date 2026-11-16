@@ -36,10 +36,6 @@ public class RopeSimulation2D extends Scene {
         private final Vector2f previousPosition;
         private final boolean locked;
 
-        public Point(Vector2f position) {
-            this(position, false);
-        }
-
         public Point(Vector2f position, boolean locked) {
             this.previousPosition = new Vector2f(position);
             this.position = position;
@@ -95,6 +91,7 @@ public class RopeSimulation2D extends Scene {
             return point.distance(this.position) <= precision;
         }
 
+        @Override
         public void update(){
             renderer.setPosition(position);
         }
@@ -102,10 +99,12 @@ public class RopeSimulation2D extends Scene {
         @Override
         public void postUpdate() {}
 
+        @Override
         public void display(){
             renderer.display();
         }
 
+        @Override
         public void unload(){
             renderer.unload();
         }
@@ -146,6 +145,7 @@ public class RopeSimulation2D extends Scene {
                     new Vector4f(pointA.getPosition().x, pointA.getPosition().y, pointB.getPosition().x, pointB.getPosition().y), precision);
         }
 
+        @Override
         public void update(){
             // position = center of center
             Vector2f position = new Vector2f(
@@ -167,10 +167,12 @@ public class RopeSimulation2D extends Scene {
         @Override
         public void postUpdate() {}
 
+        @Override
         public void display(){
             renderer.display();
         }
 
+        @Override
         public void unload(){
             renderer.unload();
         }
@@ -196,7 +198,7 @@ public class RopeSimulation2D extends Scene {
     private boolean isDrawingStick, isDrawingPoint;
     private boolean controlWind;
     private ClickingMode clickingMode = ClickingMode.ADD_POINT;
-    private final int numberIteration = 1;
+    private static final int NUMBER_ITERATION = 1;
 
     private Point selectedPoint;
     private Vector2f windForce;
@@ -204,13 +206,13 @@ public class RopeSimulation2D extends Scene {
     private ArrayList<Point> points;
     private ArrayList<Stick> sticks;
 
-    private Camera2D hudCamera;
     private Text textCurrentState;
     private Text textCurrentModeClicking;
     private Text textIsDrawingPoint;
     private Text textIsDrawingStick;
     private Text textIsWindControlled;
 
+    @Override
     public void init(String[] args) {
         windForce = new Vector2f(0, 0);
 
@@ -235,12 +237,13 @@ public class RopeSimulation2D extends Scene {
         sticks.clear();
     }
 
+    @Override
     public void launch(String[] args) {
         setClearColor(52, 189, 235, 1f);
 
         /// SCENE INFORMATION ///
 
-        hudCamera = camera2D().copy();
+        Camera2D hudCamera = camera2D().copy();
 
         textCurrentState = new Text();
         textCurrentState.setReferenceCamera(hudCamera);
@@ -309,6 +312,7 @@ public class RopeSimulation2D extends Scene {
         camera2D().setZoomLevel(0.5f);
     }
 
+    @Override
     public void update() {
         super.update();
 
@@ -392,7 +396,7 @@ public class RopeSimulation2D extends Scene {
         }
 
         // Update using sticks
-        for (int i = 0; i < numberIteration; ++i) {
+        for (int i = 0; i < NUMBER_ITERATION; ++i) {
             for (Stick stick : sticks) {
                 Point pointA = stick.getPointA();
                 Point pointB = stick.getPointB();
@@ -513,6 +517,7 @@ public class RopeSimulation2D extends Scene {
         }
     }
 
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();

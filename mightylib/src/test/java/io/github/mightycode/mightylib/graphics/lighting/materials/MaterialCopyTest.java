@@ -5,12 +5,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// A clone has its own vectors: changing it leaves the original as it is (the clones shared them)
-class MaterialCloneTest {
+// A copy has its own vectors: changing it leaves the original as it is (the copies shared them)
+class MaterialCopyTest {
     @Test
-    void basicMaterialCloneIsDeep() {
+    void basicMaterialCopyIsDeep() {
         BasicMaterial original = new BasicMaterial(new Vector3f(1), new Vector3f(2), new Vector3f(3));
-        BasicMaterial copy = original.clone();
+        BasicMaterial copy = original.copy();
         copy.Ambient.set(9);
         copy.Diffuse.set(9);
         copy.Specular.set(9);
@@ -18,14 +18,14 @@ class MaterialCloneTest {
         assertEquals(new Vector3f(1), original.Ambient);
         assertEquals(new Vector3f(2), original.Diffuse);
         assertEquals(new Vector3f(3), original.Specular);
-        assertEquals(new Vector3f(3), original.cloneBasicMaterial().Specular);
-        assertNotSame(original.Ambient, original.cloneBasicMaterial().Ambient);
+        assertEquals(new Vector3f(3), original.copyBasicMaterial().Specular);
+        assertNotSame(original.Ambient, original.copyBasicMaterial().Ambient);
     }
 
     @Test
-    void materialCloneIsDeep() {
+    void materialCopyIsDeep() {
         Material original = Material.Gold();
-        Material copy = original.clone();
+        Material copy = original.copy();
         copy.Diffuse.set(0);
         copy.Shininess = 1;
 

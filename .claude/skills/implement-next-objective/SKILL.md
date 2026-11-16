@@ -1,6 +1,6 @@
 ---
 name: implement-next-objective
-description: Implémente un objectif donné par l'utilisateur, ou à défaut le prochain de docs/current.md, quand il est assez petit pour ne pas demander de plan : branche depuis dev, code, tests, vérification en jeu, docs, puis s'arrête avant la PR et propose la commande /pr-ml à copier. Redirige vers /planification-ml si le point est gros ou demande des choix de conception. À utiliser quand l'utilisateur dit /implement-next-objective [objectif].
+description: "Implémente un objectif donné par l'utilisateur, ou à défaut le prochain de docs/current.md, quand il est assez petit pour ne pas demander de plan : branche depuis dev, code, tests, vérification en jeu, docs, puis s'arrête avant la PR et propose la commande /pr-ml à copier. Redirige vers /planification-ml si le point est gros ou demande des choix de conception. À utiliser quand l'utilisateur dit /implement-next-objective [objectif]."
 disable-model-invocation: true
 ---
 
@@ -26,7 +26,7 @@ Le travail d'un développeur qui prend la prochaine ligne de `docs/current.md`, 
 - Branche de sujet depuis `dev`, nom court en kebab-case tiré de l'objectif. Si un plan non suivi existe, le commiter en premier.
 - Un commit par changement logique, message en anglais au style de `git log --oneline -10`, terminé par la ligne `Co-Authored-By` demandée par le système. Ne pas commiter `target/` ni `.idea/workspace.xml`.
 - Respecter `CLAUDE.md` : Java 11, conventions, commandes déclarées avec syntaxe et niveau, thread principal pour le GL, ressources libérées dans `unload`/`release`, jamais d'import de `mightylibdemo` depuis `mightylib`, 3D seulement au strict nécessaire (mais jamais cassée).
-- Éditer avec Edit (jamais `sed` sur un source) ; à la fin de chaque changement, relire son diff comme l'analyseur IntelliJ (`bonnes-pratiques.md`, point 14 : imports devenus inutiles, diamant, `isEmpty()`, redondances).
+- Éditer avec Edit (jamais `sed` sur un fichier source) ; à la fin de chaque changement, relire son diff comme l'analyseur IntelliJ (`bonnes-pratiques.md`, point 14 : imports devenus inutiles, diamant, `isEmpty()`, redondances).
 - Compiler après chaque modification (commande de `CLAUDE.md` selon l'OS).
 - Rien en douce : un bug existant hors sujet est noté dans `later.md` ou `futur-discussion.md` et signalé, pas corrigé ; pas de refactor non demandé (en proposer, avec autorisation, voir la mémoire « refactors sur demande »). Si une vraie question de conception apparaît en cours de route : s'arrêter et demander.
 

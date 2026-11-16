@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.utils.valueDebug;
 
 import io.github.mightycode.mightylib.main.MainLoop;
 
-import java.util.ArrayList;
+import java.util.Collection;
 
 public final class TableDebug {
 
@@ -86,7 +86,7 @@ public final class TableDebug {
         printParti(table, 0, table.length);
     }
 
-    public static void printi(ArrayList<Integer> table) {
+    public static void printi(Collection<Integer> table) {
         printi(table.stream().mapToInt(Integer::intValue).toArray());
     }
 

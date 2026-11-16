@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
+package io.github.mightycode.mightylibdemo.scenes.platformer2d;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.main.utils.GameTime;
@@ -138,7 +138,7 @@ public class PlatformerBox2D extends Scene {
     private static class StaticBox extends Box2DActor {
         private final RectangleRenderer renderer;
 
-        public StaticBox(World world, Vec2 pos, Vec2 size, Color4f color) {
+        StaticBox(World world, Vec2 pos, Vec2 size, Color4f color) {
             setStatic();
             setShapeRectangle(pos, size);
             initializePhysics(world);
@@ -150,11 +150,11 @@ public class PlatformerBox2D extends Scene {
             renderer.setPosition(B2Utils.b2ToEngine(pos));
         }
 
-        public void display() {
+        void display() {
             renderer.display();
         }
 
-        public void unload() {
+        void unload() {
             renderer.unload();
         }
     }

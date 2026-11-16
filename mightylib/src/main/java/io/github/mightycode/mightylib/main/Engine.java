@@ -98,8 +98,13 @@ public final class Engine implements IView {
     // The hooks of the plugins on the life of the engine (none before the registration), called by the engine
     public LifecycleHooks lifecycle() { return registrations != null ? registrations.lifecycle() : NO_HOOKS; }
     private static final LifecycleHooks NO_HOOKS = new LifecycleHooks();
-    // The scenes registered by the plugins, by name (null before the start)
-    public SceneRegistry scenes() { return registrations != null ? registrations.scenes() : null; }
+    // The scenes registered by the plugins, by name (an IllegalStateException before the start)
+    public SceneRegistry scenes() {
+        if (registrations == null)
+            throw new IllegalStateException("No scene registry: the engine is not started");
+
+        return registrations.scenes();
+    }
 
     public GLResources glResources() { return glResources; }
 
@@ -383,7 +388,7 @@ public final class Engine implements IView {
         if (previous != null && !previous.isDestroyed())
             previous.makeCurrent();
         else
-            contexts.getMainWindow().getWindow().bindWindow();
+            contexts.requireMainWindow().getWindow().bindWindow();
         return context;
     }
 
@@ -451,7 +456,7 @@ public final class Engine implements IView {
     }
 
     /**
-     * A window by its number, its title (case insensitive), or the name of a context (its main window); null if none.
+     * A window by its number, its title (case-insensitive), or the name of a context (its main window); null if none.
      */
     public WindowContext findWindow(String reference) {
         try {
@@ -575,6 +580,8 @@ public final class Engine implements IView {
         // Terminate GLFW and free the error callback
         if (glfwStarted) {
             glfwTerminate();
+            // Freed just below (Callback.free is its close)
+            //noinspection resource
             GLFWErrorCallback callback = glfwSetErrorCallback(null);
             if (callback != null)
                 callback.free();

@@ -14,11 +14,11 @@ import static org.apiguardian.api.API.Status.INTERNAL;
 /**
  * Registry and loading pipeline of the data read from the disk.
  *
- * Single owner: references and states of the data are changed by the main thread only. Calls from other threads
+ * <p>Single owner: references and states of the data are changed by the main thread only. Calls from other threads
  * (owned resources registered by a worker) are posted to the main thread. Workers only run the preload (initWithFile)
  * and, for THREAD_CONTEXT data, the load (internLoad), on a data that the main thread does not touch meanwhile.
  *
- * Reconciliation: for each data, update compares what is wanted (referenced or not) with its state and starts the
+ * <p>Reconciliation: for each data, update compares what is wanted (referenced or not) with its state and starts the
  * next step. A data with a running step is never changed: when the step ends, update runs again, so a data unloaded
  * then loaded again while it was read ends in the wanted state without any special case.
  */
@@ -71,7 +71,7 @@ public final class Resources {
 
     /**
      * The given loaders, in their order: those the plugins registered (EngineRegistry.resources), the mandatory ones of
-     * the engine first. The list can't change afterwards. The loaders read their files in the given folder
+     * the engine first. The list can't change afterward. The loaders read their files in the given folder
      * (EngineConfig.setResourcesFolder).
      */
     public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
@@ -233,6 +233,8 @@ public final class Resources {
                 break;
 
             try {
+                // Synchronous first load: the main thread runs the steps the workers give back, at most 1 ms late
+                //noinspection BusyWait
                 Thread.sleep(1);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -560,7 +562,7 @@ public final class Resources {
         requestUpdate(data);
     }
 
-    // True when the steps of the data go before the preload ones: wanted now, or not wanted any more (skipped quickly)
+    // True when the steps of the data go before the preload ones: wanted now, or not wanted anymore (skipped quickly)
     boolean isUrgent(DataType data) {
         DataType original = data.reloadOf != null ? data.reloadOf : data;
         return data.urgent || original.urgent || !isWanted(data);

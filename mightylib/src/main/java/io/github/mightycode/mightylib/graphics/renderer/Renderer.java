@@ -26,7 +26,7 @@ import java.util.Map;
  * the OpenGL state of the draw (RenderState). It has no geometry: MeshRenderer draws one Mesh, ModelRenderer a
  * model. The program, the values and the state are grouped apart from the transform (a future shareable Material).
  *
- * Hooks of a subclass: draw (the geometry), updateShader (bind and send before draw), applyRenderState, display
+ * <p>Hooks of a subclass: draw (the geometry), updateShader (bind and send before draw), applyRenderState, display
  * (a condition, then super), unload (release, then super), and the setters whose change it must follow
  * (setPosition, setRotationZ, position, setColorMode, setNoColorNoTextureMode, setFaceCulling: call super).
  * display() calls them in this order: applyRenderState, program in use, updateShader, draw.

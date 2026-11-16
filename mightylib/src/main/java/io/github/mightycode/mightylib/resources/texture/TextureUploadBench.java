@@ -16,7 +16,7 @@ import static org.lwjgl.opengl.GL11.*;
  * Measures, on the card and the driver in use, the way to send the pixels of a texture by strips of rows:
  * directly or through PBOs. Main thread, blocks the program for about a second.
  *
- * For each texture size and each way: "call" is the time spent in the calls (what a frame pays),
+ * <p>For each texture size and each way: "call" is the time spent in the calls (what a frame pays),
  * "total" is the time until the card has everything (glFinish).
  */
 public final class TextureUploadBench {
@@ -38,7 +38,7 @@ public final class TextureUploadBench {
             for (int i = 0; i < pixels.capacity(); ++i)
                 pixels.put(i, (byte) (i * 31 + (i >> 8)));
 
-            // Warm up each way once, then the repeats go through the ways in turn so that none is favoured
+            // Warm up each way once, then the repeats go through the ways in turn so that none is favored
             List<List<Double>> calls = new ArrayList<>();
             List<List<Double>> totals = new ArrayList<>();
             for (TextureUploader.Variant variant : variants) {

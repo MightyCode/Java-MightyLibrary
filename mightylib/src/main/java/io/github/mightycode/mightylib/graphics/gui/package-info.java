@@ -1,5 +1,5 @@
 @API(status = STABLE)
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import org.apiguardian.api.API;
 

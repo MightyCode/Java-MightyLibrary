@@ -28,7 +28,7 @@ public final class ServiceKey<T extends IEngineService> {
 
     @Override
     public boolean equals(Object other) {
-        return this == other || other instanceof ServiceKey && id.equals(((ServiceKey<?>) other).id);
+        return this == other || (other instanceof ServiceKey && id.equals(((ServiceKey<?>) other).id));
     }
 
     @Override

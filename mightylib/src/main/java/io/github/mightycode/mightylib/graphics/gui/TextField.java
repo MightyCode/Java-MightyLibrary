@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.graphics.GUI;
+package io.github.mightycode.mightylib.graphics.gui;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
@@ -100,7 +100,7 @@ public final class TextField extends GUI {
         return this;
     }
 
-    /** Shown in grey while the text is empty. */
+    /** Shown in gray while the text is empty. */
     public TextField setHint(String content) {
         hint.setText(content);
         return this;

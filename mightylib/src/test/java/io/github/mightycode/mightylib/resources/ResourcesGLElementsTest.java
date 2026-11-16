@@ -126,7 +126,7 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         assertFalse(fallback.hasSource());
     }
 
-    // A reload that failed on a missing include: the include is watched too, creating it reloads the shader
+    // A reload that failed on a missing include: the included file is watched too, creating it reloads the shader
     @Test
     void aShaderWatchesTheFilesOfAFailedReload() {
         ShaderData data = new ShaderData("program", true, "v.glsl", "f.glsl");
@@ -189,7 +189,7 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         assertEquals(0, sink.urgent("a"));
         assertEquals(1, sink.preload("a"));
 
-        // Entering the scene: loaded for real, then the preload is cancelled (SceneManager.changeScene)
+        // Entering the scene: loaded for real, then the preload is canceled (SceneManager.changeScene)
         resources.loadBatch("next");
         resources.cancelPreloadBatch("next");
         pump();

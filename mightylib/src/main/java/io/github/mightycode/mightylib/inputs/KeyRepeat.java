@@ -5,7 +5,7 @@ package io.github.mightycode.mightylib.inputs;
  * then after a delay one step at each interval. No GL, no clock: the caller gives the time of the tick.
  * The defaults are the ones of the keyboard settings of Windows (about 0.5 s, then about 30 steps a second).
  *
- * A key already held when the repeat could begin (the focus came back with the key down) does not repeat: only a
+ * <p>A key already held when the repeat could begin (the focus came back with the key down) does not repeat: only a
  * press starts it.
  */
 public final class KeyRepeat {
@@ -48,7 +48,7 @@ public final class KeyRepeat {
      * @param pressed the key went down at this tick
      * @param held    the key is down
      * @param seconds duration of the tick
-     * @return the steps to do at this tick: 1 at the press, then 0 or more (a slow tick can owe several)
+     * @return the steps to take at this tick: 1 at the press, then 0 or more (a slow tick can owe several)
      */
     public int update(boolean pressed, boolean held, float seconds) {
         if (!held) {

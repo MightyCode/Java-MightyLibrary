@@ -289,9 +289,8 @@ class ConsoleInputTest {
         assertEquals(3, editor.getCursor());
     }
 
-    private List<String> handleWith(ConsoleLayout layout, String text, KeyEvent... keys) {
-        return input.handle(text, Arrays.asList(keys), 10, fakeClipboard, layout).stream()
-                .map(ConsoleInput.Request::toString).collect(Collectors.toList());
+    private void handleWith(ConsoleLayout layout, String text, KeyEvent... keys) {
+        input.handle(text, Arrays.asList(keys), 10, fakeClipboard, layout);
     }
 
     private static long addLine(ConsoleLog log, String text) {

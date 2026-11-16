@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
+package io.github.mightycode.mightylibdemo.scenes.platformer2d;
 
 import io.github.mightycode.mightylib.physics.B2Utils;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -15,7 +15,7 @@ public class PlayerManager extends Box2DActor{
     private final Vector2i windowSize;
 
     // Camera follow smoothness
-    private final float cameraFollowLerp = 0.1f;
+    private static final float CAMERA_FOLLOW_LERP = 0.1f;
 
     public PlayerManager(World world, PlayerController controller, Vec2 spawnPos, Camera2D baseCamera, Vector2i windowSize) {
         this.windowSize = windowSize;
@@ -38,17 +38,13 @@ public class PlayerManager extends Box2DActor{
 
     /** Update player state (no argument version) */
     public void update() {
-        //this.setMaxSpeedX(3);
-
-        this.applyForce(new Vec2(values.moveSpeed * controller.getMoveAxis(), 0));
+        this.applyForce(new Vec2(PlayerValues.MOVE_SPEED * controller.getMoveAxis(), 0));
 
         // Jumping
         if (controller.wantsJump() && values.onGround()) {
-            Vec2 jumpVec = new Vec2(0, values.jumpForce);
+            Vec2 jumpVec = new Vec2(0, PlayerValues.JUMP_FORCE);
             applyImpulse(jumpVec);
         }
-
-        super.update();
 
         // Update cached player position
         Vec2 pos = body.getPosition();
@@ -61,7 +57,7 @@ public class PlayerManager extends Box2DActor{
         newCameraPos.x -= windowSize.x / (2f * camera.getZoomLevel().x);
         newCameraPos.y -= windowSize.y /  (2f * camera.getZoomLevel().y);
 
-        camPos.lerp(newCameraPos, cameraFollowLerp);
+        camPos.lerp(newCameraPos, CAMERA_FOLLOW_LERP);
         camera.setPos(camPos);
 
         renderer.update();

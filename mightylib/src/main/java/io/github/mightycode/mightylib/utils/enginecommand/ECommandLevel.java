@@ -22,7 +22,7 @@ public enum ECommandLevel {
         return first.ordinal() <= second.ordinal() ? first : second;
     }
 
-    /** "user", "cheat" or "dev", case insensitive. @throws IllegalArgumentException otherwise */
+    /** "user", "cheat" or "dev", case-insensitive. @throws IllegalArgumentException otherwise */
     public static ECommandLevel Parse(String text) {
         try {
             if (text == null)

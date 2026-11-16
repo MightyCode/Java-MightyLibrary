@@ -5,6 +5,7 @@ import org.joml.Vector4f;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Objects;
 
 public final class Polygon {
     public static final class PolygonBuilder {
@@ -47,7 +48,7 @@ public final class Polygon {
         }
     }
 
-    protected float[] vertices;
+    private final float[] vertices;
 
     // x from, y from, x to, y to
     private final Vector4f boundingBox;
@@ -92,9 +93,9 @@ public final class Polygon {
         return vertices.length / 2;
     }
 
+    // A copy of the vertex: an index out of the polygon is an IndexOutOfBoundsException, as for a list
     public Vector2f get(int index) {
-        if (index < 0 || index >= vertices.length / 2)
-            return null;
+        Objects.checkIndex(index, size());
 
         return new Vector2f(vertices[index * 2], vertices[index * 2 + 1]);
     }
@@ -133,11 +134,12 @@ public final class Polygon {
         int fill = 0;
 
         ArrayList<Vector2f> polygonCopy = new ArrayList<>();
-        ArrayList<Integer> polygonIndices = new ArrayList<>();
+        // Index in this polygon of each vertex of the copy (the first polygonCopy.size() are used)
+        int[] polygonIndices = new int[vertices.length / 2];
 
         for (int i = 0; i < vertices.length; i += 2){
             polygonCopy.add(new Vector2f(vertices[i], vertices[i + 1]));
-            polygonIndices.add(i / 2);
+            polygonIndices[i / 2] = i / 2;
         }
 
         // The ears are found on a counter-clockwise polygon: a clockwise one is walked the other way round
@@ -149,7 +151,11 @@ public final class Polygon {
 
         if (signedArea < 0){
             Collections.reverse(polygonCopy);
-            Collections.reverse(polygonIndices);
+            for (int i = 0, j = polygonIndices.length - 1; i < j; ++i, --j) {
+                int swapped = polygonIndices[i];
+                polygonIndices[i] = polygonIndices[j];
+                polygonIndices[j] = swapped;
+            }
         }
 
         // The first ear is cut each time, the ears are searched again as the polygon changes
@@ -167,13 +173,13 @@ public final class Polygon {
             int previous = earIndex > 0 ? earIndex - 1 : polygonCopy.size() - 1;
             int next = (earIndex + 1) % polygonCopy.size();
 
-            indices[fill * 3] = polygonIndices.get(previous);
-            indices[fill * 3 + 1] = polygonIndices.get(earIndex);
-            indices[fill * 3 + 2] = polygonIndices.get(next);
+            indices[fill * 3] = polygonIndices[previous];
+            indices[fill * 3 + 1] = polygonIndices[earIndex];
+            indices[fill * 3 + 2] = polygonIndices[next];
             ++fill;
 
             polygonCopy.remove(earIndex);
-            polygonIndices.remove(earIndex);
+            System.arraycopy(polygonIndices, earIndex + 1, polygonIndices, earIndex, polygonCopy.size() - earIndex);
         }
 
         return indices;

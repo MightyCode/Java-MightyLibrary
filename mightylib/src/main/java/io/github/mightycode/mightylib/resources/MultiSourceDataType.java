@@ -19,7 +19,7 @@ public abstract class MultiSourceDataType extends DataType {
     protected MultiSourceDataType(TYPE_SET_UP typeSetUp, String dataName, List<String> paths) {
         super(typeSetUp, dataName);
 
-        sources = Collections.unmodifiableList(new ArrayList<>(paths));
+        sources = List.copyOf(paths);
         sourceRead = new boolean[sources.size()];
     }
 

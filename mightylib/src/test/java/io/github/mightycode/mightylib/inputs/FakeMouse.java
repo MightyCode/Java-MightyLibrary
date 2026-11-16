@@ -5,7 +5,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
 // A mouse without window: the real cursor and the left button are given
 final class FakeMouse extends MouseManager {
     double x = 50;
-    double y = 60;
+    final double y = 60;
     boolean left;
 
     @Override

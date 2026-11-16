@@ -19,4 +19,43 @@
         </Or>
         <Bug pattern="VO_VOLATILE_INCREMENT,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"/>
     </Match>
+    <!-- Public fields of pure data structures (decisions.md, guarded by PublicFieldsTest). -->
+    <Match>
+        <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE"/>
+    </Match>
+    <!-- No finalizer, no security manager: a constructor that refuses its arguments can't be attacked through
+         a subclass finalizer (finalization is deprecated since Java 18). -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+    <!-- The current GL context of the main thread is static on purpose: GL has one current context per thread and
+         every context runs on the main thread. -->
+    <Match>
+        <Class name="io.github.mightycode.mightylib.graphics.GLContext"/>
+        <Field name="current"/>
+        <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
+    </Match>
+    <!-- State changed and read on the main thread only (GL elements, resources, commands: CLAUDE.md); the
+         detector takes them for shared because these classes also have synchronized or worker code. -->
+    <Match>
+        <Or>
+            <Class name="io.github.mightycode.mightylib.graphics.GLElement"/>
+            <Class name="io.github.mightycode.mightylib.scenes.camera.Camera"/>
+            <And><Class name="io.github.mightycode.mightylib.resources.DataType"/><Field name="manuallyCreated"/></And>
+            <And><Class name="io.github.mightycode.mightylib.utils.enginecommand.Commands"/><Or><Field name="tick"/><Field name="pluginCommandsFrozen"/></Or></And>
+        </Or>
+        <Bug pattern="AT_STALE_THREAD_WRITE_OF_PRIMITIVE,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"/>
+    </Match>
+    <!-- FLAC samples have at most 24 bits (FlacStream refuses deeper files): side 25 bits, mid 26 bits, their sum
+         can't overflow an int. -->
+    <Match>
+        <Class name="io.github.mightycode.mightylib.resources.sound.decoder.FlacStream"/>
+        <Bug pattern="IM_AVERAGE_COMPUTATION_COULD_OVERFLOW"/>
+    </Match>
+    <!-- A future kept in a local named "ignored" says its result is not needed: Error Prone
+         (FutureReturnValueIgnored) wants the value used, the variable is that use. -->
+    <Match>
+        <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
+        <Local name="ignored"/>
+    </Match>
 </FindBugsFilter>

@@ -3,7 +3,6 @@ package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -143,20 +142,12 @@ public final class Option {
         return excluded.contains(other.name) || other.excluded.contains(name);
     }
 
-    ECommandLevel getLevel() {
-        return level;
-    }
-
     boolean isVisible(CommandContext context) {
         return CommandCondition.Visible(level, conditions, context);
     }
 
     void check(CommandContext context) {
         CommandCondition.Check(conditions, context);
-    }
-
-    Set<String> getExcluded() {
-        return Collections.unmodifiableSet(excluded);
     }
 
     void validate() {

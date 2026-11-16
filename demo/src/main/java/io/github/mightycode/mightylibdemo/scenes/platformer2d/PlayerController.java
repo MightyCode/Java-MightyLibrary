@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
+package io.github.mightycode.mightylibdemo.scenes.platformer2d;
 
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylibdemo.main.ActionId;

@@ -28,7 +28,7 @@ public final class ReducedGraph extends ListNode<NodeIntersection> {
     private void init(Graph graph, EVerbosity verbosity) {
         subNodeGraph.clear();
 
-        Queue<Node> nodeToCheck = new LinkedList<>();
+        Queue<Node> nodeToCheck = new ArrayDeque<>();
         List<Node> subNodes = new ArrayList<>();
 
         Node currentNode, nextNode, previousNode, tempNode;
