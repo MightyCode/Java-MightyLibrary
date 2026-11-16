@@ -1,5 +1,31 @@
-# Gros point actuel — Philosophie du moteur : bases simples, implémentations proposées, injection
+# Gros point actuel — Bibliothèque réutilisable
 
 **Ce fichier ne contient que ce qui reste à faire, jamais l'historique.** Quand un objectif est atteint (même en partie) : supprimer sa ligne, ou la réécrire pour ne garder que le reste. Aucun « fait », « déjà », « aujourd'hui fait X » : l'état actuel est décrit dans `architecture.md`, l'historique est dans git. Fichier vide → **discuter** avec l'utilisateur du point en tête de `later.md`, puis l'écrire ici (format et cycle de vie : `later.md`, « Écrire `current.md` »). Propositions **à valider avec l'utilisateur avant d'appliquer** ; changements cassants maintenant, avant toute version publiée. Chaque objectif passe par `/planification-ml` avant son implémentation. (U) = le plus urgent.
 
-Philosophie de `decisions.md` : usage courant facile (niveau Processing), réimplémentation (presque) complète possible par héritage + injection. Prérequis de la bibliothèque réutilisable, du modding, du thème et des langues, de Lua et de la physique injectable : chaque commit écrit sans elle ajoute du code à reprendre. Fin du point : la démo, module Maven à part, compile contre la seule API publique.
+Philosophie de `decisions.md` : usage courant facile (niveau Processing), réimplémentation (presque) complète possible par héritage + injection. Prérequis de la bibliothèque réutilisable, du modding, du thème et des langues, de Lua et de la physique injectable : chaque commit écrit sans elle ajoute du code à reprendre.
+
+`mightylib` = base des futurs jeux et logiciels, `mightylibdemo` l'illustre. La démo compile contre le jar, mais à l'exécution tout est lu depuis `resources/` à la racine du dépôt (shaders, texture `error`, polices) : un jeu hors du dépôt ne démarre pas. Passe avant le gamma (variantes de shaders injectées), les mods, le thème, les langues et Lua (plusieurs sources de ressources). Fin du point : un projet de jeu hors du dépôt, dépendant du seul jar publié, lance une scène 2D.
+
+- **Lectures en dur hors de `Resources`** : fichiers lus depuis `resources/` sans passer par le dossier de `Resources` (`EngineConfig.setResourcesFolder`, `resources.folder()`).
+  - Constat : `GamepadManager.MAPPINGS_FILE` (lu par `ContextManager`), `network/NetworkConfigurationLoader` (`resources/networkConfigs`).
+  - À décider : ce qui devient une ressource du moteur (mappings de manettes) ou du jeu (configurations réseau).
+- **Sources de ressources et plusieurs racines** : abstraction de source (disque, classpath du jar) sous `Resources` ; plusieurs racines empilées (moteur, jeu, plus tard mods), un nom identique remplace celui du moteur.
+  - Constat : le dossier est propre à chaque `Resources`, mais unique et sur disque ; `ShaderLoader` lit le disque directement.
+  - À décider : déclaration des racines (une par plugin dans `registry` ?), ordre de priorité, rechargement à chaud (`ResourceWatcher`) d'une ressource du jar remplacée ou non, listage d'un dossier dans un jar (`ResourceLoader.exploreResourcesFile`).
+- **Ressources du moteur dans le jar** : shaders, texture `error`, polices par défaut déplacées dans `mightylib/src/main/resources`, lues depuis le classpath ; celles du jeu restent dans le dossier du projet.
+  - À décider : la liste exacte de ce qui est au moteur (batch `init`, police de la console…), espace de noms des ressources du moteur (lien avec `registry/Identifier`).
+- **Refonte des shaders** : `ShaderManager` en service (clé `mightylib:shaders`, comme le son et la console), shaders ajoutés ou remplacés par les projets et les plugins, un seul jeu de fichiers.
+  - Constat : `ShaderManager` est le seul système unique encore créé en dur par `Engine.setup` (avant les ressources, lu par le `ShaderLoader`) ; un plugin peut remplacer le `ShaderLoader` entier, mais ni ajouter ni remplacer un shader de la liste (`shaders.json` du moteur) ; `resources/shaders/1_40/` presque vide (4 fichiers contre 31 en `3_30`) et incompatible avec le contexte 3.3 core demandé.
+  - Cible : includes GLSL lus par les sources de ressources ; `#version` et macros `in`/`out` injectés (retrait de `1_40` et de la branche GLSL 140 de `ShaderManager.init`) ; variantes par `#define` injectés par le moteur (ubershader), utiles au gamma.
+  - À décider : forme de la déclaration des shaders (`shaders.json` par racine, `ShaderData`, `registry.shaders()`), moment de création du service par rapport aux ressources.
+- **Paquet de démonstration** : modèles lourds (`backpack`, `basicShape`, `weapon`, `world`) hors de git (`.gitignore`), la démo fonctionne sans, avec un message clair.
+  - À décider : où le récupérer (archive de release, script `tools/`), comportement des scènes 3D sans lui.
+- **Packages internes et modules Java** : déplacer les types `INTERNAL` des packages `STABLE` (`GLContext`, `ConsoleLog`, `BatchLoader`… : `architecture.md`, « API publique ») dans des packages à eux, puis `module-info` n'exportant que les packages non `INTERNAL` (`decisions.md`, JPMS).
+  - À décider : nom des packages (`….internal`), dépendances non modulaires (JBox2D, org.json), modules des natives LWJGL.
+- **Pom « starter » pour les jeux** : un jeu reçoit les jars Java de LWJGL par `mightylib`, mais recopie les profils d'OS (`lwjgl.natives`) et déclare lui-même les natives (comme `demo/pom.xml`).
+  - À décider : pom parent ou pom « starter » (dépendance de type `pom`), ce qu'il fixe pour le jeu (Java, encodage, plugins).
+- **Kit de test pour les jeux** : le jar `tests` de `mightylib` ne contient que les aides `*TestAccess` (thread principal, workers) des tests du moteur ; un jeu qui teste ses loaders, ses commandes ou ses scènes sans fenêtre a besoin d'un kit pensé pour lui (moteur sans GL, `Resources` de test, temps fixé).
+  - À décider : artefact à part ou jar `tests`, statut `@API` du kit.
+- **Distribution et versions** : `mvn install`, puis JitPack ou GitHub Packages ; versions sémantiques par release ; à partir de la première version publiée, japicmp compare l'API de chaque version à la précédente (les statuts `@API` disent ce qui peut changer).
+  - À décider : dépôt de publication, numéro de la première version, contrôle japicmp dans la CI ou en local.
+- **Test d'acceptation** : projet de jeu minimal hors du dépôt (pom starter, jar publié, ses propres ressources, un shader remplacé) qui lance une scène 2D.
