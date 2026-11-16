@@ -14,5 +14,6 @@ jobs:
           java-version: 21
           cache: maven
       # The tests need neither a window nor OpenGL (see docs/debug-tools.md for the in-game checks)
-      - name: Compile and test
-        run: mvn -B test
+      # verify: the demo is compiled and tested against the jar of the library, as another project would use it
+      - name: Compile, test and package
+        run: mvn -B verify

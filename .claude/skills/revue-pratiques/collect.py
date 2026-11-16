@@ -17,6 +17,8 @@ since = "1 week ago"
 if "--since" in sys.argv:
     since = sys.argv[sys.argv.index("--since") + 1]
 
+# The Maven modules (sources in <module>/src/main/java, tests in <module>/src/test/java)
+MODULES = ("mightylib", "demo")
 LEGACY = ("network/", "graphics/GUI/", "utils/DataFolder", "algorithms/", "resources/data/", "graphics/text/FontFile")
 
 
@@ -57,9 +59,10 @@ fix_words = re.compile(r"\bfix|bug|no longer|crash|NullPointer|leak|stuck", re.I
 with_code = without_doc = 0
 flagged = {"correctif sans test": [], "code ancien sans test": []}
 for title, files in commits:
-    code = [f for f in files if f.startswith("src/")]
+    # Main sources and tests of the Maven modules (old layout before the split: src/ and test/)
+    code = [f for f in files if "/src/main/" in f or f.startswith("src/")]
     docs = [f for f in files if f.startswith("docs/") or f == "CLAUDE.md"]
-    tests = [f for f in files if f.startswith("test/")]
+    tests = [f for f in files if "/src/test/" in f or f.startswith("test/")]
     if not code:
         continue
     with_code += 1
@@ -68,7 +71,7 @@ for title, files in commits:
         flagged["correctif sans test"].append(title)
     if any(part in f for f in code for part in LEGACY) and not tests:
         flagged["code ancien sans test"].append(title)
-print(f"commits: {len(commits)}, dont {with_code} touchent src/ ; {without_doc} sans doc "
+print(f"commits: {len(commits)}, dont {with_code} touchent le code ; {without_doc} sans doc "
       "(normal pour un changement sans effet sur l'architecture : regarder les plus gros)")
 for flag, titles in flagged.items():
     print(f"{flag}: {len(titles)}")
@@ -80,7 +83,7 @@ print("(un drapeau n'est pas une faute : Ã  juger, ex. un correctif impossible Ã
 
 section("[3] Tests")
 test_count = 0
-for root, _, files in os.walk("test"):
+for root, _, files in (entry for module in MODULES for entry in os.walk(module + "/src/test/java")):
     for name in files:
         if name.endswith(".java"):
             with open(os.path.join(root, name), encoding="utf-8") as file:
@@ -98,7 +101,7 @@ for number, line in enumerate(current, 1):
 section("[9][10] Code")
 stack_traces, opened, empty_catches = [], [], []
 open_call = re.compile(r"new (FileInputStream|FileReader|FileWriter|FileOutputStream)\(|new Scanner\(new File")
-for root, _, files in os.walk("src"):
+for root, _, files in (entry for module in MODULES for entry in os.walk(module + "/src/main/java")):
     for name in files:
         if not name.endswith(".java"):
             continue

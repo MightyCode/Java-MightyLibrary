@@ -4,9 +4,17 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Parent and aggregator: the versions, the plugins and the profiles shared by the library and the demo.
+         Each module only declares what it uses. -->
     <groupId>io.github.mightycode</groupId>
-    <artifactId>Java-MightyLibrary</artifactId>
+    <artifactId>mightylib-parent</artifactId>
     <version>1.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>mightylib</module>
+        <module>demo</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -14,6 +22,11 @@
         <lwjgl.version>3.3.6</lwjgl.version>
         <joml.version>1.10.3</joml.version>
         <json.version>20260719</json.version>
+        <jbox2d.version>2.2.1.1</jbox2d.version>
+        <opensimplex.version>1.0.3</opensimplex.version>
+        <jlayer.version>1.0.1</jlayer.version>
+        <apiguardian.version>1.1.2</apiguardian.version>
+        <junit.version>5.10.2</junit.version>
         <errorprone.version>2.52.0</errorprone.version>
         <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
         <jacoco.version>0.8.16</jacoco.version>
@@ -21,6 +34,8 @@
     </properties>
 
     <profiles>
+        <!-- The classifier of the LWJGL natives of this machine. The natives themselves are declared by the
+             application (the demo), and by the library for its tests only. -->
         <profile>
             <id>lwjgl-natives-linux-amd64</id>
             <activation>
@@ -45,13 +60,14 @@
                 <lwjgl.natives>natives-windows</lwjgl.natives>
             </properties>
         </profile>
-        <!-- Static analysis, never part of the normal build: mvn -P analyse process-classes (see tools/analyse.py).
+        <!-- Static analysis, never part of the normal build: mvn -P analyse process-test-classes (see tools/analyse.py).
              Error Prone runs inside javac (forked: JDK 17+ needs the add-exports and add-opens options below),
              SpotBugs reads the bytecode afterwards. All findings are reported, none fails the build. -->
         <profile>
             <id>analyse</id>
             <build>
-                <!-- Own output folder: the game keeps using target/classes, and a recompilation is always forced -->
+                <!-- Own output folder in each module: the game keeps using target/classes, and a recompilation is
+                     always forced -->
                 <directory>${project.basedir}/target/static-analysis</directory>
                 <plugins>
                     <plugin>
@@ -101,7 +117,8 @@
                             <threshold>Medium</threshold>
                             <xmlOutput>true</xmlOutput>
                             <failOnError>false</failOnError>
-                            <excludeFilterFile>tools/spotbugs-exclude.xml</excludeFilterFile>
+                            <!-- From the root of the build (the parent and its modules share the file) -->
+                            <excludeFilterFile>${maven.multiModuleProjectDirectory}/tools/spotbugs-exclude.xml</excludeFilterFile>
                         </configuration>
                         <executions>
                             <execution>
@@ -116,7 +133,8 @@
                 </plugins>
             </build>
         </profile>
-        <!-- Code coverage of the unit tests, never part of the normal build: mvn -P coverage test (see tools/coverage.py) -->
+        <!-- Code coverage of the unit tests, never part of the normal build:
+             mvn -P coverage test -pl mightylib (see tools/coverage.py) -->
         <profile>
             <id>coverage</id>
             <build>
@@ -126,10 +144,9 @@
                         <artifactId>jacoco-maven-plugin</artifactId>
                         <version>${jacoco.version}</version>
                         <configuration>
-                            <!-- Code bound to OpenGL, OpenAL or GLFW (needs a window or a context, never unit tested)
-                                 and the demo itself: left out so the figures only show what a test could cover -->
+                            <!-- Code bound to OpenGL, OpenAL or GLFW (needs a window or a context, never unit tested):
+                                 left out so the figures only show what a test could cover -->
                             <excludes>
-                                <exclude>io/github/mightycode/mightylibdemo/**</exclude>
                                 <exclude>io/github/mightycode/mightylib/graphics/renderer/**</exclude>
                                 <exclude>io/github/mightycode/mightylib/graphics/shader/**</exclude>
                                 <exclude>io/github/mightycode/mightylib/graphics/surface/**</exclude>
@@ -173,152 +190,79 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
+            <dependency>
+                <groupId>io.github.mightycode</groupId>
+                <artifactId>mightylib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.mightycode</groupId>
+                <artifactId>mightylib</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>${json.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.joml</groupId>
+                <artifactId>joml</artifactId>
+                <version>${joml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jbox2d</groupId>
+                <artifactId>jbox2d-library</artifactId>
+                <version>${jbox2d.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.raylabz</groupId>
+                <artifactId>opensimplex</artifactId>
+                <version>${opensimplex.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javazoom</groupId>
+                <artifactId>jlayer</artifactId>
+                <version>${jlayer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apiguardian</groupId>
+                <artifactId>apiguardian-api</artifactId>
+                <version>${apiguardian.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
-        <testSourceDirectory>test</testSourceDirectory>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>io.github.mightycode.mightylibdemo.main.Main</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase> <!-- packaging phase -->
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.2.1</version>
-                <configuration>
-                    <mainClass>io.github.mightycode.mightylibdemo.main.Main</mainClass>
-                            <arguments>
-                                <argument>-f</argument>
-                                <argument>false</argument>
-                            </arguments>
-                </configuration>
-            </plugin>
-        </plugins>
-        <resources>
-            <resource>
-                <directory>${basedir}/resources</directory>
-                <targetPath>${basedir}/target/resources</targetPath>
-                <filtering>false</filtering>
-            </resource>
-        </resources>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>3.4.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.7.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
     </build>
-    <dependencies>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>${json.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-assimp</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-glfw</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-openal</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-opengl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-stb</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-assimp</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-glfw</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-openal</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-opengl</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.lwjgl</groupId>
-            <artifactId>lwjgl-stb</artifactId>
-            <classifier>${lwjgl.natives}</classifier>
-        </dependency>
-        <dependency>
-            <groupId>org.joml</groupId>
-            <artifactId>joml</artifactId>
-            <version>${joml.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jbox2d</groupId>
-            <artifactId>jbox2d-library</artifactId>
-            <version>2.2.1.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.raylabz</groupId>
-            <artifactId>opensimplex</artifactId>
-            <version>1.0.3</version>
-        </dependency>
-        <dependency>
-            <groupId>javazoom</groupId>
-            <artifactId>jlayer</artifactId>
-            <version>1.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apiguardian</groupId>
-            <artifactId>apiguardian-api</artifactId>
-            <version>1.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.10.2</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-    
 </project>

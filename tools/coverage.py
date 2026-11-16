@@ -7,7 +7,8 @@ Usage:
     python tools/coverage.py --classes PART          # classes of the packages whose name contains PART (dotted or slashed)
     python tools/coverage.py --lines CLASS           # uncovered line numbers of a class (simple or full name)
     python tools/coverage.py --no-run                # summarize the last run
-The HTML report is target/site/jacoco/index.html. Machine specific paths: see tools/scenario.py.
+Covers the library only (module mightylib), the demo is not measured.
+The HTML report is mightylib/target/site/jacoco/index.html. Machine specific paths: see tools/scenario.py.
 """
 import argparse
 import os
@@ -19,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import scenario  # noqa: E402
 
 ROOT = scenario.ROOT
-REPORT = os.path.join(ROOT, "target", "site", "jacoco", "jacoco.xml")
+REPORT = os.path.join(ROOT, "mightylib", "target", "site", "jacoco", "jacoco.xml")
 LOG = os.path.join(ROOT, "target", "coverage.log")
 
 
@@ -27,8 +28,10 @@ def run_maven():
     environment = dict(os.environ)
     if scenario.MAVEN_JDK:
         environment["JAVA_HOME"] = scenario.MAVEN_JDK
-    result = subprocess.run([scenario.MVN, "-B", "-P", "coverage", "test"], cwd=ROOT, env=environment,
+    result = subprocess.run([scenario.MVN, "-B", "-P", "coverage", "test", "-pl", "mightylib"], cwd=ROOT, env=environment,
                             capture_output=True, text=True, encoding="utf-8", errors="replace")
+    # The root target/ belongs to no module: Maven does not create it
+    os.makedirs(os.path.dirname(LOG), exist_ok=True)
     with open(LOG, "w", encoding="utf-8") as log:
         log.write(result.stdout + result.stderr)
     if result.returncode != 0:
