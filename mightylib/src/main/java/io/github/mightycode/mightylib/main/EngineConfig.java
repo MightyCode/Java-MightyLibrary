@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -392,7 +393,8 @@ public final class EngineConfig {
         if (property != null) {
             try {
                 return Long.parseLong(property.trim());
-            } catch (NumberFormatException ignored) {
+            } catch (NumberFormatException e) {
+                System.err.println("--" + WATCH_INTERVAL_PROPERTY + " : not a number ->" + property + "<-, the configured interval is kept");
             }
         }
         return watchResourcesInterval;
@@ -460,24 +462,24 @@ public final class EngineConfig {
         if (property == null)
             return configured;
 
-        Boolean shown = ParseShown(property);
-        if (shown == null) {
+        Optional<Boolean> shown = ParseShown(property);
+        if (shown.isEmpty()) {
             System.err.println("--" + name + " : unknown value ->" + property + "<-, expected shown or hidden");
             return configured;
         }
 
-        return shown;
+        return shown.get();
     }
 
-    // shown: true, hidden: false, anything else: null
-    static Boolean ParseShown(String value) {
+    // shown: true, hidden: false, anything else: empty
+    static Optional<Boolean> ParseShown(String value) {
         switch (value.trim().toLowerCase(Locale.ROOT)) {
             case "shown":
-                return Boolean.TRUE;
+                return Optional.of(true);
             case "hidden":
-                return Boolean.FALSE;
+                return Optional.of(false);
             default:
-                return null;
+                return Optional.empty();
         }
     }
 

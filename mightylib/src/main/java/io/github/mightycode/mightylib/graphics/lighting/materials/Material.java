@@ -140,8 +140,8 @@ public final class Material extends BasicMaterial {
     public static Material CyanPlastic(){
         return new Material(
                 new Vector3f(0.0f, 0.1f, 0.06f),
-                new Vector3f(0.0f,	0.50980392f,	0.50980392f),
-                new Vector3f(0.50196078f),
+                new Vector3f(0.0f, 130f / 255f, 130f / 255f),
+                new Vector3f(128f / 255f),
                 PLASTIC_SHININESS);
     }
 

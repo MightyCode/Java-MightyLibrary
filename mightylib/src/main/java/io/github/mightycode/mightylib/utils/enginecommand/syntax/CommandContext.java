@@ -61,7 +61,8 @@ public final class CommandContext {
      * option.
      * @throws IllegalArgumentException if nothing is given and there is no default value
      */
-    @SuppressWarnings("unchecked")
+    // The type is the one the syntax declared for this name: the caller asks for it, as with Brigadier
+    @SuppressWarnings({"unchecked", "TypeParameterUnusedInFormals"})
     public <T> T get(String name) {
         List<Object> given = values.get(name);
         if (given != null)

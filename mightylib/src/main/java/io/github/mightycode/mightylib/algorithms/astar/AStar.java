@@ -71,14 +71,15 @@ public final class AStar {
     }
 
     private static List<Node> reconstructPath(Map<Node, Node> previousNodes, Node endNode) {
-        LinkedList<Node> path = new LinkedList<>();
+        List<Node> path = new ArrayList<>();
         Node currentNode = endNode;
 
         while (currentNode != null) {
-            path.addFirst(currentNode);
+            path.add(currentNode);
             currentNode = previousNodes.get(currentNode);
         }
 
-        return new ArrayList<>(path);
+        Collections.reverse(path);
+        return path;
     }
 }

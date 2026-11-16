@@ -19,7 +19,7 @@ public final class GraphUtil {
                 continue;
 
             Set<Node> connectedNodes = new HashSet<>();
-            Queue<Node> nodeToCheck = new LinkedList<>();
+            Queue<Node> nodeToCheck = new ArrayDeque<>();
             nodeToCheck.add(node);
 
             while (!nodeToCheck.isEmpty()){

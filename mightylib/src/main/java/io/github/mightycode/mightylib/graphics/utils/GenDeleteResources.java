@@ -8,7 +8,10 @@ import org.apiguardian.api.API;
 import org.lwjgl.opengl.GL30;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 
 import static org.apiguardian.api.API.Status.INTERNAL;
@@ -16,11 +19,11 @@ import static org.lwjgl.opengl.GL30.*;
 
 public final class GenDeleteResources {
     private static boolean Initialized = false;
-    private static ArrayList<Integer> VBOs;
-    private static ArrayList<Integer> EBOs;
-    private static ArrayList<Integer> PBOs;
+    private static Set<Integer> VBOs;
+    private static Set<Integer> EBOs;
+    private static Set<Integer> PBOs;
 
-    private static ArrayList<Integer> Textures;
+    private static Set<Integer> Textures;
 
 
     private GenDeleteResources(){}
@@ -39,11 +42,11 @@ public final class GenDeleteResources {
         if (Initialized)
             return;
 
-        VBOs = new ArrayList<>();
-        EBOs = new ArrayList<>();
-        PBOs = new ArrayList<>();
+        VBOs = new LinkedHashSet<>();
+        EBOs = new LinkedHashSet<>();
+        PBOs = new LinkedHashSet<>();
 
-        Textures = new ArrayList<>();
+        Textures = new LinkedHashSet<>();
 
 
         Initialized = true;
@@ -94,7 +97,7 @@ public final class GenDeleteResources {
         return vbo;
     }
 
-    public static void DeleteBuffers(Integer vbo) {
+    public static void DeleteBuffers(int vbo) {
         CheckMainThread("DeleteBuffers");
         VBOs.remove(vbo);
         glDeleteBuffers(vbo);
@@ -107,7 +110,7 @@ public final class GenDeleteResources {
         return ebo;
     }
 
-    public static void DeleteBuffersEBO(Integer ebo) {
+    public static void DeleteBuffersEBO(int ebo) {
         CheckMainThread("DeleteBuffersEBO");
         EBOs.remove(ebo);
         glDeleteBuffers(ebo);
@@ -121,7 +124,7 @@ public final class GenDeleteResources {
         return pbo;
     }
 
-    public static void DeletePixelBuffer(Integer pbo) {
+    public static void DeletePixelBuffer(int pbo) {
         CheckMainThread("DeletePixelBuffer");
         PBOs.remove(pbo);
         glDeleteBuffers(pbo);
@@ -134,7 +137,7 @@ public final class GenDeleteResources {
         return texture;
     }
 
-    public static void DeleteTexture(Integer texture) {
+    public static void DeleteTexture(int texture) {
         CheckMainThread("DeleteTexture");
         Textures.remove(texture);
         glDeleteTextures(texture);
@@ -173,8 +176,8 @@ public final class GenDeleteResources {
     }
 
     // What the contexts alive own, of one kind (ids of different contexts can be equal)
-    private static ArrayList<Integer> PerContext(Function<GLContext, List<Integer>> owned) {
-        ArrayList<Integer> all = new ArrayList<>();
+    private static List<Integer> PerContext(Function<GLContext, Collection<Integer>> owned) {
+        List<Integer> all = new ArrayList<>();
         for (GLContext context : GLContext.live())
             all.addAll(owned.apply(context));
 

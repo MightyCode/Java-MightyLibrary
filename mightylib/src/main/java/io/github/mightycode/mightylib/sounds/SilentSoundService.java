@@ -37,7 +37,7 @@ public final class SilentSoundService implements ISoundService {
         // The ended ones first: a sound that is not owned is seen playing during one tick
         for (int i = sources.size() - 1; i >= 0; --i) {
             SilentSoundSource source = sources.get(i);
-            if (source.isReleased() || !source.isOwned() && source.hadPlayed())
+            if (source.isReleased() || (!source.isOwned() && source.hadPlayed()))
                 sources.remove(i);
         }
 

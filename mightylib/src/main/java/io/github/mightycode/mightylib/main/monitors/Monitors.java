@@ -7,7 +7,6 @@ import org.lwjgl.system.MemoryStack;
 
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -22,7 +21,7 @@ public final class Monitors {
     public static List<MonitorInfo> List() {
         PointerBuffer handles = glfwGetMonitors();
         if (handles == null)
-            return Collections.emptyList();
+            return new ArrayList<>();
 
         long primary = glfwGetPrimaryMonitor();
         List<MonitorInfo> monitors = new ArrayList<>();
@@ -58,7 +57,7 @@ public final class Monitors {
     private static List<VideoMode> VideoModes(long handle) {
         GLFWVidMode.Buffer modes = glfwGetVideoModes(handle);
         if (modes == null)
-            return Collections.emptyList();
+            return new ArrayList<>();
 
         List<VideoMode> list = new ArrayList<>(modes.limit());
         for (int i = 0; i < modes.limit(); ++i) {

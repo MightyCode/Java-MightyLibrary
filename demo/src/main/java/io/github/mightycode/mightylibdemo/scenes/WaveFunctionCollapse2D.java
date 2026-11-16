@@ -35,6 +35,7 @@ public class WaveFunctionCollapse2D extends Scene {
         };
     }
 
+    @Override
     public void launch(String[] args) {
         /// SCENE INFORMATION ///
 
@@ -102,6 +103,7 @@ public class WaveFunctionCollapse2D extends Scene {
     }
 
 
+    @Override
     public void update() {
         super.update();
 
@@ -137,6 +139,7 @@ public class WaveFunctionCollapse2D extends Scene {
     }
 
 
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();

@@ -48,6 +48,7 @@ public class Game3D2D extends Scene {
         };
     }
 
+    @Override
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
@@ -116,6 +117,7 @@ public class Game3D2D extends Scene {
     }
 
 
+    @Override
     public void update() {
         super.update();
 
@@ -162,6 +164,7 @@ public class Game3D2D extends Scene {
     }
 
 
+    @Override
     public void display() {
         game2DRender.bindFrameBuffer();
         clear();

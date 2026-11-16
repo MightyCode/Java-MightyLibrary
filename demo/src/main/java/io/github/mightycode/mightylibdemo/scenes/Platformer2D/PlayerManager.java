@@ -38,17 +38,13 @@ public class PlayerManager extends Box2DActor{
 
     /** Update player state (no argument version) */
     public void update() {
-        //this.setMaxSpeedX(3);
-
-        this.applyForce(new Vec2(values.moveSpeed * controller.getMoveAxis(), 0));
+        this.applyForce(new Vec2(PlayerValues.MOVE_SPEED * controller.getMoveAxis(), 0));
 
         // Jumping
         if (controller.wantsJump() && values.onGround()) {
-            Vec2 jumpVec = new Vec2(0, values.jumpForce);
+            Vec2 jumpVec = new Vec2(0, PlayerValues.JUMP_FORCE);
             applyImpulse(jumpVec);
         }
-
-        super.update();
 
         // Update cached player position
         Vec2 pos = body.getPosition();

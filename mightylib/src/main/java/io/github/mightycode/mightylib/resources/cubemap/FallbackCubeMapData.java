@@ -19,7 +19,7 @@ public final class FallbackCubeMapData extends CubeMapData {
     }
 
     @Override
-    protected boolean internLoad() {
+    protected synchronized boolean internLoad() {
         ByteBuffer[] faces = new ByteBuffer[FACE_COUNT];
         for (int face = 0; face < FACE_COUNT; ++face) {
             ByteBuffer pixels = BufferUtils.createByteBuffer(SIZE * SIZE * 4);

@@ -6,8 +6,8 @@ public class PlayerValues {
     public final Vec2 position = new Vec2(0, 0);
     public final Vec2 size = new Vec2(1, 1);
 
-    public final float moveSpeed = 100;
-    public final float jumpForce = 500f;
+    public static final float MOVE_SPEED = 100;
+    public static final float JUMP_FORCE = 500f;
     public int groundCount;
 
     public boolean onGround() {

@@ -67,6 +67,7 @@ public final class MovingCameraComponent implements IUpdatable {
         this.inputs = inputs;
     }
 
+    @Override
     public void update(){
         float speed = inputManager.getState(inputs.QuickSpeed) ? quickSpeed : moveSpeed;
 

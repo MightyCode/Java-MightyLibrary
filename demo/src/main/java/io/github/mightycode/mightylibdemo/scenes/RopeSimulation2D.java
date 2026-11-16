@@ -91,6 +91,7 @@ public class RopeSimulation2D extends Scene {
             return point.distance(this.position) <= precision;
         }
 
+        @Override
         public void update(){
             renderer.setPosition(position);
         }
@@ -98,10 +99,12 @@ public class RopeSimulation2D extends Scene {
         @Override
         public void postUpdate() {}
 
+        @Override
         public void display(){
             renderer.display();
         }
 
+        @Override
         public void unload(){
             renderer.unload();
         }
@@ -142,6 +145,7 @@ public class RopeSimulation2D extends Scene {
                     new Vector4f(pointA.getPosition().x, pointA.getPosition().y, pointB.getPosition().x, pointB.getPosition().y), precision);
         }
 
+        @Override
         public void update(){
             // position = center of center
             Vector2f position = new Vector2f(
@@ -163,10 +167,12 @@ public class RopeSimulation2D extends Scene {
         @Override
         public void postUpdate() {}
 
+        @Override
         public void display(){
             renderer.display();
         }
 
+        @Override
         public void unload(){
             renderer.unload();
         }
@@ -206,6 +212,7 @@ public class RopeSimulation2D extends Scene {
     private Text textIsDrawingStick;
     private Text textIsWindControlled;
 
+    @Override
     public void init(String[] args) {
         windForce = new Vector2f(0, 0);
 
@@ -230,6 +237,7 @@ public class RopeSimulation2D extends Scene {
         sticks.clear();
     }
 
+    @Override
     public void launch(String[] args) {
         setClearColor(52, 189, 235, 1f);
 
@@ -304,6 +312,7 @@ public class RopeSimulation2D extends Scene {
         camera2D().setZoomLevel(0.5f);
     }
 
+    @Override
     public void update() {
         super.update();
 
@@ -508,6 +517,7 @@ public class RopeSimulation2D extends Scene {
         }
     }
 
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();

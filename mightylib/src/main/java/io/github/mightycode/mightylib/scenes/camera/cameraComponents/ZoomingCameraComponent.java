@@ -41,6 +41,7 @@ public final class ZoomingCameraComponent implements IUpdatable {
         controlledCamera.setZoomLevel(new Vector2f(controlledCamera.getZoomLevel()).mul(factor));
     }
 
+    @Override
     public void update(){
         if (mouseManager.getMouseScroll().y != 0) {
             controlledCamera.setZoomReference(

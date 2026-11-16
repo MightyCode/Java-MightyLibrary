@@ -24,6 +24,7 @@ public abstract class ServerThread extends CommunicationThread{
         //Todo
     }
 
+    @Override
     public void doStop() {
         this.running = false;
         if (server != null && server.hasClient()) {

@@ -100,7 +100,7 @@ final class ConsoleLayout {
     private ECommandLevel viewer = ECommandLevel.USER;
     // Types of lines not shown (console logs off: the program output)
     private final Set<ConsoleLog.EType> hiddenTypes = EnumSet.noneOf(ConsoleLog.EType.class);
-    private final Predicate<ConsoleLog.Line> filter = line -> !hiddenTypes.contains(line.getType());
+    private final Predicate<ConsoleLog.Line> filter = this::isShown;
 
     // null: follow the end of the log
     private Anchor anchor;
@@ -574,6 +574,11 @@ final class ConsoleLayout {
         }
 
         return text.length();
+    }
+
+    // Not of a hidden type (the level is checked by the log)
+    private boolean isShown(ConsoleLog.Line line) {
+        return !hiddenTypes.contains(line.getType());
     }
 
     float width(CharSequence text, int start, int end) {

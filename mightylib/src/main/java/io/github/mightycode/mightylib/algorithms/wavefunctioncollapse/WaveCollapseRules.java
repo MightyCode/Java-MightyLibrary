@@ -238,8 +238,9 @@ public final class WaveCollapseRules extends DataType {
         JSONObject root = data.getObject();
         Map<Vector2i, Map<Integer, Set<Integer>>> typedRules = new HashMap<>();
 
-        for (Integer id : rules.keySet()) {
-            Rule rule = rules.get(id);
+        for (Map.Entry<Integer, Rule> entry : rules.entrySet()) {
+            Integer id = entry.getKey();
+            Rule rule = entry.getValue();
             JSONObject jsonRule = root.getJSONObject(ruleKeys.get(id));
             JSONArray connections = jsonRule.getJSONArray("connections");
 
@@ -329,9 +330,9 @@ public final class WaveCollapseRules extends DataType {
     }
 
     private static <T> T getValue(Map<Vector2i, T> map, Vector2i vec){
-        for (Vector2i vec2 : map.keySet()){
-            if (vec2.x == vec.x && vec.y == vec2.y)
-                return map.get(vec2);
+        for (Map.Entry<Vector2i, T> entry : map.entrySet()){
+            if (entry.getKey().x == vec.x && entry.getKey().y == vec.y)
+                return entry.getValue();
         }
 
         return null;
@@ -350,10 +351,9 @@ public final class WaveCollapseRules extends DataType {
         System.out.println("Initial rule :");
         initialRule.printRule();
 
-        for (Integer id : rules.keySet()){
-            Rule rule = rules.get(id);
-            System.out.println("Rule " + id + " :");
-            rule.printRule();
+        for (Map.Entry<Integer, Rule> entry : rules.entrySet()){
+            System.out.println("Rule " + entry.getKey() + " :");
+            entry.getValue().printRule();
         }
     }
 }

@@ -5,9 +5,11 @@ import io.github.mightycode.mightylib.main.WindowInfo;
 import io.github.mightycode.mightylib.utils.math.UUID;
 import org.joml.Matrix4f;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public abstract class Camera extends UUID {
     // Ids of the cameras only (UUID ids are shared with renderers), to target a camera with the camera command
-    private static int CAMERA_COUNT = 0;
+    private static final AtomicInteger CAMERA_COUNT = new AtomicInteger();
     private final int cameraId;
     private String name;
 
@@ -21,7 +23,7 @@ public abstract class Camera extends UUID {
 
     // Package-private: the hierarchy is closed, its subclasses are in this package
     Camera(WindowInfo windowInfo) {
-        cameraId = CAMERA_COUNT++;
+        cameraId = CAMERA_COUNT.getAndIncrement();
         name = "camera" + cameraId;
         this.windowInfo = windowInfo;
 

@@ -62,6 +62,7 @@ public class Scene2D extends Scene {
         };
     }
 
+    @Override
     public void init(String[] args) {
         atlas = new TextureDataAtlas("atlas1");
 
@@ -72,6 +73,7 @@ public class Scene2D extends Scene {
         resources().addPreLoadedResource(atlas);
     }
 
+    @Override
     public void launch(String[] args) {
         setClearColor(52, 189, 235, 1f);
         /// SCENE INFORMATION ///
@@ -218,6 +220,7 @@ public class Scene2D extends Scene {
         clockwisePolygonRenderer.setPosition(new Vector2f(1500, 500));
     }
 
+    @Override
     public void update() {
         super.update();
 
@@ -248,6 +251,7 @@ public class Scene2D extends Scene {
     }
 
 
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();

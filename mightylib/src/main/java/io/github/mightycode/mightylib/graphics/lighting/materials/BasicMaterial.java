@@ -18,12 +18,14 @@ public class BasicMaterial implements IShaderUniforms {
     /**
      * Assuming that the shader contains struct Material with attributes
      */
+    @Override
     public void addToRenderer(Renderer renderer, String structureName){
         renderer.addShaderValue(structureName + ".ambient", Vector3f.class, Ambient)
                 .addShaderValue(structureName + ".diffuse", Vector3f.class, Diffuse)
                 .addShaderValue(structureName + ".specular", Vector3f.class, Specular);
     }
 
+    @Override
     public void updateRenderer(Renderer renderer, String structureName){
         renderer.updateShaderValue(structureName + ".ambient", Ambient)
                 .updateShaderValue(structureName + ".diffuse", Diffuse)

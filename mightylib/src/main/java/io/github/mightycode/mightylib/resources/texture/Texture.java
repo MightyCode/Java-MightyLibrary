@@ -299,6 +299,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         Logger.CheckOpenGLError("Set texture parameters : " + data.getDataName());
     }
 
+    @Override
     public final int getQualityType(){
         return qualityType;
     }
@@ -307,6 +308,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         this.textureType = textureType;
     }
 
+    @Override
     public final int getTextureType(){
         return this.textureType;
     }

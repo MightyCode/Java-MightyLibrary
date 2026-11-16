@@ -50,6 +50,7 @@ public class Scene3DBis extends Scene {
         };
     }
 
+    @Override
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
@@ -211,6 +212,7 @@ public class Scene3DBis extends Scene {
     }
 
 
+    @Override
     public void update() {
         super.update();
 
@@ -241,6 +243,7 @@ public class Scene3DBis extends Scene {
     }
 
 
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();

@@ -30,7 +30,7 @@ public final class CharInputEntry {
         if (entries.containsKey(action))
             return entries.get(action);
 
-        return (char) -1;
+        return Character.MAX_VALUE;
     }
 
     public char getModificationOrDefault(int action){

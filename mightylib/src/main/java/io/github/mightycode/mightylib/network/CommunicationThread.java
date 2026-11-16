@@ -5,10 +5,12 @@ import io.github.mightycode.mightylib.resources.Resources;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class CommunicationThread extends Thread {
     public static final int SPECIAL_ID = -1;
-    private int messageIdCounter;
+    // Messages are sent from the engine while the thread runs
+    private final AtomicInteger messageIdCounter = new AtomicInteger();
     protected int processedMessageNumber;
     protected int receivedMessageNumber;
 
@@ -36,13 +38,13 @@ public abstract class CommunicationThread extends Thread {
         configuration = resources.getResource(NetworkConfiguration.class,
                 configurationName);
 
-        messageIdCounter = 0;
+        messageIdCounter.set(0);
         processedMessageNumber = 0;
         receivedMessageNumber = 0;
     }
 
     public void reset(){
-        messageIdCounter = 0;
+        messageIdCounter.set(0);
         processedMessageNumber = 0;
         receivedMessageNumber = 0;
 
@@ -50,6 +52,7 @@ public abstract class CommunicationThread extends Thread {
         messageToSend.clear();
     }
 
+    @Override
     public void run() {}
     public boolean isRunning(){ return running; }
 
@@ -67,8 +70,9 @@ public abstract class CommunicationThread extends Thread {
     }
 
     public final int sendMessage(String message) {
-        messageToSend.put(messageIdCounter, message);
-        return messageIdCounter++;
+        int id = messageIdCounter.getAndIncrement();
+        messageToSend.put(id, message);
+        return id;
     }
 
     public abstract void doStop();

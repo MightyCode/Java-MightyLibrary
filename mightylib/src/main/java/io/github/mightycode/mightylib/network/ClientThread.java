@@ -10,9 +10,9 @@ public final class ClientThread extends CommunicationThread {
     public static final String HEADER_SEPARATION = "|";
 
     public ClientTcp client;
-    public boolean shouldTryConnection;
+    public volatile boolean shouldTryConnection;
 
-    public float timeOutCounter;
+    public volatile float timeOutCounter;
 
     public ClientThread() {
         timeOutCounter = GameTime.currentTime();
@@ -34,6 +34,7 @@ public final class ClientThread extends CommunicationThread {
         return this.client;
     }
 
+    @Override
     public void reset(){
         super.reset();
 

@@ -29,6 +29,7 @@ public final class DraggingCameraComponent implements IUpdatable {
         this.dragActionId = dragActionId;
     }
 
+    @Override
     public void update(){
         if (inputManager.inputReleased(dragActionId))
             isDragging = false;

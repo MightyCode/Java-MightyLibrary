@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.utils.math.geometry.EDirection3D;
 import org.joml.*;
 
 import java.lang.Math;
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Math class.
@@ -79,7 +79,7 @@ public final class MightyMath {
 
 
 
-	public static Float Sum(ArrayList<Float> list){
+	public static Float Sum(List<Float> list){
 		float sum = 0;
 		for (Float value : list){
 			sum += value;

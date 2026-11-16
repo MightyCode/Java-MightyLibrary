@@ -48,6 +48,7 @@ public class Box2D extends Scene {
             box.createFixture(fixtureDef);
         }
 
+        @Override
         public void update(){
             Vec2 position = box.getPosition();
             float angle = box.getAngle();
@@ -61,10 +62,12 @@ public class Box2D extends Scene {
         @Override
         public void postUpdate() {}
 
+        @Override
         public void display(){
             renderer.display();
         }
 
+        @Override
         public void unload(){
             renderer.unload();
         }
@@ -180,6 +183,7 @@ public class Box2D extends Scene {
             box.update();
     }
 
+    @Override
     public void display(){
         super.setVirtualScene();
         clear();

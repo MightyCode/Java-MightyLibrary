@@ -22,7 +22,8 @@ public final class ClientTcp {
 
     private volatile boolean running = true;
 
-    private boolean TryingConnection;
+    // Written by the connection thread, read by the engine
+    private volatile boolean TryingConnection;
 
     public ClientTcp(NetworkConfiguration configuration){
         this.configuration = configuration;

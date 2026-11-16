@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylibdemo.scenes.Platformer2D;
 
 import org.jbox2d.collision.shapes.PolygonShape;
-import org.jbox2d.common.MathUtils;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.*;
 
@@ -10,18 +9,10 @@ public class Box2DActor {
     protected final BodyDef bodyDef;
     protected final FixtureDef fixtureDef;
 
-    protected Float maxSpeed;
-    protected Float maxSpeedX;
-    protected Float maxSpeedY;
-
     public Box2DActor() {
         body = null;
         bodyDef = new BodyDef();
         fixtureDef = new FixtureDef();
-
-        maxSpeed = null;
-        maxSpeedX = null;
-        maxSpeedY = null;
     }
 
     public void setStatic() {
@@ -82,25 +73,4 @@ public class Box2DActor {
         body.applyLinearImpulse(impulse, body.getPosition());
     }
 
-    public void update() {
-        // cap max speeds, if they have been set
-        if (maxSpeedX != null)
-        {
-            Vec2 v = getVelocity();
-            v.x = MathUtils.clamp(v.x, -maxSpeedX, maxSpeedX);
-            setVelocity(v);
-        }
-        if (maxSpeedY != null)
-        {
-            Vec2 v = getVelocity();
-            v.y = MathUtils.clamp(v.y, -maxSpeedY, maxSpeedY);
-            setVelocity(v);
-        }
-        if (maxSpeed != null)
-        {
-            float s = getSpeed();
-            if (s > maxSpeed)
-                setSpeed(maxSpeed);
-        }
-    }
 }

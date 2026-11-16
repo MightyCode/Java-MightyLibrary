@@ -266,7 +266,7 @@ public final class CommandParser {
             if (option.valueCount() == 0) {
                 if (inline != null)
                     throw new CommandSyntaxException("The option --" + option.getName() + " takes no value");
-                context.add(option.getName(), Boolean.TRUE);
+                context.add(option.getName(), true);
                 return;
             }
 

@@ -135,7 +135,9 @@ final class FileChangeDetector {
             if (service != null) {
                 try {
                     service.close();
-                } catch (IOException ignored) {
+                } catch (IOException e) {
+                    // Stopping: the watch is over anyway, the system frees it with the process
+                    System.err.println("--Watch: the watch service did not close: " + e);
                 }
                 service = null;
             }
@@ -220,7 +222,7 @@ final class FileChangeDetector {
         }
 
         Set<Path> toCheck;
-        if (events == null || service == null && mode == Mode.POLLING) {
+        if (events == null || (service == null && mode == Mode.POLLING)) {
             toCheck = tracked;
         } else {
             toCheck = new HashSet<>(pending.keySet());

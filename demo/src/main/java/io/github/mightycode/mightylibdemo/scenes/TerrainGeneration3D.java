@@ -26,9 +26,9 @@ public class TerrainGeneration3D extends Scene {
     private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
     private MeshRenderer sBlock;
 
-    private final int lineSize = 5;
-    private final int faceSize = lineSize * 6;
-    private final int boxSize = faceSize * 6;
+    private static final int LINE_SIZE = 5;
+    private static final int FACE_SIZE = LINE_SIZE * 6;
+    private static final int BOX_SIZE = FACE_SIZE * 6;
 
     private TerrainRenderer terrainRenderer;
     private SkyboxRenderer skybox;
@@ -47,6 +47,7 @@ public class TerrainGeneration3D extends Scene {
         };
     }
 
+    @Override
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
@@ -104,6 +105,7 @@ public class TerrainGeneration3D extends Scene {
     }
 
 
+    @Override
     public void update() {
         super.update();
 
@@ -124,6 +126,7 @@ public class TerrainGeneration3D extends Scene {
     }
 
 
+    @Override
     public void display() {
         super.setVirtualScene();
         clear();
@@ -154,7 +157,7 @@ public class TerrainGeneration3D extends Scene {
 
 
     public float [] createCrates(int size){
-        float[] array = new float[size * size * boxSize];
+        float[] array = new float[size * size * BOX_SIZE];
 
         for(int i = 0; i < size; ++i) {
             for(int a = 0; a < size; ++a) {
@@ -167,7 +170,7 @@ public class TerrainGeneration3D extends Scene {
 
 
     public void placeCrates(float[] array, float realPosX, float realPosZ, float realPosY, int posX, int posY, int maxSizeY){
-        int index = boxSize * (posY * maxSizeY + posX);
+        int index = BOX_SIZE * (posY * maxSizeY + posX);
         placeCoord(array, realPosX, realPosZ, realPosY, index);
         placeText(array, index);
         //placeNormal(array, index);
@@ -177,62 +180,62 @@ public class TerrainGeneration3D extends Scene {
     public void placeCoord(float[] array, float realPosX, float realPosZ, float realPosY, int index){
         // Right
         placeValueToCoords(array, new float[]{realPosX , realPosZ , realPosY  }, index);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY}, index  + lineSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + 2 * lineSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + 3 * lineSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY}, index  + 4 * lineSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY}, index  + 5 * lineSize);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY}, index  + LINE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + 2 * LINE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + 3 * LINE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY}, index  + 4 * LINE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY}, index  + 5 * LINE_SIZE);
 
         // Down
-        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index + faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY + 1}, index  + lineSize + faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 2 * lineSize + faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 3 * lineSize + faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 4 * lineSize + faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index  + 5 * lineSize + faceSize);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index + FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY + 1}, index  + LINE_SIZE + FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 2 * LINE_SIZE + FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 3 * LINE_SIZE + FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 4 * LINE_SIZE + FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index  + 5 * LINE_SIZE + FACE_SIZE);
 
         // Left
-        placeValueToCoords(array, new float[]{realPosX, realPosZ , realPosY}, index + 2 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index  + lineSize + 2 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 2 * lineSize + 2 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 3 * lineSize + 2 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY}, index  + 4 * lineSize + 2 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY}, index  + 5 * lineSize + 2 * faceSize);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ , realPosY}, index + 2 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index  + LINE_SIZE + 2 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 2 * LINE_SIZE + 2 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 3 * LINE_SIZE + 2 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY}, index  + 4 * LINE_SIZE + 2 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY}, index  + 5 * LINE_SIZE + 2 * FACE_SIZE);
 
         // Up
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index + 3 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + lineSize + 3 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY}, index  + 2 * lineSize + 3 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ , realPosY}, index  + 3 * lineSize + 3 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY + 1}, index  + 4 * lineSize + 3 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 5 * lineSize + 3 * faceSize);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index + 3 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + LINE_SIZE + 3 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY}, index  + 2 * LINE_SIZE + 3 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ , realPosY}, index  + 3 * LINE_SIZE + 3 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY + 1}, index  + 4 * LINE_SIZE + 3 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 5 * LINE_SIZE + 3 * FACE_SIZE);
 
         // Bottom
-        placeValueToCoords(array, new float[]{realPosX , realPosZ , realPosY}, index + 4 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ , realPosY}, index  + lineSize + 4 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY + 1}, index  + 2 * lineSize + 4 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ , realPosY + 1}, index  + 3 * lineSize + 4 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index  + 4 * lineSize + 4 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX , realPosZ, realPosY}, index  + 5 * lineSize + 4 * faceSize);
+        placeValueToCoords(array, new float[]{realPosX , realPosZ , realPosY}, index + 4 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ , realPosY}, index  + LINE_SIZE + 4 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ, realPosY + 1}, index  + 2 * LINE_SIZE + 4 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ , realPosY + 1}, index  + 3 * LINE_SIZE + 4 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ, realPosY + 1}, index  + 4 * LINE_SIZE + 4 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX , realPosZ, realPosY}, index  + 5 * LINE_SIZE + 4 * FACE_SIZE);
 
         // Top
-        placeValueToCoords(array, new float[]{realPosX , realPosZ + 1 , realPosY}, index + 5 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + lineSize + 5 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 2 * lineSize + 5 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 3 * lineSize + 5 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 4 * lineSize + 5 * faceSize);
-        placeValueToCoords(array, new float[]{realPosX , realPosZ + 1, realPosY}, index  + 5 * lineSize + 5 * faceSize);
+        placeValueToCoords(array, new float[]{realPosX , realPosZ + 1 , realPosY}, index + 5 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY}, index  + LINE_SIZE + 5 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 2 * LINE_SIZE + 5 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX + 1, realPosZ + 1, realPosY + 1}, index  + 3 * LINE_SIZE + 5 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX, realPosZ + 1, realPosY + 1}, index  + 4 * LINE_SIZE + 5 * FACE_SIZE);
+        placeValueToCoords(array, new float[]{realPosX , realPosZ + 1, realPosY}, index  + 5 * LINE_SIZE + 5 * FACE_SIZE);
     }
 
 
     public void placeText(float[] array, int index){
         for(int i = 0; i < 6; ++i){
-            placeValueToCoords(array, new float[]{0.0f, 1.0f}, index + (i) * faceSize + 3);
-            placeValueToCoords(array, new float[]{1.0f, 1.0f}, index + (i) * faceSize + 3 + lineSize);
-            placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * faceSize + 3 + 2 * lineSize);
-            placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * faceSize + 3 + 3 * lineSize);
-            placeValueToCoords(array, new float[]{0.0f, 0.0f}, index + (i) * faceSize + 3 + 4 * lineSize);
-            placeValueToCoords(array, new float[]{0.0f, 1.0f}, index + (i) * faceSize + 3 + 5 * lineSize);
+            placeValueToCoords(array, new float[]{0.0f, 1.0f}, index + (i) * FACE_SIZE + 3);
+            placeValueToCoords(array, new float[]{1.0f, 1.0f}, index + (i) * FACE_SIZE + 3 + LINE_SIZE);
+            placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * FACE_SIZE + 3 + 2 * LINE_SIZE);
+            placeValueToCoords(array, new float[]{1.0f, 0.0f}, index + (i) * FACE_SIZE + 3 + 3 * LINE_SIZE);
+            placeValueToCoords(array, new float[]{0.0f, 0.0f}, index + (i) * FACE_SIZE + 3 + 4 * LINE_SIZE);
+            placeValueToCoords(array, new float[]{0.0f, 1.0f}, index + (i) * FACE_SIZE + 3 + 5 * LINE_SIZE);
         }
     }
 

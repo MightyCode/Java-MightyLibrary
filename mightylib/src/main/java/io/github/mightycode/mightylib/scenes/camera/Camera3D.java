@@ -122,6 +122,7 @@ public final class Camera3D extends Camera {
         superUpdateProjection();
     }
 
+    @Override
     public void updateProjection() {
         if (viewMode == EViewMode.Perspective)
             projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);

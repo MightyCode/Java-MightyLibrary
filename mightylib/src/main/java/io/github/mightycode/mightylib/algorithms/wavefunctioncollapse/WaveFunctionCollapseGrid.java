@@ -150,8 +150,9 @@ public final class WaveFunctionCollapseGrid {
         if (minimumPossibleTilePositions.isEmpty())
             return null;
 
-        int minKey = minimumPossibleTilePositions.keySet().iterator().next();
-        List<Vector2i> positions = minimumPossibleTilePositions.get(minKey);
+        Map.Entry<Integer, List<Vector2i>> minimum = minimumPossibleTilePositions.entrySet().iterator().next();
+        int minKey = minimum.getKey();
+        List<Vector2i> positions = minimum.getValue();
         if (positions.isEmpty())
             return null;
 

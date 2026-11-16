@@ -40,7 +40,7 @@ final class GainTree {
         KeyTreeNode<String, Float> node = tree.getNode(name);
 
         float clamped = value > 1 ? 1 : value < 0 ? 0 : value;
-        if (node == null || node.getValue() != null && clamped == node.getValue())
+        if (node == null || (node.getValue() != null && clamped == node.getValue()))
             return false;
 
         node.setValue(clamped);

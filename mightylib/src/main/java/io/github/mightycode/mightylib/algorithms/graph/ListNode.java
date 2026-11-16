@@ -1,13 +1,14 @@
 package io.github.mightycode.mightylib.algorithms.graph;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Class that can only contain itself
  * @param <T> T is a child class of ListNode
  */
 public abstract class ListNode<T extends ListNode<?>>{
-    private static long ID = 0;
+    private static final AtomicLong ID = new AtomicLong();
     private final long objectId;
 
     private final long id;
@@ -17,7 +18,7 @@ public abstract class ListNode<T extends ListNode<?>>{
     // Package-private: the hierarchy is closed, its subclasses are in this package
     ListNode(long id){
         this.id = id;
-        objectId = ID++;
+        objectId = ID.getAndIncrement();
 
         nodes = new TreeMap<>();
         ids = new ArrayList<>();

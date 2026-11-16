@@ -71,6 +71,7 @@ public final class Text extends MeshRenderer {
         return font == null || text == null || text.trim().isEmpty();
     }
 
+    @Override
     public void display(){
         if (shouldNotDrawText())
             return;
@@ -138,7 +139,8 @@ public final class Text extends MeshRenderer {
         StringBuilder result = new StringBuilder();
         Vector2f sizeTaken = new Vector2f();
 
-        for (char c : clean.toCharArray()){
+        for (int index = 0; index < clean.length(); ++index){
+            char c = clean.charAt(index);
             if (c == '\n'){
                 if (sizeTaken.y > boxSize.y){
                     break;
@@ -204,7 +206,7 @@ public final class Text extends MeshRenderer {
 
 
     public Text setPosition(Vector2f position){
-        if (position == null || position.x == position().x && position.y == position().y)
+        if (position == null || (position.x == position().x && position.y == position().y))
             return this;
 
         super.setPosition(new Vector3f(position.x, position.y, 0.0f));

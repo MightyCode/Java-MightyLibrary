@@ -115,6 +115,7 @@ public class MenuScene extends Scene {
         return super.createLoadingScene(args);
     }
 
+    @Override
     public void launch(String[] args) {
         /// SCENE INFORMATION ///
 
