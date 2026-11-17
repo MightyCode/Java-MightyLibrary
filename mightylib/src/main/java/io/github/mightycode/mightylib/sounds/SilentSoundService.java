@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.sounds;
 
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,9 +19,9 @@ public final class SilentSoundService implements ISoundService {
     // Buffers are names only: never 0 (no buffer)
     private int lastBuffer;
 
-    // Null file: no gain node
-    public SilentSoundService(String gainTreeFile) {
-        gainTree = new GainTree(gainTreeFile);
+    // The content of the gain tree file, null for no gain node
+    public SilentSoundService(JSONObject gainTree) {
+        this.gainTree = new GainTree(gainTree);
     }
 
     @Override

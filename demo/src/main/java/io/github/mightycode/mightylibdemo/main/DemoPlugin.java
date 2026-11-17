@@ -67,7 +67,10 @@ public class DemoPlugin implements IPlugin {
                 .add(new TextureDataAtlasLoader())
                 .add(new WaveCollapseRulesLoader())
                 .add(new CubeMapLoader())
-                .add(new LayeredTextureLoader());
+                .add(new LayeredTextureLoader())
+                // The files of the demo in its jar (demo/src/main/resources/assets/demo), above the folder of the
+                // game, as a mod would be: ResourceSourcesScene2D
+                .classpath();
 
         // Commands of the game: kept for the whole run, whatever the scene
         registry.commands().register(new BaseCommand(registry.id("menu"), ECommandLevel.USER, "Go back to the menu") {

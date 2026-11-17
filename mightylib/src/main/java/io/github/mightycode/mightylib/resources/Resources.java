@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.apiguardian.api.API;
@@ -48,7 +49,7 @@ public final class Resources {
 
     // Fixed at the construction: the mandatory loaders, then those of the project, one per type of data
     private final List<ResourceLoader> loaders;
-    private final String folder;
+    private final ResourceSources sources;
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
@@ -71,12 +72,13 @@ public final class Resources {
 
     /**
      * The given loaders, in their order: those the plugins registered (EngineRegistry.resources), the mandatory ones of
-     * the engine first. The list can't change afterward. The loaders read their files in the given folder
-     * (EngineConfig.setResourcesFolder).
+     * the engine first. The list can't change afterward. The loaders read their files in the given stack of sources
+     * (the engine's, the folder of the game, those of the plugins).
      */
-    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ResourceSources sources,
+                     List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
-        this.folder = NormalizeFolder(folder);
+        this.sources = Objects.requireNonNull(sources, "sources");
         resources = new ConcurrentHashMap<>();
         this.loaders = checkedLoaders(loaders);
 
@@ -111,22 +113,21 @@ public final class Resources {
         return loaders;
     }
 
-    // Separators turned to '/', with a final '/': loaders concatenate the paths
-    public static String NormalizeFolder(String folder) {
-        String normalized = Objects.requireNonNull(folder, "folder").replace('\\', '/');
-        return normalized.endsWith("/") ? normalized : normalized + "/";
-    }
-
     /**
-     * Folder read by the loaders, ending with '/' (default "resources/"). Final and set by the constructor: safe to read
-     * from any thread (workers, resource watcher).
+     * The stack of the sources of the files, from the lowest to the highest priority. Immutable and set by the
+     * constructor: safe to read from any thread (workers, resource watcher).
      */
-    public String folder() {
-        return folder;
+    public ResourceSources sources() {
+        return sources;
     }
 
     public void setStrict(boolean strict) {
         this.strict = strict;
+    }
+
+    // Read by the loaders (collisions of names between sources), maybe on a worker: set before init
+    boolean isStrict() {
+        return strict;
     }
 
     // Where the batches hold the GL elements of their data (GLResources); null: nothing is sent to the card
@@ -284,6 +285,11 @@ public final class Resources {
 
     public JSONObject describe(ResourceSelection selection) {
         return describer.describe(selection);
+    }
+
+    // The stack of the sources; with a path (null: none), the sources that have it and the one that serves it
+    public JSONObject describeSources(String path) {
+        return ResourceDescriber.DescribeSources(sources, path);
     }
 
     JSONObject describePipeline() {

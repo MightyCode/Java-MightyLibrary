@@ -23,7 +23,7 @@ public final class WaveCollapseRulesLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, resources().folder());
+        exploreResourcesFile(data, "");
     }
 
     @Override

@@ -1,11 +1,11 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.source.IResourceSource;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -136,15 +137,17 @@ public final class ResourceWatcher {
             if (!resources.isReloadable(data) || !matches(type, data))
                 return;
 
+            // Its file in every source on the disk, existing or not: one created in a higher source replaces it
             for (String source : data.sourcePaths()) {
-                Path path;
+                List<Path> candidates;
                 try {
-                    path = Paths.get(source).toAbsolutePath().normalize();
-                } catch (InvalidPathException e) {
-                    // A source that is not a file path (generated data): nothing to watch
+                    candidates = resources.sources().localCandidates(source);
+                } catch (IllegalArgumentException e) {
+                    // A source that is not a logical path (generated data): nothing to watch
                     continue;
                 }
-                byPath.computeIfAbsent(path, p -> new ArrayList<>(1)).add(data);
+                for (Path path : candidates)
+                    byPath.computeIfAbsent(path, p -> new ArrayList<>(1)).add(data);
             }
         });
 
@@ -158,23 +161,30 @@ public final class ResourceWatcher {
         return watched;
     }
 
+    // The folders of every source on the disk (a classpath source in a jar is never watched)
     private Set<Path> listFolders() {
         Set<Path> directories = new HashSet<>();
-        try {
-            Files.walkFileTree(Paths.get(resources.folder()).toAbsolutePath().normalize(), new SimpleFileVisitor<>() {
-                @Override
-                public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
-                    directories.add(directory);
-                    return FileVisitResult.CONTINUE;
-                }
+        for (IResourceSource source : resources.sources().sources()) {
+            Optional<Path> root = source.localFile("");
+            if (root.isEmpty() || !Files.isDirectory(root.get()))
+                continue;
 
-                @Override
-                public FileVisitResult visitFileFailed(Path file, IOException e) {
-                    return FileVisitResult.CONTINUE;
-                }
-            });
-        } catch (IOException | InvalidPathException e) {
-            System.err.println("--Watch: can't list the resource folders (" + e + ")");
+            try {
+                Files.walkFileTree(root.get(), new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
+                        directories.add(directory);
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFileFailed(Path file, IOException e) {
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            } catch (IOException e) {
+                System.err.println("--Watch: can't list the folders of " + source.name() + " (" + e + ")");
+            }
         }
         return directories;
     }

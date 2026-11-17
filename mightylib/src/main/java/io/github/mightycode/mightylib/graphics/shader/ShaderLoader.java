@@ -3,10 +3,10 @@ package io.github.mightycode.mightylib.graphics.shader;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -133,7 +133,7 @@ public final class ShaderLoader extends ResourceLoader {
     private String preprocess(String path, Set<String> watched, List<List<String>> stageFiles) {
         // GLSL 140: the line after "#line n" is n + 1 (n from GLSL 330)
         int lineOffset = "1_40".equals(manager().getVersion()) ? -1 : 0;
-        ShaderPreprocessor preprocessor = new ShaderPreprocessor(ShaderLoader::readIfFile,
+        ShaderPreprocessor preprocessor = new ShaderPreprocessor(this::readIfFile,
                 manager().versionFolder(), lineOffset);
         try {
             String source = preprocessor.process(path);
@@ -144,7 +144,20 @@ public final class ShaderLoader extends ResourceLoader {
         }
     }
 
-    private static String readIfFile(String path) {
-        return new File(path).isFile() ? FileMethods.readFileAsString(path) : null;
+    private String readIfFile(String path) {
+        return ReadIfFile(resources().sources(), path);
+    }
+
+    // The file served by the highest source that has it, null if none (a missing include is searched elsewhere)
+    static String ReadIfFile(ResourceSources sources, String path) {
+        try {
+            if (sources.size(path) < 0)
+                return null;
+        } catch (IllegalArgumentException e) {
+            // Absolute, or out of the sources by its ".."
+            return null;
+        }
+
+        return FileMethods.readString(sources, path);
     }
 }

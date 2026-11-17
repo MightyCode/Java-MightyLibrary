@@ -5,8 +5,9 @@ import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.NoSuchFileException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,7 @@ public final class CSVLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, resources().folder());
+        exploreResourcesFile(data, "");
     }
 
     @Override
@@ -57,7 +58,8 @@ public final class CSVLoader extends ResourceLoader {
         List<String[]> dataList = new ArrayList<>();
         String[] data;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(csv.path(), StandardCharsets.UTF_8))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(resources().sources().open(csv.path()),
+                StandardCharsets.UTF_8))) {
             while ((line = br.readLine()) != null) {
                 data = line.split(csvSplitBy);
 
@@ -78,6 +80,8 @@ public final class CSVLoader extends ResourceLoader {
 
                 lineHeader = false;
             }
+        } catch (NoSuchFileException e) {
+            throw new ResourceException("file not found: " + csv.path());
         } catch (IOException e) {
             throw new ResourceException("can't read the file " + csv.path(), e);
         }

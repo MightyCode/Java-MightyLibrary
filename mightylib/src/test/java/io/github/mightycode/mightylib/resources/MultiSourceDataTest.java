@@ -96,7 +96,7 @@ class MultiSourceDataTest extends ResourcesTestBase {
     @BeforeEach
     void setUpPairs() throws IOException {
         pairLoader = new PairLoader();
-        resources = new Resources(new Resources.BatchResourcesMethod("unused"), WORKERS, folder.toString(),
+        resources = new Resources(new Resources.BatchResourcesMethod("unused"), WORKERS, LoaderTestAccess.sources(folder),
                 Arrays.asList(pairLoader, new JSONLoader(), new BatchLoader()));
 
         first = folder.resolve("first.txt").toString();

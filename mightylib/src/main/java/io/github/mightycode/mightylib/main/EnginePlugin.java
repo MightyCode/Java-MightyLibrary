@@ -9,6 +9,7 @@ import io.github.mightycode.mightylib.inputs.inputType.InputSimple;
 import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.registry.Identifier;
+import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.LibraryLoaders;
 import io.github.mightycode.mightylib.scenes.SceneManager;
 import io.github.mightycode.mightylib.services.EngineServices;
@@ -18,6 +19,8 @@ import io.github.mightycode.mightylib.sounds.OpenALSoundService;
 import io.github.mightycode.mightylib.sounds.SilentSoundService;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
+
+import org.json.JSONObject;
 
 import java.util.function.Supplier;
 
@@ -51,6 +54,12 @@ final class EnginePlugin implements IPlugin {
     @Override
     public void register(EngineRegistry registry) {
         registry.resources().addAll(LibraryLoaders.mandatory(shaderManager));
+        // The files of the engine, below the folder of the game: in the jar, or a folder to edit them (development)
+        String engineFolder = config.getEngineResourcesFolder();
+        if (engineFolder != null)
+            registry.resources().folder(engineFolder);
+        else
+            registry.resources().classpath();
 
         // "cheats on|off": the build allows the cheats and the game wants the command
         ECommandLevel maxAccess = config.getMaxCommandAccess();
@@ -65,7 +74,7 @@ final class EnginePlugin implements IPlugin {
         registry.services().sceneManager(SceneManager::new).inputManager(InputManager::new);
 
         registry.services().register(EngineServices.SOUND,
-                        engine -> OpenALSoundService.Open(engine.resources(), GainTreeFile(engine)))
+                        engine -> OpenALSoundService.Open(engine.resources(), GainTree(engine)))
                 .fallback(SilentSound());
 
         if (console) {
@@ -80,12 +89,12 @@ final class EnginePlugin implements IPlugin {
 
     // The silent sound: fallback of the OpenAL one, forced by -Dmightylib.sound=silent
     static IServiceFactory<ISoundService> SilentSound() {
-        return engine -> new SilentSoundService(GainTreeFile(engine));
+        return engine -> new SilentSoundService(GainTree(engine));
     }
 
-    // Null without gain tree
-    private static String GainTreeFile(Engine engine) {
+    // Null without gain tree; read in the sources of the resources (logical path)
+    private static JSONObject GainTree(Engine engine) {
         String path = engine.config().getGainTreePath();
-        return path == null ? null : engine.resources().folder() + path;
+        return path == null ? null : FileMethods.readJSONObject(engine.resources().sources(), path);
     }
 }

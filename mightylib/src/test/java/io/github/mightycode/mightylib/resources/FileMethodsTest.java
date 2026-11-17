@@ -1,5 +1,8 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -15,29 +18,41 @@ class FileMethodsTest {
     @TempDir
     Path folder;
 
+    private ResourceSources sources;
+
+    @BeforeEach
+    void setUp() {
+        sources = ResourceSources.of(new FolderSource(folder));
+    }
+
     @Test
     void missingFileThrowsResourceException() {
-        String path = folder.resolve("missing.json").toString();
-
-        ResourceException e = assertThrows(ResourceException.class, () -> FileMethods.readFileAsString(path));
+        ResourceException e = assertThrows(ResourceException.class,
+                () -> FileMethods.readString(sources, "missing.json"));
         assertTrue(e.getMessage().contains("missing.json"), e.getMessage());
         assertEquals(0, e.getStackTrace().length);
     }
 
     @Test
-    void invalidJSONThrowsResourceException() throws IOException {
-        Path file = folder.resolve("broken.json");
-        Files.write(file, "{ \"a\": ".getBytes(StandardCharsets.UTF_8));
+    void pathOutOfTheSourcesThrowsResourceException() {
+        ResourceException e = assertThrows(ResourceException.class,
+                () -> FileMethods.readString(sources, "../outside.json"));
+        assertEquals(0, e.getStackTrace().length);
+    }
 
-        ResourceException e = assertThrows(ResourceException.class, () -> FileMethods.readJSONObject(file.toString()));
+    @Test
+    void invalidJSONThrowsResourceException() throws IOException {
+        Files.write(folder.resolve("broken.json"), "{ \"a\": ".getBytes(StandardCharsets.UTF_8));
+
+        ResourceException e = assertThrows(ResourceException.class,
+                () -> FileMethods.readJSONObject(sources, "broken.json"));
         assertTrue(e.getMessage().contains("invalid JSON"), e.getMessage());
     }
 
     @Test
     void validJSONIsRead() throws IOException {
-        Path file = folder.resolve("fine.json");
-        Files.write(file, "{ \"a\": 3 }".getBytes(StandardCharsets.UTF_8));
+        Files.write(folder.resolve("fine.json"), "{ \"a\": 3 }".getBytes(StandardCharsets.UTF_8));
 
-        assertEquals(3, FileMethods.readJSONObject(file.toString()).getInt("a"));
+        assertEquals(3, FileMethods.readJSONObject(sources, "fine.json").getInt("a"));
     }
 }

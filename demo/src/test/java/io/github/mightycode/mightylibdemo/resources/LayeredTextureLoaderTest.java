@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylibdemo.resources;
 
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.main.WorkersTestAccess;
 import io.github.mightycode.mightylib.resources.Resources;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,11 +51,11 @@ class LayeredTextureLoaderTest {
     }
 
     private String path(String data, String file) {
-        return Resources.NormalizeFolder(folder.toString()) + LayeredTextureLoader.FOLDER + "/" + data + "/" + file;
+        return LayeredTextureLoader.FOLDER + "/" + data + "/" + file;
     }
 
     private Resources load() {
-        Resources resources = new Resources(new Resources.AllResourcesMethod(), 2, folder.toString(),
+        Resources resources = new Resources(new Resources.AllResourcesMethod(), 2, ResourceSources.of(new FolderSource(folder)),
                 List.of(new LayeredTextureLoader()));
         resources.init();
         resources.load();

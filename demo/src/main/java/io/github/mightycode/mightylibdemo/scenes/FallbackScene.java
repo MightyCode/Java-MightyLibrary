@@ -41,9 +41,9 @@ public class FallbackScene extends Scene {
     public void init(String[] args) {
         // Read by their loaders, they fail: missing files
         resources().addResourceAndSetUp(TextureData.class,
-                new TextureData(BROKEN_TEXTURE, resources().folder() + "textures/missing/brokenTexture.png"));
+                new TextureData(BROKEN_TEXTURE, "textures/missing/brokenTexture.png"));
         resources().addResourceAndSetUp(ShaderData.class, new ShaderData(BROKEN_SHADER, true,
-                resources().folder() + "shaders/missing/brokenV.glsl", resources().folder() + "shaders/missing/brokenF.glsl"));
+                "shaders/missing/brokenV.glsl", "shaders/missing/brokenF.glsl"));
 
         // Read, then the program does not compile: the data is loaded, its GL element fails
         String versionFolder = engine().shaderManager().versionFolder();

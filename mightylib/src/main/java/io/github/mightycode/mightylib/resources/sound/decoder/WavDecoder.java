@@ -1,13 +1,14 @@
 package io.github.mightycode.mightylib.resources.sound.decoder;
 
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.File;
+import java.io.BufferedInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.concurrent.CancellationException;
@@ -22,10 +23,11 @@ public final class WavDecoder implements SoundDecoder {
     }
 
     @Override
-    public SoundLoadInfo decode(String path, Runnable checkCancelled) {
+    public SoundLoadInfo decode(ResourceSources sources, String path, Runnable checkCancelled) {
         PcmBuilder builder = null;
 
-        try (AudioInputStream source = AudioSystem.getAudioInputStream(new File(path))) {
+        // javax.sound reads the header with mark and reset: a buffered stream supports them
+        try (AudioInputStream source = AudioSystem.getAudioInputStream(new BufferedInputStream(sources.open(path)))) {
             AudioFormat format = source.getFormat();
             int channels = format.getChannels();
             int rate = (int) format.getSampleRate();

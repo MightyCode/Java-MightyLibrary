@@ -1,43 +1,29 @@
 package io.github.mightycode.mightylib.sounds;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.SeekableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
-import static org.lwjgl.BufferUtils.createByteBuffer;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.stb.STBVorbis.*;
 
 public final class SoundDataType {
+    private SoundDataType() {}
 
     // Samples (all channels) decoded between two checks of the cancellation
     public static final int DECODE_CHUNK_SAMPLES = 64 * 1024;
 
-    public static ShortBuffer readVorbis(String resource, int bufferSize, STBVorbisInfo info) throws Exception {
-        return readVorbis(resource, bufferSize, info, () -> {}, DECODE_CHUNK_SAMPLES);
-    }
-
     /**
-     * Reads then decodes the file in chunks of chunkSamples, calling checkCancelled between two steps (it throws to stop).
-     * The result is native memory (MemoryUtil.memFree), freed here when the decoding stops or fails.
+     * Decodes an Ogg Vorbis file read in a direct buffer (ResourceSources.readNative), in chunks of chunkSamples,
+     * calling checkCancelled between two steps (it throws to stop). The file stays the caller's. The result is native
+     * memory (MemoryUtil.memFree), freed here when the decoding stops or fails.
      */
-    public static ShortBuffer readVorbis(String resource, int bufferSize, STBVorbisInfo info,
-                                         Runnable checkCancelled, int chunkSamples) throws Exception {
-        ByteBuffer vorbis = ioResourceToByteBuffer(resource, bufferSize);
+    public static ShortBuffer readVorbis(ByteBuffer vorbis, STBVorbisInfo info, Runnable checkCancelled,
+                                         int chunkSamples) {
         checkCancelled.run();
 
         long decoder = NULL;
@@ -48,7 +34,7 @@ public final class SoundDataType {
             IntBuffer error = stack.mallocInt(1);
             decoder = stb_vorbis_open_memory(vorbis, error, null);
             if (decoder == NULL)
-                throw new RuntimeException("Failed to open Ogg Vorbis file. Error: " + error.get(0));
+                throw new IllegalStateException("Failed to open Ogg Vorbis file. Error: " + error.get(0));
 
             stb_vorbis_get_info(decoder, info);
             int channels = info.channels();
@@ -77,51 +63,5 @@ public final class SoundDataType {
             if (!done && pcm != null)
                 MemoryUtil.memFree(pcm);
         }
-    }
-
-    public static ByteBuffer ioResourceToByteBuffer(String resource, int bufferSize) throws IOException {
-        ByteBuffer buffer;
-
-        Path path = Paths.get(resource);
-        if (Files.isReadable(path)) {
-            try (SeekableByteChannel fc = Files.newByteChannel(path)) {
-                buffer = createByteBuffer((int) fc.size() + 1);
-                // Stops at the end of the file, or once the buffer is full: a file growing meanwhile (being written)
-                // would otherwise make read return 0 forever
-                int read;
-                do {
-                    read = fc.read(buffer);
-                } while (read != -1 && buffer.hasRemaining());
-            }
-        } else {
-            // Neither a readable file nor in the classpath: a clear error rather than a NullPointerException
-            InputStream source = SoundDataType.class.getResourceAsStream(resource);
-            if (source == null)
-                throw new FileNotFoundException("sound file not found: " + resource);
-
-            try (ReadableByteChannel rbc = Channels.newChannel(source)) {
-                buffer = createByteBuffer(bufferSize);
-
-                while (true) {
-                    int bytes = rbc.read(buffer);
-                    if (bytes == -1) {
-                        break;
-                    }
-                    if (buffer.remaining() == 0) {
-                        buffer = resizeBuffer(buffer, buffer.capacity() * 2);
-                    }
-                }
-            }
-        }
-
-        buffer.flip();
-        return buffer;
-    }
-
-    private static ByteBuffer resizeBuffer(ByteBuffer buffer, int newCapacity) {
-        ByteBuffer newBuffer = BufferUtils.createByteBuffer(newCapacity);
-        buffer.flip();
-        newBuffer.put(buffer);
-        return newBuffer;
     }
 }

@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.sounds;
 import io.github.mightycode.mightylib.resources.sound.SoundLoader;
 import io.github.mightycode.mightylib.utils.math.KeyTree;
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
+import org.json.JSONObject;
 
 import java.util.List;
 
@@ -10,10 +11,10 @@ import java.util.List;
 final class GainTree {
     private final KeyTree<String, Float> tree = new KeyTree<>();
 
-    // Null file: no node, every sound keeps a gain of 1
-    GainTree(String file) {
-        if (file != null)
-            SoundLoader.loadGainTree(file, tree);
+    // Null content: no node, every sound keeps a gain of 1
+    GainTree(JSONObject content) {
+        if (content != null)
+            SoundLoader.loadGainTree(content, tree);
     }
 
     List<KeyTreeNode<String, Float>> nodes() {

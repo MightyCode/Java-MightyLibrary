@@ -1,17 +1,14 @@
 package io.github.mightycode.mightylib.network;
 
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
-import io.github.mightycode.mightylib.utils.Logger;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 public final class NetworkConfigurationLoader extends ResourceLoader {
-    private static final String CONFIG_FOLDER = "resources/networkConfigs";
+    // Logical folder, in the sources of the resources
+    static final String CONFIG_FOLDER = "networkConfigs";
 
     @Override
     public Class<? extends DataType> getType() {
@@ -49,20 +46,15 @@ public final class NetworkConfigurationLoader extends ResourceLoader {
         char symbol = '=';
         String[] values = {"","","","",""};
         int i = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(((NetworkConfiguration) dataType).path(), StandardCharsets.UTF_8))) {
-            String line = reader.readLine();
-
-            while (line != null) {
-                if (!line.contains("#") && !line.isEmpty()){
-                    int symbolPosition = line.indexOf(symbol);
-                    String newline = line.substring(symbolPosition + 2);
-                    values[i] = newline;
-                    i = i+1;
-                }
-                line = reader.readLine();
+        // Missing or unreadable: a ResourceException (the data fails)
+        String content = FileMethods.readString(resources().sources(), ((NetworkConfiguration) dataType).path());
+        for (String line : content.split("\n")) {
+            if (!line.contains("#") && !line.isEmpty()){
+                int symbolPosition = line.indexOf(symbol);
+                String newline = line.substring(symbolPosition + 2);
+                values[i] = newline;
+                i = i+1;
             }
-        } catch (IOException e) {
-            Logger.LogException("Can't read the network configuration " + ((NetworkConfiguration) dataType).path(), e);
         }
 
         String address = values[0];

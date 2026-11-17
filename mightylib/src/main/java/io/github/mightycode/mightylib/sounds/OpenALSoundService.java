@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.sounds;
 
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
+import org.json.JSONObject;
 import org.lwjgl.openal.AL;
 import org.lwjgl.openal.ALC;
 import org.lwjgl.openal.ALCCapabilities;
@@ -33,7 +34,7 @@ public final class OpenALSoundService implements ISoundService {
     // The sounds are data of this Resources
     private final Resources resources;
 
-    private OpenALSoundService(Resources resources, String gainTreeFile, long device, long context) {
+    private OpenALSoundService(Resources resources, JSONObject gainTree, long device, long context) {
         this.resources = resources;
         this.device = device;
         this.context = context;
@@ -41,15 +42,15 @@ public final class OpenALSoundService implements ISoundService {
 
         soundsSource = new ArrayList<>();
 
-        gainTree = new GainTree(gainTreeFile);
+        this.gainTree = new GainTree(gainTree);
     }
 
     /**
      * Opens the default device.
-     * @param gainTreeFile path of the gain tree, null for none
+     * @param gainTree content of the gain tree file, null for none
      * @throws IllegalStateException if no device or context can be created
      */
-    public static OpenALSoundService Open(Resources resources, String gainTreeFile) {
+    public static OpenALSoundService Open(Resources resources, JSONObject gainTree) {
         long device = alcOpenDevice((ByteBuffer) null);
         if (device == NULL)
             throw new IllegalStateException("No OpenAL device can be opened");
@@ -64,7 +65,7 @@ public final class OpenALSoundService implements ISoundService {
             alcMakeContextCurrent(context);
             AL.createCapabilities(deviceCaps);
 
-            return new OpenALSoundService(resources, gainTreeFile, device, context);
+            return new OpenALSoundService(resources, gainTree, device, context);
         } catch (RuntimeException | LinkageError e) {
             // The fallback of the key (silent) takes over: nothing stays open
             if (context != NULL) {

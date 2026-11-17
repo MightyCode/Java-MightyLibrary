@@ -1,10 +1,12 @@
 package io.github.mightycode.mightylib.graphics.text;
 
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.joml.Vector4i;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -51,8 +53,9 @@ public final class FontFile {
     }
 
     // A missing or unreadable file is a failure of the data (ResourceException): the fallback font replaces it
-    public void load(){
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(path, StandardCharsets.UTF_8))) {
+    public void load(ResourceSources sources){
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(sources.open(path),
+                StandardCharsets.UTF_8))) {
 
             String line;
             Map<String, String> values = new HashMap<>();
@@ -117,11 +120,16 @@ public final class FontFile {
                 characters.put(id, fontChar);
             }
 
+        } catch (NoSuchFileException e) {
+            throw new ResourceException("font file not found: " + path);
         } catch (IOException e) {
             throw new ResourceException("can't read the font file " + path, e);
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
             // A malformed value: the file is not a valid font, not a bug of the engine
             throw new ResourceException("malformed font file " + path + " (" + e.getMessage() + ")", e);
+        } catch (IllegalArgumentException e) {
+            // A path absolute or with "..": written in fonts.json
+            throw new ResourceException(e.getMessage());
         }
     }
 

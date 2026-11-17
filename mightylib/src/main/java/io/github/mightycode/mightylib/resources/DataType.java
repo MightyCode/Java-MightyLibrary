@@ -249,12 +249,26 @@ public abstract class DataType extends UUID implements LoadingElement {
     public long estimatedCpuBytes() {
         long total = 0;
         for (String path : sourcePaths()) {
-            long length = new java.io.File(path).length();
+            long length = sourceSize(path);
             if (length > 0)
                 total += length;
         }
 
         return total;
+    }
+
+    // Size of a file of this data in the sources of its Resources (logical path), -1 if unknown
+    private long sourceSize(String path) {
+        Resources current = owner;
+        if (current == null)
+            return -1;
+
+        try {
+            return current.sources().size(path);
+        } catch (IllegalArgumentException e) {
+            // Not a logical path (generated data)
+            return -1;
+        }
     }
 
     // Memory (bytes) of the card this data takes once its GL element is loaded, 0 for the data that are not sent to it

@@ -20,7 +20,7 @@ public final class TileMapLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, resources().folder() + "tilemap");
+        exploreResourcesFile(data, "tilemap");
     }
 
     @Override
@@ -46,7 +46,7 @@ public final class TileMapLoader extends ResourceLoader {
         TileMap tileMap = (TileMap) dataType;
 
         String path = tileMap.path();
-        String data = FileMethods.readFileAsString(path);
+        String data = FileMethods.readString(resources().sources(), path);
         String[] parts = data.split("\n");
         int lineIndex = 0;
 

@@ -1,7 +1,11 @@
 package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.TestFiles;
+import io.github.mightycode.mightylib.resources.LoaderTestAccess;
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.resources.source.ClasspathSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -20,13 +24,28 @@ import static org.junit.jupiter.api.Assertions.*;
  * No OpenGL: only the CPU data is checked.
  */
 class TextureDataLoaderTest {
-    private final TextureDataLoader loader = new TextureDataLoader();
-
     @TempDir
     Path folder;
 
+    // Reads the files of the folder
+    private TextureDataLoader loader;
+
+    @BeforeEach
+    void setUp() {
+        loader = LoaderTestAccess.attached(new TextureDataLoader(), folder);
+    }
+
+    // Logical path of a file of the folder
+    private String logical(File file) {
+        return folder.relativize(file.toPath()).toString().replace(File.separatorChar, '/');
+    }
+
     private TextureData read(File file) {
-        TextureData data = new TextureData("test", file.getPath());
+        return read(loader, logical(file));
+    }
+
+    private static TextureData read(TextureDataLoader loader, String path) {
+        TextureData data = new TextureData("test", path);
         loader.initWithFile(data);
         assertTrue(data.internLoad());
         return data;
@@ -138,7 +157,7 @@ class TextureDataLoaderTest {
         File file = folder.resolve("text.png").toFile();
         Files.write(file.toPath(), "this is not an image".getBytes());
 
-        assertThrows(ResourceException.class, () -> loader.initWithFile(new TextureData("test", file.getPath())));
+        assertThrows(ResourceException.class, () -> loader.initWithFile(new TextureData("test", logical(file))));
     }
 
     @Test
@@ -146,9 +165,10 @@ class TextureDataLoaderTest {
         File empty = folder.resolve("empty.png").toFile();
         Files.write(empty.toPath(), new byte[0]);
 
-        assertThrows(ResourceException.class, () -> loader.initWithFile(new TextureData("test", empty.getPath())));
-        assertThrows(ResourceException.class, () -> loader.initWithFile(
-                new TextureData("test", folder.resolve("missing.png").toString())));
+        assertThrows(ResourceException.class, () -> loader.initWithFile(new TextureData("test", logical(empty))));
+        assertThrows(ResourceException.class, () -> loader.initWithFile(new TextureData("test", "missing.png")));
+        // Out of the sources
+        assertThrows(ResourceException.class, () -> loader.initWithFile(new TextureData("test", "../a.png")));
     }
 
     @Test
@@ -171,7 +191,7 @@ class TextureDataLoaderTest {
     @Test
     void cancelledPreloadFreesTheDecodedPixels() throws IOException {
         File file = write(gradient(20, 10, BufferedImage.TYPE_INT_ARGB), "png", "cancel.png");
-        TextureData data = new TextureData("test", file.getPath());
+        TextureData data = new TextureData("test", logical(file));
         loader.initWithFile(data);
 
         data.internCancelPreload();
@@ -188,7 +208,10 @@ class TextureDataLoaderTest {
             reference = ImageIO.read(input);
         }
 
-        TextureData data = read(file);
+        // Read from the classpath (the test resources), as from the jar of a plugin
+        TextureDataLoader classpath = LoaderTestAccess.attached(new TextureDataLoader(),
+                ResourceSources.of(new ClasspathSource(getClass().getClassLoader(), "textures")));
+        TextureData data = read(classpath, "world/container2.png");
         assertEquals(reference.getWidth(), data.getWidth());
         assertEquals(reference.getHeight(), data.getHeight());
         for (int y = 0; y < reference.getHeight(); y += 7) {

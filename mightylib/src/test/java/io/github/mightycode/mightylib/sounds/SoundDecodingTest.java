@@ -1,11 +1,16 @@
 package io.github.mightycode.mightylib.sounds;
 
 import io.github.mightycode.mightylib.TestFiles;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryUtil;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
+import java.nio.file.NoSuchFileException;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,13 +20,18 @@ import static org.junit.jupiter.api.Assertions.*;
  * Decoding of ogg files by chunks (no OpenAL needed): same samples whatever the chunk, stopped between two chunks.
  */
 class SoundDecodingTest {
-    private static final String FILE = TestFiles.file("sounds/selectogg.ogg");
+    private static final ResourceSources SOURCES = ResourceSources.of(
+            new FolderSource(TestFiles.path("sounds")));
+    private static final String FILE = "selectogg.ogg";
 
     private static ShortBuffer decode(int chunkSamples, Runnable checkCancelled, int[] channels) throws Exception {
+        ByteBuffer file = SOURCES.readNative(FILE);
         try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-            ShortBuffer pcm = SoundDataType.readVorbis(FILE, 32 * 1024, info, checkCancelled, chunkSamples);
+            ShortBuffer pcm = SoundDataType.readVorbis(file, info, checkCancelled, chunkSamples);
             channels[0] = info.channels();
             return pcm;
+        } finally {
+            MemoryUtil.memFree(file);
         }
     }
 
@@ -56,12 +66,13 @@ class SoundDecodingTest {
     }
 
     @Test
-    void missingFileFails() {
-        assertThrows(Exception.class, () -> {
-            try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
-                SoundDataType.readVorbis(TestFiles.file("sounds/missing.ogg"), 1024, info, () -> {}, 1000);
-            }
-        });
+    void notAVorbisFileFails() throws IOException {
+        ByteBuffer file = SOURCES.readNative("sounds.gaintree");
+        try (STBVorbisInfo info = STBVorbisInfo.malloc()) {
+            assertThrows(IllegalStateException.class, () -> SoundDataType.readVorbis(file, info, () -> {}, 1000));
+        } finally {
+            MemoryUtil.memFree(file);
+        }
     }
 
     @Test
@@ -81,8 +92,7 @@ class SoundDecodingTest {
 
     @Test
     void aMissingFileGivesAClearError() {
-        java.io.FileNotFoundException error = assertThrows(java.io.FileNotFoundException.class,
-                () -> SoundDataType.ioResourceToByteBuffer(TestFiles.file("sounds/missing.ogg"), 1024));
+        NoSuchFileException error = assertThrows(NoSuchFileException.class, () -> SOURCES.readNative("missing.ogg"));
         assertTrue(error.getMessage().contains("missing.ogg"));
     }
 }

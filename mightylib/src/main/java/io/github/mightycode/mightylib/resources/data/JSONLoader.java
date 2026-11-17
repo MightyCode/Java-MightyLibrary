@@ -18,7 +18,7 @@ public final class JSONLoader extends ResourceLoader {
     }
 
     @Override
-    public void create(Map<String, DataType> data){ exploreResourcesFile(data, resources().folder()); }
+    public void create(Map<String, DataType> data){ exploreResourcesFile(data, ""); }
 
     @Override
     public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
@@ -40,6 +40,6 @@ public final class JSONLoader extends ResourceLoader {
             return;
 
         JSONFile json = (JSONFile) dataType;
-        json.setJsonObject(FileMethods.readJSONObject(json.path()));
+        json.setJsonObject(FileMethods.readJSONObject(resources().sources(), json.path()));
     }
 }

@@ -38,7 +38,7 @@ class ResourceSelectionTest {
 
         FakeLoader fakeLoader = new FakeLoader();
         JSONLoader jsonLoader = new JSONLoader();
-        resources = new Resources(new Resources.BatchResourcesMethod("unused"), 2, folder.toString(),
+        resources = new Resources(new Resources.BatchResourcesMethod("unused"), 2, LoaderTestAccess.sources(folder),
                 Arrays.asList(fakeLoader, jsonLoader, new BatchLoader()));
 
         grass = new FakeData(THREAD_CONTEXT, "grass");

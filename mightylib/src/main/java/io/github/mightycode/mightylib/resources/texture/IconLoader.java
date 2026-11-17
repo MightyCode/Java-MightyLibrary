@@ -6,7 +6,8 @@ import io.github.mightycode.mightylib.resources.ResourceLoader;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.NoSuchFileException;
 import java.io.IOException;
 import java.util.Map;
 
@@ -24,7 +25,7 @@ public final class IconLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, resources().folder());
+        exploreResourcesFile(data, "");
     }
 
     @Override
@@ -49,8 +50,10 @@ public final class IconLoader extends ResourceLoader {
         Icon icon = (Icon) dataType;
 
         BufferedImage image;
-        try (FileInputStream input = new FileInputStream(icon.path())) {
+        try (InputStream input = resources().sources().open(icon.path())) {
             image = ImageIO.read(input);
+        } catch (NoSuchFileException e) {
+            throw new ResourceException("icon file not found: " + icon.path());
         } catch (IOException e) {
             throw new ResourceException("can't read the icon " + icon.path(), e);
         }

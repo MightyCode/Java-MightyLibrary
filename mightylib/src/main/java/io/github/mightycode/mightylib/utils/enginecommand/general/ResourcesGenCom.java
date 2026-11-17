@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
+import org.json.JSONObject;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.suggest;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
@@ -29,6 +30,12 @@ public final class ResourcesGenCom extends BaseCommand {
                         + " referenced (leak) or referenced but not loaded (loading or failed), and state of the loading pipeline",
                         context -> CommandResult.ok("Resources by type and state of the loading pipeline",
                                 Views.engine().resources().describe()))
+                .then(literal("sources", "The sources of the files, from the lowest to the highest priority (owner,"
+                        + " disk or classpath, watchable)")
+                        .executes(context -> sources(null))
+                        .then(argument("path", ResourceArguments.sourcePath(() -> Views.engine().resources()),
+                                "Logical path (textures/gui/button.png): the sources that have it, the highest serves it")
+                                .executes(context -> sources(context.get("path")))))
                 .then(literal("batch", "What a batch loads (known dependencies, loaded, estimated memory)")
                         .then(argument("name", batches, "Name of the batch")
                                 .executes(context -> CommandResult.ok("What the batch loads",
@@ -51,5 +58,10 @@ public final class ResourcesGenCom extends BaseCommand {
                                 + " sources), 100 at most",
                         selection -> CommandResult.ok("Detail of the selected data",
                                 Views.engine().resources().describe(selection))));
+    }
+
+    private static CommandResult sources(String path) {
+        JSONObject data = Views.engine().resources().describeSources(path);
+        return CommandResult.ok((String) data.remove("message"), data);
     }
 }

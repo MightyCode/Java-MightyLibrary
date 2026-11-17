@@ -81,6 +81,12 @@
 				"file" : "whitePixel.png",
 				"qualityType" : "realistic"
 			}
+		},
+		"sources" : {
+			"sourcesReplaced" : {
+				"file" : "replaced.png",
+				"qualityType" : "pixelart"
+			}
 		}
 	}
 }

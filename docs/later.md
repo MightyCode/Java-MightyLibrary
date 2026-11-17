@@ -44,6 +44,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 ## Bugs relevés en passant (non corrigés)
 - **`network` n'est pas sûr entre threads** : les drapeaux sont `volatile` et le compteur de messages atomique, mais `receivedMessages` et `messageToSend` (listes et table ordinaires) sont lus et écrits par le thread réseau et par le moteur sans verrou. À reprendre avec le réseau (file concurrente entre les deux), pas avant.
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
+- **Configuration réseau mal formée** (`NetworkConfigurationLoader.initWithFile`) : plus de cinq lignes utiles (`ArrayIndexOutOfBoundsException`), une ligne sans `= ` ou un port manquant ou non numérique (`NumberFormatException`) donnent une exception brute au lieu d'une `ResourceException` nommant le fichier et la ligne (comme `TextFormat`) ; un autre type de donnée affiche `ERROR LOAD` sans préfixe `--`. À reprendre avec le réseau.
 
 ## Manuel et documentation de l'API (cap proposé, **points précis à discuter avant de commencer**)
 - **But** : un site HTML pour l'utilisateur du jar, distinct de `docs/` (notes internes) : **manuel d'utilisation et d'explication** en **français et anglais** (comment se servir du moteur, et pourquoi il est construit ainsi) ; la documentation de l'API publique est à côté, sur le même site, et liée depuis le manuel.
@@ -62,7 +63,9 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Commandes d'un mod** : le mod (son plugin) est leur propriétaire, niveau `DEV` ; insérer `MODDER` entre `CHEAT` et `DEV` si les outils de mod doivent être séparés de ceux du moteur.
 - **Scènes enregistrées** : clé de langue de la description (aujourd'hui texte anglais, `SceneRegistry`).
 - Remplacement de ressources par id ; à terme **bus d'événements** (plusieurs modules réagissent, ex. ajouter un bouton au menu).
-- **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit les ressources du jeu ; il devra suivre aussi les dossiers et ressources de chaque mod, et les remplacements de ressources par id.
+- **Rechargement à chaud des ressources des mods** : l'observateur de fichiers (`ResourceWatcher`) suit chaque source sur le disque (dossiers du jeu et des plugins, classpath en dossier), jamais un jar ; reste un mod livré en jar (le recharger entier, ou le remplacer par son dossier comme `-Dmightylib.resources.engine` pour le moteur) et les remplacements de ressources par id.
+- **Observateur à l'échelle de nombreuses sources** : chaque fichier suivi l'est dans *chaque* source disque (`ResourceSources.localCandidates`), existant ou non ; quand son dossier manque dans une source, `FileChangeDetector` le sonde. Suffit pour la démo (3 sources) ; avec des milliers de ressources et plusieurs mods, le sondage grossit en ressources × sources. Cible : observer la création des dossiers (premier dossier existant de chaque candidat) et ne sonder que ce qui ne peut pas être observé.
+- **Retrait d'une entrée d'une liste fusionnée** : une source plus haute ajoute ou remplace une entrée de `textures.json`, `fonts.json`, `shaders.json`, ou ajoute à un batch (`ResourceSources.layers`, `FileMethods.mergeEntries`, `BatchLoader.Merge`), mais ne peut pas en retirer (syntaxe à choisir : entrée `null`, liste `remove`).
 - Mods de données (JSON/ressources) et mods de code (jars, sans sandbox : de confiance seulement).
 
 ## Chargement : optimisations seulement si les mesures ou un vrai jeu l'exigent
@@ -72,13 +75,14 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Chargement GL** : PBO ou contexte partagé (fenêtre cachée + `glFenceSync`). `HeightMapRenderer` et `TerrainRenderer` envoient encore leur géométrie d'un bloc.
 - **Rechargement partiel d'une donnée multi-fichiers** (`MultiSourceDataType`) : aujourd'hui un fichier modifié relit toute la donnée (six faces d'une cubemap, tous les calques) ; ne relire que le fichier changé, avec l'état par fichier déjà tenu.
 - **Données composées de dépendances** à côté de `MultiSourceDataType` (fichiers fixes) : planche de sprites (image + JSON Aseprite/TexturePacker) et matériau (albedo + normal + rugosité), chaque partie une donnée à part entière (partageable, avec son repli), l'ensemble une donnée qui en dépend.
+- **Modèles 3D depuis un jar** : Assimp lit un fichier du disque (`aiImportFile`), donc un modèle doit être dans une source sur le disque (sinon `ResourceException`), et son `.mtl` à côté de lui dans la même source ; lire par les sources avec `AIFileIO` (fonctions d'ouverture et de lecture données à Assimp), le `.mtl` compris.
 - **Préchargement GL des modèles 3D** : `MeshUpload` est propre à chaque `ModelRenderer` (créé dans `launch`, exige le modèle chargé) ; le rendre partageable par modèle pour qu'un batch l'envoie pendant le chargement comme les textures (`DataType.createGLElement`).
 
 ## Budget mémoire et chargement en continu (quand un vrai jeu l'exige)
 
 Les estimations de `DataType.estimatedCpuBytes`/`estimatedGpuBytes` ne servent aujourd'hui qu'au debug (`resources`, `resources batch`) ; aucune décision du moteur ne s'en sert.
 - **Budget** : vérifier qu'un lot tient en mémoire (carte comprise), choisir quoi décharger pendant un chargement en continu, prévenir quand un mod est trop gros.
-- **Manifeste généré à la compilation** (prérequis) : pour chaque ressource, ses dépendances et sa taille décodée, sans lire le fichier. Aujourd'hui les dépendances d'une donnée non lue ne sont connues qu'après sa lecture (`dependenciesKnown` dans `describeBatch`) et les estimations avant lecture sont des ratios par format (pansements).
+- **Manifeste généré à la compilation** (prérequis) : pour chaque ressource, ses dépendances et sa taille décodée, sans lire le fichier. Aujourd'hui les dépendances d'une donnée non lue ne sont connues qu'après sa lecture (`dependenciesKnown` dans `describeBatch`) et les estimations avant lecture sont des ratios par format (pansements). Il servirait aussi d'index des sources classpath : aujourd'hui une source dans un jar est listée en ouvrant le jar comme système de fichiers zip (`ClasspathSource`), ce qui exige un préfixe tenu par un seul jar.
 
 ## Effets 2D : particules et post-traitement
 D'après LearnOpenGL « 2D Game » (Breakout).
