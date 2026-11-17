@@ -128,32 +128,4 @@ public final class FileMethods {
 
         return merged.put(listKey, entries);
     }
-
-    // A file of the disk. Throws a ResourceException when the file is missing or unreadable
-    public static String readFileAsString(String filePath) {
-        StringBuilder source = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                source.append(line).append('\n');
-            }
-        } catch (FileNotFoundException e) {
-            throw new ResourceException("file not found: " + filePath);
-        } catch (IOException e) {
-            throw new ResourceException("can't read the file " + filePath, e);
-        }
-
-        return source.toString();
-    }
-
-    // Throws a ResourceException when the file is missing, unreadable or not a JSON object
-    public static JSONObject readJSONObject(String filePath) {
-        String content = readFileAsString(filePath);
-        try {
-            return new JSONObject(content);
-        } catch (JSONException e) {
-            throw new ResourceException("invalid JSON in " + filePath, e);
-        }
-    }
 }
