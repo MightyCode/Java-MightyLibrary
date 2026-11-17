@@ -12,8 +12,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -32,16 +30,26 @@ public final class ResourceSources {
     public static final String GAME_OWNER = "(game)";
 
     private final List<IResourceSource> sources;
-    private final Map<IResourceSource, String> owners;
+    // The owner of each source, at the same index
+    private final List<String> owners;
 
     private ResourceSources(List<IResourceSource> sources, List<String> owners) {
         this.sources = List.copyOf(sources);
-        Map<IResourceSource, String> byOwner = new IdentityHashMap<>();
+        this.owners = List.copyOf(owners);
         for (int i = 0; i < sources.size(); ++i) {
-            if (byOwner.put(sources.get(i), owners.get(i)) != null)
+            if (indexOf(sources.get(i)) != i)
                 throw new IllegalArgumentException("The source " + sources.get(i).name() + " is twice in the stack");
         }
-        this.owners = Collections.unmodifiableMap(byOwner);
+    }
+
+    // By identity: two sources may be equal without being the same root; -1 if absent
+    private int indexOf(IResourceSource source) {
+        for (int i = 0; i < sources.size(); ++i) {
+            if (sources.get(i) == source)
+                return i;
+        }
+
+        return -1;
     }
 
     // The given sources, from the lowest to the highest priority, without owner
@@ -111,11 +119,11 @@ public final class ResourceSources {
 
     // The namespace of the plugin that declared it, GAME_OWNER for the folder of the game, "" without owner
     public String owner(IResourceSource source) {
-        String owner = owners.get(source);
-        if (owner == null)
+        int index = indexOf(source);
+        if (index < 0)
             throw new IllegalArgumentException("The source " + source.name() + " is not in the stack");
 
-        return owner;
+        return owners.get(index);
     }
 
     // The highest source that has a file or a folder at this path
