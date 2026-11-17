@@ -155,20 +155,19 @@ public abstract class ResourceLoader {
             if (name == null)
                 return;
 
-            DataType before = data.get(name);
-            fileDetected(data, entry.path(), name);
-
-            SourceEntry previous = detected.put(name, entry);
-            if (previous == null || previous.source() == entry.source())
+            SourceEntry previous = detected.get(name);
+            if (previous == null || previous.source() == entry.source()) {
+                detected.put(name, entry);
+                fileDetected(data, entry.path(), name);
                 return;
+            }
 
-            // Same name in two sources: the highest one wins, whatever the order of the exploration
+            // Same name in two sources: the highest one wins, whatever the order of the exploration. Decided before
+            // fileDetected, so that the loader never sees the file that loses
             SourceEntry winner = entry, loser = previous;
             if (sources.sources().indexOf(previous.source()) > sources.sources().indexOf(entry.source())) {
                 winner = previous;
                 loser = entry;
-                detected.put(name, previous);
-                data.put(name, before);
             }
 
             String message = getResourceNameType() + " " + name + ": " + winner.path() + " ("
@@ -177,6 +176,10 @@ public abstract class ResourceLoader {
                 throw new IllegalStateException(message);
 
             System.out.println("--" + message);
+            if (winner == entry) {
+                detected.put(name, entry);
+                fileDetected(data, entry.path(), name);
+            }
         }
     }
 

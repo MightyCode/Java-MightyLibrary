@@ -10,11 +10,13 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -135,6 +137,39 @@ class ResourceLoaderExploreTest {
         IllegalStateException e = assertThrows(IllegalStateException.class, () -> exploreJson(low, high, true));
         assertTrue(e.getMessage().contains("b/x.json"), e.getMessage());
         assertTrue(e.getMessage().contains("overrides a/x.json"), e.getMessage());
+    }
+
+    // Names every file by its file name, stores nothing, records what it is given
+    private static final class RecordingLoader extends FakeLoader {
+        final List<String> detected = new ArrayList<>();
+
+        @Override
+        public String filterFile(String path) {
+            return path.substring(path.lastIndexOf('/') + 1);
+        }
+
+        @Override
+        public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
+            detected.add(currentPath);
+        }
+    }
+
+    @Test
+    void theLosingFileIsNeverGivenToTheLoader(@TempDir Path low, @TempDir Path high) throws IOException {
+        // The high source first ("a/" before "b/"), then the low one: the loader stores nothing under the name
+        file(high, "a/x.json");
+        file(low, "b/x.json");
+        file(low, "c/y.json");
+        file(high, "d/y.json");
+
+        RecordingLoader loader = LoaderTestAccess.attached(new RecordingLoader(),
+                ResourceSources.of(new FolderSource(low), new FolderSource(high)));
+        Map<String, DataType> data = new ConcurrentHashMap<>();
+        loader.exploreResourcesFile(data, "");
+
+        // The low y.json, explored first, is given, then replaced by the high one
+        assertEquals(List.of("a/x.json", "c/y.json", "d/y.json"), loader.detected);
+        assertTrue(data.isEmpty());
     }
 
     @Test
