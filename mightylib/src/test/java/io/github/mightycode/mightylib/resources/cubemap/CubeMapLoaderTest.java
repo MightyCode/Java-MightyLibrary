@@ -57,7 +57,7 @@ class CubeMapLoaderTest {
     }
 
     private Resources load(StringBuilder errors) {
-        Resources resources = new Resources(new Resources.AllResourcesMethod(), 2, folder.toString(),
+        Resources resources = new Resources(new Resources.AllResourcesMethod(), 2, ResourceSources.of(new FolderSource(folder)),
                 List.of(new CubeMapLoader()));
         PrintStream previous = System.err;
         ByteArrayOutputStream captured = new ByteArrayOutputStream();

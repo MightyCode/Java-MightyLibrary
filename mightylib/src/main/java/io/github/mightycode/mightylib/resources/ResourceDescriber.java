@@ -229,8 +229,8 @@ class ResourceDescriber {
         try {
             return resources.sources().resolve(path).map(IResourceSource::name).orElse(null);
         } catch (IllegalArgumentException e) {
-            // Until every loader reads through the sources: a path of the disk
-            return "disk";
+            // Not a logical path (generated data)
+            return null;
         }
     }
 

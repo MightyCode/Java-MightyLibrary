@@ -10,9 +10,14 @@ import java.util.List;
 public final class LoaderTestAccess {
     private LoaderTestAccess() {}
 
+    // A stack of this folder only, as the folder of the game
+    public static ResourceSources sources(Path folder) {
+        return ResourceSources.builder().add(ResourceSources.GAME_OWNER, new FolderSource(folder)).build();
+    }
+
     // The loader attached to a Resources on a stack of this folder only: it reads the logical paths of the folder
     public static <L extends ResourceLoader> L attached(L loader, Path folder) {
-        return attached(loader, ResourceSources.of(new FolderSource(folder)));
+        return attached(loader, sources(folder));
     }
 
     public static <L extends ResourceLoader> L attached(L loader, ResourceSources sources) {

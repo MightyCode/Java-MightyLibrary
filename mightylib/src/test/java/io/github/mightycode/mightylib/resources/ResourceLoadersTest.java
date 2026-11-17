@@ -16,7 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 // The loaders are given at the construction of Resources (those of the plugins, the engine first), then fixed
 class ResourceLoadersTest {
     private static Resources create(List<ResourceLoader> loaders) {
-        return new Resources(new Resources.AllResourcesMethod(), 1, Resources.DEFAULT_FOLDER, loaders);
+        return new Resources(new Resources.AllResourcesMethod(), 1,
+                ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)), loaders);
     }
 
     private static List<ResourceLoader> mandatory() {

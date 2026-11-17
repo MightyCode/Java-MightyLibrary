@@ -74,13 +74,4 @@ class ResourcesSourcesTest {
         assertEquals(3, path.getJSONArray("layers").getJSONObject(1).getLong("size"));
         assertFalse(resources.describeSources("missing.json").has("servedBy"));
     }
-
-    @Test
-    void folderEndsWithASlashAndUsesForwardSlashes() {
-        Resources resources = new Resources(new Resources.AllResourcesMethod(), 1, "some\\folder", List.of());
-        assertEquals("some/folder/", resources.folder());
-
-        resources = new Resources(new Resources.AllResourcesMethod(), 1, "other/", List.of());
-        assertEquals("other/", resources.folder());
-    }
 }

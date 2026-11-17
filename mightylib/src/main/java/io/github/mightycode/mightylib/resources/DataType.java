@@ -257,24 +257,18 @@ public abstract class DataType extends UUID implements LoadingElement {
         return total;
     }
 
-    /**
-     * Size of a file of this data in the sources of its Resources (logical path), -1 if unknown. Until every loader
-     * reads through the sources, a path of the disk too.
-     */
+    // Size of a file of this data in the sources of its Resources (logical path), -1 if unknown
     private long sourceSize(String path) {
         Resources current = owner;
-        if (current != null) {
-            try {
-                long size = current.sources().size(path);
-                if (size >= 0)
-                    return size;
-            } catch (IllegalArgumentException e) {
-                // Absolute: a path of the disk
-            }
-        }
+        if (current == null)
+            return -1;
 
-        java.io.File file = new java.io.File(path);
-        return file.isFile() ? file.length() : -1;
+        try {
+            return current.sources().size(path);
+        } catch (IllegalArgumentException e) {
+            // Not a logical path (generated data)
+            return -1;
+        }
     }
 
     // Memory (bytes) of the card this data takes once its GL element is loaded, 0 for the data that are not sent to it

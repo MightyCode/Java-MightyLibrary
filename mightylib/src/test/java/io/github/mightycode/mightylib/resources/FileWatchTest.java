@@ -1,7 +1,10 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
+import io.github.mightycode.mightylib.resources.data.JSONFile;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -206,7 +209,7 @@ class FileWatchTest {
     private Resources newResources(FakeLoader fakeLoader) throws IOException {
         Files.createDirectories(folder.resolve("batchs"));
         JSONLoader jsonLoader = new JSONLoader();
-        return new Resources(new Resources.BatchResourcesMethod("unused"), 2, folder.toString(),
+        return new Resources(new Resources.BatchResourcesMethod("unused"), 2, LoaderTestAccess.sources(folder),
                 Arrays.asList(fakeLoader, jsonLoader, new BatchLoader()));
     }
 
@@ -221,9 +224,9 @@ class FileWatchTest {
         write(fileB, "b", 1_000_000);
 
         FakeData a = new FakeData(THREAD_CONTEXT, "a");
-        a.sourcePath = fileA.toString();
+        a.sourcePath = "a.dat";
         FakeData b = new FakeData(THREAD_CONTEXT, "b");
-        b.sourcePath = fileB.toString();
+        b.sourcePath = "b.dat";
         fakeLoader.add(a);
         fakeLoader.add(b);
 
@@ -273,8 +276,8 @@ class FileWatchTest {
         write(source, "s", 1_000_000);
 
         FakeData a = new FakeData(THREAD_CONTEXT, "a");
-        a.sourcePath = description.toString();
-        a.extraSourcePath = source.toString();
+        a.sourcePath = "a.desc";
+        a.extraSourcePath = "a.src";
         fakeLoader.add(a);
 
         Files.write(folder.resolve("batchs").resolve("level.batch"),
@@ -303,6 +306,42 @@ class FileWatchTest {
 
         assertEquals(1, watcher.getReloadCount());
         assertEquals(version + 1, a.getVersion());
+    }
+
+    // The same path created in a higher source: the data is read again from it
+    @Test
+    void aFileCreatedInAHigherSourceReplacesTheData(@TempDir Path high) throws Exception {
+        Files.createDirectories(folder.resolve("batchs"));
+        Files.createDirectories(folder.resolve("data"));
+        write(folder.resolve("data").resolve("level.json"), "{\"from\": \"low\"}", 1_000_000);
+        Files.write(folder.resolve("batchs").resolve("level.batch"),
+                ("{\"batchs\":[{\"type\":\"JSONFile\",\"files\":[\"level\"],\"regex\":[]}]}")
+                        .getBytes(StandardCharsets.UTF_8));
+        Resources resources = new Resources(new Resources.BatchResourcesMethod("unused"), 2,
+                ResourceSources.of(new FolderSource(folder), new FolderSource(high)),
+                Arrays.asList(new JSONLoader(), new BatchLoader()));
+        resources.init();
+        resources.loadAllOfType(BatchResources.class);
+        resources.loadBatch("level");
+        pumpUntilIdle(resources);
+        JSONFile level = resources.getResource(JSONFile.class, "level");
+        assertEquals("low", level.getObject().getString("from"));
+        int version = level.getVersion();
+
+        watcher = resources.watcher();
+        watcher.configure(ResourceWatcher.Mode.POLLING, 50);
+        watcher.watchType(JSONFile.class);
+        pump(resources, 1500); // the files of every source are tracked, the missing one too
+
+        Files.createDirectories(high.resolve("data"));
+        write(high.resolve("data").resolve("level.json"), "{\"from\": \"high\"}", 2_000_000);
+
+        long end = System.currentTimeMillis() + 10_000;
+        while (level.getVersion() == version && System.currentTimeMillis() < end)
+            pump(resources, 50);
+        pumpUntilIdle(resources);
+
+        assertEquals("high", level.getObject().getString("from"));
     }
 
     // A file created after the start gives a new data, usable by name

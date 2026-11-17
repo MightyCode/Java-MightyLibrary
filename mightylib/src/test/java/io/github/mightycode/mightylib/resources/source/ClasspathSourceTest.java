@@ -92,6 +92,21 @@ class ClasspathSourceTest {
         }
     }
 
+    // Never watched: a jar has no file on the disk for the resource watcher
+    @Test
+    void aJarIsNotACandidateOfTheWatcher() throws IOException {
+        try (URLClassLoader loader = loaderOf(writeJar())) {
+            ClasspathSource jar = new ClasspathSource(loader, "assets/plugin");
+            FolderSource disk = new FolderSource(folder);
+            try {
+                assertEquals(List.of(disk.localFile("a.txt").orElseThrow()),
+                        ResourceSources.of(disk, jar).localCandidates("a.txt"));
+            } finally {
+                jar.close();
+            }
+        }
+    }
+
     @Test
     void absentPrefixIsEmpty() throws IOException {
         try (URLClassLoader loader = loaderOf(writeJar())) {

@@ -1,7 +1,5 @@
 package io.github.mightycode.mightylib.resources;
 
-import io.github.mightycode.mightylib.resources.source.FolderSource;
-import io.github.mightycode.mightylib.resources.source.IResourceSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -52,7 +50,6 @@ public final class Resources {
     // Fixed at the construction: the mandatory loaders, then those of the project, one per type of data
     private final List<ResourceLoader> loaders;
     private final ResourceSources sources;
-    private final String folder;
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
     private final Map<Class<? extends DataType>, Map<String, DataType>> resources;
@@ -80,21 +77,8 @@ public final class Resources {
      */
     public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ResourceSources sources,
                      List<ResourceLoader> loaders) {
-        this(loadingMethod, maxNumberOfWorkers, sources, GameFolder(sources), loaders);
-    }
-
-    // A stack of this folder only
-    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
-        this(loadingMethod, maxNumberOfWorkers,
-                ResourceSources.builder().add(ResourceSources.GAME_OWNER, new FolderSource(folder)).build(),
-                NormalizeFolder(folder), loaders);
-    }
-
-    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ResourceSources sources, String folder,
-                      List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
         this.sources = Objects.requireNonNull(sources, "sources");
-        this.folder = folder;
         resources = new ConcurrentHashMap<>();
         this.loaders = checkedLoaders(loaders);
 
@@ -127,35 +111,6 @@ public final class Resources {
     // The loaders, in their order (those of the plugins, the engine first); unmodifiable
     List<ResourceLoader> loaders() {
         return loaders;
-    }
-
-    // Separators turned to '/', with a final '/': loaders concatenate the paths
-    public static String NormalizeFolder(String folder) {
-        String normalized = Objects.requireNonNull(folder, "folder").replace('\\', '/');
-        return normalized.endsWith("/") ? normalized : normalized + "/";
-    }
-
-    // The folder of the game in the stack (the highest folder without one), as it was given
-    private static String GameFolder(ResourceSources sources) {
-        IResourceSource found = null;
-        for (IResourceSource source : sources.sources()) {
-            if (source instanceof FolderSource && (found == null
-                    || ResourceSources.GAME_OWNER.equals(sources.owner(source))))
-                found = source;
-        }
-        // No folder (classpath only)
-        if (found == null)
-            return "";
-
-        return NormalizeFolder(found.name().substring("folder:".length()));
-    }
-
-    /**
-     * Folder of the game, ending with '/' (default "resources/"). Final and set by the constructor: safe to read
-     * from any thread (workers, resource watcher).
-     */
-    public String folder() {
-        return folder;
     }
 
     /**

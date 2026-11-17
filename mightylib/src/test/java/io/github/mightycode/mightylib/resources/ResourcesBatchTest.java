@@ -109,7 +109,8 @@ class ResourcesBatchTest extends ResourcesTestBase {
     @Test
     void allResourcesMethodLoadsEverything() throws Exception {
         fakeLoader = new FakeLoader();
-        resources = new Resources(new Resources.AllResourcesMethod(), WORKERS, folder.toString(), List.of(fakeLoader));
+        resources = new Resources(new Resources.AllResourcesMethod(), WORKERS, LoaderTestAccess.sources(folder),
+                List.of(fakeLoader));
         fake(THREAD_CONTEXT, "a");
         fake(MAIN_CONTEXT, "b");
         resources.init();
