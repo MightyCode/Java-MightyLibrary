@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.resources.cubemap;
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.main.WorkersTestAccess;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -51,7 +53,7 @@ class CubeMapLoaderTest {
     }
 
     private String path(String cubeMap, String face) {
-        return Resources.NormalizeFolder(folder.toString()) + CubeMapLoader.FOLDER + "/" + cubeMap + "/" + face + ".png";
+        return CubeMapLoader.FOLDER + "/" + cubeMap + "/" + face + ".png";
     }
 
     private Resources load(StringBuilder errors) {
@@ -91,6 +93,29 @@ class CubeMapLoaderTest {
             assertTrue(sky.isSourceRead(i));
             assertEquals((byte) (i * 40), sky.getFace(i).get(0), "face " + i);
         }
+    }
+
+    @Test
+    void aFaceOfAHigherSourceReplacesTheLowerOne(@TempDir Path high) throws IOException {
+        faces("sky", 4);
+        // Only the top face, white, in the higher source
+        Path sky = Files.createDirectories(high.resolve(CubeMapLoader.FOLDER).resolve("sky"));
+        BufferedImage white = new BufferedImage(4, 4, BufferedImage.TYPE_INT_ARGB);
+        for (int y = 0; y < 4; ++y) {
+            for (int x = 0; x < 4; ++x)
+                white.setRGB(x, y, 0xFFFFFFFF);
+        }
+        ImageIO.write(white, "png", sky.resolve("top.png").toFile());
+
+        Resources resources = new Resources(new Resources.AllResourcesMethod(), 2,
+                ResourceSources.of(new FolderSource(folder), new FolderSource(high)), List.of(new CubeMapLoader()));
+        resources.init();
+        resources.load();
+        CubeMapData data = resources.getResource(CubeMapData.class, "sky");
+
+        assertTrue(data.isLoaded());
+        assertEquals((byte) 0xFF, data.getFace(2).get(0), "top, from the higher source");
+        assertEquals((byte) 40, data.getFace(1).get(0), "left, from the lower source");
     }
 
     @Test

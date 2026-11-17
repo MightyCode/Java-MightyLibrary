@@ -49,7 +49,7 @@ class LayeredTextureLoaderTest {
     }
 
     private String path(String data, String file) {
-        return Resources.NormalizeFolder(folder.toString()) + LayeredTextureLoader.FOLDER + "/" + data + "/" + file;
+        return LayeredTextureLoader.FOLDER + "/" + data + "/" + file;
     }
 
     private Resources load() {

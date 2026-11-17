@@ -3,18 +3,15 @@ package io.github.mightycode.mightylib.resources.cubemap;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.source.SourceEntry;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Map;
 
 /**
@@ -36,13 +33,10 @@ public final class CubeMapLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        File[] folders = new File(resources().folder() + FOLDER).listFiles(File::isDirectory);
-        if (folders == null)
-            return;
-
-        for (File folder : folders) {
-            String name = folder.getName();
-            data.put(name, new CubeMapData(name, resources().folder() + FOLDER + "/" + name + "/"));
+        // The folders of every source: a face missing in the highest source is read in a lower one
+        for (SourceEntry folder : resources().sources().list(FOLDER)) {
+            if (folder.isFolder())
+                data.put(folder.name(), new CubeMapData(folder.name(), folder.path() + "/"));
         }
     }
 
@@ -76,7 +70,7 @@ public final class CubeMapLoader extends ResourceLoader {
         }
     }
 
-    private static void readFace(CubeMapData cubeMap, int index) {
+    private void readFace(CubeMapData cubeMap, int index) {
         String path = cubeMap.sourcePath(index);
         ByteBuffer file = readFile(path);
         try (MemoryStack stack = MemoryStack.stackPush()) {
@@ -102,23 +96,15 @@ public final class CubeMapLoader extends ResourceLoader {
         }
     }
 
-    private static ByteBuffer readFile(String path) {
-        try (FileChannel channel = FileChannel.open(Paths.get(path), StandardOpenOption.READ)) {
-            long size = channel.size();
-            if (size <= 0 || size > Integer.MAX_VALUE)
-                throw new ResourceException("can't read the face " + path + " (size " + size + ")");
-
-            ByteBuffer buffer = MemoryUtil.memAlloc((int) size);
-            try {
-                while (buffer.hasRemaining()) {
-                    if (channel.read(buffer) < 0)
-                        break;
-                }
-            } catch (IOException | RuntimeException e) {
+    // A native buffer, freed by the caller
+    private ByteBuffer readFile(String path) {
+        try {
+            ByteBuffer buffer = resources().sources().readNative(path);
+            if (!buffer.hasRemaining()) {
                 MemoryUtil.memFree(buffer);
-                throw e;
+                throw new ResourceException("can't read the face " + path + " (size 0)");
             }
-            buffer.flip();
+
             return buffer;
         } catch (NoSuchFileException e) {
             throw new ResourceException("missing face " + path);

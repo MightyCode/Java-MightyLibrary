@@ -1,9 +1,16 @@
 package io.github.mightycode.mightylib.resources.sound;
 
 import io.github.mightycode.mightylib.TestFiles;
+import io.github.mightycode.mightylib.resources.LoaderTestAccess;
 import io.github.mightycode.mightylib.resources.sound.decoder.*;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -13,15 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * (meant for real sounds) cannot be checked on them. No OpenAL needed.
  */
 class SoundDataEstimateTest {
-    private static String sound(String file) {
-        return TestFiles.file("sounds/" + file);
-    }
+    private static final Path FOLDER = TestFiles.path("sounds");
 
-    private static void check(SoundDecoder decoder, String file, long ratio) {
-        SoundData sound = new SoundData("estimate-" + file, sound(file));
-        assertEquals(new java.io.File(sound(file)).length() * ratio, sound.estimatedCpuBytes(), file);
+    private static void check(SoundDecoder decoder, String file, long ratio) throws IOException {
+        SoundData sound = LoaderTestAccess.attached(new SoundData("estimate-" + file, file), FOLDER);
+        assertEquals(Files.size(FOLDER.resolve(file)) * ratio, sound.estimatedCpuBytes(), file);
 
-        SoundLoadInfo info = decoder.decode(sound(file), () -> {});
+        SoundLoadInfo info = decoder.decode(ResourceSources.of(new FolderSource(FOLDER)), file, () -> {});
         try {
             sound.setSoundLoadInfo(info);
             assertEquals((long) info.getBuffer().capacity() * Short.BYTES, sound.estimatedCpuBytes(), file);
@@ -32,7 +37,7 @@ class SoundDataEstimateTest {
     }
 
     @Test
-    void guessFromTheFileThenDecodedSize() {
+    void guessFromTheFileThenDecodedSize() throws IOException {
         check(new OggDecoder(), "selectogg.ogg", 10);
         check(new WavDecoder(), "selectwav.wav", 1);
         check(new Mp3Decoder(), "selectmp3.mp3", 10);

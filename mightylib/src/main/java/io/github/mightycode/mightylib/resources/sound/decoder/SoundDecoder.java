@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.sound.decoder;
 
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 
 /**
@@ -11,9 +12,9 @@ public interface SoundDecoder {
     String[] extensions();
 
     /**
-     * Decode the whole file. The result owns native memory (SoundLoadInfo.nativeBuffer, freed by release).
+     * Decode the whole file at this logical path, read in the sources. The result owns native memory (SoundLoadInfo.nativeBuffer, freed by release).
      * Calls checkCancelled between two steps (it throws to stop), frees what it allocated when it stops or fails,
      * and throws a ResourceException when the file is missing or invalid.
      */
-    SoundLoadInfo decode(String path, Runnable checkCancelled);
+    SoundLoadInfo decode(ResourceSources sources, String path, Runnable checkCancelled);
 }

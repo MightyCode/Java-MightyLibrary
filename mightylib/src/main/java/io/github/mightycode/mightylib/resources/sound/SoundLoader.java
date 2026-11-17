@@ -59,7 +59,7 @@ public final class SoundLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreDiskFolder(data, resources().folder());
+        exploreResourcesFile(data, "");
     }
 
     @Override
@@ -94,7 +94,7 @@ public final class SoundLoader extends ResourceLoader {
         if (decoder == null)
             throw new ResourceException("unsupported sound format: " + path);
 
-        SoundLoadInfo info = decoder.decode(path, sound::checkCancelled);
+        SoundLoadInfo info = decoder.decode(resources().sources(), path, sound::checkCancelled);
         if (info.getChannels() != 1 && info.getChannels() != 2) {
             int channels = info.getChannels();
             info.release();

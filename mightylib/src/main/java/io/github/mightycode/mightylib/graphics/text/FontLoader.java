@@ -25,7 +25,7 @@ public final class FontLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = new JSONObject(FileMethods.readFileAsString(resources().folder() + FontFace.FONTS_FOLDER + "fonts.json"));
+        JSONObject obj = FileMethods.readJSONObject(resources().sources(), FontFace.FONTS_FOLDER + "fonts.json");
         obj = obj.getJSONObject("fonts");
 
         create(data, obj);
@@ -77,6 +77,6 @@ public final class FontLoader extends ResourceLoader {
 
         FontFace fontFace = (FontFace) dataType;
         // Failing here makes the preload fail: the fallback replaces the font
-        fontFace.getFontFile().load();
+        fontFace.getFontFile().load(resources().sources());
     }
 }

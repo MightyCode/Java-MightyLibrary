@@ -3,17 +3,17 @@ package io.github.mightycode.mightylibdemo.resources;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.source.SourceEntry;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -36,21 +36,20 @@ public class LayeredTextureLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        File[] folders = new File(resources().folder() + FOLDER).listFiles(File::isDirectory);
-        if (folders == null)
-            return;
-
-        for (File folder : folders) {
-            File[] files = folder.listFiles((directory, name) -> name.toLowerCase().endsWith(EXTENSION));
-            if (files == null || files.length == 0)
+        // The folders and their layers in every source of the resources, sorted by name
+        for (SourceEntry folder : resources().sources().list(FOLDER)) {
+            if (!folder.isFolder())
                 continue;
 
-            Arrays.sort(files, Comparator.comparing(File::getName));
             List<String> layers = new ArrayList<>();
-            for (File file : files)
-                layers.add(resources().folder() + FOLDER + "/" + folder.getName() + "/" + file.getName());
+            for (SourceEntry file : resources().sources().list(folder.path())) {
+                if (!file.isFolder() && file.name().toLowerCase(Locale.ROOT).endsWith(EXTENSION))
+                    layers.add(file.path());
+            }
+            if (layers.isEmpty())
+                continue;
 
-            data.put(folder.getName(), new LayeredTextureData(folder.getName(), layers));
+            data.put(folder.name(), new LayeredTextureData(folder.name(), layers));
         }
     }
 
@@ -95,9 +94,9 @@ public class LayeredTextureLoader extends ResourceLoader {
         data.setComposed(composed);
     }
 
-    private static BufferedImage read(String path) {
-        try {
-            BufferedImage image = ImageIO.read(new File(path));
+    private BufferedImage read(String path) {
+        try (InputStream input = resources().sources().open(path)) {
+            BufferedImage image = ImageIO.read(input);
             if (image == null)
                 throw new ResourceException("not an image: " + path);
             return image;

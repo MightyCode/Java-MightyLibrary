@@ -20,7 +20,7 @@ public final class TextureDataAtlasLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreDiskFolder(data, resources().folder());
+        exploreResourcesFile(data, "");
     }
 
     @Override
@@ -44,7 +44,7 @@ public final class TextureDataAtlasLoader extends ResourceLoader {
             return;
 
         TextureDataAtlas atlas = (TextureDataAtlas)dataType;
-        String data = FileMethods.readFileAsString(atlas.path());
+        String data = FileMethods.readString(resources().sources(), atlas.path());
 
         String[] parts = data.split("\n");
 

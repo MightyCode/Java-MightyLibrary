@@ -1,7 +1,8 @@
 package io.github.mightycode.mightylib.graphics.text;
 
-import io.github.mightycode.mightylib.TestFiles;
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -17,9 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FontFileTest {
     // A failure of the data: the preload fails on one line and the fallback font replaces it
     @Test
-    void aMissingFileIsAResourceFailure() {
-        FontFile file = new FontFile(TestFiles.file("fonts/missing.fnt"));
-        ResourceException error = assertThrows(ResourceException.class, file::load);
+    void aMissingFileIsAResourceFailure(@TempDir Path folder) {
+        FontFile file = new FontFile("fonts/missing.fnt");
+        ResourceException error = assertThrows(ResourceException.class, () -> file.load(ResourceSources.of(new FolderSource(folder))));
         assertTrue(error.getMessage().contains("missing.fnt"));
     }
 
@@ -29,13 +30,13 @@ class FontFileTest {
     private static FontFile write(Path folder, String content) throws IOException {
         Path file = folder.resolve("font.fnt");
         Files.write(file, content.getBytes(StandardCharsets.UTF_8));
-        return new FontFile(file.toString());
+        return new FontFile("font.fnt");
     }
 
     @Test
     void aFileWithoutCountIsTruncated(@TempDir Path folder) throws IOException {
         FontFile file = write(folder, HEADER);
-        ResourceException error = assertThrows(ResourceException.class, file::load);
+        ResourceException error = assertThrows(ResourceException.class, () -> file.load(ResourceSources.of(new FolderSource(folder))));
         assertTrue(error.getMessage().contains("truncated"), error.getMessage());
     }
 
@@ -43,28 +44,28 @@ class FontFileTest {
     void missingCharactersAreTruncated(@TempDir Path folder) throws IOException {
         FontFile file = write(folder, HEADER + "chars count=2\n"
                 + "char id=65 x=0 y=0 width=10 height=10 xoffset=0 yoffset=0 xadvance=10\n");
-        ResourceException error = assertThrows(ResourceException.class, file::load);
+        ResourceException error = assertThrows(ResourceException.class, () -> file.load(ResourceSources.of(new FolderSource(folder))));
         assertTrue(error.getMessage().contains("truncated"), error.getMessage());
     }
 
     @Test
     void aMissingValueIsMalformed(@TempDir Path folder) throws IOException {
         FontFile file = write(folder, HEADER + "chars count=1\n" + "char id=65 x=0 y=0\n");
-        ResourceException error = assertThrows(ResourceException.class, file::load);
+        ResourceException error = assertThrows(ResourceException.class, () -> file.load(ResourceSources.of(new FolderSource(folder))));
         assertTrue(error.getMessage().contains("no width"), error.getMessage());
     }
 
     @Test
     void aBadNumberIsMalformed(@TempDir Path folder) throws IOException {
         FontFile file = write(folder, HEADER.replace("size=32", "size=big") + "chars count=0\n");
-        ResourceException error = assertThrows(ResourceException.class, file::load);
+        ResourceException error = assertThrows(ResourceException.class, () -> file.load(ResourceSources.of(new FolderSource(folder))));
         assertTrue(error.getMessage().contains("malformed"), error.getMessage());
     }
 
     @Test
     void aNullSizeIsMalformed(@TempDir Path folder) throws IOException {
         FontFile file = write(folder, HEADER.replace("size=32", "size=0") + "chars count=0\n");
-        ResourceException error = assertThrows(ResourceException.class, file::load);
+        ResourceException error = assertThrows(ResourceException.class, () -> file.load(ResourceSources.of(new FolderSource(folder))));
         assertTrue(error.getMessage().contains("size 0"), error.getMessage());
     }
 
@@ -72,6 +73,6 @@ class FontFileTest {
     void aValidFileLoads(@TempDir Path folder) throws IOException {
         FontFile file = write(folder, HEADER + "chars count=1\n"
                 + "char id=65 x=0 y=0 width=10 height=10 xoffset=0 yoffset=0 xadvance=10\n");
-        assertDoesNotThrow(file::load);
+        assertDoesNotThrow(() -> file.load(ResourceSources.of(new FolderSource(folder))));
     }
 }

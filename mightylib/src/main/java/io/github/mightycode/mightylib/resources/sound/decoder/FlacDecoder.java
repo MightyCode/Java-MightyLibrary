@@ -1,10 +1,8 @@
 package io.github.mightycode.mightylib.resources.sound.decoder;
 
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.concurrent.CancellationException;
 
 /** Flac (4 to 24 bits), decoded frame by frame (FlacStream) and converted to 16 bit. */
@@ -15,11 +13,11 @@ public final class FlacDecoder implements SoundDecoder {
     }
 
     @Override
-    public SoundLoadInfo decode(String path, Runnable checkCancelled) {
+    public SoundLoadInfo decode(ResourceSources sources, String path, Runnable checkCancelled) {
         PcmBuilder builder = null;
 
         try {
-            FlacStream stream = new FlacStream(Files.readAllBytes(Paths.get(path)));
+            FlacStream stream = new FlacStream(sources.readBytes(path));
             int estimate = stream.totalSamples > 0 && stream.totalSamples < Integer.MAX_VALUE / 4
                     ? (int) stream.totalSamples * stream.channels : 0;
             builder = new PcmBuilder(estimate);

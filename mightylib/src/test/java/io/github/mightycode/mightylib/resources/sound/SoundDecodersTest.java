@@ -1,8 +1,9 @@
 package io.github.mightycode.mightylib.resources.sound;
 
-import io.github.mightycode.mightylib.TestFiles;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.sound.decoder.*;
+import io.github.mightycode.mightylib.resources.source.ClasspathSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 import org.junit.jupiter.api.Test;
 
@@ -16,12 +17,16 @@ import static org.junit.jupiter.api.Assertions.*;
  * length, can be stopped, and frees its memory. No OpenAL needed.
  */
 class SoundDecodersTest {
+    // Read from the classpath (the test resources), as from the jar of a plugin
+    private static final ResourceSources SOURCES = ResourceSources.of(
+            new ClasspathSource(SoundDecodersTest.class.getClassLoader(), "sounds"));
+
     private static String sound(String file) {
-        return TestFiles.file("sounds/" + file);
+        return file;
     }
 
     private static SoundLoadInfo decode(SoundDecoder decoder, String file) {
-        return decoder.decode(sound(file), () -> {});
+        return decoder.decode(SOURCES, sound(file), () -> {});
     }
 
     private static double seconds(SoundLoadInfo info) {
@@ -72,7 +77,7 @@ class SoundDecodersTest {
             SoundDecoder decoder = decoders[i];
             String file = sound(cases[i][1]);
 
-            assertThrows(CancellationException.class, () -> decoder.decode(file, () -> {
+            assertThrows(CancellationException.class, () -> decoder.decode(SOURCES, file, () -> {
                 if (checks.incrementAndGet() == 2)
                     throw new CancellationException();
             }), cases[i][0]);
@@ -83,9 +88,10 @@ class SoundDecodersTest {
     @Test
     void missingOrInvalidFilesFail() {
         for (SoundDecoder decoder : new SoundDecoder[]{new OggDecoder(), new WavDecoder(), new Mp3Decoder(), new FlacDecoder()}) {
-            assertThrows(ResourceException.class, () -> decoder.decode(sound("missing" + decoder.extensions()[0]), () -> {}));
+            assertThrows(ResourceException.class,
+                    () -> decoder.decode(SOURCES, sound("missing" + decoder.extensions()[0]), () -> {}));
             // A file of another format
-            assertThrows(ResourceException.class, () -> decoder.decode(sound("sounds.gaintree"), () -> {}));
+            assertThrows(ResourceException.class, () -> decoder.decode(SOURCES, sound("sounds.gaintree"), () -> {}));
         }
     }
 
@@ -104,7 +110,7 @@ class SoundDecodersTest {
             }
 
             @Override
-            public SoundLoadInfo decode(String path, Runnable checkCancelled) {
+            public SoundLoadInfo decode(ResourceSources sources, String path, Runnable checkCancelled) {
                 return null;
             }
         });

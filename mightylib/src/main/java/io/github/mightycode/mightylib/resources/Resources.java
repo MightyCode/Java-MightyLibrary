@@ -143,8 +143,9 @@ public final class Resources {
                     || ResourceSources.GAME_OWNER.equals(sources.owner(source))))
                 found = source;
         }
+        // No folder (classpath only)
         if (found == null)
-            throw new IllegalArgumentException("No folder in the sources " + sources);
+            return "";
 
         return NormalizeFolder(found.name().substring("folder:".length()));
     }

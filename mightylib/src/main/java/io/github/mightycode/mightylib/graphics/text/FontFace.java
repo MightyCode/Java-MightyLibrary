@@ -36,7 +36,7 @@ public final class FontFace extends SingleSourceDataType {
     }
 
     FontFace(Resources resources, String fontFaceName, String textureName, String infoPath) {
-        super(TYPE_SET_UP.THREAD_CONTEXT, fontFaceName, resources.folder() + FONTS_FOLDER + infoPath);
+        super(TYPE_SET_UP.THREAD_CONTEXT, fontFaceName, FONTS_FOLDER + infoPath);
 
         name = fontFaceName;
         fontAtlas = resources.getResource(TextureData.class, textureName);

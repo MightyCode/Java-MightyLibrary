@@ -10,7 +10,7 @@ import org.lwjgl.stb.STBImage;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
@@ -142,7 +142,7 @@ public class TextureData extends SingleSourceDataType {
     }
 
     public BufferedImage loadBufferedImage(){
-        try (FileInputStream input = new FileInputStream(path())) {
+        try (InputStream input = resources().sources().open(path())) {
             return ImageIO.read(input);
         } catch (IOException e) {
             Logger.LogException("Can't read the image " + path(), e);
