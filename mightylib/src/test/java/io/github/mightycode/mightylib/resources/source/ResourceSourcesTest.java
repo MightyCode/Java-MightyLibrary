@@ -41,6 +41,25 @@ class ResourceSourcesTest {
     }
 
     @Test
+    void aFolderOfAHigherSourceDoesNotHideAFile() throws IOException {
+        // "textures/x" is a file below, a folder above
+        Files.writeString(low.resolve("textures/x"), "low x");
+        Files.createDirectories(high.resolve("textures/x"));
+
+        assertSame(highSource, stack.resolve("textures/x").orElseThrow());
+        assertEquals("low x", stack.readString("textures/x"));
+        assertEquals(5, stack.size("textures/x"));
+        assertEquals(low.resolve("textures/x").toAbsolutePath().normalize(),
+                stack.localFile("textures/x").orElseThrow());
+        ByteBuffer buffer = stack.readNative("textures/x");
+        try {
+            assertEquals(5, buffer.remaining());
+        } finally {
+            MemoryUtil.memFree(buffer);
+        }
+    }
+
+    @Test
     void theHighestSourceWins() throws IOException {
         assertSame(highSource, stack.resolve("textures/a.png").orElseThrow());
         assertSame(lowSource, stack.resolve("textures/onlyLow.png").orElseThrow());

@@ -141,6 +141,17 @@ public final class ResourceSources {
         return resolve(path).isPresent();
     }
 
+    // The highest source that has a file at this path: a folder of a higher source doesn't hide it
+    private Optional<IResourceSource> resolveFile(String logical) {
+        for (int i = sources.size() - 1; i >= 0; --i) {
+            IResourceSource source = sources.get(i);
+            if (source.exists(logical) && !source.isFolder(logical))
+                return Optional.of(source);
+        }
+
+        return Optional.empty();
+    }
+
     // A source has a folder at this path
     public boolean isFolder(String path) {
         String logical = normalize(path);
@@ -158,7 +169,7 @@ public final class ResourceSources {
      */
     public InputStream open(String path) throws IOException {
         String logical = normalize(path);
-        Optional<IResourceSource> source = resolve(logical);
+        Optional<IResourceSource> source = resolveFile(logical);
         if (source.isEmpty())
             throw new NoSuchFileException(logical + " (in no source)");
 
@@ -182,7 +193,7 @@ public final class ResourceSources {
      */
     public ByteBuffer readNative(String path) throws IOException {
         String logical = normalize(path);
-        Optional<IResourceSource> source = resolve(logical);
+        Optional<IResourceSource> source = resolveFile(logical);
         if (source.isEmpty())
             throw new NoSuchFileException(logical + " (in no source)");
 
@@ -225,7 +236,7 @@ public final class ResourceSources {
     // Size in bytes of the file of the highest source that has it, -1 if none
     public long size(String path) {
         String logical = normalize(path);
-        return resolve(logical).map(source -> source.size(logical)).orElse(-1L);
+        return resolveFile(logical).map(source -> source.size(logical)).orElse(-1L);
     }
 
     // The children of the folder in every source, sorted by name; for a name in several sources, the highest one
@@ -252,10 +263,10 @@ public final class ResourceSources {
         return layers;
     }
 
-    // The file on the disk of the highest source that has it; empty if none, or if it is not on the disk
+    // The file on the disk of the highest source that has it as a file; empty if none, or if it is not on the disk
     public Optional<Path> localFile(String path) {
         String logical = normalize(path);
-        return resolve(logical).flatMap(source -> source.localFile(logical));
+        return resolveFile(logical).flatMap(source -> source.localFile(logical));
     }
 
     /**
