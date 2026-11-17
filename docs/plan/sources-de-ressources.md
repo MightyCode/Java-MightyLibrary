@@ -114,3 +114,32 @@ Un commit par étape ; chaque étape compile, passe les tests et laisse le jeu f
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/resource-sources`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait
+Étapes 1 à 10, un commit par étape (8 et 9 séparés, la démo et les documents à part) : package `resources/source` (`IResourceSource`, `FolderSource`, `ClasspathSource`, `ResourceSources`, `SourceEntry`), déclaration par `registry.resources().source/classpath/folder`, pile construite par `Engine.setup` et donnée à `Resources`, au `ShaderManager` et au `ContextManager` ; exploration et lecture de tous les loaders par la pile (chemins logiques), règle de collision entre sources ; fusion par entrée de `textures.json`, `fonts.json`, `shaders.json` et des batchs ; observateur sur toutes les sources disque ; mappings de manettes et configurations réseau dans la pile ; commande `resources sources [chemin]` ; `-Dmightylib.resources.engine` ; source `assets/demo/` et `ResourceSourcesScene2D` ; documents.
+
+### Écarts au plan
+- `ShaderManager` reçoit la pile à l'étape 5 (pas 2) : il ne lit `shaders.json` qu'avec le `ShaderLoader`, porté à l'étape 5 ; évite un double dossier provisoire.
+- Pour que chaque commit reste fonctionnel, les étapes 3 à 6 ont gardé des passerelles provisoires : `ResourceLoader.exploreDiskFolder` (loaders pas encore portés), replis sur le disque de `DataType.estimatedCpuBytes`, de l'observateur et de `resources <Type>`, `Resources.folder()` déduit du dossier du jeu. Toutes retirées aux étapes 7 et 9.
+- `TextureDataLoader.discover` porté sur la pile dès l'étape 4 (plan : 7) : sa comparaison avec les chemins logiques des textures ne marchait plus.
+- Constructeur `Resources(…, String dossier, …)` supprimé avec `folder()` (étape 7) : un seul constructeur, la pile ; les tests passent par `LoaderTestAccess.sources(dossier)` (nouvelle aide de test, qui attache aussi un loader ou une donnée à une pile).
+- Changements d'API induits : `SoundDecoder.decode(sources, chemin, …)`, `SoundDataType.readVorbis(ByteBuffer, …)` (repli `getResourceAsStream` et `ioResourceToByteBuffer` supprimés), `FontFile.load(sources)`, `SilentSoundService`/`OpenALSoundService.Open` reçoivent le JSON de l'arbre des gains (lu par `EnginePlugin` dans la pile), `GamepadManager.loadMappingsFile` supprimé (`ContextManager.ReadMappings` lit le fichier, `addMappings` reçoit le texte), `FileMethods.readString/readJSONObject(sources, …)`, `readJSONObjectLayers`, `mergeEntries`.
+- `resources <Type> <nom>` : `sourceFiles` pour toute donnée (avant : multi-fichiers seulement ; la clé `sources` disparaît) ; `source` = la source qui sert le fichier au moment de la commande (résolue à la demande, pas mémorisée à la lecture).
+- Propriétaire du dossier du jeu : `ResourceSources.GAME_OWNER = "(game)"` (pas un espace de noms valide, aucune collision).
+- `ClasspathSource` exige que le jar contienne les entrées de ses dossiers (Maven et Gradle les écrivent) ; noté dans sa Javadoc.
+- Bug relevé hors sujet (non corrigé) : configuration réseau mal formée → exception brute (`later.md`, Bugs relevés en passant).
+- Étapes 8 à 10 faites sur Opus 5.5 (recommandé : Sonnet 5.5), dans la même discussion.
+
+### Vérifié
+- `mvn -o -q test` : 1081 tests, 0 échec (nouveaux : `FolderSourceTest`, `ClasspathSourceTest` avec un jar écrit par le test, `ResourceSourcesTest`, `ResourcesSourcesTest`, `EngineSourcesTest`, `ListMergeTest`, `NetworkConfigurationLoaderTest`, cas ajoutés à `EngineRegistryTest`, `ResourceLoaderExploreTest`, `CubeMapLoaderTest`, `ShaderPreprocessorTest`, `FileWatchTest`, `ContextManagerTest`, `TextureDataLoaderTest` et `SoundDecodersTest` lus par une `ClasspathSource`). `package` : la démo compile et passe ses tests contre le jar.
+- `python tools/analyse.py` : 0 constat (un `IdentityHashMapUsage` corrigé) ; aucun import inutilisé dans le diff.
+- En jeu, `--strict` : `Scene2D`, `WaveFunctionCollapse2D`, `DocumentationScene` (batch, `sounds gains`), `SoundFormatsScene` (4 formats), `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` (cubemap), `ResourceSourcesScene2D` ; sans `--strict` (replis voulus) : `LayeredTexture2D`, `FallbackScene` avec `-Dmightylib.resources.watch=poll` (101 fichiers suivis). `leakcheck ResourceSourcesScene2D` : aucune fuite. `resources sources textures/sources/replaced.png` : deux couches, servie par `classpath:assets/demo/`.
+- Démo lancée depuis `demo/target/mightylib-demo-1.1-SNAPSHOT-jar-with-dependencies.jar` et pilotée par `scenario.py --attach` : source de la démo `classpath jar`, non observable, les deux textures servies par elle, sortie sans erreur.
+
+### À vérifier à la main
+- `ResourceSourcesScene2D` : à gauche rayures **vertes** (la texture du dossier du jeu, rouge, est remplacée par celle du jar de la démo au même chemin), au milieu rayures **bleues** (texture ajoutée par le `textures.json` de la démo), dessous les couches de chaque fichier.
+- Scènes 3D (`Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`) : modèles texturés et ciel comme avant.
+- `SoundFormatsScene` : les quatre sons s'entendent.
+- Rechargement à chaud, lancé avec `-Dmightylib.resources.watch=poll` : modifier une texture de `resources/textures/` (rechargée) ; créer dans `demo/target/classes/assets/demo/` (source de la démo en dossier, dans l'IDE) un fichier au chemin d'une ressource du dossier du jeu, ex. `textures/gui/…` : la donnée est relue depuis la source plus haute.
+- Démo depuis le jar : `package`, puis `java -cp demo/target/mightylib-demo-1.1-SNAPSHOT-jar-with-dependencies.jar io.github.mightycode.mightylibdemo.main.Main` depuis la racine, menu → `ResourceSourcesScene2D`.
