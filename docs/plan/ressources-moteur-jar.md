@@ -142,3 +142,32 @@ Pas de nouvelle scène : le changement se voit dans toutes les scènes (polices)
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/engine-resources`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+
+### Fait
+- **Étape 1** (`cedec03`) : 23 fichiers GLSL déplacés (`git mv`) vers `assets/mightylib/shaders/3_30/` avec leur `shaders.json` ; celui de la démo ne garde que `customStar2D`, `textureDisplacement3D`, `colorLighting3D`, `colorMaterial3D`, `textureMaterial3D`. `EngineResources` (constantes des shaders, `ENGINE_BATCH`) remplace les littéraux de la bibliothèque. `Resources.load()` charge le batch `mightylib` avant le premier batch du jeu, avec les deux méthodes de chargement.
+- **Étape 2** (`2c59a60`, `e1961a7`) : 8 atlas BMFont dérivés de Liberation Sans/Mono 2.1.4 (OFL 1.1, `LICENSE` téléchargé avec ton accord depuis le dépôt Liberation, tag 2.1.4), une page de 1024² chacun ; le batch du moteur ne charge que les deux Regular. `EngineConfig.setDefaultFont`/`getDefaultFont`, `Text()` prend la police par défaut ; `ValueSelector` et `DebugInfoCamera2D/3D` n'appellent plus `setFont`. Démo : `setFont("bahnschrift"|"arial")` retirés, 3 littéraux remplacés par `engine().config().getDefaultFont()`, `arial.*`, `bahnschrift*`, `svbasicmanual.*` et `resources/textures/fonts/` supprimés. `.ttf`, licence, `.bmfc` et `generate.py` dans `mightylib/fonts/` (hors du jar).
+- **Étape 3** (`1a51f34`) : `gamecontrollerdb.txt` (SDL_GameControllerDB, commit `22de0d7ef9fe1e6f852a50a9403a7a48f9be30ad`, 2026-11-16, téléchargé avec ton accord) et `gamecontrollerdb.LICENSE.txt` à la racine d'`assets/mightylib/` ; `EngineResources.GAMEPAD_MAPPINGS`, `GamepadManager.MAPPINGS_FILE` y renvoie.
+- **Étape 4** (`0f4b58f`) : docs mises à jour (`architecture`, `decisions`, `licence`, `debug-tools`, `later`, `current`, `CLAUDE.md`). Ce plan n'est pas supprimé (`/pr-ml`).
+
+### Écarts au plan, et raison
+- **Noms `engineSans` / `engineMono`** (variantes `engineSansBold`…) au lieu de `liberationSans` / `liberationMono`. Le point du plan « vérifier dans la FAQ si un atlas compte comme version modifiée » : oui (la licence dit « by changing formats », FAQ OFL 2.2), donc le nom réservé « Liberation » est interdit. Choix de l'utilisateur. Les `.bmfc` gardent `fontName=Liberation …` (BMFont retrouve la police par ce nom : avec un autre nom il prenait une police de repli) ; `generate.py` renomme le `face` du `.fnt`.
+- **Chasse fixe de la console** : BMFont donne `xadvance` 21 à `A`, `W`, `%` et `_` de Liberation Mono (débordement du glyphe), contre 19 aux autres. `generate.py` ramène tout `xadvance` ≥ 19 à 19 dans les `.fnt` Mono.
+- **`init.batch` de la démo** : l'entrée `FontFace` `.*` est supprimée (sinon elle aurait chargé les 8 atlas du moteur, 32 Mo) ; la démo n'a plus de police à elle.
+- **`Resources`** : une instance sans description de batch (aucun `BatchLoader`, tests) ne cherche pas le batch du moteur ; batch absent = une ligne d'erreur, exception en mode strict. `SkyboxRenderer.SHADER` et `ModelRenderer.DEFAULT_SHADER` sont supprimés (plus d'utilisateur).
+- **Pas de scène de démo** : l'option « remplacer un shader du moteur depuis `assets/demo/` » n'a pas été faite (à demander avant, comme prévu).
+- Le test `EngineConfig` est `EngineFontsConfigTest` ; le test des fichiers arial/bahnschrift est `DemoFontsTest` (démo).
+
+### Vérifié
+- `mvn -o test` (1070 tests `mightylib`, 29 démo) et `package` (la démo compile et passe ses tests contre le jar) : `BUILD SUCCESS`. Le jar contient `batchs/mightylib.batch`, les `shaders.json` et GLSL du moteur, les atlas, `OFL.txt`, `gamecontrollerdb.txt` et sa licence ; aucun `.ttf`.
+- Tests ajoutés : `EngineResourcesTest` (shaders, `#include` résolus dans la source du moteur seule, batch, 8 polices déclarées avec atlas et `FontFile` lisible, flèches U+2190–2195, chasse fixe de la console, pas de « Liberation » dans les noms ni le `face`, licence, mappings), `ResourcesEngineBatchTest`, `EngineFontsConfigTest`, `ContextManagerTest` (mappings du moteur remplacés par ceux du jeu), `DemoFontsTest`.
+- En jeu avec `scenario.py` : `Scene2D`, `Scene3D`, `Game3D2D` sans shader en échec ; `resources sources` montre `colorShape2DF.glsl` et `textureMaterial3DV.glsl` servis par `classpath:assets/mightylib/` ; journal `Load batch: mightylib` avant `init` ; `MenuScene` (`gl text` : 13 textes), `GUIWidgetsScene`, `ConsoleFeedScene`, console ouverte/fermée, `GamepadScene` (« Gamepad mappings loaded from gamecontrollerdb.txt », pas d'« Invalid gamepad mappings »), 0 ligne de problème. Une capture du menu avec la console ouverte : Liberation Sans dans le menu, monospace dans la console.
+- **Non vérifié à l'œil** : les atlas Bold, Italic et BoldItalic (seulement `bold=`/`italic=` du `.fnt`, tailles des PNG différentes), et l'alignement du curseur de la console en saisie.
+
+### À vérifier à la main par l'utilisateur
+- `MenuScene` et la console avec les nouvelles polices : lisibilité, texte dans les boutons, curseur et sélection alignés sur les caractères en monospace, indicateur des lignes sous la vue.
+- `Scene3D` et `Game3D2D` : skybox, éclairage (shaders servis par le jar).
+- `GamepadScene` avec une manette branchée.
+- `GUIWidgetsScene` : `ValueSelector`, `TextField`, `Slider`.
+- Optionnel : charger un atlas Bold/Italic dans un batch de test et le regarder.
