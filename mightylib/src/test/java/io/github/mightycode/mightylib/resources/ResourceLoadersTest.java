@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.resources.sound.SoundData;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -18,7 +20,7 @@ class ResourceLoadersTest {
     }
 
     private static List<ResourceLoader> mandatory() {
-        ShaderManager shaders = new ShaderManager(Resources.DEFAULT_FOLDER);
+        ShaderManager shaders = new ShaderManager(ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)));
         return LibraryLoaders.mandatory(() -> shaders);
     }
 
@@ -38,7 +40,7 @@ class ResourceLoadersTest {
         ShaderLoader loader = new ShaderLoader(() -> manager[0]);
         assertThrows(IllegalStateException.class, loader::createFallback);
 
-        manager[0] = new ShaderManager(Resources.DEFAULT_FOLDER);
+        manager[0] = new ShaderManager(ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)));
         assertInstanceOf(ShaderLoader.class, LibraryLoaders.mandatory(() -> manager[0]).get(0));
     }
 
@@ -95,7 +97,7 @@ class ResourceLoadersTest {
         assertThrows(IllegalArgumentException.class, () -> create(List.of(new FakeLoader(), new FakeLoader())));
         // A second loader of a mandatory type either (the registry replaces with replace)
         List<ResourceLoader> twice = new ArrayList<>(mandatory());
-        twice.add(new ShaderLoader(new ShaderManager(Resources.DEFAULT_FOLDER)));
+        twice.add(new ShaderLoader(new ShaderManager(ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)))));
         assertThrows(IllegalArgumentException.class, () -> create(twice));
     }
 

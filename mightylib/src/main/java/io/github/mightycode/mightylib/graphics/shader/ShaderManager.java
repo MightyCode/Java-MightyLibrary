@@ -1,8 +1,10 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.resources.FileMethods;
-import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.json.JSONObject;
+
+import java.util.Objects;
 
 
 import static org.lwjgl.opengl.GL11.glGetString;
@@ -20,14 +22,17 @@ public final class ShaderManager {
     public static final String GENERIC_MODEL_FIELD_NAME = "model";
     public static final String GENERIC_COLOR_FIELD_NAME = "color";
 
-    // Folder of the shaders, in the folder of the resources
-    private final String shadersFolder;
+    // Logical folder of the shaders, in the sources of the resources
+    private static final String SHADERS_FOLDER = "shaders/";
+
+    // Where shaders.json is read
+    private final ResourceSources sources;
     private String version;
 
     private JSONObject shadersInfo;
 
-    public ShaderManager(String resourcesFolder) {
-        shadersFolder = Resources.NormalizeFolder(resourcesFolder) + "shaders/";
+    public ShaderManager(ResourceSources sources) {
+        this.sources = Objects.requireNonNull(sources, "sources");
         version = "330";
     }
 
@@ -51,16 +56,16 @@ public final class ShaderManager {
 
         String shaderListPath = versionFolder() + LIST_SHADER_FILE_NAME;
 
-        shadersInfo = new JSONObject(FileMethods.readFileAsString(shaderListPath));
+        shadersInfo = FileMethods.readJSONObject(sources, shaderListPath);
     }
 
     public String getVersion(){
         return version;
     }
 
-    // Folder of the shaders of the GLSL version, ending with '/'
+    // Logical folder of the shaders of the GLSL version, ending with '/'
     public String versionFolder() {
-        return shadersFolder + version + "/";
+        return SHADERS_FOLDER + version + "/";
     }
 
     public JSONObject getShadersInfo() {

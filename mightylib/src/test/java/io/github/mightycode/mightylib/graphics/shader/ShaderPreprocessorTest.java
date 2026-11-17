@@ -1,8 +1,14 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -170,6 +176,29 @@ class ShaderPreprocessorTest {
         assertEquals("7(2) : error", ShaderPreprocessor.translateLog("7(2) : error", ids));
         assertEquals("syntax error", ShaderPreprocessor.translateLog("syntax error", ids));
         assertEquals("0(1) : error", ShaderPreprocessor.translateLog("0(1) : error", List.of()));
+    }
+
+    // The reader of the shader loader: an include of a higher source replaces the lower one, the others stay
+    @Test
+    void anIncludeOfAHigherSourceReplacesTheLowerOne(@TempDir Path low, @TempDir Path high) throws IOException {
+        Files.createDirectories(low.resolve("shaders/3_30/2D"));
+        Files.createDirectories(high.resolve("shaders/3_30/2D"));
+        Files.writeString(low.resolve("shaders/3_30/2D/a.glsl"), "#include \"lib.glsl\"\n#include \"other.glsl\"\nmain");
+        Files.writeString(low.resolve("shaders/3_30/2D/lib.glsl"), "low lib");
+        Files.writeString(low.resolve("shaders/3_30/other.glsl"), "low other");
+        Files.writeString(high.resolve("shaders/3_30/2D/lib.glsl"), "high lib");
+        ResourceSources sources = ResourceSources.of(new FolderSource(low), new FolderSource(high));
+
+        ShaderPreprocessor preprocessor = new ShaderPreprocessor(path -> ShaderLoader.ReadIfFile(sources, path),
+                VERSION_FOLDER, 0);
+        String source = preprocessor.process("shaders/3_30/2D/a.glsl");
+
+        assertTrue(source.contains("high lib"), source);
+        assertFalse(source.contains("low lib"), source);
+        assertTrue(source.contains("low other"), source);
+        // Out of the sources: not found, never read
+        assertNull(ShaderLoader.ReadIfFile(sources, "../a.glsl"));
+        assertNull(ShaderLoader.ReadIfFile(sources, "shaders/3_30"));
     }
 
     @Test

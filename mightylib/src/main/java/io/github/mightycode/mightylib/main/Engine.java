@@ -283,7 +283,7 @@ public final class Engine implements IView {
         GenDeleteResources.Init();
 
         System.out.println("--Create ShaderManager");
-        shaderManager = new ShaderManager(config.getResourcesFolder());
+        shaderManager = new ShaderManager(resourceSources);
         shaderManager.init(config.getShaderVersion());
 
         System.out.println("--Create Resources");

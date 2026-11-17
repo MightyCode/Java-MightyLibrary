@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources.models;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.texture.ColorTextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Matrix3f;
@@ -11,12 +12,13 @@ import org.joml.Vector3f;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.*;
 
-import java.io.File;
 import java.nio.IntBuffer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.lwjgl.assimp.Assimp.*;
 
@@ -47,7 +49,7 @@ public final class ModelLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreDiskFolder(data, resources().folder());
+        exploreResourcesFile(data, "");
     }
 
     @Override
@@ -82,7 +84,20 @@ public final class ModelLoader extends ResourceLoader {
 
         Model model = (Model) dataType;
 
-        AIScene scene = aiImportFile(model.path(), IMPORT_FLAGS);
+        // Assimp reads a file of the disk (and its .mtl next to it), not a stream: no model in a jar yet
+        Optional<Path> file;
+        try {
+            file = resources().sources().localFile(model.path());
+        } catch (IllegalArgumentException e) {
+            throw new ResourceException(e.getMessage());
+        }
+        if (file.isEmpty()) {
+            throw new ResourceException(resources().sources().exists(model.path())
+                    ? "the model " + model.path() + " must be in a folder source (Assimp reads the files of the disk)"
+                    : "model file not found: " + model.path());
+        }
+
+        AIScene scene = aiImportFile(file.get().toString(), IMPORT_FLAGS);
         AINode root = scene == null ? null : scene.mRootNode();
         if (root == null) {
             String error = aiGetErrorString();
@@ -95,7 +110,9 @@ public final class ModelLoader extends ResourceLoader {
             // The import is the costly part; the materials register owned textures, so stop before them too
             model.checkCancelled();
 
-            String folder = new File(model.path()).getParent();
+            // Logical folder of the model: its textures are searched there in every source
+            String path = ResourceSources.normalize(model.path());
+            String folder = path.contains("/") ? path.substring(0, path.lastIndexOf('/')) : "";
             String[][] materialsTextures = readMaterials(model, scene, folder);
             float[] materialsShininess = readShininess(scene);
 
@@ -183,8 +200,14 @@ public final class ModelLoader extends ResourceLoader {
             return null;
         }
 
-        String fullPath = new File(folder, file).getPath().replace('\\', '/');
-        if (!new File(fullPath).isFile()) {
+        String fullPath;
+        try {
+            fullPath = ResourceSources.normalize(folder.isEmpty() ? file : folder + "/" + file);
+        } catch (IllegalArgumentException e) {
+            System.err.println("--Model " + model.getDataName() + " : texture out of the sources " + file);
+            return null;
+        }
+        if (resources().sources().size(fullPath) < 0) {
             System.err.println("--Model " + model.getDataName() + " : texture not found " + fullPath);
             return null;
         }
