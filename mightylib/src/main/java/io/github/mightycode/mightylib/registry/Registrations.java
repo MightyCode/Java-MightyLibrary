@@ -102,7 +102,8 @@ public final class Registrations {
 
     /**
      * The stack of the sources of resources, from the lowest to the highest: those of the engine, the folder of the
-     * game, then those of the plugins in their order.
+     * game, then those of the plugins in their order. When it can't be built (a source declared twice), every source
+     * is closed before the exception goes up: nothing else would close them.
      */
     public ResourceSources resourceSources(IResourceSource gameFolder) {
         ResourceSources.Builder builder = ResourceSources.builder();
@@ -114,7 +115,13 @@ public final class Registrations {
                 builder.add(ResourceSources.GAME_OWNER, gameFolder);
         }
 
-        return builder.build();
+        try {
+            return builder.build();
+        } catch (RuntimeException e) {
+            closeSources();
+            gameFolder.close();
+            throw e;
+        }
     }
 
     // The loaders of every plugin, in registration order

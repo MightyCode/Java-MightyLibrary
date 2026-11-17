@@ -241,7 +241,12 @@ public final class Engine implements IView {
             return ListError.PLUGIN_REGISTRATION_FAIL;
         }
         // Before the shaders and the resources, which read their files in it
-        resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()));
+        try {
+            resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()));
+        } catch (RuntimeException e) {
+            Logger.LogException("The sources of the resources can't be stacked", e);
+            return ListError.PLUGIN_REGISTRATION_FAIL;
+        }
         contexts.setResourceSources(resourceSources);
         System.out.println("--Resource sources : " + resourceSources.sources().stream()
                 .map(IResourceSource::name).collect(Collectors.joining(" < ")));
