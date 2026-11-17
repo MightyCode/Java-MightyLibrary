@@ -4,12 +4,10 @@ import io.github.mightycode.mightylib.resources.source.IResourceSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.source.SourceEntry;
 
-import java.io.File;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -182,26 +180,6 @@ public abstract class ResourceLoader {
         }
     }
 
-    /**
-     * Until every loader reads its files through the sources: the files of a folder of the disk (path given as
-     * is to filterFile and fileDetected).
-     */
-    protected final void exploreDiskFolder(Map<String, DataType> data, String currentPath){
-        File file = new File(currentPath);
-
-        if (file.isFile()){
-            String result = filterFile(currentPath);
-            if (result != null){
-                fileDetected(data, currentPath, result);
-            }
-        } else if (file.isDirectory()) {
-            if (DEFAULT_IGNORED_FOLDERS.contains(file.getName()))
-                return;
-
-            for (String childPath : Objects.requireNonNull(file.list()))
-                exploreDiskFolder(data, currentPath + "/" + childPath);
-        }
-    }
 
     /**
      * Hook called to read a data (preload, maybe on a worker, never with GL): read its file(s) and fill it, or
