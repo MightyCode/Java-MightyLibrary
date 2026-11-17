@@ -249,8 +249,7 @@ public class RopeSimulation2D extends Scene {
         textCurrentState.setReferenceCamera(hudCamera);
 
         Vector2i size = context().getWindow().getInfo().getSizeRef();
-        textCurrentState.setFont("bahnschrift")
-                .setFontSize(20)
+        textCurrentState.setFontSize(20)
                 .setReference(EDirection.RightUp)
                 .setAlignment(ETextAlignment.Right)
                 .setPosition(new Vector2f(size.x, 0))

@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -66,6 +67,9 @@ public final class Text extends MeshRenderer {
 
         positionIndex = getMesh().addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
         textureIndex = getMesh().addVboFloat(new float[0], 2, Mesh.DYNAMIC_STORE);
+
+        // The font of the interface of the engine, until setFont
+        setFont(Views.engine().config().getDefaultFont());
     }
 
     private boolean shouldNotDrawText(){

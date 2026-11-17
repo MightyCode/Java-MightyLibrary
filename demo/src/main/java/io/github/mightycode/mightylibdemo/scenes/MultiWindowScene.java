@@ -48,8 +48,7 @@ public class MultiWindowScene extends Scene {
 
     private Text text(int size, Vector2f position) {
         Text text = new Text();
-        text.setFont("bahnschrift")
-                .setFontSize(size)
+        text.setFontSize(size)
                 .setReference(EDirection.Up)
                 .setAlignment(ETextAlignment.Center)
                 .setPosition(position);
@@ -132,8 +131,7 @@ public class MultiWindowScene extends Scene {
             setClearColor(color.x, color.y, 0.3f);
 
             text = new Text();
-            text.setFont("bahnschrift")
-                    .setFontSize(48)
+            text.setFontSize(48)
                     .setReference(EDirection.None)
                     .setAlignment(ETextAlignment.Center)
                     .setPosition(new Vector2f(VIRTUAL_WIDTH / 2f, VIRTUAL_HEIGHT / 2f))

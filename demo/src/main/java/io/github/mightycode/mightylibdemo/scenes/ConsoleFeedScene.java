@@ -34,8 +34,7 @@ public class ConsoleFeedScene extends Scene {
         Vector2f windowSize = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
 
         help = new Text();
-        help.setFont("bahnschrift")
-                .setFontSize(30)
+        help.setFontSize(30)
                 .setReference(EDirection.Up)
                 .setAlignment(ETextAlignment.Center)
                 .setPosition(new Vector2f(windowSize.x / 2, windowSize.y * 0.1f))

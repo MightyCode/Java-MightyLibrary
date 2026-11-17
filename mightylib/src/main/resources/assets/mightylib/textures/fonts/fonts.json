@@ -1,0 +1,36 @@
+{
+	"fonts": {
+		"liberationSans": {
+			"texture": "liberationSans",
+			"info": "liberationSans.fnt"
+		},
+		"liberationSansBold": {
+			"texture": "liberationSansBold",
+			"info": "liberationSansBold.fnt"
+		},
+		"liberationSansItalic": {
+			"texture": "liberationSansItalic",
+			"info": "liberationSansItalic.fnt"
+		},
+		"liberationSansBoldItalic": {
+			"texture": "liberationSansBoldItalic",
+			"info": "liberationSansBoldItalic.fnt"
+		},
+		"liberationMono": {
+			"texture": "liberationMono",
+			"info": "liberationMono.fnt"
+		},
+		"liberationMonoBold": {
+			"texture": "liberationMonoBold",
+			"info": "liberationMonoBold.fnt"
+		},
+		"liberationMonoItalic": {
+			"texture": "liberationMonoItalic",
+			"info": "liberationMonoItalic.fnt"
+		},
+		"liberationMonoBoldItalic": {
+			"texture": "liberationMonoBoldItalic",
+			"info": "liberationMonoBoldItalic.fnt"
+		}
+	}
+}

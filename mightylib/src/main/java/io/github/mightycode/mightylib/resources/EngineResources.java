@@ -36,4 +36,35 @@ public final class EngineResources {
     public static List<String> shaders() {
         return SHADERS;
     }
+
+    // ---- Fonts (textures/fonts/fonts.json, atlas in textures/textures.json) ----
+
+    // Liberation Sans (SIL OFL 1.1): the font of the interface, EngineConfig.setDefaultFont
+    public static final String DEFAULT_FONT = "liberationSans";
+    // Liberation Mono: the font of the console, EngineConfig.setConsoleFont
+    public static final String CONSOLE_FONT = "liberationMono";
+
+    // Declared by the engine, but only the two regular ones are loaded by its batch (4 MB of texture each)
+    public static final String DEFAULT_FONT_BOLD = "liberationSansBold";
+    public static final String DEFAULT_FONT_ITALIC = "liberationSansItalic";
+    public static final String DEFAULT_FONT_BOLD_ITALIC = "liberationSansBoldItalic";
+    public static final String CONSOLE_FONT_BOLD = "liberationMonoBold";
+    public static final String CONSOLE_FONT_ITALIC = "liberationMonoItalic";
+    public static final String CONSOLE_FONT_BOLD_ITALIC = "liberationMonoBoldItalic";
+
+    private static final List<String> LOADED_FONTS = List.of(DEFAULT_FONT, CONSOLE_FONT);
+
+    private static final List<String> FONTS = List.of(
+            DEFAULT_FONT, DEFAULT_FONT_BOLD, DEFAULT_FONT_ITALIC, DEFAULT_FONT_BOLD_ITALIC,
+            CONSOLE_FONT, CONSOLE_FONT_BOLD, CONSOLE_FONT_ITALIC, CONSOLE_FONT_BOLD_ITALIC);
+
+    // The fonts the engine declares (the name of the font is the name of its atlas)
+    public static List<String> fonts() {
+        return FONTS;
+    }
+
+    // The fonts the batch of the engine loads
+    public static List<String> loadedFonts() {
+        return LOADED_FONTS;
+    }
 }

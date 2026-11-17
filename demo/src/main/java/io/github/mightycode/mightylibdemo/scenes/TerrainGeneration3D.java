@@ -97,8 +97,7 @@ public class TerrainGeneration3D extends Scene {
         terrainRenderer.load();
 
         originLabel = new Text();
-        originLabel.setFont("arial")
-                .setText("(0, 0, 0)")
+        originLabel.setText("(0, 0, 0)")
                 .setFontSize(60);
 
         originLabel.setColor(ColorList.Red());

@@ -1,8 +1,24 @@
 {
-    "batchs" : [
+    "batchs": [
         {
-            "type" : "ShaderData",
-            "files" : [
+            "type": "TextureData",
+            "files": [
+                "liberationSans",
+                "liberationMono"
+            ],
+            "regex": []
+        },
+        {
+            "type": "FontFace",
+            "files": [
+                "liberationSans",
+                "liberationMono"
+            ],
+            "regex": []
+        },
+        {
+            "type": "ShaderData",
+            "files": [
                 "colorShape2D",
                 "colorEllipse2D",
                 "texture2D",
@@ -15,8 +31,7 @@
                 "multiColoredLighting3D",
                 "textureMultipleLights3D"
             ],
-            "regex" : [
-            ]
+            "regex": []
         }
     ]
 }

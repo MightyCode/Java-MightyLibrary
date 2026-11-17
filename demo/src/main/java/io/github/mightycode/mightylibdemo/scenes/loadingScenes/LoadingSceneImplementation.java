@@ -24,8 +24,7 @@ public class LoadingSceneImplementation extends TemplateSceneLoading {
         Vector2i windowSize = context().getWindow().getInfo().getSizeCopy();
 
         text = new Text();
-        text.setFont("bahnschrift")
-                .setAlignment(ETextAlignment.Center)
+        text.setAlignment(ETextAlignment.Center)
                 .setColor(ColorList.White())
                 .setReference(EDirection.None)
                 .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.1f))

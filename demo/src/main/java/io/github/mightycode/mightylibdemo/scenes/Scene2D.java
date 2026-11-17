@@ -115,8 +115,7 @@ public class Scene2D extends Scene {
 
         Vector2i size = context().getWindow().getInfo().getSizeRef();
 
-        text.setFont("bahnschrift")
-                .setFontSize(60)
+        text.setFontSize(60)
                 .setReference(EDirection.RightDown)
                 .setAlignment(ETextAlignment.Right)
                 .setPosition(new Vector2f(size.x, size.y))

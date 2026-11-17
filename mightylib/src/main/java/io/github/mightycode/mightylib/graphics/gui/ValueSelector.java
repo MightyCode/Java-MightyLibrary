@@ -46,16 +46,14 @@ public abstract class ValueSelector<T> {
         float textY = position.y + height * 0.125f;
 
         typeSelectedName = new Text();
-        typeSelectedName.setFont("bahnschrift")
-                .setColor(ColorList.Blue())
+        typeSelectedName.setColor(ColorList.Blue())
                 .setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.Up)
                 .setPosition(new Vector2f(position.x + width * 0.515f, textY))
                 .setFontSize(20);
 
         chooseLeft = new BackgroundlessButton(context);
-        chooseLeft.text().setFont("bahnschrift")
-                .setAlignment(ETextAlignment.Center)
+        chooseLeft.text().setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.Up)
                 .setPosition(new Vector2f(position.x + width * 0.21f, textY))
                 .setFontSize(30)

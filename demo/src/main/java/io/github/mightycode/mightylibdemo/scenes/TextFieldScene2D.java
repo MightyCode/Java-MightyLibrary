@@ -33,12 +33,11 @@ public class TextFieldScene2D extends Scene {
         setClearColor(0.1f, 0.1f, 0.12f);
         context().getMouseManager().setCursor(true);
 
-        field = new TextField(context(), 340, 200, 600, 56, "bahnschrift", 30);
+        field = new TextField(context(), 340, 200, 600, 56, engine().config().getDefaultFont(), 30);
         field.setHint("Type something...");
 
         info = new Text();
-        info.setFont("bahnschrift")
-                .setFontSize(28)
+        info.setFontSize(28)
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
                 .setColor(new Color4f(1, 1, 1, 1))

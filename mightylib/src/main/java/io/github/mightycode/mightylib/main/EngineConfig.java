@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.registry.IPlugin;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.ETextureUpload;
@@ -61,7 +62,8 @@ public final class EngineConfig {
     private boolean maxCommandAccessSet;
     private ECommandLevel maxCommandAccess;
     private boolean cheatCommand;
-    private String consoleFont = "bahnschrift";
+    private String defaultFont = EngineResources.DEFAULT_FONT;
+    private String consoleFont = EngineResources.CONSOLE_FONT;
     private int consoleLogCapacity = ConsoleLog.DEFAULT_CAPACITY;
     private boolean consoleLogsShown = true;
     private boolean consoleDataShown;
@@ -254,6 +256,12 @@ public final class EngineConfig {
      */
     public EngineConfig setCheatCommand(boolean cheatCommand) {
         this.cheatCommand = cheatCommand;
+        return this;
+    }
+
+    // Font of a Text that has no setFont, among the fonts loaded at start (the fallback font otherwise)
+    public EngineConfig setDefaultFont(String defaultFont) {
+        this.defaultFont = defaultFont;
         return this;
     }
 
@@ -467,6 +475,7 @@ public final class EngineConfig {
     public boolean isConsoleEnabled() { return getCommandAccess() != null; }
 
     public boolean isCheatCommand() { return cheatCommand; }
+    public String getDefaultFont() { return defaultFont; }
     public String getConsoleFont() { return consoleFont; }
     public int getConsoleLogCapacity() { return consoleLogCapacity; }
 

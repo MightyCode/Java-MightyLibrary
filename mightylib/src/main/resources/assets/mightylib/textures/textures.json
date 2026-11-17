@@ -1,0 +1,46 @@
+{
+	"textures": {
+		"fonts": {
+			"liberationSans": {
+				"file": "liberationSans_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"liberationSansBold": {
+				"file": "liberationSansBold_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"liberationSansItalic": {
+				"file": "liberationSansItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"liberationSansBoldItalic": {
+				"file": "liberationSansBoldItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"liberationMono": {
+				"file": "liberationMono_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"liberationMonoBold": {
+				"file": "liberationMonoBold_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"liberationMonoItalic": {
+				"file": "liberationMonoItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"liberationMonoBoldItalic": {
+				"file": "liberationMonoBoldItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			}
+		}
+	}
+}

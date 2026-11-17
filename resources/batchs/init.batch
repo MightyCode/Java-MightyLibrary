@@ -3,8 +3,6 @@
         {
             "type" : "TextureData",
             "files" : [
-                "arial",
-                "bahnschrift",
                 "whitePixel",
                 "slime",
                 "painting",
@@ -22,13 +20,6 @@
             "regex" : [
             ],
             "gpu" : false
-        },
-        {
-            "type" : "FontFace",
-            "files" : [],
-            "regex" : [
-                ".*"
-            ]
         },
         {
             "type" : "SoundData",
