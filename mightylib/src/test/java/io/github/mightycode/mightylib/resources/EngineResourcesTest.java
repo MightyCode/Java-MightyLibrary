@@ -156,4 +156,12 @@ class EngineResourcesTest {
     void theLicenseOfTheFontsIsNextToTheAtlas() {
         assertTrue(readIfFile("textures/fonts/OFL.txt").contains("SIL OPEN FONT LICENSE Version 1.1"));
     }
+
+    @Test
+    void theGamepadMappingsAreAtTheRoot() {
+        String mappings = readIfFile(EngineResources.GAMEPAD_MAPPINGS);
+        assertNotNull(mappings, EngineResources.GAMEPAD_MAPPINGS);
+        assertTrue(mappings.contains(",platform:Windows"), "SDL_GameControllerDB format");
+        assertTrue(readIfFile("gamecontrollerdb.LICENSE.txt").contains("Permission is granted"), "zlib license");
+    }
 }

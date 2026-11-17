@@ -14,6 +14,12 @@ public final class EngineResources {
     // Loaded by Resources.load before the first batch of the game, never unloaded
     public static final String ENGINE_BATCH = "mightylib";
 
+    // ---- Files ----
+
+    // Gamepad mappings (SDL_GameControllerDB) at the root of the sources, read by ContextManager: the one of the
+    // highest source that has it is used
+    public static final String GAMEPAD_MAPPINGS = "gamecontrollerdb.txt";
+
     // ---- Shaders (shaders/<version>/shaders.json) ----
 
     public static final String COLOR_SHAPE_2D = "colorShape2D";
