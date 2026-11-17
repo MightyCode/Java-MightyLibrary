@@ -220,11 +220,14 @@ public final class Resources {
         if (loadingMethod instanceof BatchResourcesMethod){
             // The batch descriptions first: they are loaded immediately
             loadAllOfType(BatchResources.class);
+            loadEngineBatch();
             loadBatch(((BatchResourcesMethod) loadingMethod).firstBatch);
         } else {
             for (ResourceLoader loader : loaders){
                 loadAllOfType(loader.getType());
             }
+            // Everything is loaded already: the batch keeps its reference, as with the batch method
+            loadEngineBatch();
         }
 
         // Main context steps may depend on worker results, so keep processing until everything is done
@@ -246,6 +249,26 @@ public final class Resources {
         finishLoading();
     }
 
+
+    // The resources of the engine (EngineResources.ENGINE_BATCH), before the first batch of the game, never unloaded
+    private void loadEngineBatch() {
+        // Without batch descriptions (no BatchLoader), there is no batch to load
+        if (!resources.containsKey(BatchResources.class))
+            return;
+
+        if (!isExistingResource(BatchResources.class, EngineResources.ENGINE_BATCH)) {
+            // The source of the engine is missing or incomplete (folder of development, replaced classpath)
+            String message = "the batch of the engine " + EngineResources.ENGINE_BATCH + " is in no source ("
+                    + sources + ")";
+            if (strict)
+                throw new IllegalStateException("Strict resources: " + message);
+
+            System.err.println("--" + message + ", the shaders and fonts of the engine are not loaded");
+            return;
+        }
+
+        batches.load(EngineResources.ENGINE_BATCH);
+    }
 
     private void finishLoading() {
         if (glElementSink != null)

@@ -39,8 +39,7 @@ public class EngineServices2D extends Scene {
 
     private Text text(Vector2f position, float size) {
         Text text = new Text();
-        text.setFont("bahnschrift")
-                .setFontSize(size)
+        text.setFontSize(size)
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
                 .setPosition(position)

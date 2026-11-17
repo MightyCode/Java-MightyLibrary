@@ -75,8 +75,7 @@ public class ResourceSourcesScene2D extends Scene {
 
     private void text(float x, float y, float size, String content) {
         Text text = new Text();
-        text.setFont("bahnschrift")
-                .setFontSize(size)
+        text.setFontSize(size)
                 .setReference(EDirection.LeftUp)
                 .setColor(new Color4f(1, 1, 1, 1))
                 .setPosition(new Vector2f(x, y))

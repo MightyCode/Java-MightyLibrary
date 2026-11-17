@@ -2,18 +2,6 @@
 	"textures" : {
 		"enemies" : {
 		},
-		"fonts" : {
-			"arial" : {
-				"file": "arial.png",
-				"qualityType" : "realistic",
-				"textureType" : "rectangle"
-			},
-			"bahnschrift" : {
-				"file" : "bahnschrift_0.png",
-				"qualityType" : "realistic",
-				"textureType" : "rectangle"
-			}
-		},
 		 "gui": {
 			 "button-unhover" : {
 				 "file": "GUIButton.png",

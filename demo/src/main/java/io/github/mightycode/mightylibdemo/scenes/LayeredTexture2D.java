@@ -65,8 +65,7 @@ public class LayeredTexture2D extends Scene {
         renderer.setPosition(new Vector2f(index * (SIZE + 50) + 40, 80));
 
         Text text = new Text();
-        text.setFont("bahnschrift")
-                .setFontSize(24)
+        text.setFontSize(24)
                 .setReference(EDirection.LeftUp)
                 .setColor(new Color4f(1, 1, 1, 1))
                 .setPosition(new Vector2f(index * (SIZE + 50) + 40, 80 + SIZE + 20))

@@ -42,8 +42,7 @@ public class DisplayModesScene extends Scene {
 
     private static Text text(int size, Vector2f position) {
         Text text = new Text();
-        text.setFont("bahnschrift")
-                .setFontSize(size)
+        text.setFontSize(size)
                 .setReference(EDirection.Up)
                 .setAlignment(ETextAlignment.Center)
                 .setPosition(position);

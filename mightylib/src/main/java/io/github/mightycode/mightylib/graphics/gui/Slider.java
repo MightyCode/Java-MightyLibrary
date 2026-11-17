@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;
@@ -47,7 +48,7 @@ public abstract class Slider {
 
         maxPrecision = -1;
 
-        button = new RectangleRenderer("colorShape2D");
+        button = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         button.setColorMode(ColorList.Grey());
         setButtonSize(button, referenceSize);
 
@@ -55,7 +56,7 @@ public abstract class Slider {
 
         button.setReferenceCamera(referenceCamera);
 
-        bar = new RectangleRenderer("colorShape2D");
+        bar = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         bar.setColorMode(ColorList.DarkGrey());
         bar.setReferenceCamera(referenceCamera);
         setBarSize(bar, size);

@@ -209,8 +209,7 @@ public class Scene3D extends Scene {
         heightMapRenderer.load();
 
         originLabel = new Text();
-        originLabel.setFont("arial")
-                .setText("(0, 0, 0)")
+        originLabel.setText("(0, 0, 0)")
                         .setFontSize(60);
 
         originLabel.setColor(ColorList.Red());
@@ -224,7 +223,7 @@ public class Scene3D extends Scene {
             System.err.println("--Scene3D : " + message);
 
             missingBackpackLabel = new Text();
-            missingBackpackLabel.setFont("arial").setFontSize(20).setText(message);
+            missingBackpackLabel.setFontSize(20).setText(message);
             missingBackpackLabel.setColor(ColorList.Red());
             missingBackpackLabel.setPosition(new Vector2f(5, 120));
             return;

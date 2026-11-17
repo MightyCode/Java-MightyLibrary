@@ -49,8 +49,7 @@ public class TextPaddingScene extends Scene {
 
     private static Text text(EDirection reference, ETextAlignment alignment, Vector4f padding, Vector2f position) {
         Text text = new Text();
-        text.setFont("bahnschrift")
-                .setFontSize(40)
+        text.setFontSize(40)
                 .setReference(reference)
                 .setAlignment(alignment)
                 .setColor(new Color4f(1, 1, 1, 1))

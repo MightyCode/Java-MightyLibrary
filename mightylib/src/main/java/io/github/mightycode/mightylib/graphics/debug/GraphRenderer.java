@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.debug;
 
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
@@ -35,7 +36,7 @@ public final class GraphRenderer {
 
     public GraphRenderer(Camera2D referenceCamera){
         // Setup the renderer
-        renderer = new MeshRenderer("colorShape2D", true);
+        renderer = new MeshRenderer(EngineResources.COLOR_SHAPE_2D, true);
         renderer.setColorMode(ColorList.Blue());
         renderer.getMesh().setEboStorage(Mesh.DYNAMIC_STORE);
         renderer.getMesh().setEbo(new int[0]);

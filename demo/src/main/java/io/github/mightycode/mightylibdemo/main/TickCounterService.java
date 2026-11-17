@@ -79,8 +79,7 @@ public final class TickCounterService implements IEngineService {
             if (overlay == null) {
                 Vector2f size = new Vector2f(overlayView.context().getWindow().getInfo().getVirtualSizeRef());
                 overlay = new Text();
-                overlay.setFont("bahnschrift")
-                        .setFontSize(24)
+                overlay.setFontSize(24)
                         .setReference(EDirection.RightDown)
                         .setPosition(new Vector2f(size.x - 10, size.y - 10))
                         .setColor(new Color4f(1f, 0.85f, 0.3f, 1f))

@@ -93,8 +93,7 @@ public class GUIWidgetsScene extends Scene {
         square.setColorMode(new Color4f(0.95f, 0.8f, 0.2f, 1f));
 
         info = new Text();
-        info.setFont("bahnschrift")
-                .setFontSize(24)
+        info.setFontSize(24)
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
                 .setColor(new Color4f(1, 1, 1, 1))

@@ -29,7 +29,7 @@ public final class DebugInfoCamera2D implements IUpdatableDisplayable {
         text.setReference(EDirection.LeftUp).setAlignment(ETextAlignment.Left)
                 .setPosition(new Vector2f(0, 0))
                 .setColor(ColorList.Purple())
-                .setFont("arial").setFontSize(25);
+                .setFontSize(25);
 
         info.add("id");
     }

@@ -67,8 +67,7 @@ public class CollisionGridScene2D extends Scene {
         rectangle = new RectangleRenderer("colorShape2D");
 
         info = new Text();
-        info.setFont("bahnschrift")
-                .setFontSize(24)
+        info.setFontSize(24)
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
                 .setColor(new Color4f(1, 1, 1, 1))

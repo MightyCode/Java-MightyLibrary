@@ -1,0 +1,46 @@
+{
+	"textures": {
+		"fonts": {
+			"engineSans": {
+				"file": "engineSans_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"engineSansBold": {
+				"file": "engineSansBold_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"engineSansItalic": {
+				"file": "engineSansItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"engineSansBoldItalic": {
+				"file": "engineSansBoldItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"engineMono": {
+				"file": "engineMono_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"engineMonoBold": {
+				"file": "engineMonoBold_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"engineMonoItalic": {
+				"file": "engineMonoItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			},
+			"engineMonoBoldItalic": {
+				"file": "engineMonoBoldItalic_0.png",
+				"qualityType": "realistic",
+				"textureType": "rectangle"
+			}
+		}
+	}
+}

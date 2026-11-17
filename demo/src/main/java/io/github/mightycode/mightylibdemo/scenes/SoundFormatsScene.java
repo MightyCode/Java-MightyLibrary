@@ -48,8 +48,7 @@ public class SoundFormatsScene extends Scene {
 
     private Text createText(Vector2f position, int size) {
         Text text = new Text();
-        text.setFont("bahnschrift")
-                .setFontSize(size)
+        text.setFontSize(size)
                 .setReference(EDirection.Up)
                 .setAlignment(ETextAlignment.Center)
                 .setPosition(position)

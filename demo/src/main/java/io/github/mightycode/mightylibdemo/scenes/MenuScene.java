@@ -162,8 +162,7 @@ public class MenuScene extends Scene {
         Vector2i windowSize = context().getWindow().getInfo().getVirtualSizeCopy();
 
         title = new Text();
-        title.setFont("bahnschrift")
-                .setAlignment(ETextAlignment.Center)
+        title.setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
                 .setFontSize(80)
                 .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.09f))
@@ -177,10 +176,10 @@ public class MenuScene extends Scene {
         float bottom = windowSize.y * 0.86f;
 
         float sortWidth = 230f;
-        field = new TextField(context(), left, top, listWidth - sortWidth - 10f, fieldHeight, "bahnschrift", 30);
+        field = new TextField(context(), left, top, listWidth - sortWidth - 10f, fieldHeight, engine().config().getDefaultFont(), 30);
         field.setHint("Filter the scenes...");
 
-        sceneList = new ScrollList(context(), left, listTop, listWidth, bottom - listTop, 50f, "bahnschrift", 30);
+        sceneList = new ScrollList(context(), left, listTop, listWidth, bottom - listTop, 50f, engine().config().getDefaultFont(), 30);
         sceneList.setupActivationActions(ActionId.LEFT_CLICK);
         sceneList.setItems(labelsOf(shown));
 
@@ -194,16 +193,14 @@ public class MenuScene extends Scene {
         panel.setSizePix(panelWidth, bottom - top);
 
         panelTitle = new Text();
-        panelTitle.setFont("bahnschrift")
-                .setFontSize(38)
+        panelTitle.setFontSize(38)
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
                 .setColor(TEXT_COLOR)
                 .setPosition(new Vector2f(panelLeft + padding, top + padding));
 
         panelText = new Text();
-        panelText.setFont("bahnschrift")
-                .setFontSize(28)
+        panelText.setFontSize(28)
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
                 .setColor(TEXT_COLOR)
@@ -211,8 +208,7 @@ public class MenuScene extends Scene {
                 .setPosition(new Vector2f(panelLeft + padding, top + padding + 70f));
 
         buttonQuit = new BackgroundlessButton(context());
-        buttonQuit.text().setFont("bahnschrift")
-                .setAlignment(ETextAlignment.Center)
+        buttonQuit.text().setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
                 .setFontSize(40)
                 .setPosition(new Vector2f(windowSize.x * 0.5f, windowSize.y * 0.93f))
@@ -221,8 +217,7 @@ public class MenuScene extends Scene {
         buttonQuit.overlapsText().setColor(new Color4f(0.3f)).setText("->Quit<-");
 
         buttonSort = new BackgroundlessButton(context());
-        buttonSort.text().setFont("bahnschrift")
-                .setAlignment(ETextAlignment.Center)
+        buttonSort.text().setAlignment(ETextAlignment.Center)
                 .setReference(EDirection.None)
                 .setFontSize(26)
                 .setPosition(new Vector2f(left + listWidth - sortWidth * 0.5f, top + fieldHeight * 0.5f));

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
+import io.github.mightycode.mightylib.resources.EngineResources;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,10 +26,10 @@ public final class GamepadManager {
     public static final int ANY_PLAYER = -1;
 
     /**
-     * Optional SDL_GameControllerDB file, a logical path at the root of the sources of the resources, read at startup
-     * (the highest source that has it: not merged, the SDL format is already a whole base).
+     * SDL_GameControllerDB file, a logical path at the root of the sources of the resources, read at startup (the
+     * highest source that has it: not merged, the SDL format is already a whole base). The engine provides one.
      */
-    public static final String MAPPINGS_FILE = "gamecontrollerdb.txt";
+    public static final String MAPPINGS_FILE = EngineResources.GAMEPAD_MAPPINGS;
     public static final int REAL_SLOTS = GLFW_JOYSTICK_LAST + 1;
     public static final int VIRTUAL_SLOTS = 8;
 

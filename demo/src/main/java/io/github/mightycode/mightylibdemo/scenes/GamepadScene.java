@@ -49,8 +49,7 @@ public class GamepadScene extends Scene {
         }
 
         info = new Text();
-        info.setFont("bahnschrift")
-                .setFontSize(22)
+        info.setFontSize(22)
                 .setReference(EDirection.LeftUp)
                 .setColor(ColorList.White())
                 .setPosition(new Vector2f(20, 20));

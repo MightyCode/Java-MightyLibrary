@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -69,14 +70,14 @@ public final class TextField extends GUI {
         model = new TextFieldModel(this, text::measureWidth);
         model.setAvailableWidth(width - 2 * PADDING);
 
-        background = new RectangleRenderer("colorShape2D");
+        background = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         background.setPosition(new Vector2f(x, y));
         background.setSizePix(width, height);
 
-        selection = new RectangleRenderer("colorShape2D");
+        selection = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         selection.setColorMode(new Color4f(0.25f, 0.45f, 0.9f, 0.6f));
 
-        cursor = new RectangleRenderer("colorShape2D");
+        cursor = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         cursor.setColorMode(new Color4f(1f, 1f, 1f, 1f));
 
         clipboard = new IClipboard() {

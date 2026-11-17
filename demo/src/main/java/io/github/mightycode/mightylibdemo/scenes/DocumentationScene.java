@@ -130,8 +130,7 @@ public class DocumentationScene extends Scene {
 
         // Fonts and shaders come from the batch "init", loaded for the whole game
         title = new Text();
-        title.setFont("bahnschrift")
-                .setFontSize(60)
+        title.setFontSize(60)
                 .setReference(EDirection.Up)
                 .setAlignment(ETextAlignment.Center)
                 .setPosition(new Vector2f(windowSize.x / 2, 30))
@@ -139,8 +138,7 @@ public class DocumentationScene extends Scene {
                 .setText(config.getString("title"));
 
         message = new Text();
-        message.setFont("bahnschrift")
-                .setFontSize(28)
+        message.setFontSize(28)
                 .setReference(EDirection.Up)
                 .setAlignment(ETextAlignment.Center)
                 .setPosition(new Vector2f(windowSize.x / 2, 120))

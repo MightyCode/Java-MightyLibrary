@@ -1,0 +1,36 @@
+{
+	"fonts": {
+		"engineSans": {
+			"texture": "engineSans",
+			"info": "engineSans.fnt"
+		},
+		"engineSansBold": {
+			"texture": "engineSansBold",
+			"info": "engineSansBold.fnt"
+		},
+		"engineSansItalic": {
+			"texture": "engineSansItalic",
+			"info": "engineSansItalic.fnt"
+		},
+		"engineSansBoldItalic": {
+			"texture": "engineSansBoldItalic",
+			"info": "engineSansBoldItalic.fnt"
+		},
+		"engineMono": {
+			"texture": "engineMono",
+			"info": "engineMono.fnt"
+		},
+		"engineMonoBold": {
+			"texture": "engineMonoBold",
+			"info": "engineMonoBold.fnt"
+		},
+		"engineMonoItalic": {
+			"texture": "engineMonoItalic",
+			"info": "engineMonoItalic.fnt"
+		},
+		"engineMonoBoldItalic": {
+			"texture": "engineMonoBoldItalic",
+			"info": "engineMonoBoldItalic.fnt"
+		}
+	}
+}

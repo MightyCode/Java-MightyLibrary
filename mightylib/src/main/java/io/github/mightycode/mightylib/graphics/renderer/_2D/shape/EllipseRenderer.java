@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 
@@ -34,7 +35,7 @@ public final class EllipseRenderer extends RectangleRenderer {
     }
 
     public EllipseRenderer(){
-        this("colorEllipse2D", new ShaderEllipseProperty());
+        this(EngineResources.COLOR_ELLIPSE_2D, new ShaderEllipseProperty());
     }
 
     @Override
