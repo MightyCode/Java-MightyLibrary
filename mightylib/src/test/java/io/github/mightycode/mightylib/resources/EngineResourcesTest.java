@@ -133,6 +133,10 @@ class EngineResourcesTest {
             assertTrue(page.contains("file=\"" + atlas.substring("textures/fonts/".length()) + "\""), name + ": " + page);
             assertEquals(1, FileMethods.readString(engine, info).lines().filter(l -> l.startsWith("page ")).count(),
                     name + ": FontFile reads one page");
+            // An atlas is a modified version of the font: the reserved name of the OFL ("Liberation") is not used
+            assertFalse(name.toLowerCase().contains("liberation"), name);
+            assertFalse(FileMethods.readString(engine, info).lines().findFirst().orElse("").contains("Liberation"),
+                    name + ": face of the .fnt");
             assertTrue(file.getCharacter('A').getxAdvance() > 0, name);
             for (int arrow = 0x2190; arrow <= 0x2195; ++arrow)
                 assertTrue(file.getCharacter(arrow).getWidth() > 0, name + ": missing arrow " + arrow);

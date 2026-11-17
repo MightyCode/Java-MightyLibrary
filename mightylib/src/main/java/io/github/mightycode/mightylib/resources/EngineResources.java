@@ -45,18 +45,19 @@ public final class EngineResources {
 
     // ---- Fonts (textures/fonts/fonts.json, atlas in textures/textures.json) ----
 
-    // Liberation Sans (SIL OFL 1.1): the font of the interface, EngineConfig.setDefaultFont
-    public static final String DEFAULT_FONT = "liberationSans";
-    // Liberation Mono: the font of the console, EngineConfig.setConsoleFont
-    public static final String CONSOLE_FONT = "liberationMono";
+    // Atlases derived from Liberation Sans 2.1.4 (SIL OFL 1.1; a change of format is a modified version, so the
+    // reserved name "Liberation" is not used): the font of the interface, EngineConfig.setDefaultFont
+    public static final String DEFAULT_FONT = "engineSans";
+    // Derived from Liberation Mono 2.1.4: the font of the console, EngineConfig.setConsoleFont
+    public static final String CONSOLE_FONT = "engineMono";
 
     // Declared by the engine, but only the two regular ones are loaded by its batch (4 MB of texture each)
-    public static final String DEFAULT_FONT_BOLD = "liberationSansBold";
-    public static final String DEFAULT_FONT_ITALIC = "liberationSansItalic";
-    public static final String DEFAULT_FONT_BOLD_ITALIC = "liberationSansBoldItalic";
-    public static final String CONSOLE_FONT_BOLD = "liberationMonoBold";
-    public static final String CONSOLE_FONT_ITALIC = "liberationMonoItalic";
-    public static final String CONSOLE_FONT_BOLD_ITALIC = "liberationMonoBoldItalic";
+    public static final String DEFAULT_FONT_BOLD = "engineSansBold";
+    public static final String DEFAULT_FONT_ITALIC = "engineSansItalic";
+    public static final String DEFAULT_FONT_BOLD_ITALIC = "engineSansBoldItalic";
+    public static final String CONSOLE_FONT_BOLD = "engineMonoBold";
+    public static final String CONSOLE_FONT_ITALIC = "engineMonoItalic";
+    public static final String CONSOLE_FONT_BOLD_ITALIC = "engineMonoBoldItalic";
 
     private static final List<String> LOADED_FONTS = List.of(DEFAULT_FONT, CONSOLE_FONT);
 

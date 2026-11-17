@@ -6,7 +6,10 @@
 BMFont writes an absolute page path in the .fnt and widens the advance of a glyph that overhangs its cell
 (Liberation Mono: A, W, %, _ get 21 instead of 19), which breaks the alignment of a monospace console. This script
 puts back the file name of the page, and gives every glyph of Liberation Mono that is not narrower the advance of
-the cell. The .ttf and their license stay out of the jar; the jar only gets the atlas and OFL.txt.
+the cell. The atlas is a modified version of the font (OFL: a change of format is one), so its name is
+engineSans / engineMono, not the reserved name "Liberation": the .bmfc keep the real name of the font (BMFont
+finds it by its name, the .ttf is installed or given by fontFile), the "face" of the .fnt is renamed here. The .ttf and their license stay out of the jar; the
+jar only gets the atlas and OFL.txt.
 """
 import os
 import re
@@ -23,6 +26,7 @@ MONO_CELL = 19
 
 def fix_fnt(fnt: Path, mono: bool) -> None:
     text = fnt.read_text(encoding="utf-8")
+    text = re.sub(r'face="Liberation (Sans|Mono)"', r'face="Engine \1"', text, count=1)
     text = re.sub(r'file="[^"]*"', f'file="{fnt.stem}_0.png"', text, count=1)
     if mono:
         text = re.sub(r"xadvance=(\d+)",
