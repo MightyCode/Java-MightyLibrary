@@ -1,61 +1,11 @@
 {
 	"shaders": {
-		"colorShape2D": {
-			"files": [
-				"2D/essential/colorShape2DV.glsl",
-				"2D/essential/colorShape2DF.glsl"
-			],
-			"path": "",
-			"tags" : ["2D"]
-		},
-		"multiColoredShape2D": {
-			"files": [
-				"2D/complex/multiColoredShape2DV.glsl",
-				"2D/complex/multiColoredShape2DF.glsl"
-			],
-			"tags" : ["2D"]
-		},
 		"customStar2D": {
 			"files": [
 				"2D/complex/customStar2DV.glsl",
 				"2D/complex/customStar2DF.glsl"
 			],
 			"tags" : ["2D"]
-		},
-		"colorEllipse2D": {
-			"files": [
-				"2D/essential/colorEllipse2DV.glsl",
-				"2D/essential/colorEllipse2DF.glsl"
-			],
-			"tags" : ["2D"]
-		},
-		"texture2D": {
-			"files": [
-				"2D/essential/texture2DV.glsl",
-				"2D/essential/texture2DF.glsl"
-			],
-			"tags" : ["2D"]
-		},
-		"colorShape3D": {
-			"files": [
-				"3D/essential/colorShape3DV.glsl",
-				"3D/essential/colorShape3DF.glsl"
-			],
-			"tags" : ["3D"]
-		},
-		"skybox": {
-			"files": [
-				"3D/skybox/skyboxV.glsl",
-				"3D/skybox/skyboxF.glsl"
-			],
-			"tags" : ["3D"]
-		},
-		"texture3D": {
-			"files": [
-				"3D/essential/texture3DV.glsl",
-				"3D/essential/texture3DF.glsl"
-			],
-			"tags" : ["3D"]
 		},
 		"textureDisplacement3D": {
 			"files": [
@@ -68,13 +18,6 @@
 			"files": [
 				"3D/complex/colorLighting3DV.glsl",
 				"3D/complex/colorLighting3DF.glsl"
-			],
-			"tags" : ["3D"]
-		},
-		"multiColoredLighting3D": {
-			"files": [
-				"3D/complex/multiColoredLighting3DV.glsl",
-				"3D/complex/multiColoredLighting3DF.glsl"
 			],
 			"tags" : ["3D"]
 		},
@@ -91,27 +34,6 @@
 				"3D/complex/textureMaterial3DF.glsl"
 			],
 			"tags" : ["3D"]
-		},
-		"textureMultipleLights3D": {
-			"files": [
-				"3D/complex/textureMaterial3DV.glsl",
-				"3D/complex/textureMultipleLights3DF.glsl"
-			],
-			"tags" : ["3D"]
-		},
-		"postProcessing": {
-			"files": [
-				"framebuffers/postProcessingV.glsl",
-				"framebuffers/postProcessingF.glsl"
-			],
-			"tags" : ["2D"]
-		},
-		"coloredText" : {
-			"files" : [
-				"font/coloredTextV.glsl",
-				"font/coloredTextF.glsl"
-			],
-			"tags" : ["2D"]
 		}
 	}
 }

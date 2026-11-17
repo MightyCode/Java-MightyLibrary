@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -68,7 +69,7 @@ public abstract class ValueSelector<T> {
 
         chooseRight.copyTextToOverlapping().overlapsText().setColor(new Color4f(0.8f));
 
-        background = new RectangleRenderer("colorShape2D");
+        background = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         background.setColorMode(ColorList.White());
         background.setPosition(new Vector2f(position));
         background.setSizePix(width, height);

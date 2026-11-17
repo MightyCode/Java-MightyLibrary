@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -80,17 +81,17 @@ final class ConsolePanel {
         this.editor = console.getEditor();
         this.fontName = console.getFontName();
 
-        background = new RectangleRenderer("colorShape2D");
+        background = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         background.setColorMode(backgroundColor);
-        inputBackground = new RectangleRenderer("colorShape2D");
+        inputBackground = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         this.inputBackgroundColor = inputBackgroundColor;
         inputBackgroundValue = inputBackground.setColorMode(inputBackgroundColor);
-        cursor = new RectangleRenderer("colorShape2D");
+        cursor = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         cursor.setColorMode(new Color4f(1f, 1f, 1f, 0.85f));
-        inputSelection = new RectangleRenderer("colorShape2D");
+        inputSelection = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         inputSelection.setColorMode(ConsoleColors.SELECTION);
 
-        indicatorBackground = new RectangleRenderer("colorShape2D");
+        indicatorBackground = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         indicatorBackground.setColorMode(ConsoleColors.INDICATOR_BACKGROUND);
         indicatorText = createText();
         indicatorText.setColor(ConsoleColors.INDICATOR);
@@ -272,7 +273,7 @@ final class ConsolePanel {
                 continue;
 
             if (used == highlights.size()) {
-                RectangleRenderer highlight = new RectangleRenderer("colorShape2D");
+                RectangleRenderer highlight = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
                 highlight.setColorMode(ConsoleColors.SELECTION);
                 highlights.add(highlight);
             }

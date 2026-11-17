@@ -9,6 +9,7 @@ import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyRepeat;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.main.WindowContext;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -83,12 +84,12 @@ public final class ScrollList {
             rows.add(row);
         }
 
-        scrollTrack = new RectangleRenderer("colorShape2D");
+        scrollTrack = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         scrollTrack.setColorMode(new Color4f(0f, 0f, 0f, 0.15f));
         scrollTrack.setPosition(new Vector2f(x + width - SCROLLBAR_WIDTH, y));
         scrollTrack.setSizePix(SCROLLBAR_WIDTH, height);
 
-        scrollThumb = new RectangleRenderer("colorShape2D");
+        scrollThumb = new RectangleRenderer(EngineResources.COLOR_SHAPE_2D);
         scrollThumb.setColorMode(new Color4f(0f, 0f, 0f, 0.5f));
         scrollThumb.setPosition(new Vector2f(x + width - SCROLLBAR_WIDTH, y));
         scrollThumb.setSizePix(SCROLLBAR_WIDTH, height);

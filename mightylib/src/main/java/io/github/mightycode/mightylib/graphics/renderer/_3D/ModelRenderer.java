@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.models.Model;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
@@ -19,7 +20,6 @@ import java.util.List;
  * Each mesh binds its diffuse map on unit 0 and its specular map on unit 1.
  */
 public final class ModelRenderer extends Renderer {
-    public static final String DEFAULT_SHADER = "textureMultipleLights3D";
     public static final String DEFAULT_DIFFUSE_UNIFORM = "material.diffuse";
     public static final String DEFAULT_SPECULAR_UNIFORM = "material.specular";
     public static final String SHININESS_UNIFORM = "material.shininess";
@@ -45,7 +45,7 @@ public final class ModelRenderer extends Renderer {
     private final MeshUpload upload;
 
     public ModelRenderer(String modelName) {
-        this(DEFAULT_SHADER, modelName);
+        this(EngineResources.TEXTURE_MULTIPLE_LIGHTS_3D, modelName);
     }
 
     public ModelRenderer(String shaderName, String modelName) {

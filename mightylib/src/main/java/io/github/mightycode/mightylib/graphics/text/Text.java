@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -42,7 +43,7 @@ public final class Text extends MeshRenderer {
     private final ShaderValue color;
 
     public Text() {
-        super("coloredText", true);
+        super(EngineResources.COLORED_TEXT, true);
 
         fontSize = 10.0f;
 

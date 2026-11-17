@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer._3D.terrain;
 
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.models.ModelMesh;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 
@@ -12,7 +13,7 @@ public final class TerrainRenderer extends MeshRenderer {
     private final ModelMesh mesh;
 
     public TerrainRenderer(ModelMesh mesh, boolean willUpdateFrequently) {
-        super("multiColoredLighting3D", true);
+        super(EngineResources.MULTI_COLORED_LIGHTING_3D, true);
         this.mesh = mesh;
         this.willUpdateFrequently = willUpdateFrequently;
     }

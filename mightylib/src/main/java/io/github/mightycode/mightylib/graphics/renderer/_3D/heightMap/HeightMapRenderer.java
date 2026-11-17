@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer._3D.heightMap;
 
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector3f;
@@ -39,7 +40,7 @@ public final class HeightMapRenderer extends MeshRenderer {
 
     private final TextureData heightMapTexture;
     public HeightMapRenderer(String heightMapName, boolean willUpdateFrequently) {
-        super("multiColoredLighting3D", true);
+        super(EngineResources.MULTI_COLORED_LIGHTING_3D, true);
         this.heightMapTexture = resources().getResource(TextureData.class, heightMapName);
         heightMapTexture.computeCache();
 

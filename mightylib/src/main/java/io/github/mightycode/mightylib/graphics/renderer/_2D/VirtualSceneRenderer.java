@@ -3,12 +3,13 @@ package io.github.mightycode.mightylib.graphics.renderer._2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.main.WindowInfo;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
+import io.github.mightycode.mightylib.resources.EngineResources;
 
 public final class VirtualSceneRenderer extends RectangleRenderer {
     private final FrameBuffer frameBuffer;
 
     public VirtualSceneRenderer(WindowInfo info, IGLBindable bindable){
-        super("postProcessing");
+        super(EngineResources.POST_PROCESSING);
         frameBuffer = new FrameBuffer(bindable, info.getVirtualSizeRef().x, info.getVirtualSizeRef().y);
     }
 
