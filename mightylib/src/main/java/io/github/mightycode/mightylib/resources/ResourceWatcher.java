@@ -16,6 +16,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -139,7 +140,7 @@ public final class ResourceWatcher {
             for (String source : data.sourcePaths()) {
                 Path path;
                 try {
-                    path = Paths.get(source).toAbsolutePath().normalize();
+                    path = diskFile(source);
                 } catch (InvalidPathException e) {
                     // A source that is not a file path (generated data): nothing to watch
                     continue;
@@ -156,6 +157,22 @@ public final class ResourceWatcher {
         watched.addAll(directories);
         folders = directories;
         return watched;
+    }
+
+    /**
+     * The file on the disk of a source of a data: the file of its logical path in the sources; until every loader
+     * reads through the sources, a path of the disk too.
+     */
+    private Path diskFile(String source) {
+        try {
+            Optional<Path> file = resources.sources().localFile(source);
+            if (file.isPresent())
+                return file.get();
+        } catch (IllegalArgumentException e) {
+            // Absolute: a path of the disk
+        }
+
+        return Paths.get(source).toAbsolutePath().normalize();
     }
 
     private Set<Path> listFolders() {

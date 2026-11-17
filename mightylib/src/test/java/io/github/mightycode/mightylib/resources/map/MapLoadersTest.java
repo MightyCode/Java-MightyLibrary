@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.resources.map;
 
+import io.github.mightycode.mightylib.resources.LoaderTestAccess;
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.resources.ResourceLoader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -22,13 +24,17 @@ class MapLoadersTest {
     private String write(String name, String content) throws IOException {
         Path file = folder.resolve(name);
         Files.write(file, content.getBytes(StandardCharsets.UTF_8));
-        return file.toString();
+        return name;
+    }
+
+    private <L extends ResourceLoader> L loader(L loader) {
+        return LoaderTestAccess.attached(loader, folder);
     }
 
     private TileMap load(String content) throws IOException {
         String path = write("map.tilemap", content);
         TileMap map = new TileMap("map", path);
-        new TileMapLoader().initWithFile(map);
+        loader(new TileMapLoader()).initWithFile(map);
         return map;
     }
 
@@ -80,20 +86,20 @@ class MapLoadersTest {
     void anEmptyMapFileIsRefused() throws IOException {
         String path = write("empty.tilemap", "");
         ResourceException error = assertThrows(ResourceException.class,
-                () -> new TileMapLoader().initWithFile(new TileMap("empty", path)));
+                () -> loader(new TileMapLoader()).initWithFile(new TileMap("empty", path)));
         assertTrue(error.getMessage().contains("empty.tilemap"), error.getMessage());
     }
 
     @Test
     void aNegativeMapSizeIsRefused() throws IOException {
         String path = write("negative.tilemap", "layerSize -1 2\n");
-        assertThrows(ResourceException.class, () -> new TileMapLoader().initWithFile(new TileMap("negative", path)));
+        assertThrows(ResourceException.class, () -> loader(new TileMapLoader()).initWithFile(new TileMap("negative", path)));
     }
 
     @Test
     void aNumberOfLayersThatIsNegativeIsRefused() throws IOException {
         String path = write("negative.tilemap", "layerSize 1 1\nlayerNumber -1 0\n");
-        assertThrows(ResourceException.class, () -> new TileMapLoader().initWithFile(new TileMap("negative", path)));
+        assertThrows(ResourceException.class, () -> loader(new TileMapLoader()).initWithFile(new TileMap("negative", path)));
     }
 
     @Test
@@ -105,7 +111,7 @@ class MapLoadersTest {
     @Test
     void aLayerMissingFromTheFileIsRefused() throws IOException {
         String path = write("missing.tilemap", "layerSize 1 1\nlayerNumber 2 0\nlayer 0\n1\n");
-        assertThrows(ResourceException.class, () -> new TileMapLoader().initWithFile(new TileMap("missing", path)));
+        assertThrows(ResourceException.class, () -> loader(new TileMapLoader()).initWithFile(new TileMap("missing", path)));
     }
 
     @Test
@@ -113,7 +119,7 @@ class MapLoadersTest {
         String path = write("anim.tileset", "animation 2\n3 4 0.5 5 0.25\n7 7 1.5\n");
         TileSet tileSet = new TileSet("anim", path);
 
-        new TileSetLoader().initWithFile(tileSet);
+        loader(new TileSetLoader()).initWithFile(tileSet);
 
         TileSet.TileAnimation first = tileSet.getAnimation(3);
         assertNotNull(first);
@@ -135,7 +141,7 @@ class MapLoadersTest {
         String path = write("empty.tileset", "tilesize 16 16\n");
         TileSet tileSet = new TileSet("empty", path);
 
-        new TileSetLoader().initWithFile(tileSet);
+        loader(new TileSetLoader()).initWithFile(tileSet);
 
         assertEquals("error", tileSet.texture(), "the texture is still the default one");
     }
@@ -143,34 +149,34 @@ class MapLoadersTest {
     @Test
     void parameterLineNeedsTheTwoFlags() throws IOException {
         String path = write("flags.tileset", "parameter true\n");
-        assertThrows(ResourceException.class, () -> new TileSetLoader().initWithFile(new TileSet("flags", path)));
+        assertThrows(ResourceException.class, () -> loader(new TileSetLoader()).initWithFile(new TileSet("flags", path)));
     }
 
     @Test
     void loadersAcceptTheirOwnFilesOnly() {
-        TileMapLoader maps = new TileMapLoader();
+        TileMapLoader maps = loader(new TileMapLoader());
         assertEquals("level", maps.filterFile("res/tilemap/level.tilemap"));
         assertNull(maps.filterFile("res/tilemap/level.tileset"));
         assertNull(maps.filterFile("res/tilemap/level"));
 
-        TileSetLoader sets = new TileSetLoader();
+        TileSetLoader sets = loader(new TileSetLoader());
         assertEquals("ground", sets.filterFile("res/tileset/ground.tileset"));
         assertNull(sets.filterFile("res/tileset/ground.tilemap"));
     }
 
     @Test
     void loadersDescribeTheirType() {
-        assertEquals(TileMap.class, new TileMapLoader().getType());
-        assertEquals("TileMap", new TileMapLoader().getResourceNameType());
-        assertEquals(TileSet.class, new TileSetLoader().getType());
-        assertEquals("TileSet", new TileSetLoader().getResourceNameType());
+        assertEquals(TileMap.class, loader(new TileMapLoader()).getType());
+        assertEquals("TileMap", loader(new TileMapLoader()).getResourceNameType());
+        assertEquals(TileSet.class, loader(new TileSetLoader()).getType());
+        assertEquals("TileSet", loader(new TileSetLoader()).getResourceNameType());
     }
 
     @Test
     void anotherTypeOfDataIsIgnoredByTheLoaders() {
         TileSet notAMap = new TileSet("set", "set.tileset");
-        assertDoesNotThrow(() -> new TileMapLoader().initWithFile(notAMap));
+        assertDoesNotThrow(() -> loader(new TileMapLoader()).initWithFile(notAMap));
         TileMap notASet = new TileMap("map", "map.tilemap");
-        assertDoesNotThrow(() -> new TileSetLoader().initWithFile(notASet));
+        assertDoesNotThrow(() -> loader(new TileSetLoader()).initWithFile(notASet));
     }
 }

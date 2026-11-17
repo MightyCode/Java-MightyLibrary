@@ -1,11 +1,13 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.NoSuchFileException;
 
 
 public final class FileMethods {
@@ -34,7 +36,41 @@ public final class FileMethods {
     }
 
 
-    // Throws a ResourceException when the file is missing or unreadable
+    /**
+     * The text (UTF-8) of the file at this logical path, served by the highest source that has it; lines ended by
+     * '\n'. Throws a ResourceException when no source has it or it is unreadable.
+     */
+    public static String readString(ResourceSources sources, String path) {
+        StringBuilder source = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(sources.open(path), StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                source.append(line).append('\n');
+            }
+        } catch (NoSuchFileException e) {
+            throw new ResourceException("file not found: " + path);
+        } catch (IOException e) {
+            throw new ResourceException("can't read the file " + path, e);
+        } catch (IllegalArgumentException e) {
+            // Absolute or with "..": written in a description
+            throw new ResourceException(e.getMessage());
+        }
+
+        return source.toString();
+    }
+
+    // Throws a ResourceException when no source has the file, or it is unreadable or not a JSON object
+    public static JSONObject readJSONObject(ResourceSources sources, String path) {
+        String content = readString(sources, path);
+        try {
+            return new JSONObject(content);
+        } catch (JSONException e) {
+            throw new ResourceException("invalid JSON in " + path, e);
+        }
+    }
+
+    // A file of the disk. Throws a ResourceException when the file is missing or unreadable
     public static String readFileAsString(String filePath) {
         StringBuilder source = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(

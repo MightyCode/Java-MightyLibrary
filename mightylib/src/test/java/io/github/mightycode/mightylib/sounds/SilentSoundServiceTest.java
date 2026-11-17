@@ -2,13 +2,26 @@ package io.github.mightycode.mightylib.sounds;
 
 import io.github.mightycode.mightylib.TestFiles;
 import org.joml.Vector3f;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 // The sound without device: sources, their life, the gain tree
 class SilentSoundServiceTest {
-    private static final String GAIN_TREE = TestFiles.file("sounds/sounds.gaintree");
+    private static final JSONObject GAIN_TREE = readGainTree();
+
+    private static JSONObject readGainTree() {
+        try {
+            return new JSONObject(Files.readString(TestFiles.path("sounds/sounds.gaintree")));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
 
     private static SoundSourceCreationInfo info(String name, boolean owned) {
         SoundSourceCreationInfo info = new SoundSourceCreationInfo();

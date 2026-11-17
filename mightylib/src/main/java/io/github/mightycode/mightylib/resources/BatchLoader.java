@@ -22,7 +22,7 @@ public final class BatchLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, resources().folder() + "batchs", List.of());
+        exploreResourcesFile(data, "batchs", List.of());
     }
 
     @Override
@@ -46,6 +46,6 @@ public final class BatchLoader extends ResourceLoader {
             return;
 
         BatchResources batch = (BatchResources) dataType;
-        batch.setJsonObject(FileMethods.readJSONObject(batch.path()));
+        batch.setJsonObject(FileMethods.readJSONObject(resources().sources(), batch.path()));
     }
 }

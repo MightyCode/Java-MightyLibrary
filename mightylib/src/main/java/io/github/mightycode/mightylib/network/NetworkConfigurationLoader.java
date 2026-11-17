@@ -25,7 +25,7 @@ public final class NetworkConfigurationLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        exploreResourcesFile(data, CONFIG_FOLDER);
+        exploreDiskFolder(data, CONFIG_FOLDER);
     }
 
     @Override

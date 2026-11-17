@@ -22,7 +22,7 @@ public final class AnimationDataLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, resources().folder());
+        exploreResourcesFile(data, "");
     }
 
     @Override
@@ -54,7 +54,7 @@ public final class AnimationDataLoader extends ResourceLoader {
         AnimationData animationData = (AnimationData)dataType;
 
         String path = animationData.path();
-        String data = FileMethods.readFileAsString(path);
+        String data = FileMethods.readString(resources().sources(), path);
         String[] parts = data.split("\n");
 
         if (parts.length <= SIZE_FRAME_POS)

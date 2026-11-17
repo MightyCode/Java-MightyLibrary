@@ -1,10 +1,16 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.source.IResourceSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import io.github.mightycode.mightylib.resources.source.SourceEntry;
+
 import java.io.File;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Finds the data of one type (DataType) in the files and reads them (preload, maybe on a worker). Registered by a
@@ -88,17 +94,99 @@ public abstract class ResourceLoader {
         return path.substring(index);
     }
 
-    // Every file under currentPath (or this file), the batch folders skipped
+    // Every file under the logical folder currentPath ("" for the root) or this file, the batch folders skipped
     public final void exploreResourcesFile(Map<String, DataType> data, String currentPath){
         exploreResourcesFile(data, currentPath, DEFAULT_IGNORED_FOLDERS);
     }
 
     /**
-     * Every file under currentPath (or this file) given to filterFile, then to fileDetected when kept. The folders
-     * with one of these names are skipped, at any depth (currentPath itself included).
+     * Every file under the logical folder currentPath ("" for the root) or this file, in every source of the
+     * resources, given to filterFile then to fileDetected when kept, with its logical path. The folders with one of
+     * these names are skipped, at any depth (currentPath itself included).
+     *
+     * <p>A path in several sources is given once (the highest source serves it). Two paths giving the same name in
+     * two sources: the data of the highest source is kept, one line "--... overrides ...", an exception in strict
+     * mode. In one source, the loader decides (the last detected usually wins).
      */
     public final void exploreResourcesFile(Map<String, DataType> data, String currentPath,
                                            Collection<String> ignoredFolders){
+        Resources resources = resources();
+        new Exploration(resources.sources(), data, ignoredFolders, resources.isStrict())
+                .explore(ResourceSources.normalize(currentPath));
+    }
+
+    // One call of exploreResourcesFile: the source of each name detected, for the collisions between sources
+    private final class Exploration {
+        private final ResourceSources sources;
+        private final Map<String, DataType> data;
+        private final Collection<String> ignoredFolders;
+        private final boolean strict;
+        private final Map<String, SourceEntry> detected = new HashMap<>();
+
+        Exploration(ResourceSources sources, Map<String, DataType> data, Collection<String> ignoredFolders,
+                    boolean strict) {
+            this.sources = sources;
+            this.data = data;
+            this.ignoredFolders = ignoredFolders;
+            this.strict = strict;
+        }
+
+        void explore(String path) {
+            if (sources.isFolder(path)) {
+                if (!path.isEmpty() && ignoredFolders.contains(path.substring(path.lastIndexOf('/') + 1)))
+                    return;
+
+                for (SourceEntry entry : sources.list(path)) {
+                    if (entry.isFolder())
+                        explore(entry.path());
+                    else
+                        detect(entry);
+                }
+            } else {
+                Optional<IResourceSource> source = sources.resolve(path);
+                if (source.isPresent()) {
+                    int slash = path.lastIndexOf('/');
+                    detect(new SourceEntry(source.get(), slash < 0 ? "" : path.substring(0, slash),
+                            path.substring(slash + 1), false));
+                }
+            }
+        }
+
+        private void detect(SourceEntry entry) {
+            String name = filterFile(entry.path());
+            if (name == null)
+                return;
+
+            DataType before = data.get(name);
+            fileDetected(data, entry.path(), name);
+
+            SourceEntry previous = detected.put(name, entry);
+            if (previous == null || previous.source() == entry.source())
+                return;
+
+            // Same name in two sources: the highest one wins, whatever the order of the exploration
+            SourceEntry winner = entry, loser = previous;
+            if (sources.sources().indexOf(previous.source()) > sources.sources().indexOf(entry.source())) {
+                winner = previous;
+                loser = entry;
+                detected.put(name, previous);
+                data.put(name, before);
+            }
+
+            String message = getResourceNameType() + " " + name + ": " + winner.path() + " ("
+                    + winner.source().name() + ") overrides " + loser.path() + " (" + loser.source().name() + ")";
+            if (strict)
+                throw new IllegalStateException(message);
+
+            System.out.println("--" + message);
+        }
+    }
+
+    /**
+     * Until every loader reads its files through the sources: the files of a folder of the disk (path given as
+     * is to filterFile and fileDetected).
+     */
+    protected final void exploreDiskFolder(Map<String, DataType> data, String currentPath){
         File file = new File(currentPath);
 
         if (file.isFile()){
@@ -107,11 +195,11 @@ public abstract class ResourceLoader {
                 fileDetected(data, currentPath, result);
             }
         } else if (file.isDirectory()) {
-            if (ignoredFolders.contains(file.getName()))
+            if (DEFAULT_IGNORED_FOLDERS.contains(file.getName()))
                 return;
 
             for (String childPath : Objects.requireNonNull(file.list()))
-                exploreResourcesFile(data, currentPath + "/" + childPath, ignoredFolders);
+                exploreDiskFolder(data, currentPath + "/" + childPath);
         }
     }
 

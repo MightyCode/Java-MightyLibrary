@@ -22,7 +22,7 @@ public final class TileSetLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        exploreResourcesFile(data, resources().folder() + "tileset");
+        exploreResourcesFile(data, "tileset");
     }
 
     @Override
@@ -48,7 +48,7 @@ public final class TileSetLoader extends ResourceLoader {
         TileSet tileset = (TileSet) dataType;
 
         String path = tileset.path();
-        String data = FileMethods.readFileAsString(path);
+        String data = FileMethods.readString(resources().sources(), path);
         String[] parts = data.split("\n");
 
         String texture = null;

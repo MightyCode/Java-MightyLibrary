@@ -169,6 +169,11 @@ public final class Resources {
         this.strict = strict;
     }
 
+    // Read by the loaders (collisions of names between sources), maybe on a worker: set before init
+    boolean isStrict() {
+        return strict;
+    }
+
     // Where the batches hold the GL elements of their data (GLResources); null: nothing is sent to the card
     private IGLElementSink glElementSink;
 

@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -194,9 +195,7 @@ class ResourceDescriber {
             if (data.failed && resources.hasFallback(data))
                 item.put("usingFallback", true);
             if (!data.sourcePaths().isEmpty())
-                item.put("sources", new JSONArray(data.sourcePaths()));
-            if (data instanceof MultiSourceDataType)
-                item.put("sourceFiles", describeSources((MultiSourceDataType) data));
+                item.put("sourceFiles", describeSourceFiles(data));
             list.put(item);
         });
 
@@ -209,17 +208,30 @@ class ResourceDescriber {
         return result;
     }
 
-    // Each file of the data and whether its last reading read it
-    private static JSONArray describeSources(MultiSourceDataType data) {
+    // Each file of the data, the source that serves it (null: in none), and for several files whether the last reading
+    // read it
+    private JSONArray describeSourceFiles(DataType data) {
         JSONArray files = new JSONArray();
-        for (int i = 0; i < data.sourceCount(); ++i) {
+        List<String> paths = data.sourcePaths();
+        for (int i = 0; i < paths.size(); ++i) {
             JSONObject file = new JSONObject();
-            file.put("path", String.valueOf(data.sourcePath(i)));
-            file.put("read", data.isSourceRead(i));
+            file.put("path", paths.get(i));
+            file.put("source", servingSource(paths.get(i)));
+            if (data instanceof MultiSourceDataType)
+                file.put("read", ((MultiSourceDataType) data).isSourceRead(i));
             files.put(file);
         }
 
         return files;
+    }
+
+    private Object servingSource(String path) {
+        try {
+            return resources.sources().resolve(path).map(IResourceSource::name).orElse(null);
+        } catch (IllegalArgumentException e) {
+            // Until every loader reads through the sources: a path of the disk
+            return "disk";
+        }
     }
 
     private static boolean onlyReferencedAsDependency(DataType data) {

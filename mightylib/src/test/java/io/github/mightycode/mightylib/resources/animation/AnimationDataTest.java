@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.animation;
 
+import io.github.mightycode.mightylib.resources.LoaderTestAccess;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import org.joml.Vector2i;
 import org.joml.Vector4i;
@@ -21,8 +22,8 @@ class AnimationDataTest {
     private AnimationData load(String content) throws IOException {
         Path file = folder.resolve("walk.anim");
         Files.write(file, content.getBytes(StandardCharsets.UTF_8));
-        AnimationData data = new AnimationData("walk", file.toString());
-        new AnimationDataLoader().initWithFile(data);
+        AnimationData data = new AnimationData("walk", "walk.anim");
+        LoaderTestAccess.attached(new AnimationDataLoader(), folder).initWithFile(data);
         return data;
     }
 
