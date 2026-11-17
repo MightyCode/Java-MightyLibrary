@@ -11,8 +11,9 @@ import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 
-import java.nio.file.Paths;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,6 +27,8 @@ public final class ContextManager {
     private final List<Context> contexts = new CopyOnWriteArrayList<>();
     private Context mainContext;
     private GamepadManager gamepadManager;
+    // Where the gamepad mappings are read (null in the tests without engine)
+    private ResourceSources resourceSources;
     private int lastWindowId;
     // The actions and axes of the engine (set by the engine before its first context), bound in each window
     private InputRegistry inputRegistry = new InputRegistry().freeze();
@@ -187,10 +190,34 @@ public final class ContextManager {
         if (gamepadManager == null) {
             gamepadManager = new GamepadManager();
             gamepadManager.init();
-            gamepadManager.loadMappingsFile(Paths.get(GamepadManager.MAPPINGS_FILE));
+            String mappings = ReadMappings(resourceSources);
+            if (mappings != null && gamepadManager.addMappings(mappings))
+                System.out.println("--Gamepad mappings loaded from " + GamepadManager.MAPPINGS_FILE);
         }
 
         return gamepadManager;
+    }
+
+    /**
+     * The mappings file of the sources (GamepadManager.MAPPINGS_FILE); null when it is absent (nothing to do, not an
+     * error), unreadable (one line) or without sources (tests).
+     */
+    static String ReadMappings(ResourceSources sources) {
+        if (sources == null || sources.size(GamepadManager.MAPPINGS_FILE) < 0)
+            return null;
+
+        try {
+            return sources.readString(GamepadManager.MAPPINGS_FILE);
+        } catch (IOException e) {
+            System.err.println("--Gamepad mappings file " + GamepadManager.MAPPINGS_FILE + " can't be read : "
+                    + e.getMessage());
+            return null;
+        }
+    }
+
+    // Set by the engine before the first context: the gamepad mappings are read there
+    void setResourceSources(ResourceSources resourceSources) {
+        this.resourceSources = resourceSources;
     }
 
     // ---- Run by the engine ----

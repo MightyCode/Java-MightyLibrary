@@ -242,6 +242,7 @@ public final class Engine implements IView {
         }
         // Before the shaders and the resources, which read their files in it
         resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()));
+        contexts.setResourceSources(resourceSources);
         System.out.println("--Resource sources : " + resourceSources.sources().stream()
                 .map(IResourceSource::name).collect(Collectors.joining(" < ")));
         contexts.setInputRegistry(registrations.inputs());
