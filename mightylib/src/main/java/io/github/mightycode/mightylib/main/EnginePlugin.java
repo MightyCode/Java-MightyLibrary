@@ -51,6 +51,12 @@ final class EnginePlugin implements IPlugin {
     @Override
     public void register(EngineRegistry registry) {
         registry.resources().addAll(LibraryLoaders.mandatory(shaderManager));
+        // The files of the engine, below the folder of the game: in the jar, or a folder to edit them (development)
+        String engineFolder = config.getEngineResourcesFolder();
+        if (engineFolder != null)
+            registry.resources().folder(engineFolder);
+        else
+            registry.resources().classpath();
 
         // "cheats on|off": the build allows the cheats and the game wants the command
         ECommandLevel maxAccess = config.getMaxCommandAccess();

@@ -1,5 +1,8 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.IResourceSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.apiguardian.api.API;
@@ -48,6 +51,7 @@ public final class Resources {
 
     // Fixed at the construction: the mandatory loaders, then those of the project, one per type of data
     private final List<ResourceLoader> loaders;
+    private final ResourceSources sources;
     private final String folder;
 
     // Read from any thread, written by the main thread (and by addOwnedResource, atomically)
@@ -71,12 +75,26 @@ public final class Resources {
 
     /**
      * The given loaders, in their order: those the plugins registered (EngineRegistry.resources), the mandatory ones of
-     * the engine first. The list can't change afterward. The loaders read their files in the given folder
-     * (EngineConfig.setResourcesFolder).
+     * the engine first. The list can't change afterward. The loaders read their files in the given stack of sources
+     * (the engine's, the folder of the game, those of the plugins).
      */
+    public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ResourceSources sources,
+                     List<ResourceLoader> loaders) {
+        this(loadingMethod, maxNumberOfWorkers, sources, GameFolder(sources), loaders);
+    }
+
+    // A stack of this folder only
     public Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, String folder, List<ResourceLoader> loaders) {
+        this(loadingMethod, maxNumberOfWorkers,
+                ResourceSources.builder().add(ResourceSources.GAME_OWNER, new FolderSource(folder)).build(),
+                NormalizeFolder(folder), loaders);
+    }
+
+    private Resources(LoadingMethod loadingMethod, int maxNumberOfWorkers, ResourceSources sources, String folder,
+                      List<ResourceLoader> loaders) {
         this.loadingMethod = loadingMethod;
-        this.folder = NormalizeFolder(folder);
+        this.sources = Objects.requireNonNull(sources, "sources");
+        this.folder = folder;
         resources = new ConcurrentHashMap<>();
         this.loaders = checkedLoaders(loaders);
 
@@ -117,12 +135,34 @@ public final class Resources {
         return normalized.endsWith("/") ? normalized : normalized + "/";
     }
 
+    // The folder of the game in the stack (the highest folder without one), as it was given
+    private static String GameFolder(ResourceSources sources) {
+        IResourceSource found = null;
+        for (IResourceSource source : sources.sources()) {
+            if (source instanceof FolderSource && (found == null
+                    || ResourceSources.GAME_OWNER.equals(sources.owner(source))))
+                found = source;
+        }
+        if (found == null)
+            throw new IllegalArgumentException("No folder in the sources " + sources);
+
+        return NormalizeFolder(found.name().substring("folder:".length()));
+    }
+
     /**
-     * Folder read by the loaders, ending with '/' (default "resources/"). Final and set by the constructor: safe to read
+     * Folder of the game, ending with '/' (default "resources/"). Final and set by the constructor: safe to read
      * from any thread (workers, resource watcher).
      */
     public String folder() {
         return folder;
+    }
+
+    /**
+     * The stack of the sources of the files, from the lowest to the highest priority. Immutable and set by the
+     * constructor: safe to read from any thread (workers, resource watcher).
+     */
+    public ResourceSources sources() {
+        return sources;
     }
 
     public void setStrict(boolean strict) {
@@ -284,6 +324,11 @@ public final class Resources {
 
     public JSONObject describe(ResourceSelection selection) {
         return describer.describe(selection);
+    }
+
+    // The stack of the sources; with a path (null: none), the sources that have it and the one that serves it
+    public JSONObject describeSources(String path) {
+        return ResourceDescriber.DescribeSources(sources, path);
     }
 
     JSONObject describePipeline() {

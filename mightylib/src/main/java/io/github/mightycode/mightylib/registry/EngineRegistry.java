@@ -20,10 +20,10 @@ public final class EngineRegistry {
     private final ServicesSection services;
     private final LifecycleSection lifecycle;
 
-    private EngineRegistry(Registrations registrations, String namespace) {
+    private EngineRegistry(Registrations registrations, String namespace, ClassLoader classLoader) {
         this.registrations = registrations;
         this.namespace = namespace;
-        resources = new ResourcesSection(registrations, namespace);
+        resources = new ResourcesSection(registrations, namespace, classLoader);
         commands = new CommandsSection(registrations, this);
         inputs = new InputsSection(registrations, this);
         scenes = new ScenesSection(registrations, this);
@@ -58,17 +58,22 @@ public final class EngineRegistry {
         }
 
         Registrations registrations = new Registrations();
-        register(registrations, enginePlugin);
-        for (IPlugin plugin : plugins)
-            register(registrations, plugin);
+        try {
+            register(registrations, enginePlugin);
+            for (IPlugin plugin : plugins)
+                register(registrations, plugin);
 
-        registrations.freeze();
+            registrations.freeze();
+        } catch (RuntimeException e) {
+            registrations.closeSources();
+            throw e;
+        }
         return registrations;
     }
 
     private static void register(Registrations registrations, IPlugin plugin) {
         registrations.addPlugin(plugin.namespace());
-        plugin.register(new EngineRegistry(registrations, plugin.namespace()));
+        plugin.register(new EngineRegistry(registrations, plugin.namespace(), plugin.getClass().getClassLoader()));
     }
 
     public String namespace() {

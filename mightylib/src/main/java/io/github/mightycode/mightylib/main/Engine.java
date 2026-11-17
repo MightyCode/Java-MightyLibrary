@@ -18,6 +18,9 @@ import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.LifecycleHooks;
 import io.github.mightycode.mightylib.registry.Registrations;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.IResourceSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import io.github.mightycode.mightylib.resources.texture.TextureUploader;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -45,6 +48,7 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
@@ -64,6 +68,8 @@ public final class Engine implements IView {
     private ShaderManager shaderManager;
     // What the plugins registered (the engine first), frozen; null before setup
     private Registrations registrations;
+    // The sources of the files of the resources, built once the registry is frozen; null before
+    private ResourceSources resourceSources;
     private Resources resources;
     private GLResources glResources;
     private ISceneManager sceneManager;
@@ -234,6 +240,10 @@ public final class Engine implements IView {
             Logger.LogException("The registration of the plugins failed", e);
             return ListError.PLUGIN_REGISTRATION_FAIL;
         }
+        // Before the shaders and the resources, which read their files in it
+        resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()));
+        System.out.println("--Resource sources : " + resourceSources.sources().stream()
+                .map(IResourceSource::name).collect(Collectors.joining(" < ")));
         contexts.setInputRegistry(registrations.inputs());
         contexts.setInputManagerFactory(registrations.inputManagerFactory());
         registrations.lifecycle().setStrict(config.isStrictResources());
@@ -278,7 +288,7 @@ public final class Engine implements IView {
 
         System.out.println("--Create Resources");
         resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
-                config.getResourcesFolder(), registrations.loaders());
+                resourceSources, registrations.loaders());
         resources.setStrict(config.isStrictResources());
         if (config.isStrictResources())
             System.out.println("--Strict resources: a resource that fails stops the program");
@@ -569,6 +579,9 @@ public final class Engine implements IView {
             resources.unload();
         if (glResources != null)
             glResources.unload();
+        // After the resources: their workers may still read the sources until their unload
+        if (resourceSources != null)
+            resourceSources.close();
 
         // Tasks still waiting can free GL objects: run them while the context exists
         MainThread.processAll();

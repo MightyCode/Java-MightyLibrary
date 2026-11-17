@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import io.github.mightycode.mightylib.resources.source.SourceEntry;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
@@ -61,6 +63,45 @@ public final class ResourceArguments {
             @Override
             public String describe() {
                 return "resource type";
+            }
+        };
+    }
+
+    // A logical path of the sources of the resources, completed folder by folder (folders end with '/')
+    public static ArgumentType<String> sourcePath(Supplier<Resources> resources) {
+        return new ArgumentType<>() {
+            @Override
+            public String parse(String word, CommandContext context) {
+                try {
+                    return ResourceSources.normalize(word);
+                } catch (IllegalArgumentException e) {
+                    throw CommandSyntaxException.expected("a relative path, without \"..\"", word);
+                }
+            }
+
+            @Override
+            public Collection<String> complete(String start, CommandContext context) {
+                String slashes = start.replace('\\', '/');
+                int last = slashes.lastIndexOf('/');
+                String folder = last < 0 ? "" : slashes.substring(0, last);
+                String begin = slashes.substring(last + 1);
+
+                List<String> paths = new ArrayList<>();
+                try {
+                    for (SourceEntry entry : resources.get().sources().list(folder)) {
+                        if (entry.name().startsWith(begin))
+                            paths.add(entry.path() + (entry.isFolder() ? "/" : ""));
+                    }
+                } catch (IllegalArgumentException e) {
+                    // Absolute or with "..": nothing to propose
+                    return List.of();
+                }
+                return paths;
+            }
+
+            @Override
+            public String describe() {
+                return "path";
             }
         };
     }

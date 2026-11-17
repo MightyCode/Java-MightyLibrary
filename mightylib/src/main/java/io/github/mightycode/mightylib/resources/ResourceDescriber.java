@@ -1,9 +1,15 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.registry.Identifier;
+import io.github.mightycode.mightylib.resources.source.ClasspathSource;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.IResourceSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Main thread: state of the registered data as JSON, for the debug commands.
@@ -15,6 +21,70 @@ class ResourceDescriber {
 
     ResourceDescriber(Resources resources) {
         this.resources = resources;
+    }
+
+    // Any thread: the stack is immutable. "message": a summary for the player of the command
+    static JSONObject DescribeSources(ResourceSources sources, String path) {
+        JSONArray stack = new JSONArray();
+        for (IResourceSource source : sources.sources())
+            stack.put(DescribeSource(sources, source));
+
+        JSONObject result = new JSONObject().put("sources", stack);
+        StringBuilder message = new StringBuilder();
+        if (path == null) {
+            message.append(sources.sources().size()).append(" sources, from the lowest to the highest:");
+            for (IResourceSource source : sources.sources())
+                message.append(' ').append(source.name());
+
+            return result.put("message", message.toString());
+        }
+
+        String logical = ResourceSources.normalize(path);
+        JSONArray layers = new JSONArray();
+        for (IResourceSource layer : sources.layers(logical))
+            layers.put(DescribeSource(sources, layer).put("size", layer.size(logical)));
+
+        result.put("path", logical).put("layers", layers);
+        Optional<IResourceSource> served = sources.resolve(logical);
+        if (served.isPresent()) {
+            result.put("servedBy", served.get().name());
+            message.append(logical).append(": served by ").append(served.get().name());
+            if (layers.length() > 1)
+                message.append(" (in ").append(layers.length()).append(" sources)");
+        } else {
+            message.append(logical).append(": in no source");
+        }
+
+        return result.put("message", message.toString());
+    }
+
+    private static JSONObject DescribeSource(ResourceSources sources, IResourceSource source) {
+        String owner = sources.owner(source);
+        String kind;
+        if (Identifier.ENGINE_NAMESPACE.equals(owner))
+            kind = "engine";
+        else if (ResourceSources.GAME_OWNER.equals(owner))
+            kind = "game";
+        else
+            kind = "plugin";
+
+        String location;
+        if (source instanceof FolderSource)
+            location = "disk";
+        else if (source instanceof ClasspathSource && !((ClasspathSource) source).isPresent())
+            location = "classpath, prefix absent";
+        else if (source instanceof ClasspathSource)
+            location = source.localFile("").isPresent() ? "classpath folder" : "classpath jar";
+        else
+            location = source.getClass().getSimpleName();
+
+        return new JSONObject()
+                .put("name", source.name())
+                .put("owner", owner)
+                .put("kind", kind)
+                .put("location", location)
+                // Only the sources on the disk are watched (hot reload)
+                .put("watchable", source.localFile("").isPresent());
     }
 
     /**

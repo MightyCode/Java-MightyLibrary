@@ -2,6 +2,9 @@ package io.github.mightycode.mightylib.registry;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FakeLoader;
+import io.github.mightycode.mightylib.resources.source.FolderSource;
+import io.github.mightycode.mightylib.resources.source.IResourceSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -151,6 +154,51 @@ class EngineRegistryTest {
         assertThrows(IllegalStateException.class, () -> kept[0].resources());
         assertThrows(IllegalStateException.class, () -> kept[0].commands());
         assertThrows(UnsupportedOperationException.class, () -> registrations.loaders().add(new FakeLoader()));
+    }
+
+    @Test
+    void sourcesOfResourcesEngineThenGameThenPlugins() {
+        FolderSource engineSource = new FolderSource("engine");
+        FolderSource game = new FolderSource("game");
+        FolderSource first = new FolderSource("first");
+        FolderSource second = new FolderSource("second");
+        FolderSource mod = new FolderSource("mod");
+
+        Registrations registrations = EngineRegistry.Collect(engine(registry -> registry.resources().source(engineSource)),
+                List.of(plugin("game", registry -> registry.resources().source(first).source(second)),
+                        plugin("other", registry -> {}),
+                        plugin("mod", registry -> registry.resources().source(mod))));
+
+        assertEquals(List.of(first, second), registrations.sources("game"));
+        assertTrue(registrations.sources("other").isEmpty());
+
+        ResourceSources stack = registrations.resourceSources(game);
+        assertEquals(List.of(engineSource, game, first, second, mod), stack.sources());
+        assertEquals("mightylib", stack.owner(engineSource));
+        assertEquals(ResourceSources.GAME_OWNER, stack.owner(game));
+        assertEquals("game", stack.owner(second));
+        assertEquals("mod", stack.owner(mod));
+    }
+
+    @Test
+    void classpathSourceOfAPluginUnderItsNamespace() {
+        Registrations registrations = EngineRegistry.Collect(EMPTY_ENGINE,
+                List.of(plugin("game", registry -> registry.resources().classpath().folder("folder"))));
+
+        List<IResourceSource> sources = registrations.sources("game");
+        assertEquals("classpath:assets/game/", sources.get(0).name());
+        assertEquals("folder:folder/", sources.get(1).name());
+    }
+
+    @Test
+    void sourcesFrozenAfterThePhase() {
+        ResourcesSection[] kept = new ResourcesSection[1];
+        Registrations registrations = EngineRegistry.Collect(EMPTY_ENGINE,
+                List.of(plugin("game", registry -> kept[0] = registry.resources())));
+        assertThrows(IllegalStateException.class, () -> kept[0].folder("late"));
+        assertThrows(IllegalStateException.class, () -> kept[0].classpath());
+        assertThrows(UnsupportedOperationException.class,
+                () -> registrations.sources("game").add(new FolderSource("late")));
     }
 
     // A second type of data, different from FakeData

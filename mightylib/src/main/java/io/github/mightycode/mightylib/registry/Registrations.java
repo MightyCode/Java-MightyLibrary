@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.inputs.IInputManagerFactory;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.source.IResourceSource;
+import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.scenes.ISceneManagerFactory;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.services.ServiceDeclaration;
@@ -13,7 +15,9 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Everything the plugins registered (EngineRegistry.Collect), frozen once the last plugin is done: the engine reads it
@@ -30,6 +34,8 @@ public final class Registrations {
     final Replaceable<ISceneManagerFactory> sceneManagerFactory = new Replaceable<>("Scene manager factory");
     final Replaceable<IInputManagerFactory> inputManagerFactory = new Replaceable<>("Input manager factory");
     final LifecycleHooks lifecycle = new LifecycleHooks();
+    // The sources of resources of each plugin, in the order of the plugins then of the calls
+    private final Map<String, List<IResourceSource>> sources = new LinkedHashMap<>();
 
     private boolean frozen;
     // Built at the freeze
@@ -41,6 +47,18 @@ public final class Registrations {
 
     void addPlugin(String namespace) {
         plugins.add(namespace);
+    }
+
+    void addSource(String plugin, IResourceSource source) {
+        sources.computeIfAbsent(plugin, key -> new ArrayList<>()).add(source);
+    }
+
+    // A registration failed: the engine won't build the stack, nothing else closes them
+    void closeSources() {
+        for (List<IResourceSource> ofPlugin : sources.values()) {
+            for (IResourceSource source : ofPlugin)
+                source.close();
+        }
     }
 
     void freeze() {
@@ -75,6 +93,28 @@ public final class Registrations {
     // Namespaces of the plugins, in registration order: the engine first
     public List<String> plugins() {
         return Collections.unmodifiableList(plugins);
+    }
+
+    // The sources of resources the plugin declared, in the order of its calls
+    public List<IResourceSource> sources(String plugin) {
+        return Collections.unmodifiableList(sources.getOrDefault(plugin, List.of()));
+    }
+
+    /**
+     * The stack of the sources of resources, from the lowest to the highest: those of the engine, the folder of the
+     * game, then those of the plugins in their order.
+     */
+    public ResourceSources resourceSources(IResourceSource gameFolder) {
+        ResourceSources.Builder builder = ResourceSources.builder();
+        for (String plugin : plugins) {
+            for (IResourceSource source : sources(plugin))
+                builder.add(plugin, source);
+
+            if (Identifier.ENGINE_NAMESPACE.equals(plugin))
+                builder.add(ResourceSources.GAME_OWNER, gameFolder);
+        }
+
+        return builder.build();
     }
 
     // The loaders of every plugin, in registration order

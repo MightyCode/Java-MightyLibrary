@@ -71,6 +71,8 @@ public final class EngineConfig {
     private int shaderVersion = -1;
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
     private String resourcesFolder = Resources.DEFAULT_FOLDER;
+    // Null: the classpath source of the engine
+    private String engineResourcesFolder;
     private int maxThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
     private int maxGLUploadMillisecondsPerFrame = -1;
     private float inGameLoadingShare = 0.3f;
@@ -169,6 +171,19 @@ public final class EngineConfig {
     }
 
     public static final String STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict";
+
+    /**
+     * Development: a folder on the disk replaces the classpath source of the engine (its files in the jar, under
+     * "assets/mightylib/"), so that they can be edited and reloaded from the repository (ex.
+     * "mightylib/src/main/resources/assets/mightylib"). Null (the default): the classpath. The system property
+     * ENGINE_RESOURCES_PROPERTY (-Dmightylib.resources.engine=folder) overrides it.
+     */
+    public EngineConfig setEngineResourcesFolder(String engineResourcesFolder) {
+        this.engineResourcesFolder = engineResourcesFolder;
+        return this;
+    }
+
+    public static final String ENGINE_RESOURCES_PROPERTY = "mightylib.resources.engine";
 
     /**
      * Hot reload of all the resources when their files change, from the start (null = off, the default; it can
@@ -292,7 +307,10 @@ public final class EngineConfig {
         return this;
     }
 
-    // Folder read by the resource loaders, relative to the working directory ("resources/" by default)
+    /**
+     * Folder of the files of the game, relative to the working directory ("resources/" by default): a source of
+     * resources above the engine's, below those of the plugins (EngineRegistry.resources().source).
+     */
     public EngineConfig setResourcesFolder(String resourcesFolder) {
         this.resourcesFolder = Objects.requireNonNull(resourcesFolder, "resourcesFolder");
         return this;
@@ -362,6 +380,12 @@ public final class EngineConfig {
     public ETextureUpload getTextureUpload() {
         ETextureUpload fromProperty = ETextureUpload.parse(System.getProperty(ETextureUpload.PROPERTY));
         return fromProperty != null ? fromProperty : textureUpload;
+    }
+
+    // Null: the classpath source of the engine; the system property wins over the configuration
+    public String getEngineResourcesFolder() {
+        String property = System.getProperty(ENGINE_RESOURCES_PROPERTY);
+        return property != null && !property.isBlank() ? property.trim() : engineResourcesFolder;
     }
 
     // Strict only in debug mode, the system property wins over the configuration
