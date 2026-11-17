@@ -46,8 +46,9 @@ public final class TextureDataLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = FileMethods.readJSONObject(resources().sources(), LIST_TEXTURES);
-        create(data, obj, "");
+        // Merged by entry: the textures of a higher source are added, or replace those of the same name
+        for (JSONObject layer : FileMethods.readJSONObjectLayers(resources().sources(), LIST_TEXTURES))
+            create(data, layer, "");
     }
 
     /**

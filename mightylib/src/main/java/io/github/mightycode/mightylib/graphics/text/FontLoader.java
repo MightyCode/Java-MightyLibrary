@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
@@ -25,10 +26,10 @@ public final class FontLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
-        JSONObject obj = FileMethods.readJSONObject(resources().sources(), FontFace.FONTS_FOLDER + "fonts.json");
-        obj = obj.getJSONObject("fonts");
-
-        create(data, obj);
+        // Merged by entry: the fonts of a higher source are added, or replace those of the same name
+        List<JSONObject> layers = FileMethods.readJSONObjectLayers(resources().sources(),
+                FontFace.FONTS_FOLDER + "fonts.json");
+        create(data, FileMethods.mergeEntries(layers, "fonts").getJSONObject("fonts"));
     }
 
     /**

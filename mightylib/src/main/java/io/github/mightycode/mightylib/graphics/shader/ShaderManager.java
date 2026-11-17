@@ -56,7 +56,8 @@ public final class ShaderManager {
 
         String shaderListPath = versionFolder() + LIST_SHADER_FILE_NAME;
 
-        shadersInfo = FileMethods.readJSONObject(sources, shaderListPath);
+        // Merged by entry: the shaders of a higher source are added, or replace those of the same name
+        shadersInfo = FileMethods.mergeEntries(FileMethods.readJSONObjectLayers(sources, shaderListPath), "shaders");
     }
 
     public String getVersion(){
