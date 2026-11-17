@@ -35,7 +35,7 @@ public final class EllipseRenderer extends RectangleRenderer {
     }
 
     public EllipseRenderer(){
-        this(EngineResources.COLOR_ELLIPSE_2D,new ShaderEllipseProperty());
+        this(EngineResources.COLOR_ELLIPSE_2D, new ShaderEllipseProperty());
     }
 
     @Override

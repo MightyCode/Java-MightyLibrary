@@ -9,8 +9,8 @@ import io.github.mightycode.mightylib.resources.cubemap.CubeMapTexture;
 /**
  * The sky around the 3D camera: a cube seen from inside, textured by a cubemap (CubeMapData, listed by a batch of the
  * scene), drawn first without depth test nor depth write, so everything drawn after covers it. The program
- * EngineResources.SKYBOX keeps only the rotation of the view: the sky does not move with the camera. While the cubemap is not loaded, its
- * fallback (checkerboards) is shown.
+ * EngineResources.SKYBOX keeps only the rotation of the view: the sky does not move with the camera. While the
+ * cubemap is not loaded, its fallback (checkerboards) is shown.
  */
 public final class SkyboxRenderer extends MeshRenderer {
     private static final String SAMPLER = "skybox";
