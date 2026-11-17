@@ -61,6 +61,7 @@ public final class DemoScenes {
             scene(PathfindingScene2D.class, PathfindingScene2D::new, "Graph, Dijkstra and A*: paint walls with the mouse, move the start and the end, and see the shortest path."),
             scene(PlatformerBox2D.class, PlatformerBox2D::new, "A platformer: a player controlled on JBox2D physics."),
             scene(PreloadScene.class, PreloadScene::new, "Loads the next scene in advance while this one runs, so Enter switches with a short loading screen."),
+            scene(ResourceSourcesScene2D.class, ResourceSourcesScene2D::new, "The sources of the resources: a texture of the game folder replaced by the jar of the demo (same path), a texture added by the demo through its own textures.json, and the sources that have each file."),
             scene(RopeSimulation2D.class, RopeSimulation2D::new, "A rope simulation driven by the mouse."),
             scene(Scene2D.class, Scene2D::new, "The main 2D test scene: tile map, animations and texts."),
             scene(Scene3D.class, Scene3D::new, "The main 3D test scene: cubes and models lit by several lights, with a free camera."),

@@ -1,0 +1,10 @@
+{
+	"textures" : {
+		"sources" : {
+			"sourcesOnlyDemo" : {
+				"file" : "onlyDemo.png",
+				"qualityType" : "pixelart"
+			}
+		}
+	}
+}

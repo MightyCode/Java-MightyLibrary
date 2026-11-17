@@ -1,0 +1,13 @@
+{
+    "batchs" : [
+        {
+            "type" : "TextureData",
+            "files" : [
+                "sourcesReplaced",
+                "sourcesOnlyDemo"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}
