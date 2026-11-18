@@ -98,6 +98,26 @@ class ApiStatusTest {
                 + String.join("\n", missing));
     }
 
+    // A package named "internal" is INTERNAL, and every INTERNAL package is named "internal"
+    @Test
+    void internalPackagesAreExactlyThoseNamedInternal() throws Exception {
+        Set<String> packages = new TreeSet<>();
+        for (String name : classNames()) {
+            if (!name.endsWith("package-info"))
+                packages.add(packageOf(name));
+        }
+
+        List<String> problems = new ArrayList<>();
+        for (String packageName : packages) {
+            boolean named = packageName.endsWith(".internal");
+            boolean internal = packageStatus(packageName) == API.Status.INTERNAL;
+            if (named != internal)
+                problems.add(packageName + (named ? ": named internal but not INTERNAL" : ": INTERNAL but not named internal"));
+        }
+
+        assertTrue(problems.isEmpty(), "Packages breaking the internal naming rule:\n" + String.join("\n", problems));
+    }
+
     @Test
     void annotationsAreNeverMoreStableThanAroundThem() throws Exception {
         List<String> problems = new ArrayList<>();
