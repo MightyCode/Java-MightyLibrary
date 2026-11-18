@@ -66,6 +66,7 @@ public final class DemoScenes {
             scene(Scene2D.class, Scene2D::new, "The main 2D test scene: tile map, animations and texts."),
             scene(Scene3D.class, Scene3D::new, "The main 3D test scene: cubes and models lit by several lights, with a free camera."),
             scene(Scene3DBis.class, Scene3DBis::new, "A second 3D test scene with cubes and lights."),
+            scene(ShaderDefines2D.class, ShaderDefines2D::new, "The defines of the shaders: two entries of shaders.json on the same files, one tinted by a define of its entry. D sets or removes a global define that inverts the colors (every shader is read again)."),
             scene(SoundFormatsScene.class, SoundFormatsScene::new, "The same sound in each supported format (ogg, wav, mp3, flac), played when the mouse enters its line."),
             scene(TerrainGeneration3D.class, TerrainGeneration3D::new, "A generated terrain seen with a free camera."),
             scene(TextFieldScene2D.class, TextFieldScene2D::new, "The TextField and the focus of the window: while the field has the focus, the scene sees no key."),

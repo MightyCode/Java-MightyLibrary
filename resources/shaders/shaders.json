@@ -7,6 +7,23 @@
 			],
 			"tags" : ["2D"]
 		},
+		"definesDemo2D": {
+			"files": [
+				"2D/essential/colorShape2DV.glsl",
+				"2D/defines/definesDemo2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"definesDemoTinted2D": {
+			"files": [
+				"2D/essential/colorShape2DV.glsl",
+				"2D/defines/definesDemo2DF.glsl"
+			],
+			"tags" : ["2D"],
+			"defines": {
+				"TINT": "vec3(0.2, 0.6, 1.0)"
+			}
+		},
 		"textureDisplacement3D": {
 			"files": [
 				"3D/complex/textureDisplacement3DV.glsl",
