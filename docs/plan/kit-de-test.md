@@ -101,3 +101,35 @@ Pas de nouvelle scène : les tests de l'étape 8 (`demo/src/test/java`) servent 
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/test-kit`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait
+- Question restante tranchée par l'utilisateur : les tests qui demandent le moteur entier vivent dans `mightylib-test/src/test/java` ; les aides des tests unitaires de `mightylib` restent dans ses sources de test.
+- Étapes 1 à 10, un commit chacune (7 et 8 : migration, puis exemples de la démo ; 9 : CI ; 10 : docs).
+- Horloge injectable de `GameTime` (`setClock`, `setDeltaTime`, `reset`, package-private) ; `GameTimeControl` sans réflexion.
+- `MainLoop.tick` / `MainLoop.frame` ; `frame` sans fenêtre saute affichage, GL et échange.
+- `Engine.setup` = `setupCore` + `setupWindow` ; `setupHeadless(puits)` = cœur + chargement.
+- Module `mightylib-test` : `MightyTest`, `TestEngine`, `SceneRunner`, `EmptyTestScene`, `GLUnavailableException`, `@MightyEngineTest`, `@MightySceneTest` (tag `gl`) ; ponts `KitEngineAccess`, `KitTimeAccess`.
+- Démo : `DemoTestConfig`, `DemoHeadlessTest`, `Scene2DTest`, `LayeredTextureLoaderTest` réécrit avec le kit.
+- CI : Xvfb + Mesa, `-Dmightylib.test.requireGL=true`.
+
+### Écarts au plan et raisons
+- **Entrées sans fenêtre** : impossibles (`KeyboardManager`/`MouseManager` posent leurs callbacks GLFW sur une fenêtre) : entrées seulement en mode fenêtre. La console n'est pas créée par le cœur seul (elle lit la fenêtre principale).
+- **`EngineConfig.validate(withScenes)`** : sans fenêtre, aucune scène de départ n'est exigée.
+- **Ressources strictes** : `EngineConfig.isStrictResources()` ne vaut qu'en mode DEBUG ; le kit force la rigueur dans le moteur (`Engine.setUnderTest(strict)`), pas dans la config. Ajout de `TestEngine.allowResourceFailures()` pour tester un échec (exigé par `LayeredTextureLoaderTest`).
+- **Fenêtre une fois par JVM** : le moteur avec fenêtre (GLFW, fenêtre cachée, contexte GL) est gardé par `@MightySceneTest` entre les tests d'une même configuration, et fermé dès qu'un autre moteur de test démarre (un seul moteur par JVM à cause de l'état statique) ; `MightyTest.withWindow` seul crée le sien.
+- **Moteur avec fenêtre démarré sur `EmptyTestScene`** (et non la scène de départ du jeu) : base des mesures de fuites, chargement rapide.
+- **`-Dmightylib.test.requireGL=true`** ajouté (CI) : un test `gl` sans GL y échoue au lieu d'être ignoré en silence.
+- **`LayeredTextureLoaderTest`** réécrit dès l'étape 5 (la suppression du jar `tests` le cassait), complété à l'étape 8.
+- **`tools/analyse.py`** : `mightylib-test` ajouté aux modules analysés.
+- Un `mvn install` a été lancé une fois pendant l'implémentation : le dépôt local contient des snapshots du moteur ; `-pl <module>` sans `-am` les utilise (noté dans `CLAUDE.md`).
+
+### Vérifié et comment
+- `mvn -o -q test` : 1155 tests `mightylib`, 13 `mightylib-test`, 34 démo, aucun ignoré ni en échec ; `mvn -o -q package` vert.
+- Tests GL (`SceneRunnerTest`, `GLContextTest`, `Scene2DTest`) lancés en local sous `-Dmightylib.test.requireGL=true` : contexte 3.3 core (NVIDIA), fuites contrôlées autour de `Scene2D`.
+- En jeu (`scenario.py`) : `Scene2D` (`gl summary`, `services`), `MultiWindowScene` (D, T, C, `windows`), `leakcheck Scene2D` sans fuite, `--modulepath "scene Scene2D"` ; journaux sans problème.
+
+### À vérifier à la main par l'utilisateur
+- `Scene2D`, `MultiWindowScene` (D, T, C), `leakcheck Scene2D`, lancement `--modulepath`.
+- `mvn test` : aucune fenêtre visible pendant les tests `gl`.
+- CI verte sur la branche, avec les tests `gl` lancés (journal : ligne `--GL of the tests: … Mesa …`) et non ignorés.

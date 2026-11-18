@@ -24,6 +24,32 @@ Un jeu hérite de `mightylib-game-parent` (versions, plugins, natives LWJGL de l
 
 `mvn package` produit le jar complet (`-P all-natives` : natives des six plateformes) ; `mvn -P analyse process-test-classes` lance l'analyse statique.
 
+Le parent donne aussi le kit de test `mightylib-test` (portée `test`, jamais dans le jar du jeu) ; le jeu déclare JUnit 5 (`junit-jupiter`, version du BOM, portée `test`). Un test sans GL démarre le moteur du jeu (mêmes plugins), un test de scène ouvre une fenêtre cachée (tag `gl`) et vérifie qu'aucune ressource ne fuit :
+
+```java
+public final class GameTestConfig implements Supplier<EngineConfig> {
+    public EngineConfig get() { return Main.createConfig(); }
+}
+
+@MightyEngineTest(config = GameTestConfig.class)
+class CommandsTest {
+    @Test
+    void theCommandAnswers(TestEngine engine) {
+        assertTrue(engine.step(5).execute("game:score").isSuccess());
+    }
+}
+
+@MightySceneTest(config = GameTestConfig.class)
+class LevelSceneTest {
+    @Test
+    void theLevelLoads(SceneRunner runner) {
+        runner.start("level").untilLoaded().press("game:jump", 1).frames(10);
+    }
+}
+```
+
+Exemples complets : `demo/src/test/java` (`DemoHeadlessTest`, `Scene2DTest`).
+
 Un jeu qui a déjà son propre parent importe seulement les versions (sans natives ni plugins : à déclarer soi-même) :
 
 ```xml

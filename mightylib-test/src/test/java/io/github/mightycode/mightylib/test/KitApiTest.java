@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 // The rules of the public API of the engine, for the kit: EXPERIMENTAL package, final classes, no public field
+// but constants
 class KitApiTest {
     private static List<Class<?>> kitClasses() throws IOException, URISyntaxException, ClassNotFoundException {
         Path folder = Paths.get(MightyTest.class.getProtectionDomain().getCodeSource().getLocation().toURI())
@@ -52,6 +53,9 @@ class KitApiTest {
             if (!Modifier.isFinal(type.getModifiers()))
                 problems.add(type.getSimpleName() + " is not final");
             for (Field field : type.getDeclaredFields()) {
+                // Constants (property names) are part of the API
+                if (Modifier.isStatic(field.getModifiers()) && Modifier.isFinal(field.getModifiers()))
+                    continue;
                 if (Modifier.isPublic(field.getModifiers()) || Modifier.isProtected(field.getModifiers()))
                     problems.add(type.getSimpleName() + "." + field.getName() + " is visible");
             }

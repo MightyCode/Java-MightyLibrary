@@ -26,7 +26,7 @@ import scenario  # noqa: E402
 
 ROOT = scenario.ROOT
 # The Maven modules, in the order of the summary
-MODULES = ("mightylib", "demo")
+MODULES = ("mightylib", "mightylib-test", "demo")
 SOURCES = "src/main/java/"
 LOG = os.path.join(ROOT, "target", "static-analysis.log")
 JAVAC_WARNING = re.compile(r"^\[WARNING\] (.+?\.java):\[(\d+),\d+\] (?:\[(\w+)\] )?(.*)$")

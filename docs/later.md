@@ -42,6 +42,14 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 À étendre (liste des tests : `CLAUDE.md`) : scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
 - **Logique pure encore sans test** (`python tools/coverage.py`) : `Animation` / `Animator` (le constructeur de `Animation` lit `Views.engine().resources()` : lui passer `Resources` en paramètre, en gardant le constructeur actuel pour l'usage courant, permettrait de les tester sans moteur) et `FallbackAnimationData` (demande une `Resources`) ; `physics/B2Utils` (conversions JBox2D, à voir avec la physique 2D).
 
+## Kit de test : suites
+- **Statut `STABLE`** du package `io.github.mightycode.mightylib.test` avant la première version publiée (objectif « Distribution »), une fois éprouvé par un vrai jeu.
+- **Tests sur le chemin de modules** : le kit est classpath seulement (ses ponts partagent des packages du moteur) ; un jeu en module teste sur le classpath (`useModulePath=false`, déjà dans `mightylib-base-parent`). Le passage au chemin de modules demanderait des ponts publics `INTERNAL` dans la bibliothèque, ou `--patch-module`.
+- **macOS** : les tests `gl` exigent `-XstartOnFirstThread` dans l'`argLine` de Surefire (non testé, comme les autres natives macOS).
+- **Comparaison d'images** (tests de rendu au pixel près) : capture de la fenêtre cachée (`Screenshot`) comparée à une image de référence, avec tolérance (pilotes différents, Mesa en CI).
+- **Serveur dédié** sur le cœur sans GL (`Engine.setupHeadless`) : boucle sans fenêtre (`MainLoop.tick` seul, ou `frame` sans affichage), réseau ; préparé, pas fait.
+- **Plusieurs moteurs de test en parallèle** : impossible tant que `MainThread`, `Workers`, `GameTime`, `Views`… sont statiques (le kit refuse un second moteur) ; l'exécution parallèle de JUnit reste à éteindre pour les tests du kit.
+
 ## Bugs relevés en passant (non corrigés)
 - **`network` n'est pas sûr entre threads** : les drapeaux sont `volatile` et le compteur de messages atomique, mais `receivedMessages` et `messageToSend` (listes et table ordinaires) sont lus et écrits par le thread réseau et par le moteur sans verrou. À reprendre avec le réseau (file concurrente entre les deux), pas avant.
 - Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
