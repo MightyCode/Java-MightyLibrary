@@ -8,8 +8,10 @@ tools/scripts/
 # Natives extracted by LWJGL at launch
 .lwjgl/
 
-# Demonstration resources, distributed apart from the repository
+# Demonstration package, distributed apart from the repository (this list follows tools/demo_assets.json)
 resources/models/backpack/
+
+# Unused local models, not distributed (unknown licence)
 resources/models/basicShape/
 resources/models/weapon/
 resources/models/world/

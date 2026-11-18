@@ -6,8 +6,6 @@ Philosophie de `decisions.md` : usage courant facile (niveau Processing), réimp
 
 `mightylib` = base des futurs jeux et logiciels, `mightylibdemo` l'illustre. La démo compile contre le jar ; le moteur fournit ses shaders, ses polices et ses mappings de manettes dans sa source (`architecture.md`, « Source du moteur »), le reste de ce que lit la démo est dans `resources/` à la racine du dépôt. Passe avant le gamma, les mods, le thème, les langues et Lua (plusieurs sources de ressources). Fin du point : un projet de jeu hors du dépôt, dépendant du seul jar publié, lance une scène 2D.
 
-- **Paquet de démonstration** : modèles lourds (`backpack`, `basicShape`, `weapon`, `world`) hors de git (`.gitignore`), la démo fonctionne sans, avec un message clair.
-  - À décider : où le récupérer (archive de release, script `tools/`), comportement des scènes 3D sans lui.
 - **Packages internes et modules Java** : déplacer les types `INTERNAL` des packages `STABLE` (`GLContext`, `ConsoleLog`, `BatchLoader`… : `architecture.md`, « API publique ») dans des packages à eux, puis `module-info` n'exportant que les packages non `INTERNAL` (`decisions.md`, JPMS).
   - À décider : nom des packages (`….internal`), dépendances non modulaires (JBox2D, org.json), modules des natives LWJGL ; `ClasspathSource` ouvre les jars en système de fichiers zip : le module `jdk.zipfs` doit être présent au runtime (`requires` ou image `jlink`).
 - **Pom « starter » pour les jeux** : un jeu reçoit les jars Java de LWJGL par `mightylib`, mais recopie les profils d'OS (`lwjgl.natives`) et déclare lui-même les natives (comme `demo/pom.xml`).

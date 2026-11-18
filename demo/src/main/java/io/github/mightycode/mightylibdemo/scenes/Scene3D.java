@@ -91,6 +91,8 @@ public class Scene3D extends Scene {
 
         timeShaderValue = new ShaderValue("time", Float.class, 0f);
         camera3D().setSpeed(new Vector3f(10));
+        // Initial view: toward the lit cubes (z < 0); the stand (z > 0) is large and hides the backpack from here
+        camera3D().lookAt(new Vector3f(1, 3, -8));
         cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
         addUpdatable(cameraComponent);
 
@@ -219,7 +221,7 @@ public class Scene3D extends Scene {
     private void createBackpack() {
         Model data = resources().getResource(Model.class, BACKPACK_MODEL);
         if (data == null || !data.isLoaded()) {
-            String message = "Model '" + BACKPACK_MODEL + "' missing: copy the demonstration package into resources/models/backpack/";
+            String message = "Model '" + BACKPACK_MODEL + "' missing: run python tools/demo_assets.py";
             System.err.println("--Scene3D : " + message);
 
             missingBackpackLabel = new Text();
