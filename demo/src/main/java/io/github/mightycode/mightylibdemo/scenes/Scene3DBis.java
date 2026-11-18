@@ -58,6 +58,8 @@ public class Scene3DBis extends Scene {
         cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
         addUpdatable(cameraComponent);
         camera3D().setSpeed(new Vector3f(8));
+        // Initial view: toward the cluster of crates (z < 0)
+        camera3D().lookAt(new Vector3f(0, 0, -6));
         cameraComponent.setQuickFactor(2);
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());

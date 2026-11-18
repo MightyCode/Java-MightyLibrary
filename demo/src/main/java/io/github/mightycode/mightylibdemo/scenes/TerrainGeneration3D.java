@@ -57,6 +57,8 @@ public class TerrainGeneration3D extends Scene {
         Color4f clearColor = ColorList.DarkGrey();
         setClearColor(clearColor.getR(), clearColor.getG(), clearColor.getB(), clearColor.getA());
         camera3D().setSpeed(new Vector3f(10));
+        // Initial view: toward the platform of crates (x 0..10, z 0..-9)
+        camera3D().lookAt(new Vector3f(5, 0, -5));
 
         addUpdatableAndDisplayable(
                 new DebugInfoCamera3D().init(camera3D(), new Vector2f(5, 5))

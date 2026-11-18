@@ -58,6 +58,8 @@ public class Game3D2D extends Scene {
         setClearColor(52, 189, 235, 1f);
 
         camera3D().setSpeed(new Vector3f(10));
+        // Initial view: toward the cube that shows the 2D game
+        camera3D().lookAt(new Vector3f(-40, 0, 0));
 
         Camera2D insideCamera = new Camera2D(context().getWindow().getInfo(), new Vector2f(0, 0), true);
 
