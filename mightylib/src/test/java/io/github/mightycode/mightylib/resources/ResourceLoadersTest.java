@@ -44,6 +44,17 @@ class ResourceLoadersTest {
         public String prelude(Map<String, String> entryDefines) {
             return "#version 330 core\n";
         }
+
+        @Override
+        public void setDefine(String name, String value) {}
+
+        @Override
+        public void removeDefine(String name) {}
+
+        @Override
+        public Map<String, String> defines() {
+            return Map.of();
+        }
     }
 
     @Test

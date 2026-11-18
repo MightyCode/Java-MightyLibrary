@@ -7,7 +7,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * The sources of a shader program (CPU side): read by a worker, compiled by its GL element (Shader).
@@ -16,6 +18,8 @@ import java.util.Set;
 public class ShaderData extends DataType {
     private final String[] paths;
     private final boolean shader2D;
+    // Of its entry in shaders.json (name to value, "" for none), sorted, immutable: written in its prelude
+    private final Map<String, String> defines;
 
     // Files watched for hot reload: replaced in full, read by the watcher thread
     private volatile List<String> sourcePaths;
@@ -26,10 +30,21 @@ public class ShaderData extends DataType {
     private List<List<String>> stageFiles = Collections.emptyList();
 
     public ShaderData(String name, boolean shader2D, String ... paths) {
+        this(name, shader2D, Collections.emptyMap(), paths);
+    }
+
+    // defines: written in the prelude of its sources after the global ones (IShaderService.prelude)
+    public ShaderData(String name, boolean shader2D, Map<String, String> defines, String ... paths) {
         super(TYPE_SET_UP.THREAD_CONTEXT, name);
         this.paths = paths.clone();
         this.shader2D = shader2D;
+        this.defines = Collections.unmodifiableSortedMap(new TreeMap<>(defines));
         sourcePaths = validPaths() ? List.of(this.paths) : Collections.emptyList();
+    }
+
+    // The defines of its entry, sorted by name
+    public Map<String, String> getDefines() {
+        return defines;
     }
 
     public boolean isDimension2DShader() {
@@ -121,7 +136,7 @@ public class ShaderData extends DataType {
         if (getClass() != ShaderData.class || !validPaths())
             return null;
 
-        return new ShaderData(getDataName(), shader2D, paths);
+        return new ShaderData(getDataName(), shader2D, defines, paths);
     }
 
     @Override

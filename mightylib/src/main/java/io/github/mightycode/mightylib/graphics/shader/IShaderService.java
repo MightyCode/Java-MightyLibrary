@@ -27,10 +27,27 @@ public interface IShaderService extends IEngineService {
     String folder();
 
     /**
-     * Written before the source of a shader, ending with a line break: #version first, then the defines. Called by a
-     * worker for each source read; must not fail.
+     * Written before the sources of a shader, ending with a line break: #version first, then the global defines
+     * sorted by name, then those of the entry (they win over a global one of the same name). Called by a worker once
+     * per reading of a shader; must not fail.
      *
-     * @param entryDefines the defines of the entry of the shader (name to value, "" for a define without value)
+     * @param entryDefines the defines of the entry of the shader (name to value, "" for a define without value),
+     *                     already checked (ShaderService.CheckDefine)
      */
     String prelude(Map<String, String> entryDefines);
+
+    /**
+     * Global define written in the prelude of every shader ("" for "#define NAME"); every shader is read again when
+     * it changes, nothing happens when the value is the same. Main thread.
+     *
+     * @throws IllegalArgumentException if the name is not a GLSL identifier, starts with GL_, or the value has a line
+     *                                  break
+     */
+    void setDefine(String name, String value);
+
+    // Removes a global define (every shader is read again); nothing if there is none of this name. Main thread
+    void removeDefine(String name);
+
+    // The global defines sorted by name: an immutable snapshot, not changed by a later setDefine
+    Map<String, String> defines();
 }

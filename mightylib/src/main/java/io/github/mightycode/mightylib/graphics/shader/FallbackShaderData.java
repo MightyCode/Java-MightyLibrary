@@ -15,7 +15,7 @@ public final class FallbackShaderData extends ShaderData {
 
     public FallbackShaderData() {
         // No path: nothing is read by the loader
-        super(Resources.FALLBACK_NAME, false, null, null);
+        super(Resources.FALLBACK_NAME, false, (String) null, null);
     }
 
     @Override
