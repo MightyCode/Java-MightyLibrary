@@ -78,3 +78,32 @@ Pas de nouvelle scène : la démo modulaire est l'acceptation (l'objectif suivan
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/internal-packages-jpms`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait (un commit par étape)
+1. `utils.enginecommand.general` → `utils.enginecommand.internal`, `physics.tweenings.tweeningmath` → `physics.tweenings.internal`.
+2. Les 13 types dans `console.internal`, `graphics.internal`, `inputs.internal`, `main.internal`, `resources.internal`, `utils.enginecommand.internal` ; `package-info` `INTERNAL`, annotations des types retirées ; tests déplacés quand ils touchent au package-private (`ConsoleInputTest`, `ConsoleLayoutTest`, `ConsoleLogTest`, `LogSelectionTest`, `WindowPlatformTest`).
+3. `ApiStatusTest` : package nommé `internal` ⇔ `INTERNAL`.
+4. `module-info` de `mightylib`, pom (lint, `release 11`, tests sur classpath), `ModuleDescriptorTest`.
+5. `module-info` de la démo, `scenario.py --modulepath`, `DemoApiUsageTest` retiré.
+6. Documents.
+
+### Écarts au plan, et pourquoi
+- **Trois types de plus déplacés** (`ConsoleLayout`, `LogPosition`, `LogSelection` → `console.internal`, décidé avec l'utilisateur) : package-private, utilisés par `ConsoleInput`/`ConsoleLog`. Leurs membres et ceux de `ConsoleInput`, `InputSimulation`, `WindowPlatform` utilisés par l'ancien package sont devenus publics (packages non exportés). `BatchManager` reste dans `resources` (seul un commentaire de `BatchLoader` le citait) ; `Resources.loaders()` devient un membre public `INTERNAL` (pour `ResourceArguments`).
+- **Aucun `opens`** (plan : `opens assets.mightylib`, et `opens assets.<plugin>` pour chaque jeu). Expérience : `ClasspathSource` cherche le dossier `assets/mightylib` (paquet `assets`, celui d'aucun module) puis lit par chemin (dossier ou système de fichiers du jar) ; trouvé et lu en module, en dossier comme en jar, sans `opens` ; un fichier (`assets/mightylib/gamecontrollerdb.txt`) est bien encapsulé par `getResource`, mais le moteur ne le lit jamais ainsi. `ModuleDescriptorTest` vérifie donc qu'il n'y a aucun `opens`.
+- **Deux modules automatiques de plus que prévu** : JLayer (`jlayer`) et OpenSimplex (`opensimplex`), en plus de `jbox2d.library` ; aucun n'est dans l'API publique (pas de `transitive`). Maven avertit de ne pas publier un projet qui requiert des modules automatiques nommés d'après le jar : noté dans l'objectif « Distribution » de `current.md`.
+- **`requires transitive java.desktop`** (`BufferedImage`, `Color` dans l'API) et `requires jdk.jfr` (événements JFR), non prévus ; LWJGL n'est pas exposé.
+- **apiguardian `requires static`** non transitif : `static transitive` obligeait la démo (et tout jeu) à l'avoir à la compilation. La démo ne déclare plus apiguardian en `test` (seul `DemoApiUsageTest` le lisait) : elle le reçoit de la bibliothèque, ce qui fait aussi disparaître les alertes « unknown enum constant ».
+- **Tests compilés aussi sur le classpath** (`useModulePath=false` sur `default-testCompile`, en plus de Surefire) : sinon les `*TestAccess` du jar `tests` (packages du moteur) font un paquet coupé dans les tests de la démo.
+- **`maven.compiler.release=11`** au lieu de `source`/`target` (javac avertissait que le chemin des modules système n'était pas fixé avec `-source 11`).
+- **`DemoApiUsageTest` retiré** : le compilateur refuse un type d'un package `internal` (vérifié par une classe d'essai dans la démo : « package … is not visible »), et la nouvelle règle d'`ApiStatusTest` (aucun type `INTERNAL` dans un package exporté) rend la frontière complète au niveau des types ; les membres `INTERNAL` n'étaient détectés ni avant ni maintenant.
+- **Natives en module** : modules `org.lwjgl.natives`… que rien ne requiert ; `scenario.py --modulepath` les résout par `--add-modules ALL-MODULE-PATH`.
+
+### Vérifié
+- `mvn -o package` (tests des deux modules, démo contre le jar), `python tools/analyse.py` (2 alertes Error Prone préexistantes dans `ShaderLoader`/`ShaderService`, rien de nouveau), `python tools/coverage.py`.
+- Classpath : `scenario.py "scene Scene2D" wait-loaded "?gl summary" resources`, 0 problème ; jar `jar-with-dependencies` lancé (`java -jar`), démarre.
+- Module : `scenario.py --modulepath` sur `Scene2D` (même `gl summary` qu'en classpath), `Scene3D` (modèle Assimp, natives), `LayeredTexture2D` (ressources `assets/demo` du jar de la démo), `console open`, `sounds`, `resources` : 0 problème ; sources `classpath:assets/mightylib/` et mappings de manettes lus.
+
+### À vérifier à la main
+- `python tools/scenario.py --keep-open "scene Scene2D"` puis `python tools/scenario.py --modulepath --keep-open "scene Scene2D"` : rendu de `Scene2D`, une scène 3D (`Scene3D`), la console (²/F2, saisie d'une commande `resources`), le son du menu.
+- Lancer la démo depuis IntelliJ (configuration existante) : le projet est réimporté avec les `module-info` ; si IntelliJ lance en module, vérifier que les natives sont trouvées (sinon ajouter `--add-modules ALL-MODULE-PATH` aux options de la VM).
