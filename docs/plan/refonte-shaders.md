@@ -121,7 +121,7 @@ Décisions prises :
 ### À vérifier à la main
 - `Scene2D`, `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`, `FallbackScene` : rendu identique à avant (seules `Scene2D`, `Scene3D` et `FallbackScene` ont été lancées, sans capture).
 - `ShaderDefines2D` : touche D plusieurs fois (inversion puis retour), texte d'aide à jour.
-- Rechargement à chaud : `watch on`, modifier un fichier GLSL (par exemple `definesDemo2DF.glsl`) pendant `ShaderDefines2D` : le shader se recharge avec le prélude et les defines courants ; y écrire un `#version` : repli magenta et message `#version is written by the engine`.
+- Rechargement à chaud : `watch on`, modifier un fichier GLSL (par exemple `definesDemo2DF.glsl`) pendant `ShaderDefines2D` : le shader se recharge avec le prélude et les defines courants ; y écrire un `#version` : l'ancienne version reste affichée (rechargement échoué, pas de repli) et le journal donne `#version in …definesDemo2DF.glsl:1: the #version is written by the engine` ; le retirer recharge le shader.
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/shader-service`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Vérifications manuelles : celles du « Bilan ».
