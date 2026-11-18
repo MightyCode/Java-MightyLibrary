@@ -148,6 +148,19 @@ class HeadlessTestEngineTest {
         }
     }
 
+    // The kit changes the configuration it starts from: a second engine on it is refused with a clear message
+    @Test
+    void aConfigurationStartsOneEngine(@TempDir Path game, @TempDir Path test) {
+        EngineConfig config = config(game);
+        MightyTest.headless(config).addSource(test).start().close();
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> MightyTest.headless(config).addSource(test).start());
+        assertTrue(error.getMessage().contains("already started"), error.getMessage());
+
+        // The refused engine took no lock: the next one starts
+        MightyTest.headless(config(game)).start().close();
+    }
+
     @Test
     void aStepNeedsAStartedEngine(@TempDir Path game) {
         TestEngine engine = MightyTest.headless(config(game));

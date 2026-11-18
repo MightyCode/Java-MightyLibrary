@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -35,6 +37,9 @@ public final class TestEngine implements AutoCloseable {
     private static final AtomicBoolean RUNNING = new AtomicBoolean();
     // An engine with a window kept between the tests (@MightySceneTest): closed when another engine starts
     private static TestEngine shared;
+    // The configurations already given to a started engine (weak: forgotten with them)
+    private static final Set<EngineConfig> STARTED_CONFIGS = Collections.synchronizedSet(
+            Collections.newSetFromMap(new WeakHashMap<>()));
 
     // Namespace of the plugin that stacks the folders of the test above the sources of the game
     static final String SOURCES_NAMESPACE = "mightytest";
@@ -86,6 +91,10 @@ public final class TestEngine implements AutoCloseable {
     public TestEngine start() {
         if (engine != null || closed)
             throw new IllegalStateException("A test engine starts once");
+        // The kit changes the configuration (plugin of the test sources, start scene, display): one per engine
+        if (!STARTED_CONFIGS.add(config))
+            throw new IllegalStateException("This EngineConfig already started a test engine: give a new one to each"
+                    + " engine (a Supplier<EngineConfig>, as the JUnit annotations do)");
         TestEngine idle = shared;
         if (idle != null && idle != this)
             idle.close();
