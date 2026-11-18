@@ -68,12 +68,11 @@ Choix à faire par l'auteur au moment du projet payant, pas avant. Si le modèle
 
 | Ressource | Origine connue | Statut |
 |---|---|---|
-| `models/backpack/*` | Berk Gedik (Sketchfab), adapté par Joey de Vries (LearnOpenGL), voir `source_attribution.txt` | **à vérifier** : licence de la page Sketchfab (probablement une licence Creative Commons avec attribution) ; l'attribution est obligatoire |
+| `models/backpack/*` (paquet de démonstration) | « Survival guitar backpack » de Berk Gedik (Sketchfab, https://sketchfab.com/3d-models/survival-guitar-backpack-799f8c4511f84fab8c3f12887f7e6b36), adapté par Joey de Vries (LearnOpenGL), voir `source_attribution.txt` | **CC BY 4.0** : attribution obligatoire (auteur, source, licence), indiquer les modifications ; distribué à part (release GitHub `demo-assets-N`, `tools/demo_assets.py`), avec `source_attribution.txt` dans l'archive |
 | `assets/mightylib/textures/fonts/engine*` (jar de la bibliothèque) | atlas bitmap (AngelCode BMFont) de Liberation Sans et Liberation Mono 2.1.4 (Red Hat, Google ; SIL OFL 1.1), Regular, Bold, Italic, BoldItalic ; les `.ttf`, `LICENSE`, `AUTHORS`, `README.md`, les `.bmfc` et `generate.py` sont dans `mightylib/fonts/`, hors du jar ; `OFL.txt` est joint aux atlas | libre : voir « Polices du moteur (SIL OFL) » plus bas |
 | `assets/mightylib/gamecontrollerdb.txt` (+ `gamecontrollerdb.LICENSE.txt`) | SDL_GameControllerDB (mdqinc), commit `22de0d7ef9fe1e6f852a50a9403a7a48f9be30ad` (2026-11-16), licence zlib | libre : garder la licence à côté du fichier |
 | `models/stand/stall.obj`, `textures/world/stallTexture.png` | probablement un tutoriel OpenGL | **inconnu** |
 | `textures/world/container*.png/jpg` | probablement LearnOpenGL | **inconnu**, à vérifier |
-| `models/weapon`, `models/world/tree`, `models/basicShape` | inconnu | **inconnu** |
 | `textures/world/*.png`, `gui/*`, `shaderEffects/*`, `icon/icon.ico` | inconnu (peut-être créés par l'auteur) | **à confirmer** |
 | `sounds/select*` (ogg, wav, mp3, flac) | inconnu (probablement créés par l'auteur) | **à confirmer** |
 | `sounds/chime.wav` | généré par programme pour le projet (arpège de cloches, mono) | aucune |

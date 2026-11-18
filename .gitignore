@@ -8,11 +8,8 @@ tools/scripts/
 # Natives extracted by LWJGL at launch
 .lwjgl/
 
-# Demonstration resources, distributed apart from the repository
+# Demonstration package, distributed apart from the repository (this list follows tools/demo_assets.json)
 resources/models/backpack/
-resources/models/basicShape/
-resources/models/weapon/
-resources/models/world/
 
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
