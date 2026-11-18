@@ -1,0 +1,16 @@
+{
+  "tag": "",
+  "archive": "",
+  "url": "",
+  "sha256": "",
+  "files": {
+    "models/backpack/ao.jpg": "603226102ae202a61ab4914734e1d9b09591b861689e8b14d887c0b0b0d7434b",
+    "models/backpack/backpack.mtl": "f9aaffb7ce3f968c01c3ab0e2de60fa38dff9695993c79d082c2e0a10c115cb5",
+    "models/backpack/backpack.obj": "8d3253f4032314c72353b79cbe589ec5751f50c294668cfd55fe70988e1d64ea",
+    "models/backpack/diffuse.jpg": "bbac15f06974d2ff27ea3aa3c4c555025b4d90bef533a23bd6c89630efc8f582",
+    "models/backpack/normal.png": "d4a2f93658af8c4881cfa6ac329993879adfb7b3ce48000a3928f20593a9908d",
+    "models/backpack/roughness.jpg": "8e6d31f76cd1cc19694c99f4c2d05dc75baf5f09580439ddf5f3cb934779df08",
+    "models/backpack/source_attribution.txt": "d6eed6ccfb2574e7c0eedddb2cbf6354a55946a76510dfbcd8ceddedcaeac441",
+    "models/backpack/specular.jpg": "dfc3fac4a52b709caa998aec8699ae2421f59ae8c353c7e05779cd93cff8153b"
+  }
+}
