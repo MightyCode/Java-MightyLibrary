@@ -6,7 +6,7 @@ import io.github.mightycode.mightylib.console.ConsoleLog;
 import io.github.mightycode.mightylib.console.LogCapture;
 import io.github.mightycode.mightylib.graphics.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
@@ -65,7 +65,6 @@ public final class Engine implements IView {
     private final EngineConfig config;
 
     private final ContextManager contexts = new ContextManager();
-    private ShaderManager shaderManager;
     // What the plugins registered (the engine first), frozen; null before setup
     private Registrations registrations;
     // The sources of the files of the resources, built once the registry is frozen; null before
@@ -94,8 +93,6 @@ public final class Engine implements IView {
 
     public ContextManager contexts() { return contexts; }
 
-    public ShaderManager shaderManager() { return shaderManager; }
-
     public Resources resources() { return resources; }
     // What the plugins registered, frozen (null before the start)
     public Registrations registrations() { return registrations; }
@@ -113,6 +110,9 @@ public final class Engine implements IView {
     }
 
     public GLResources glResources() { return glResources; }
+
+    // The shaders: declarations and prelude of their sources (service mightylib:shaders)
+    public IShaderService shaders() { return service(EngineServices.SHADERS); }
 
     // The sound (service mightylib:sound)
     public ISoundService sound() { return service(EngineServices.SOUND); }
@@ -234,7 +234,8 @@ public final class Engine implements IView {
         // Before the window: a mistake of a plugin stops the engine before anything is opened
         System.out.println("--Register the plugins.");
         try {
-            registrations = EngineRegistry.Collect(new EnginePlugin(config, () -> shaderManager, access != null),
+            registrations = EngineRegistry.Collect(new EnginePlugin(config,
+                    () -> hasService(EngineServices.SHADERS) ? shaders() : null, access != null),
                     config.getPlugins());
         } catch (RuntimeException e) {
             Logger.LogException("The registration of the plugins failed", e);
@@ -287,10 +288,6 @@ public final class Engine implements IView {
         System.out.println("GLSL VERSION :" + glGetString(GL_SHADING_LANGUAGE_VERSION));
 
         GenDeleteResources.Init();
-
-        System.out.println("--Create ShaderManager");
-        shaderManager = new ShaderManager(resourceSources);
-        shaderManager.init();
 
         System.out.println("--Create Resources");
         resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),

@@ -18,9 +18,9 @@ import static org.lwjgl.opengl.GL20.glUniformMatrix4fv;
  */
 public final class FallbackShader extends Shader {
     private static final String[] MATRICES = {
-            ShaderManager.GENERIC_PROJECTION_FIELD_NAME,
-            ShaderManager.GENERIC_VIEW_FIELD_NAME,
-            ShaderManager.GENERIC_MODEL_FIELD_NAME
+            ShaderUniforms.PROJECTION,
+            ShaderUniforms.VIEW,
+            ShaderUniforms.MODEL
     };
 
     public FallbackShader(FallbackShaderData data) {

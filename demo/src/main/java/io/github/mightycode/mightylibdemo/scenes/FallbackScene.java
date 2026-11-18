@@ -46,7 +46,7 @@ public class FallbackScene extends Scene {
                 "shaders/missing/brokenV.glsl", "shaders/missing/brokenF.glsl"));
 
         // Read, then the program does not compile: the data is loaded, its GL element fails
-        String folder = engine().shaderManager().folder();
+        String folder = engine().shaders().folder();
         String vertex = folder + "2D/essential/colorShape2DV.glsl";
         resources().addResourceAndSetUp(ShaderData.class, new ShaderData(NOT_COMPILING_SHADER, true,
                 vertex, folder + "fallbackDemo/notCompilingF.glsl"));

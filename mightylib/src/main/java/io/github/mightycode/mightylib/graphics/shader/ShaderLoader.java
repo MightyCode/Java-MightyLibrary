@@ -8,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -17,33 +18,34 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- * The shaders listed in shaders.json of the GLSL version (ShaderManager). Their sources are read and preprocessed by
- * the workers (ShaderPreprocessor: #include searched next to the including file, then in the version folder).
+ * The shaders declared by the shader service (IShaderService.declarations). Their sources are read and preprocessed
+ * by the workers (ShaderPreprocessor: prelude of the service, #include searched next to the including file, then in
+ * the folder of the shaders).
  */
 public final class ShaderLoader extends ResourceLoader {
-    // Read when the loader works: the manager exists once the window does, after the registration of the plugins
-    private final Supplier<ShaderManager> shaderManager;
+    // Read when the loader works: the service is created after the registration of the plugins
+    private final Supplier<IShaderService> shaderService;
 
     @Override
     public Class<? extends DataType> getType() {
         return ShaderData.class;
     }
 
-    public ShaderLoader(ShaderManager shaderManager) {
-        this(() -> shaderManager);
+    public ShaderLoader(IShaderService shaderService) {
+        this(() -> shaderService);
     }
 
-    // The plugin of the engine registers it before the shader manager exists (Engine.shaderManager)
-    public ShaderLoader(Supplier<ShaderManager> shaderManager) {
-        this.shaderManager = Objects.requireNonNull(shaderManager, "shaderManager");
+    // The plugin of the engine registers it before the services exist (Engine.shaders)
+    public ShaderLoader(Supplier<IShaderService> shaderService) {
+        this.shaderService = Objects.requireNonNull(shaderService, "shaderService");
     }
 
-    private ShaderManager manager() {
-        ShaderManager manager = shaderManager.get();
-        if (manager == null)
-            throw new IllegalStateException("The loader of the shaders is used before the shader manager exists");
+    private IShaderService service() {
+        IShaderService service = shaderService.get();
+        if (service == null)
+            throw new IllegalStateException("The loader of the shaders is used before the shader service exists");
 
-        return manager;
+        return service;
     }
 
     @Override
@@ -58,7 +60,8 @@ public final class ShaderLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data) {
-        JSONObject shadersList = manager().getShadersInfo().getJSONObject("shaders");
+        IShaderService service = service();
+        JSONObject shadersList = service.declarations();
 
         Iterator<String> arrayShader = shadersList.keys();
         while (arrayShader.hasNext()) {
@@ -71,7 +74,7 @@ public final class ShaderLoader extends ResourceLoader {
             JSONArray files = JShader.getJSONArray("files");
             String[] sArrayFiles = new String[files.length()];
             for (int i = 0; i < files.length(); ++i) {
-                sArrayFiles[i] = manager().folder() + files.getString(i);
+                sArrayFiles[i] = service.folder() + files.getString(i);
             }
 
             JSONArray tags = JShader.getJSONArray("tags");
@@ -132,7 +135,7 @@ public final class ShaderLoader extends ResourceLoader {
 
     private String preprocess(String path, Set<String> watched, List<List<String>> stageFiles) {
         ShaderPreprocessor preprocessor = new ShaderPreprocessor(this::readIfFile,
-                manager().folder(), manager().prelude());
+                service().folder(), service().prelude(Collections.emptyMap()));
         try {
             String source = preprocessor.process(path);
             stageFiles.add(List.copyOf(preprocessor.files()));
