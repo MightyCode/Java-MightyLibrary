@@ -25,6 +25,12 @@ public final class MainThread {
         mainThread = Thread.currentThread();
     }
 
+    // Test kit, once the engine is stopped: no main thread, no task left for the next engine
+    static void reset() {
+        mainThread = null;
+        TASKS.clear();
+    }
+
     // True before the engine starts too: there is no other thread to protect yet
     public static boolean isMainThread() {
         Thread main = mainThread;

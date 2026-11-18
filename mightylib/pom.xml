@@ -84,27 +84,4 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <!-- Test helpers for the projects that use the library (the demo): a jar of the classes *TestAccess of the
-                 tests only, which open package-private parts of the engine (main thread, workers) to tests -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>test-helpers</id>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                        <configuration>
-                            <includes>
-                                <include>**/*TestAccess.class</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 </project>

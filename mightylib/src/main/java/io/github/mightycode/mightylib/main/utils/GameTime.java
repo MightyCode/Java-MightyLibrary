@@ -78,7 +78,8 @@ public final class GameTime {
     // Replaces the source of the time (nanoseconds) and restarts the time from it; null = real time
     static void setClock(LongSupplier newClock){
         clock = newClock == null ? SYSTEM_CLOCK : newClock;
-        gametime = null;
+        // The time starts now: the first update measures from the clock as it is
+        gametime = new GameTime();
     }
 
     // Sets the duration of the last frame (DeltaTime) without waiting

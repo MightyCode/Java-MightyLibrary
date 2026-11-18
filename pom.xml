@@ -23,6 +23,7 @@
         <module>base-parent</module>
         <module>game-parent</module>
         <module>mightylib</module>
+        <module>mightylib-test</module>
         <module>demo</module>
     </modules>
 

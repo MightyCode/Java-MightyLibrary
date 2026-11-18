@@ -1,10 +1,11 @@
 package io.github.mightycode.mightylibdemo.resources;
 
-import io.github.mightycode.mightylib.main.MainThreadTestAccess;
-import io.github.mightycode.mightylib.resources.source.FolderSource;
-import io.github.mightycode.mightylib.resources.source.ResourceSources;
-import io.github.mightycode.mightylib.main.WorkersTestAccess;
+import io.github.mightycode.mightylib.main.EngineConfig;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.test.MightyTest;
+import io.github.mightycode.mightylib.test.TestEngine;
+import io.github.mightycode.mightylibdemo.main.DemoPlugin;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -21,7 +22,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/** The layered pictures of the demo: found by folder, layers sorted by name and stacked, a bad layer named. */
+/**
+ * The layered pictures of the demo: found by folder, layers sorted by name and stacked, a bad layer named.
+ * A headless engine of the test kit with the plugin of the demo, on a folder of the test as the folder of the game.
+ */
 class LayeredTextureLoaderTest {
     private static final int RED = 0xFFFF0000;
     private static final int BLUE = 0xFF0000FF;
@@ -30,12 +34,17 @@ class LayeredTextureLoaderTest {
     Path folder;
 
     private Path layered;
+    private TestEngine engine;
 
     @BeforeEach
     void setUp() {
-        MainThreadTestAccess.setCurrentAsMain();
-        WorkersTestAccess.ensureThreads(2);
         layered = folder.resolve(LayeredTextureLoader.FOLDER);
+    }
+
+    @AfterEach
+    void stop() {
+        if (engine != null)
+            engine.close();
     }
 
     // A layer of the given size filled with the color, transparent elsewhere
@@ -54,12 +63,16 @@ class LayeredTextureLoaderTest {
         return LayeredTextureLoader.FOLDER + "/" + data + "/" + file;
     }
 
+    // The engine started on the folder, its resources loaded; a failing layer gives the fallback, as in the game
     private Resources load() {
-        Resources resources = new Resources(new Resources.AllResourcesMethod(), 2, ResourceSources.of(new FolderSource(folder)),
-                List.of(new LayeredTextureLoader()));
-        resources.init();
-        resources.load();
-        return resources;
+        engine = MightyTest.headless(new EngineConfig()
+                        .setResourcesFolder(folder.toString())
+                        .setResourcesLoadingMethod(new Resources.AllResourcesMethod())
+                        .addPlugin(new DemoPlugin()))
+                .allowResourceFailures()
+                .start()
+                .loadUntilDone();
+        return engine.resources();
     }
 
     @Test

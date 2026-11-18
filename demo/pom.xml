@@ -50,13 +50,6 @@
             <artifactId>lwjgl-openal</artifactId>
         </dependency>
 
-        <!-- Test helpers of the library (MainThreadTestAccess, WorkersTestAccess) -->
-        <dependency>
-            <groupId>io.github.mightycode</groupId>
-            <artifactId>mightylib</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

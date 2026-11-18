@@ -27,6 +27,12 @@
          written out: with all-natives, the natives of this machine are declared twice once lwjgl.natives is replaced,
          and Maven only gives the managed version to one of the two declarations. -->
     <dependencies>
+        <!-- The test kit (MightyTest, @MightyEngineTest, @MightySceneTest), test scope only: never in the game's jar -->
+        <dependency>
+            <groupId>io.github.mightycode</groupId>
+            <artifactId>mightylib-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl</artifactId>

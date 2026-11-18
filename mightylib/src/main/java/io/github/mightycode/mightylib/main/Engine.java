@@ -84,6 +84,9 @@ public final class Engine implements IView {
     private boolean glfwStarted;
     // Started without window nor GL (setupHeadless)
     private boolean headless;
+    // Run by the test kit: silent sound, neither standard input nor debug server (setUnderTest)
+    private boolean underTest;
+    private boolean strictUnderTest;
     // A window that stops the engine was closed
     private boolean stopRequested;
     // Inside glfwPollEvents, see isPollingEvents
@@ -242,6 +245,18 @@ public final class Engine implements IView {
     // Started without window (setupHeadless): no scene manager, the commands run for the engine
     boolean isHeadless() { return headless; }
 
+    // Before the setup, by the test kit: silent sound, neither standard input nor debug server; strict or lenient
+    // resources whatever the mode
+    void setUnderTest(boolean strictResources) {
+        underTest = true;
+        strictUnderTest = strictResources;
+    }
+
+    // A resource that fails stops the program: the configuration (debug mode only), or the choice of the test kit
+    boolean isStrictResources() {
+        return underTest ? strictUnderTest : config.isStrictResources();
+    }
+
     /**
      * Everything that needs neither a window nor GL: threads, plugins, sources, resources (not loaded yet),
      * commands, services. A null sink: the window part follows and gives the GL resources as the sink.
@@ -291,15 +306,15 @@ public final class Engine implements IView {
                 .map(IResourceSource::name).collect(Collectors.joining(" < ")));
         contexts.setInputRegistry(registrations.inputs());
         contexts.setInputManagerFactory(registrations.inputManagerFactory());
-        registrations.lifecycle().setStrict(config.isStrictResources());
+        registrations.lifecycle().setStrict(isStrictResources());
 
         GameTime.setFixedDeltaTime(1f / config.getTps());
 
         System.out.println("--Create Resources");
         resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
                 resourceSources, registrations.loaders());
-        resources.setStrict(config.isStrictResources());
-        if (config.isStrictResources())
+        resources.setStrict(isStrictResources());
+        if (isStrictResources())
             System.out.println("--Strict resources: a resource that fails stops the program");
 
         if (config.getWatchResources() != null) {
@@ -334,7 +349,10 @@ public final class Engine implements IView {
         // After the resources and the commands, before the scenes: they can use the services
         System.out.println("--Create the services");
         services = new ServiceSet();
-        if (config.isSoundForcedSilent()) {
+        if (underTest) {
+            System.out.println("--Run by the test kit: no sound device");
+            services.override(EngineServices.SOUND, EnginePlugin.SilentSound());
+        } else if (config.isSoundForcedSilent()) {
             System.out.println("--" + EngineConfig.SOUND_PROPERTY + "=silent: no sound device");
             services.override(EngineServices.SOUND, EnginePlugin.SilentSound());
         }
@@ -391,8 +409,8 @@ public final class Engine implements IView {
         loadResources();
         sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
-        // The standard input and the debug server only exist in debug mode
-        if (MainLoop.isDebug()) {
+        // The standard input and the debug server only exist in debug mode, never in a test
+        if (MainLoop.isDebug() && !underTest) {
             commands.startConsole();
 
             int debugServerPort = config.getDebugServerPort();
