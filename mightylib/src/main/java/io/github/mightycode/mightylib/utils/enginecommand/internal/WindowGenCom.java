@@ -9,6 +9,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.main.Context;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public final class WindowGenCom extends BaseCommand {
 
     @Override
     protected void syntax(CommandNode root) {
+        root.requires(CommandCondition.window());
         ArgumentType<String> reference = oneOf(() -> windowReferences(Views.engine()));
 
         root.executes("The target window", context -> describeTarget(Views.engine(), "Target window"))

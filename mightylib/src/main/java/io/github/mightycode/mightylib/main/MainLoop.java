@@ -1,12 +1,10 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.text.DrawnTexts;
 import io.github.mightycode.mightylib.main.internal.FrameEvent;
 import io.github.mightycode.mightylib.main.internal.TickEvent;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.main.utils.GameTime;
-import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.scenes.ISceneManager;
 
 public final class MainLoop {
@@ -49,6 +47,67 @@ public final class MainLoop {
         }
     }
 
+    // One tick: time, then update of the engine. Returns the CPU time spent (nanoseconds).
+    // Called by the loop and by the test kit, so that both run the same code.
+    static long tick(Engine engine) {
+        TickEvent tickEvent = new TickEvent();
+        tickEvent.begin();
+        long tickStart = System.nanoTime();
+        GameTime.update();
+        engine.update();
+        long tickWork = System.nanoTime() - tickStart;
+        EngineStats.endTick(tickWork);
+        tickEvent.commit();
+        return tickWork;
+    }
+
+    // One frame (headless: no display, no GL, no swap): display, then loading queues, main thread tasks and GL elements until the deadline
+    // (System.nanoTime, at most one frame from now), then buffer swap. Returns the CPU time spent before the swap.
+    // Called by the loop and by the test kit, so that both run the same code.
+    static long frame(Engine engine, long deadline) {
+        EngineConfig config = engine.config();
+        double frameTime = NANO_IN_SECOND / config.getFps();
+
+        FrameEvent frameEvent = new FrameEvent();
+        frameEvent.begin();
+        long frameStart = System.nanoTime();
+        // Without window (Engine.setupHeadless): no display, the GL elements stay in the sink
+        boolean windowed = !engine.isHeadless();
+        DrawnTexts.beginFrame();
+        if (windowed) {
+            engine.displayWindows();
+
+            // What follows (loading queues, main thread tasks, screenshots) works in the main window
+            engine.contexts().requireMainWindow().getWindow().bindWindow();
+        }
+
+        // GL elements are sent with the time left in this frame, before the next tick or frame.
+        // No tick is due now (the tick branch would have run), at least one step is done anyway.
+        long frameDeadline = Math.min(deadline, frameStart + (long) frameTime);
+        // The loading uses the whole frame under a loading screen, a share of it while the scene is displayed.
+        // Every queue does at least one step, so the loading always progresses; the main thread tasks
+        // (posted by any code, not only the loading) keep the whole frame.
+        long loadingDeadline = loadingDeadline(System.nanoTime(), frameDeadline, frameTime,
+                config.getInGameLoadingShare(), engine.isAnySceneLoading());
+
+        engine.resources().processUntil(loadingDeadline);
+        MainThread.process(frameDeadline);
+        if (windowed)
+            engine.glResources().process(loadingDeadline);
+
+        // Measured before the buffer swap, which can wait for the GPU
+        long frameWork = System.nanoTime() - frameStart;
+        EngineStats.endFrame(frameStart, frameWork);
+        frameEvent.commit();
+
+        if (windowed) {
+            long swapStart = System.nanoTime();
+            engine.swapWindows();
+            EngineStats.endSwap(System.nanoTime() - swapStart);
+        }
+        return frameWork;
+    }
+
     // Return the status of the end of the loop
     @SuppressWarnings("BusyWait")
     private static int loop(Engine engine) {
@@ -72,61 +131,18 @@ public final class MainLoop {
 
         long start = System.nanoTime();
 
-        WindowContext mainContext = engine.contexts().requireMainWindow();
-
-        Window window = mainContext.getWindow();
-        GLResources glResources = engine.glResources();
-        Resources resources = engine.resources();
+        Window window = engine.contexts().requireMainWindow().getWindow();
 
         while (!engine.isStopRequested() && !sceneManager.isExitRequested()) {
             long now = System.nanoTime() - start;
             if (now - lastTick >= tickTime) {
-                TickEvent tickEvent = new TickEvent();
-                tickEvent.begin();
-                long tickStart = System.nanoTime();
-                GameTime.update();
-                engine.update();
-                long tickWork = System.nanoTime() - tickStart;
-                tickNanos += tickWork;
-                EngineStats.endTick(tickWork);
-                tickEvent.commit();
+                tickNanos += tick(engine);
                 ++ticks;
 
                 while (now - lastTick >= tickTime)
                     lastTick += tickTime;
             } else if (now - lastFrame >= frameTime) {
-                FrameEvent frameEvent = new FrameEvent();
-                frameEvent.begin();
-                long frameStart = System.nanoTime();
-                DrawnTexts.beginFrame();
-                engine.displayWindows();
-
-                // What follows (loading queues, main thread tasks, screenshots) works in the main window
-                window.bindWindow();
-
-                // GL elements are sent with the time left in this frame, before the next tick or frame.
-                // No tick is due now (the tick branch would have run), at least one step is done anyway.
-                long nextTick = start + (long) (lastTick + tickTime);
-                long deadline = Math.min(nextTick, frameStart + (long) frameTime);
-                // The loading uses the whole frame under a loading screen, a share of it while the scene is displayed.
-                // Every queue does at least one step, so the loading always progresses; the main thread tasks
-                // (posted by any code, not only the loading) keep the whole frame.
-                long loadingDeadline = loadingDeadline(System.nanoTime(), deadline, frameTime,
-                        config.getInGameLoadingShare(), engine.isAnySceneLoading());
-
-                resources.processUntil(loadingDeadline);
-                MainThread.process(deadline);
-                glResources.process(loadingDeadline);
-
-                // Measured before the buffer swap, which can wait for the GPU
-                long frameWork = System.nanoTime() - frameStart;
-                frameNanos += frameWork;
-                EngineStats.endFrame(frameStart, frameWork);
-                frameEvent.commit();
-
-                long swapStart = System.nanoTime();
-                engine.swapWindows();
-                EngineStats.endSwap(System.nanoTime() - swapStart);
+                frameNanos += frame(engine, start + (long) (lastTick + tickTime));
                 ++frames;
                 while (now - lastFrame >= frameTime)
                     lastFrame += frameTime;

@@ -13,7 +13,10 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
-      # The tests need neither a window nor OpenGL (see docs/debug-tools.md for the in-game checks)
+      # The tests tagged gl open a hidden window: a virtual screen (Xvfb) and the OpenGL of Mesa (llvmpipe, 3.3 core
+      # and more). mightylib.test.requireGL: a test with GL fails without GL instead of being skipped
+      - name: Virtual screen and Mesa
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
       # verify: the demo is compiled and tested against the jar of the library, as another project would use it
       - name: Compile, test and package
-        run: mvn -B verify
+        run: xvfb-run -a mvn -B verify -Dmightylib.test.requireGL=true

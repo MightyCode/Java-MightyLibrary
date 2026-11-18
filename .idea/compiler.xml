@@ -9,6 +9,7 @@
         <module name="mightylib-parent" />
         <module name="mightylib" />
         <module name="mightylib-demo" />
+        <module name="mightylib-test" />
       </profile>
     </annotationProcessing>
   </component>
@@ -17,6 +18,7 @@
       <module name="Java-MightyLibrary" options="-Xlint:-exports -Xlint:-requires-automatic" />
       <module name="mightylib" options="-Xlint:-exports -Xlint:-requires-automatic" />
       <module name="mightylib-demo" options="" />
+      <module name="mightylib-test" options="-Xlint:-exports -Xlint:-requires-automatic" />
     </option>
   </component>
 </project>

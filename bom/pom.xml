@@ -41,9 +41,8 @@
             </dependency>
             <dependency>
                 <groupId>io.github.mightycode</groupId>
-                <artifactId>mightylib</artifactId>
+                <artifactId>mightylib-test</artifactId>
                 <version>${mightylib.version}</version>
-                <type>test-jar</type>
             </dependency>
             <dependency>
                 <groupId>org.json</groupId>

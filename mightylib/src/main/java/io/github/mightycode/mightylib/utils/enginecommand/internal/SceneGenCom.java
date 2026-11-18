@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONObject;
 
@@ -27,6 +28,7 @@ public final class SceneGenCom extends BaseCommand {
 
     @Override
     protected void syntax(CommandNode root) {
+        root.requires(CommandCondition.window());
         root.executes("Name of the current scene and whether it is still loading", context -> currentScene())
                 .then(argument("name", suggest(() -> scenes().completions()),
                         "A registered scene: its identifier (demo:scene2d) or its path alone when no other scene has"

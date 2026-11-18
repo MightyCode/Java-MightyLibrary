@@ -19,6 +19,7 @@ import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.LifecycleHooks;
 import io.github.mightycode.mightylib.registry.Registrations;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.IResourceSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
@@ -81,6 +82,11 @@ public final class Engine implements IView {
     private ConsoleLog consoleLog;
 
     private boolean glfwStarted;
+    // Started without window nor GL (setupHeadless)
+    private boolean headless;
+    // Run by the test kit: silent sound, neither standard input nor debug server (setUnderTest)
+    private boolean underTest;
+    private boolean strictUnderTest;
     // A window that stops the engine was closed
     private boolean stopRequested;
     // Inside glfwPollEvents, see isPollingEvents
@@ -212,7 +218,52 @@ public final class Engine implements IView {
 
     // Return ListError.NO_ERROR, or the error that prevents the engine from starting
     int setup() {
-        config.validate();
+        int status = setupCore(null);
+        if (status != ListError.NO_ERROR)
+            return status;
+
+        return setupWindow();
+    }
+
+    /**
+     * The engine without window nor GL (test kit, later a dedicated server): the core, then the loading of the
+     * resources, whose GL elements go to the given sink. No scene manager, no console, no inputs (they read a
+     * window), no debug server.
+     */
+    int setupHeadless(IGLElementSink sink) {
+        if (sink == null)
+            throw new IllegalArgumentException("A headless engine needs a sink for the GL elements");
+
+        int status = setupCore(sink);
+        if (status != ListError.NO_ERROR)
+            return status;
+
+        loadResources();
+        return ListError.NO_ERROR;
+    }
+
+    // Started without window (setupHeadless): no scene manager, the commands run for the engine
+    boolean isHeadless() { return headless; }
+
+    // Before the setup, by the test kit: silent sound, neither standard input nor debug server; strict or lenient
+    // resources whatever the mode
+    void setUnderTest(boolean strictResources) {
+        underTest = true;
+        strictUnderTest = strictResources;
+    }
+
+    // A resource that fails stops the program: the configuration (debug mode only), or the choice of the test kit
+    boolean isStrictResources() {
+        return underTest ? strictUnderTest : config.isStrictResources();
+    }
+
+    /**
+     * Everything that needs neither a window nor GL: threads, plugins, sources, resources (not loaded yet),
+     * commands, services. A null sink: the window part follows and gives the GL resources as the sink.
+     */
+    private int setupCore(IGLElementSink headlessSink) {
+        headless = headlessSink != null;
+        config.validate(!headless);
         MainThread.setCurrentAsMain();
         Workers.start(config.getMaxThreads());
         MainLoop.setMode(config.getMode());
@@ -230,13 +281,14 @@ public final class Engine implements IView {
             LogCapture.install(consoleLog);
         }
 
-        System.out.println("--Start program.");
+        System.out.println("--Start program" + (headless ? " without window." : "."));
 
-        // Before the window: a mistake of a plugin stops the engine before anything is opened
+        // Before the window: a mistake of a plugin stops the engine before anything is opened.
+        // The console shows itself in the main window: none without window
         System.out.println("--Register the plugins.");
         try {
             registrations = EngineRegistry.Collect(new EnginePlugin(config,
-                    () -> hasService(EngineServices.SHADERS) ? shaders() : null, access != null),
+                    () -> hasService(EngineServices.SHADERS) ? shaders() : null, access != null && !headless),
                     config.getPlugins());
         } catch (RuntimeException e) {
             Logger.LogException("The registration of the plugins failed", e);
@@ -254,14 +306,70 @@ public final class Engine implements IView {
                 .map(IResourceSource::name).collect(Collectors.joining(" < ")));
         contexts.setInputRegistry(registrations.inputs());
         contexts.setInputManagerFactory(registrations.inputManagerFactory());
-        registrations.lifecycle().setStrict(config.isStrictResources());
+        registrations.lifecycle().setStrict(isStrictResources());
 
+        GameTime.setFixedDeltaTime(1f / config.getTps());
+
+        System.out.println("--Create Resources");
+        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
+                resourceSources, registrations.loaders());
+        resources.setStrict(isStrictResources());
+        if (isStrictResources())
+            System.out.println("--Strict resources: a resource that fails stops the program");
+
+        if (config.getWatchResources() != null) {
+            resources.watcher().configure(config.getWatchResources(), config.getWatchResourcesInterval());
+            resources.watcher().watchAll();
+        }
+
+        // The batches send the GL elements of their data (textures) during the loading
+        if (headless)
+            resources.setGLElementSink(headlessSink);
+        TextureUploader.setMode(config.getTextureUpload());
+
+        // Before the scenes and the game: they add their commands to it
+        if (maxAccess == null && System.getProperty(EngineConfig.COMMAND_ACCESS_PROPERTY) != null)
+            System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
+
+        commands = new Commands(maxAccess == null ? ECommandLevel.USER : maxAccess,
+                access == null ? ECommandLevel.USER : access);
+        // Each plugin owns its commands (the engine its general ones), fixed for the whole run
+        for (String plugin : registrations.plugins()) {
+            CommandOwner owner = CommandOwner.Plugin(plugin);
+            for (BaseCommand command : registrations.commands(plugin))
+                commands.register(command, owner);
+        }
+        commands.freezePluginCommands();
+        // Without window, there is no view to choose among: the commands run for the engine
+        if (!headless)
+            commands.setViewChooser(this::targetedView);
+        if (consoleLog != null)
+            commands.addListener(new CommandEcho(consoleLog));
+
+        // After the resources and the commands, before the scenes: they can use the services
+        System.out.println("--Create the services");
+        services = new ServiceSet();
+        if (underTest) {
+            System.out.println("--Run by the test kit: no sound device");
+            services.override(EngineServices.SOUND, EnginePlugin.SilentSound());
+        } else if (config.isSoundForcedSilent()) {
+            System.out.println("--" + EngineConfig.SOUND_PROPERTY + "=silent: no sound device");
+            services.override(EngineServices.SOUND, EnginePlugin.SilentSound());
+        }
+        if (!services.create(this, registrations.services()))
+            return ListError.SERVICE_FAIL;
+        // Before the resources are loaded: the sounds keep their samples in the sound service
+        resources.setSoundBuffers(sound());
+
+        return ListError.NO_ERROR;
+    }
+
+    // The window, GL and what shows the game: scene manager, loading, start scene, console, debug server, icon
+    private int setupWindow() {
         System.out.println("--Load libraries.");
 
         if (loadLibraries() == -1)
             return ListError.LIBRARIES_LOAD_FAIL;
-
-        GameTime.setFixedDeltaTime(1f / config.getTps());
 
         System.out.println("--Create main context.");
 
@@ -290,66 +398,19 @@ public final class Engine implements IView {
 
         GenDeleteResources.Init();
 
-        System.out.println("--Create Resources");
-        resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
-                resourceSources, registrations.loaders());
-        resources.setStrict(config.isStrictResources());
-        if (config.isStrictResources())
-            System.out.println("--Strict resources: a resource that fails stops the program");
-
-        if (config.getWatchResources() != null) {
-            resources.watcher().configure(config.getWatchResources(), config.getWatchResourcesInterval());
-            resources.watcher().watchAll();
-        }
-
         // The batches send the GL elements of their data (textures) during the loading
         glResources = new GLResources(config.getMaxGLUploadMillisecondsPerFrame());
         resources.setGLElementSink(glResources);
-        TextureUploader.setMode(config.getTextureUpload());
-
-        // Before the scenes and the game: they add their commands to it
-        if (maxAccess == null && System.getProperty(EngineConfig.COMMAND_ACCESS_PROPERTY) != null)
-            System.out.println("--" + EngineConfig.COMMAND_ACCESS_PROPERTY + " ignored: this game has no command access");
-
-        commands = new Commands(maxAccess == null ? ECommandLevel.USER : maxAccess,
-                access == null ? ECommandLevel.USER : access);
-        // Each plugin owns its commands (the engine its general ones), fixed for the whole run
-        for (String plugin : registrations.plugins()) {
-            CommandOwner owner = CommandOwner.Plugin(plugin);
-            for (BaseCommand command : registrations.commands(plugin))
-                commands.register(command, owner);
-        }
-        commands.freezePluginCommands();
-        commands.setViewChooser(this::targetedView);
-        if (consoleLog != null)
-            commands.addListener(new CommandEcho(consoleLog));
-
-        // After the resources and the commands, before the scenes: they can use the services
-        System.out.println("--Create the services");
-        services = new ServiceSet();
-        if (config.isSoundForcedSilent()) {
-            System.out.println("--" + EngineConfig.SOUND_PROPERTY + "=silent: no sound device");
-            services.override(EngineServices.SOUND, EnginePlugin.SilentSound());
-        }
-        if (!services.create(this, registrations.services()))
-            return ListError.SERVICE_FAIL;
-        // Before the resources are loaded: the sounds keep their samples in the sound service
-        resources.setSoundBuffers(sound());
 
         System.out.println("--Create the scene manager");
         sceneManager = registrations.sceneManagerFactory().create(this, mainContext, true, config.getLoadingScene());
         mainContext.setSceneManager(sceneManager);
 
-        // Create all resources dependencies
-        resources.init();
-
-        // Load all resources
-        resources.load();
-        lifecycle().started();
+        loadResources();
         sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
-        // The standard input and the debug server only exist in debug mode
-        if (MainLoop.isDebug()) {
+        // The standard input and the debug server only exist in debug mode, never in a test
+        if (MainLoop.isDebug() && !underTest) {
             commands.startConsole();
 
             int debugServerPort = config.getDebugServerPort();
@@ -369,6 +430,13 @@ public final class Engine implements IView {
         }
 
         return ListError.NO_ERROR;
+    }
+
+    // The dependencies of the resources, then their loading, then the plugins are told the engine is started
+    private void loadResources() {
+        resources.init();
+        resources.load();
+        lifecycle().started();
     }
 
     // ---- Contexts and windows ----
@@ -571,13 +639,13 @@ public final class Engine implements IView {
         // What every window shows, then the resources, while the OpenGL contexts exist
         contexts.unloadViews();
 
+        // The sources of the sound, the GL objects of the console (in the main window when it exists)
         WindowContext mainWindow = contexts.getMainWindow();
-        if (mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated()) {
+        boolean windowExists = mainWindow != null && mainWindow.getWindow().getInfo().isWindowCreated();
+        if (windowExists)
             mainWindow.getWindow().bindWindow();
-            // The sources of the sound, the GL objects of the console
-            if (services != null)
-                services.unload();
-        }
+        if (services != null && (windowExists || headless))
+            services.unload();
 
         if (resources != null)
             resources.unload();

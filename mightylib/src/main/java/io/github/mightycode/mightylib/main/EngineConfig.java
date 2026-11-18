@@ -352,10 +352,11 @@ public final class EngineConfig {
         return this;
     }
 
-    void validate() {
-        if (startScene == null)
+    // Without window (headless engine), there are no scenes to start
+    void validate(boolean withScenes) {
+        if (withScenes && startScene == null)
             throw new IllegalStateException("EngineConfig: no start scene, call setStartScene");
-        if (loadingScene == null)
+        if (withScenes && loadingScene == null)
             throw new IllegalStateException("EngineConfig: no loading scene, keep the default one or call setLoadingScene");
         if (consoleLogCapacity < 1)
             throw new IllegalStateException("EngineConfig: the console log capacity must be positive");

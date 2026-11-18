@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.syntax;
 
+import io.github.mightycode.mightylib.main.IView;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -19,6 +21,7 @@ import java.util.function.Supplier;
  */
 public final class CommandCondition {
     public static final String SCENE_STILL_LOADING = "Scene still loading";
+    public static final String NO_WINDOW = "No window: the engine runs without window";
 
     private final Predicate<CommandContext> predicate;
     // Null for a hidden condition
@@ -59,6 +62,18 @@ public final class CommandCondition {
             Scene current = scene.get();
             return current != null && current.isLaunched();
         }, SCENE_STILL_LOADING);
+    }
+
+    /**
+     * "No window" when the engine was started without window (test kit, dedicated server): for the commands that
+     * read a window, its scene, its inputs or GL. Put it first on the root: the conditions are asked in order.
+     */
+    public static CommandCondition window() {
+        return check(context -> {
+            // No view (the commands used without engine): nothing to check here, the command answers for itself
+            IView view = Views.currentOrNull();
+            return view == null || view.engine().contexts().getMainWindow() != null;
+        }, NO_WINDOW);
     }
 
     public boolean isHidden() {

@@ -9,6 +9,7 @@ import io.github.mightycode.mightylib.main.monitors.VideoMode;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,6 +31,7 @@ public final class MonitorsGenCom extends BaseCommand {
 
     @Override
     protected void syntax(CommandNode root) {
+        root.requires(CommandCondition.window());
         root.executes("The screen is chosen at start by EngineConfig.setMonitorSelector or"
                         + " -Dmightylib.window.monitor=primary|secondary|largest|index|part of a name",
                         context -> describe(false, false))

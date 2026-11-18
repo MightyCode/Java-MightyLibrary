@@ -14,6 +14,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.ArgumentType;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandSyntaxException;
@@ -122,7 +123,8 @@ public final class InputGenCom extends BaseCommand {
         ArgumentType<Integer> key = keyType();
         ArgumentType<Integer> button = mouseButtonType();
 
-        root.then(literal("list", "List the actions with their id, then the axes")
+        root.requires(CommandCondition.window())
+                .then(literal("list", "List the actions with their id, then the axes")
                         .executes(context -> list(inputManager())))
                 .then(literal("state", "Inputs seen by the current tick (mouse, keys, text, actions)")
                         .executes(context -> state(inputManager())))

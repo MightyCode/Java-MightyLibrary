@@ -62,6 +62,16 @@ public final class ServicesGenCom extends BaseCommand {
                     .append(declaration.afterKeys().isEmpty() ? "" : ", after " + declaration.afterKeys());
         }
 
+        JSONObject data = new JSONObject();
+        data.put("count", services.length());
+        data.put("services", services);
+
+        // Without window (test kit, dedicated server): neither scene manager nor input manager
+        if (engine.sceneManager() == null) {
+            message.append("\nNo scene manager nor input manager: the engine runs without window");
+            return CommandResult.ok(services.length() + " service(s)" + message, data);
+        }
+
         Registrations registrations = engine.registrations();
         JSONObject managers = new JSONObject();
         String sceneManager = engine.sceneManager().getClass().getName();
@@ -75,9 +85,6 @@ public final class ServicesGenCom extends BaseCommand {
                 .append("\nInput manager: ").append(engine.targetWindow().getInputManager().getClass().getSimpleName())
                 .append(" (plugin ").append(registrations.inputManagerFactoryPlugin()).append(")");
 
-        JSONObject data = new JSONObject();
-        data.put("count", services.length());
-        data.put("services", services);
         data.put("managers", managers);
         return CommandResult.ok(services.length() + " service(s)" + message, data);
     }

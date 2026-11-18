@@ -1,10 +1,16 @@
 package io.github.mightycode.mightylib.main.utils;
 
+import java.util.function.LongSupplier;
+
 public final class GameTime {
+    private static final LongSupplier SYSTEM_CLOCK = System::nanoTime;
+
     private static GameTime gametime;
 
+    // Source of the time in nanoseconds: real time by default, replaced by a manual clock in tests
+    private static LongSupplier clock = SYSTEM_CLOCK;
+
     private long currentTime;
-    private long temp;
 
     private float elapsedTime;
 
@@ -23,48 +29,38 @@ public final class GameTime {
 
     public GameTime(){
         elapsedTime = 0;
-        currentTime = System.nanoTime();
+        currentTime = clock.getAsLong();
     }
 
-    public static float DeltaTime(){
+    private static GameTime instance(){
         if (gametime == null){
             gametime = new GameTime();
         }
 
-        return gametime.elapsedTime;
+        return gametime;
+    }
+
+    public static float DeltaTime(){
+        return instance().elapsedTime;
     }
 
 
     public static float getDeltaTSinceLastUpdate(){
-        if (gametime == null){
-            gametime = new GameTime();
-        }
-
-        return gametime.deltaTimeSinceLastUpdate();
+        return instance().deltaTimeSinceLastUpdate();
     }
 
 
     private float deltaTimeSinceLastUpdate(){
-        temp = System.nanoTime();
-
-        return ((float)(temp - currentTime)) / NANO_TO_SEC;
+        return ((float)(clock.getAsLong() - currentTime)) / NANO_TO_SEC;
     }
 
 
     public static void update(){
-        if (gametime == null){
-            gametime = new GameTime();
-        }
-
-        gametime.updateGameTime();
+        instance().updateGameTime();
     }
 
     public static float currentTime(){
-        if (gametime == null){
-            gametime = new GameTime();
-        }
-
-        return gametime.getCurrentTime();
+        return instance().getCurrentTime();
     }
 
     public float getCurrentTime(){
@@ -72,8 +68,28 @@ public final class GameTime {
     }
 
     private void updateGameTime(){
-        temp = System.nanoTime();
-        elapsedTime = ((float)(temp - currentTime)) / NANO_TO_SEC;
-        currentTime = temp;
+        long now = clock.getAsLong();
+        elapsedTime = ((float)(now - currentTime)) / NANO_TO_SEC;
+        currentTime = now;
+    }
+
+    // Test access (package-private): the test kit reaches it through a bridge in this package
+
+    // Replaces the source of the time (nanoseconds) and restarts the time from it; null = real time
+    static void setClock(LongSupplier newClock){
+        clock = newClock == null ? SYSTEM_CLOCK : newClock;
+        // The time starts now: the first update measures from the clock as it is
+        gametime = new GameTime();
+    }
+
+    // Sets the duration of the last frame (DeltaTime) without waiting
+    static void setDeltaTime(float seconds){
+        instance().elapsedTime = seconds;
+    }
+
+    // Back to the real time, fixed delta time to its default, time restarted
+    static void reset(){
+        setClock(null);
+        fixedDeltaTime = 1f / 60f;
     }
 }
