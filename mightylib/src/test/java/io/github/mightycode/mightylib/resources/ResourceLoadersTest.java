@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,18 @@ class ResourceLoadersTest {
         loader.create(data);
         assertTrue(data.isEmpty());
         assertInstanceOf(ShaderLoader.class, LibraryLoaders.mandatory(() -> service[0]).get(0));
+    }
+
+    // An invalid define of an entry (rule of the service) makes this shader fail alone, before its files are read
+    @Test
+    void invalidEntryDefineFailsTheShader() {
+        ShaderLoader loader = new ShaderLoader(new NoShaders());
+        for (Map<String, String> defines : List.of(Map.of("1A", ""), Map.of("GL_MINE", "1"), Map.of("A", "1\n2"),
+                Collections.singletonMap("A", (String) null))) {
+            ShaderData shader = new ShaderData("bad", true, defines, "shaders/v.glsl", "shaders/f.glsl");
+            ResourceException error = assertThrows(ResourceException.class, () -> loader.initWithFile(shader));
+            assertTrue(error.getMessage().contains("bad"), error.getMessage());
+        }
     }
 
     // The mandatory loaders and the optional ones of the library: one per type, new instances at each call
