@@ -22,7 +22,7 @@ Déjà dans le moteur (ne pas reproposer) : A*, Dijkstra, tweens, son positionn�
 - **CI** (GitHub Actions) : compiler, tester, publier le jar.
 
 ## Rendu
-- **Version d'OpenGL/GLSL au-delà de 3.3 core** : 4.3+ apporte compute shaders, SSBO, rendu indirect (particules, culling, batching sur GPU) mais exclut macOS (4.1 maximum, OpenGL déprécié) ; 4.1 n'apporte presque rien. Choix de plateformes : garder 3.3 partout, chemin optionnel 4.3 détecté au démarrage avec repli 3.3 (deux jeux de shaders ou `#version` injecté), ou abandon de macOS en OpenGL (Vulkan/MoltenVK plus tard).
+- **Version d'OpenGL/GLSL au-delà de 3.3 core** : 4.3+ apporte compute shaders, SSBO, rendu indirect (particules, culling, batching sur GPU) mais exclut macOS (4.1 maximum, OpenGL déprécié) ; 4.1 n'apporte presque rien. Choix de plateformes : garder 3.3 partout, chemin optionnel 4.3 détecté au démarrage avec repli 3.3 (par remplacement du service des shaders : son prélude écrit le `#version`, `IShaderService.prelude` ; un define global peut signaler le chemin 4.3 aux fichiers), ou abandon de macOS en OpenGL (Vulkan/MoltenVK plus tard).
 
 ## Qualité
 - **Aucune allocation par frame** (pools, réutilisation) comme règle générale, pas seulement pour les particules.
