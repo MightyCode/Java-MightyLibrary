@@ -46,7 +46,8 @@ public final class ShaderService implements IShaderService {
 
     @Override
     public JSONObject declarations() {
-        return declarations;
+        // A deep copy: read once by the loader, and by the command shaders
+        return new JSONObject(declarations.toString());
     }
 
     @Override

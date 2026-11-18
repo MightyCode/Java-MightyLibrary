@@ -18,7 +18,8 @@ import static org.apiguardian.api.API.Status.EXPERIMENTAL;
 public interface IShaderService extends IEngineService {
     /**
      * The declared shaders by name (the "shaders" object of the merged shaders.json): "files" (vertex, fragment, and
-     * geometry when there are three, relative to folder()), "tags", optional "defines". Read-only.
+     * geometry when there are three, relative to folder()), "tags", optional "defines". A copy: changing it changes
+     * nothing in the service.
      */
     JSONObject declarations();
 

@@ -49,6 +49,21 @@ class ShaderServiceTest {
         assertTrue(declarations.has("c"));
     }
 
+    // A copy, even deep: a caller can't change the shaders of the service
+    @Test
+    void declarationsAreACopy(@TempDir Path root) throws IOException {
+        writeList(root, "{\"shaders\": {\"a\": {\"files\": [\"a/v.glsl\", \"a/f.glsl\"], \"tags\": [\"2D\"]}}}");
+        ShaderService service = service(root);
+
+        JSONObject declarations = service.declarations();
+        declarations.remove("a");
+        declarations.put("b", new JSONObject());
+        service.declarations().getJSONObject("a").getJSONArray("files").put(0, "changed.glsl");
+
+        assertEquals(List.of("a"), List.copyOf(service.declarations().keySet()));
+        assertEquals("a/v.glsl", service.declarations().getJSONObject("a").getJSONArray("files").getString(0));
+    }
+
     // The engine always has one: without any, the service can't be created (the engine stops, SERVICE_FAIL)
     @Test
     void noListFails(@TempDir Path empty) {
