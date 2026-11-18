@@ -219,7 +219,7 @@ public class Scene3D extends Scene {
     private void createBackpack() {
         Model data = resources().getResource(Model.class, BACKPACK_MODEL);
         if (data == null || !data.isLoaded()) {
-            String message = "Model '" + BACKPACK_MODEL + "' missing: copy the demonstration package into resources/models/backpack/";
+            String message = "Model '" + BACKPACK_MODEL + "' missing: run python tools/demo_assets.py";
             System.err.println("--Scene3D : " + message);
 
             missingBackpackLabel = new Text();

@@ -25,7 +25,7 @@ mightylib/src/main/java/io/github/mightycode/
     utils/         # commandes, JSON, maths, Logger
 demo/src/main/java/io/github/mightycode/
   mightylibdemo/   # démo : Main, DemoPlugin, ActionId, AxisId, resources/ (LayeredTextureData), scènes de démo (liste DemoScenes)
-resources/         # assets du moteur et de la démo, à la racine ; batchs/*.batch = groupes de ressources
+resources/         # assets du moteur et de la démo, à la racine ; batchs/*.batch = groupes de ressources ; models/backpack/ = paquet de démonstration (hors de git)
 ```
 
 ## Démarrage

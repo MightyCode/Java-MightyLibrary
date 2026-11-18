@@ -1,6 +1,11 @@
 # Java-MightyLibrary
 A library to create a game.
 
+## Paquet de démonstration
+Le modèle 3D de `Scene3D` (`resources/models/backpack/`, environ 36 Mo) n'est pas dans le dépôt : il est distribué à part, dans une release GitHub (`demo-assets-N`). Pour l'installer : `python tools/demo_assets.py` (bibliothèque standard seulement, empreintes sha256 vérifiées ; `--check` vérifie sans réseau). Sans lui, la démo fonctionne et `Scene3D` affiche un message.
+
+Crédits : « Survival guitar backpack » par Berk Gedik ([Sketchfab](https://sketchfab.com/3d-models/survival-guitar-backpack-799f8c4511f84fab8c3f12887f7e6b36)), licence CC BY 4.0, matériau adapté par Joey de Vries (LearnOpenGL).
+
 ## Checklist 
 
 **Ressources :**
