@@ -2,14 +2,18 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.resources.sound.SoundData;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,8 +25,37 @@ class ResourceLoadersTest {
     }
 
     private static List<ResourceLoader> mandatory() {
-        ShaderManager shaders = new ShaderManager(ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)));
+        IShaderService shaders = new NoShaders();
         return LibraryLoaders.mandatory(() -> shaders);
+    }
+
+    // A shader service without shaders
+    private static final class NoShaders implements IShaderService {
+        @Override
+        public JSONObject declarations() {
+            return new JSONObject();
+        }
+
+        @Override
+        public String folder() {
+            return "shaders/";
+        }
+
+        @Override
+        public String prelude(Map<String, String> entryDefines) {
+            return "#version 330 core\n";
+        }
+
+        @Override
+        public void setDefine(String name, String value) {}
+
+        @Override
+        public void removeDefine(String name) {}
+
+        @Override
+        public Map<String, String> defines() {
+            return Map.of();
+        }
     }
 
     @Test
@@ -34,15 +67,32 @@ class ResourceLoadersTest {
         assertEquals(List.of(first, second), loaders);
     }
 
-    // The loader of the shaders is registered before the shader manager exists: it reads it when it works
+    // The loader of the shaders is registered before the shader service exists: it reads it when it works
     @Test
-    void shaderLoaderReadsItsManagerLate() {
-        ShaderManager[] manager = new ShaderManager[1];
-        ShaderLoader loader = new ShaderLoader(() -> manager[0]);
-        assertThrows(IllegalStateException.class, loader::createFallback);
+    void shaderLoaderReadsItsServiceLate() {
+        IShaderService[] service = new IShaderService[1];
+        ShaderLoader loader = new ShaderLoader(() -> service[0]);
+        assertThrows(IllegalStateException.class, () -> loader.create(new HashMap<>()));
+        // The fallback does not need it: it can't fail
+        assertNotNull(loader.createFallback());
 
-        manager[0] = new ShaderManager(ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)));
-        assertInstanceOf(ShaderLoader.class, LibraryLoaders.mandatory(() -> manager[0]).get(0));
+        service[0] = new NoShaders();
+        Map<String, DataType> data = new HashMap<>();
+        loader.create(data);
+        assertTrue(data.isEmpty());
+        assertInstanceOf(ShaderLoader.class, LibraryLoaders.mandatory(() -> service[0]).get(0));
+    }
+
+    // An invalid define of an entry (rule of the service) makes this shader fail alone, before its files are read
+    @Test
+    void invalidEntryDefineFailsTheShader() {
+        ShaderLoader loader = new ShaderLoader(new NoShaders());
+        for (Map<String, String> defines : List.of(Map.of("1A", ""), Map.of("GL_MINE", "1"), Map.of("A", "1\n2"),
+                Collections.singletonMap("A", (String) null))) {
+            ShaderData shader = new ShaderData("bad", true, defines, "shaders/v.glsl", "shaders/f.glsl");
+            ResourceException error = assertThrows(ResourceException.class, () -> loader.initWithFile(shader));
+            assertTrue(error.getMessage().contains("bad"), error.getMessage());
+        }
     }
 
     // The mandatory loaders and the optional ones of the library: one per type, new instances at each call
@@ -98,7 +148,7 @@ class ResourceLoadersTest {
         assertThrows(IllegalArgumentException.class, () -> create(List.of(new FakeLoader(), new FakeLoader())));
         // A second loader of a mandatory type either (the registry replaces with replace)
         List<ResourceLoader> twice = new ArrayList<>(mandatory());
-        twice.add(new ShaderLoader(new ShaderManager(ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)))));
+        twice.add(new ShaderLoader(new NoShaders()));
         assertThrows(IllegalArgumentException.class, () -> create(twice));
     }
 

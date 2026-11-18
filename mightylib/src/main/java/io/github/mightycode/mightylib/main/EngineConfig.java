@@ -70,7 +70,6 @@ public final class EngineConfig {
 
     private final List<IPlugin> plugins = new ArrayList<>();
 
-    private int shaderVersion = -1;
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
     private String resourcesFolder = Resources.DEFAULT_FOLDER;
     // Null: the classpath source of the engine
@@ -304,12 +303,6 @@ public final class EngineConfig {
         return this;
     }
 
-    // -1 for the newest version
-    public EngineConfig setShaderVersion(int shaderVersion) {
-        this.shaderVersion = shaderVersion;
-        return this;
-    }
-
     public EngineConfig setResourcesLoadingMethod(Resources.LoadingMethod resourcesLoadingMethod) {
         this.resourcesLoadingMethod = resourcesLoadingMethod;
         return this;
@@ -531,7 +524,6 @@ public final class EngineConfig {
 
     // In the order of addPlugin, read only
     public List<IPlugin> getPlugins() { return Collections.unmodifiableList(plugins); }
-    public int getShaderVersion() { return shaderVersion; }
     public Resources.LoadingMethod getResourcesLoadingMethod() { return resourcesLoadingMethod; }
     public String getResourcesFolder() { return resourcesFolder; }
     public int getMaxThreads() { return maxThreads; }

@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderData;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.resources.texture.Texture;
@@ -89,17 +89,17 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
         // Generic matrices: sent at each draw when the current program uses them
         if (in2D) {
-            putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera2D().getProjection());
-            putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera2D().getView());
+            putOptionalValue(ShaderUniforms.PROJECTION, Views.current().camera2D().getProjection());
+            putOptionalValue(ShaderUniforms.VIEW, Views.current().camera2D().getView());
         } else {
-            putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, Views.current().camera3D().getProjection());
-            putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, Views.current().camera3D().getView());
+            putOptionalValue(ShaderUniforms.PROJECTION, Views.current().camera3D().getProjection());
+            putOptionalValue(ShaderUniforms.VIEW, Views.current().camera3D().getView());
         }
 
         applyModel();
 
-        putOptionalValue(ShaderManager.GENERIC_MODEL_FIELD_NAME,
-                new ShaderValue(ShaderManager.GENERIC_MODEL_FIELD_NAME, Matrix4f.class, model));
+        putOptionalValue(ShaderUniforms.MODEL,
+                new ShaderValue(ShaderUniforms.MODEL, Matrix4f.class, model));
     }
 
     protected final Resources resources() {
@@ -367,15 +367,15 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
     // Hook (call super): draws in this color; a subclass also stops its textures there
     public ShaderValue setColorMode(Color4f color) {
-        ShaderValue value = new ShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME, Color4f.class, color);
-        shaderValues.put(ShaderManager.GENERIC_COLOR_FIELD_NAME, value);
+        ShaderValue value = new ShaderValue(ShaderUniforms.COLOR, Color4f.class, color);
+        shaderValues.put(ShaderUniforms.COLOR, value);
 
         return value;
     }
 
     // Hook (call super): neither color nor texture
     public void setNoColorNoTextureMode() {
-        removeShaderValue(ShaderManager.GENERIC_COLOR_FIELD_NAME);
+        removeShaderValue(ShaderUniforms.COLOR);
     }
 
     // Hook: the position of the drawn object, a subclass may compute it (an animation with its own reference)
@@ -398,8 +398,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
             return;
 
         referenceCamera = camera;
-        putOptionalValue(ShaderManager.GENERIC_PROJECTION_FIELD_NAME, camera.getProjection());
-        putOptionalValue(ShaderManager.GENERIC_VIEW_FIELD_NAME, camera.getView());
+        putOptionalValue(ShaderUniforms.PROJECTION, camera.getProjection());
+        putOptionalValue(ShaderUniforms.VIEW, camera.getView());
     }
 
     // Hook called when the renderer is no longer used: a subclass releases what it created, then calls super

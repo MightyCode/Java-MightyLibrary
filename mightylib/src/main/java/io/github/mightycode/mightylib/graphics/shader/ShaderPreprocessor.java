@@ -12,6 +12,7 @@ import java.util.Deque;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -19,10 +20,11 @@ import java.util.regex.Pattern;
 
 /**
  * The #include of the engine (GLSL has none): #include "path" is replaced by the file, searched first next to the
- * file that includes it, then in the folder of the GLSL version. Without GL: the files are read by a given function.
- * A file is included once per source, a cycle or a missing file throws a ResourceException, a #version in an
- * included file is refused. "#line n id" directives are inserted (id: index of the file in files(), 0 the main one)
- * so the compiler log gives the real line, translated to "file:line" by translateLog.
+ * file that includes it, then in the folder of the shaders. Without GL: the files are read by a given function.
+ * The source starts with the prelude given by the shader service (#version, #define), then "#line 1 0": a #version
+ * in any file is refused, the engine writes it. A file is included once per source, a cycle or a missing file
+ * throws a ResourceException. "#line n id" directives are inserted (id: index of the file in files(), 0 the main
+ * one) so the compiler log gives the real line, translated to "file:line" by translateLog.
  * One instance per source: files() and watchedFiles() describe the last process.
  */
 public final class ShaderPreprocessor {
@@ -31,10 +33,9 @@ public final class ShaderPreprocessor {
 
     // Content of a file, null when there is no such file
     private final Function<String, String> reader;
-    private final String versionFolder;
-    // Added to the line given to #line: 0 when it is the number of the next line (GLSL 330),
-    // -1 when the next line is that number plus one (GLSL 140)
-    private final int lineOffset;
+    private final String folder;
+    // Written before the source, ends with a line break
+    private final String prelude;
 
     // Files by id (#line), the main one first
     private final List<String> files = new ArrayList<>();
@@ -45,10 +46,15 @@ public final class ShaderPreprocessor {
     // Content of the file found by the last resolve
     private String resolvedContent;
 
-    public ShaderPreprocessor(Function<String, String> reader, String versionFolder, int lineOffset) {
-        this.reader = reader;
-        this.versionFolder = versionFolder;
-        this.lineOffset = lineOffset;
+    /**
+     * @param folder  where an include not found next to its file is searched (IShaderService.folder)
+     * @param prelude written before the source (#version first), a line break is added if it has none
+     */
+    public ShaderPreprocessor(Function<String, String> reader, String folder, String prelude) {
+        this.reader = Objects.requireNonNull(reader, "reader");
+        this.folder = Objects.requireNonNull(folder, "folder");
+        Objects.requireNonNull(prelude, "prelude");
+        this.prelude = prelude.isEmpty() || prelude.endsWith("\n") ? prelude : prelude + "\n";
     }
 
     // The source of the file with its includes; the file itself is read by the reader too
@@ -64,8 +70,10 @@ public final class ShaderPreprocessor {
         if (content == null)
             throw new ResourceException("shader file not found: " + main);
 
-        StringBuilder out = new StringBuilder(content.length());
-        appendFile(out, main, content, true);
+        StringBuilder out = new StringBuilder(prelude.length() + content.length() + 16);
+        // The lines of the main file keep their number, after the prelude
+        out.append(prelude).append("#line 1 0\n");
+        appendFile(out, main, content);
         return out.toString();
     }
 
@@ -79,26 +87,21 @@ public final class ShaderPreprocessor {
         return new ArrayList<>(watched);
     }
 
-    private void appendFile(StringBuilder out, String path, String content, boolean main) {
+    private void appendFile(StringBuilder out, String path, String content) {
         int id = files.size();
         files.add(path);
         included.add(path);
         including.push(path);
 
         String[] lines = content.split("\n", -1);
-        // No #line before the #version of the main file: an include must come after it
-        boolean versionToCome = main && hasVersion(lines);
 
         for (int i = 0; i < lines.length; ++i) {
             String line = lines[i].endsWith("\r") ? lines[i].substring(0, lines[i].length() - 1) : lines[i];
             int lineNumber = i + 1;
 
-            if (VERSION.matcher(line).find()) {
-                if (!main)
-                    throw new ResourceException("#version in the included file " + path + ":" + lineNumber
-                            + " (only the main file gives it)");
-                versionToCome = false;
-            }
+            if (VERSION.matcher(line).find())
+                throw new ResourceException("#version in " + path + ":" + lineNumber
+                        + ": the #version is written by the engine (shader service), remove it from the file");
 
             String trimmed = line.trim();
             if (!trimmed.startsWith(INCLUDE)) {
@@ -107,9 +110,6 @@ public final class ShaderPreprocessor {
             }
 
             String where = path + ":" + lineNumber;
-            if (versionToCome)
-                throw new ResourceException("#include before #version in " + where);
-
             String includePath = resolve(path, includeName(trimmed, where), where);
             if (including.contains(includePath))
                 throw new ResourceException("#include cycle: " + cycle(includePath));
@@ -121,12 +121,12 @@ public final class ShaderPreprocessor {
             }
 
             String includeContent = resolvedContent;
-            out.append("#line ").append(1 + lineOffset).append(' ').append(files.size()).append('\n');
-            appendFile(out, includePath, includeContent, false);
+            out.append("#line 1 ").append(files.size()).append('\n');
+            appendFile(out, includePath, includeContent);
             if (out.length() > 0 && out.charAt(out.length() - 1) != '\n')
                 out.append('\n');
             // Back to this file, at its next line
-            out.append("#line ").append(lineNumber + 1 + lineOffset).append(' ').append(id).append('\n');
+            out.append("#line ").append(lineNumber + 1).append(' ').append(id).append('\n');
         }
 
         including.pop();
@@ -138,15 +138,6 @@ public final class ShaderPreprocessor {
             out.append('\n');
     }
 
-    private static boolean hasVersion(String[] lines) {
-        for (String line : lines) {
-            if (VERSION.matcher(line).find())
-                return true;
-        }
-
-        return false;
-    }
-
     private static String includeName(String trimmed, String where) {
         String name = trimmed.substring(INCLUDE.length()).trim();
         if (name.length() < 3 || !name.startsWith("\"") || !name.endsWith("\""))
@@ -155,13 +146,13 @@ public final class ShaderPreprocessor {
         return name.substring(1, name.length() - 1);
     }
 
-    // Next to the file that includes it, then in the folder of the version; missing: both are watched
+    // Next to the file that includes it, then in the folder of the shaders; missing: both are watched
     private String resolve(String includingPath, String name, String where) {
         Path parent = Paths.get(includingPath).getParent();
         String nextToIt = normalize(parent == null ? name : parent.resolve(name).toString());
-        String inVersionFolder = normalize(Paths.get(versionFolder).resolve(name).toString());
+        String inFolder = normalize(Paths.get(folder).resolve(name).toString());
 
-        for (String candidate : new String[] { nextToIt, inVersionFolder }) {
+        for (String candidate : new String[] { nextToIt, inFolder }) {
             resolvedContent = reader.apply(candidate);
             if (resolvedContent != null) {
                 watched.add(candidate);
@@ -170,9 +161,9 @@ public final class ShaderPreprocessor {
         }
 
         watched.add(nextToIt);
-        watched.add(inVersionFolder);
+        watched.add(inFolder);
         throw new ResourceException("#include \"" + name + "\" not found (" + where + "), searched " + nextToIt
-                + " and " + inVersionFolder);
+                + " and " + inFolder);
     }
 
     private String cycle(String includePath) {

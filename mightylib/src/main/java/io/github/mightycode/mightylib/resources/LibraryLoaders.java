@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.algorithms.wavefunctioncollapse.WaveCollapseRulesLoader;
+import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.cubemap.CubeMapLoader;
@@ -45,11 +45,12 @@ public final class LibraryLoaders {
     /**
      * New instances of the mandatory loaders, registered by the plugin of the engine (a plugin replaces one with
      * registry.resources().replace).
-     * @param shaderManager read by the loader of the shaders when it works (the manager is created with the window)
+     * @param shaderService read by the loader of the shaders when it works (the services are created after the
+     *                      registration of the plugins)
      */
-    public static List<ResourceLoader> mandatory(Supplier<ShaderManager> shaderManager) {
+    public static List<ResourceLoader> mandatory(Supplier<IShaderService> shaderService) {
         List<ResourceLoader> loaders = new ArrayList<>();
-        loaders.add(new ShaderLoader(shaderManager));
+        loaders.add(new ShaderLoader(shaderService));
         loaders.add(new IconLoader());
         loaders.add(new TextureDataLoader());
         loaders.add(new AnimationDataLoader());

@@ -10,23 +10,20 @@ import io.github.mightycode.mightylib.resources.Resources;
  * (glElementNeededBeforeDrawing): a renderer always has a linked program to draw with.
  */
 public final class FallbackShaderData extends ShaderData {
-    private final boolean modernGLSL;
+    // Written here, not by the prelude of the shader service: a replaced service can't make it fail
+    private static final String VERSION = "#version 330 core\n";
 
-    // version: folder of the shaders (ShaderManager.getVersion), "3_30" or "1_40"
-    public FallbackShaderData(String version) {
+    public FallbackShaderData() {
         // No path: nothing is read by the loader
-        super(Resources.FALLBACK_NAME, false, null, null);
-        modernGLSL = !"1_40".equals(version);
+        super(Resources.FALLBACK_NAME, false, (String) null, null);
     }
 
     @Override
     protected boolean internLoad() {
-        String version = modernGLSL ? "#version 330 core\n" : "#version 140\n";
-
-        setSources(version + (modernGLSL ? "layout (location = 0) " : "") + "in vec4 aPos;\n"
+        setSources(VERSION + "layout (location = 0) in vec4 aPos;\n"
                         + "uniform mat4 projection;\nuniform mat4 view;\nuniform mat4 model;\n"
                         + "void main() { gl_Position = projection * view * model * aPos; }\n",
-                version + "out vec4 fragColor;\n"
+                VERSION + "out vec4 fragColor;\n"
                         + "void main() { fragColor = vec4(1.0, 0.0, 1.0, 1.0); }\n",
                 null);
 

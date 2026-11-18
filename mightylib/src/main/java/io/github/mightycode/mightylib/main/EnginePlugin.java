@@ -1,7 +1,8 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.console.Console;
-import io.github.mightycode.mightylib.graphics.shader.ShaderManager;
+import io.github.mightycode.mightylib.graphics.shader.IShaderService;
+import io.github.mightycode.mightylib.graphics.shader.ShaderService;
 import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.inputType.EInputType;
@@ -30,19 +31,19 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
 
 /**
  * The content of the engine, registered like the one of any plugin, before them: mandatory loaders, general commands,
- * actions of the console with their keys, services (sound, console).
+ * actions of the console with their keys, services (shaders, sound, console).
  * A later plugin replaces an entry with replace.
  */
 final class EnginePlugin implements IPlugin {
     private final EngineConfig config;
-    // Created with the window, after the registration: read by the loader of the shaders when it works
-    private final Supplier<ShaderManager> shaderManager;
+    // A service, created after the registration: read by the loader of the shaders when it works
+    private final Supplier<IShaderService> shaderService;
     // The player has access to the commands (EngineConfig.getCommandAccess, resolved once)
     private final boolean console;
 
-    EnginePlugin(EngineConfig config, Supplier<ShaderManager> shaderManager, boolean console) {
+    EnginePlugin(EngineConfig config, Supplier<IShaderService> shaderService, boolean console) {
         this.config = config;
-        this.shaderManager = shaderManager;
+        this.shaderService = shaderService;
         this.console = console;
     }
 
@@ -53,7 +54,7 @@ final class EnginePlugin implements IPlugin {
 
     @Override
     public void register(EngineRegistry registry) {
-        registry.resources().addAll(LibraryLoaders.mandatory(shaderManager));
+        registry.resources().addAll(LibraryLoaders.mandatory(shaderService));
         // The files of the engine, below the folder of the game: in the jar, or a folder to edit them (development)
         String engineFolder = config.getEngineResourcesFolder();
         if (engineFolder != null)
@@ -72,6 +73,9 @@ final class EnginePlugin implements IPlugin {
                 .action(EngineActions.RELOAD_TEXTURE, new InputSimple(GLFW_KEY_F5, EInputType.Keyboard));
 
         registry.services().sceneManager(SceneManager::new).inputManager(InputManager::new);
+
+        // No fallback: it fails only on a shaders.json that can't be read
+        registry.services().register(EngineServices.SHADERS, engine -> new ShaderService(engine.resources()));
 
         registry.services().register(EngineServices.SOUND,
                         engine -> OpenALSoundService.Open(engine.resources(), GainTree(engine)))

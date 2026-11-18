@@ -16,50 +16,44 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ShaderPreprocessorTest {
-    private static final String VERSION_FOLDER = "shaders/3_30/";
+    private static final String FOLDER = "shaders/";
+    private static final String PRELUDE = "#version 330 core\n#define A 1\n";
+    // Start of every source: the prelude, then the main file from its line 1
+    private static final String HEAD = PRELUDE + "#line 1 0\n";
 
     private final Map<String, String> files = new HashMap<>();
 
-    private ShaderPreprocessor preprocessor(int lineOffset) {
-        return new ShaderPreprocessor(files::get, VERSION_FOLDER, lineOffset);
+    private ShaderPreprocessor preprocessor() {
+        return new ShaderPreprocessor(files::get, FOLDER, PRELUDE);
     }
 
     private String process(String path) {
-        return preprocessor(0).process(path);
+        return preprocessor().process(path);
     }
 
     @Test
     void includeIsReplacedWithLineDirectives() {
-        files.put("shaders/3_30/2D/a.glsl", "#version 330 core\nuniform int x;\n#include \"lib.glsl\"\nvoid main() {}\n");
-        files.put("shaders/3_30/2D/lib.glsl", "int f() { return 1; }\n");
+        files.put("shaders/2D/a.glsl", "uniform int x;\n#include \"lib.glsl\"\nvoid main() {}\n");
+        files.put("shaders/2D/lib.glsl", "int f() { return 1; }\n");
 
-        ShaderPreprocessor preprocessor = preprocessor(0);
-        String source = preprocessor.process("shaders/3_30/2D/a.glsl");
+        ShaderPreprocessor preprocessor = preprocessor();
+        String source = preprocessor.process("shaders/2D/a.glsl");
 
-        assertEquals("#version 330 core\nuniform int x;\n#line 1 1\nint f() { return 1; }\n#line 4 0\nvoid main() {}\n",
+        // Numbers of the log: lines of the file, after the prelude
+        assertEquals(HEAD + "uniform int x;\n#line 1 1\nint f() { return 1; }\n#line 3 0\nvoid main() {}\n",
                 source);
-        assertEquals(List.of("shaders/3_30/2D/a.glsl", "shaders/3_30/2D/lib.glsl"), preprocessor.files());
-        assertEquals(List.of("shaders/3_30/2D/a.glsl", "shaders/3_30/2D/lib.glsl"), preprocessor.watchedFiles());
-    }
-
-    // GLSL 140: the line after "#line n" is n + 1
-    @Test
-    void lineOffsetForOlderGLSL() {
-        files.put("shaders/3_30/a.glsl", "#version 140\n#include \"lib.glsl\"\nvoid main() {}");
-        files.put("shaders/3_30/lib.glsl", "int f();");
-
-        assertEquals("#version 140\n#line 0 1\nint f();\n#line 2 0\nvoid main() {}",
-                preprocessor(-1).process("shaders/3_30/a.glsl"));
+        assertEquals(List.of("shaders/2D/a.glsl", "shaders/2D/lib.glsl"), preprocessor.files());
+        assertEquals(List.of("shaders/2D/a.glsl", "shaders/2D/lib.glsl"), preprocessor.watchedFiles());
     }
 
     @Test
-    void includeIsSearchedNextToTheFileThenInTheVersionFolder() {
-        files.put("shaders/3_30/2D/a.glsl", "#include \"utils/colors.glsl\"\n#include \"near.glsl\"");
-        files.put("shaders/3_30/2D/near.glsl", "near");
-        files.put("shaders/3_30/near.glsl", "far");
-        files.put("shaders/3_30/utils/colors.glsl", "colors");
+    void includeIsSearchedNextToTheFileThenInTheShadersFolder() {
+        files.put("shaders/2D/a.glsl", "#include \"utils/colors.glsl\"\n#include \"near.glsl\"");
+        files.put("shaders/2D/near.glsl", "near");
+        files.put("shaders/near.glsl", "far");
+        files.put("shaders/utils/colors.glsl", "colors");
 
-        String source = process("shaders/3_30/2D/a.glsl");
+        String source = process("shaders/2D/a.glsl");
 
         assertTrue(source.contains("colors\n"));
         assertTrue(source.contains("near\n"));
@@ -69,98 +63,111 @@ class ShaderPreprocessorTest {
     // An included file includes next to itself
     @Test
     void nestedIncludeIsRelativeToTheIncludingFile() {
-        files.put("shaders/3_30/a.glsl", "#include \"utils/b.glsl\"");
-        files.put("shaders/3_30/utils/b.glsl", "#include \"c.glsl\"\nb");
-        files.put("shaders/3_30/utils/c.glsl", "c");
+        files.put("shaders/a.glsl", "#include \"utils/b.glsl\"");
+        files.put("shaders/utils/b.glsl", "#include \"c.glsl\"\nb");
+        files.put("shaders/utils/c.glsl", "c");
 
-        ShaderPreprocessor preprocessor = preprocessor(0);
-        String source = preprocessor.process("shaders/3_30/a.glsl");
+        ShaderPreprocessor preprocessor = preprocessor();
+        String source = preprocessor.process("shaders/a.glsl");
 
-        assertEquals("#line 1 1\n#line 1 2\nc\n#line 2 1\nb\n#line 2 0\n", source);
-        assertEquals(List.of("shaders/3_30/a.glsl", "shaders/3_30/utils/b.glsl", "shaders/3_30/utils/c.glsl"),
+        assertEquals(HEAD + "#line 1 1\n#line 1 2\nc\n#line 2 1\nb\n#line 2 0\n", source);
+        assertEquals(List.of("shaders/a.glsl", "shaders/utils/b.glsl", "shaders/utils/c.glsl"),
                 preprocessor.files());
     }
 
     @Test
     void fileIsIncludedOncePerSource() {
-        files.put("shaders/3_30/a.glsl", "#include \"lib.glsl\"\n#include \"b.glsl\"\n#include \"lib.glsl\"\nend");
-        files.put("shaders/3_30/b.glsl", "#include \"lib.glsl\"\nb");
-        files.put("shaders/3_30/lib.glsl", "lib");
+        files.put("shaders/a.glsl", "#include \"lib.glsl\"\n#include \"b.glsl\"\n#include \"lib.glsl\"\nend");
+        files.put("shaders/b.glsl", "#include \"lib.glsl\"\nb");
+        files.put("shaders/lib.glsl", "lib");
 
-        String source = process("shaders/3_30/a.glsl");
+        String source = process("shaders/a.glsl");
 
         assertEquals(1, source.split("\nlib\n", -1).length - 1);
         assertTrue(source.contains("// #include \"lib.glsl\" (already included)\nb"));
         assertTrue(source.endsWith("// #include \"lib.glsl\" (already included)\nend"));
 
         // Each source starts again: the same file is included in the next one
-        assertTrue(process("shaders/3_30/b.glsl").contains("lib\n"));
+        assertTrue(process("shaders/b.glsl").contains("lib\n"));
     }
 
     @Test
     void cycleIsRefused() {
-        files.put("shaders/3_30/a.glsl", "#include \"b.glsl\"");
-        files.put("shaders/3_30/b.glsl", "#include \"c.glsl\"");
-        files.put("shaders/3_30/c.glsl", "#include \"b.glsl\"");
+        files.put("shaders/a.glsl", "#include \"b.glsl\"");
+        files.put("shaders/b.glsl", "#include \"c.glsl\"");
+        files.put("shaders/c.glsl", "#include \"b.glsl\"");
 
-        ResourceException error = assertThrows(ResourceException.class, () -> process("shaders/3_30/a.glsl"));
-        assertTrue(error.getMessage().contains("shaders/3_30/b.glsl -> shaders/3_30/c.glsl -> shaders/3_30/b.glsl"),
+        ResourceException error = assertThrows(ResourceException.class, () -> process("shaders/a.glsl"));
+        assertTrue(error.getMessage().contains("shaders/b.glsl -> shaders/c.glsl -> shaders/b.glsl"),
                 error.getMessage());
     }
 
     // The source fails (fallback) instead of being compiled without its include; both paths are watched
     @Test
     void missingIncludeFailsAndIsWatched() {
-        files.put("shaders/3_30/2D/a.glsl", "#include \"missing.glsl\"");
+        files.put("shaders/2D/a.glsl", "#include \"missing.glsl\"");
 
-        ShaderPreprocessor preprocessor = preprocessor(0);
+        ShaderPreprocessor preprocessor = preprocessor();
         ResourceException error = assertThrows(ResourceException.class,
-                () -> preprocessor.process("shaders/3_30/2D/a.glsl"));
+                () -> preprocessor.process("shaders/2D/a.glsl"));
         assertTrue(error.getMessage().contains("missing.glsl"));
-        assertTrue(error.getMessage().contains("shaders/3_30/2D/a.glsl:1"));
-        assertEquals(List.of("shaders/3_30/2D/a.glsl", "shaders/3_30/2D/missing.glsl", "shaders/3_30/missing.glsl"),
+        assertTrue(error.getMessage().contains("shaders/2D/a.glsl:1"));
+        assertEquals(List.of("shaders/2D/a.glsl", "shaders/2D/missing.glsl", "shaders/missing.glsl"),
                 preprocessor.watchedFiles());
     }
 
     @Test
     void missingMainFileFailsAndIsWatched() {
-        ShaderPreprocessor preprocessor = preprocessor(0);
-        assertThrows(ResourceException.class, () -> preprocessor.process("shaders/3_30/none.glsl"));
-        assertEquals(List.of("shaders/3_30/none.glsl"), preprocessor.watchedFiles());
+        ShaderPreprocessor preprocessor = preprocessor();
+        assertThrows(ResourceException.class, () -> preprocessor.process("shaders/none.glsl"));
+        assertEquals(List.of("shaders/none.glsl"), preprocessor.watchedFiles());
     }
 
+    // The engine writes the #version (prelude): a file that gives one is refused, main file or include
     @Test
-    void versionInAnIncludedFileIsRefused() {
-        files.put("shaders/3_30/a.glsl", "#version 330 core\n#include \"lib.glsl\"");
-        files.put("shaders/3_30/lib.glsl", "  #version 330 core\nint f();");
+    void versionInAFileIsRefused() {
+        files.put("shaders/a.glsl", "#version 330 core\nvoid main() {}");
+        ResourceException error = assertThrows(ResourceException.class, () -> process("shaders/a.glsl"));
+        assertTrue(error.getMessage().contains("shaders/a.glsl:1"), error.getMessage());
 
-        ResourceException error = assertThrows(ResourceException.class, () -> process("shaders/3_30/a.glsl"));
-        assertTrue(error.getMessage().contains("shaders/3_30/lib.glsl:1"), error.getMessage());
+        files.put("shaders/b.glsl", "#include \"lib.glsl\"");
+        files.put("shaders/lib.glsl", "int f();\n  #  version 330 core");
+        error = assertThrows(ResourceException.class, () -> process("shaders/b.glsl"));
+        assertTrue(error.getMessage().contains("shaders/lib.glsl:2"), error.getMessage());
     }
 
-    // A #line before #version would not compile
+    // The include of the first line comes after the prelude, the next line keeps its number
     @Test
-    void includeBeforeVersionIsRefused() {
-        files.put("shaders/3_30/a.glsl", "#include \"lib.glsl\"\n#version 330 core");
-        files.put("shaders/3_30/lib.glsl", "int f();");
+    void includeOnTheFirstLineComesAfterThePrelude() {
+        files.put("shaders/a.glsl", "#include \"lib.glsl\"\nvoid main() {}");
+        files.put("shaders/lib.glsl", "int f();");
 
-        assertThrows(ResourceException.class, () -> process("shaders/3_30/a.glsl"));
+        assertEquals(HEAD + "#line 1 1\nint f();\n#line 2 0\nvoid main() {}", process("shaders/a.glsl"));
+    }
+
+    // A prelude without a final line break gets one: #line stays on its own line
+    @Test
+    void preludeEndsWithALineBreak() {
+        files.put("shaders/a.glsl", "x");
+
+        assertEquals("#version 330 core\n#line 1 0\nx",
+                new ShaderPreprocessor(files::get, FOLDER, "#version 330 core").process("shaders/a.glsl"));
     }
 
     @Test
     void indentationAndCarriageReturnsAreHandled() {
-        files.put("shaders/3_30/a.glsl", "void main() {\r\n    #include \"body.glsl\"\r\n}\r\n");
-        files.put("shaders/3_30/body.glsl", "\tint x = 1;\r\n\tint y = 2;\r\n");
+        files.put("shaders/a.glsl", "void main() {\r\n    #include \"body.glsl\"\r\n}\r\n");
+        files.put("shaders/body.glsl", "\tint x = 1;\r\n\tint y = 2;\r\n");
 
-        assertEquals("void main() {\n#line 1 1\n\tint x = 1;\n\tint y = 2;\n#line 3 0\n}\n",
-                process("shaders/3_30/a.glsl"));
+        assertEquals(HEAD + "void main() {\n#line 1 1\n\tint x = 1;\n\tint y = 2;\n#line 3 0\n}\n",
+                process("shaders/a.glsl"));
     }
 
     @Test
     void invalidIncludeSyntaxIsRefused() {
-        files.put("shaders/3_30/a.glsl", "#include lib.glsl");
+        files.put("shaders/a.glsl", "#include lib.glsl");
 
-        assertThrows(ResourceException.class, () -> process("shaders/3_30/a.glsl"));
+        assertThrows(ResourceException.class, () -> process("shaders/a.glsl"));
     }
 
     // NVIDIA "0(12)", Mesa/AMD/Intel "0:12(5)" and "ERROR: 0:12:": the first location of each line
@@ -181,33 +188,33 @@ class ShaderPreprocessorTest {
     // The reader of the shader loader: an include of a higher source replaces the lower one, the others stay
     @Test
     void anIncludeOfAHigherSourceReplacesTheLowerOne(@TempDir Path low, @TempDir Path high) throws IOException {
-        Files.createDirectories(low.resolve("shaders/3_30/2D"));
-        Files.createDirectories(high.resolve("shaders/3_30/2D"));
-        Files.writeString(low.resolve("shaders/3_30/2D/a.glsl"), "#include \"lib.glsl\"\n#include \"other.glsl\"\nmain");
-        Files.writeString(low.resolve("shaders/3_30/2D/lib.glsl"), "low lib");
-        Files.writeString(low.resolve("shaders/3_30/other.glsl"), "low other");
-        Files.writeString(high.resolve("shaders/3_30/2D/lib.glsl"), "high lib");
+        Files.createDirectories(low.resolve("shaders/2D"));
+        Files.createDirectories(high.resolve("shaders/2D"));
+        Files.writeString(low.resolve("shaders/2D/a.glsl"), "#include \"lib.glsl\"\n#include \"other.glsl\"\nmain");
+        Files.writeString(low.resolve("shaders/2D/lib.glsl"), "low lib");
+        Files.writeString(low.resolve("shaders/other.glsl"), "low other");
+        Files.writeString(high.resolve("shaders/2D/lib.glsl"), "high lib");
         ResourceSources sources = ResourceSources.of(new FolderSource(low), new FolderSource(high));
 
         ShaderPreprocessor preprocessor = new ShaderPreprocessor(path -> ShaderLoader.ReadIfFile(sources, path),
-                VERSION_FOLDER, 0);
-        String source = preprocessor.process("shaders/3_30/2D/a.glsl");
+                FOLDER, PRELUDE);
+        String source = preprocessor.process("shaders/2D/a.glsl");
 
         assertTrue(source.contains("high lib"), source);
         assertFalse(source.contains("low lib"), source);
         assertTrue(source.contains("low other"), source);
         // Out of the sources: not found, never read
         assertNull(ShaderLoader.ReadIfFile(sources, "../a.glsl"));
-        assertNull(ShaderLoader.ReadIfFile(sources, "shaders/3_30"));
+        assertNull(ShaderLoader.ReadIfFile(sources, "shaders"));
     }
 
     @Test
     void pathsAreNormalized() {
-        files.put("shaders/3_30/2D/a.glsl", "#include \"../utils/lib.glsl\"");
-        files.put("shaders/3_30/utils/lib.glsl", "lib");
+        files.put("shaders/2D/a.glsl", "#include \"../utils/lib.glsl\"");
+        files.put("shaders/utils/lib.glsl", "lib");
 
-        ShaderPreprocessor preprocessor = preprocessor(0);
-        preprocessor.process("shaders/3_30/./2D/a.glsl");
-        assertEquals(List.of("shaders/3_30/2D/a.glsl", "shaders/3_30/utils/lib.glsl"), preprocessor.files());
+        ShaderPreprocessor preprocessor = preprocessor();
+        preprocessor.process("shaders/./2D/a.glsl");
+        assertEquals(List.of("shaders/2D/a.glsl", "shaders/utils/lib.glsl"), preprocessor.files());
     }
 }

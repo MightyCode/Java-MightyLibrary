@@ -1,0 +1,56 @@
+{
+	"shaders": {
+		"customStar2D": {
+			"files": [
+				"2D/complex/customStar2DV.glsl",
+				"2D/complex/customStar2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"definesDemo2D": {
+			"files": [
+				"2D/essential/colorShape2DV.glsl",
+				"2D/defines/definesDemo2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"definesDemoTinted2D": {
+			"files": [
+				"2D/essential/colorShape2DV.glsl",
+				"2D/defines/definesDemo2DF.glsl"
+			],
+			"tags" : ["2D"],
+			"defines": {
+				"TINT": "vec3(0.2, 0.6, 1.0)"
+			}
+		},
+		"textureDisplacement3D": {
+			"files": [
+				"3D/complex/textureDisplacement3DV.glsl",
+				"3D/complex/textureDisplacement3DF.glsl"
+			],
+			"tags" : ["3D"]
+		},
+		"colorLighting3D": {
+			"files": [
+				"3D/complex/colorLighting3DV.glsl",
+				"3D/complex/colorLighting3DF.glsl"
+			],
+			"tags" : ["3D"]
+		},
+		"colorMaterial3D": {
+			"files": [
+				"3D/complex/colorLighting3DV.glsl",
+				"3D/complex/colorMaterial3DF.glsl"
+			],
+			"tags" : ["3D"]
+		},
+		"textureMaterial3D": {
+			"files": [
+				"3D/complex/textureMaterial3DV.glsl",
+				"3D/complex/textureMaterial3DF.glsl"
+			],
+			"tags" : ["3D"]
+		}
+	}
+}
