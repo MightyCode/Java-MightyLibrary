@@ -12,6 +12,9 @@ module io.github.mightycode.mightylib {
     requires transitive java.desktop;
     requires transitive org.joml;
     requires transitive org.json;
+    // Automatic module, named after its jar (no module name of its own: see docs/later.md); in the public API
+    // (physics.B2Utils: Vec2, Contact)
+    requires transitive jbox2d.library;
     // Annotations only, optional at run time; not transitive, so that a game compiles without apiguardian
     requires static org.apiguardian.api;
 
@@ -26,7 +29,6 @@ module io.github.mightycode.mightylib {
     requires org.lwjgl.opengl;
     requires org.lwjgl.stb;
     // Automatic modules, named after their jar (no module name of their own): see docs/later.md
-    requires jbox2d.library;
     requires jlayer;
     requires opensimplex;
 

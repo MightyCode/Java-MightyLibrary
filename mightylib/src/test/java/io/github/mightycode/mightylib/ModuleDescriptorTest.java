@@ -55,6 +55,16 @@ class ModuleDescriptorTest {
         assertTrue(descriptor.opens().isEmpty(), descriptor.opens().toString());
     }
 
+    // The modules whose types the public API exposes are read by every module that reads the engine
+    @Test
+    void exposedModulesAreTransitive() throws Exception {
+        Set<String> transitive = descriptor().requires().stream()
+                .filter(requires -> requires.modifiers().contains(ModuleDescriptor.Requires.Modifier.TRANSITIVE))
+                .map(ModuleDescriptor.Requires::name)
+                .collect(Collectors.toCollection(TreeSet::new));
+        assertEquals(new TreeSet<>(Set.of("java.desktop", "jbox2d.library", "org.joml", "org.json")), transitive);
+    }
+
     // The statuses are annotations only: the module runs without apiguardian
     @Test
     void apiguardianIsOptional() throws Exception {

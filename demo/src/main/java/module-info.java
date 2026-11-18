@@ -3,10 +3,8 @@
  * those of the engine (see the module-info of mightylib).
  */
 module io.github.mightycode.mightylibdemo {
-    // JOML, org.json and java.desktop come with the engine (requires transitive)
+    // JOML, org.json, java.desktop and JBox2D come with the engine (requires transitive)
     requires io.github.mightycode.mightylib;
     requires org.lwjgl.glfw;
     requires org.lwjgl.openal;
-    // Automatic module, named after its jar
-    requires jbox2d.library;
 }
