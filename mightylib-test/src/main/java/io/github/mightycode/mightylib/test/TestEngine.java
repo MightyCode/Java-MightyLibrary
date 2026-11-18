@@ -262,14 +262,18 @@ public final class TestEngine implements AutoCloseable {
             if (engine != null)
                 KitEngineAccess.shutdown(engine, ListError.NO_ERROR);
         } finally {
-            if (scope != null)
-                scope.close();
-            KitEngineAccess.resetProcessState();
-            KitTimeAccess.reset();
-            if (shared == this)
-                shared = null;
-            if (owner)
-                RUNNING.set(false);
+            try {
+                if (scope != null)
+                    scope.close();
+                KitEngineAccess.resetProcessState();
+                KitTimeAccess.reset();
+            } finally {
+                // Whatever failed above, the next test can start an engine
+                if (shared == this)
+                    shared = null;
+                if (owner)
+                    RUNNING.set(false);
+            }
         }
     }
 
