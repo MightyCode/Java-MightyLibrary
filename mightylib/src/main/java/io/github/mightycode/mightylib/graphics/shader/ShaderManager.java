@@ -6,13 +6,9 @@ import org.json.JSONObject;
 
 import java.util.Objects;
 
-
-import static org.lwjgl.opengl.GL11.glGetString;
-import static org.lwjgl.opengl.GL20.GL_SHADING_LANGUAGE_VERSION;
-
 /**
- * GLSL version of the driver and list of the shaders (shaders.json): the same for all the windows of the engine.
- * The cameras belong to the views (IView), not to this class.
+ * List of the shaders (shaders.json) and prelude written before their sources: the same for all the windows of the
+ * engine. The cameras belong to the views (IView), not to this class.
  */
 public final class ShaderManager {
     public static final String LIST_SHADER_FILE_NAME = "shaders.json";
@@ -27,46 +23,29 @@ public final class ShaderManager {
 
     // Where shaders.json is read
     private final ResourceSources sources;
-    private String version;
 
     private JSONObject shadersInfo;
 
     public ShaderManager(ResourceSources sources) {
         this.sources = Objects.requireNonNull(sources, "sources");
-        version = "330";
     }
 
     public void init() {
-        init(-1);
-    }
-
-    // Needs a current GL context (the GLSL version of the driver)
-    public void init(int version){
         System.out.println("--Load ShaderManager");
 
-        String glslVersion = glGetString(GL_SHADING_LANGUAGE_VERSION);
-
-        if (version == 140 || (glslVersion != null && glslVersion.contains("1.40"))){
-            this.version = "1_40";
-            System.out.println("--Version of shader GLSL 140");
-        } else {
-            this.version = "3_30";
-            System.out.println("--Version of shader GLSL 330");
-        }
-
-        String shaderListPath = versionFolder() + LIST_SHADER_FILE_NAME;
-
         // Merged by entry: the shaders of a higher source are added, or replace those of the same name
-        shadersInfo = FileMethods.mergeEntries(FileMethods.readJSONObjectLayers(sources, shaderListPath), "shaders");
+        shadersInfo = FileMethods.mergeEntries(
+                FileMethods.readJSONObjectLayers(sources, folder() + LIST_SHADER_FILE_NAME), "shaders");
     }
 
-    public String getVersion(){
-        return version;
+    // Logical folder of the shaders, ending with '/'
+    public String folder() {
+        return SHADERS_FOLDER;
     }
 
-    // Logical folder of the shaders of the GLSL version, ending with '/'
-    public String versionFolder() {
-        return SHADERS_FOLDER + version + "/";
+    // Written before the source of every shader (the files have no #version)
+    public String prelude() {
+        return "#version 330 core\n";
     }
 
     public JSONObject getShadersInfo() {

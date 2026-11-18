@@ -53,7 +53,7 @@ public final class ShaderLoader extends ResourceLoader {
 
     @Override
     public DataType createFallback() {
-        return new FallbackShaderData(manager().getVersion());
+        return new FallbackShaderData();
     }
 
     @Override
@@ -71,7 +71,7 @@ public final class ShaderLoader extends ResourceLoader {
             JSONArray files = JShader.getJSONArray("files");
             String[] sArrayFiles = new String[files.length()];
             for (int i = 0; i < files.length(); ++i) {
-                sArrayFiles[i] = manager().versionFolder() + files.getString(i);
+                sArrayFiles[i] = manager().folder() + files.getString(i);
             }
 
             JSONArray tags = JShader.getJSONArray("tags");
@@ -131,10 +131,8 @@ public final class ShaderLoader extends ResourceLoader {
     }
 
     private String preprocess(String path, Set<String> watched, List<List<String>> stageFiles) {
-        // GLSL 140: the line after "#line n" is n + 1 (n from GLSL 330)
-        int lineOffset = "1_40".equals(manager().getVersion()) ? -1 : 0;
         ShaderPreprocessor preprocessor = new ShaderPreprocessor(this::readIfFile,
-                manager().versionFolder(), lineOffset);
+                manager().folder(), manager().prelude());
         try {
             String source = preprocessor.process(path);
             stageFiles.add(List.copyOf(preprocessor.files()));

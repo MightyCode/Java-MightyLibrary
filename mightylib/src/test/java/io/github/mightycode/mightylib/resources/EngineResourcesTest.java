@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // The content of the source of the engine (classpath assets/mightylib/): every name of EngineResources is there
 class EngineResourcesTest {
-    private static final String SHADERS_FOLDER = "shaders/3_30/";
+    private static final String SHADERS_FOLDER = "shaders/";
 
     private static ResourceSources engine;
 
@@ -71,7 +71,8 @@ class EngineResourcesTest {
             JSONArray files = shaders.getJSONObject(name).getJSONArray("files");
             for (int i = 0; i < files.length(); ++i) {
                 String path = SHADERS_FOLDER + files.getString(i);
-                ShaderPreprocessor preprocessor = new ShaderPreprocessor(EngineResourcesTest::readIfFile, SHADERS_FOLDER, 0);
+                ShaderPreprocessor preprocessor = new ShaderPreprocessor(EngineResourcesTest::readIfFile,
+                        SHADERS_FOLDER, "#version 330 core\n");
                 assertDoesNotThrow(() -> preprocessor.process(path), name + ": " + path);
             }
         }

@@ -120,7 +120,7 @@ class ResourcesGLElementsTest extends ResourcesTestBase {
         assertSame(data, program.getData());
         assertTrue(program.isDimension2DShader());
 
-        FallbackShaderData fallback = new FallbackShaderData("3_30");
+        FallbackShaderData fallback = new FallbackShaderData();
         assertEquals(Shader.class, fallback.glElementType());
         assertInstanceOf(FallbackShader.class, fallback.createGLElement());
         assertFalse(fallback.hasSource());

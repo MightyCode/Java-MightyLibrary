@@ -9,6 +9,7 @@ import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,7 +40,9 @@ class ResourceLoadersTest {
     void shaderLoaderReadsItsManagerLate() {
         ShaderManager[] manager = new ShaderManager[1];
         ShaderLoader loader = new ShaderLoader(() -> manager[0]);
-        assertThrows(IllegalStateException.class, loader::createFallback);
+        assertThrows(IllegalStateException.class, () -> loader.create(new HashMap<>()));
+        // The fallback does not need it: it can't fail
+        assertNotNull(loader.createFallback());
 
         manager[0] = new ShaderManager(ResourceSources.of(new FolderSource(Resources.DEFAULT_FOLDER)));
         assertInstanceOf(ShaderLoader.class, LibraryLoaders.mandatory(() -> manager[0]).get(0));

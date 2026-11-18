@@ -290,7 +290,7 @@ public final class Engine implements IView {
 
         System.out.println("--Create ShaderManager");
         shaderManager = new ShaderManager(resourceSources);
-        shaderManager.init(config.getShaderVersion());
+        shaderManager.init();
 
         System.out.println("--Create Resources");
         resources = new Resources(config.getResourcesLoadingMethod(), Math.max(1, config.getMaxThreads()),
