@@ -100,3 +100,17 @@ Pas de nouvelle scène : `Scene3D` est déjà la scène qui montre le modèle et
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/demo-assets`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+Fait : étapes 1 à 6. Release publique `demo-assets-1` créée (archive de 36 Mo, 8 fichiers) ; manifeste complet commité.
+
+Écarts au plan :
+- `weapon`, `world` et `basicShape` sont toujours sur le disque de l'utilisateur (ignorés par l'ancien `.gitignore`, maintenant visibles comme non suivis) : à supprimer ou sortir du dépôt par lui.
+- Pas d'option cachée de test : les tests de l'extraction ont appelé `demo_assets.extract`/`status` directement depuis un script du scratchpad (non versionné).
+
+Vérifié :
+- `--check` : 0 sur l'état actuel ; fichier modifié ou manquant détecté ; archives avec `../x`, `/abs`, `C:/x`, `models/../../x` refusées ; mauvaise empreinte refusée sans fichier `.part` ; entrée non listée non extraite.
+- De bout en bout : dossier `backpack` déplacé, `python tools/demo_assets.py` (téléchargement réel) → 8 installés, `--check` 0, `diff -r` identique à la copie ; relance : « up to date » sans réseau.
+- `mvn -o -q compile` OK. `scenario.py "scene Scene3D" wait-loaded "?resources"` : sans le paquet, ligne « Model 'backpack' missing: run python tools/demo_assets.py » dans le journal, 0 problème ; avec le paquet, 3 modèles chargés. `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` : aucune erreur dans le journal.
+
+À vérifier à la main : sur une copie fraîche du dépôt, `python tools/demo_assets.py` puis `Scene3D` affiche le backpack éclairé ; sans le paquet, message rouge avec la commande ; release `demo-assets-1` visible sur GitHub avec ses notes de licence.
