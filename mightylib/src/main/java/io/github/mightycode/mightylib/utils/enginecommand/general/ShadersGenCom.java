@@ -11,7 +11,7 @@ import org.json.JSONObject;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.oneOf;
@@ -66,7 +66,7 @@ public final class ShadersGenCom extends BaseCommand {
         JSONObject declarations = shaders.declarations();
         JSONArray entries = new JSONArray();
         message.append("\n").append(declarations.length()).append(" declared shader(s)");
-        for (String name : new TreeMap<>(declarations.toMap()).keySet()) {
+        for (String name : new TreeSet<>(declarations.keySet())) {
             JSONObject declaration = declarations.getJSONObject(name);
             JSONObject entry = new JSONObject();
             entry.put("name", name);
@@ -80,7 +80,7 @@ public final class ShadersGenCom extends BaseCommand {
 
             message.append("\n  ").append(name);
             if (entryDefines != null && entryDefines.length() > 0)
-                message.append(" (defines: ").append(String.join(", ", new TreeMap<>(entryDefines.toMap()).keySet()))
+                message.append(" (defines: ").append(String.join(", ", new TreeSet<>(entryDefines.keySet())))
                         .append(")");
         }
 
