@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.test;
 
+import io.github.mightycode.mightylib.main.EWindowMode;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.EngineConfig;
 import io.github.mightycode.mightylib.main.KitEngineAccess;
@@ -99,6 +100,8 @@ public final class TestEngine implements AutoCloseable {
             // Hidden, on a scene without resources: the tests start the scenes they need
             KitEngineAccess.setHiddenWindows(true);
             config.setStartScene(EmptyTestScene::new);
+            // Never the fullscreen of the game (it would switch the screen of the machine), no wait for the screen
+            config.setDisplay(config.getDisplay().setMode(EWindowMode.WINDOWED).setVsync(false));
         }
 
         clock = NANOS_PER_SECOND;
