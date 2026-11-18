@@ -285,7 +285,9 @@
                     <compilerArgs>
                         <!-- Off, accepted: some public members of exported types expose a type of an internal
                              package (Engine.consoleLog, Window.getGLContext, GLResources.shared...: docs/decisions.md);
-                             removing them needs an internal gateway (docs/later.md) -->
+                             removing them needs an internal gateway (docs/later.md). The alert also hides a type of
+                             another module exposed without "requires transitive": when a dependency enters the API,
+                             compile once with -Xlint:exports and compare with the list of docs/later.md -->
                         <arg>-Xlint:-exports</arg>
                         <!-- Off, accepted: JBox2D, JLayer and OpenSimplex have no module name, the engine requires
                              them as automatic modules named after their jar -->
