@@ -17,9 +17,8 @@ Déjà dans le moteur (ne pas reproposer) : A*, Dijkstra, tweens, son positionn�
 - **Permissions par joueur** : opérateur, administrateur, triche autorisée par le serveur ; le niveau des commandes (`ECommandLevel`) ne vaut qu'en local, en réseau, c'est le serveur qui décide.
 
 ## Production et distribution
-- **Livrer** : `jpackage`/`jlink` (Java intégré) ; macOS `-XstartOnFirstThread` ; prérequis Steam.
+- **Livrer** : installeur `jpackage` (Java intégré) ; prérequis Steam (l'image `jlink`, macOS et la publication du jar : `later.md`, « Distribution et versions »).
 - **Journal fichier et rapports de plantage**.
-- **CI** (GitHub Actions) : compiler, tester, publier le jar.
 
 ## Rendu
 - **Version d'OpenGL/GLSL au-delà de 3.3 core** : 4.3+ apporte compute shaders, SSBO, rendu indirect (particules, culling, batching sur GPU) mais exclut macOS (4.1 maximum, OpenGL déprécié) ; 4.1 n'apporte presque rien. Choix de plateformes : garder 3.3 partout, chemin optionnel 4.3 détecté au démarrage avec repli 3.3 (par remplacement du service des shaders : son prélude écrit le `#version`, `IShaderService.prelude` ; un define global peut signaler le chemin 4.3 aux fichiers), ou abandon de macOS en OpenGL (Vulkan/MoltenVK plus tard).

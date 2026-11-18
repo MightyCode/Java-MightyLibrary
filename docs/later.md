@@ -43,7 +43,7 @@ LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'
 - **Logique pure encore sans test** (`python tools/coverage.py`) : `Animation` / `Animator` (le constructeur de `Animation` lit `Views.engine().resources()` : lui passer `Resources` en paramètre, en gardant le constructeur actuel pour l'usage courant, permettrait de les tester sans moteur) et `FallbackAnimationData` (demande une `Resources`) ; `physics/B2Utils` (conversions JBox2D, à voir avec la physique 2D).
 
 ## Kit de test : suites
-- **Statut `STABLE`** du package `io.github.mightycode.mightylib.test` avant la première version publiée (objectif « Distribution »), une fois éprouvé par un vrai jeu.
+- **Statut `STABLE`** du package `io.github.mightycode.mightylib.test` avant la première version publiée (« Distribution et versions »), une fois éprouvé par un vrai jeu.
 - **Tests sur le chemin de modules** : le kit est classpath seulement (ses ponts partagent des packages du moteur) ; un jeu en module teste sur le classpath (`useModulePath=false`, déjà dans `mightylib-base-parent`). Le passage au chemin de modules demanderait des ponts publics `INTERNAL` dans la bibliothèque, ou `--patch-module`.
 - **macOS** : les tests `gl` exigent `-XstartOnFirstThread` dans l'`argLine` de Surefire (non testé, comme les autres natives macOS).
 - **Comparaison d'images** (tests de rendu au pixel près) : capture de la fenêtre cachée (`Screenshot`) comparée à une image de référence, avec tolérance (pilotes différents, Mesa en CI).
@@ -221,10 +221,17 @@ Streaming des musiques longues (tout est décodé en mémoire).
 - **Fenêtre redimensionnée** : recalcul optionnel de la surface virtuelle (elle reste fixe, avec bandes noires) ; le jeu se fige pendant qu'on tire un bord ou déplace la fenêtre sous Windows (boucle modale dans `glfwPollEvents`, seule l'image est redessinée) : la cible durable est une boucle de jeu et de rendu sur un thread à elle, le thread principal ne lisant que les événements (change la règle « tout le GL sur le thread principal », à discuter). Icône par fenêtre, renvoi du focus au dialogue modal quand on clique sur la fenêtre parente, manettes bloquées par un dialogue modal.
 - **`EngineStats` par fenêtre** (compteurs de frames et de swaps) et `Screenshot` par fenêtre dans la boucle.
 
+## Distribution et versions (avant le premier jeu publié)
+Pas avant : publier fige le dépôt, les versions et les statuts `@API` d'un moteur encore changé librement. D'ici là, un jeu sur la même machine dépend du moteur par `mvn install`.
+- **Publication** : JitPack ou GitHub Packages ; versions sémantiques par release ; à partir de la première version publiée, japicmp compare l'API de chaque version à la précédente (les statuts `@API` disent ce qui peut changer). À décider : dépôt de publication, numéro de la première version, contrôle japicmp dans la CI ou en local.
+- **Modules automatiques** : le moteur requiert trois modules nommés d'après leur jar (`jbox2d.library`, `jlayer`, `opensimplex`), que Maven déconseille de publier (le nom changerait avec le jar) : les remplacer, les embarquer ou fixer leur nom avant la première publication.
+- **Image `jlink`** du jeu : doit contenir `jdk.zipfs` (requis par le module du moteur, résolu par `jlink` à partir du module du jeu).
+- **Premier jeu hors du dépôt** : il vérifie ce que la démo ne couvre pas (ressources lues depuis le jar du jeu, aucun chemin relatif au dépôt).
+
 ## Poms des jeux : suites
-- **Générateur de projet** (archetype Maven) : à partir du projet jetable du test d'acceptation (`mightylib-game-parent`, `mightylib`, `mightylib.mainClass`, une scène 2D vide).
-- **macOS** : le lancement exige `-XstartOnFirstThread`, que `exec:java` (même JVM) ne permet pas : prévoir `exec:exec` ou un lanceur (objectif « Distribution » de `current.md`) ; les natives macOS ne sont pas testées.
-- **Plateforme non reconnue** : si aucun profil d'OS de `mightylib-base-parent` ne s'active (Linux x86 32 bits, FreeBSD…), `${lwjgl.natives}` reste tel quel et la résolution des natives de `mightylib-game-parent` échoue avec un message obscur. Prévoir un profil de repli (`activeByDefault` ou `!lwjgl.natives`) qui arrête le build avec un message clair (objectif « Distribution »).
+- **Générateur de projet** (archetype Maven) : à partir du premier jeu hors du dépôt (`mightylib-game-parent`, `mightylib`, `mightylib.mainClass`, une scène 2D vide).
+- **macOS** : le lancement exige `-XstartOnFirstThread`, que `exec:java` (même JVM) ne permet pas : prévoir `exec:exec` ou un lanceur (« Distribution et versions ») ; les natives macOS ne sont pas testées.
+- **Plateforme non reconnue** : si aucun profil d'OS de `mightylib-base-parent` ne s'active (Linux x86 32 bits, FreeBSD…), `${lwjgl.natives}` reste tel quel et la résolution des natives de `mightylib-game-parent` échoue avec un message obscur. Prévoir un profil de repli (`activeByDefault` ou `!lwjgl.natives`) qui arrête le build avec un message clair (« Distribution et versions »).
 - **`exec-maven-plugin` 1.2.1** (2011), transmis à tout jeu par `mightylib-base-parent` : passer à une version 3.x (vérifier `exec:java` et les arguments de la démo), en même temps que la question macOS ci-dessus.
 - **Maven 4** : ses mixins pourraient simplifier la chaîne de parents.
 

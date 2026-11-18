@@ -74,7 +74,7 @@ Crédits : « Survival guitar backpack » par Berk Gedik ([Sketchfab](https://sk
 ## Checklist 
 
 **Ressources :**
-- Chargement automatique des ressources présentes dans le dossier ressources. ✅
+- Chargement automatique des ressources d'une pile de sources (dossiers, classpath, jar ; celles du moteur dans son jar, remplaçables par le jeu). ✅
 - Chargement et déchargement de ressources par bloc. ✅
 - Support des fichiers pratiques comme json, csv. ✅
 - Chargement de fichiers atlas et de fichiers map (format propre au moteur). ✅
@@ -100,7 +100,7 @@ Crédits : « Survival guitar backpack » par Berk Gedik ([Sketchfab](https://sk
 - Sphere normalisé ✅
 - Texture 3D ✅
 - Utilisation model simple 3D .obj ✅
-- Chargement modèle plus complexe avec matériaux. ❌
+- Chargement de modèles avec matériaux (Assimp). ✅
 - Camera complexe 3D ❌
  
 **GUI :**
