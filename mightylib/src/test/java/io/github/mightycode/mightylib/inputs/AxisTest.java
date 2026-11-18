@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.inputs.inputType.AxisInput;
 import io.github.mightycode.mightylib.inputs.inputType.AxisSum;
 import io.github.mightycode.mightylib.inputs.inputType.InputGamepadAxis;
 import io.github.mightycode.mightylib.inputs.inputType.InputGamepadButton;
+import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

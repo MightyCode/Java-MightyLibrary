@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.console.internal;
 
 import io.github.mightycode.mightylib.inputs.KeyEvent;
 import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;

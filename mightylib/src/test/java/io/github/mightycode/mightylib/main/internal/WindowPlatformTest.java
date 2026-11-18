@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.main;
+package io.github.mightycode.mightylib.main.internal;
 
 import org.junit.jupiter.api.Test;
 

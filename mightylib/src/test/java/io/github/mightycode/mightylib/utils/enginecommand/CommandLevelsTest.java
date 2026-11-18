@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
-import io.github.mightycode.mightylib.console.CommandEcho;
-import io.github.mightycode.mightylib.console.ConsoleLog;
+import io.github.mightycode.mightylib.console.internal.CommandEcho;
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.ICommandHandler;
 import org.json.JSONObject;

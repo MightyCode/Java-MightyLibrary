@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.console.ConsoleLog;
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;

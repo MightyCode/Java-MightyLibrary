@@ -1,6 +1,4 @@
-package io.github.mightycode.mightylib.inputs;
-
-import org.apiguardian.api.API;
+package io.github.mightycode.mightylib.inputs.internal;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -10,15 +8,12 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import static org.apiguardian.api.API.Status.INTERNAL;
-
 /**
  * Simulated presses of ids (actions, keys or mouse buttons) from commands, scripts, later replays,
  * stored then applied when the inputs of the next tick are computed.
  * A simulated press is seen by the whole next tick, exactly like a real one.
  * Main thread only.
  */
-@API(status = INTERNAL)
 public final class InputSimulation {
     // Hold until a release is asked
     public static final int UNTIL_RELEASE = -1;
@@ -64,7 +59,7 @@ public final class InputSimulation {
     }
 
     // Called when the inputs of the next tick are computed
-    void update() {
+    public void update() {
         oldState.clear();
         oldState.addAll(currentState);
 
@@ -94,15 +89,15 @@ public final class InputSimulation {
         currentState.addAll(heldActions.keySet());
     }
 
-    boolean getState(int actionId) {
+    public boolean getState(int actionId) {
         return currentState.contains(actionId);
     }
 
-    boolean pressed(int actionId) {
+    public boolean pressed(int actionId) {
         return currentState.contains(actionId) && !oldState.contains(actionId);
     }
 
-    boolean released(int actionId) {
+    public boolean released(int actionId) {
         return !currentState.contains(actionId) && oldState.contains(actionId);
     }
 

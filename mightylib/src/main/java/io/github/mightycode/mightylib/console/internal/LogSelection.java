@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.console.internal;
 
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 
@@ -9,28 +9,28 @@ import java.util.function.Predicate;
  * A selection in the console log: from an anchor (where the mouse was pressed) to a focus (where it is now), in
  * places of the log (line id, character of the displayed text), so independent of the width and of the scroll.
  */
-final class LogSelection {
+public final class LogSelection {
     private LogPosition anchor;
     private LogPosition focus;
 
-    LogSelection(LogPosition anchor, LogPosition focus) {
+    public LogSelection(LogPosition anchor, LogPosition focus) {
         this.anchor = anchor;
         this.focus = focus;
     }
 
-    LogPosition anchor() { return anchor; }
+    public LogPosition anchor() { return anchor; }
 
-    LogPosition focus() { return focus; }
+    public LogPosition focus() { return focus; }
 
     // The first place selected, whatever the direction of the selection
-    LogPosition start() { return anchor.compareTo(focus) <= 0 ? anchor : focus; }
+    public LogPosition start() { return anchor.compareTo(focus) <= 0 ? anchor : focus; }
 
     // After the last character selected
-    LogPosition end() { return anchor.compareTo(focus) <= 0 ? focus : anchor; }
+    public LogPosition end() { return anchor.compareTo(focus) <= 0 ? focus : anchor; }
 
-    boolean isEmpty() { return anchor.equals(focus); }
+    public boolean isEmpty() { return anchor.equals(focus); }
 
-    void extendTo(LogPosition position) {
+    public void extendTo(LogPosition position) {
         focus = position;
     }
 
@@ -39,7 +39,7 @@ final class LogSelection {
      * oldest line kept.
      * @return false when every line of the selection is forgotten: the selection is dropped
      */
-    boolean keepFrom(long oldestId) {
+    public boolean keepFrom(long oldestId) {
         if (end().lineId() < oldestId)
             return false;
 
@@ -81,7 +81,7 @@ final class LogSelection {
     }
 
     // The last lines up to the end of the log
-    static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count) {
+    public static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count) {
         return LastLinesText(log, viewer, filter, count, Long.MAX_VALUE);
     }
 
@@ -91,7 +91,7 @@ final class LogSelection {
      * @param count lines to copy, 0 or less: every line kept
      * @param upToId the newest line that may be copied (Long.MAX_VALUE: the end of the log)
      */
-    static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count,
+    public static String LastLinesText(ConsoleLog log, ECommandLevel viewer, Predicate<ConsoleLog.Line> filter, int count,
                                 long upToId) {
         List<ConsoleLog.Line> lines = log.upTo(upToId, count > 0 ? count : Integer.MAX_VALUE, viewer, filter);
         if (lines.isEmpty())

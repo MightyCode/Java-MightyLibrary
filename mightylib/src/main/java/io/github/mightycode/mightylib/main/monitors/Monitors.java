@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.main.monitors;
 
-import io.github.mightycode.mightylib.main.WindowPlatform;
+import io.github.mightycode.mightylib.main.internal.WindowPlatform;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.system.MemoryStack;

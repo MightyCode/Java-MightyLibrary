@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 

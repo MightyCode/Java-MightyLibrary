@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
-import io.github.mightycode.mightylib.console.LogCapture;
+import io.github.mightycode.mightylib.console.internal.LogCapture;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;

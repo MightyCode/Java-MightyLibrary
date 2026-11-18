@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;

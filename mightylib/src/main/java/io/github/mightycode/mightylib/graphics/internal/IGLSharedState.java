@@ -1,15 +1,11 @@
-package io.github.mightycode.mightylib.graphics;
+package io.github.mightycode.mightylib.graphics.internal;
 
-import org.apiguardian.api.API;
-
-import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * GL state shared by every element of a type (placeholders of the textures, upload buffers), named by its class:
  * created at the first GLResources.shared call, deleted with GLResources. Main thread only.
  * GLResources knows no element type: what an element type needs beside its elements lives here.
  */
-@API(status = INTERNAL)
 public interface IGLSharedState {
     // Nothing left to send (the loading queues are empty): what is only needed while sending can be freed
     default void loadingIdle() {}

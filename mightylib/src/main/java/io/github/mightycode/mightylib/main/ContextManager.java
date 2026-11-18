@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.IInputManagerFactory;

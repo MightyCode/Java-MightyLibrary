@@ -1,25 +1,22 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.console.internal;
 
 import io.github.mightycode.mightylib.inputs.KeyEvent;
 import io.github.mightycode.mightylib.inputs.text.CommandLineEditor;
 import io.github.mightycode.mightylib.inputs.text.IClipboard;
 import io.github.mightycode.mightylib.inputs.text.LineEditKeys;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandCompletion;
-import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * Turns what is typed in the console (text and keys of a tick) into edits of its command line and into requests
  * (run a line, close, scroll...). No GL, no window: the console gives it the inputs of the window it is shown in.
  */
-@API(status = INTERNAL)
 public final class ConsoleInput {
     public enum ERequest {
         SUBMIT, CLOSE, SCROLL, SCROLL_TOP, SCROLL_END, CLEAR
@@ -75,7 +72,7 @@ public final class ConsoleInput {
     public CommandLineEditor getEditor() { return editor; }
 
     // The selection in the log, null if none (or empty)
-    LogSelection getLogSelection() {
+    public LogSelection getLogSelection() {
         return logSelection == null || logSelection.isEmpty() ? null : logSelection;
     }
 
@@ -94,7 +91,7 @@ public final class ConsoleInput {
     }
 
     /** @param layout the log as shown (selection, copy), null before the console is displayed */
-    List<Request> handle(String typedText, List<KeyEvent> keys, int pageLines, IClipboard clipboard,
+    public List<Request> handle(String typedText, List<KeyEvent> keys, int pageLines, IClipboard clipboard,
                          ConsoleLayout layout) {
         this.layout = layout;
         keepLogSelection();
@@ -245,7 +242,7 @@ public final class ConsoleInput {
     // ---- Mouse ----
 
     /** The left button of the mouse during a tick, in pixels from the top left of the panel. */
-    static final class MouseState {
+    public static final class MouseState {
         final float x;
         final float y;
         final boolean pressed;
@@ -257,7 +254,7 @@ public final class ConsoleInput {
         // Time of the tick (System.nanoTime): the automatic scroll while dragging out of the log
         final long nanoTime;
 
-        MouseState(float x, float y, boolean pressed, boolean held, boolean released, int clicks, boolean shift,
+        public MouseState(float x, float y, boolean pressed, boolean held, boolean released, int clicks, boolean shift,
                    long nanoTime) {
             this.x = x;
             this.y = y;
@@ -287,7 +284,7 @@ public final class ConsoleInput {
      * triple click the line (the log line, not its row).
      * @param layout where the rows and the command line are in the panel
      */
-    List<Request> handleMouse(MouseState mouse, ConsoleLayout layout) {
+    public List<Request> handleMouse(MouseState mouse, ConsoleLayout layout) {
         this.layout = layout;
         keepLogSelection();
         List<Request> requests = new ArrayList<>();

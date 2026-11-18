@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
-import io.github.mightycode.mightylib.graphics.IGLSharedState;
+import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;

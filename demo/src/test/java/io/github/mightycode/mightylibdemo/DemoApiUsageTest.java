@@ -116,11 +116,11 @@ class DemoApiUsageTest {
         Path file = Files.createTempFile("DemoApiUsageTest", ".java");
         try {
             Files.write(file, List.of(
-                    "import io.github.mightycode.mightylib.console.ConsoleLog;",
-                    "import static io.github.mightycode.mightylib.graphics.GLContext.current;",
+                    "import io.github.mightycode.mightylib.console.internal.ConsoleLog;",
+                    "import static io.github.mightycode.mightylib.graphics.internal.GLContext.current;",
                     "import io.github.mightycode.mightylib.utils.enginecommand.internal.*;",
                     "import io.github.mightycode.mightylib.scenes.Scene;",
-                    "class X { io.github.mightycode.mightylib.resources.BatchLoader loader; }"),
+                    "class X { io.github.mightycode.mightylib.resources.internal.BatchLoader loader; }"),
                     StandardCharsets.UTF_8);
 
             List<String> uses = internalUses(file);

@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;

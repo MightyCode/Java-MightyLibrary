@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand.internal;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;

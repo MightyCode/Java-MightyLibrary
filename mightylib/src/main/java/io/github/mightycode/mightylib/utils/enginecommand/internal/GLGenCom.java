@@ -2,7 +2,7 @@ package io.github.mightycode.mightylib.utils.enginecommand.internal;
 
 import io.github.mightycode.mightylib.main.Views;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.text.DrawnTexts;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;

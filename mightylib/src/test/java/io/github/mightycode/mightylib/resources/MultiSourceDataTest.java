@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;

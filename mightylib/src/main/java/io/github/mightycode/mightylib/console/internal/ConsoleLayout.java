@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.console.internal;
 
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 
@@ -16,25 +16,25 @@ import java.util.function.Predicate;
  * The scroll is anchored on a line of the log, not counted from the bottom: new lines do not move a view scrolled
  * up. The work grows with what is shown, not with the size of the log.
  */
-final class ConsoleLayout {
+public final class ConsoleLayout {
     /** Width of a character in pixels. */
-    interface ICharAdvance {
+    public interface ICharAdvance {
         float of(char c);
     }
 
     /** The bottom of the view: a line of the log and the rows of this line hidden below the view. */
-    static final class Anchor {
+    public static final class Anchor {
         private final long lineId;
         private final int rowsBelow;
 
-        Anchor(long lineId, int rowsBelow) {
+        public Anchor(long lineId, int rowsBelow) {
             this.lineId = lineId;
             this.rowsBelow = rowsBelow;
         }
 
-        long lineId() { return lineId; }
+        public long lineId() { return lineId; }
 
-        int rowsBelow() { return rowsBelow; }
+        public int rowsBelow() { return rowsBelow; }
 
         @Override
         public boolean equals(Object other) {
@@ -57,7 +57,7 @@ final class ConsoleLayout {
     }
 
     /** One row shown: a part of a log line, from the character start (included) to end (excluded). */
-    static final class Row {
+    public static final class Row {
         private final ConsoleLog.Line line;
         private final String text;
         private final int start;
@@ -72,15 +72,15 @@ final class ConsoleLayout {
             this.parts = parts;
         }
 
-        ConsoleLog.Line line() { return line; }
+        public ConsoleLog.Line line() { return line; }
 
-        String text() { return text; }
+        public String text() { return text; }
 
-        int start() { return start; }
+        public int start() { return start; }
 
-        int end() { return start + text.length(); }
+        public int end() { return start + text.length(); }
 
-        boolean isLastPart() { return part == parts - 1; }
+        public boolean isLastPart() { return part == parts - 1; }
     }
 
     // The count of the lines below the view stops here
@@ -113,13 +113,13 @@ final class ConsoleLayout {
     private long buildCount;
     private long builtVersion = -1;
 
-    ConsoleLayout(ConsoleLog log, ICharAdvance advance) {
+    public ConsoleLayout(ConsoleLog log, ICharAdvance advance) {
         this.log = log;
         this.advance = advance;
     }
 
     /** Text of a line as shown: tabulations replaced by 4 spaces. The characters of a LogPosition are counted in it. */
-    static String DisplayedText(ConsoleLog.Line line) {
+    public static String DisplayedText(ConsoleLog.Line line) {
         return line.toString().replace("\t", "    ");
     }
 
@@ -130,7 +130,7 @@ final class ConsoleLayout {
      * @param rows      rows shown at once
      * @param rowHeight distance between two rows, in pixels
      */
-    void setGeometry(float width, int rows, float rowHeight) {
+    public void setGeometry(float width, int rows, float rowHeight) {
         if (width == this.width && rows == visibleRows && rowHeight == this.rowHeight)
             return;
 
@@ -141,7 +141,7 @@ final class ConsoleLayout {
     }
 
     // Only the lines this level sees are shown
-    void setViewer(ECommandLevel viewer) {
+    public void setViewer(ECommandLevel viewer) {
         if (viewer == this.viewer)
             return;
 
@@ -153,7 +153,7 @@ final class ConsoleLayout {
      * The lines of these types are not shown. The anchor does not change: a view whose bottom line is hidden shows the
      * nearest visible line before it, and comes back to the same place when the lines are shown again.
      */
-    void setHiddenTypes(Set<ConsoleLog.EType> types) {
+    public void setHiddenTypes(Set<ConsoleLog.EType> types) {
         if (types.equals(hiddenTypes))
             return;
 
@@ -163,14 +163,14 @@ final class ConsoleLayout {
     }
 
     // The width of the characters changed (font size)
-    void invalidate() {
+    public void invalidate() {
         dirty = true;
     }
 
     // ---- Rows ----
 
     /** Compute the rows again if the log (what the viewer sees), the scroll or the settings changed. */
-    void refresh() {
+    public void refresh() {
         if (dirty || log.version(viewer, hiddenTypes) != builtVersion)
             build();
     }
@@ -179,27 +179,27 @@ final class ConsoleLayout {
      * Changes each time the rows are computed again (by refresh, a scroll or a read that refreshes): the panel draws
      * its rows again when it differs from the count it last drew.
      */
-    long buildCount() { return buildCount; }
+    public long buildCount() { return buildCount; }
 
     // The rows shown, oldest first; fewer than the visible rows when the log is short (the panel puts them at the bottom)
-    List<Row> rows() { return rows; }
+    public List<Row> rows() { return rows; }
 
     // Slot of the panel (0: the top row) where a row of rows() is drawn
-    int slotOf(int rowIndex) {
+    public int slotOf(int rowIndex) {
         return visibleRows - rows.size() + rowIndex;
     }
 
     // null: the view follows the end of the log
-    Anchor anchor() { return anchor; }
+    public Anchor anchor() { return anchor; }
 
     // Nothing visible below the view
-    boolean isAtEnd() { return atEnd; }
+    public boolean isAtEnd() { return atEnd; }
 
     // Lines below the view (filter and level applied), counted up to MAX_LINES_BELOW + 1: more than the maximum
-    int linesBelow() { return linesBelow; }
+    public int linesBelow() { return linesBelow; }
 
     // Text of the indicator shown when the view is not at the end, null at the end
-    String linesBelowText() {
+    public String linesBelowText() {
         if (linesBelow == 0)
             return null;
 
@@ -339,7 +339,7 @@ final class ConsoleLayout {
     }
 
     // Cut a text on the characters that pass the width (at least one character per row)
-    List<String> wrap(String text) {
+    public List<String> wrap(String text) {
         List<String> parts = new ArrayList<>();
         int start = 0;
         float used = 0;
@@ -360,7 +360,7 @@ final class ConsoleLayout {
     // ---- Scroll ----
 
     /** Toward the oldest lines (positive) or the newest (negative), by rows, from what is shown. */
-    void scroll(int amount) {
+    public void scroll(int amount) {
         refresh();
         if (amount == 0 || bottom == null)
             return;
@@ -397,7 +397,7 @@ final class ConsoleLayout {
     }
 
     /** The oldest line kept at the top. */
-    void scrollToTop() {
+    public void scrollToTop() {
         List<ConsoleLog.Line> oldest = log.after(0, 1, viewer, filter);
         if (oldest.isEmpty())
             return;
@@ -406,7 +406,7 @@ final class ConsoleLayout {
     }
 
     /** Follow the end of the log again. */
-    void scrollToEnd() {
+    public void scrollToEnd() {
         if (anchor != null) {
             anchor = null;
             dirty = true;
@@ -423,25 +423,25 @@ final class ConsoleLayout {
     // ---- The log as shown (viewer and filter applied), for the selection ----
 
     // Beginning of the oldest line shown, null if none
-    LogPosition firstPosition() {
+    public LogPosition firstPosition() {
         List<ConsoleLog.Line> oldest = log.after(0, 1, viewer, filter);
         return oldest.isEmpty() ? null : new LogPosition(oldest.get(0).getId(), 0);
     }
 
     // End of the newest line shown, null if none
-    LogPosition lastPosition() {
+    public LogPosition lastPosition() {
         List<ConsoleLog.Line> newest = log.upTo(Long.MAX_VALUE, 1, viewer, filter);
         return newest.isEmpty() ? null
                 : new LogPosition(newest.get(0).getId(), DisplayedText(newest.get(0)).length());
     }
 
     // The lines before it are forgotten or cleared for the viewer
-    long oldestKeptId() {
+    public long oldestKeptId() {
         return Math.max(log.oldestId(), log.clearedUpTo(viewer) + 1);
     }
 
     // Displayed text of a line shown, null if it is not
-    String displayedText(long lineId) {
+    public String displayedText(long lineId) {
         for (Row row : rows) {
             if (row.line.getId() == lineId)
                 return DisplayedText(row.line);
@@ -452,7 +452,7 @@ final class ConsoleLayout {
     }
 
     // What Ctrl+C copies between two places (see LogSelection.CopyText)
-    String copyText(LogPosition from, LogPosition to) {
+    public String copyText(LogPosition from, LogPosition to) {
         return LogSelection.CopyText(log, viewer, filter, from, to);
     }
 
@@ -469,45 +469,45 @@ final class ConsoleLayout {
      * @param inputTextLeft left of the first character of the command line shown (after the prompt)
      * @param inputScroll   first character of the command line shown (it scrolls around the cursor)
      */
-    void setPanelGeometry(float textLeft, float rowsTop, float inputTextLeft, int inputScroll) {
+    public void setPanelGeometry(float textLeft, float rowsTop, float inputTextLeft, int inputScroll) {
         this.textLeft = textLeft;
         this.rowsTop = rowsTop;
         this.inputTextLeft = inputTextLeft;
         this.inputScroll = inputScroll;
     }
 
-    float rowsTop() { return rowsTop; }
+    public float rowsTop() { return rowsTop; }
 
     // Space kept around the text of the indicator of the lines below
-    static final float INDICATOR_PADDING = 4;
+    public static final float INDICATOR_PADDING = 4;
 
     // Width of the indicator of the lines below, with its padding (0: not shown), as of the last build (what is drawn)
-    float indicatorWidth() {
+    public float indicatorWidth() {
         return indicatorWidth;
     }
 
     // Left of the indicator in the panel: at the right of the last row
-    float indicatorLeft() {
+    public float indicatorLeft() {
         return textLeft + width - indicatorWidth();
     }
 
     // The point of the panel is on the indicator of the lines below
-    boolean isOnIndicator(float x, float y) {
+    public boolean isOnIndicator(float x, float y) {
         float indicatorWidth = indicatorWidth();
         return indicatorWidth > 0 && x >= textLeft + width - indicatorWidth && x < textLeft + width
                 && y >= rowsBottom() - rowHeight && y < rowsBottom();
     }
 
     // Below the last slot: the command line
-    float rowsBottom() { return rowsTop + visibleRows * rowHeight; }
+    public float rowsBottom() { return rowsTop + visibleRows * rowHeight; }
 
     // The place in the log under a point of the panel (the nearest one outside the rows), null if nothing is shown
-    LogPosition logPositionAt(float x, float y) {
+    public LogPosition logPositionAt(float x, float y) {
         return positionAt(x - textLeft, y - rowsTop);
     }
 
     // Index of the command line under x, the nearest one (not before the first character shown)
-    int inputIndexAt(CharSequence text, float x) {
+    public int inputIndexAt(CharSequence text, float x) {
         int first = Math.max(0, Math.min(inputScroll, text.length()));
         return first + indexAt(text.subSequence(first, text.length()), x - inputTextLeft);
     }
@@ -519,7 +519,7 @@ final class ConsoleLayout {
      * @param x pixels from the left of the text
      * @param y pixels from the top of the first slot (the top row of the panel)
      */
-    LogPosition positionAt(float x, float y) {
+    public LogPosition positionAt(float x, float y) {
         refresh();
         if (rows.isEmpty())
             return null;
@@ -531,7 +531,7 @@ final class ConsoleLayout {
     }
 
     /** Index in rows() of the row that shows the place, -1 when it is not shown. */
-    int rowIndexOf(LogPosition position) {
+    public int rowIndexOf(LogPosition position) {
         for (int i = 0; i < rows.size(); ++i) {
             Row row = rows.get(i);
             if (row.line.getId() != position.lineId())
@@ -546,13 +546,13 @@ final class ConsoleLayout {
     }
 
     /** Pixels from the left of the text to the character of the row (clamped to the row). */
-    float xOf(Row row, int character) {
+    public float xOf(Row row, int character) {
         int end = Math.max(0, Math.min(row.text.length(), character - row.start));
         return width(row.text, 0, end);
     }
 
     // Index between two characters nearest to x (0: before the first one, length: after the last one)
-    int indexAt(CharSequence text, float x) {
+    public int indexAt(CharSequence text, float x) {
         float used = 0;
         for (int i = 0; i < text.length(); ++i) {
             float charWidth = advance.of(text.charAt(i));
@@ -569,7 +569,7 @@ final class ConsoleLayout {
         return !hiddenTypes.contains(line.getType());
     }
 
-    float width(CharSequence text, int start, int end) {
+    public float width(CharSequence text, int start, int end) {
         float used = 0;
         for (int i = start; i < end; ++i)
             used += advance.of(text.charAt(i));

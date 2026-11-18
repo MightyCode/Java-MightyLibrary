@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.cubemap.CubeMapLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchLoader;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
 import io.github.mightycode.mightylib.resources.map.TileSetLoader;
 import io.github.mightycode.mightylib.resources.models.ModelLoader;

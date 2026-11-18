@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;

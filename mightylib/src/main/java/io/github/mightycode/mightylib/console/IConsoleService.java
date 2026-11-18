@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.services.IEngineService;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.json.JSONObject;

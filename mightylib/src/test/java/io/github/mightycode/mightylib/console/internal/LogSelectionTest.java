@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.console.internal;
 
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.junit.jupiter.api.Test;

@@ -1,21 +1,21 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.console.internal;
 
 /**
  * A place in the console log: a line (its id) and a character of its displayed text (ConsoleLayout.DisplayedText),
  * from 0 (before the first character) to the length (after the last one). Independent of the width of the panel.
  */
-final class LogPosition implements Comparable<LogPosition> {
+public final class LogPosition implements Comparable<LogPosition> {
     private final long lineId;
     private final int character;
 
-    LogPosition(long lineId, int character) {
+    public LogPosition(long lineId, int character) {
         this.lineId = lineId;
         this.character = character;
     }
 
-    long lineId() { return lineId; }
+    public long lineId() { return lineId; }
 
-    int character() { return character; }
+    public int character() { return character; }
 
     @Override
     public int compareTo(LogPosition other) {

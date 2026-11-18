@@ -1,10 +1,8 @@
-package io.github.mightycode.mightylib.main;
+package io.github.mightycode.mightylib.main.internal;
 
-import org.apiguardian.api.API;
 
 import java.util.Locale;
 
-import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.glfw.GLFW.*;
 
 /**
@@ -14,7 +12,6 @@ import static org.lwjgl.glfw.GLFW.*;
  * The system property named by PROPERTY (-Dmightylib.glfw.platform=x11|wayland|win32|cocoa|null) chooses the platform,
  * otherwise GLFW takes the best one (Wayland in a Wayland session).
  */
-@API(status = INTERNAL)
 public final class WindowPlatform {
     public static final String PROPERTY = "mightylib.glfw.platform";
 
@@ -23,7 +20,7 @@ public final class WindowPlatform {
     private WindowPlatform() {}
 
     // Before glfwInit: the platform asked by the system property, if any and supported
-    static void applyInitHint() {
+    public static void applyInitHint() {
         String wanted = System.getProperty(PROPERTY);
         if (wanted == null || wanted.isEmpty())
             return;
@@ -42,12 +39,12 @@ public final class WindowPlatform {
     }
 
     // After glfwInit
-    static void readPlatform() {
+    public static void readPlatform() {
         platform = glfwGetPlatform();
         System.out.println("--GLFW platform : " + Name());
     }
 
-    static int Parse(String name) {
+    public static int Parse(String name) {
         switch (name.trim().toLowerCase(Locale.ROOT)) {
             case "x11": return GLFW_PLATFORM_X11;
             case "wayland": return GLFW_PLATFORM_WAYLAND;

@@ -1,6 +1,8 @@
-package io.github.mightycode.mightylib.resources;
+package io.github.mightycode.mightylib.resources.internal;
 
-import org.apiguardian.api.API;
+import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.FileMethods;
+import io.github.mightycode.mightylib.resources.ResourceLoader;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -10,10 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.apiguardian.api.API.Status.INTERNAL;
-
 // The batches (resources/batchs/*.batch, JSON): reads its files itself, whatever loader the JSON files have
-@API(status = INTERNAL)
 public final class BatchLoader extends ResourceLoader {
     // Keys of a description (read by BatchManager)
     private static final String LIST_KEY = "batchs";

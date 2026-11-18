@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.internal;
 
 import io.github.mightycode.mightylib.main.Views;
-import io.github.mightycode.mightylib.resources.ResourceArguments;
+import io.github.mightycode.mightylib.resources.internal.ResourceArguments;
 import io.github.mightycode.mightylib.resources.ResourceWatcher;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;

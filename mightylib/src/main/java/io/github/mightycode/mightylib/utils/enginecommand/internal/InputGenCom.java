@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.InputAxis;
 import io.github.mightycode.mightylib.inputs.IInputManager;
-import io.github.mightycode.mightylib.inputs.InputSimulation;
+import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;

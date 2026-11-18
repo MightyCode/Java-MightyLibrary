@@ -4,7 +4,7 @@ import io.github.mightycode.mightylib.main.Views;
 
 import io.github.mightycode.mightylib.inputs.Gamepad;
 import io.github.mightycode.mightylib.inputs.GamepadManager;
-import io.github.mightycode.mightylib.inputs.InputSimulation;
+import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;

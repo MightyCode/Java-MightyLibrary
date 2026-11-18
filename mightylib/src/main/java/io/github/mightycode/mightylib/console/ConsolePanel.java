@@ -1,5 +1,9 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.console.internal.ConsoleLayout;
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
+import io.github.mightycode.mightylib.console.internal.LogPosition;
+import io.github.mightycode.mightylib.console.internal.LogSelection;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;

@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources;
 import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
+import io.github.mightycode.mightylib.resources.internal.BatchLoader;
 import io.github.mightycode.mightylib.resources.sound.SoundData;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;

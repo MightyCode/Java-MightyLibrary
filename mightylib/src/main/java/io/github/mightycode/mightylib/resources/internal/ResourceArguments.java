@@ -1,5 +1,9 @@
-package io.github.mightycode.mightylib.resources;
+package io.github.mightycode.mightylib.resources.internal;
 
+import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.ResourceLoader;
+import io.github.mightycode.mightylib.resources.ResourceSelection;
+import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.source.SourceEntry;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
@@ -8,7 +12,6 @@ import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandSyntaxException;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
-import org.apiguardian.api.API;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,14 +24,12 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.argument;
-import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * The words of a command that choose registered data: a type (all or the name of a loader), names, and the option
  * --regex ("reload TextureData grass sand --regex tile.*"). A data is selected if it is in the names OR matches the
  * regex (see ResourceSelection).
  */
-@API(status = INTERNAL)
 public final class ResourceArguments {
     public static final String TYPE = "type";
     public static final String NAMES = "names";

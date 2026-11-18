@@ -1,5 +1,10 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.console.internal.ConsoleInput;
+import io.github.mightycode.mightylib.console.internal.ConsoleLayout;
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
+import io.github.mightycode.mightylib.console.internal.LogPosition;
+import io.github.mightycode.mightylib.console.internal.LogSelection;
 import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;

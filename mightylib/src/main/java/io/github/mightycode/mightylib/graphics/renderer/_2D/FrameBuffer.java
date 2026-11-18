@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;

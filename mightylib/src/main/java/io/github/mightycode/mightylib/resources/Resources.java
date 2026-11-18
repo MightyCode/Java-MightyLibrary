@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
+import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -109,7 +111,8 @@ public final class Resources {
     }
 
     // The loaders, in their order (those of the plugins, the engine first); unmodifiable
-    List<ResourceLoader> loaders() {
+    @API(status = INTERNAL)
+    public List<ResourceLoader> loaders() {
         return loaders;
     }
 

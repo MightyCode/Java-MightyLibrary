@@ -2,6 +2,9 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
+import io.github.mightycode.mightylib.resources.internal.ResourceArguments;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandException;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;

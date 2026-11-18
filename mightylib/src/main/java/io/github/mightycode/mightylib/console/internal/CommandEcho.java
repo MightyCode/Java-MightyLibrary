@@ -1,15 +1,12 @@
-package io.github.mightycode.mightylib.console;
+package io.github.mightycode.mightylib.console.internal;
 
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandListener;
 import io.github.mightycode.mightylib.utils.enginecommand.ICommandSource;
-import org.apiguardian.api.API;
 
 import java.util.Collections;
 import java.util.List;
-
-import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * Writes every submitted command and its result in the console log, whatever its source (in-game console, standard
@@ -17,7 +14,6 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * The command and its message are seen from the level of the source on (the lower one when the command lowered it,
  * cheats off), the data (details for the developer) by DEV, as DATA lines (the console hides them by default).
  */
-@API(status = INTERNAL)
 public final class CommandEcho implements ICommandListener {
     private final ConsoleLog log;
     // Lines of the last command told to executed (main thread)

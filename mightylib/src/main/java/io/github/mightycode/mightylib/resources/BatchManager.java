@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
+import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

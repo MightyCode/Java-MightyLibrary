@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
+import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
 import io.github.mightycode.mightylib.main.WindowInfo;
 import org.joml.Vector2f;
 import org.lwjgl.glfw.GLFWScrollCallback;

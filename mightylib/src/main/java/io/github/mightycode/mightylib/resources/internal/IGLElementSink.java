@@ -1,18 +1,15 @@
-package io.github.mightycode.mightylib.resources;
+package io.github.mightycode.mightylib.resources.internal;
 
 import io.github.mightycode.mightylib.graphics.GLElement;
-import org.apiguardian.api.API;
+import io.github.mightycode.mightylib.resources.DataType;
 
 import java.util.Map;
-
-import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * Where the batches hold the GL elements of the data they list (GLResources in the engine, none in the tests
  * without GL): a loaded batch sends them to the graphic card during the loading, a preloaded one after the rest.
  * Main thread only.
  */
-@API(status = INTERNAL)
 public interface IGLElementSink {
     // Add a reference to the GL element of the data (created the first time); null if the data has none
     GLElement acquire(DataType data, boolean urgent);

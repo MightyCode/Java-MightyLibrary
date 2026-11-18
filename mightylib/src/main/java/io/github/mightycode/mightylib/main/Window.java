@@ -1,7 +1,8 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.utils.Screenshot;
+import io.github.mightycode.mightylib.main.internal.WindowPlatform;
 import io.github.mightycode.mightylib.resources.texture.Icon;
 import org.apiguardian.api.API;
 import org.joml.Vector2f;
