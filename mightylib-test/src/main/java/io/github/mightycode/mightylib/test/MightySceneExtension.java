@@ -22,6 +22,9 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
     private static final ExtensionContext.Namespace NAMESPACE =
             ExtensionContext.Namespace.create(MightySceneExtension.class);
 
+    /** True (the CI): a test with GL fails without GL instead of being skipped, so none is skipped unseen. */
+    public static final String REQUIRE_GL_PROPERTY = "mightylib.test.requireGL";
+
     // The engine kept between the tests, and what it was started from
     private static final class Kept implements ExtensionContext.Store.CloseableResource {
         TestEngine engine;
@@ -51,7 +54,7 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
         MightySceneTest settings = settings(context);
         Kept kept = kept(context);
         if (kept.unavailable != null)
-            throw new TestAbortedException(kept.unavailable);
+            throw unavailable(kept.unavailable, null);
 
         boolean same = kept.engine != null && !kept.engine.isClosed() && kept.config == settings.config()
                 && Arrays.equals(kept.sources, settings.sources());
@@ -63,8 +66,8 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
             try {
                 engine.start();
             } catch (GLUnavailableException e) {
-                kept.unavailable = "Test with GL skipped: " + e.getMessage();
-                throw new TestAbortedException(kept.unavailable, e);
+                kept.unavailable = e.getMessage();
+                throw unavailable(kept.unavailable, e);
             }
             engine.markShared();
             kept.engine = engine;
@@ -73,6 +76,12 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
         }
 
         return kept.engine.scenes();
+    }
+
+    private static RuntimeException unavailable(String reason, Throwable cause) {
+        if (Boolean.getBoolean(REQUIRE_GL_PROPERTY))
+            throw new AssertionError("Test with GL without GL (" + REQUIRE_GL_PROPERTY + "=true): " + reason, cause);
+        return new TestAbortedException("Test with GL skipped: " + reason, cause);
     }
 
     @Override
