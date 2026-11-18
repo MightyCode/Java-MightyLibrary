@@ -60,7 +60,7 @@ public final class CameraGenCom extends BaseCommand {
     protected void syntax(CommandNode root) {
         ArgumentType<String> cameras = oneOf(CameraGenCom::cameraReferences);
 
-        root.requires(CommandCondition.launched(CameraGenCom::currentScene))
+        root.requires(CommandCondition.window()).requires(CommandCondition.launched(CameraGenCom::currentScene))
                 .executes("Cameras of the current scene (id, name, position...)", context -> list(currentScene()))
                 .then(argument("camera", cameras, "Id or name of a camera")
                         .executes("Details of a camera", context -> {

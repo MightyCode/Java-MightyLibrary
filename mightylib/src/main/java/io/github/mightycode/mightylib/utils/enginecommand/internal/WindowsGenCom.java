@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,7 +32,7 @@ public final class WindowsGenCom extends BaseCommand {
 
     @Override
     protected void syntax(CommandNode root) {
-        root.executes("The window marked target is the one that input, screenshot, monitors, scene and camera work on"
+        root.requires(CommandCondition.window()).executes("The window marked target is the one that input, screenshot, monitors, scene and camera work on"
                 + " (see the window command)", context -> describe());
     }
 

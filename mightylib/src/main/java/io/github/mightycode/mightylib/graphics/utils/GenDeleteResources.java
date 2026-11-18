@@ -222,6 +222,10 @@ public final class GenDeleteResources {
 
     // Number of objects of this type currently alive
     public static int Count(EGraphicResources graphicResources) {
+        // Without GL (engine started without window), no object exists
+        if (!Initialized)
+            return 0;
+
         switch (graphicResources) {
             case VertexArrayBuffer:
                 return PerContext(GLContext::vertexArrays).size();

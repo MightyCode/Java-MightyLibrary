@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
@@ -38,6 +39,7 @@ public final class ScreenshotGenCom extends BaseCommand {
 
     @Override
     protected void syntax(CommandNode root) {
+        root.requires(CommandCondition.window());
         root.option(Option.of(RECT, "Keep only a rectangle, in pixels of the window, origin at the top left,"
                         + " clipped to the image")
                         .value("x", integer()).value("y", integer())

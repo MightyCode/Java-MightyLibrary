@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.main.Views;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.text.DrawnTexts;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
 import org.json.JSONArray;
@@ -30,6 +31,7 @@ public final class GLGenCom extends BaseCommand {
 
     @Override
     protected void syntax(CommandNode root) {
+        root.requires(CommandCondition.window());
         root.executes("Compare it before and after a scene change to find leaks", context -> describe(false))
                 .then(literal("summary", "The shared elements given by type as elements/references")
                         .executes(context -> describe(true)))

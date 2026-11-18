@@ -12,6 +12,7 @@ import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -22,6 +23,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -118,6 +121,30 @@ class HeadlessTestEngineTest {
 
         try (TestEngine second = MightyTest.headless(config(game)).start()) {
             assertTrue(second.step(3).execute("kitgame:time").isSuccess());
+        }
+    }
+
+    // Without window, a command that needs one (or GL) answers so: none fails on what the engine lacks
+    @Test
+    void noCommandFailsWithoutWindow(@TempDir Path game) {
+        try (TestEngine engine = MightyTest.headless(config(game)).start()) {
+            List<String> failures = new ArrayList<>();
+            for (BaseCommand command : engine.engine().commands().getCommands()) {
+                // exit stops the engine, wait waits for ticks the test does not run
+                String name = command.getName();
+                if (name.equals("exit") || name.equals("wait"))
+                    continue;
+                CommandResult result = engine.execute(name);
+                if (result.getMessage() != null && result.getMessage().contains(" failed : "))
+                    failures.add(result.getMessage());
+            }
+            assertEquals(List.of(), failures);
+
+            CommandResult gl = engine.execute("gl");
+            assertFalse(gl.isSuccess());
+            assertTrue(gl.getMessage().contains(CommandCondition.NO_WINDOW), gl.getMessage());
+            assertTrue(engine.execute("stats").isSuccess());
+            assertTrue(engine.execute("services").isSuccess());
         }
     }
 
