@@ -96,5 +96,32 @@ Décisions prises :
 - Ajouter ici une section « Bilan » : fait, écarts au plan et raison, vérifié et comment, à vérifier à la main par l'utilisateur (`Scene2D`, `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`, `FallbackScene` : rendu identique à avant ; `ShaderDefines2D` : touche D ; modifier un fichier GLSL en jeu : rechargement à chaud). La commiter.
 - Pousser la branche. **Pas de PR** : c'est la discussion B. Donner le nom de la branche.
 
+## Bilan (discussion A)
+### Fait, un commit par étape
+1. `a2d4dcf` : `shaders/` à plat (moteur et démo), `1_40` supprimé, `#version` retiré des 34 fichiers ; `ShaderPreprocessor(lecteur, dossier, prélude)` (sortie = prélude + `#line 1 0` + source, `#version` refusé partout) ; `FallbackShaderData()` ; `EngineConfig.setShaderVersion` supprimé.
+2. `652b850` : `IShaderService` (`EXPERIMENTAL`), `ShaderService` (`final`, sans GL), `EngineServices.SHADERS`, `Engine.shaders()`, `ShaderUniforms` ; `ShaderManager` supprimé.
+3. `cf17d8a` : defines globaux (`setDefine`/`removeDefine`/`defines`) et `defines` d'entrée (gardés dans `ShaderData`, recopiés par `createReloadCopy`) ; prélude calculé une fois par lecture d'un shader, le même pour ses étapes.
+4. `b793a06` : commande `shaders`, `shaders define <nom> [valeur]`, `shaders undefine <nom>`.
+5. `e3fa17f` : scène `ShaderDefines2D` (entrées `definesDemo2D`/`definesDemoTinted2D`, fichier `resources/shaders/2D/defines/definesDemo2DF.glsl`, vertex du moteur `colorShape2DV.glsl`).
+6. `e71ba3c` : documents.
+
+### Écarts au plan et raisons
+- Pas de `shaders.json` dans aucune source : `ShaderService` échoue (comme `ShaderManager` avant), le moteur s'arrête (`SERVICE_FAIL`) ; le moteur en a toujours un.
+- `IShaderService.prelude(Map<String, String>)` plutôt que `prelude(JSONObject entrée)` : la `ShaderData` garde déjà ses defines (immuables, triés), le loader n'a plus le JSON au moment de lire.
+- Validation des defines : `ShaderService.CheckDefine` (public statique), appelée par le service et par le `ShaderLoader` pour ceux d'une entrée (define invalide → `ResourceException`, repli, avant la lecture : les fichiers restent suivis). Une valeur JSON non chaîne (nombre, booléen) est gardée telle qu'écrite.
+- `shaders undefine <nom>` en branche sœur de `define` (le plan citait les deux formes) ; `undefine` n'accepte qu'un define posé.
+- `ShaderDefines2D` retire `DEMO_INVERT` dans `unload` : un define global survit à la scène sinon.
+- Commande du plan `"input D"` → `"input key D"` (syntaxe de `input`).
+- `ShaderPreprocessorTest` et deux lignes d'autres tests ont été réécrits par script (Python, `sed`) au lieu d'Edit ; fins de ligne LF vérifiées.
+
+### Vérifié et comment
+- `mvn -o -q test` et `package` : verts (dont `ShaderServiceTest`, `ShadersGenComTest`, `ShaderPreprocessorTest`, `EngineResourcesTest` qui préprocesse chaque shader du moteur avec le prélude, gardes d'API).
+- `scenario.py` : `Scene2D`, `Scene3D` (`gl summary` : `failed` vide) ; `FallbackScene` (seuls les replis voulus ; journal `notCompilingF.glsl:6`, ligne exacte sans `#version`) ; `services` liste `mightylib:shaders` ; `shaders define DEMO 1` puis `?shaders` ; `ShaderDefines2D` : `input key D` → `#define DEMO_INVERT`, capture : couleurs inversées des deux carrés, carré de droite teinté par `TINT` ; retour au menu → 0 define global ; `leakcheck ShaderDefines2D` : no leak.
+
+### À vérifier à la main
+- `Scene2D`, `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`, `FallbackScene` : rendu identique à avant (seules `Scene2D`, `Scene3D` et `FallbackScene` ont été lancées, sans capture).
+- `ShaderDefines2D` : touche D plusieurs fois (inversion puis retour), texte d'aide à jour.
+- Rechargement à chaud : `watch on`, modifier un fichier GLSL (par exemple `definesDemo2DF.glsl`) pendant `ShaderDefines2D` : le shader se recharge avec le prélude et les defines courants ; y écrire un `#version` : repli magenta et message `#version is written by the engine`.
+
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/shader-service`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Vérifications manuelles : celles du « Bilan ».
