@@ -27,11 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class ApiStatusTest {
     private static final String ROOT = "io.github.mightycode.mightylib";
 
-    private static Path classesFolder() throws URISyntaxException {
+    static Path classesFolder() throws URISyntaxException {
         return Paths.get(Resources.class.getProtectionDomain().getCodeSource().getLocation().toURI());
     }
 
-    private static List<String> classNames() throws IOException, URISyntaxException {
+    static List<String> classNames() throws IOException, URISyntaxException {
         Path folder = classesFolder();
         try (Stream<Path> files = Files.walk(folder.resolve(ROOT.replace('.', '/')))) {
             return files
@@ -51,7 +51,7 @@ class ApiStatusTest {
         }
     }
 
-    private static String packageOf(String className) {
+    static String packageOf(String className) {
         return className.substring(0, className.lastIndexOf('.'));
     }
 
@@ -71,7 +71,7 @@ class ApiStatusTest {
         return api == null ? null : api.status();
     }
 
-    private static API.Status packageStatus(String packageName) {
+    static API.Status packageStatus(String packageName) {
         Class<?> info = load(packageName + ".package-info");
         return info == null ? null : declared(info);
     }
