@@ -61,7 +61,7 @@ public final class MainLoop {
         return tickWork;
     }
 
-    // One frame: display, then loading queues, main thread tasks and GL elements until the deadline
+    // One frame (headless: no display, no GL, no swap): display, then loading queues, main thread tasks and GL elements until the deadline
     // (System.nanoTime, at most one frame from now), then buffer swap. Returns the CPU time spent before the swap.
     // Called by the loop and by the test kit, so that both run the same code.
     static long frame(Engine engine, long deadline) {
@@ -71,11 +71,15 @@ public final class MainLoop {
         FrameEvent frameEvent = new FrameEvent();
         frameEvent.begin();
         long frameStart = System.nanoTime();
+        // Without window (Engine.setupHeadless): no display, the GL elements stay in the sink
+        boolean windowed = !engine.isHeadless();
         DrawnTexts.beginFrame();
-        engine.displayWindows();
+        if (windowed) {
+            engine.displayWindows();
 
-        // What follows (loading queues, main thread tasks, screenshots) works in the main window
-        engine.contexts().requireMainWindow().getWindow().bindWindow();
+            // What follows (loading queues, main thread tasks, screenshots) works in the main window
+            engine.contexts().requireMainWindow().getWindow().bindWindow();
+        }
 
         // GL elements are sent with the time left in this frame, before the next tick or frame.
         // No tick is due now (the tick branch would have run), at least one step is done anyway.
@@ -88,16 +92,19 @@ public final class MainLoop {
 
         engine.resources().processUntil(loadingDeadline);
         MainThread.process(frameDeadline);
-        engine.glResources().process(loadingDeadline);
+        if (windowed)
+            engine.glResources().process(loadingDeadline);
 
         // Measured before the buffer swap, which can wait for the GPU
         long frameWork = System.nanoTime() - frameStart;
         EngineStats.endFrame(frameStart, frameWork);
         frameEvent.commit();
 
-        long swapStart = System.nanoTime();
-        engine.swapWindows();
-        EngineStats.endSwap(System.nanoTime() - swapStart);
+        if (windowed) {
+            long swapStart = System.nanoTime();
+            engine.swapWindows();
+            EngineStats.endSwap(System.nanoTime() - swapStart);
+        }
         return frameWork;
     }
 
