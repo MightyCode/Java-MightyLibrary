@@ -1,6 +1,45 @@
 # Java-MightyLibrary
 A library to create a game.
 
+## Créer un jeu avec la bibliothèque
+Un jeu hérite de `mightylib-game-parent` (versions, plugins, natives LWJGL de la machine, `exec:java` et jar complet) ; il déclare `mightylib` et sa classe principale :
+
+```xml
+<parent>
+    <groupId>io.github.mightycode</groupId>
+    <artifactId>mightylib-game-parent</artifactId>
+    <version>1.1-SNAPSHOT</version>
+    <relativePath/> <!-- from the Maven repository, not ../pom.xml -->
+</parent>
+<properties>
+    <mightylib.mainClass>game.Main</mightylib.mainClass>
+</properties>
+<dependencies>
+    <dependency>
+        <groupId>io.github.mightycode</groupId>
+        <artifactId>mightylib</artifactId>
+    </dependency>
+</dependencies>
+```
+
+`mvn package` produit le jar complet (`-P all-natives` : natives des six plateformes) ; `mvn -P analyse process-test-classes` lance l'analyse statique.
+
+Un jeu qui a déjà son propre parent importe seulement les versions (sans natives ni plugins : à déclarer soi-même) :
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>io.github.mightycode</groupId>
+            <artifactId>mightylib-bom</artifactId>
+            <version>1.1-SNAPSHOT</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
 ## Paquet de démonstration
 Le modèle 3D de `Scene3D` (`resources/models/backpack/`, environ 36 Mo) n'est pas dans le dépôt : il est distribué à part, dans une release GitHub (`demo-assets-N`). Pour l'installer : `python tools/demo_assets.py` (bibliothèque standard seulement, empreintes sha256 vérifiées ; `--check` vérifie sans réseau). Sans lui, la démo fonctionne et `Scene3D` affiche un message.
 
