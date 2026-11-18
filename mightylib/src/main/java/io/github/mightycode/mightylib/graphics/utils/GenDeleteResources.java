@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.utils;
 
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.main.MainThread;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.valueDebug.TableDebug;

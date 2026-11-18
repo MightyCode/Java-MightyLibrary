@@ -85,12 +85,6 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
-        <!-- DemoApiUsageTest reads the @API statuses of the library -->
-        <dependency>
-            <groupId>org.apiguardian</groupId>
-            <artifactId>apiguardian-api</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

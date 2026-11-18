@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.main.internal.WindowPlatform;
 import org.lwjgl.glfw.GLFWNativeWin32;
 import org.lwjgl.system.Platform;
 import org.lwjgl.system.windows.User32;

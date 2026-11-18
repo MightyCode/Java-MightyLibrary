@@ -6,6 +6,8 @@ import io.github.mightycode.mightylib.graphics.shader.FallbackShader;
 import io.github.mightycode.mightylib.graphics.shader.FallbackShaderData;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderData;
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
+import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
+import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
 import org.joml.Vector2f;
 
 import java.util.ArrayList;

@@ -1,13 +1,14 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.console.CommandEcho;
+import io.github.mightycode.mightylib.console.internal.CommandEcho;
 import io.github.mightycode.mightylib.console.IConsoleService;
-import io.github.mightycode.mightylib.console.ConsoleLog;
-import io.github.mightycode.mightylib.console.LogCapture;
-import io.github.mightycode.mightylib.graphics.GLContext;
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
+import io.github.mightycode.mightylib.console.internal.LogCapture;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
+import io.github.mightycode.mightylib.main.internal.WindowPlatform;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
@@ -38,7 +39,7 @@ import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
-import io.github.mightycode.mightylib.utils.enginecommand.DebugServer;
+import io.github.mightycode.mightylib.utils.enginecommand.internal.DebugServer;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import org.apiguardian.api.API;
 import org.joml.Vector2i;

@@ -1,7 +1,9 @@
 package io.github.mightycode.mightylib.graphics;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.resources.DataType;
-import io.github.mightycode.mightylib.resources.IGLElementSink;
+import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
 import org.apiguardian.api.API;
 import org.json.JSONArray;
 import org.json.JSONObject;

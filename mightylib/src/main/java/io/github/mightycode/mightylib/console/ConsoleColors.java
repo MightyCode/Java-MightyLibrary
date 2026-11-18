@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 
 /** Colors of the console, gathered here until there is a theme. */

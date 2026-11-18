@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
+import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.inputType.AxisInput;

@@ -1,11 +1,11 @@
 package io.github.mightycode.mightylib.utils.enginecommand;
 
-import io.github.mightycode.mightylib.console.LogCapture;
+import io.github.mightycode.mightylib.console.internal.LogCapture;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.registry.Identifier;
-import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.internal.ListGeneralCommand;
 
 import java.io.BufferedReader;
 import java.io.IOException;

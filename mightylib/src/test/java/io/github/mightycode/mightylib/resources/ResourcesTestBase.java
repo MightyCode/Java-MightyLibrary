@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.resources;
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.main.WorkersTestAccess;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics;
 
+import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FakeData;
 import io.github.mightycode.mightylib.resources.ResourceException;

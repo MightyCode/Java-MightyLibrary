@@ -22,16 +22,17 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Guard of the API statuses (docs/architecture.md, "API publique"): every package of mightylib declares its status
  * in its package-info (@API of apiguardian), and a type or a member only declares a status less stable than the one
- * around it. The demo checks on its side that it uses no INTERNAL type or package (DemoApiUsageTest).
+ * around it. INTERNAL types live in the packages named "internal", which the module does not export
+ * (ModuleDescriptorTest): the compiler keeps any other module (the demo, a game) away from them.
  */
 class ApiStatusTest {
     private static final String ROOT = "io.github.mightycode.mightylib";
 
-    private static Path classesFolder() throws URISyntaxException {
+    static Path classesFolder() throws URISyntaxException {
         return Paths.get(Resources.class.getProtectionDomain().getCodeSource().getLocation().toURI());
     }
 
-    private static List<String> classNames() throws IOException, URISyntaxException {
+    static List<String> classNames() throws IOException, URISyntaxException {
         Path folder = classesFolder();
         try (Stream<Path> files = Files.walk(folder.resolve(ROOT.replace('.', '/')))) {
             return files
@@ -51,7 +52,7 @@ class ApiStatusTest {
         }
     }
 
-    private static String packageOf(String className) {
+    static String packageOf(String className) {
         return className.substring(0, className.lastIndexOf('.'));
     }
 
@@ -71,7 +72,7 @@ class ApiStatusTest {
         return api == null ? null : api.status();
     }
 
-    private static API.Status packageStatus(String packageName) {
+    static API.Status packageStatus(String packageName) {
         Class<?> info = load(packageName + ".package-info");
         return info == null ? null : declared(info);
     }
@@ -96,6 +97,43 @@ class ApiStatusTest {
 
         assertTrue(missing.isEmpty(), "Packages without a package-info annotated with @API:\n"
                 + String.join("\n", missing));
+    }
+
+    // A package named "internal" is INTERNAL, and every INTERNAL package is named "internal"
+    @Test
+    void internalPackagesAreExactlyThoseNamedInternal() throws Exception {
+        Set<String> packages = new TreeSet<>();
+        for (String name : classNames()) {
+            if (!name.endsWith("package-info"))
+                packages.add(packageOf(name));
+        }
+
+        List<String> problems = new ArrayList<>();
+        for (String packageName : packages) {
+            boolean named = packageName.endsWith(".internal");
+            boolean internal = packageStatus(packageName) == API.Status.INTERNAL;
+            if (named != internal)
+                problems.add(packageName + (named ? ": named internal but not INTERNAL" : ": INTERNAL but not named internal"));
+        }
+
+        assertTrue(problems.isEmpty(), "Packages breaking the internal naming rule:\n" + String.join("\n", problems));
+    }
+
+    // An INTERNAL type goes into an internal package (not exported), never stays in an exported one; only members
+    // may be INTERNAL in an exported type
+    @Test
+    void internalTypesAreInInternalPackages() throws Exception {
+        List<String> problems = new ArrayList<>();
+        for (String name : classNames()) {
+            if (name.endsWith("package-info"))
+                continue;
+            Class<?> type = load(name);
+            if (type != null && !type.isSynthetic() && status(type) == API.Status.INTERNAL
+                    && packageStatus(type.getPackageName()) != API.Status.INTERNAL)
+                problems.add(name);
+        }
+
+        assertTrue(problems.isEmpty(), "INTERNAL types in an exported package:\n" + String.join("\n", problems));
     }
 
     @Test

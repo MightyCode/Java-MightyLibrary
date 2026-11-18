@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.resources;
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.resources.data.JSONFile;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchLoader;
+import io.github.mightycode.mightylib.resources.internal.BatchResources;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import org.junit.jupiter.api.AfterEach;

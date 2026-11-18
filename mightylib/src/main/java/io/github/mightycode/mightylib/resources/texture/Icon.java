@@ -2,11 +2,14 @@ package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
+import org.apiguardian.api.API;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFWImage;
 
 import java.awt.image.BufferedImage;
 import java.nio.ByteBuffer;
+
+import static org.apiguardian.api.API.Status.INTERNAL;
 
 public final class Icon extends SingleSourceDataType {
     private int width;
@@ -78,6 +81,8 @@ public final class Icon extends SingleSourceDataType {
     public int getWidth(){ return width; }
     public int getHeight(){ return height; }
 
+    // For Window.setIcon; exposes a type of LWJGL, which the engine does not export (docs/later.md)
+    @API(status = INTERNAL)
     public GLFWImage.Buffer getBuffer(){ return buffer; }
 
     @Override

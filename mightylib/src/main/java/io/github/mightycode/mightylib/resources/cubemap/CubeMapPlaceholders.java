@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.resources.cubemap;
 
-import io.github.mightycode.mightylib.graphics.IGLSharedState;
+import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.utils.Logger;
 import org.lwjgl.BufferUtils;

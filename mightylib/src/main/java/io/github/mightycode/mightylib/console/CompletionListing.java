@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.console.internal.ConsoleLog;
+
 import java.util.function.Consumer;
 
 /**

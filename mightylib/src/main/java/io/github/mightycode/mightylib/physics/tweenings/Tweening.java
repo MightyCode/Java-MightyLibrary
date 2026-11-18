@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.physics.tweenings;
 
 import io.github.mightycode.mightylib.utils.Timer;
-import io.github.mightycode.mightylib.physics.tweenings.tweeningmath.*;
+import io.github.mightycode.mightylib.physics.tweenings.internal.*;
 import org.apiguardian.api.API;
 
 import static org.apiguardian.api.API.Status.EXPERIMENTAL;

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.sounds;
 
+import org.apiguardian.api.API;
 import org.lwjgl.stb.STBVorbisInfo;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
@@ -8,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 
+import static org.apiguardian.api.API.Status.INTERNAL;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.stb.STBVorbis.*;
 
@@ -21,7 +23,9 @@ public final class SoundDataType {
      * Decodes an Ogg Vorbis file read in a direct buffer (ResourceSources.readNative), in chunks of chunkSamples,
      * calling checkCancelled between two steps (it throws to stop). The file stays the caller's. The result is native
      * memory (MemoryUtil.memFree), freed here when the decoding stops or fails.
+     * For OggDecoder; exposes a type of LWJGL, which the engine does not export (docs/later.md).
      */
+    @API(status = INTERNAL)
     public static ShortBuffer readVorbis(ByteBuffer vorbis, STBVorbisInfo info, Runnable checkCancelled,
                                          int chunkSamples) {
         checkCancelled.run();

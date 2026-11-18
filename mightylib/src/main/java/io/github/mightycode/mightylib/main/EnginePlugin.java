@@ -19,7 +19,7 @@ import io.github.mightycode.mightylib.sounds.ISoundService;
 import io.github.mightycode.mightylib.sounds.OpenALSoundService;
 import io.github.mightycode.mightylib.sounds.SilentSoundService;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
-import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.internal.ListGeneralCommand;
 
 import org.json.JSONObject;
 

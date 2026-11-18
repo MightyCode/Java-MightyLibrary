@@ -31,7 +31,7 @@
     <!-- The current GL context of the main thread is static on purpose: GL has one current context per thread and
          every context runs on the main thread. -->
     <Match>
-        <Class name="io.github.mightycode.mightylib.graphics.GLContext"/>
+        <Class name="io.github.mightycode.mightylib.graphics.internal.GLContext"/>
         <Field name="current"/>
         <Bug pattern="ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"/>
     </Match>
