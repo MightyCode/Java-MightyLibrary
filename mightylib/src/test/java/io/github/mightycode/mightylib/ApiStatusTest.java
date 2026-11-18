@@ -22,7 +22,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Guard of the API statuses (docs/architecture.md, "API publique"): every package of mightylib declares its status
  * in its package-info (@API of apiguardian), and a type or a member only declares a status less stable than the one
- * around it. The demo checks on its side that it uses no INTERNAL type or package (DemoApiUsageTest).
+ * around it. INTERNAL types live in the packages named "internal", which the module does not export
+ * (ModuleDescriptorTest): the compiler keeps any other module (the demo, a game) away from them.
  */
 class ApiStatusTest {
     private static final String ROOT = "io.github.mightycode.mightylib";
@@ -116,6 +117,23 @@ class ApiStatusTest {
         }
 
         assertTrue(problems.isEmpty(), "Packages breaking the internal naming rule:\n" + String.join("\n", problems));
+    }
+
+    // An INTERNAL type goes into an internal package (not exported), never stays in an exported one; only members
+    // may be INTERNAL in an exported type
+    @Test
+    void internalTypesAreInInternalPackages() throws Exception {
+        List<String> problems = new ArrayList<>();
+        for (String name : classNames()) {
+            if (name.endsWith("package-info"))
+                continue;
+            Class<?> type = load(name);
+            if (type != null && !type.isSynthetic() && status(type) == API.Status.INTERNAL
+                    && packageStatus(type.getPackageName()) != API.Status.INTERNAL)
+                problems.add(name);
+        }
+
+        assertTrue(problems.isEmpty(), "INTERNAL types in an exported package:\n" + String.join("\n", problems));
     }
 
     @Test

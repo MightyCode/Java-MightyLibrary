@@ -5,6 +5,7 @@ Usage:
     python tools/scenario.py "scene Scene2D" wait-loaded gl "input ENTER" stats
     python tools/scenario.py --attach "stats"          # use an already running game
     python tools/scenario.py --no-compile "scene" ...  # skip compilation
+    python tools/scenario.py --modulepath "scene" ...  # run the demo as a Java module (default: classpath)
 
 Steps are game commands (see `help` in the game) plus:
     wait-loaded                     wait until any scene change (command or game) is done and the scene is loaded
@@ -53,6 +54,7 @@ JAVA = os.environ.get("MIGHTY_JAVA", _DEFAULT_JAVA)
 MVN = os.environ.get("MIGHTY_MVN", _DEFAULT_MVN)
 MAVEN_JDK = os.environ.get("MIGHTY_MAVEN_JDK", _DEFAULT_MAVEN_JDK)
 MAIN_CLASS = "io.github.mightycode.mightylibdemo.main.Main"
+MAIN_MODULE = "io.github.mightycode.mightylibdemo"
 CLASSPATH_FILE = os.path.join(ROOT, "target", "classpath.txt")
 # The launched game writes there the port of its debug server (the first free one from 7777):
 # one file per scenario, so that several games and scenarios can run at the same time
@@ -90,7 +92,7 @@ def prepare(compile_sources):
         run_maven("-o", "compile")
 
 
-def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, defines=()):
+def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, defines=(), module_path=False):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
         classpath = os.path.join(ROOT, "demo", "target", "classes") + os.pathsep + file.read().strip()
 
@@ -110,7 +112,14 @@ def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, 
         options.append(f"-D{NO_CURSOR_CAPTURE_PROPERTY}=true")
     options.extend(f"-D{define}" for define in defines)
 
-    return subprocess.Popen([JAVA, *options, "-cp", classpath, MAIN_CLASS], cwd=ROOT,
+    if module_path:
+        # The same entries as a module path. ALL-MODULE-PATH: the natives of LWJGL are modules that nothing requires
+        # (org.lwjgl.natives...), they must be resolved to be found
+        target = ["--module-path", classpath, "--add-modules", "ALL-MODULE-PATH",
+                  "--module", MAIN_MODULE + "/" + MAIN_CLASS]
+    else:
+        target = ["-cp", classpath, MAIN_CLASS]
+    return subprocess.Popen([JAVA, *options, *target], cwd=ROOT,
                             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT)
 
 
@@ -373,6 +382,8 @@ def main():
                         help="GLFW platform: x11, wayland (Linux; Wayland can't place windows), win32, cocoa;"
                              " by default GLFW chooses")
     parser.add_argument("--no-compile", action="store_true", help="skip the compilation")
+    parser.add_argument("--modulepath", action="store_true",
+                        help="launch the demo as a Java module (--module-path), not on the classpath")
     parser.add_argument("--strict", action="store_true",
                         help="a resource that fails stops the game instead of using its fallback (debug mode only)")
     parser.add_argument("--capture-mouse", action="store_true",
@@ -392,7 +403,8 @@ def main():
         return 0 if run_steps(args.port, args.steps, args.timeout) else 1
 
     prepare(not args.no_compile)
-    process = launch(args.log, args.monitor, args.strict, args.capture_mouse, args.platform, args.defines)
+    process = launch(args.log, args.monitor, args.strict, args.capture_mouse, args.platform, args.defines,
+                     args.modulepath)
 
     # A blocked game (main thread stuck, no answer) must not block the caller forever
     def kill_blocked_game():

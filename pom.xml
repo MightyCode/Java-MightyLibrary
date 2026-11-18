@@ -292,6 +292,17 @@
                         <arg>-Xlint:-requires-automatic</arg>
                     </compilerArgs>
                 </configuration>
+                <executions>
+                    <!-- Tests compiled on the classpath, as they run (surefire): the demo tests use the *TestAccess
+                         helpers of the library's test jar, in packages of the engine module (a split package on
+                         the module path) -->
+                    <execution>
+                        <id>default-testCompile</id>
+                        <configuration>
+                            <useModulePath>false</useModulePath>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

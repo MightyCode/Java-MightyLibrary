@@ -12,8 +12,8 @@ module io.github.mightycode.mightylib {
     requires transitive java.desktop;
     requires transitive org.joml;
     requires transitive org.json;
-    // Annotations only, optional at run time
-    requires static transitive org.apiguardian.api;
+    // Annotations only, optional at run time; not transitive, so that a game compiles without apiguardian
+    requires static org.apiguardian.api;
 
     requires jdk.jfr;
     // Provider of the jar file systems (ClasspathSource), only looked up at run time: named so that an image built
