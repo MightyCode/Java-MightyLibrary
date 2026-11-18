@@ -3,7 +3,10 @@ package io.github.mightycode.mightylib.console;
 import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.services.IEngineService;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
+import org.apiguardian.api.API;
 import org.json.JSONObject;
+
+import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * The in-game console (service mightylib:console, Engine.console): registered by the engine only when the player has
@@ -61,5 +64,6 @@ public interface IConsoleService extends IEngineService {
     JSONObject stateJson();
 
     // What the console shows
+    @API(status = INTERNAL)
     ConsoleLog getLog();
 }

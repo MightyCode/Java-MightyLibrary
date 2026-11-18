@@ -87,6 +87,7 @@ public final class Console implements IConsoleService {
     private boolean cursorShownBefore = true;
     private boolean displayFailed;
 
+    @API(status = INTERNAL)
     public Console(Engine engine, ConsoleLog log, Commands commands, String fontName) {
         this.engine = engine;
         this.log = log;
