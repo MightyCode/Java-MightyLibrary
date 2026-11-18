@@ -9,6 +9,7 @@ Un jeu hérite de `mightylib-game-parent` (versions, plugins, natives LWJGL de l
     <groupId>io.github.mightycode</groupId>
     <artifactId>mightylib-game-parent</artifactId>
     <version>1.1-SNAPSHOT</version>
+    <relativePath/> <!-- from the Maven repository, not ../pom.xml -->
 </parent>
 <properties>
     <mightylib.mainClass>game.Main</mightylib.mainClass>
