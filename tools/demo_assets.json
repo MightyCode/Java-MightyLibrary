@@ -1,8 +1,8 @@
 {
-  "tag": "",
-  "archive": "",
-  "url": "",
-  "sha256": "",
+  "tag": "demo-assets-1",
+  "archive": "mightylib-demo-assets-1.zip",
+  "url": "https://github.com/MightyCode/Java-MightyLibrary/releases/download/demo-assets-1/mightylib-demo-assets-1.zip",
+  "sha256": "a9bcb9ead05e66220d2ceddcf7d0554713d77d31525ae8a2255d8911b386399c",
   "files": {
     "models/backpack/ao.jpg": "603226102ae202a61ab4914734e1d9b09591b861689e8b14d887c0b0b0d7434b",
     "models/backpack/backpack.mtl": "f9aaffb7ce3f968c01c3ab0e2de60fa38dff9695993c79d082c2e0a10c115cb5",
