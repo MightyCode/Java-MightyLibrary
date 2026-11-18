@@ -90,7 +90,7 @@ Les estimations de `DataType.estimatedCpuBytes`/`estimatedGpuBytes` ne servent a
 ## Effets 2D : particules et post-traitement
 D'après LearnOpenGL « 2D Game » (Breakout).
 - **Particules** (absentes) : émetteurs (position, forme, débit, rafales) ; durée de vie, vitesse, forces, couleur/taille/rotation/opacité dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; pool sans allocation par frame ; émetteurs en JSON (`DataType`), injectables ; espace monde ou local.
-- **Rendu** : simple d'abord, instancing une fois le regroupement des dessins fait (Rendu 2D).
+- **Rendu** : simple d'abord, instancing une fois le regroupement des dessins fait (`current.md`).
 - **Post-traitement** sur framebuffer (base `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables, par scène. La passe finale réglable existe (`IColorService`, `VirtualSceneRenderer`) : la chaîne s'y branche. Pistes liées au gamma : HDR et tone mapping (framebuffer `RGBA16F`), `EXT_texture_sRGB_decode` (lire une texture sRGB sans décodage pour un dessin gamma, au lieu de la réencoder dans le shader).
 - `ParticlesScene` : plusieurs émetteurs, compteur et temps dans `stats`.
 
@@ -156,24 +156,8 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
 - **Padding du texte** : utiliser `Text.setPadding` dans les composants GUI et l'exposer au thème.
 - **Polices** : gestion des styles (une famille liée logiquement à ses variantes Regular, Bold, Italic, BoldItalic, `setFont(famille, style)` ; le moteur livre déjà les 4 atlas de chaque famille), polices sur plusieurs fichiers (pages, plusieurs tailles), texte net à toutes les tailles (atlas SDF/MSDF, ou atlas généré au lancement depuis le `.ttf`) ; à décider avec l'utilisateur.
 
-## Rendu 2D : formes manquantes et regroupement des dessins
-- Existant : rectangle, ellipse, hexagone, polygone (`renderer/_2D/shape`), renderers de debug (graphes, nœuds, matrices).
-- À ajouter : segments/polylignes épais, contours de toutes les formes, cercle, triangle, rectangle arrondi, arc/secteur, points, flèches, grille ; API de dessin immédiat pour le debug (ligne de A à B cette frame).
-- **Point de départ sur `archive-dev-2025`** (absent de `dev`) :
-  - `437b7ea` : `StrokeModule` (activation, couleur, taille du contour par valeurs de shader), contour dans le shader de l'ellipse, `Renderer.getShaderValue`/`hasShaderValue`, `Boolean`/`String` dans `ShaderValue`. Défauts : Java envoie `strokeSize` mais le shader lit `strokeSizePercent` (`in`, pas `uniform`) → contour probablement cassé ; `getSizePercent` lit la mauvaise clé ; faute `geEnabled` ; contour en % du rayon inégal sur une ellipse aplatie → épaisseur en pixels.
-  - `983c18c` (« Temporary ») : `AdvancedRectangle`, rectangle arrondi par SDF avec rotation et anticrénelage (`fwidth` + `smoothstep`), contour commenté. Le SDF peut servir de base aux contours, cercles, rectangles arrondis. Ne pas reprendre ses changements de `Shader.java` (vérification des uniforms désactivée, log à supprimer).
-  - Ensuite supprimer `archive-dev-2025` et `devShader` (local et `origin`) ; `devShader` (`b50dd27`) est déjà couvert par `dev`.
-- **Regroupement des dessins** (un appel par texture + shader ; complète `TextureDataAtlas`). Comparer sur mesures (`stats` : `drawCallsPerFrame`, temps CPU) :
-  - **Batch** (`SpriteBatch`) : sommets transformés sur CPU dans un VBO dynamique ; texte et formes variées.
-  - **Instancing** (quad + attributs par instance, `glVertexAttribDivisor`, `glDrawElementsInstanced`) : sprites et particules.
-  - Remplissage par frame efficace (`glMapBufferRange`, `glBufferSubData`).
-
-- **`Material` partageable** : programme, valeurs d'uniform et `RenderState` (regroupés dans `Renderer`) extraits en un objet partagé entre renderers, avec une clé de tri pour le regroupement des dessins ; partage d'un `Mesh` entre renderers (possession, compteur de références).
-- **État de dessin à étendre** : blend par renderer, cache des `glEnable`/`glDisable` redondants dans `GLContext` ; attributs nommés (en plus des canaux) si besoin.
-- **Programmes hors `GenDeleteResources`** : `Shader` crée ses programmes et étapes par `glCreateProgram`/`glCreateShader` ; `gl` montre les `Shader` partagés mais aucun compteur d'objets GL de programme, et `PrintAll` ne les voit pas. Les y faire passer (compteur `Program`) si une fuite de programme doit être traquée.
-
 ## Rendu SVG
-Après le rendu 2D et la reprise de `archive-dev-2025` (contours épais et anticrénelage communs).
+Après le rendu 2D (`current.md` : contours épais et anticrénelage communs).
 - Viser le noyau des profils légers (SVG Tiny/Native, NanoSVG) : chemins (segments, Bézier) remplis ou tracés ; texte converti en chemins à l'export.
 - Sous-ensemble : chemins et formes de base, remplissage et contour unis, opacité, transformations, `viewBox` ; plus tard dégradés. Hors champ : texte, CSS, filtres, masques, SMIL.
 - Approche (à confirmer) : `SVGData` (`DataType`, workers, NanoSVG de LWJGL) aplatit et triangule remplissages et contours (épaisseur, jointures, extrémités) ; `SVGRenderer extends Renderer` + shader `svg` ; un appel par SVG ; anticrénelage MSAA ou bande de fondu. Plus tard si besoin : courbes dans le fragment shader (Loop-Blinn, SDF).
@@ -205,7 +189,6 @@ Streaming des musiques longues (tout est décodé en mémoire).
   - commandes Lua : elles déclareront leur syntaxe par la même API (voir Entités et scripts Lua) ;
   - traduction des messages et aides des commandes du joueur (système de langues) : les descriptions de la syntaxe deviendront des clés de langue.
 - **Journal à grande échelle** : l'anneau de `ConsoleLog` oublie au-delà de sa capacité ; cible durable : journal fichier tournant (cf. `futur-discussion.md`) relu par la console, filtres par type/source, niveaux de log au lieu de `System.out` préfixé `--`.
-- **Texte de la console** : un `Text` (VAO/VBO, draw call) par ligne visible, sans découpe GL (`glScissor`), et un `RectangleRenderer` par rangée surlignée : à reprendre avec le batching 2D.
 
 ## Fenêtres
 - **Sous-fenêtres natives hors Windows** : propriétaire de fenêtre sous Linux (X11 `XSetTransientForHint`, Wayland `xdg_toplevel.set_parent`) et macOS (`addChildWindow`) à la place du simple `GLFW_FLOATING` de `NativeWindowOwner`.
