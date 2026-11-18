@@ -163,6 +163,22 @@ class ShaderServiceTest {
         assertTrue(new ShaderData("plain", true, "shaders/v.glsl", "shaders/f.glsl").getDefines().isEmpty());
     }
 
+    // null, an array or an object: no value, refused when the shader is read (that shader alone fails)
+    @Test
+    void entryDefinesWithoutTextValueAreKeptAsNull(@TempDir Path root) throws IOException {
+        JSONObject entry = new JSONObject("{\"defines\": {\"N\": null, \"A\": [1], \"O\": {}, \"T\": true}}");
+
+        Map<String, String> defines = ShaderLoader.entryDefines(entry);
+        assertNull(defines.get("N"));
+        assertNull(defines.get("A"));
+        assertNull(defines.get("O"));
+        assertTrue(defines.containsKey("N") && defines.containsKey("A") && defines.containsKey("O"));
+        assertEquals("true", defines.get("T"));
+
+        ShaderService service = counting(root);
+        assertThrows(IllegalArgumentException.class, () -> service.checkDefine("N", defines.get("N")));
+    }
+
     @Test
     void definesChangeOnTheMainThreadOnly(@TempDir Path root) throws Exception {
         ShaderService service = counting(root);

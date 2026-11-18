@@ -90,6 +90,7 @@ public final class ShaderLoader extends ResourceLoader {
     }
 
     // "defines": {"NAME": "value"} of an entry, "" for a define without value; checked when the shader is read
+    // (checkDefine), so a value that is not a string, a number or a boolean is kept as null: the shader fails alone
     static Map<String, String> entryDefines(JSONObject entry) {
         JSONObject defines = entry.optJSONObject("defines");
         if (defines == null)
@@ -98,8 +99,14 @@ public final class ShaderLoader extends ResourceLoader {
         Map<String, String> result = new TreeMap<>();
         for (String name : defines.keySet()) {
             Object value = defines.get(name);
-            // A number or a boolean is kept as written
-            result.put(name, value instanceof String ? (String) value : String.valueOf(value));
+            if (value instanceof String)
+                result.put(name, (String) value);
+            else if (value instanceof Number || value instanceof Boolean)
+                // Kept as written
+                result.put(name, String.valueOf(value));
+            else
+                // null, array, object
+                result.put(name, null);
         }
 
         return result;
