@@ -4,141 +4,44 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Parent and aggregator: the versions, the plugins and the profiles shared by the library and the demo.
-         Each module only declares what it uses. -->
-    <groupId>io.github.mightycode</groupId>
+    <parent>
+        <groupId>io.github.mightycode</groupId>
+        <artifactId>mightylib-base-parent</artifactId>
+        <version>1.1-SNAPSHOT</version>
+        <relativePath>base-parent/pom.xml</relativePath>
+    </parent>
+
+    <!-- Aggregator, and parent of the library: the tooling of the engine's own development (coverage, compiler
+         options of the engine module, values of the static analysis). The versions, the plugins and the profiles
+         shared with the games come from mightylib-base-parent; the demo inherits from mightylib-game-parent, as a
+         game does. -->
     <artifactId>mightylib-parent</artifactId>
-    <version>1.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
+        <module>bom</module>
+        <module>base-parent</module>
         <module>mightylib</module>
         <module>demo</module>
     </modules>
 
     <properties>
-        <maven.compiler.release>11</maven.compiler.release>
-        <lwjgl.version>3.3.6</lwjgl.version>
-        <joml.version>1.10.3</joml.version>
-        <json.version>20260719</json.version>
-        <jbox2d.version>2.2.1.1</jbox2d.version>
-        <opensimplex.version>1.0.3</opensimplex.version>
-        <jlayer.version>1.0.1</jlayer.version>
-        <apiguardian.version>1.1.2</apiguardian.version>
-        <junit.version>5.10.2</junit.version>
-        <errorprone.version>2.52.0</errorprone.version>
-        <spotbugs.plugin.version>4.9.8.3</spotbugs.plugin.version>
         <jacoco.version>0.8.16</jacoco.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Off: Javadoc and parentheses style (the project writes little Javadoc, and the IntelliJ analyzer already
+             covers the style rules of bonnes-pratiques.md).
+             StringSplitter: its fix is Guava's Splitter, the library stays without Guava.
+             InconsistentCapitalization: the public fields of pure data structures start with an uppercase letter
+             (WindowCreationInfo, BasicMaterial), their parameters do not.
+             ReferenceEquality: identity is what the engine compares (owners, sentinels, the same data or element);
+             String == stays checked by StringEquality.
+             EnumOrdinal: arrays indexed by an enum (ConsoleLog) and enums whose order is a contract (ECommandLevel,
+             EVerbosity). The demo repeats this list in its pom. -->
+        <mightylib.errorprone.args>-Xep:UnnecessaryParentheses:OFF -Xep:MissingSummary:OFF -Xep:EmptyBlockTag:OFF -Xep:InvalidLink:OFF -Xep:StringSplitter:OFF -Xep:InconsistentCapitalization:OFF -Xep:ReferenceEquality:OFF -Xep:EnumOrdinal:OFF</mightylib.errorprone.args>
+        <!-- From the root of the build (the library and the demo share the file) -->
+        <mightylib.spotbugs.exclude>${maven.multiModuleProjectDirectory}/tools/spotbugs-exclude.xml</mightylib.spotbugs.exclude>
     </properties>
 
     <profiles>
-        <!-- The classifier of the LWJGL natives of this machine. The natives themselves are declared by the
-             application (the demo), and by the library for its tests only. -->
-        <profile>
-            <id>lwjgl-natives-linux-amd64</id>
-            <activation>
-                <os>
-                    <family>unix</family>
-                    <arch>amd64</arch>
-                </os>
-            </activation>
-            <properties>
-                <lwjgl.natives>natives-linux</lwjgl.natives>
-            </properties>
-        </profile>
-        <profile>
-            <id>lwjgl-natives-windows-amd64</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                    <arch>amd64</arch>
-                </os>
-            </activation>
-            <properties>
-                <lwjgl.natives>natives-windows</lwjgl.natives>
-            </properties>
-        </profile>
-        <!-- Static analysis, never part of the normal build: mvn -P analyse process-test-classes (see tools/analyse.py).
-             Error Prone runs inside javac (forked: JDK 17+ needs the add-exports and add-opens options below),
-             SpotBugs reads the bytecode afterward. All findings are reported, none fails the build. -->
-        <profile>
-            <id>analyse</id>
-            <build>
-                <!-- Own output folder in each module: the game keeps using target/classes, and a recompilation is
-                     always forced -->
-                <directory>${project.basedir}/target/static-analysis</directory>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-compiler-plugin</artifactId>
-                        <version>3.13.0</version>
-                        <configuration>
-                            <fork>true</fork>
-                            <showWarnings>true</showWarnings>
-                            <compilerArgs combine.children="append">
-                                <arg>-XDcompilePolicy=simple</arg>
-                                <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
-                                <arg>--should-stop=ifError=FLOW</arg>
-                                <!-- Off: Javadoc and parentheses style (the project writes little Javadoc, and the
-                                     IntelliJ analyzer already covers the style rules of bonnes-pratiques.md).
-                                     StringSplitter: its fix is Guava's Splitter, the library stays without Guava.
-                                     InconsistentCapitalization: the public fields of pure data structures start with
-                                     an uppercase letter (WindowCreationInfo, BasicMaterial), their parameters do not.
-                                     ReferenceEquality: identity is what the engine compares (owners, sentinels, the
-                                     same data or element); String == stays checked by StringEquality.
-                                     EnumOrdinal: arrays indexed by an enum (ConsoleLog) and enums whose order is a
-                                     contract (ECommandLevel, EVerbosity). -->
-                                <arg>-Xplugin:ErrorProne -XepAllErrorsAsWarnings -XepDisableWarningsInGeneratedCode -Xep:UnnecessaryParentheses:OFF -Xep:MissingSummary:OFF -Xep:EmptyBlockTag:OFF -Xep:InvalidLink:OFF -Xep:StringSplitter:OFF -Xep:InconsistentCapitalization:OFF -Xep:ReferenceEquality:OFF -Xep:EnumOrdinal:OFF</arg>
-                                <arg>-Xlint:unchecked,deprecation</arg>
-                                <arg>-Xmaxwarns</arg>
-                                <arg>100000</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
-                                <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
-                                <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
-                                <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
-                            </compilerArgs>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>com.google.errorprone</groupId>
-                                    <artifactId>error_prone_core</artifactId>
-                                    <version>${errorprone.version}</version>
-                                </path>
-                            </annotationProcessorPaths>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.github.spotbugs</groupId>
-                        <artifactId>spotbugs-maven-plugin</artifactId>
-                        <version>${spotbugs.plugin.version}</version>
-                        <configuration>
-                            <effort>Max</effort>
-                            <threshold>Medium</threshold>
-                            <xmlOutput>true</xmlOutput>
-                            <failOnError>false</failOnError>
-                            <!-- From the root of the build (the parent and its modules share the file) -->
-                            <excludeFilterFile>${maven.multiModuleProjectDirectory}/tools/spotbugs-exclude.xml</excludeFilterFile>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>spotbugs-analysis</id>
-                                <phase>process-classes</phase>
-                                <goals>
-                                    <goal>spotbugs</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <!-- Code coverage of the unit tests, never part of the normal build:
              mvn -P coverage test -pl mightylib (see tools/coverage.py) -->
         <profile>
@@ -187,102 +90,14 @@
         </profile>
     </profiles>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>org.lwjgl</groupId>
-                <artifactId>lwjgl-bom</artifactId>
-                <version>${lwjgl.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>io.github.mightycode</groupId>
-                <artifactId>mightylib</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.github.mightycode</groupId>
-                <artifactId>mightylib</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-            </dependency>
-            <dependency>
-                <groupId>org.json</groupId>
-                <artifactId>json</artifactId>
-                <version>${json.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.joml</groupId>
-                <artifactId>joml</artifactId>
-                <version>${joml.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jbox2d</groupId>
-                <artifactId>jbox2d-library</artifactId>
-                <version>${jbox2d.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.raylabz</groupId>
-                <artifactId>opensimplex</artifactId>
-                <version>${opensimplex.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>javazoom</groupId>
-                <artifactId>jlayer</artifactId>
-                <version>${jlayer.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apiguardian</groupId>
-                <artifactId>apiguardian-api</artifactId>
-                <version>${apiguardian.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${junit.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.2.5</version>
-                    <configuration>
-                        <!-- Tests on the classpath, even for a module: the tests live in the packages of the code they
-                             test (package-private access) and the demo tests use the *TestAccess helpers of the
-                             library's test jar, which share the engine's packages -->
-                        <useModulePath>false</useModulePath>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.4.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>3.7.1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>1.2.1</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
                 <configuration>
-                    <compilerArgs>
+                    <!-- Appended to the options of the profile analyse of mightylib-base-parent -->
+                    <compilerArgs combine.children="append">
                         <!-- Off, accepted: some public members of exported types expose a type of an internal
                              package (Engine.consoleLog, Window.getGLContext, GLResources.shared...: docs/decisions.md);
                              removing them needs an internal gateway (docs/later.md). The alert also hides a type of
@@ -294,17 +109,6 @@
                         <arg>-Xlint:-requires-automatic</arg>
                     </compilerArgs>
                 </configuration>
-                <executions>
-                    <!-- Tests compiled on the classpath, as they run (surefire): the demo tests use the *TestAccess
-                         helpers of the library's test jar, in packages of the engine module (a split package on
-                         the module path) -->
-                    <execution>
-                        <id>default-testCompile</id>
-                        <configuration>
-                            <useModulePath>false</useModulePath>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

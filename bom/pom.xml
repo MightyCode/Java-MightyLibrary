@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- The versions of the engine and of its dependencies, nothing else: no plugin, no profile. A game that already
+         has its own parent imports it (scope import) and only gets the versions; otherwise mightylib-game-parent,
+         which inherits from it, brings the versions with the plugins and the natives. -->
+    <groupId>io.github.mightycode</groupId>
+    <artifactId>mightylib-bom</artifactId>
+    <version>1.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <properties>
+        <!-- Written out, not ${project.version}: in a child pom (a game), ${project.version} is the game's version -->
+        <mightylib.version>1.1-SNAPSHOT</mightylib.version>
+        <lwjgl.version>3.3.6</lwjgl.version>
+        <joml.version>1.10.3</joml.version>
+        <json.version>20260719</json.version>
+        <jbox2d.version>2.2.1.1</jbox2d.version>
+        <opensimplex.version>1.0.3</opensimplex.version>
+        <jlayer.version>1.0.1</jlayer.version>
+        <apiguardian.version>1.1.2</apiguardian.version>
+        <junit.version>5.10.2</junit.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.lwjgl</groupId>
+                <artifactId>lwjgl-bom</artifactId>
+                <version>${lwjgl.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>io.github.mightycode</groupId>
+                <artifactId>mightylib</artifactId>
+                <version>${mightylib.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.mightycode</groupId>
+                <artifactId>mightylib</artifactId>
+                <version>${mightylib.version}</version>
+                <type>test-jar</type>
+            </dependency>
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>${json.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.joml</groupId>
+                <artifactId>joml</artifactId>
+                <version>${joml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jbox2d</groupId>
+                <artifactId>jbox2d-library</artifactId>
+                <version>${jbox2d.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.raylabz</groupId>
+                <artifactId>opensimplex</artifactId>
+                <version>${opensimplex.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>javazoom</groupId>
+                <artifactId>jlayer</artifactId>
+                <version>${jlayer.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apiguardian</groupId>
+                <artifactId>apiguardian-api</artifactId>
+                <version>${apiguardian.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
