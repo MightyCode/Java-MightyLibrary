@@ -16,7 +16,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
  * The defines of the shaders. Two entries of resources/shaders/shaders.json on the same files: definesDemo2D without
  * define (left), definesDemoTinted2D with "defines": {"TINT": ...} (right, tinted blue). Key D sets or removes the
  * global define DEMO_INVERT (shaders().setDefine): every shader is read again, the colors of both squares are inverted.
- * The define is removed when the scene is left. ESCAPE goes back to the menu.
+ * The define is removed when the scene is left if the scene set it. ESCAPE goes back to the menu.
  * Check: python tools/scenario.py "scene ShaderDefines2D" wait-loaded "input key D" sleep:1 "?shaders"
  */
 public class ShaderDefines2D extends Scene {
@@ -25,6 +25,9 @@ public class ShaderDefines2D extends Scene {
     private RectangleRenderer plain;
     private RectangleRenderer tinted;
     private Text help;
+    private boolean shownInverted;
+    // DEMO_INVERT set by this scene (key D): removed when it is left
+    private boolean setHere;
 
     @Override
     public void launch(String[] args) {
@@ -39,8 +42,9 @@ public class ShaderDefines2D extends Scene {
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
                 .setPosition(new Vector2f(40, 40))
-                .setColor(new Color4f(1f))
-                .setText(helpText());
+                .setColor(new Color4f(1f));
+        shownInverted = engine().shaders().defines().containsKey(INVERT);
+        help.setText(helpText());
     }
 
     private static RectangleRenderer square(String shader, Vector2f center) {
@@ -53,7 +57,7 @@ public class ShaderDefines2D extends Scene {
     }
 
     private String helpText() {
-        boolean inverted = engine().shaders().defines().containsKey(INVERT);
+        boolean inverted = shownInverted;
         return "Same GLSL files, two entries of shaders.json.\n"
                 + "Left: definesDemo2D, no define. Right: definesDemoTinted2D, define TINT of its entry.\n"
                 + "D: global define " + INVERT + " (" + (inverted ? "set" : "not set") + "), every shader is read again.\n"
@@ -67,13 +71,20 @@ public class ShaderDefines2D extends Scene {
         if (context().getInputManager().inputPressed(ActionId.ESCAPE))
             sceneManager().setNewScene(new MenuScene(), new String[]{});
 
+        IShaderService shaders = engine().shaders();
         if (context().getKeyboardManager().keyPressed(GLFW_KEY_D)) {
-            IShaderService shaders = engine().shaders();
-            if (shaders.defines().containsKey(INVERT))
+            if (shaders.defines().containsKey(INVERT)) {
                 shaders.removeDefine(INVERT);
-            else
+            } else {
                 shaders.setDefine(INVERT, "");
+                setHere = true;
+            }
+        }
 
+        // Also changed by the command shaders
+        boolean inverted = shaders.defines().containsKey(INVERT);
+        if (inverted != shownInverted) {
+            shownInverted = inverted;
             help.setText(helpText());
         }
     }
@@ -94,8 +105,10 @@ public class ShaderDefines2D extends Scene {
     public void unload() {
         super.unload();
 
-        // A global define stays until removed: the other scenes find the shaders as they were
-        engine().shaders().removeDefine(INVERT);
+        // A global define stays until removed: the other scenes find the shaders as they were. One set before the
+        // scene (command shaders) is left as it is
+        if (setHere)
+            engine().shaders().removeDefine(INVERT);
         plain.unload();
         tinted.unload();
         help.unload();
