@@ -32,6 +32,8 @@ public final class TestEngine implements AutoCloseable {
 
     // The engine has a process-wide state (main thread, workers, time): one test engine at a time
     private static final AtomicBoolean RUNNING = new AtomicBoolean();
+    // An engine with a window kept between the tests (@MightySceneTest): closed when another engine starts
+    private static TestEngine shared;
 
     // Namespace of the plugin that stacks the folders of the test above the sources of the game
     static final String SOURCES_NAMESPACE = "mightytest";
@@ -44,6 +46,7 @@ public final class TestEngine implements AutoCloseable {
 
     private Engine engine;
     private Views.Scope scope;
+    private SceneRunner runner;
     private long clock;
     private boolean owner;
     private boolean closed;
@@ -82,12 +85,21 @@ public final class TestEngine implements AutoCloseable {
     public TestEngine start() {
         if (engine != null || closed)
             throw new IllegalStateException("A test engine starts once");
+        TestEngine idle = shared;
+        if (idle != null && idle != this)
+            idle.close();
         if (!RUNNING.compareAndSet(false, true))
             throw new IllegalStateException("Another test engine runs: close it first (one engine per JVM at a time)");
         owner = true;
 
         if (!sources.isEmpty())
             config.addPlugin(new SourcesPlugin(sources));
+
+        if (!headless) {
+            // Hidden, on a scene without resources: the tests start the scenes they need
+            KitEngineAccess.setHiddenWindows(true);
+            config.setStartScene(EmptyTestScene::new);
+        }
 
         clock = NANOS_PER_SECOND;
         KitTimeAccess.setClock(() -> clock);
@@ -104,6 +116,10 @@ public final class TestEngine implements AutoCloseable {
         }
         if (status != ListError.NO_ERROR) {
             close();
+            if (status == ListError.LIBRARIES_LOAD_FAIL)
+                throw new GLUnavailableException("GLFW can't start: no screen (display server) here");
+            if (status == ListError.WINDOW_CREATION_FAIL)
+                throw new GLUnavailableException("No window with an OpenGL 3.3 core context here");
             throw new IllegalStateException("The engine did not start: error " + status + " (ListError)");
         }
 
@@ -125,6 +141,14 @@ public final class TestEngine implements AutoCloseable {
         return this;
     }
 
+    /** Frames only (no tick), the time does not move: loading, GL elements, display. */
+    public TestEngine frames(int count) {
+        requireStarted();
+        for (int i = 0; i < count; i++)
+            KitEngineAccess.frame(engine, Long.MAX_VALUE);
+        return this;
+    }
+
     /** Moves the time without running the engine: the next tick sees this much more time (GameTime.DeltaTime). */
     public TestEngine advance(float seconds) {
         if (seconds < 0)
@@ -134,7 +158,10 @@ public final class TestEngine implements AutoCloseable {
         return this;
     }
 
-    /** Steps until no data is being loaded nor any scene, and no main thread task waits. */
+    /**
+     * Steps until no data is being loaded nor any scene, no main thread task waits, and (with a window) no urgent GL
+     * element waits.
+     */
     public TestEngine loadUntilDone() {
         return loadUntilDone(Duration.ofSeconds(30));
     }
@@ -154,7 +181,8 @@ public final class TestEngine implements AutoCloseable {
 
     private boolean isLoadingDone() {
         return engine.resources().finishedCurrentLoading() && MainThread.pendingTasks() == 0
-                && !KitEngineAccess.isAnySceneLoading(engine);
+                && !KitEngineAccess.isAnySceneLoading(engine)
+                && (headless || !engine.glResources().hasElementsToLoad());
     }
 
     /** Runs a command as the game's code would (Commands.execute), for the engine as its view. */
@@ -194,12 +222,31 @@ public final class TestEngine implements AutoCloseable {
         return headless;
     }
 
+    boolean isClosed() {
+        return closed;
+    }
+
+    // Kept between tests by the JUnit extension: the next engine to start closes it first
+    void markShared() {
+        shared = this;
+    }
+
+    /** With a window: the driver of its scenes and inputs. */
+    public SceneRunner scenes() {
+        requireStarted();
+        if (headless)
+            throw new IllegalStateException("A headless engine has no scene: MightyTest.withWindow");
+        if (runner == null)
+            runner = new SceneRunner(this);
+        return runner;
+    }
+
     /** The time of the manual clock, in seconds (GameTime.currentTime reads it). */
     public float time() {
         return (float) ((double) clock / NANOS_PER_SECOND);
     }
 
-    private void requireStarted() {
+    void requireStarted() {
         if (engine == null || closed)
             throw new IllegalStateException("The test engine is not started (start) or is closed");
     }
@@ -219,6 +266,8 @@ public final class TestEngine implements AutoCloseable {
                 scope.close();
             KitEngineAccess.resetProcessState();
             KitTimeAccess.reset();
+            if (shared == this)
+                shared = null;
             if (owner)
                 RUNNING.set(false);
         }

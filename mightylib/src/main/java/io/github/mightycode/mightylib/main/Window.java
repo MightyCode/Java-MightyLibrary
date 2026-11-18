@@ -24,6 +24,13 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * borderless). Changing the display keeps the window, its context, its objects and its input callbacks.
  */
 public final class Window {
+    // Test kit: the windows are created and drawn, never shown (process-wide, set before the engine starts)
+    private static volatile boolean hiddenWindows;
+
+    static void setHiddenWindows(boolean hidden) {
+        hiddenWindows = hidden;
+    }
+
     private final WindowInfo info;
 
     private GLContext glContext;
@@ -143,8 +150,9 @@ public final class Window {
         glContext = GLContext.ofWindow(info.windowName, info.windowId);
         glContext.setVsync(display.isVsync());
 
-        // Make the window visible
-        glfwShowWindow(info.windowId);
+        // Make the window visible (never under the test kit)
+        if (!hiddenWindows)
+            glfwShowWindow(info.windowId);
 
         readFramebufferSize();
         setViewPort(info.size.x, info.size.y);

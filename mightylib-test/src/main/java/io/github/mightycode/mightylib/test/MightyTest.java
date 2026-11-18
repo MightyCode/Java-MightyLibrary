@@ -19,4 +19,15 @@ public final class MightyTest {
 
         return new TestEngine(config, true);
     }
+
+    /**
+     * An engine with a hidden window and GL, started on an empty scene (EmptyTestScene): its scenes and inputs are
+     * driven by scenes(). Start throws GLUnavailableException without screen or OpenGL 3.3 core.
+     */
+    public static TestEngine withWindow(EngineConfig config) {
+        if (config == null)
+            throw new IllegalArgumentException("config");
+
+        return new TestEngine(config, false);
+    }
 }

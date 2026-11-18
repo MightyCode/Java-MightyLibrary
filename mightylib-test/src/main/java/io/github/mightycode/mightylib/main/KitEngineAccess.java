@@ -53,8 +53,14 @@ public final class KitEngineAccess {
         return engine.isAnySceneLoading();
     }
 
+    // Before the setup of an engine with windows: they are created hidden
+    public static void setHiddenWindows(boolean hidden) {
+        Window.setHiddenWindows(hidden);
+    }
+
     // Once the engine is stopped: the process-wide state back to the one before any engine
     public static void resetProcessState() {
+        Window.setHiddenWindows(false);
         MainThread.reset();
         MainLoop.setMode(EEngineMode.RELEASE);
         Logger.setGLErrorCheck(true);
