@@ -1,4 +1,4 @@
-package io.github.mightycode.mightylib.main.utils;
+package io.github.mightycode.mightylib.main.internal;
 
 import jdk.jfr.Category;
 import jdk.jfr.Description;

@@ -2,10 +2,10 @@ package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.text.DrawnTexts;
+import io.github.mightycode.mightylib.main.internal.FrameEvent;
+import io.github.mightycode.mightylib.main.internal.TickEvent;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
-import io.github.mightycode.mightylib.main.utils.FrameEvent;
 import io.github.mightycode.mightylib.main.utils.GameTime;
-import io.github.mightycode.mightylib.main.utils.TickEvent;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.scenes.ISceneManager;
 
