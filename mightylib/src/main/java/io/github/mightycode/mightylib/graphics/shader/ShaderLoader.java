@@ -128,17 +128,18 @@ public final class ShaderLoader extends ResourceLoader {
 
         ShaderData shader = (ShaderData) dataType;
 
+        IShaderService service = service();
+
         // An invalid define of the entry makes the shader fail (fallback); its files stay watched
         for (Map.Entry<String, String> define : shader.getDefines().entrySet()) {
             try {
-                ShaderService.CheckDefine(define.getKey(), define.getValue());
+                service.checkDefine(define.getKey(), define.getValue());
             } catch (IllegalArgumentException e) {
                 throw new ResourceException("shader " + shader.getDataName() + ": " + e.getMessage());
             }
         }
 
         // Once per reading: the same global defines for every stage, even if they change meanwhile
-        IShaderService service = service();
         String prelude = service.prelude(shader.getDefines());
 
         // Worker thread: files and preprocessing only, the compilation is made by its GL element (Shader).

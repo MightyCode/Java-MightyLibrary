@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
 
 /**
  * The shader service of the engine: GLSL 330 core, shaders/shaders.json read once at its creation, merged by entry
@@ -21,8 +20,6 @@ public final class ShaderService implements IShaderService {
     public static final String LIST_FILE_NAME = "shaders.json";
     public static final String FOLDER = "shaders/";
     public static final String VERSION = "#version 330 core";
-
-    private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
     private final JSONObject declarations;
     // Reads again every ShaderData (main thread)
@@ -45,23 +42,6 @@ public final class ShaderService implements IShaderService {
                 FileMethods.readJSONObjectLayers(sources, FOLDER + LIST_FILE_NAME), "shaders");
         JSONObject shaders = merged.optJSONObject("shaders");
         declarations = shaders == null ? new JSONObject() : shaders;
-    }
-
-    /**
-     * The rule of the defines, global or of an entry: the name is a GLSL identifier not starting with GL_ (reserved),
-     * the value is on one line (a value from a command or a mod can't slip a directive into the prelude).
-     *
-     * @throws IllegalArgumentException otherwise
-     */
-    public static void CheckDefine(String name, String value) {
-        if (name == null || !IDENTIFIER.matcher(name).matches())
-            throw new IllegalArgumentException("Invalid define name \"" + name + "\": expected a GLSL identifier");
-        if (name.startsWith("GL_"))
-            throw new IllegalArgumentException("Invalid define name " + name + ": GL_ is reserved by GLSL");
-        if (value == null)
-            throw new IllegalArgumentException("No value for the define " + name + " (\"\" for none)");
-        if (value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0)
-            throw new IllegalArgumentException("The value of the define " + name + " has a line break");
     }
 
     @Override
@@ -101,7 +81,7 @@ public final class ShaderService implements IShaderService {
     @Override
     public void setDefine(String name, String value) {
         checkMainThread();
-        CheckDefine(name, value);
+        checkDefine(name, value);
         if (value.equals(defines.get(name)))
             return;
 

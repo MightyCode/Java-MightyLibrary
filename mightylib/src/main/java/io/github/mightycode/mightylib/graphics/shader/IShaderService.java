@@ -32,9 +32,29 @@ public interface IShaderService extends IEngineService {
      * per reading of a shader; must not fail.
      *
      * @param entryDefines the defines of the entry of the shader (name to value, "" for a define without value),
-     *                     already checked (ShaderService.CheckDefine)
+     *                     already checked (checkDefine)
      */
     String prelude(Map<String, String> entryDefines);
+
+    /**
+     * The rule of the defines, global (setDefine) or of an entry (checked by the loader before reading the shader):
+     * by default the name is a GLSL identifier not starting with GL_ (reserved), the value is on one line (a value from
+     * a command or a mod can't slip a directive into the prelude). A replaced service may change it, the prelude must
+     * then accept what it accepts. Any thread.
+     *
+     * @throws IllegalArgumentException if the define is refused
+     */
+    default void checkDefine(String name, String value) {
+        if (name == null || !name.matches("[A-Za-z_][A-Za-z0-9_]*"))
+            throw new IllegalArgumentException("Invalid define name \"" + name + "\": expected a GLSL identifier");
+        if (name.startsWith("GL_"))
+            throw new IllegalArgumentException("Invalid define name " + name + ": GL_ is reserved by GLSL");
+        if (value == null)
+            throw new IllegalArgumentException("The value of the define " + name
+                    + " is not a string, a number or a boolean (\"\" for none)");
+        if (value.indexOf('\n') >= 0 || value.indexOf('\r') >= 0)
+            throw new IllegalArgumentException("The value of the define " + name + " has a line break");
+    }
 
     /**
      * Global define written in the prelude of every shader ("" for "#define NAME"); every shader is read again when

@@ -108,7 +108,7 @@ class ShaderServiceTest {
         assertTrue(service.defines().isEmpty());
         assertEquals(0, reloads);
 
-        ShaderService.CheckDefine("_ok_9", "");
+        service.checkDefine("_ok_9", "");
     }
 
     // Every change reads the shaders again, the same value or an unknown name does nothing

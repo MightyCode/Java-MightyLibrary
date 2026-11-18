@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand.general;
 
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
-import io.github.mightycode.mightylib.graphics.shader.ShaderService;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
@@ -43,7 +42,7 @@ class ShadersGenComTest {
 
         @Override
         public void setDefine(String name, String value) {
-            ShaderService.CheckDefine(name, value);
+            checkDefine(name, value);
             TreeMap<String, String> changed = new TreeMap<>(defines);
             changed.put(name, value);
             defines = changed;
