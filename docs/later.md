@@ -213,6 +213,11 @@ Streaming des musiques longues (tout est décodé en mémoire).
 - **Fenêtre redimensionnée** : recalcul optionnel de la surface virtuelle (elle reste fixe, avec bandes noires) ; le jeu se fige pendant qu'on tire un bord ou déplace la fenêtre sous Windows (boucle modale dans `glfwPollEvents`, seule l'image est redessinée) : la cible durable est une boucle de jeu et de rendu sur un thread à elle, le thread principal ne lisant que les événements (change la règle « tout le GL sur le thread principal », à discuter). Icône par fenêtre, renvoi du focus au dialogue modal quand on clique sur la fenêtre parente, manettes bloquées par un dialogue modal.
 - **`EngineStats` par fenêtre** (compteurs de frames et de swaps) et `Screenshot` par fenêtre dans la boucle.
 
+## Poms des jeux : suites
+- **Générateur de projet** (archetype Maven) : à partir du projet jetable du test d'acceptation (`mightylib-game-parent`, `mightylib`, `mightylib.mainClass`, une scène 2D vide).
+- **macOS** : le lancement exige `-XstartOnFirstThread`, que `exec:java` (même JVM) ne permet pas : prévoir `exec:exec` ou un lanceur (objectif « Distribution » de `current.md`) ; les natives macOS ne sont pas testées.
+- **Maven 4** : ses mixins pourraient simplifier la chaîne de parents.
+
 ## Intégrations plateformes
 - **Discord** : présence enrichie (SDK Discord, bindings Java à évaluer).
 - **Steam** : Steamworks (succès, overlay, statistiques), bindings Java à évaluer.

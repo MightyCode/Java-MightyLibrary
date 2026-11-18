@@ -16,7 +16,7 @@
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Java-MightyLibrary" options="-Xlint:-exports -Xlint:-requires-automatic" />
       <module name="mightylib" options="-Xlint:-exports -Xlint:-requires-automatic" />
-      <module name="mightylib-demo" options="-Xlint:-exports -Xlint:-requires-automatic" />
+      <module name="mightylib-demo" options="" />
     </option>
   </component>
 </project>

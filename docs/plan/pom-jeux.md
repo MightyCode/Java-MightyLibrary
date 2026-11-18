@@ -100,3 +100,18 @@ Pas de nouvelle scène : la démo est elle-même le jeu d'exemple du parent. Le 
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/game-poms`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan » : réimport Maven et lancement depuis IntelliJ, `java -jar` du jar complet, build sur Mac ou ARM si possible.
+
+## Bilan (discussion A)
+**Fait** : les étapes 1 à 4. `bom/`, `base-parent/`, `game-parent/` créés ; la racine hérite de `base-parent`, la démo de `game-parent`. Docs mises à jour (architecture, debug-tools, decisions, later, current, CLAUDE.md, README) ; `licence.md` inchangé (aucune dépendance ajoutée : mêmes artefacts, seules les natives sont déclarées ailleurs). `tools/scenario.py` surveille maintenant tous les poms du réacteur pour régénérer `target/classpath.txt`.
+
+**Écarts au plan et raison**
+- Jar complet dans un profil `game-jar` (activé si `${basedir}/src/main` existe) et non directement dans `build` : sinon l'assembly tournait aussi sur `game-parent` (packaging pom) et produisait un jar de natives inutile.
+- Versions des natives écrites `${lwjgl.version}` dans `game-parent` : avec `-P all-natives`, les natives de la machine sont déclarées deux fois et Maven ne donne la version gérée qu'à l'une des deux (erreur « version missing »).
+- `mightylib.version` écrit en dur dans le BOM : `${project.version}` y vaudrait la version du jeu qui l'hérite.
+- `<name>Linux</name>` ajouté au profil d'OS Linux (`unix` est aussi vrai sur macOS).
+- Question restante tranchée : SpotBugs accepte un `excludeFilterFile` vide ; défaut vide.
+- `.idea/compiler.xml` : IntelliJ ne donne plus d'options `-Xlint` à `mightylib-demo` (elles viennent du pom racine, dont la démo n'hérite plus) ; `.idea/encodings.xml` : entrées des nouveaux modules.
+
+**Vérifié** : `help:effective-pom` avant/après (mêmes dépendances et plugins pour `mightylib` ; la démo gagne les natives et l'assembly du parent) ; `mvn -o package` (1094 + 27 tests) ; `python tools/analyse.py` (mêmes nombres : mightylib 0 SpotBugs / 3 Error Prone, démo 0 / 0) ; parents résolus hors ligne sans `install` ; `dependency:tree -pl demo` (natives de la machine) ; `-P all-natives` (jar complet : natives des six plateformes) ; `scenario.py "scene Scene2D"` sur le classpath et avec `--modulepath` ; `java -jar` du jar complet ; jeu jetable hors du dépôt (parent `mightylib-game-parent` : `mvn -o package` puis `java -jar`) et variante BOM seule (compile, sans natives ni jar complet, comme attendu). Script de l'essai : `tools/scripts/game-poms-trial/` (non versionné).
+
+**À vérifier à la main** : réimport Maven dans IntelliJ (modules `mightylib-bom`, `-base-parent`, `-game-parent` apparaissent, les options `-Xlint` de `mightylib` restent dans `.idea/compiler.xml`) ; lancement de la démo depuis IntelliJ ; `java -jar demo/target/mightylib-demo-1.1-SNAPSHOT-jar-with-dependencies.jar` depuis la racine ; build sur un Mac ou une machine ARM (profils d'OS et natives non testés).

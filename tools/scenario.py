@@ -81,7 +81,7 @@ def run_maven(*goals):
 
 
 def prepare(compile_sources):
-    poms = [os.path.join(ROOT, folder, "pom.xml") for folder in ("", "mightylib", "demo")]
+    poms = [os.path.join(ROOT, folder, "pom.xml") for folder in ("", "bom", "base-parent", "game-parent", "mightylib", "demo")]
     if not os.path.exists(CLASSPATH_FILE) or os.path.getmtime(CLASSPATH_FILE) < max(map(os.path.getmtime, poms)):
         # Built in the reactor with the compilation: the library is then its classes folder, not a jar of the local
         # repository (test-compile: the test helpers of the library, a test dependency of the demo, must be resolved
