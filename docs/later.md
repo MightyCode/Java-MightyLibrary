@@ -216,6 +216,8 @@ Streaming des musiques longues (tout est décodé en mémoire).
 ## Poms des jeux : suites
 - **Générateur de projet** (archetype Maven) : à partir du projet jetable du test d'acceptation (`mightylib-game-parent`, `mightylib`, `mightylib.mainClass`, une scène 2D vide).
 - **macOS** : le lancement exige `-XstartOnFirstThread`, que `exec:java` (même JVM) ne permet pas : prévoir `exec:exec` ou un lanceur (objectif « Distribution » de `current.md`) ; les natives macOS ne sont pas testées.
+- **Plateforme non reconnue** : si aucun profil d'OS de `mightylib-base-parent` ne s'active (Linux x86 32 bits, FreeBSD…), `${lwjgl.natives}` reste tel quel et la résolution des natives de `mightylib-game-parent` échoue avec un message obscur. Prévoir un profil de repli (`activeByDefault` ou `!lwjgl.natives`) qui arrête le build avec un message clair (objectif « Distribution »).
+- **`exec-maven-plugin` 1.2.1** (2011), transmis à tout jeu par `mightylib-base-parent` : passer à une version 3.x (vérifier `exec:java` et les arguments de la démo), en même temps que la question macOS ci-dessus.
 - **Maven 4** : ses mixins pourraient simplifier la chaîne de parents.
 
 ## Intégrations plateformes
