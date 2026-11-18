@@ -118,7 +118,7 @@ class DemoApiUsageTest {
             Files.write(file, List.of(
                     "import io.github.mightycode.mightylib.console.ConsoleLog;",
                     "import static io.github.mightycode.mightylib.graphics.GLContext.current;",
-                    "import io.github.mightycode.mightylib.utils.enginecommand.general.*;",
+                    "import io.github.mightycode.mightylib.utils.enginecommand.internal.*;",
                     "import io.github.mightycode.mightylib.scenes.Scene;",
                     "class X { io.github.mightycode.mightylib.resources.BatchLoader loader; }"),
                     StandardCharsets.UTF_8);

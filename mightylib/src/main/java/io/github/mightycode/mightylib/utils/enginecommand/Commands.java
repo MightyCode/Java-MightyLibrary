@@ -5,7 +5,7 @@ import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.registry.Identifier;
-import io.github.mightycode.mightylib.utils.enginecommand.general.ListGeneralCommand;
+import io.github.mightycode.mightylib.utils.enginecommand.internal.ListGeneralCommand;
 
 import java.io.BufferedReader;
 import java.io.IOException;

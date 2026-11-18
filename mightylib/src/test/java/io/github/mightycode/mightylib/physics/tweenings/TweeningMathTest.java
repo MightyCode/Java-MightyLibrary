@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.physics.tweenings;
 
-import io.github.mightycode.mightylib.physics.tweenings.tweeningmath.Back;
-import io.github.mightycode.mightylib.physics.tweenings.tweeningmath.Bounce;
+import io.github.mightycode.mightylib.physics.tweenings.internal.Back;
+import io.github.mightycode.mightylib.physics.tweenings.internal.Bounce;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
