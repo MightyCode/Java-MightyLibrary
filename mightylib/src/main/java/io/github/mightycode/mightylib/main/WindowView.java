@@ -238,13 +238,16 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
     protected final void setAndDisplayRealScene() {
         scRenderer.unbindFrameBuff();
         windowContext.getWindow().setRealViewport();
+        // A scissor of the virtual scene left enabled would cut the final pass (the window has another size)
+        clearScissor();
 
         scRenderer.display();
     }
 
     /**
      * Limits the next draws (and clears) to a rectangle of the surface of the view, in pixels of the virtual scene,
-     * origin at the bottom left: to draw the same thing in several modes side by side. Undone by clearScissor.
+     * origin at the bottom left: to draw the same thing in several modes side by side. Undone by clearScissor,
+     * and by setAndDisplayRealScene.
      */
     protected final void setScissor(int x, int y, int width, int height) {
         glEnable(GL_SCISSOR_TEST);
