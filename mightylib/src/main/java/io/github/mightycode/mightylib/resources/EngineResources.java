@@ -33,6 +33,8 @@ public final class EngineResources {
     public static final String REGULAR_POLYGON_2D = "regularPolygon2D";
     public static final String POINTS_2D = "points2D";
     public static final String GRID_2D = "grid2D";
+    // Geometric shapes (polylines, arrows, polygons): triangles of Stroker extruded by the vertex shader
+    public static final String STROKE_2D = "stroke2D";
     public static final String MULTI_COLORED_SHAPE_2D = "multiColoredShape2D";
     public static final String COLORED_TEXT = "coloredText";
     public static final String POST_PROCESSING = "postProcessing";
@@ -45,7 +47,7 @@ public final class EngineResources {
     private static final List<String> SHADERS = List.of(
             COLOR_SHAPE_2D, TEXTURE_2D,
             ROUNDED_RECTANGLE_2D, CIRCLE_2D, ELLIPSE_2D, TRIANGLE_2D, ARC_2D, REGULAR_POLYGON_2D,
-            POINTS_2D, GRID_2D,
+            POINTS_2D, GRID_2D, STROKE_2D,
             MULTI_COLORED_SHAPE_2D, COLORED_TEXT, POST_PROCESSING,
             COLOR_SHAPE_3D, TEXTURE_3D, SKYBOX, MULTI_COLORED_LIGHTING_3D, TEXTURE_MULTIPLE_LIGHTS_3D);
 

@@ -59,11 +59,11 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         stroke = new ShapeStroke();
         antialiasing = true;
 
-        addShaderValue(SIZE, Vector2f.class, size);
-        addShaderValue(REFERENCE, Vector2f.class, reference);
-        addShaderValue(TEXTURE_POSITION, Vector4f.class, texturePosition);
-        addShaderValue(PARAMETERS_0, Vector4f.class, parameters0);
-        addShaderValue(PARAMETERS_1, Vector4f.class, parameters1);
+        addValue(SIZE, Vector2f.class, size);
+        addValue(REFERENCE, Vector2f.class, reference);
+        addValue(TEXTURE_POSITION, Vector4f.class, texturePosition);
+        addValue(PARAMETERS_0, Vector4f.class, parameters0);
+        addValue(PARAMETERS_1, Vector4f.class, parameters1);
         strokeWidthValue = addValue(STROKE_WIDTH, Float.class, 0f);
         strokeColorValue = addValue(STROKE_COLOR, Color4f.class, stroke.color());
         strokeAlignmentValue = addValue(STROKE_ALIGNMENT, Float.class, 0f);
@@ -76,9 +76,11 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         setTexturePosition(RectangularFace.BasicTexturePosition());
     }
 
+    // Optional: a shape uses only some of them (a circle has no parameter), the others are not reported missing
     private ShaderValue addValue(String name, Class<?> type, Object object) {
-        addShaderValue(name, type, object);
-        return getShaderValue(name);
+        ShaderValue value = new ShaderValue(name, type, object);
+        putOptionalValue(name, value);
+        return value;
     }
 
     @Override

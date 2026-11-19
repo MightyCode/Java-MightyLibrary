@@ -63,6 +63,13 @@
 			],
 			"tags" : ["2D"]
 		},
+		"stroke2D": {
+			"files": [
+				"2D/shape/stroke2DV.glsl",
+				"2D/shape/stroke2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
 		"texture2D": {
 			"files": [
 				"2D/essential/texture2DV.glsl",

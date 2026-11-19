@@ -1,7 +1,10 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.ArcRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.ArrowRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.CircleRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EStrokeCap;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EStrokeJoin;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EStrokeAlignment;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EStrokeUnit;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EPointShape;
@@ -9,6 +12,8 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EllipseRendere
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.GridRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.PointsRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.PolygonRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.PolylineRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RegularPolygonRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RoundedRectangleRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.TriangleRenderer;
@@ -20,6 +25,7 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylib.utils.math.geometry.Polygon;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -33,13 +39,15 @@ import static org.lwjgl.glfw.GLFW.*;
 /**
  * The vector shapes. Top: each shape filled with a stroke, stroke only, textured. Below: the three alignments of a
  * half transparent stroke, corners of different radii, a turning shape, a stroke of one pixel, sharp edges, a tinted
- * texture. Then points (a wave moved at each frame), over a background grid of lines one pixel wide. Z / X zoom, Q / E turn the camera, R resets it, U switches the unit of the strokes (world / screen
+ * texture. Then points (a wave moved at each frame); polylines with each join (miter, round, bevel: one row each)
+ * and cap (butt, round, square), a closed half transparent line, a line of one screen pixel at every zoom, arrows,
+ * a concave polygon with a stroke and the polygon of Scene2D; over a background grid of lines one pixel wide. Z / X zoom, Q / E turn the camera, R resets it, U switches the unit of the strokes (world / screen
  * pixels), A switches the anti-aliasing.
  */
 public class VectorShapes2D extends Scene {
     private static final float CELL_WIDTH = 150f;
     private static final float CELL_HEIGHT = 110f;
-    private static final float TOP = -480f;
+    private static final float TOP = -400f;
     private static final float START_ZOOM = 0.65f;
 
     private static final Color4f FILL = new Color4f(0.25f, 0.55f, 0.9f, 1f);
@@ -53,6 +61,7 @@ public class VectorShapes2D extends Scene {
     private VectorShape2DRenderer turning;
     private GridRenderer grid;
     private PointsRenderer wave;
+    private PolylineRenderer hairline;
     private float time;
     private Text help;
 
@@ -74,6 +83,7 @@ public class VectorShapes2D extends Scene {
         addShapeGrid();
         addStrokeExamples();
         addPoints();
+        addLines();
 
         help = new Text();
         help.setReferenceCamera(hudCamera);
@@ -173,10 +183,82 @@ public class VectorShapes2D extends Scene {
         strokeWidths.add(new float[]{0f, 0f});
     }
 
+    // Rows 5 to 7: a zigzag per join (row) and cap (column), then closed and thin lines, arrows, polygons
+    private void addLines() {
+        EStrokeJoin[] joins = {EStrokeJoin.MITER, EStrokeJoin.ROUND, EStrokeJoin.BEVEL};
+        EStrokeCap[] caps = EStrokeCap.values();
+        for (int row = 0; row < joins.length; ++row) {
+            for (int column = 0; column < caps.length; ++column) {
+                PolylineRenderer zigzag = new PolylineRenderer();
+                zigzag.setPoints(List.of(new Vector2f(-45, 25), new Vector2f(-15, -25), new Vector2f(10, 25),
+                        new Vector2f(45, -10)));
+                zigzag.setJoin(joins[row]);
+                zigzag.setCap(caps[column]);
+                add(zigzag, column, 5 + row);
+                stroke(zigzag, 12f, 5f, STROKE);
+            }
+        }
+
+        // A closed star, half transparent: no overlap at its joins
+        PolylineRenderer star = new PolylineRenderer();
+        List<Vector2f> starPoints = new ArrayList<>();
+        for (int i = 0; i < 10; ++i) {
+            double angle = -Math.PI / 2 + i * Math.PI / 5;
+            float radius = i % 2 == 0 ? 45f : 20f;
+            starPoints.add(new Vector2f((float) Math.cos(angle) * radius, (float) Math.sin(angle) * radius));
+        }
+        star.setPoints(starPoints).setClosed(true);
+        star.setJoin(EStrokeJoin.ROUND);
+        add(star, 3, 5);
+        stroke(star, 8f, 3f, HALF_STROKE);
+
+        // One pixel of the screen at every zoom
+        hairline = new PolylineRenderer();
+        hairline.setPoints(List.of(new Vector2f(-50, 30), new Vector2f(0, -30), new Vector2f(50, 30)));
+        hairline.setStrokeUnit(EStrokeUnit.SCREEN_PIXELS);
+        hairline.setStrokeWidth(1f);
+        hairline.setStrokeColor(STROKE);
+        hairline.setPosition(new Vector2f(0.5f * CELL_WIDTH, TOP + 5 * CELL_HEIGHT));
+
+        ArrowRenderer filled = new ArrowRenderer();
+        filled.setLine(new Vector2f(-50, 20), new Vector2f(50, -20));
+        add(filled, 5, 5);
+        stroke(filled, 5f, 2f, STROKE);
+
+        ArrowRenderer open = new ArrowRenderer();
+        open.setPoints(List.of(new Vector2f(-50, 25), new Vector2f(-10, -25), new Vector2f(20, 20),
+                new Vector2f(50, -20)));
+        open.setHead(18f, 20f, false);
+        open.setJoin(EStrokeJoin.ROUND);
+        open.setCap(EStrokeCap.ROUND);
+        add(open, 6, 5);
+        stroke(open, 5f, 2f, STROKE);
+
+        Polygon concave = Polygon.CreateBuilder()
+                .addVertex(new Vector2f(0, 0)).addVertex(new Vector2f(1, 0.4f)).addVertex(new Vector2f(2, 0))
+                .addVertex(new Vector2f(1.6f, 1)).addVertex(new Vector2f(2, 2)).addVertex(new Vector2f(0.2f, 1.6f))
+                .build();
+        VectorShape2DRenderer concaveRenderer = add(new PolygonRenderer(concave), 7, 5);
+        concaveRenderer.setColorMode(FILL);
+        stroke(concaveRenderer, 5f, 2f, STROKE);
+
+        // The polygon of Scene2D, textured
+        Polygon fromScene2D = Polygon.CreateBuilder()
+                .addVertex(new Vector2f(0, 0)).addVertex(new Vector2f(0.5f, -0.5f))
+                .addVertex(new Vector2f(0.5f, 0.5f)).addVertex(new Vector2f(1.5f, 0.5f))
+                .addVertex(new Vector2f(1f, 1f)).addVertex(new Vector2f(0f, 1f))
+                .build();
+        VectorShape2DRenderer textured = add(new PolygonRenderer(fromScene2D), 7, 6);
+        textured.setMainTextureChannel("painting");
+        stroke(textured, 3f, 1f, STROKE);
+    }
+
     // The shape centered in the cell (column, row) of the grid
     private VectorShape2DRenderer add(VectorShape2DRenderer shape, int column, int row) {
         shape.setReferenceDirection(EDirection.None);
-        if (shape instanceof HexagonRenderer)
+        if (shape instanceof PolylineRenderer || shape instanceof ArrowRenderer)
+            shape.setSizePix(1, 1);
+        else if (shape instanceof HexagonRenderer)
             shape.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         else if (shape instanceof CircleRenderer || shape instanceof ArcRenderer
                 || shape instanceof RegularPolygonRenderer)
@@ -270,6 +352,7 @@ public class VectorShapes2D extends Scene {
         grid.display();
         for (VectorShape2DRenderer shape : shapes)
             shape.display();
+        hairline.display();
 
         help.display();
 
@@ -283,6 +366,7 @@ public class VectorShapes2D extends Scene {
         super.unload();
 
         grid.unload();
+        hairline.unload();
         for (VectorShape2DRenderer shape : shapes)
             shape.unload();
         help.unload();

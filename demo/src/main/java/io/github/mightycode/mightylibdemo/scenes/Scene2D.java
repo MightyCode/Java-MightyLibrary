@@ -182,7 +182,6 @@ public class Scene2D extends Scene {
         testEllipseRenderer.setPosition(new Vector2f(-200, 0));
 
         polygonRenderer = new PolygonRenderer(
-                "texture2D",
                 Polygon.CreateBuilder()
                         .addVertex(new Vector2f(0, 0))
                         .addVertex(new Vector2f(0.5f, -0.5f))
@@ -199,7 +198,6 @@ public class Scene2D extends Scene {
         polygonRenderer.setReferenceVertex(indexVertexReference);
 
         clockwisePolygonRenderer = new PolygonRenderer(
-                "texture2D",
                 Polygon.CreateBuilder()
                         .addVertex(new Vector2f(0f, 1f))
                         .addVertex(new Vector2f(1f, 1f))

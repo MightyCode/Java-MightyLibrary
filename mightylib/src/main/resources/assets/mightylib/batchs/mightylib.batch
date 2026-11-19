@@ -36,6 +36,7 @@
                 "regularPolygon2D",
                 "points2D",
                 "grid2D",
+                "stroke2D",
                 "multiColoredShape2D",
                 "coloredText",
                 "postProcessing",
