@@ -41,7 +41,9 @@ public final class FrameBuffer implements IRenderTextureBindable {
         glBindTexture(GL_TEXTURE_2D, renderTextureId);
         Logger.CheckOpenGLError("Generate Texture : " + renderTextureId);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+        // Always sRGB: a linear draw is encoded by the card (GL_FRAMEBUFFER_SRGB), a gamma draw is stored as written;
+        // read back in linear (the final pass encodes it again)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8_ALPHA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
         Logger.CheckOpenGLError("Texture Image 2D : " + renderTextureId);
 
         TextureParameters.applyParameters(bindable);

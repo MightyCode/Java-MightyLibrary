@@ -100,6 +100,9 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
         putOptionalValue(ShaderUniforms.MODEL,
                 new ShaderValue(ShaderUniforms.MODEL, Matrix4f.class, model));
+        // Color space of the draw: a shader without the uniform draws in gamma
+        putOptionalValue(ShaderUniforms.LINEAR_COLORS,
+                new ShaderValue(ShaderUniforms.LINEAR_COLORS, Integer.class, 0));
     }
 
     protected final Resources resources() {

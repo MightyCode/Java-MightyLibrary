@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.resources.cubemap;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
+import io.github.mightycode.mightylib.resources.texture.ETextureColorSpace;
+import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.utils.Logger;
 
 import static org.lwjgl.opengl.GL11.*;
@@ -117,7 +119,8 @@ public final class CubeMapTexture extends GLElement {
     // In the bound cubemap
     private void sendFace(int face) {
         int size = data.getFaceSize();
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGBA8, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+        // The faces are color pictures
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, Texture.InternalFormat(ETextureColorSpace.SRGB), size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                 data.getFace(face));
         Logger.CheckOpenGLError("Send face " + CubeMapData.faceNames().get(face) + " of cubemap " + data.getDataName());
     }
