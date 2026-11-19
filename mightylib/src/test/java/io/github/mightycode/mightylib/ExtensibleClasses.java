@@ -18,6 +18,7 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.graphics.renderer.Renderer",
             "io.github.mightycode.mightylib.graphics.renderer.MeshRenderer",
             "io.github.mightycode.mightylib.graphics.renderer._2D.shape.Shape2DRenderer",
+            "io.github.mightycode.mightylib.graphics.renderer._2D.shape.VectorShape2DRenderer",
             // Resources
             "io.github.mightycode.mightylib.resources.DataType",
             "io.github.mightycode.mightylib.resources.SingleSourceDataType",
@@ -54,7 +55,7 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.resources.animation.AnimationData",
             "io.github.mightycode.mightylib.resources.sound.SoundData",
             "io.github.mightycode.mightylib.resources.data.JSONFile",
-            // EllipseRenderer, VirtualSceneRenderer
+            // VirtualSceneRenderer
             "io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer",
             // ConsoleView
             "io.github.mightycode.mightylib.scenes.camera.Camera2D",

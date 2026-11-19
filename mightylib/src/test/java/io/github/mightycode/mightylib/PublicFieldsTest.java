@@ -35,7 +35,6 @@ class PublicFieldsTest {
             "io.github.mightycode.mightylib.utils.math.ID",
             "io.github.mightycode.mightylib.scenes.camera.cameraComponents.FreeCamera3DComponent$Inputs",
             "io.github.mightycode.mightylib.scenes.camera.cameraComponents.MovingCameraComponent$Inputs",
-            "io.github.mightycode.mightylib.graphics.renderer._2D.shape.EllipseRenderer$ShaderEllipseProperty",
             "io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial",
             "io.github.mightycode.mightylib.graphics.lighting.materials.Material"
     );

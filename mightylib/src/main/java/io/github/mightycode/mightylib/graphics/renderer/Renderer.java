@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -16,6 +17,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.utils.math.UUID;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
+import org.joml.Vector2f;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
@@ -67,6 +69,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
     private final HashSet<String> optionalValues;
     // 1 when the draw is linear: sent with the other values
     private final ShaderValue linearColors;
+    // Size of the viewport of the draw, in pixels: sent with the other values
+    private final Vector2f viewportSize = new Vector2f();
 
     /*
      * Takes the program of the shader (the fallback one while it loads or when it failed); the tag of the shader
@@ -107,6 +111,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
         // Color space of the draw, resolved at each draw: a shader without the uniform draws in gamma
         linearColors = new ShaderValue(ShaderUniforms.LINEAR_COLORS, Integer.class, 0);
         putOptionalValue(ShaderUniforms.LINEAR_COLORS, linearColors);
+        putOptionalValue(ShaderUniforms.VIEWPORT_SIZE,
+                new ShaderValue(ShaderUniforms.VIEWPORT_SIZE, Vector2f.class, viewportSize));
     }
 
     protected final Resources resources() {
@@ -183,6 +189,10 @@ public abstract class Renderer extends UUID implements IDisplayable {
         boolean linear = resolveColorSpace().isLinear();
         renderState.apply(linear);
         linearColors.setObject(linear ? 1 : 0);
+
+        GLContext context = GLContext.currentOrNull();
+        if (context != null)
+            viewportSize.set(context.viewportWidth(), context.viewportHeight());
     }
 
     /**
@@ -306,22 +316,17 @@ public abstract class Renderer extends UUID implements IDisplayable {
         applyModel();
     }
 
+    // Through setPosition: a subclass that follows the position sees these changes too
     public final void setX(float x){
-        this.position.x = x;
-
-        applyModel();
+        setPosition(new Vector3f(x, position.y, position.z));
     }
 
     public final void setY(float y){
-        this.position.y = y;
-
-        applyModel();
+        setPosition(new Vector3f(position.x, y, position.z));
     }
 
     public final void setZ(float z){
-        this.position.z = z;
-
-        applyModel();
+        setPosition(new Vector3f(position.x, position.y, z));
     }
 
     public final void setScale(Vector3f scale){

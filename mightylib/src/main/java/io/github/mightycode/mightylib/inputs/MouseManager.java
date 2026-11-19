@@ -105,8 +105,9 @@ public class MouseManager {
         return false;
     }
 
+    // The button now: the real one (GLFW) or a simulated one (simulateButton), hidden by the capture
     public boolean getState(int buttonId){
-        return !captured && realButton(buttonId);
+        return !captured && isButton(buttonId) && (realButton(buttonId) || buttonSimulation.getState(buttonId));
     }
 
     // The button of the real mouse now (GLFW), whatever the capture

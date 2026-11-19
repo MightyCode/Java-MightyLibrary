@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.console.internal.ConsoleLayout;
 import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.console.internal.LogPosition;
 import io.github.mightycode.mightylib.console.internal.LogSelection;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
@@ -17,7 +18,6 @@ import org.joml.Vector2f;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.lwjgl.opengl.GL11.glViewport;
 
 /**
  * Draws the console in a rectangle of a window: the last lines of the log (cut to the width), the command line and
@@ -141,7 +141,7 @@ final class ConsolePanel {
     // The window's OpenGL context is current, the console view entered
     void display(float x, float y, float width, float height, boolean showCursor) {
         view.pixelCamera().refresh();
-        glViewport(0, 0, view.context().getWindow().getInfo().getSizeRef().x, view.context().getWindow().getInfo().getSizeRef().y);
+        GLContext.setViewport(0, 0, view.context().getWindow().getInfo().getSizeRef().x, view.context().getWindow().getInfo().getSizeRef().y);
 
         updateFontSize();
 

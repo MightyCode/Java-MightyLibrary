@@ -70,7 +70,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         super.display();
     }
 
-    // Hook: the indices of the triangles, asked once at the first display
+    // Hook: the indices of the triangles, asked at the first display and again after updateShapeIndices
     protected abstract int[] getIndices();
     // Hook: the positions of the vertices (2 floats each), asked again after updateShapePosition
     protected abstract float[] calculatePosition();
@@ -156,6 +156,13 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     // Sent at the next display
     public final Shape2DRenderer updateShapeTexture(){
         textureDirty = true;
+
+        return this;
+    }
+
+    // Sent at the next display
+    public final Shape2DRenderer updateShapeIndices(){
+        indicesDirty = true;
 
         return this;
     }

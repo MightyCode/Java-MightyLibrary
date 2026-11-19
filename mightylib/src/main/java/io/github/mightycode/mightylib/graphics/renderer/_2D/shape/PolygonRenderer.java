@@ -1,85 +1,106 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
-import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylib.utils.math.geometry.Polygon;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
-public final class PolygonRenderer extends Shape2DRenderer {
-    private final Polygon polygon;
+import java.util.ArrayList;
+import java.util.List;
 
-    public PolygonRenderer (String shaderName, Polygon polygon){
-        super(shaderName, true);
+/**
+ * A polygon (convex or not, either winding) filling the size of the shape (its bounding box stretched onto it), with
+ * smooth edges and a stroke centered on its edges (joins of setJoin). Filled with the color, or the texture over its
+ * bounding box. Reference point: a point of the bounding box (0..1), at the center by default, or a vertex
+ * (setReferenceVertex).
+ */
+public final class PolygonRenderer extends GeometricShape2DRenderer {
+    // Miter limit of the fringe of the fill: it follows the sharp corners
+    private static final float FRINGE_MITER_LIMIT = 20f;
+
+    private final Polygon polygon;
+    private final int[] fillIndices;
+    private final Vector2f builtSize = new Vector2f(Float.NaN);
+    private final Vector2f builtReference = new Vector2f(Float.NaN);
+
+    public PolygonRenderer(Polygon polygon) {
+        this(EngineResources.STROKE_2D, polygon);
+    }
+
+    // A shader of the project, with the attributes and parameters of stroke2DV.glsl
+    public PolygonRenderer(String shaderName, Polygon polygon) {
+        super(shaderName);
         this.polygon = polygon;
-        setTexturePosition(RectangularFace.BasicTexturePosition());
+        fillIndices = polygon.isConvex() ? fanIndices(polygon.size()) : polygon.earClipIndices();
         setReferenceDirection(EDirection.None);
     }
 
-    // position of point comparing to the bounding box
-    @Override
-    protected float[] calculateTexturePosition(){
-        float[] position = new float[polygon.size() * 2];
-        Vector4f boundingBox = polygon.getBoundingBox();
-
-        Vector2f size = new Vector2f(boundingBox.z - boundingBox.x, boundingBox.w - boundingBox.y);
-        Vector2f temp;
-
-        for (int i = 0; i < polygon.size(); ++i){
-            temp = polygon.get(i);
-            position[i * 2] = (temp.x - boundingBox.x) / size.x;
-            position[i * 2 + 1] = (temp.y - boundingBox.y) / size.y;
+    private static int[] fanIndices(int count) {
+        int[] indices = new int[Math.max(count - 2, 0) * 3];
+        for (int i = 0; i < count - 2; ++i) {
+            indices[i * 3] = 0;
+            indices[i * 3 + 1] = i + 1;
+            indices[i * 3 + 2] = i + 2;
         }
-
-        return position;
+        return indices;
     }
 
-    public int numberVertex(){
+    public int numberVertex() {
         return polygon.size();
     }
 
-    public void setReferenceVertex(int index){
-        Vector4f boundingBox = polygon.getBoundingBox();
-        Vector2f size = new Vector2f(boundingBox.z - boundingBox.x, boundingBox.w - boundingBox.y);
-
-        Vector2f temp = polygon.get(index);
-        Vector2f position = new Vector2f(
-                (temp.x - boundingBox.x) / size.x,
-                (temp.y - boundingBox.y) / size.y);
-
-        setReferencePoint(position);
+    // The vertex of this index at the position of the renderer
+    public void setReferenceVertex(int index) {
+        Vector4f box = polygon.getBoundingBox();
+        Vector2f vertex = polygon.get(index);
+        setReferencePoint(new Vector2f((vertex.x - box.x) / (box.z - box.x), (vertex.y - box.y) / (box.w - box.y)));
     }
 
-    @Override
-    protected int[] getIndices() {
-        if (polygon.isConvex()) {
-            int[] indices = new int[(polygon.size() - 2) * 3];
-
-            for (int i = 0; i < (polygon.size() - 2); ++i) {
-                indices[i * 3] = 0;
-                indices[i * 3 + 1] = i + 1;
-                indices[i * 3 + 2] = i + 2;
-            }
-
-            return indices;
+    // The side (1 left, -1 right of the direction of the edges) of the outside of a closed outline
+    static float outerSide(List<Vector2f> outline) {
+        float area = 0f;
+        for (int i = 0; i < outline.size(); ++i) {
+            Vector2f a = outline.get(i);
+            Vector2f b = outline.get((i + 1) % outline.size());
+            area += a.x * b.y - b.x * a.y;
         }
-
-        return polygon.earClipIndices();
+        // Positive area: the inside is on the left of the edges
+        return area > 0f ? -1f : 1f;
     }
 
     @Override
-    protected float[] calculatePosition() {
-        float[] position = calculateTexturePosition();
+    boolean geometryOutdated() {
+        return builtSize.x != scale().x || builtSize.y != scale().y || !builtReference.equals(getReferencePoint());
+    }
 
+    @Override
+    void buildGeometry(StrokeMesh mesh, boolean withStroke) {
+        builtSize.set(scale().x, scale().y);
+        builtReference.set(getReferencePoint());
+
+        // The vertices in the frame of the shape: world units from the reference point
+        Vector4f box = polygon.getBoundingBox();
+        float width = Math.max(box.z - box.x, 1e-6f);
+        float height = Math.max(box.w - box.y, 1e-6f);
         Vector2f reference = getReferencePoint();
-
-        if (reference.x != 0 || reference.y != 0) {
-            for (int i = 0; i < position.length; i += 2) {
-                position[i] -= reference.x;
-                position[i + 1] -= reference.y;
-            }
+        List<Vector2f> outline = new ArrayList<>();
+        float[] positions = new float[polygon.size() * 2];
+        for (int i = 0; i < polygon.size(); ++i) {
+            Vector2f vertex = polygon.get(i);
+            float x = ((vertex.x - box.x) / width - reference.x) * scale().x;
+            float y = ((vertex.y - box.y) / height - reference.y) * scale().y;
+            positions[i * 2] = x;
+            positions[i * 2 + 1] = y;
+            outline.add(new Vector2f(x, y));
         }
 
-        return position;
+        mesh.addFill(positions, fillIndices, StrokeMesh.FILL_COLOR);
+        mesh.addFillFringe(Stroker.stroke(outline, true, EStrokeJoin.MITER, EStrokeCap.BUTT, FRINGE_MITER_LIMIT),
+                outerSide(outline), StrokeMesh.FILL_COLOR);
+
+        if (withStroke)
+            mesh.addStroke(Stroker.stroke(outline, true, getJoin(), EStrokeCap.BUTT, getMiterLimit()),
+                    StrokeMesh.STROKE_COLOR);
     }
 }

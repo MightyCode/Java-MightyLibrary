@@ -173,8 +173,10 @@ public class Camera2D extends Camera {
         setZoomLevel(new Vector2f(this.zoomLevel.x, zoomLevel));
     }
 
-    public void setZoomLevel(Vector2f zoomLevel) {
+    // Copied (then kept between the min and max levels): the vector given stays the caller's
+    public void setZoomLevel(Vector2f newZoomLevel) {
         Vector2f previousZoom = new Vector2f(this.zoomLevel);
+        Vector2f zoomLevel = new Vector2f(newZoomLevel);
 
         if (zoomLevel.x < minZoomLevel)
             zoomLevel.x = minZoomLevel;
@@ -202,8 +204,9 @@ public class Camera2D extends Camera {
         updateView();
     }
 
+    // A copy: setZoomLevel changes it
     public Vector2f getZoomLevel() {
-        return zoomLevel;
+        return new Vector2f(zoomLevel);
     }
 
     public void setRotation(float newRotation){
@@ -230,7 +233,7 @@ public class Camera2D extends Camera {
 
     public Camera2D copy(){
         Camera2D copy = new Camera2D(windowInfo, camPos, invertView);
-        copy.setZoomLevel(zoomLevel);
+        copy.setZoomLevel(new Vector2f(zoomLevel));
         copy.setRotation(rotation);
 
         return copy;
