@@ -39,6 +39,7 @@ Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en 
 - **macOS** : les tests `gl` exigent `-XstartOnFirstThread` dans l'`argLine` de Surefire (non testé, comme les autres natives macOS).
 - **Comparaison d'images** (tests de rendu au pixel près) : capture de la fenêtre cachée (`Screenshot`) comparée à une image de référence, avec tolérance (pilotes différents, Mesa en CI).
 - **Serveur dédié** sur le cœur sans GL (`Engine.setupHeadless`) : boucle sans fenêtre (`MainLoop.tick` seul, ou `frame` sans affichage), réseau ; préparé, pas fait.
+- **Couche du joueur des configs** : un moteur de test garde le dossier de données par défaut (`data/` du dossier du module) ; un test qui appelle `picture` ou `ConfigData.set` y écrirait. Le kit devrait le rediriger vers un dossier temporaire (`EngineConfig.setPlayerDataFolder`).
 - **Plusieurs moteurs de test en parallèle** : impossible tant que `MainThread`, `Workers`, `GameTime`, `Views`… sont statiques (le kit refuse un second moteur) ; l'exécution parallèle de JUnit reste à éteindre pour les tests du kit.
 
 ## Bugs relevés en passant (non corrigés)
