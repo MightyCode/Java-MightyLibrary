@@ -316,22 +316,17 @@ public abstract class Renderer extends UUID implements IDisplayable {
         applyModel();
     }
 
+    // Through setPosition: a subclass that follows the position sees these changes too
     public final void setX(float x){
-        this.position.x = x;
-
-        applyModel();
+        setPosition(new Vector3f(x, position.y, position.z));
     }
 
     public final void setY(float y){
-        this.position.y = y;
-
-        applyModel();
+        setPosition(new Vector3f(position.x, y, position.z));
     }
 
     public final void setZ(float z){
-        this.position.z = z;
-
-        applyModel();
+        setPosition(new Vector3f(position.x, position.y, z));
     }
 
     public final void setScale(Vector3f scale){

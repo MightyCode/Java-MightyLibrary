@@ -214,9 +214,16 @@ public final class Text extends MeshRenderer {
         if (position == null || (position.x == position().x && position.y == position().y))
             return this;
 
-        super.setPosition(new Vector3f(position.x, position.y, 0.0f));
+        setPosition(new Vector3f(position.x, position.y, 0.0f));
 
         return this;
+    }
+
+    // The box of the text (leftUpPosition) follows the position
+    @Override
+    public void setPosition(Vector3f position) {
+        super.setPosition(position);
+        computeRightUpPosition();
     }
 
     public Vector2f leftUpPosition() { return this.leftUpPosition; }
