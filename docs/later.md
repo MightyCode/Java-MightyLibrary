@@ -98,6 +98,13 @@ D'après LearnOpenGL « 2D Game » (Breakout).
 Exigences : 2D au pixel près, cas complexes compris ; 3D compatible plus tard. Une boîte poussée **reste collée** au joueur (aucun écart, aucun tremblement). Un projet C++ précédent a échoué sur le test ci-dessous.
 - Constat : JBox2D 2.2.1.1 non maintenu, sans nom de module (module automatique `jbox2d.library`) (seulement `physics/B2Utils`, `Box2D`, `platformer2d`). Collisions maison (`physics/collision`, ~500 lignes : `CollisionRectangle`, `CollisionBoundedVolume2D`, `Collision2DGrid`, `replaceComparedTo`), base de la physique arcade.
 
+### Unité du monde (à trancher au début du point, avec `/planification-ml`)
+Aujourd'hui 1 unité du monde 2D = 1 pixel virtuel, en dur (`Camera2D.updateProjection` : `ortho` sur la taille virtuelle ; tailles en pixels : `setSizePix`, `setSizeToTexture`, tuiles de `TileMapRenderer`) ; `B2Utils.setB2ToEngineVector` est une échelle **statique globale** (un seul monde possible ; seul `PlatformerBox2D` l'utilise). Suffit à un pixel-art (comme Godot, Bevy), mais pas aux mètres que veut Box2D (objets mobiles de 0,1 à 10 m), ni à des images de résolutions différentes (images HD d'un mod).
+- Cible : trois échelles séparées, défaut 1 (rien ne change pour l'existant). **Caméra** : pixels virtuels par unité, défaut du projet dans `EngineConfig`, valeur propre possible par `Camera2D`, distincte du zoom du joueur (le zoom fait déjà ce travail aujourd'hui) ; souris convertie en unités du monde. **Image** : taille d'un sprite en unités = pixels / PPU, `"pixelsPerUnit"` par texture dans `textures.json` et les tilesets (défaut du projet sinon), comme Unity. **Physique** : unités par mètre propres à chaque monde (fin du statique de `B2Utils`).
+- GUI et console restent en pixels virtuels (espace écran).
+- 3D : unité déjà libre (perspective, modèles dans leurs unités) ; viser une même unité du monde pour 2D et 3D (≈ 1 m, au choix du projet), le PPU donnant la taille d'un sprite ou d'un texte posé dans un monde 3D (`Game3D2D`). Rien à changer en 3D.
+- À fixer au plus tard avant l'API Lua des entités (les distances du gameplay s'y figent) ; lien avec « Pixel perfect » (`futur-discussion.md`) et « Tailles automatiques ».
+
 ### Test d'acceptation : `PhysicsCratesScene`
 Trois caisses empilées sur une plateforme mobile (horizontale et verticale) ; pousser celle du bas (la pile suit), puis celle du haut (elle seule bouge et tombe du bord) ; une caisse écrasée contre un mur. Aucun écart d'un pixel, aucun retard d'une frame, aucun tremblement.
 
