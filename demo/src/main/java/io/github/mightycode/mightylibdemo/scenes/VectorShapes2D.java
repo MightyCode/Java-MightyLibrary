@@ -19,6 +19,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RoundedRectang
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.TriangleRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.VectorShape2DRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
+import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -41,8 +42,10 @@ import static org.lwjgl.glfw.GLFW.*;
  * half transparent stroke, corners of different radii, a turning shape, a stroke of one pixel, sharp edges, a tinted
  * texture. Then points (a wave moved at each frame); polylines with each join (miter, round, bevel: one row each)
  * and cap (butt, round, square), a closed half transparent line, a line of one screen pixel at every zoom, arrows,
- * a concave polygon with a stroke and the polygon of Scene2D; over a background grid of lines one pixel wide. Z / X zoom, Q / E turn the camera, R resets it, U switches the unit of the strokes (world / screen
- * pixels), A switches the anti-aliasing.
+ * a concave polygon with a stroke and the polygon of Scene2D; over a background grid of lines one pixel wide.
+ * Controls (letters of a French AZERTY keyboard, read by their position like the other bindings of the demo): the wheel
+ * zooms, Ctrl held zooms in, Shift held zooms out, Alt + wheel turns the camera, Z Q S D move it, R resets it,
+ * X switches the unit of the strokes (world / screen pixels), W switches the anti-aliasing.
  */
 public class VectorShapes2D extends Scene {
     private static final float CELL_WIDTH = 150f;
@@ -64,6 +67,16 @@ public class VectorShapes2D extends Scene {
     private PolylineRenderer hairline;
     private float time;
     private Text help;
+
+    // Physical keys (GLFW names the positions of a QWERTY keyboard): the letters W and X of an AZERTY keyboard
+    private static final int ANTIALIASING_KEY = GLFW_KEY_Z;
+    private static final int STROKE_UNIT_KEY = GLFW_KEY_X;
+    private static final int RESET_KEY = GLFW_KEY_R;
+    // World units per second at zoom 1, zoom factor per second (keys) and per notch of the wheel, radians per notch
+    private static final float MOVE_SPEED = 600f;
+    private static final float KEY_ZOOM_SPEED = 1.5f;
+    private static final float WHEEL_ZOOM_STEP = 1.15f;
+    private static final float WHEEL_ROTATION_STEP = (float) Math.toRadians(5);
 
     private boolean screenUnits;
     private boolean antialiasing = true;
@@ -297,9 +310,9 @@ public class VectorShapes2D extends Scene {
     }
 
     private void updateHelp() {
-        help.setText("Z / X zoom, Q / E turn the camera, R reset\n"
-                + "U stroke unit: " + (screenUnits ? "screen pixels" : "world") + "\n"
-                + "A anti-aliasing: " + (antialiasing ? "on" : "off"));
+        help.setText("Wheel / Ctrl / Shift zoom, Alt + wheel turn, Z Q S D move, R reset\n"
+                + "X stroke unit: " + (screenUnits ? "screen pixels" : "world") + "\n"
+                + "W anti-aliasing: " + (antialiasing ? "on" : "off"));
     }
 
     @Override
@@ -312,25 +325,19 @@ public class VectorShapes2D extends Scene {
         KeyboardManager keyboard = context().getKeyboardManager();
         float delta = GameTime.DeltaTime();
 
-        if (keyboard.getKeyState(GLFW_KEY_Z))
-            camera2D().setZoomLevel(camera2D().getZoomLevel().x * (1f + delta));
-        if (keyboard.getKeyState(GLFW_KEY_X))
-            camera2D().setZoomLevel(camera2D().getZoomLevel().x / (1f + delta));
-        if (keyboard.getKeyState(GLFW_KEY_Q))
-            camera2D().setRotation(camera2D().getRotation() - delta * 0.5f);
-        if (keyboard.getKeyState(GLFW_KEY_E))
-            camera2D().setRotation(camera2D().getRotation() + delta * 0.5f);
-        if (keyboard.keyPressed(GLFW_KEY_R))
+        moveCamera(delta);
+        zoomAndTurnCamera(keyboard, delta);
+        if (keyboard.keyPressed(RESET_KEY))
             resetCamera();
 
-        if (keyboard.keyPressed(GLFW_KEY_U)) {
+        if (keyboard.keyPressed(STROKE_UNIT_KEY)) {
             screenUnits = !screenUnits;
             for (int i = 0; i < shapes.size(); ++i)
                 applyStroke(i);
             updateHelp();
         }
 
-        if (keyboard.keyPressed(GLFW_KEY_A)) {
+        if (keyboard.keyPressed(ANTIALIASING_KEY)) {
             antialiasing = !antialiasing;
             for (VectorShape2DRenderer shape : shapes)
                 shape.setAntialiasing(antialiasing);
@@ -342,6 +349,44 @@ public class VectorShapes2D extends Scene {
         time += delta;
         for (int i = 0; i < wave.pointCount(); ++i)
             wave.setPoint(i, new Vector2f(i * 12f, (float) Math.sin(time * 2 + i * 0.25) * 25f));
+    }
+
+    // Z Q S D (the move actions of the demo, arrows too): along the axes of the screen, at the same speed on the screen
+    // whatever the zoom (the position of the camera is in the turned world, scaled by the zoom)
+    private void moveCamera(float delta) {
+        IInputManager inputs = context().getInputManager();
+        Vector2f direction = new Vector2f(
+                inputs.getValue(ActionId.MOVE_RIGHT_2D) - inputs.getValue(ActionId.MOVE_LEFT_2D),
+                inputs.getValue(ActionId.MOVE_DOWN_2D) - inputs.getValue(ActionId.MOVE_UP_2D));
+        if (direction.lengthSquared() == 0f)
+            return;
+
+        if (direction.lengthSquared() > 1f)
+            direction.normalize();
+        Vector2f zoom = camera2D().getZoomLevel();
+        direction.mul(MOVE_SPEED * delta).div(zoom);
+        camera2D().setPos(camera2D().getCamPosCopy().add(direction));
+    }
+
+    // The wheel zooms (turns with Alt), Ctrl held zooms in, Shift held zooms out, around the center of the view
+    private void zoomAndTurnCamera(KeyboardManager keyboard, float delta) {
+        float wheel = context().getMouseManager().getMouseScroll().y;
+        boolean alt = keyboard.getKeyState(GLFW_KEY_LEFT_ALT) || keyboard.getKeyState(GLFW_KEY_RIGHT_ALT);
+
+        float factor = 1f;
+        if (wheel != 0f) {
+            if (alt)
+                camera2D().setRotation(camera2D().getRotation() + wheel * WHEEL_ROTATION_STEP);
+            else
+                factor *= (float) Math.pow(WHEEL_ZOOM_STEP, wheel);
+        }
+        if (keyboard.getKeyState(GLFW_KEY_LEFT_CONTROL) || keyboard.getKeyState(GLFW_KEY_RIGHT_CONTROL))
+            factor *= (float) Math.pow(KEY_ZOOM_SPEED, delta);
+        if (keyboard.getKeyState(GLFW_KEY_LEFT_SHIFT) || keyboard.getKeyState(GLFW_KEY_RIGHT_SHIFT))
+            factor /= (float) Math.pow(KEY_ZOOM_SPEED, delta);
+
+        if (factor != 1f)
+            camera2D().setZoomLevel(camera2D().getZoomLevel().x * factor);
     }
 
     @Override
