@@ -157,11 +157,13 @@ Dépend du point d'injection (thèmes et langues fournis par le projet et les mo
 - **Polices** : gestion des styles (une famille liée logiquement à ses variantes Regular, Bold, Italic, BoldItalic, `setFont(famille, style)` ; le moteur livre déjà les 4 atlas de chaque famille), polices sur plusieurs fichiers (pages, plusieurs tailles), texte net à toutes les tailles (atlas SDF/MSDF, ou atlas généré au lancement depuis le `.ttf`) ; à décider avec l'utilisateur.
 
 ## Rendu SVG
-Après le rendu 2D (`current.md` : contours épais et anticrénelage communs).
+Après le rendu 2D (`current.md`). Contours épais, jointures, extrémités et anticrénelage par frange existent : `Stroker` (`StrokeGeometry`) et le shader `stroke2D` (`architecture.md`, Formes 2D), à réutiliser.
 - Viser le noyau des profils légers (SVG Tiny/Native, NanoSVG) : chemins (segments, Bézier) remplis ou tracés ; texte converti en chemins à l'export.
 - Sous-ensemble : chemins et formes de base, remplissage et contour unis, opacité, transformations, `viewBox` ; plus tard dégradés. Hors champ : texte, CSS, filtres, masques, SMIL.
-- Approche (à confirmer) : `SVGData` (`DataType`, workers, NanoSVG de LWJGL) aplatit et triangule remplissages et contours (épaisseur, jointures, extrémités) ; `SVGRenderer extends Renderer` + shader `svg` ; un appel par SVG ; anticrénelage MSAA ou bande de fondu. Plus tard si besoin : courbes dans le fragment shader (Loop-Blinn, SDF).
+- Approche (à confirmer) : `SVGData` (`DataType`, workers, NanoSVG de LWJGL) aplatit les chemins et triangule les remplissages, contours par `Stroker` ; `SVGRenderer extends Renderer` + shader `svg` (sur le modèle de `stroke2D`) ; un appel par SVG ; anticrénelage par frange comme `PolygonRenderer`. Plus tard si besoin : courbes dans le fragment shader (Loop-Blinn, SDF).
 - `SVGScene` : icônes à plusieurs échelles.
+- Avec le SVG : courbes de Bézier aplaties avant `Stroker`, dégradés, **tirets** (découpe de la polyligne avant `Stroker`).
+- **Recouvrement d'un contour semi-transparent sur lui-même** : une polyligne qui se coupe (ou la pointe ouverte d'une flèche sur sa ligne) mélange deux fois la couleur aux croisements (les jointures, elles, ne se recouvrent pas) ; cible : stencil (forme dans le stencil, puis une passe de couleur) ou couverture maximale, à décider avec le SVG.
 
 ## Entrées : remappage et manettes
 - Touches modifiables à l'exécution, sauvegardées/chargées depuis un fichier, sur les clés du registre (identifiants stables, `InputRegistry` ; liaisons par défaut déclarées par les plugins) ; scène prefab de changement des touches.
