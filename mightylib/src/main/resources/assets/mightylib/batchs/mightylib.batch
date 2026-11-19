@@ -29,6 +29,7 @@
                 "colorShape2D",
                 "colorEllipse2D",
                 "texture2D",
+                "roundedRectangle2D",
                 "multiColoredShape2D",
                 "coloredText",
                 "postProcessing",

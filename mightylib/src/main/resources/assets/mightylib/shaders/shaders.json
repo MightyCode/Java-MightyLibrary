@@ -14,6 +14,13 @@
 			],
 			"tags" : ["2D"]
 		},
+		"roundedRectangle2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"2D/shape/roundedRectangle2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
 		"texture2D": {
 			"files": [
 				"2D/essential/texture2DV.glsl",

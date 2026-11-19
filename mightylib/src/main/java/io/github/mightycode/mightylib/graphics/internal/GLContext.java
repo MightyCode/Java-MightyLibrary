@@ -47,6 +47,9 @@ public final class GLContext {
 
     // Program bound in this context, -1 when unknown: avoids sending glUseProgram again
     private int currentProgram = -1;
+    // Size of the viewport of this context in pixels (glViewport through setViewport), 0 before the first one
+    private int viewportWidth;
+    private int viewportHeight;
 
     // GL ids are unique: a set, removed in constant time
     private final Set<Integer> vaos = new LinkedHashSet<>();
@@ -211,6 +214,21 @@ public final class GLContext {
                 context.currentProgram = -1;
         }
     }
+
+    // ---- Viewport ----
+
+    // glViewport, remembered by the current context (read by the shaders that size things in pixels)
+    public static void setViewport(int x, int y, int width, int height) {
+        glViewport(x, y, width, height);
+        if (current != null) {
+            current.viewportWidth = width;
+            current.viewportHeight = height;
+        }
+    }
+
+    public int viewportWidth() { return viewportWidth; }
+
+    public int viewportHeight() { return viewportHeight; }
 
     // ---- Objects owned by the context ----
 

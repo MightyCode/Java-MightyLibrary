@@ -1,0 +1,198 @@
+package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
+
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
+import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
+import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
+import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
+import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import org.joml.Vector2f;
+import org.joml.Vector4f;
+
+/**
+ * A 2D shape drawn by its signed distance on a quad (the rectangle of the shape, widened for the stroke and the
+ * anti-aliasing): smooth edges at every zoom and rotation, a stroke inside, centered on or outside the edge, a fill
+ * of a color or of a texture tinted by the color.
+ * <p>
+ * Fill: the color of setColorMode (white by default; alpha 0 for the stroke alone), or the main texture
+ * (setMainTextureChannel) multiplied by the color; setColorMode(color) stops the texture, setColorMode(color, false)
+ * keeps it. The size, the reference point and the rotation are those of Shape2DRenderer.
+ * <p>
+ * A project adds its own shape: a fragment shader that includes utils/shape2D.glsl and gives its distance to
+ * shapeColor (vertex shader 2D/shape/shape2DV.glsl), declared in shaders.json, and a subclass that sends its
+ * parameters (writeShapeParameters) and, when it goes beyond its rectangle, its margin (extraMargin).
+ */
+public abstract class VectorShape2DRenderer extends Shape2DRenderer {
+    private static final String SIZE = "shapeSize";
+    private static final String REFERENCE = "shapeReference";
+    private static final String STROKE_COLOR = "strokeColor";
+    private static final String STROKE_WIDTH = "strokeWidth";
+    private static final String STROKE_ALIGNMENT = "strokeAlignment";
+    private static final String STROKE_UNIT = "strokeUnit";
+    private static final String ANTIALIASING = "antialiasing";
+    private static final String MARGIN = "shapeMargin";
+    private static final String TEXTURE_POSITION = "shapeTexturePosition";
+    private static final String TEXTURED = "shapeTextured";
+    private static final String PARAMETERS_0 = "shapeParams0";
+    private static final String PARAMETERS_1 = "shapeParams1";
+
+    private final ShapeStroke stroke;
+    private boolean antialiasing;
+
+    // Sent at each draw (the program skips the unchanged ones), filled in place
+    private final Vector2f size = new Vector2f();
+    private final Vector2f reference = new Vector2f();
+    private final Vector4f texturePosition = new Vector4f();
+    private final Vector4f parameters0 = new Vector4f();
+    private final Vector4f parameters1 = new Vector4f();
+    private final ShaderValue strokeWidthValue;
+    private final ShaderValue strokeColorValue;
+    private final ShaderValue strokeAlignmentValue;
+    private final ShaderValue strokeUnitValue;
+    private final ShaderValue antialiasingValue;
+    private final ShaderValue marginValue;
+    private final ShaderValue texturedValue;
+
+    protected VectorShape2DRenderer(String shaderName) {
+        super(shaderName, true);
+
+        stroke = new ShapeStroke();
+        antialiasing = true;
+
+        addShaderValue(SIZE, Vector2f.class, size);
+        addShaderValue(REFERENCE, Vector2f.class, reference);
+        addShaderValue(TEXTURE_POSITION, Vector4f.class, texturePosition);
+        addShaderValue(PARAMETERS_0, Vector4f.class, parameters0);
+        addShaderValue(PARAMETERS_1, Vector4f.class, parameters1);
+        strokeWidthValue = addValue(STROKE_WIDTH, Float.class, 0f);
+        strokeColorValue = addValue(STROKE_COLOR, Color4f.class, stroke.color());
+        strokeAlignmentValue = addValue(STROKE_ALIGNMENT, Float.class, 0f);
+        strokeUnitValue = addValue(STROKE_UNIT, Float.class, 0f);
+        antialiasingValue = addValue(ANTIALIASING, Float.class, 1f);
+        marginValue = addValue(MARGIN, Float.class, 0f);
+        texturedValue = addValue(TEXTURED, Integer.class, 0);
+
+        super.setColorMode(new Color4f(1f, 1f, 1f, 1f));
+        setTexturePosition(RectangularFace.BasicTexturePosition());
+    }
+
+    private ShaderValue addValue(String name, Class<?> type, Object object) {
+        addShaderValue(name, type, object);
+        return getShaderValue(name);
+    }
+
+    @Override
+    protected int[] getIndices() {
+        return RectangularFace.IndicesForSquare();
+    }
+
+    @Override
+    protected float[] calculatePosition() {
+        return RendererUtils.calculatePositionForSquare(new Vector2f(1, 1), getReferencePoint());
+    }
+
+    // Not read by the vector shaders (they place the texture themselves), kept for a shader of a project
+    @Override
+    protected float[] calculateTexturePosition() {
+        return new RectangularFace().textureCornerPosition(getTexturePosition());
+    }
+
+    /**
+     * Hook: the values of the shape are set before each draw, then sent (sendShaderValues); a subclass that sends
+     * more redefines it and calls super.
+     */
+    @Override
+    public void updateShader() {
+        size.set(scale().x, scale().y);
+        reference.set(getReferencePoint());
+        texturePosition.set(getTexturePosition());
+        texturedValue.setObject(getMainTexture() != null
+                && getMesh().isEnableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL) ? 1 : 0);
+
+        strokeWidthValue.setObject(stroke.width());
+        strokeColorValue.setObject(stroke.color());
+        strokeAlignmentValue.setObject(stroke.alignment().outsideFraction());
+        strokeUnitValue.setObject(stroke.unit().shaderValue());
+        antialiasingValue.setObject(antialiasing ? 1f : 0f);
+        marginValue.setObject(Math.max(extraMargin(), 0f));
+
+        writeShapeParameters(parameters0, parameters1);
+
+        super.updateShader();
+    }
+
+    /**
+     * Hook called before each draw: writes the parameters of the shape (read by its fragment shader as shapeData0
+     * and shapeData1) into the two vectors, in place. Their previous values are kept when not written.
+     */
+    protected void writeShapeParameters(Vector4f first, Vector4f second) {
+        // No parameter by default
+    }
+
+    /**
+     * Hook called before each draw: how far (world units) the shape goes beyond the rectangle of its size, so that
+     * its quad covers it. 0 by default.
+     */
+    protected float extraMargin() {
+        return 0f;
+    }
+
+    // Hook (call super): no fill (transparent color), the stroke is kept
+    @Override
+    public void setNoColorNoTextureMode() {
+        super.setNoColorNoTextureMode();
+        super.setColorMode(new Color4f(0f, 0f, 0f, 0f));
+    }
+
+    // ---- Stroke ----
+
+    // Width of the stroke, 0 (the default) for none; in the unit of setStrokeUnit
+    public final VectorShape2DRenderer setStrokeWidth(float width) {
+        stroke.setWidth(width);
+        return this;
+    }
+
+    public final float getStrokeWidth() {
+        return stroke.width();
+    }
+
+    // Black by default
+    public final VectorShape2DRenderer setStrokeColor(Color4f color) {
+        stroke.setColor(color);
+        return this;
+    }
+
+    public final Color4f getStrokeColor() {
+        return stroke.color();
+    }
+
+    // CENTERED by default
+    public final VectorShape2DRenderer setStrokeAlignment(EStrokeAlignment alignment) {
+        stroke.setAlignment(alignment);
+        return this;
+    }
+
+    public final EStrokeAlignment getStrokeAlignment() {
+        return stroke.alignment();
+    }
+
+    // WORLD by default (the width follows the zoom), SCREEN_PIXELS for the same width at every zoom
+    public final VectorShape2DRenderer setStrokeUnit(EStrokeUnit unit) {
+        stroke.setUnit(unit);
+        return this;
+    }
+
+    public final EStrokeUnit getStrokeUnit() {
+        return stroke.unit();
+    }
+
+    // Smooth edges over one pixel (the default), or sharp ones (pixel art)
+    public final VectorShape2DRenderer setAntialiasing(boolean antialiasing) {
+        this.antialiasing = antialiasing;
+        return this;
+    }
+
+    public final boolean isAntialiasing() {
+        return antialiasing;
+    }
+}

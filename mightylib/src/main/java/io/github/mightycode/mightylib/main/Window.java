@@ -461,6 +461,6 @@ public final class Window {
     }
 
     private void setViewPort(int x, int y, int w, int h){
-        glViewport(x, y, w, h);
+        GLContext.setViewport(x, y, w, h);
     }
 }
