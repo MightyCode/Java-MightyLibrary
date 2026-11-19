@@ -114,7 +114,8 @@ public final class ArrowRenderer extends GeometricShape2DRenderer {
             if (headLength < lastLength)
                 shaft.add(headBase);
             if (withStroke)
-                mesh.addStroke(Stroker.stroke(shaft, false, getJoin(), cap, getMiterLimit()), StrokeMesh.STROKE_COLOR);
+                mesh.addStroke(Stroker.stroke(shaft, false, getJoin(), cap, EStrokeCap.BUTT, getMiterLimit()),
+                        StrokeMesh.STROKE_COLOR);
 
             if (headLength > 0f && headWidth > 0f) {
                 List<Vector2f> head = List.of(tip, firstWing, secondWing);

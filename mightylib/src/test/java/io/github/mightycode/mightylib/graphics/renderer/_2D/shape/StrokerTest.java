@@ -70,6 +70,23 @@ class StrokerTest {
         }
     }
 
+    @Test
+    void eachEndHasItsOwnCap() {
+        StrokeGeometry geometry = Stroker.stroke(points(0, 0, 10, 0), false, EStrokeJoin.MITER, EStrokeCap.ROUND,
+                EStrokeCap.BUTT, Stroker.DEFAULT_MITER_LIMIT);
+        // A round cap at the start, a butt one at the end
+        assertEquals((2 + 1 + ROUND_STEPS + 1) + FLAT_CAP_VERTICES, geometry.vertexCount());
+        assertEquals(2 + ROUND_STEPS + FLAT_CAP_TRIANGLES, triangles(geometry));
+        assertNoDegenerateTriangle(geometry, 2f, 0.5f);
+
+        // The end stops half a fringe after the end point, the start goes round before it
+        assertEquals(10f + 0.5f, maxX(geometry, 2f, 0.5f), EPSILON);
+        float minX = Float.MAX_VALUE;
+        for (int i = 0; i < geometry.vertexCount(); ++i)
+            minX = Math.min(minX, geometry.position(i, 2f, 0.5f).x);
+        assertEquals(-2.5f, minX, EPSILON);
+    }
+
     private static float distanceToNearestEnd(Vector2f point) {
         return Math.min(point.distance(0, 0), point.distance(10, 0));
     }
@@ -243,6 +260,8 @@ class StrokerTest {
                 () -> Stroker.stroke(points(0, 0, 1, 1), false, null, EStrokeCap.BUTT, 4f));
         assertThrows(IllegalArgumentException.class,
                 () -> Stroker.stroke(points(0, 0, 1, 1), false, EStrokeJoin.MITER, null, 4f));
+        assertThrows(IllegalArgumentException.class,
+                () -> Stroker.stroke(points(0, 0, 1, 1), false, EStrokeJoin.MITER, EStrokeCap.BUTT, null, 4f));
     }
 
     @Test

@@ -38,14 +38,23 @@ public final class Stroker {
      */
     public static StrokeGeometry stroke(List<Vector2f> points, boolean closed, EStrokeJoin join, EStrokeCap cap,
                                         float miterLimit) {
-        if (points == null || join == null || cap == null)
-            throw new IllegalArgumentException("The points, the join and the cap of a stroke can't be null");
+        return stroke(points, closed, join, cap, cap, miterLimit);
+    }
+
+    /**
+     * The stroke of an open polyline with a cap of its own at each end (an arrow ends flat under its head); closed:
+     * no cap, as stroke.
+     */
+    public static StrokeGeometry stroke(List<Vector2f> points, boolean closed, EStrokeJoin join, EStrokeCap startCap,
+                                        EStrokeCap endCap, float miterLimit) {
+        if (points == null || join == null || startCap == null || endCap == null)
+            throw new IllegalArgumentException("The points, the join and the caps of a stroke can't be null");
 
         List<Vector2f> clean = cleanPoints(points, closed);
         if (clean.size() < 2)
-            return new Builder(clean, false, join, cap, miterLimit).geometry();
+            return new Builder(clean, false, join, startCap, endCap, miterLimit).geometry();
 
-        Builder builder = new Builder(clean, closed && clean.size() >= 3, join, cap, miterLimit);
+        Builder builder = new Builder(clean, closed && clean.size() >= 3, join, startCap, endCap, miterLimit);
         builder.build();
         return builder.geometry();
     }
@@ -70,7 +79,8 @@ public final class Stroker {
         private final List<Vector2f> points;
         private final boolean loop;
         private final EStrokeJoin join;
-        private final EStrokeCap cap;
+        private final EStrokeCap startCap;
+        private final EStrokeCap endCap;
         private final float miterLimit;
 
         private final int segmentCount;
@@ -89,11 +99,13 @@ public final class Stroker {
         private final FloatList limits = new FloatList();
         private final List<Integer> indices = new ArrayList<>();
 
-        Builder(List<Vector2f> points, boolean loop, EStrokeJoin join, EStrokeCap cap, float miterLimit) {
+        Builder(List<Vector2f> points, boolean loop, EStrokeJoin join, EStrokeCap startCap, EStrokeCap endCap,
+                float miterLimit) {
             this.points = points;
             this.loop = loop;
             this.join = join;
-            this.cap = cap;
+            this.startCap = startCap;
+            this.endCap = endCap;
             this.miterLimit = miterLimit;
 
             segmentCount = points.size() < 2 ? 0 : (loop ? points.size() : points.size() - 1);
@@ -146,6 +158,7 @@ public final class Stroker {
             else
                 ends[segment] = new int[]{left, right};
 
+            EStrokeCap cap = atStart ? startCap : endCap;
             switch (cap) {
                 case ROUND:
                     // Half disk from the left edge through the outward direction to the right edge
