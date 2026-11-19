@@ -29,15 +29,6 @@ Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en 
 - Pas de bug découvert hors du point : il va dans « Bugs relevés en passant » ou dans `futur-discussion.md`.
 - Pas de second gros point : un objectif qui grossit au point d'en devenir un retourne dans `later.md`.
 
-## Gamma : rendu linéaire activable et réglable
-LearnOpenGL « Gamma Correction ». Tôt car il change toutes les couleurs à l'écran.
-- Constat : aucun `GL_SRGB*`, calculs en sRGB → éclairage 3D trop sombre, fondus et dégradés ternes (peu visible en pixel art).
-- Règle : `Color4f` et textures du projet sont en sRGB.
-- Activation : option `EngineConfig` + par scène, désactivée par défaut, activée par défaut en 3D éclairée. Active : textures de couleur en `GL_SRGB8_ALPHA8` (pas les cartes de données : normales, spéculaire, hauteurs), couleurs uniformes converties en linéaire, `GL_FRAMEBUFFER_SRGB` ou conversion dans la passe finale si framebuffer intermédiaire (`VirtualSceneRenderer`).
-- Réglage joueur : gamma/luminosité dans une passe finale (`pow(c, 1/gamma)`), modifiable à l'exécution, sauvegardé.
-- Shaders : la conversion en linéaire passe par un define global (`engine.shaders().setDefine`, par exemple `LINEAR_COLORS`), lu par les shaders de couleur ; un changement relit tous les shaders.
-- `GammaScene` : dégradés, fondus alpha, éclairage, activé/désactivé côte à côte.
-
 ## Tests de non-régression
 À étendre (liste des tests : `CLAUDE.md`) : scénarios en jeu via `tools/mighty.py` vérifiant du texte ; fuites par allers-retours de scènes. Filet avant les gros chantiers suivants.
 - **Logique pure encore sans test** (`python tools/coverage.py`) : `Animation` / `Animator` (le constructeur de `Animation` lit `Views.engine().resources()` : lui passer `Resources` en paramètre, en gardant le constructeur actuel pour l'usage courant, permettrait de les tester sans moteur) et `FallbackAnimationData` (demande une `Resources`) ; `physics/B2Utils` (conversions JBox2D, à voir avec la physique 2D).
@@ -99,7 +90,7 @@ Les estimations de `DataType.estimatedCpuBytes`/`estimatedGpuBytes` ne servent a
 D'après LearnOpenGL « 2D Game » (Breakout).
 - **Particules** (absentes) : émetteurs (position, forme, débit, rafales) ; durée de vie, vitesse, forces, couleur/taille/rotation/opacité dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; pool sans allocation par frame ; émetteurs en JSON (`DataType`), injectables ; espace monde ou local.
 - **Rendu** : simple d'abord, instancing une fois le regroupement des dessins fait (Rendu 2D).
-- **Post-traitement** sur framebuffer (base `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables, par scène. Inclut la passe finale du gamma.
+- **Post-traitement** sur framebuffer (base `VirtualSceneRenderer`) : tremblement, flou, inversion, fondus, vignette ; enchaînables, par scène. La passe finale réglable existe (`IColorService`, `VirtualSceneRenderer`) : la chaîne s'y branche. Pistes liées au gamma : HDR et tone mapping (framebuffer `RGBA16F`), `EXT_texture_sRGB_decode` (lire une texture sRGB sans décodage pour un dessin gamma, au lieu de la réencoder dans le shader).
 - `ParticlesScene` : plusieurs émetteurs, compteur et temps dans `stats`.
 
 ## Physique 2D : remplacer JBox2D

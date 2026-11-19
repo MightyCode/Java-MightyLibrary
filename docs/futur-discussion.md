@@ -6,7 +6,7 @@ Déjà dans le moteur (ne pas reproposer) : A*, Dijkstra, tweens, son positionn�
 
 ## Jeu 2D
 - **Pixel perfect** : agrandissement entier de la résolution virtuelle, bandes noires, caméra calée sur les pixels.
-- **Sauvegardes et réglages** : emplacements, version et migration, écriture sûre (temporaire puis renommage), dossier par système ; réglages persistants (volumes, touches, gamma, langue). Requis par `save.get/set` en Lua.
+- **Sauvegardes et réglages** : `ConfigData` (configs en couches, couche du joueur `data/configs/`, écriture sûre) existe ; reste l'emplacement par système (dossier de données de l'utilisateur), les versions et la migration, les sauvegardes de partie, un menu d'options, et les autres réglages persistants (volumes, touches, langue). Requis par `save.get/set` en Lua.
 - **Import Tiled** (`.tmx`/`.tmj`) : le moteur a son propre format (`resources/map`), le projet C++ plaçait ses entités depuis Tiled.
 - **Transitions et pile de scènes** : fondus, volets ; pause par-dessus le jeu sans le décharger.
 - **Caméra 2D de jeu** : zone morte, anticipation, limites, zoom, tremblement (voir d'abord `Camera2D`).
