@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.lighting.MultiLightingManager;
 import io.github.mightycode.mightylib.graphics.lighting.lights.DirectionalLight;
 import io.github.mightycode.mightylib.graphics.lighting.lights.LightDecrease;
@@ -53,6 +54,9 @@ public class Scene3DBis extends Scene {
     @Override
     public void launch(String[] args){
         /// SCENE INFORMATION ///
+
+        // Lit scene: lighting and blending in linear (F7 switches it)
+        setColorSpace(ERenderColorSpace.LINEAR);
 
         context().getMouseManager().setCursor(false);
         cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
