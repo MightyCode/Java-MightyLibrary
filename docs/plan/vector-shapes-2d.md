@@ -116,3 +116,4 @@ Aucune.
 
 **Branches d'archive** : `archive-dev-2025` garde hors de `dev` `40f4d8a` (padding du texte : `Text.setPadding` existe dans `dev` ; scène `TestGUI`), `437b7ea` (contour de l'ellipse, repris autrement ici), `983c18c` (rectangle arrondi, repris ici) ; `devShader` garde `b50dd27` (« Add log, remove print » : `Shader`, `Texture`, `TextureLoader` de 2024). Supprimées en local et sur `origin` sur confirmation de l'utilisateur.
 
+**Bugs existants corrigés en route** (demandé par l'utilisateur) : `Text.setPosition` ne recalculait pas `leftUpPosition()` (et `Renderer.setX/Y/Z` contournaient le hook `setPosition`) ; un bouton de souris simulé n'atteignait pas les actions (`MouseManager.getState` relisait le seul bouton GLFW) ; `Camera2D.copy()` et `setZoomLevel(Vector2f)` partageaient le vecteur de zoom. Tests : `VectorShapes2DTest` (GL), `MouseRawTest`, `Camera2DZoomTest`.

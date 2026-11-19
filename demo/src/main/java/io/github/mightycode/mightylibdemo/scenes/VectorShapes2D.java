@@ -488,7 +488,7 @@ public class VectorShapes2D extends Scene {
     // The right button held: the world follows the mouse
     private void dragCamera() {
         MouseManager mouse = context().getMouseManager();
-        if (mouse.isCaptured() || !mouse.getButton(GLFW_MOUSE_BUTTON_RIGHT)) {
+        if (mouse.isCaptured() || !context().getInputManager().getState(ActionId.RIGHT_CLICK)) {
             dragging = false;
             return;
         }
@@ -531,11 +531,8 @@ public class VectorShapes2D extends Scene {
             tooltip.setText(label);
             shownLabel = label;
         }
-        // Reference at the top left, no padding: the box of the text starts at its position (leftUpPosition isn't
-        // updated by setPosition, docs/later.md)
-        Vector2f textPosition = mouse.pos().add(18f, 18f);
-        tooltip.setPosition(textPosition);
-        tooltipBackground.setPosition(new Vector2f(textPosition).sub(TOOLTIP_PADDING, TOOLTIP_PADDING));
+        tooltip.setPosition(mouse.pos().add(18f, 18f));
+        tooltipBackground.setPosition(new Vector2f(tooltip.leftUpPosition()).sub(TOOLTIP_PADDING, TOOLTIP_PADDING));
         tooltipBackground.setSizePix(tooltip.size().x + 2 * TOOLTIP_PADDING, tooltip.size().y + 2 * TOOLTIP_PADDING);
     }
 
@@ -558,6 +555,19 @@ public class VectorShapes2D extends Scene {
 
         if (factor != 1f)
             camera2D().setZoomLevel(camera2D().getZoomLevel().x * factor);
+    }
+
+    // For the tests: the renderer named under the mouse (null: none), the box of the tooltip
+    String hoveredLabel() {
+        return hovered;
+    }
+
+    Vector2f tooltipTextPosition() {
+        return new Vector2f(tooltip.leftUpPosition());
+    }
+
+    Vector2f tooltipBackgroundPosition() {
+        return tooltipBackground.get2DPosition();
     }
 
     @Override
