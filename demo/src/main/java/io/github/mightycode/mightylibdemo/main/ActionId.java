@@ -23,6 +23,9 @@ public class ActionId {
     public static final InputAction ENTER = InputAction.of("demo:enter");
     public static final InputAction TAB = InputAction.of("demo:tab");
 
+    // F7: switch the color space of the current scene (ColorSpaceToggleService)
+    public static final InputAction TOGGLE_COLOR_SPACE = InputAction.of("demo:toggle_color_space");
+
     public static final InputAction SELECT_UP = InputAction.of("demo:select_up");
     public static final InputAction SELECT_DOWN = InputAction.of("demo:select_down");
 }

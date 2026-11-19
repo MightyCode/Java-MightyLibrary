@@ -2,6 +2,8 @@ in vec2 texCoords;
 
 out vec4 FragColor;
 
+#include "utils/colorSpace.glsl"
+
 uniform sampler2D ourTexture;
 uniform sampler2D displacementMap;
 uniform float time;
@@ -22,5 +24,5 @@ void main()
 
     // Combine the waves and the water texture to get the final color
     vec4 waterColor = texture(ourTexture, uv + vec2(wave1, wave2) * 0.01 + vec2(wave3, wave1) * 0.005);
-    FragColor = waterColor;
+    FragColor = textureIn(waterColor);
 }

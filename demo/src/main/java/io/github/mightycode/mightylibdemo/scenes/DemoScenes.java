@@ -48,6 +48,8 @@ public final class DemoScenes {
             scene(CommandsScene2D.class, CommandsScene2D::new, "A scene with its own command, spawn, that creates shapes. Open the console with the key left of 1 and try: spawn 3 --color red"),
             scene(ConsoleFeedScene.class, ConsoleFeedScene::new, "Writes a line of every type in the console at a regular pace, to try scrolling, filters and selection while the log moves."),
             scene(CustomRenderer2D.class, CustomRenderer2D::new, "Custom geometry with a custom shader: stars drawn by a MeshRenderer subclass and by a Mesh of the scene. D toggles the depth test."),
+            scene(ColorSpaceSplit2D.class, ColorSpaceSplit2D::new, "The same 2D picture in linear (left half) and gamma (right half): a control ramp, alpha blends, a filtered texture and anti-aliased text. F7 has no effect here."),
+            scene(ColorSpaceSplit3D.class, ColorSpaceSplit3D::new, "The same lit 3D scene in linear (left half) and gamma (right half) with the same camera: the lighting is softer on the left. WASD and the mouse move the camera."),
             scene(DisplayModesScene.class, DisplayModesScene::new, "Windowed, exclusive fullscreen and borderless modes, a second window, the border and the resizing."),
             scene(DocumentationScene.class, DocumentationScene::new, "The reference scene: read its source code, each step of the life of a scene and of its resources is explained."),
             scene(EngineServices2D.class, EngineServices2D::new, "The services of the engine and their plugins (command services), the sound in use (OpenAL or silent) and the overlay of the tick_counter service of the demo, under the console."),

@@ -92,9 +92,14 @@ public final class KeyboardManager {
                 if (action != GLFW_RELEASE && key != GLFW_KEY_UNKNOWN)
                     // The text that came before it in this tick: the editors put them back in order
                     incomingKeyEvents.add(new KeyEvent(key, scancode, mods, action == GLFW_REPEAT,
-                            KeyEvent.LetterOf(glfwGetKeyName(key, scancode)), incomingText.length()));
+                            letterOf(key, scancode, mods), incomingText.length()));
             }
         });
+    }
+
+    // The letter of a key in the layout of the system, asked only when a shortcut can read it (KeyEvent.NeedsLetter)
+    private static char letterOf(int key, int scancode, int mods) {
+        return KeyEvent.NeedsLetter(mods) ? KeyEvent.LetterOf(glfwGetKeyName(key, scancode)) : 0;
     }
 
     public boolean getKeyState(int keyID){
@@ -234,8 +239,10 @@ public final class KeyboardManager {
             state[key] = !blocked && (testState(key) || simulated);
 
             // A simulated key is typed like a real one
-            if (simulated && !oldSimulated[key])
-                events.add(new KeyEvent(key, 0, simulatedMods(), false, KeyEvent.LetterOf(glfwGetKeyName(key, 0))));
+            if (simulated && !oldSimulated[key]) {
+                int mods = simulatedMods();
+                events.add(new KeyEvent(key, 0, mods, false, letterOf(key, 0, mods)));
+            }
             oldSimulated[key] = simulated;
 
             if (state[key]){

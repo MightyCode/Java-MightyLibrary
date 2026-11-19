@@ -26,7 +26,8 @@ public final class TexturePlaceholders implements IGLSharedState {
             placeholderId = GenDeleteResources.GenTexture();
             glBindTexture(GL_TEXTURE_2D, placeholderId);
             ByteBuffer transparent = BufferUtils.createByteBuffer(4);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, transparent);
+            glTexImage2D(GL_TEXTURE_2D, 0, Texture.InternalFormat(ETextureColorSpace.SRGB), 1, 1, 0, GL_RGBA,
+                    GL_UNSIGNED_BYTE, transparent);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             Logger.CheckOpenGLError("Create placeholder texture");
@@ -35,7 +36,8 @@ public final class TexturePlaceholders implements IGLSharedState {
         return placeholderId;
     }
 
-    // The fallback checkerboard as a rectangle texture, for the samplers of rectangle textures (fonts); -1 until ready
+    // The fallback checkerboard as a rectangle texture, for the samplers of rectangle textures (fonts); -1 until ready.
+    // Linear like a font atlas: its values are coverage
     int fallbackRectangleId(Resources resources) {
         if (fallbackRectangleId == -1) {
             TextureData fallback = resources.getFallback(TextureData.class);

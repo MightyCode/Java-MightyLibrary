@@ -37,7 +37,8 @@
 			},
 			"container2_specular" : {
 				"file": "container2_specular.png",
-				"qualityType" : "realistic"
+				"qualityType" : "realistic",
+				"colorSpace" : "linear"
 			},
 			"slime" : {
 				"file" : "slime.png",
@@ -63,7 +64,8 @@
 		"shaderEffects" : {
 			"dispMap1" :  {
 				"file": "displacementMap1.png",
-				"qualityType" : "realistic"
+				"qualityType" : "realistic",
+				"colorSpace" : "linear"
 			},
 			"whitePixel" : {
 				"file" : "whitePixel.png",

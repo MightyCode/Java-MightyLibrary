@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.utils.Logger;
+import org.json.JSONObject;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.stb.STBImage;
 
@@ -13,6 +14,7 @@ import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 
@@ -37,6 +39,9 @@ public class TextureData extends SingleSourceDataType {
 
     int defaultAspectTexture;
     int defaultTextureType;
+    private ETextureColorSpace colorSpace = ETextureColorSpace.SRGB;
+    // Unknown value of textures.json: the data fails when it is read (TextureDataLoader.initWithFile)
+    String rejectedColorSpace;
 
     public TextureData(String name, String path) {
         this(TYPE_SET_UP.THREAD_CONTEXT, name, path);
@@ -67,6 +72,8 @@ public class TextureData extends SingleSourceDataType {
     protected final void copySettingsFrom(TextureData original) {
         defaultAspectTexture = original.defaultAspectTexture;
         defaultTextureType = original.defaultTextureType;
+        colorSpace = original.colorSpace;
+        rejectedColorSpace = original.rejectedColorSpace;
     }
 
     @Override
@@ -211,6 +218,22 @@ public class TextureData extends SingleSourceDataType {
 
     public final void setDefaultTextureType(int defaultTextureType) {
         this.defaultTextureType = defaultTextureType;
+    }
+
+    // SRGB for a color picture (default), LINEAR for a data map; read when the texture is sent to the card
+    public final ETextureColorSpace getColorSpace() {
+        return colorSpace;
+    }
+
+    public final void setColorSpace(ETextureColorSpace colorSpace) {
+        this.colorSpace = Objects.requireNonNull(colorSpace, "colorSpace");
+    }
+
+    @Override
+    protected void describeDetails(JSONObject details) {
+        details.put("colorSpace", colorSpace.jsonName());
+        if (rejectedColorSpace != null)
+            details.put("rejectedColorSpace", rejectedColorSpace);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.algorithms.TerrainGeneration;
 import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
 import io.github.mightycode.mightylib.graphics.renderer._3D.SkyboxRenderer;
@@ -50,6 +51,9 @@ public class TerrainGeneration3D extends Scene {
     @Override
     public void launch(String[] args){
         /// SCENE INFORMATION ///
+
+        // Lit scene: lighting and blending in linear (F7 switches it)
+        setColorSpace(ERenderColorSpace.LINEAR);
 
         context().getMouseManager().setCursor(false);
         cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());

@@ -1,5 +1,7 @@
 out vec4 FragColor;
 
+#include "utils/colorSpace.glsl"
+
 in vec3 FragPos;
 in vec2 TexCoords;
 in vec3 Normal;
@@ -30,7 +32,7 @@ uniform Light light;
 
 void main() {
     // ambient
-    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
+    vec3 ambient = colorIn(light.ambient) * textureIn(texture(material.diffuse, TexCoords)).rgb;
 
     // diffuse
     vec3 norm = normalize(Normal);
@@ -44,13 +46,13 @@ void main() {
         lightDir = normalize(- light.vector.xyz);
 
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;
+    vec3 diffuse = colorIn(light.diffuse) * diff * textureIn(texture(material.diffuse, TexCoords)).rgb;
 
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;
+    vec3 specular = colorIn(light.specular) * spec * texture(material.specular, TexCoords).rgb;
 
     // attenuation
     if (light.vector.w <= 0.1f && light.useDistance) {

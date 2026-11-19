@@ -18,6 +18,15 @@ class KeyEventTest {
     }
 
     @Test
+    void theLetterIsAskedOnlyWithControl() {
+        // Wayland reports an error for keys without a character (dead keys): typed text never asks for a name
+        assertFalse(KeyEvent.NeedsLetter(0));
+        assertFalse(KeyEvent.NeedsLetter(GLFW_MOD_SHIFT | GLFW_MOD_ALT));
+        assertTrue(KeyEvent.NeedsLetter(GLFW_MOD_CONTROL));
+        assertTrue(KeyEvent.NeedsLetter(GLFW_MOD_CONTROL | GLFW_MOD_SHIFT));
+    }
+
+    @Test
     void theLetterIsLowerCaseAndIndependentOfThePosition() {
         KeyEvent event = new KeyEvent(GLFW_KEY_Q, 16, GLFW_MOD_CONTROL | GLFW_MOD_SHIFT, false, 'A');
         assertEquals('a', event.letter());

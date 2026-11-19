@@ -17,7 +17,8 @@ import java.util.Optional;
  */
 public abstract class ResourceLoader {
     // Folders skipped by exploreResourcesFile(data, path), at any depth
-    private static final List<String> DEFAULT_IGNORED_FOLDERS = List.of("batchs");
+    // (the configurations are read by ConfigDataLoader only)
+    private static final List<String> DEFAULT_IGNORED_FOLDERS = List.of("batchs", "configs");
 
     // The Resources registering the data of this loader, set by Resources.init (a loader serves one Resources)
     private volatile Resources owner;

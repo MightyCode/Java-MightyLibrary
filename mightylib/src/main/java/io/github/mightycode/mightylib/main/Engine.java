@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.console.internal.LogCapture;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.color.IColorService;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.internal.WindowPlatform;
@@ -20,6 +21,8 @@ import io.github.mightycode.mightylib.registry.LifecycleHooks;
 import io.github.mightycode.mightylib.registry.Registrations;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
+import io.github.mightycode.mightylib.resources.config.ConfigDataLoader;
+import io.github.mightycode.mightylib.resources.source.FilteredSource;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.IResourceSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
@@ -120,6 +123,7 @@ public final class Engine implements IView {
 
     // The shaders: declarations and prelude of their sources (service mightylib:shaders)
     public IShaderService shaders() { return service(EngineServices.SHADERS); }
+    public IColorService colors() { return service(EngineServices.COLORS); }
 
     // The sound (service mightylib:sound)
     public ISoundService sound() { return service(EngineServices.SOUND); }
@@ -296,7 +300,9 @@ public final class Engine implements IView {
         }
         // Before the shaders and the resources, which read their files in it
         try {
-            resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()));
+            // The player's configurations (configs/ of its data folder) win over every other source
+            resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()),
+                    new FilteredSource(new FolderSource(config.getPlayerDataFolder()), ConfigDataLoader.FOLDER));
         } catch (RuntimeException e) {
             Logger.LogException("The sources of the resources can't be stacked", e);
             return ListError.PLUGIN_REGISTRATION_FAIL;

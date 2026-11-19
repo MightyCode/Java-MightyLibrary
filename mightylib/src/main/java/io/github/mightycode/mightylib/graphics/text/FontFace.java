@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.text;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.texture.ETextureColorSpace;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Vector2f;
 
@@ -40,6 +41,9 @@ public final class FontFace extends SingleSourceDataType {
 
         name = fontFaceName;
         fontAtlas = resources.getResource(TextureData.class, textureName);
+        // The atlas holds the coverage of the characters, not colors
+        if (fontAtlas != null)
+            fontAtlas.setColorSpace(ETextureColorSpace.LINEAR);
         addDependency(fontAtlas);
 
         fontFile = new FontFile(path());
@@ -51,6 +55,7 @@ public final class FontFace extends SingleSourceDataType {
 
         name = Resources.FALLBACK_NAME;
         fontAtlas = atlas;
+        fontAtlas.setColorSpace(ETextureColorSpace.LINEAR);
         addDependency(fontAtlas);
 
         fontFile = generatedFile;

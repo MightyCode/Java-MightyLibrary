@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.texture.ColorTextureData;
+import io.github.mightycode.mightylib.resources.texture.ETextureColorSpace;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
@@ -135,13 +136,14 @@ public final class ModelLoader extends ResourceLoader {
             //noinspection DataFlowIssue
             AIMaterial material = AIMaterial.create(materials.get(i));
 
-            String diffuse = readTexture(model, material, aiTextureType_DIFFUSE, folder);
+            // A diffuse map is a color picture, a specular map holds data
+            String diffuse = readTexture(model, material, aiTextureType_DIFFUSE, folder, ETextureColorSpace.SRGB);
             if (diffuse == null)
-                diffuse = registerColor(model, readColor(material, AI_MATKEY_COLOR_DIFFUSE));
+                diffuse = registerColor(model, readColor(material, AI_MATKEY_COLOR_DIFFUSE), ETextureColorSpace.SRGB);
 
-            String specular = readTexture(model, material, aiTextureType_SPECULAR, folder);
+            String specular = readTexture(model, material, aiTextureType_SPECULAR, folder, ETextureColorSpace.LINEAR);
             if (specular == null)
-                specular = registerColor(model, NO_SPECULAR_COLOR);
+                specular = registerColor(model, NO_SPECULAR_COLOR, ETextureColorSpace.LINEAR);
 
             textures[i][0] = diffuse;
             textures[i][1] = specular;
@@ -182,7 +184,7 @@ public final class ModelLoader extends ResourceLoader {
     }
 
     // Return the name of the registered texture, or null if the material has no texture of this type
-    private String readTexture(Model model, AIMaterial material, int type, String folder) {
+    private String readTexture(Model model, AIMaterial material, int type, String folder, ETextureColorSpace role) {
         if (aiGetMaterialTextureCount(material, type) == 0)
             return null;
 
@@ -212,18 +214,32 @@ public final class ModelLoader extends ResourceLoader {
             return null;
         }
 
-        TextureData texture = model.ownedResources().addOwnedResource(TextureData.class,
-                new TextureData(model.getDataName() + "/" + file, fullPath), model.ownerName());
-        model.addOwnedTexture(texture);
-
-        return texture.getDataName();
+        return registerOwned(model, new TextureData(model.getDataName() + "/" + file, fullPath), role);
     }
 
-    private String registerColor(Model model, int argb) {
-        TextureData texture = model.ownedResources().addOwnedResource(TextureData.class, new ColorTextureData(argb), model.ownerName());
-        model.addOwnedTexture(texture);
+    private String registerColor(Model model, int argb, ETextureColorSpace role) {
+        return registerOwned(model, new ColorTextureData(argb, role), role);
+    }
 
-        return texture.getDataName();
+    // The encoding is the role of the texture in the model, fixed when it is registered
+    private static String registerOwned(Model model, TextureData texture, ETextureColorSpace role) {
+        texture.setColorSpace(role);
+        TextureData registered = model.ownedResources().addOwnedResource(TextureData.class, texture, model.ownerName());
+        WarnIfOtherRole(model.getDataName(), registered, role);
+        model.addOwnedTexture(registered);
+
+        return registered.getDataName();
+    }
+
+    // A file used in two roles keeps the first one: true (and a line) when the shared texture has another encoding
+    static boolean WarnIfOtherRole(String modelName, TextureData registered, ETextureColorSpace role) {
+        if (registered.getColorSpace() == role)
+            return false;
+
+        System.err.println("--Model " + modelName + " : texture " + registered.getDataName() + " used as "
+                + role.jsonName() + " and " + registered.getColorSpace().jsonName() + ", kept "
+                + registered.getColorSpace().jsonName());
+        return true;
     }
 
     private void readNode(Model model, AIScene scene, AINode node, Matrix4f parentTransform,

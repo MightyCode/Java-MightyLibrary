@@ -89,6 +89,7 @@ public class DemoPlugin implements IPlugin {
         registry.services().register(TickCounterService.KEY, TickCounterService::new)
                 .requires(EngineServices.SOUND)
                 .after(EngineServices.CONSOLE);
+        registry.services().register(ColorSpaceToggleService.KEY, ColorSpaceToggleService::new);
         registerLifecycle(registry);
     }
 
@@ -166,6 +167,7 @@ public class DemoPlugin implements IPlugin {
                         gamepadDirection(GLFW_GAMEPAD_BUTTON_DPAD_DOWN, GLFW_GAMEPAD_AXIS_LEFT_Y, InputGamepadAxis.POSITIVE)))
 
                 .action(ActionId.TAB, new InputSimple(GLFW_KEY_TAB, EInputType.Keyboard))
+                .action(ActionId.TOGGLE_COLOR_SPACE, new InputSimple(GLFW_KEY_F7, EInputType.Keyboard))
                 .action(ActionId.ENTER, new InputOr(
                         new InputSimple(GLFW_KEY_ENTER, EInputType.Keyboard),
                         new InputGamepadButton(GLFW_GAMEPAD_BUTTON_A)))

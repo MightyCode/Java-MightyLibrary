@@ -6,7 +6,8 @@ import static org.lwjgl.glfw.GLFW.*;
  * A key pressed, or repeated by the system while held, in the order typed: for text editing (cursor moves, deletions),
  * where the state of the keys at each tick loses fast presses and the repetition.
  * The key code is the physical position (GLFW_KEY_Q is the key at the left of W, 'a' on an AZERTY keyboard); the
- * letter is the one the layout of the system gives to it: shortcuts such as Ctrl+A compare letters.
+ * letter is the one the layout of the system gives to it: shortcuts such as Ctrl+A compare letters (read only while
+ * Control is held).
  */
 public final class KeyEvent {
     private final int key;
@@ -59,7 +60,7 @@ public final class KeyEvent {
 
     public boolean isRepeat() { return repeat; }
 
-    // Lower case letter of the key in the layout of the system, 0 if the key has none
+    // Lower case letter of the key in the layout of the system, 0 if the key has none or Control is not held
     public char letter() { return letter; }
 
     public boolean isControl() { return (mods & GLFW_MOD_CONTROL) != 0; }
@@ -67,6 +68,14 @@ public final class KeyEvent {
     public boolean isShift() { return (mods & GLFW_MOD_SHIFT) != 0; }
 
     public boolean isAlt() { return (mods & GLFW_MOD_ALT) != 0; }
+
+    /*
+     * Only the shortcuts (Ctrl + a key) read the letter, so the system is asked for it only then: on Wayland,
+     * glfwGetKeyName reports a platform error for a key whose symbol has no character (dead key...).
+     */
+    static boolean NeedsLetter(int mods) {
+        return (mods & GLFW_MOD_CONTROL) != 0;
+    }
 
     // The letter of a key name given by glfwGetKeyName (null: none)
     static char LetterOf(String keyName) {

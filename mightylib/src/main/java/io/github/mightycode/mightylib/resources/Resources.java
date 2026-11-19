@@ -162,6 +162,11 @@ public final class Resources {
         reloads.setMaxCopies(maxReloadCopies);
     }
 
+    // True once init created the data of every loader (getResource needs it)
+    public boolean isInitialized() {
+        return initialized;
+    }
+
     public void init() {
         if (initialized)
             return;

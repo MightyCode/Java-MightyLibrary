@@ -13,7 +13,10 @@ public interface IEngineService {
     // Each tick, after the update of the contexts, before their postUpdate (the sound)
     default void lateUpdate() {}
 
-    // Each frame, after the views, over the main window (bound); by layer (overlayLayer), then order of creation
+    /*
+     * Each frame, after the views, over the main window (bound); by layer (overlayLayer), then order of creation.
+     * The window is not sRGB: the view the overlay draws under (Views.enter) returns GAMMA from IView.colorSpace.
+     */
     default void displayOverlay() {}
 
     // Higher layers are drawn over the lower ones (the console: 1000, always on top)

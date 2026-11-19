@@ -2,40 +2,22 @@ in vec2 texCoords;
 
 out vec4 FragColor;
 
+// The framebuffer of the view, sRGB: decoded to linear by the card when it is read
 uniform sampler2D ourTexture;
 
-const float offset = 1.0 / 300.0;
+// Settings of the picture (PictureSettings), 1 = unchanged
+uniform float mlGamma;
+uniform float mlBrightness;
+uniform float mlContrast;
 
-void main(){
-    FragColor = texture(ourTexture, texCoords);
-    //FragColor = vec4(vec3(1.0 - texture(ourTexture, texCoords)), 1.0);
+#include "utils/colorSpace.glsl"
 
-    /*vec2 offsets[9] = vec2[](
-    vec2(-offset,  offset), // top-left
-    vec2( 0.0f,    offset), // top-center
-    vec2( offset,  offset), // top-right
-    vec2(-offset,  0.0f),   // center-left
-    vec2( 0.0f,    0.0f),   // center-center
-    vec2( offset,  0.0f),   // center-right
-    vec2(-offset, -offset), // bottom-left
-    vec2( 0.0f,   -offset), // bottom-center
-    vec2( offset, -offset)  // bottom-right
-    );
-
-    float kernel[9] = float[](
-    1.0 / 16, 2.0 / 16, 1.0 / 16,
-    2.0 / 16, 4.0 / 16, 2.0 / 16,
-    1.0 / 16, 2.0 / 16, 1.0 / 16
-    );
-
-    vec3 sampleTex[9];
-    for(int i = 0; i < 9; i++)
-    {
-        sampleTex[i] = vec3(texture(ourTexture, texCoords.st + offsets[i]));
-    }
-    vec3 col = vec3(0.0);
-    for(int i = 0; i < 9; i++)
-    col += sampleTex[i] * kernel[i];
-
-    FragColor = vec4(col, 1.0);*/
+// Written to the window without GL_FRAMEBUFFER_SRGB: encoded here, whatever the default framebuffer supports, then
+// the settings are applied to the encoded values
+void main() {
+    vec3 color = toSRGB(texture(ourTexture, texCoords).rgb);
+    color = (color - 0.5) * mlContrast + 0.5;
+    color = color * mlBrightness;
+    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / mlGamma));
+    FragColor = vec4(color, 1.0);
 }

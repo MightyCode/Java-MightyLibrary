@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.WindowContext;
@@ -63,5 +64,11 @@ final class ConsoleView implements IView {
     @Override
     public Camera3D camera3D() {
         throw new IllegalStateException("The console has no 3D camera");
+    }
+
+    // Drawn straight on the window, which is not sRGB: never linear, whatever the mode of the engine
+    @Override
+    public ERenderColorSpace colorSpace() {
+        return ERenderColorSpace.GAMMA;
     }
 }

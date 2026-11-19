@@ -38,7 +38,8 @@ class HeadlessEngineTest {
     }
 
     // Keeps the data whose GL element is asked, sends nothing
-    private static final class RecordingSink implements IGLElementSink {
+    // Also used by the other tests of an engine without window
+    static final class RecordingSink implements IGLElementSink {
         final List<DataType> acquired = new ArrayList<>();
 
         @Override

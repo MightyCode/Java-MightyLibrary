@@ -100,12 +100,18 @@ public final class Registrations {
         return Collections.unmodifiableList(sources.getOrDefault(plugin, List.of()));
     }
 
+    // The stack without the layer of the player
+    public ResourceSources resourceSources(IResourceSource gameFolder) {
+        return resourceSources(gameFolder, null);
+    }
+
     /**
      * The stack of the sources of resources, from the lowest to the highest: those of the engine, the folder of the
-     * game, then those of the plugins in their order. When it can't be built (a source declared twice), every source
-     * is closed before the exception goes up: nothing else would close them.
+     * game, those of the plugins in their order, then the layer of the player (null: none) above everything. When it
+     * can't be built (a source declared twice), every source is closed before the exception goes up: nothing else
+     * would close them.
      */
-    public ResourceSources resourceSources(IResourceSource gameFolder) {
+    public ResourceSources resourceSources(IResourceSource gameFolder, IResourceSource player) {
         ResourceSources.Builder builder = ResourceSources.builder();
         for (String plugin : plugins) {
             for (IResourceSource source : sources(plugin))
@@ -114,12 +120,16 @@ public final class Registrations {
             if (Identifier.ENGINE_NAMESPACE.equals(plugin))
                 builder.add(ResourceSources.GAME_OWNER, gameFolder);
         }
+        if (player != null)
+            builder.add(ResourceSources.PLAYER_OWNER, player);
 
         try {
             return builder.build();
         } catch (RuntimeException e) {
             closeSources();
             gameFolder.close();
+            if (player != null)
+                player.close();
             throw e;
         }
     }

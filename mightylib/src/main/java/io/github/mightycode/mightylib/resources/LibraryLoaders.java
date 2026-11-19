@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.text.FontLoader;
 import io.github.mightycode.mightylib.resources.animation.AnimationDataLoader;
 import io.github.mightycode.mightylib.resources.cubemap.CubeMapLoader;
+import io.github.mightycode.mightylib.resources.config.ConfigDataLoader;
 import io.github.mightycode.mightylib.resources.data.JSONLoader;
 import io.github.mightycode.mightylib.resources.internal.BatchLoader;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
@@ -57,6 +58,7 @@ public final class LibraryLoaders {
         loaders.add(new AnimationDataLoader());
         loaders.add(new FontLoader());
         loaders.add(new JSONLoader());
+        loaders.add(new ConfigDataLoader());
         loaders.add(new BatchLoader());
         return loaders;
     }

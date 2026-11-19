@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.FrameBuffer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
@@ -52,6 +53,9 @@ public class Game3D2D extends Scene {
     public void launch(String[] args){
         /// SCENE INFORMATION ///
 
+        // The view is linear, the 2D game drawn in its framebuffer stays in gamma (level of the renderer)
+        setColorSpace(ERenderColorSpace.LINEAR);
+
         context().getMouseManager().setCursor(false);
         cameraComponent = new FreeCamera3DComponent(context().getInputManager(), camera3D(), AxisId.freeCamera3DInputs());
         addUpdatable(cameraComponent);
@@ -75,6 +79,7 @@ public class Game3D2D extends Scene {
         background.setSizePix(context().getWindow().getInfo().getVirtualSizeRef().x,
                 context().getWindow().getInfo().getVirtualSizeRef().y);
         background.setPosition(new Vector2f(0, 0));
+        background.setColorSpace(ERenderColorSpace.GAMMA);
 
         slimeRenderer = new Animation2DRenderer("texture2D");
         slimeRenderer.setReferenceCamera(insideCamera);
@@ -88,6 +93,7 @@ public class Game3D2D extends Scene {
         slimeRenderer.setScale(new Vector2f(scale));
         slimeRenderer.setPosition(new Vector2f(400, context().getWindow().getInfo().getSizeCopy().y));
         slimeRenderer.setVerticalFlip(false);
+        slimeRenderer.setColorSpace(ERenderColorSpace.GAMMA);
         slimeRenderer.update();
 
         debugView = new RectangleRenderer("texture2D");

@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.resources.source.ClasspathSource;
+import io.github.mightycode.mightylib.resources.source.FilteredSource;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.IResourceSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
@@ -66,12 +67,16 @@ class ResourceDescriber {
             kind = "engine";
         else if (ResourceSources.GAME_OWNER.equals(owner))
             kind = "game";
+        else if (ResourceSources.PLAYER_OWNER.equals(owner))
+            kind = "player";
         else
             kind = "plugin";
 
         String location;
         if (source instanceof FolderSource)
             location = "disk";
+        else if (source instanceof FilteredSource && ((FilteredSource) source).inner() instanceof FolderSource)
+            location = "disk, " + ((FilteredSource) source).folder() + "/ only";
         else if (source instanceof ClasspathSource && !((ClasspathSource) source).isPresent())
             location = "classpath, prefix absent";
         else if (source instanceof ClasspathSource)
@@ -196,6 +201,10 @@ class ResourceDescriber {
                 item.put("usingFallback", true);
             if (!data.sourcePaths().isEmpty())
                 item.put("sourceFiles", describeSourceFiles(data));
+            JSONObject details = new JSONObject();
+            data.describeDetails(details);
+            if (details.length() > 0)
+                item.put("details", details);
             list.put(item);
         });
 

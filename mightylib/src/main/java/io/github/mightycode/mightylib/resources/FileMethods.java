@@ -57,7 +57,7 @@ public final class FileMethods {
     }
 
     // UTF-8, lines ended by '\n'; closes the stream
-    private static String readLines(InputStream stream) throws IOException {
+    public static String readLines(InputStream stream) throws IOException {
         StringBuilder content = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
             String line;

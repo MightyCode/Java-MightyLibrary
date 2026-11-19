@@ -1,6 +1,13 @@
 {
     "batchs": [
         {
+            "type": "ConfigData",
+            "files": [
+                "mightylib/display"
+            ],
+            "regex": []
+        },
+        {
             "type": "TextureData",
             "files": [
                 "engineSans",

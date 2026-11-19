@@ -8,6 +8,8 @@ uniform float time;
 
 out vec4 vertexColor;
 
+#include "utils/colorSpace.glsl"
+
 void main() {
     // The star breathes: the farther a vertex is from the center, the more it moves
     float pulse = 1.0 + 0.15 * sin(time * 2.0) * length(aPos);
@@ -15,5 +17,5 @@ void main() {
 
     // The colors rotate over time
     float shift = 0.5 + 0.5 * sin(time + aPos.x * 3.0);
-    vertexColor = vec4(mix(aColor.rgb, aColor.gbr, shift), aColor.a);
+    vertexColor = colorIn(vec4(mix(aColor.rgb, aColor.gbr, shift), aColor.a));
 }

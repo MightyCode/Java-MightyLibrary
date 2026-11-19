@@ -7,7 +7,9 @@ uniform mat4 model;
 
 out vec4 vertexColor; // Output color to fragment shader
 
+#include "utils/colorSpace.glsl"
+
 void main() {
     gl_Position = projection * view * model * vec4(aPos, 0.0f, 1.0f);
-    vertexColor = aColor; // Pass the color attribute to fragment shader
+    vertexColor = colorIn(aColor); // Pass the color attribute to fragment shader
 }

@@ -14,6 +14,7 @@ import io.github.mightycode.mightylib.utils.Logger;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
+import static org.lwjgl.opengl.GL21.GL_SRGB8_ALPHA8;
 import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 /**
@@ -106,6 +107,14 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         }
     }
 
+    /**
+     * Storage of a texture: an sRGB picture is decoded to linear by the card when it is read (and filtered in
+     * linear), a linear data map is read as it is.
+     */
+    public static int InternalFormat(ETextureColorSpace colorSpace) {
+        return colorSpace == ETextureColorSpace.SRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+    }
+
     // Its data was reloaded: sent again by GLResources, the current version is used meanwhile
     private void checkVersion() {
         if (data.isLoaded() && data.getVersion() != uploadedVersion)
@@ -132,10 +141,10 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             glBindTexture(textureType, pendingId);
 
             if (isSentByStrips()) {
-                glTexImage2D(textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+                glTexImage2D(textureType, 0, InternalFormat(data.getColorSpace()), data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
                 pendingRows = 0;
             } else {
-                glTexImage2D(textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getData());
+                glTexImage2D(textureType, 0, InternalFormat(data.getColorSpace()), data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getData());
                 pendingRows = data.getHeight();
             }
             Logger.CheckOpenGLError("Send texture again : " + data.getDataName());
@@ -232,7 +241,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType + " , quality type : " + qualityType + " , path : " + data.path() + " width : " + data.getWidth() + " , height : " + data.getHeight());
 
                 if (!isSentByStrips()) {
-                    glTexImage2D(this.textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getData());
+                    glTexImage2D(this.textureType, 0, InternalFormat(data.getColorSpace()), data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, data.getData());
                     Logger.CheckOpenGLError("Set texture data : " + data.getDataName());
 
                     finishLoad();
@@ -240,7 +249,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 }
 
                 // Memory reserved now, filled by the strips
-                glTexImage2D(this.textureType, 0, GL_RGBA8, data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+                glTexImage2D(this.textureType, 0, InternalFormat(data.getColorSpace()), data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
                 Logger.CheckOpenGLError("Reserve texture : " + data.getDataName());
             } else {
                 glBindTexture(this.textureType, textureId);
