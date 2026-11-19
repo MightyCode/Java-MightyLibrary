@@ -40,6 +40,7 @@ module io.github.mightycode.mightylib {
     exports io.github.mightycode.mightylib.algorithms.wavefunctioncollapse;
     exports io.github.mightycode.mightylib.console;
     exports io.github.mightycode.mightylib.graphics;
+    exports io.github.mightycode.mightylib.graphics.color;
     exports io.github.mightycode.mightylib.graphics.debug;
     exports io.github.mightycode.mightylib.graphics.game;
     exports io.github.mightycode.mightylib.graphics.gui;

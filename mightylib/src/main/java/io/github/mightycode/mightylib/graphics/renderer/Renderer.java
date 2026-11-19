@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
@@ -63,6 +65,8 @@ public abstract class Renderer extends UUID implements IDisplayable {
     private final HashMap<String, ShaderValue> shaderValues;
     // Keys of the values sent only when the current program has their uniform, never reported missing (generic ones)
     private final HashSet<String> optionalValues;
+    // 1 when the draw is linear: sent with the other values
+    private final ShaderValue linearColors;
 
     /*
      * Takes the program of the shader (the fallback one while it loads or when it failed); the tag of the shader
@@ -100,9 +104,9 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
         putOptionalValue(ShaderUniforms.MODEL,
                 new ShaderValue(ShaderUniforms.MODEL, Matrix4f.class, model));
-        // Color space of the draw: a shader without the uniform draws in gamma
-        putOptionalValue(ShaderUniforms.LINEAR_COLORS,
-                new ShaderValue(ShaderUniforms.LINEAR_COLORS, Integer.class, 0));
+        // Color space of the draw, resolved at each draw: a shader without the uniform draws in gamma
+        linearColors = new ShaderValue(ShaderUniforms.LINEAR_COLORS, Integer.class, 0);
+        putOptionalValue(ShaderUniforms.LINEAR_COLORS, linearColors);
     }
 
     protected final Resources resources() {
@@ -174,9 +178,29 @@ public abstract class Renderer extends UUID implements IDisplayable {
         }
     }
 
-    // Hook: sets the OpenGL state of the draw (depth, culling) before the program is used; call super to keep it
+    // Hook: sets the OpenGL state of the draw (depth, culling, color space) before the program is used; call super
     protected void applyRenderState() {
-        renderState.apply();
+        boolean linear = resolveColorSpace().isLinear();
+        renderState.apply(linear);
+        linearColors.setObject(linear ? 1 : 0);
+    }
+
+    /**
+     * The mode of the next draw: the one of this renderer, otherwise of the current view, otherwise of the engine.
+     */
+    public final ERenderColorSpace resolveColorSpace() {
+        IView view = Views.current();
+        return view.engine().colors().resolve(renderState.getColorSpace(), view.colorSpace());
+    }
+
+    // INHERIT (the default) takes the mode of the view; LINEAR or GAMMA fixes the mode of this renderer
+    public final Renderer setColorSpace(ERenderColorSpace colorSpace) {
+        renderState.setColorSpace(colorSpace);
+        return this;
+    }
+
+    public final ERenderColorSpace getColorSpace() {
+        return renderState.getColorSpace();
     }
 
     public final Renderer setDepthTest(boolean depthTest) {

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D;
 
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.main.WindowInfo;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
@@ -10,6 +11,8 @@ public final class VirtualSceneRenderer extends RectangleRenderer {
 
     public VirtualSceneRenderer(WindowInfo info, IGLBindable bindable){
         super(EngineResources.POST_PROCESSING);
+        // Written to the window without the sRGB encoding: the final pass encodes itself
+        setColorSpace(ERenderColorSpace.GAMMA);
         frameBuffer = new FrameBuffer(bindable, info.getVirtualSizeRef().x, info.getVirtualSizeRef().y);
     }
 

@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.scenes;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
@@ -27,10 +28,12 @@ import org.joml.Vector3f;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_SRGB;
 
 /**
  * A screen of the game: what the engine updates and displays in a window, one scene at a time per window.
@@ -64,6 +67,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     // Null until the scene sets one
     private float[] clearColor = null;
+    private ERenderColorSpace colorSpace = ERenderColorSpace.INHERIT;
 
     private String[] args;
 
@@ -117,6 +121,19 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
             throw new IllegalStateException("The cameras of " + getClass().getSimpleName() + " exist from launch() on");
 
         return main2DCamera;
+    }
+
+    @Override
+    public final ERenderColorSpace colorSpace() {
+        return colorSpace;
+    }
+
+    /**
+     * The color space of the draws of this view: LINEAR (a lit scene), GAMMA, or INHERIT (the default) for the one
+     * of the engine. A renderer may still override it. Takes effect at the next draw, at any time.
+     */
+    public final void setColorSpace(ERenderColorSpace colorSpace) {
+        this.colorSpace = Objects.requireNonNull(colorSpace, "colorSpace");
     }
 
     @Override
@@ -411,7 +428,11 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         scRenderer.display();
     }
 
-    protected final void clear(){ glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); }
+    protected final void clear() {
+        // Without the sRGB encoding: the clear color is stored as written, whatever the mode of the draws
+        glDisable(GL_FRAMEBUFFER_SRGB);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
     // The clear color is a global GL state: kept by the scene and applied again before each of its displays,
     // so the loading scene (displayed after launch) or another scene can't replace it

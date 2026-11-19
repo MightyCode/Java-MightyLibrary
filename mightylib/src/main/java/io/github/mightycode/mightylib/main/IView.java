@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 
@@ -18,4 +20,9 @@ public interface IView {
     Camera2D camera2D();
 
     Camera3D camera3D();
+
+    // Color space of the draws of the view; INHERIT (the default): the one of the engine (Engine.colors)
+    default ERenderColorSpace colorSpace() {
+        return ERenderColorSpace.INHERIT;
+    }
 }

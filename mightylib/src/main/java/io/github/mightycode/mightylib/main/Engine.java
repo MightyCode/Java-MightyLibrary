@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.console.internal.LogCapture;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.color.IColorService;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.internal.WindowPlatform;
@@ -120,6 +121,7 @@ public final class Engine implements IView {
 
     // The shaders: declarations and prelude of their sources (service mightylib:shaders)
     public IShaderService shaders() { return service(EngineServices.SHADERS); }
+    public IColorService colors() { return service(EngineServices.COLORS); }
 
     // The sound (service mightylib:sound)
     public ISoundService sound() { return service(EngineServices.SOUND); }

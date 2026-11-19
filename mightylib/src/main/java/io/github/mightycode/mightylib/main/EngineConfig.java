@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.console.internal.ConsoleLog;
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
@@ -54,6 +55,7 @@ public final class EngineConfig {
     private ResourceWatcher.Mode watchResources;
     private long watchResourcesInterval = ResourceWatcher.DEFAULT_INTERVAL_MS;
     private boolean openGLErrorCheck;
+    private ERenderColorSpace colorSpace = ERenderColorSpace.GAMMA;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
     // Commands of the player: unset (null) gives DEV in debug mode, none in release
     private boolean commandAccessSet;
@@ -172,6 +174,20 @@ public final class EngineConfig {
     }
 
     public static final String STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict";
+
+    /**
+     * The color space of the draws at the start (IColorService, then changed by the code or the commands): GAMMA by
+     * default (the 2D of most games), LINEAR for a lit scene; a view or a renderer overrides it. The system property
+     * COLOR_SPACE_PROPERTY (-Dmightylib.colorSpace=linear|gamma) overrides it.
+     *
+     * @throws IllegalArgumentException if the mode is INHERIT or null
+     */
+    public EngineConfig setColorSpace(ERenderColorSpace colorSpace) {
+        this.colorSpace = ERenderColorSpace.CheckEngine(colorSpace);
+        return this;
+    }
+
+    public static final String COLOR_SPACE_PROPERTY = "mightylib.colorSpace";
 
     /**
      * Development: a folder on the disk replaces the classpath source of the engine (its files in the jar, under
@@ -508,6 +524,20 @@ public final class EngineConfig {
             default:
                 return Optional.empty();
         }
+    }
+
+    // The property wins over the configuration; an unknown value is ignored, with a line in the log
+    public ERenderColorSpace getColorSpace() {
+        String property = System.getProperty(COLOR_SPACE_PROPERTY);
+        if (property == null)
+            return colorSpace;
+
+        ERenderColorSpace value = ERenderColorSpace.parse(property);
+        if (value == ERenderColorSpace.LINEAR || value == ERenderColorSpace.GAMMA)
+            return value;
+
+        System.err.println("--" + COLOR_SPACE_PROPERTY + " : unknown value ->" + property + "<-, expected linear or gamma");
+        return colorSpace;
     }
 
     // Launch option -Dmightylib.sound=silent: no device is opened; another value is ignored, with a line in the log

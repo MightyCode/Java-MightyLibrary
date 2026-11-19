@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.console.Console;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
+import io.github.mightycode.mightylib.graphics.color.ColorService;
 import io.github.mightycode.mightylib.graphics.shader.ShaderService;
 import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.InputManager;
@@ -76,6 +77,9 @@ final class EnginePlugin implements IPlugin {
 
         // No fallback: it fails only on a shaders.json that can't be read
         registry.services().register(EngineServices.SHADERS, engine -> new ShaderService(engine.resources()));
+
+        // No fallback: it can't fail
+        registry.services().register(EngineServices.COLORS, engine -> new ColorService(engine.config().getColorSpace()));
 
         registry.services().register(EngineServices.SOUND,
                         engine -> OpenALSoundService.Open(engine.resources(), GainTree(engine)))

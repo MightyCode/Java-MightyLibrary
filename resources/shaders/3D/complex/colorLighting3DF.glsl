@@ -15,19 +15,19 @@ uniform vec3 lightColor;
 void main() {
     // ambient
     float ambientStrengh = 0.5f;
-    vec3 ambient = worldColor * ambientStrengh;
+    vec3 ambient = colorIn(worldColor) * ambientStrengh;
 
     // diffuse
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0f);
-    vec3 diffuse = diff * lightColor;
+    vec3 diffuse = diff * colorIn(lightColor);
 
     float specularStrength = 0.5;
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 128);
-    vec3 specular = specularStrength * spec * lightColor;
+    vec3 specular = specularStrength * spec * colorIn(lightColor);
 
     vec4 decodedColor = decodeColor(color);
 
