@@ -242,6 +242,19 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
         scRenderer.display();
     }
 
+    /**
+     * Limits the next draws (and clears) to a rectangle of the surface of the view, in pixels of the virtual scene,
+     * origin at the bottom left: to draw the same thing in several modes side by side. Undone by clearScissor.
+     */
+    protected final void setScissor(int x, int y, int width, int height) {
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(x, y, width, height);
+    }
+
+    protected final void clearScissor() {
+        glDisable(GL_SCISSOR_TEST);
+    }
+
     protected final void clear() {
         // Without the sRGB encoding: the clear color is stored as written, whatever the mode of the draws
         glDisable(GL_FRAMEBUFFER_SRGB);
