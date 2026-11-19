@@ -52,7 +52,7 @@ public final class TextureDataLoader extends ResourceLoader {
     }
 
     /**
-     * The textures of textures.json, plus the images of the textures folder it does not list: named after their file,
+     * The textures of textures.json (field "colorSpace": "srgb" by default, "linear" for a data map), plus the images of the textures folder it does not list: named after their file,
      * with the default parameters of TextureData (realistic, 2D) and a warning, so a file dropped in the folder can be
      * used (and reloaded) without editing the list.
      */
@@ -138,6 +138,15 @@ public final class TextureDataLoader extends ResourceLoader {
                         currentTexture.defaultTextureType = GL_TEXTURE_RECTANGLE;
                 }
 
+                if (information.has("colorSpace")) {
+                    String name = String.valueOf(information.get("colorSpace"));
+                    ETextureColorSpace colorSpace = ETextureColorSpace.parse(name);
+                    if (colorSpace == null)
+                        currentTexture.rejectedColorSpace = name;
+                    else
+                        currentTexture.setColorSpace(colorSpace);
+                }
+
                 data.put(currentNode, currentTexture);
             } else {
                 create(data, node.getJSONObject(currentNode), currentPath + currentNode + "/");
@@ -151,6 +160,9 @@ public final class TextureDataLoader extends ResourceLoader {
             return;
 
         TextureData textureData = (TextureData) dataType;
+        if (textureData.rejectedColorSpace != null)
+            throw new ResourceException("unknown colorSpace \"" + textureData.rejectedColorSpace + "\" of the texture "
+                    + textureData.getDataName() + " (srgb or linear)");
 
         // Failing here makes the preload fail: the fallback replaces the texture
         ByteBuffer file = readFile(textureData);

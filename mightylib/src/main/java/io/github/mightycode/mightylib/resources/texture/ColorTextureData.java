@@ -9,12 +9,23 @@ public final class ColorTextureData extends TextureData {
     private final int argb;
 
     public ColorTextureData(int argb) {
-        super(NameOf(argb), null);
+        this(argb, ETextureColorSpace.SRGB);
+    }
+
+    // A color of a data map (specular...) is linear: another texture than the same color of a picture
+    public ColorTextureData(int argb, ETextureColorSpace colorSpace) {
+        super(NameOf(argb, colorSpace), null);
         this.argb = argb;
+        setColorSpace(colorSpace);
     }
 
     public static String NameOf(int argb) {
-        return String.format("color/%08x", argb);
+        return NameOf(argb, ETextureColorSpace.SRGB);
+    }
+
+    public static String NameOf(int argb, ETextureColorSpace colorSpace) {
+        return colorSpace == ETextureColorSpace.SRGB ? String.format("color/%08x", argb)
+                : String.format("color/%s/%08x", colorSpace.jsonName(), argb);
     }
 
     public static int ToArgb(float r, float g, float b, float a) {

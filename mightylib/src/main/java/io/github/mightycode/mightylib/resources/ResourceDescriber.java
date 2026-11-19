@@ -196,6 +196,10 @@ class ResourceDescriber {
                 item.put("usingFallback", true);
             if (!data.sourcePaths().isEmpty())
                 item.put("sourceFiles", describeSourceFiles(data));
+            JSONObject details = new JSONObject();
+            data.describeDetails(details);
+            if (details.length() > 0)
+                item.put("details", details);
             list.put(item);
         });
 

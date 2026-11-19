@@ -5,6 +5,8 @@ import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.utils.LoadingElement;
 import io.github.mightycode.mightylib.utils.math.UUID;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -302,6 +304,12 @@ public abstract class DataType extends UUID implements LoadingElement {
     public GLElement createGLElement() {
         throw new UnsupportedOperationException(getClass().getSimpleName() + " has no GL element");
     }
+
+    /**
+     * Called by the command "resources" on the main thread when the data is selected: adds what this type knows of
+     * the data (its settings) to its description, without loading anything. Does nothing by default.
+     */
+    protected void describeDetails(JSONObject details) {}
 
     public final int getVersion() {
         return version;
