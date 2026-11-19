@@ -111,11 +111,14 @@ public class ColorSpaceSplit3D extends Scene {
         Vector2i size = context().getWindow().getInfo().getVirtualSizeRef();
         int half = size.x / 2;
 
+        // Each half forces its mode, the mode of the view comes back after (commands colorspace, F7)
+        ERenderColorSpace viewMode = colorSpace();
         setScissor(0, 0, half, size.y);
         drawAll(ERenderColorSpace.LINEAR);
         setScissor(half, 0, size.x - half, size.y);
         drawAll(ERenderColorSpace.GAMMA);
         clearScissor();
+        setColorSpace(viewMode);
 
         setAndDisplayRealScene();
     }
