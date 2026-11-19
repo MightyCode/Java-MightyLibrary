@@ -21,6 +21,8 @@ import io.github.mightycode.mightylib.registry.LifecycleHooks;
 import io.github.mightycode.mightylib.registry.Registrations;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
+import io.github.mightycode.mightylib.resources.config.ConfigDataLoader;
+import io.github.mightycode.mightylib.resources.source.FilteredSource;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.IResourceSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
@@ -298,7 +300,9 @@ public final class Engine implements IView {
         }
         // Before the shaders and the resources, which read their files in it
         try {
-            resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()));
+            // The player's configurations (configs/ of its data folder) win over every other source
+            resourceSources = registrations.resourceSources(new FolderSource(config.getResourcesFolder()),
+                    new FilteredSource(new FolderSource(config.getPlayerDataFolder()), ConfigDataLoader.FOLDER));
         } catch (RuntimeException e) {
             Logger.LogException("The sources of the resources can't be stacked", e);
             return ListError.PLUGIN_REGISTRATION_FAIL;

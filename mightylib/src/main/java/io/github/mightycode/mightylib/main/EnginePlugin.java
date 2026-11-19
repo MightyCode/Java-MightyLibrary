@@ -79,7 +79,7 @@ final class EnginePlugin implements IPlugin {
         registry.services().register(EngineServices.SHADERS, engine -> new ShaderService(engine.resources()));
 
         // No fallback: it can't fail
-        registry.services().register(EngineServices.COLORS, engine -> new ColorService(engine.config().getColorSpace()));
+        registry.services().register(EngineServices.COLORS, engine -> new ColorService(engine.config().getColorSpace(), engine.resources()));
 
         registry.services().register(EngineServices.SOUND,
                         engine -> OpenALSoundService.Open(engine.resources(), GainTree(engine)))

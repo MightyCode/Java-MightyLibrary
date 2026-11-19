@@ -14,6 +14,12 @@ import static org.apiguardian.api.API.Status.EXPERIMENTAL;
  */
 @API(status = EXPERIMENTAL)
 public interface IColorService extends IEngineService {
+    // Configuration (ConfigData) of the settings of the picture: "gamma", "brightness", "contrast"
+    String DISPLAY_CONFIG = "mightylib/display";
+    String GAMMA_KEY = "gamma";
+    String BRIGHTNESS_KEY = "brightness";
+    String CONTRAST_KEY = "contrast";
+
     // LINEAR or GAMMA, never INHERIT; read at each draw
     ERenderColorSpace colorSpace();
 
@@ -34,8 +40,18 @@ public interface IColorService extends IEngineService {
     // The settings of the final pass, never null
     PictureSettings picture();
 
-    // Main thread; null: IllegalArgumentException
+    /**
+     * The player's settings (command picture): ColorService keeps them in the player's layer of the configuration
+     * DISPLAY_CONFIG. Main thread.
+     *
+     * @throws IllegalArgumentException if the settings are null
+     */
     void setPicture(PictureSettings picture);
+
+    // Back to the settings of the game (the player's are forgotten); Main thread
+    default void resetPicture() {
+        setPicture(PictureSettings.DEFAULT);
+    }
 
     // The mode of a draw from the levels below the engine (null or INHERIT: the level above)
     default ERenderColorSpace resolve(ERenderColorSpace renderer, ERenderColorSpace view) {

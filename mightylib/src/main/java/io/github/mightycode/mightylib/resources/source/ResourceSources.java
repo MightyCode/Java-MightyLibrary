@@ -28,6 +28,8 @@ import java.util.TreeMap;
 public final class ResourceSources {
     // Owner of the folder of the game (not a namespace: no plugin has it)
     public static final String GAME_OWNER = "(game)";
+    // Owner of the layer of the player (its configurations), above every other source
+    public static final String PLAYER_OWNER = "(player)";
 
     private final List<IResourceSource> sources;
     // The owner of each source, at the same index

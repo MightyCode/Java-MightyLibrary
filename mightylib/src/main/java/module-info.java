@@ -75,6 +75,7 @@ module io.github.mightycode.mightylib {
     exports io.github.mightycode.mightylib.resources;
     exports io.github.mightycode.mightylib.resources.animation;
     exports io.github.mightycode.mightylib.resources.cubemap;
+    exports io.github.mightycode.mightylib.resources.config;
     exports io.github.mightycode.mightylib.resources.data;
     exports io.github.mightycode.mightylib.resources.map;
     exports io.github.mightycode.mightylib.resources.models;
