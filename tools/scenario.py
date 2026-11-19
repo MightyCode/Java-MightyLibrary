@@ -82,11 +82,18 @@ def run_maven(*goals):
 
 def prepare(compile_sources):
     poms = [os.path.join(ROOT, folder, "pom.xml") for folder in ("", "bom", "base-parent", "game-parent", "mightylib", "mightylib-test", "demo")]
-    if not os.path.exists(CLASSPATH_FILE) or os.path.getmtime(CLASSPATH_FILE) < max(map(os.path.getmtime, poms)):
+    if (not os.path.exists(CLASSPATH_FILE) or os.path.getsize(CLASSPATH_FILE) == 0
+            or os.path.getmtime(CLASSPATH_FILE) < max(map(os.path.getmtime, poms))):
         # Built in the reactor with the compilation: the library is then its classes folder, not a jar of the local
-        # repository (test-compile: the test kit mightylib-test, a test dependency of the demo, must be resolved too). Every module of the reactor writes the file, the demo last: its runtime classpath, natives included
+        # repository (test-compile: the test kit mightylib-test, a test dependency of the demo, must be resolved too). Every module of the reactor writes the file, the demo last: its runtime classpath, natives included.
+        # Written to a temporary file, kept only when the whole build succeeded: a failed build would otherwise leave
+        # the classpath of another module (empty for the poms), reused by the next scenarios
+        temporary = CLASSPATH_FILE + ".tmp"
+        if os.path.exists(temporary):
+            os.remove(temporary)
         run_maven("-o", "test-compile", "dependency:build-classpath", "-pl", "demo", "-am",
-                  "-DincludeScope=runtime", "-Dmdep.outputFile=" + CLASSPATH_FILE)
+                  "-DincludeScope=runtime", "-Dmdep.outputFile=" + temporary)
+        os.replace(temporary, CLASSPATH_FILE)
     elif compile_sources:
         run_maven("-o", "compile")
 
