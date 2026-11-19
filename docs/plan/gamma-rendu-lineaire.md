@@ -96,3 +96,14 @@ Aucune.
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/gamma`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan (en cours : étapes 1 à 6 faites)
+- **Fait** : étapes 1 à 6, un commit chacune sur `feature/gamma`.
+- **Écarts au plan** :
+  - Étape 3 : le service `IColorService` (`mightylib:colors`, paquet `graphics.color`) est créé dès l'étape 3 avec le seul mode du moteur (le mode courant devait vivre quelque part) ; l'étape 4 y ajoute la passe finale et `PictureSettings`.
+  - Étape 4 : `VirtualSceneRenderer` dessine lui-même la passe par défaut (`postProcessing`) ; un autre shader (vue ou moteur) passe par un renderer interne recréé quand le nom résolu change. `resetPicture()` ajouté au contrat (défaut : `setPicture(DEFAULT)`).
+  - Étape 5 : une couche de config illisible n'échoue pas la donnée : elle est ignorée avec une ligne nommant le fichier et listée dans `invalidLayers` (détails de `resources ConfigData`), les autres couches gardent leurs valeurs ; une couche du joueur illisible n'est jamais réécrite (le changement reste en mémoire, une ligne). Une config absente de toute source se charge vide (le service la demande par `addOwnedResource`).
+  - Étape 5 : `FilteredSource` (paquet `resources.source`) expose `configs/` et ses parents ; `localFile("")` rend la racine de `data/` pour que l'observateur suive aussi la création de fichiers (il parcourt donc tous les dossiers de `data/`). `configs` est ajouté aux dossiers ignorés par `exploreResourcesFile` (les JSON de configs ne sont plus des `JSONFile`). `EngineConfig.setPlayerDataFolder` (défaut `data/`).
+  - Étape 5 : le service ne garde dans la couche du joueur que les valeurs qui diffèrent de celles du jeu (revenir à la valeur du jeu retire la clé).
+- **Vérifié** : `mvn -o -q test` (tous modules) à chaque étape ; captures avant/après de l'étape 2 (`TextPaddingScene` identique au pixel près, `GUIWidgetsScene` : seule la zone animée diffère, `Scene2D`/`Scene3D` animées : différences dans les zones animées, vérifiées à l'œil) ; `leakcheck` de `Scene2D` et `Scene3D` ; `-Dmightylib.colorSpace=linear` sur `Scene3D` (fond et éclairage plus clairs, texte plus fin) ; `colorspace view toggle`, `picture gamma 1.5` gardé après relance, `picture reset` → couche du joueur vide.
+- **À noter pour plus tard** : un moteur de test du kit (`mightylib-test`) garde la couche du joueur dans `data/` du dossier du module ; un test qui appelle `picture` y écrirait (rediriger vers un dossier temporaire dans le kit).
