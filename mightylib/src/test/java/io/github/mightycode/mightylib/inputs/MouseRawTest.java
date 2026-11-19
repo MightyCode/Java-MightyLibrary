@@ -1,11 +1,13 @@
 package io.github.mightycode.mightylib.inputs;
 
+import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
 import org.joml.Vector2f;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LAST;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_RIGHT;
 
 // The owner of the capture (the console) reads the mouse the game no longer sees, simulation included
 class MouseRawTest {
@@ -94,5 +96,35 @@ class MouseRawTest {
         mouse.x = 70;
         mouse.postUpdate();
         assertEquals(new Vector2f(70, 60), mouse.getRawPos());
+    }
+
+    // getState (read by the mouse bindings of the actions, InputSimple) sees a simulated button like getButton
+    @Test
+    void aSimulatedButtonIsSeenByTheStateOfTheActions() {
+        FakeMouse mouse = new FakeMouse();
+        mouse.postUpdate();
+        assertFalse(mouse.getState(GLFW_MOUSE_BUTTON_RIGHT));
+
+        mouse.simulateButton(GLFW_MOUSE_BUTTON_RIGHT, InputSimulation.UNTIL_RELEASE);
+        mouse.postUpdate();
+        assertTrue(mouse.getButton(GLFW_MOUSE_BUTTON_RIGHT));
+        assertTrue(mouse.getState(GLFW_MOUSE_BUTTON_RIGHT));
+
+        mouse.postUpdate();
+        assertTrue(mouse.getState(GLFW_MOUSE_BUTTON_RIGHT), "held until released");
+
+        // Hidden by the capture, like the real button
+        mouse.setCaptured(true);
+        assertFalse(mouse.getState(GLFW_MOUSE_BUTTON_RIGHT));
+        mouse.setCaptured(false);
+
+        mouse.simulateButtonRelease(GLFW_MOUSE_BUTTON_RIGHT);
+        mouse.postUpdate();
+        assertFalse(mouse.getState(GLFW_MOUSE_BUTTON_RIGHT));
+        assertFalse(mouse.getButton(GLFW_MOUSE_BUTTON_RIGHT));
+
+        // A button that does not exist: false, no exception
+        assertFalse(mouse.getState(-1));
+        assertFalse(mouse.getState(GLFW_MOUSE_BUTTON_LAST + 1));
     }
 }
