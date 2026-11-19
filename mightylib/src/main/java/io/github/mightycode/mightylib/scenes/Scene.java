@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.scenes;
 
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.color.PictureSettings;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
@@ -68,6 +69,9 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     // Null until the scene sets one
     private float[] clearColor = null;
     private ERenderColorSpace colorSpace = ERenderColorSpace.INHERIT;
+    // Null: those of the engine
+    private String finalPassShader;
+    private PictureSettings picture;
 
     private String[] args;
 
@@ -134,6 +138,26 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
      */
     public final void setColorSpace(ERenderColorSpace colorSpace) {
         this.colorSpace = Objects.requireNonNull(colorSpace, "colorSpace");
+    }
+
+    @Override
+    public final String finalPassShader() {
+        return finalPassShader;
+    }
+
+    // The shader of the final pass of this view (name of a ShaderData), null for the one of the engine
+    public final void setFinalPassShader(String shaderName) {
+        finalPassShader = shaderName;
+    }
+
+    @Override
+    public final PictureSettings picture() {
+        return picture;
+    }
+
+    // The settings of the final pass of this view, null for those of the engine (the player's)
+    public final void setPicture(PictureSettings picture) {
+        this.picture = picture;
     }
 
     @Override

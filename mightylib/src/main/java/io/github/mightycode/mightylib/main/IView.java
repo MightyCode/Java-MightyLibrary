@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.color.PictureSettings;
 
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
@@ -24,5 +25,15 @@ public interface IView {
     // Color space of the draws of the view; INHERIT (the default): the one of the engine (Engine.colors)
     default ERenderColorSpace colorSpace() {
         return ERenderColorSpace.INHERIT;
+    }
+
+    // Shader of the final pass of the view (its framebuffer to the window); null (the default): the one of the engine
+    default String finalPassShader() {
+        return null;
+    }
+
+    // Settings of the final pass; null (the default): those of the engine (the player's)
+    default PictureSettings picture() {
+        return null;
     }
 }

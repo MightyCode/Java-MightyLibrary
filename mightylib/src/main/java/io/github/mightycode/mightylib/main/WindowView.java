@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.color.PictureSettings;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
 import io.github.mightycode.mightylib.graphics.surface.BasicBindableObject;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
@@ -50,6 +51,9 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
     // Null until the view sets one
     private float[] clearColor = null;
     private ERenderColorSpace colorSpace = ERenderColorSpace.INHERIT;
+    // Null: those of the engine
+    private String finalPassShader;
+    private PictureSettings picture;
 
     // ---- IView ----
 
@@ -91,6 +95,26 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
      */
     public final void setColorSpace(ERenderColorSpace colorSpace) {
         this.colorSpace = Objects.requireNonNull(colorSpace, "colorSpace");
+    }
+
+    @Override
+    public final String finalPassShader() {
+        return finalPassShader;
+    }
+
+    // The shader of the final pass of this view (name of a ShaderData), null for the one of the engine
+    public final void setFinalPassShader(String shaderName) {
+        finalPassShader = shaderName;
+    }
+
+    @Override
+    public final PictureSettings picture() {
+        return picture;
+    }
+
+    // The settings of the final pass of this view, null for those of the engine (the player's)
+    public final void setPicture(PictureSettings picture) {
+        this.picture = picture;
     }
 
     @Override
