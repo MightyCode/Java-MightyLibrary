@@ -22,7 +22,8 @@ public interface IView {
 
     Camera3D camera3D();
 
-    // Color space of the draws of the view; INHERIT (the default): the one of the engine (Engine.colors)
+    // Color space of the draws of the view; INHERIT (the default): the one of the engine (Engine.colors).
+    // A view that draws straight on the window (no framebuffer of view: overlays) returns GAMMA, the window is not sRGB
     default ERenderColorSpace colorSpace() {
         return ERenderColorSpace.INHERIT;
     }

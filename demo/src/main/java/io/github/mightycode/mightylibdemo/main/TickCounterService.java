@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylibdemo.main;
 
+import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.IView;
@@ -129,6 +130,12 @@ public final class TickCounterService implements IEngineService {
         @Override
         public Camera3D camera3D() {
             throw new IllegalStateException("The overlay of tick_counter has no 3D camera");
+        }
+
+        // Drawn straight on the window, which is not sRGB (IEngineService.displayOverlay)
+        @Override
+        public ERenderColorSpace colorSpace() {
+            return ERenderColorSpace.GAMMA;
         }
     }
 }
