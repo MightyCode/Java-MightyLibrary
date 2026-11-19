@@ -49,6 +49,20 @@
 			],
 			"tags" : ["2D"]
 		},
+		"points2D": {
+			"files": [
+				"2D/shape/points2DV.glsl",
+				"2D/shape/points2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"grid2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"2D/shape/grid2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
 		"texture2D": {
 			"files": [
 				"2D/essential/texture2DV.glsl",

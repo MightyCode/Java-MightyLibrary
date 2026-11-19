@@ -75,6 +75,24 @@ float shapeQuadMargin(float stroke, float worldPerPixel) {
     return max(stroke * strokeAlignment, 0.0) + (antialiasing > 0.5 ? worldPerPixel : 0.0) + max(shapeMargin, 0.0);
 }
 
+// The outs shared by every vertex of a shape; t: position over the size of the shape (0..1 inside it)
+void shapeSetOuts(vec2 local, vec2 t, vec2 halfSize, float worldPerPixel, float stroke) {
+    shapeUV = vec2(mix(shapeTexturePosition.x, shapeTexturePosition.y, t.x),
+            mix(shapeTexturePosition.z, shapeTexturePosition.w, t.y));
+
+    shapeLocal = local;
+    shapeHalfSize = halfSize;
+    shapePixel = worldPerPixel;
+    shapeStroke = stroke;
+    shapeStrokeOuter = stroke * strokeAlignment;
+    shapeFill = decodeColor(color);
+    shapeStrokeColor = decodeColor(strokeColor);
+    shapeAntialiasing = antialiasing;
+    shapeHasTexture = float(shapeTextured);
+    shapeData0 = shapeParams0;
+    shapeData1 = shapeParams1;
+}
+
 // Sets gl_Position and the outs for the vertex aPos of the unit quad
 void shapeVertex(vec2 aPos) {
     float worldPerPixel = shapeWorldPerPixel(projection * view);
@@ -90,20 +108,19 @@ void shapeVertex(vec2 aPos) {
     vec2 unitPosition = center + local / safeSize;
 
     gl_Position = projection * view * model * vec4(unitPosition, 0.0, 1.0);
+    shapeSetOuts(local, local / safeSize + 0.5, halfSize, worldPerPixel, stroke);
+}
 
-    vec2 t = local / safeSize + 0.5;
-    shapeUV = vec2(mix(shapeTexturePosition.x, shapeTexturePosition.y, t.x),
-            mix(shapeTexturePosition.z, shapeTexturePosition.w, t.y));
+// Sets gl_Position and the outs for a corner (-1 or 1 on each axis) of the quad of a point of diameter size around
+// center (positions in the frame of the renderer, model applied); each point is a shape of its own
+void shapePointVertex(vec2 center, vec2 corner, float size) {
+    float worldPerPixel = shapeWorldPerPixel(projection * view * model);
+    float stroke = shapeStrokeWidth(worldPerPixel);
+    float margin = shapeQuadMargin(stroke, worldPerPixel);
 
-    shapeLocal = local;
-    shapeHalfSize = halfSize;
-    shapePixel = worldPerPixel;
-    shapeStroke = stroke;
-    shapeStrokeOuter = stroke * strokeAlignment;
-    shapeFill = decodeColor(color);
-    shapeStrokeColor = decodeColor(strokeColor);
-    shapeAntialiasing = antialiasing;
-    shapeHasTexture = float(shapeTextured);
-    shapeData0 = shapeParams0;
-    shapeData1 = shapeParams1;
+    vec2 halfSize = vec2(abs(size) * 0.5);
+    vec2 local = corner * (halfSize + margin);
+
+    gl_Position = projection * view * model * vec4(center + local, 0.0, 1.0);
+    shapeSetOuts(local, local / max(2.0 * halfSize, vec2(1e-6)) + 0.5, halfSize, worldPerPixel, stroke);
 }

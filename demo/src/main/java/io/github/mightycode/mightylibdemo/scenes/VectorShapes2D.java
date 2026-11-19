@@ -4,8 +4,11 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.ArcRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.CircleRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EStrokeAlignment;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EStrokeUnit;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EPointShape;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.EllipseRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.GridRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.HexagonRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.PointsRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RegularPolygonRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RoundedRectangleRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.TriangleRenderer;
@@ -30,7 +33,7 @@ import static org.lwjgl.glfw.GLFW.*;
 /**
  * The vector shapes. Top: each shape filled with a stroke, stroke only, textured. Below: the three alignments of a
  * half transparent stroke, corners of different radii, a turning shape, a stroke of one pixel, sharp edges, a tinted
- * texture. Z / X zoom, Q / E turn the camera, R resets it, U switches the unit of the strokes (world / screen
+ * texture. Then points (a wave moved at each frame), over a background grid of lines one pixel wide. Z / X zoom, Q / E turn the camera, R resets it, U switches the unit of the strokes (world / screen
  * pixels), A switches the anti-aliasing.
  */
 public class VectorShapes2D extends Scene {
@@ -48,6 +51,9 @@ public class VectorShapes2D extends Scene {
     // Width of the stroke of each shape: in world units, in pixels of the screen
     private final List<float[]> strokeWidths = new ArrayList<>();
     private VectorShape2DRenderer turning;
+    private GridRenderer grid;
+    private PointsRenderer wave;
+    private float time;
     private Text help;
 
     private boolean screenUnits;
@@ -60,8 +66,14 @@ public class VectorShapes2D extends Scene {
         Camera2D hudCamera = camera2D().copy();
         resetCamera();
 
+        grid = new GridRenderer();
+        grid.setSizePix(2400, 1600);
+        grid.setStrokeColor(new Color4f(1f, 1f, 1f, 0.12f));
+        grid.setPosition(new Vector2f(0, 0));
+
         addShapeGrid();
         addStrokeExamples();
+        addPoints();
 
         help = new Text();
         help.setReferenceCamera(hudCamera);
@@ -128,6 +140,37 @@ public class VectorShapes2D extends Scene {
         VectorShape2DRenderer tinted = add(new EllipseRenderer(), 7, 3);
         tinted.setMainTextureChannel("painting");
         tinted.setColorMode(new Color4f(1f, 0.5f, 0.5f, 0.8f), false);
+    }
+
+    // Row 4: round and square points of growing size, a wave of points moved at each frame
+    private void addPoints() {
+        PointsRenderer round = new PointsRenderer();
+        PointsRenderer square = new PointsRenderer();
+        square.setPointShape(EPointShape.SQUARE);
+        for (int i = 0; i < 8; ++i) {
+            round.addPoint(new Vector2f(i * 30f, 0f));
+            square.addPoint(new Vector2f(i * 30f, 40f));
+        }
+        round.setPointSize(14f);
+        round.setColorMode(FILL);
+        square.setPointSize(14f);
+        square.setColorMode(NONE);
+
+        for (PointsRenderer points : List.of(round, square)) {
+            points.setPosition(new Vector2f(-3.5f * CELL_WIDTH, TOP + 4 * CELL_HEIGHT - 20f));
+            shapes.add(points);
+            strokeWidths.add(new float[]{0f, 0f});
+        }
+        stroke(square, 2f, 1f, STROKE);
+
+        wave = new PointsRenderer();
+        for (int i = 0; i < 60; ++i)
+            wave.addPoint(new Vector2f(i * 12f, 0f));
+        wave.setPointSize(7f);
+        wave.setColorMode(STROKE);
+        wave.setPosition(new Vector2f(-0.5f * CELL_WIDTH, TOP + 4 * CELL_HEIGHT));
+        shapes.add(wave);
+        strokeWidths.add(new float[]{0f, 0f});
     }
 
     // The shape centered in the cell (column, row) of the grid
@@ -213,6 +256,10 @@ public class VectorShapes2D extends Scene {
         }
 
         turning.setRotationZ(turning.getRotationAngle() + delta * 0.6f);
+
+        time += delta;
+        for (int i = 0; i < wave.pointCount(); ++i)
+            wave.setPoint(i, new Vector2f(i * 12f, (float) Math.sin(time * 2 + i * 0.25) * 25f));
     }
 
     @Override
@@ -220,6 +267,7 @@ public class VectorShapes2D extends Scene {
         setVirtualScene();
         clear();
 
+        grid.display();
         for (VectorShape2DRenderer shape : shapes)
             shape.display();
 
@@ -234,6 +282,7 @@ public class VectorShapes2D extends Scene {
     public void unload() {
         super.unload();
 
+        grid.unload();
         for (VectorShape2DRenderer shape : shapes)
             shape.unload();
         help.unload();
