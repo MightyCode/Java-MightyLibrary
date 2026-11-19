@@ -21,7 +21,9 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.VectorShape2DR
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
+import io.github.mightycode.mightylib.inputs.MouseManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
+import io.github.mightycode.mightylib.physics.collision.CollisionRectangle;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -44,8 +46,10 @@ import static org.lwjgl.glfw.GLFW.*;
  * and cap (butt, round, square), a closed half transparent line, a line of one screen pixel at every zoom, arrows,
  * a concave polygon with a stroke and the polygon of Scene2D; over a background grid of lines one pixel wide.
  * Controls (letters of a French AZERTY keyboard, read by their position like the other bindings of the demo): the wheel
- * zooms, Ctrl held zooms in, Shift held zooms out, Alt + wheel turns the camera, Z Q S D move it, R resets it,
- * X switches the unit of the strokes (world / screen pixels), W switches the anti-aliasing.
+ * zooms, Ctrl held zooms in, Shift held zooms out, Alt + wheel turns the camera, Z Q S D or the right button dragged
+ * move it, R resets it,
+ * X switches the unit of the strokes (world / screen pixels), W switches the anti-aliasing. The mouse over an element
+ * shows the renderer that draws it (found by a bounding rectangle of the element).
  */
 public class VectorShapes2D extends Scene {
     private static final float CELL_WIDTH = 150f;
@@ -67,6 +71,29 @@ public class VectorShapes2D extends Scene {
     private PolylineRenderer hairline;
     private float time;
     private Text help;
+
+    // An element under the mouse: its bounding rectangle in the world and what to show
+    private static final class Hoverable {
+        private final CollisionRectangle bounds;
+        private final String label;
+
+        private Hoverable(CollisionRectangle bounds, String label) {
+            this.bounds = bounds;
+            this.label = label;
+        }
+    }
+
+    private static final float TOOLTIP_PADDING = 6f;
+    private final List<Hoverable> hoverables = new ArrayList<>();
+    private final CollisionRectangle mouseBounds = new CollisionRectangle(0, 0, 0.01f, 0.01f);
+    private Text tooltip;
+    private RoundedRectangleRenderer tooltipBackground;
+    private String hovered;
+    // The text of the tooltip, set again only when it changes
+    private String shownLabel;
+    // Mouse position (virtual pixels) at the previous tick of a drag with the right button
+    private final Vector2f dragFrom = new Vector2f();
+    private boolean dragging;
 
     // Physical keys (GLFW names the positions of a QWERTY keyboard): the letters W and X of an AZERTY keyboard
     private static final int ANTIALIASING_KEY = GLFW_KEY_Z;
@@ -105,6 +132,93 @@ public class VectorShapes2D extends Scene {
                 .setColor(new Color4f(1, 1, 1, 1))
                 .setPosition(new Vector2f(10, 10));
         updateHelp();
+
+        tooltip = new Text();
+        tooltip.setReferenceCamera(hudCamera);
+        tooltip.setFontSize(18)
+                .setReference(EDirection.LeftUp)
+                .setColor(new Color4f(1, 1, 1, 1));
+        tooltipBackground = new RoundedRectangleRenderer();
+        tooltipBackground.setReferenceCamera(hudCamera);
+        tooltipBackground.setCornerRadius(6f);
+        tooltipBackground.setColorMode(new Color4f(0.22f, 0.24f, 0.32f, 0.92f));
+        tooltipBackground.setStrokeColor(new Color4f(1f, 1f, 1f, 0.5f));
+        tooltipBackground.setStrokeWidth(1f);
+        tooltipBackground.setStrokeUnit(EStrokeUnit.SCREEN_PIXELS);
+
+        buildHoverables();
+    }
+
+    // The bounding rectangle of each element, the last drawn first (it is over the others), the grid last
+    private void buildHoverables() {
+        for (int i = shapes.size() - 1; i >= 0; --i) {
+            VectorShape2DRenderer shape = shapes.get(i);
+            hoverables.add(new Hoverable(bounds(shape), label(shape)));
+        }
+        hoverables.add(0, new Hoverable(bounds(hairline), label(hairline)));
+
+        Vector2f gridHalf = new Vector2f(grid.scale().x, grid.scale().y).div(2);
+        hoverables.add(new Hoverable(new CollisionRectangle(new Vector2f(grid.get2DPosition()).sub(gridHalf),
+                new Vector2f(gridHalf).mul(2)), label(grid)));
+    }
+
+    private CollisionRectangle bounds(VectorShape2DRenderer shape) {
+        Vector2f position = shape.get2DPosition();
+        Vector2f min = new Vector2f(Float.MAX_VALUE);
+        Vector2f max = new Vector2f(-Float.MAX_VALUE);
+        float margin;
+
+        if (shape instanceof PointsRenderer) {
+            PointsRenderer points = (PointsRenderer) shape;
+            for (int i = 0; i < points.pointCount(); ++i)
+                include(min, max, points.getPoint(i));
+            // The wave moves up and down
+            margin = points.getPointSize() / 2 + (shape == wave ? 30f : 0f);
+        } else if (shape instanceof PolylineRenderer) {
+            PolylineRenderer line = (PolylineRenderer) shape;
+            for (int i = 0; i < line.pointCount(); ++i)
+                include(min, max, line.getPoint(i));
+            margin = 10f;
+        } else if (shape instanceof ArrowRenderer) {
+            ArrowRenderer arrow = (ArrowRenderer) shape;
+            for (int i = 0; i < arrow.pointCount(); ++i)
+                include(min, max, arrow.getPoint(i));
+            margin = Math.max(10f, arrow.getHeadWidth());
+        } else {
+            // Centered on its position; a turning shape is in the circle of its half diagonal
+            Vector2f half = new Vector2f(Math.abs(shape.scale().x), Math.abs(shape.scale().y)).div(2);
+            if (shape == turning)
+                half.set(half.length());
+            min.set(half).negate();
+            max.set(half);
+            margin = 4f;
+        }
+
+        min.add(position).sub(margin, margin);
+        max.add(position).add(margin, margin);
+        return new CollisionRectangle(min, new Vector2f(max).sub(min));
+    }
+
+    private static void include(Vector2f min, Vector2f max, Vector2f point) {
+        min.min(point);
+        max.max(point);
+    }
+
+    private static String label(VectorShape2DRenderer shape) {
+        String name = shape.getClass().getSimpleName();
+        if (shape instanceof PolylineRenderer) {
+            PolylineRenderer line = (PolylineRenderer) shape;
+            return name + " (join " + line.getJoin()
+                    + (line.isClosed() ? ", closed" : ", cap " + line.getCap()) + ")";
+        }
+        if (shape instanceof ArrowRenderer)
+            return name + " (head " + (((ArrowRenderer) shape).isHeadFilled() ? "filled" : "open") + ")";
+        if (shape instanceof PointsRenderer)
+            return name + " (" + ((PointsRenderer) shape).pointCount() + " points, "
+                    + ((PointsRenderer) shape).getPointShape() + ")";
+        if (shape.getStrokeWidth() > 0f && !(shape instanceof GridRenderer))
+            return name + " (stroke " + shape.getStrokeAlignment() + ")";
+        return name;
     }
 
     // One column per shape: filled with a stroke, stroke only, textured with a stroke
@@ -310,7 +424,7 @@ public class VectorShapes2D extends Scene {
     }
 
     private void updateHelp() {
-        help.setText("Wheel / Ctrl / Shift zoom, Alt + wheel turn, Z Q S D move, R reset\n"
+        help.setText("Wheel / Ctrl / Shift zoom, Alt + wheel turn, Z Q S D or right drag move, R reset\n"
                 + "X stroke unit: " + (screenUnits ? "screen pixels" : "world") + "\n"
                 + "W anti-aliasing: " + (antialiasing ? "on" : "off"));
     }
@@ -326,6 +440,7 @@ public class VectorShapes2D extends Scene {
         float delta = GameTime.DeltaTime();
 
         moveCamera(delta);
+        dragCamera();
         zoomAndTurnCamera(keyboard, delta);
         if (keyboard.keyPressed(RESET_KEY))
             resetCamera();
@@ -343,6 +458,8 @@ public class VectorShapes2D extends Scene {
                 shape.setAntialiasing(antialiasing);
             updateHelp();
         }
+
+        updateTooltip();
 
         turning.setRotationZ(turning.getRotationAngle() + delta * 0.6f);
 
@@ -366,6 +483,60 @@ public class VectorShapes2D extends Scene {
         Vector2f zoom = camera2D().getZoomLevel();
         direction.mul(MOVE_SPEED * delta).div(zoom);
         camera2D().setPos(camera2D().getCamPosCopy().add(direction));
+    }
+
+    // The right button held: the world follows the mouse
+    private void dragCamera() {
+        MouseManager mouse = context().getMouseManager();
+        if (mouse.isCaptured() || !mouse.getButton(GLFW_MOUSE_BUTTON_RIGHT)) {
+            dragging = false;
+            return;
+        }
+
+        Vector2f position = mouse.pos();
+        Vector2f moved = new Vector2f(position).sub(dragFrom);
+        dragFrom.set(position);
+        if (!dragging) {
+            // The first tick of the drag only takes the starting point
+            dragging = true;
+            return;
+        }
+        if (moved.lengthSquared() == 0f)
+            return;
+
+        camera2D().setPos(camera2D().getCamPosCopy().sub(moved.div(camera2D().getZoomLevel())));
+    }
+
+    // The renderer of the element under the mouse, next to it
+    private void updateTooltip() {
+        MouseManager mouse = context().getMouseManager();
+        String label = null;
+        if (!mouse.isCaptured()) {
+            Vector2f world = camera2D().transformPosition(mouse.pos());
+            mouseBounds.setX(world.x);
+            mouseBounds.setY(world.y);
+            for (Hoverable hoverable : hoverables) {
+                if (hoverable.bounds.isColliding(mouseBounds)) {
+                    label = hoverable.label;
+                    break;
+                }
+            }
+        }
+
+        hovered = label;
+        if (label == null)
+            return;
+
+        if (!label.equals(shownLabel)) {
+            tooltip.setText(label);
+            shownLabel = label;
+        }
+        // Reference at the top left, no padding: the box of the text starts at its position (leftUpPosition isn't
+        // updated by setPosition, docs/later.md)
+        Vector2f textPosition = mouse.pos().add(18f, 18f);
+        tooltip.setPosition(textPosition);
+        tooltipBackground.setPosition(new Vector2f(textPosition).sub(TOOLTIP_PADDING, TOOLTIP_PADDING));
+        tooltipBackground.setSizePix(tooltip.size().x + 2 * TOOLTIP_PADDING, tooltip.size().y + 2 * TOOLTIP_PADDING);
     }
 
     // The wheel zooms (turns with Alt), Ctrl held zooms in, Shift held zooms out, around the center of the view
@@ -400,6 +571,10 @@ public class VectorShapes2D extends Scene {
         hairline.display();
 
         help.display();
+        if (hovered != null) {
+            tooltipBackground.display();
+            tooltip.display();
+        }
 
         super.display();
 
@@ -415,5 +590,7 @@ public class VectorShapes2D extends Scene {
         for (VectorShape2DRenderer shape : shapes)
             shape.unload();
         help.unload();
+        tooltip.unload();
+        tooltipBackground.unload();
     }
 }
