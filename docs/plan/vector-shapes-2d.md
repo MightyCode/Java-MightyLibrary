@@ -93,3 +93,26 @@ Aucune.
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/vector-shapes`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+**Fait** (un commit par étape) : base `VectorShape2DRenderer` (contour, alignement, unité, anticrénelage, marge, texture teintée) et includes `utils/shape2DVertex.glsl` / `utils/shape2D.glsl` ; `RoundedRectangleRenderer`, `CircleRenderer`, `EllipseRenderer` (migré, `colorEllipse2D` et `ShaderEllipseProperty` supprimés), `TriangleRenderer`, `ArcRenderer`, `RegularPolygonRenderer`, `HexagonRenderer` (migré) ; `PointsRenderer`, `GridRenderer` ; `Stroker` / `StrokeGeometry` ; `PolylineRenderer`, `ArrowRenderer`, `PolygonRenderer` (migré : frange + contour) avec `stroke2D` ; scène `VectorShapes2D` ; `Scene2D` mise à jour ; docs.
+
+**Écarts au plan, et pourquoi** :
+- Deux includes au lieu d'un : `utils/shape2DVertex.glsl` (côté sommet) et `utils/shape2D.glsl` (côté fragment) : `fwidth`/`dFdx` n'existent pas dans un vertex shader, et les deux côtés partagent des `in`/`out`.
+- Un vertex shader commun à toutes les formes SDF (`2D/shape/shape2DV.glsl`) + un fragment shader par forme ; paramètres génériques `shapeParams0/1` (vec4) lus comme `shapeData0/1` (déjà au format d'attributs par instance).
+- Taille d'un pixel : les matrices ne suffisent pas (il faut le viewport) → nouvel uniform générique `mlViewportSize` envoyé par `Renderer`, viewport suivi par `GLContext.setViewport` (`Window` et `ConsolePanel` y passent).
+- Uniforms des formes déclarés optionnels (`putOptionalValue`) : sinon chaque forme qui n'en lit qu'une partie signalait des uniforms absents.
+- Base package-private `GeometricShape2DRenderer` commune à polyligne, flèche et polygone (géométrie dans `StrokeMesh`, un seul appel : remplissage, frange puis contour) ; `Shape2DRenderer.updateShapeIndices` ajouté (nombre de sommets variable).
+- Formes géométriques : contour toujours centré (l'alignement ne s'applique qu'aux formes par distance) ; la ligne d'une polyligne/flèche = le contour (`setStrokeWidth`, `setStrokeColor`), épaisseur 1 par défaut ; la grille trace ses lignes avec le contour.
+- Extrémité plate (et frange d'un remplissage géométrique) : le bord est un demi-pixel au-delà du point (la frange ne peut pas mordre sur l'intérieur sans recouvrement).
+- Côté intérieur d'une jointure limité à la moitié du segment le plus court : une ligne plus large que ses segments y est un peu amincie.
+
+**Vérifié** : `mvn -o -q package` (tous les tests, GL compris, et la démo contre les jars) ; tests ajoutés `ShapeStrokeTest`, `RegularPolygonShapeTest`, `StrokerTest` (15 cas), `PolygonOuterSideTest` ; en jeu par `scenario.py` : `VectorShapes2D` (toutes les formes, zoom 3-4, caméra tournée de 20 à 30°, contours en pixels d'écran avec U, mode linéaire par `colorspace view linear`), `leakcheck VectorShapes2D` (aucune fuite), `Scene2D` (hexagones, ellipse, deux polygones), `Scene3D`, `Game3D2D`, `ColorSpaceSplit2D` lancées sans erreur ; aucun uniform signalé absent dans le journal.
+
+**À vérifier à la main** :
+- `VectorShapes2D` : bords lisses en zoomant (Z / X) et en tournant la caméra (Q / E) ; U : les contours gardent la même largeur à l'écran au zoom ; A : bords nets ; jointures (onglet, rond, biseau) et extrémités (plate, ronde, carrée) des zigzags ; étoile semi-transparente sans recouvrement aux jointures ; ligne d'un pixel ; flèches ; polygone concave.
+- `Scene2D` : hexagones (doré, pavage texturé), ellipse qui tourne (touche de changement de référence), deux polygones texturés.
+- `ColorSpaceSplit2D` ou F7 sur `VectorShapes2D` : bords des formes en linéaire et en gamma.
+
+**Branches d'archive** : `archive-dev-2025` garde hors de `dev` `40f4d8a` (padding du texte : `Text.setPadding` existe dans `dev` ; scène `TestGUI`), `437b7ea` (contour de l'ellipse, repris autrement ici), `983c18c` (rectangle arrondi, repris ici) ; `devShader` garde `b50dd27` (« Add log, remove print » : `Shader`, `Texture`, `TextureLoader` de 2024). Suppression (locale et `origin`) en attente de la confirmation de l'utilisateur.
+
