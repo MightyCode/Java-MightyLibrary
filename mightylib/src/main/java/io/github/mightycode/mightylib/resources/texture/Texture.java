@@ -107,7 +107,6 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         }
     }
 
-    // Its data was reloaded: sent again by GLResources, the current version is used meanwhile
     /**
      * Storage of a texture: an sRGB picture is decoded to linear by the card when it is read (and filtered in
      * linear), a linear data map is read as it is.
@@ -116,6 +115,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         return colorSpace == ETextureColorSpace.SRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8;
     }
 
+    // Its data was reloaded: sent again by GLResources, the current version is used meanwhile
     private void checkVersion() {
         if (data.isLoaded() && data.getVersion() != uploadedVersion)
             requestReload();
