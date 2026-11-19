@@ -23,10 +23,14 @@ public final class EngineResources {
     // ---- Shaders (shaders/<version>/shaders.json) ----
 
     public static final String COLOR_SHAPE_2D = "colorShape2D";
-    public static final String COLOR_ELLIPSE_2D = "colorEllipse2D";
     public static final String TEXTURE_2D = "texture2D";
     // Vector shapes (VectorShape2DRenderer), one per shape
     public static final String ROUNDED_RECTANGLE_2D = "roundedRectangle2D";
+    public static final String CIRCLE_2D = "circle2D";
+    public static final String ELLIPSE_2D = "ellipse2D";
+    public static final String TRIANGLE_2D = "triangle2D";
+    public static final String ARC_2D = "arc2D";
+    public static final String REGULAR_POLYGON_2D = "regularPolygon2D";
     public static final String MULTI_COLORED_SHAPE_2D = "multiColoredShape2D";
     public static final String COLORED_TEXT = "coloredText";
     public static final String POST_PROCESSING = "postProcessing";
@@ -37,8 +41,8 @@ public final class EngineResources {
     public static final String TEXTURE_MULTIPLE_LIGHTS_3D = "textureMultipleLights3D";
 
     private static final List<String> SHADERS = List.of(
-            COLOR_SHAPE_2D, COLOR_ELLIPSE_2D, TEXTURE_2D,
-            ROUNDED_RECTANGLE_2D,
+            COLOR_SHAPE_2D, TEXTURE_2D,
+            ROUNDED_RECTANGLE_2D, CIRCLE_2D, ELLIPSE_2D, TRIANGLE_2D, ARC_2D, REGULAR_POLYGON_2D,
             MULTI_COLORED_SHAPE_2D, COLORED_TEXT, POST_PROCESSING,
             COLOR_SHAPE_3D, TEXTURE_3D, SKYBOX, MULTI_COLORED_LIGHTING_3D, TEXTURE_MULTIPLE_LIGHTS_3D);
 

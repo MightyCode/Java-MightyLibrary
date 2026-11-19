@@ -7,17 +7,45 @@
 			],
 			"tags" : ["2D"]
 		},
-		"colorEllipse2D": {
-			"files": [
-				"2D/essential/colorEllipse2DV.glsl",
-				"2D/essential/colorEllipse2DF.glsl"
-			],
-			"tags" : ["2D"]
-		},
 		"roundedRectangle2D": {
 			"files": [
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/roundedRectangle2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"circle2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"2D/shape/circle2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"ellipse2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"2D/shape/ellipse2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"triangle2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"2D/shape/triangle2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"arc2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"2D/shape/arc2DF.glsl"
+			],
+			"tags" : ["2D"]
+		},
+		"regularPolygon2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"2D/shape/regularPolygon2DF.glsl"
 			],
 			"tags" : ["2D"]
 		},

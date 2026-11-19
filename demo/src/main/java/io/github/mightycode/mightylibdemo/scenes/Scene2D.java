@@ -14,7 +14,6 @@ import io.github.mightycode.mightylib.resources.animation.AnimationData;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.resources.texture.Texture;
-import io.github.mightycode.mightylib.resources.texture.TextureData;
 import io.github.mightycode.mightylib.resources.texture.TextureDataAtlas;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -166,16 +165,13 @@ public class Scene2D extends Scene {
 
         camera2D().setZoomLevel(0.5f);
 
-        hexagonRenderer1 = new HexagonRenderer("colorShape2D");
+        hexagonRenderer1 = new HexagonRenderer();
         hexagonRenderer1.setColorMode(ColorList.Gold());
         hexagonRenderer1.setSizePix(200, 100);
         hexagonRenderer1.setPosition(new Vector2f(-100, 400));
 
-        hexagonRenderer2 = new HexagonRenderer("texture2D");
-        hexagonRenderer2.setMainTextureChannel(glResources().addElementOrReturnIfPresent(
-                Texture.class,
-                new Texture(resources().getResource(TextureData.class,
-                        "hexagon")), "hexagon"));
+        hexagonRenderer2 = new HexagonRenderer();
+        hexagonRenderer2.setMainTextureChannel("hexagon");
         hexagonRenderer2.setSizePix(100, 100 * HexagonRenderer.STRETCH_RATIO);
         hexagonRenderer2.setPosition(new Vector2f(0,0));
         //ellipseRenderer.setReference(EDirection.Right);

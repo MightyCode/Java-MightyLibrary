@@ -36,6 +36,93 @@ float sdRoundedBox(vec2 p, vec2 halfSize, vec4 radii) {
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
 
+float sdCircle(vec2 p, float radius) {
+    return length(p) - radius;
+}
+
+// Ellipse of semi-axes radii, approached by f / |grad f| (exact on the axes, close elsewhere)
+float sdEllipse(vec2 p, vec2 radii) {
+    radii = max(radii, vec2(1e-6));
+    float k0 = length(p / radii);
+    float k1 = length(p / (radii * radii));
+    if (k1 < 1e-9)
+        return -min(radii.x, radii.y);
+    return k0 * (k0 - 1.0) / k1;
+}
+
+// Squared distance from p to the segment [a, b]
+float shapeSegmentDistance2(vec2 p, vec2 a, vec2 b) {
+    vec2 edge = b - a;
+    vec2 toP = p - a;
+    vec2 closest = toP - edge * clamp(dot(toP, edge) / max(dot(edge, edge), 1e-12), 0.0, 1.0);
+    return dot(closest, closest);
+}
+
+// Triangle of vertices a, b, c (either order)
+float sdTriangle(vec2 p, vec2 a, vec2 b, vec2 c) {
+    float d2 = min(min(shapeSegmentDistance2(p, a, b), shapeSegmentDistance2(p, b, c)), shapeSegmentDistance2(p, c, a));
+    // Inside when p is on the same side of the three edges
+    float s0 = (b.x - a.x) * (p.y - a.y) - (b.y - a.y) * (p.x - a.x);
+    float s1 = (c.x - b.x) * (p.y - b.y) - (c.y - b.y) * (p.x - b.x);
+    float s2 = (a.x - c.x) * (p.y - c.y) - (a.y - c.y) * (p.x - c.x);
+    bool inside = (s0 >= 0.0 && s1 >= 0.0 && s2 >= 0.0) || (s0 <= 0.0 && s1 <= 0.0 && s2 <= 0.0);
+    return inside ? -sqrt(d2) : sqrt(d2);
+}
+
+// Part of a ring between the radii inner and outer, from the angle start over sweep (radians, from +x toward +y,
+// so clockwise on the screen); inner 0: a pie, sweep 2 pi: a ring (a disk with inner 0)
+float sdAnnularSector(vec2 p, float inner, float outer, float start, float sweep) {
+    sweep = clamp(sweep, 0.0, 2.0 * SHAPE_PI);
+    float halfSweep = 0.5 * sweep;
+    // Turned so that the middle of the sector is along +x, mirrored onto y >= 0
+    float middle = start + halfSweep;
+    vec2 q = vec2(cos(middle) * p.x + sin(middle) * p.y, -sin(middle) * p.x + cos(middle) * p.y);
+    q.y = abs(q.y);
+
+    float len = length(q);
+    bool inAngle = atan(q.y, q.x) <= halfSweep;
+    float d = 1e30;
+    if (inAngle) {
+        d = abs(len - outer);
+        if (inner > 0.0)
+            d = min(d, abs(len - inner));
+    }
+
+    // The straight edge at the end of the sector, when it isn't a full ring
+    if (halfSweep < SHAPE_PI - 1e-4) {
+        vec2 side = vec2(cos(halfSweep), sin(halfSweep));
+        d = min(d, length(q - side * clamp(dot(q, side), inner, outer)));
+    }
+
+    bool inside = inAngle && len <= outer && len >= inner;
+    return inside ? -d : d;
+}
+
+// Polygon of sides vertices on the unit circle from the angle start, its bounding box stretched onto the box of
+// half size halfSize; unitBox: the bounding box of the unit polygon (min x, max x, min y, max y)
+float sdStretchedRegularPolygon(vec2 p, vec2 halfSize, int sides, float start, vec4 unitBox) {
+    sides = clamp(sides, 3, 64);
+    vec2 scale = 2.0 * halfSize / max(vec2(unitBox.y - unitBox.x, unitBox.w - unitBox.z), vec2(1e-6));
+    vec2 offset = -halfSize - vec2(unitBox.x, unitBox.z) * scale;
+
+    float angleStep = 2.0 * SHAPE_PI / float(sides);
+    vec2 previous = offset + scale * vec2(cos(start - angleStep), sin(start - angleStep));
+    float d2 = 1e30;
+    bool inside = false;
+    for (int i = 0; i < sides; ++i) {
+        float angle = start + angleStep * float(i);
+        vec2 current = offset + scale * vec2(cos(angle), sin(angle));
+        d2 = min(d2, shapeSegmentDistance2(p, previous, current));
+        // Crossing count of a ray toward +x
+        if ((current.y > p.y) != (previous.y > p.y)
+                && p.x < (previous.x - current.x) * (p.y - current.y) / (previous.y - current.y) + current.x)
+            inside = !inside;
+        previous = current;
+    }
+
+    return inside ? -sqrt(d2) : sqrt(d2);
+}
+
 // ---- Composition ----
 
 // Size of a pixel in the frame of the shape, at this fragment (the zoom and the rotations included)
