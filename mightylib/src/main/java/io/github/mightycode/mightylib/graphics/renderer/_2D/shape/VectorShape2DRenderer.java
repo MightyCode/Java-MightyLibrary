@@ -158,14 +158,15 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         return stroke.width();
     }
 
-    // Black by default
+    // Black by default; copied: changing the color given afterwards changes nothing
     public final VectorShape2DRenderer setStrokeColor(Color4f color) {
         stroke.setColor(color);
         return this;
     }
 
+    // A copy
     public final Color4f getStrokeColor() {
-        return stroke.color();
+        return stroke.color().copy();
     }
 
     // CENTERED by default

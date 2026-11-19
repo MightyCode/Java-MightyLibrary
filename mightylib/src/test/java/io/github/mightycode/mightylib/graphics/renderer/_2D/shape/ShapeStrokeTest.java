@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -69,5 +70,15 @@ class ShapeStrokeTest {
         assertThrows(IllegalArgumentException.class, () -> stroke.setColor(null));
         assertThrows(IllegalArgumentException.class, () -> stroke.setAlignment(null));
         assertThrows(IllegalArgumentException.class, () -> stroke.setUnit(null));
+    }
+
+    @Test
+    void theColorIsCopied() {
+        ShapeStroke stroke = new ShapeStroke();
+        Color4f given = new Color4f(1f, 0f, 0f, 1f);
+        stroke.setColor(given);
+        given.setR(0f);
+
+        assertEquals(1f, stroke.color().getR(), EPSILON);
     }
 }

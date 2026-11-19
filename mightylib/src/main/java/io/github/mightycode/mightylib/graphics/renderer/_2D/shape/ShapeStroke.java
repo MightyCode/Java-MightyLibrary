@@ -26,12 +26,14 @@ final class ShapeStroke {
         this.width = Math.max(width, 0f);
     }
 
+    // The color kept here: sent to the shaders, never handed out
     Color4f color() { return color; }
 
+    // Copied: the color given stays the caller's
     void setColor(Color4f color) {
         if (color == null)
             throw new IllegalArgumentException("The stroke color can't be null");
-        this.color = color;
+        this.color = color.copy();
     }
 
     EStrokeAlignment alignment() { return alignment; }
