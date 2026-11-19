@@ -12,11 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 // The color service of an engine without window: created from the configuration, or replaced by a plugin
-class ColorServiceEngineTest {
+public class ColorServiceEngineTest {
     private Engine engine;
     private Views.Scope scope;
 
@@ -37,6 +38,16 @@ class ColorServiceEngineTest {
             return engine;
         } finally {
             System.clearProperty(EngineConfig.SOUND_PROPERTY);
+        }
+    }
+
+    // An engine without window, entered as the current view, for the other tests
+    public static void WithHeadlessEngine(Path resources, Consumer<Engine> test) {
+        ColorServiceEngineTest owner = new ColorServiceEngineTest();
+        try {
+            test.accept(owner.start(resources, new EngineConfig()));
+        } finally {
+            owner.stop();
         }
     }
 
