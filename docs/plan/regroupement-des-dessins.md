@@ -117,3 +117,30 @@ Décisions prises :
 | 128 000 | 4 | 221,8 | 221,8 | 128 002 | 64 001 | 160 002 |
 
 Écart : l'« atlas » de la scène est le tileset `tileset` découpé en régions (une texture, plusieurs régions : même effet pour le lot), pas un `TextureDataAtlas` construit par la scène.
+
+### Mesures après l'étape 6 (`RectangleRenderer` regroupé)
+Même scène, même machine, `renderCpuMs` (appels de dessin) :
+
+| N | off | orphan | ring | orphan trié par état (S) |
+|---|---|---|---|---|
+| 1 000 | 0,25 (1 002) | 0,25 (502) | 0,31 (502) | — |
+| 8 000 | 10,7 (8 002) | 1,44 (4 002) | 1,49 (4 002) | — |
+| 32 000 | 55,1 (32 002) | 6,42 (16 002) | 6,35 (16 002) | 5,5 (4) |
+| 128 000 | 253,6 (128 002) | 33,3 (64 002) | 33,7 (64 002) | 42,8 (4) |
+
+Sans tri, sprites et rectangles colorés alternent (3 pour 1, deux textures) : une coupure par changement. Trié par état, 4 appels ; à 128 000 le tri du `long[]` coûte plus qu'il ne gagne : le coût restant est le travail CPU par dessin (~260 ns), à profiler (JFR) dans l'objectif d'acceptation.
+
+### Écarts au plan (étapes 4 à 6)
+- État d'un lot = int (génération de la table sur 4 bits, part de matériau 16 bits, place de caméra 10 bits, mode de couleur 1 bit). La caméra n'est pas internée par contenu mais par **objets de ses matrices** (place mise à jour sur place quand aucun dessin ne l'attend, nouvelle place si elle bouge pendant qu'un dessin l'attend) : une caméra qui bouge à chaque frame ne crée ni état ni allocation. Deux caméras distinctes de même contenu ne fusionnent pas. Un état gardé au-delà d'une remise à zéro de la table est refusé par `beginDraw` (étiquette de génération).
+- Texture et couleur d'un dessin regroupé : décidées par le programme d'origine (il lit une texture : texture principale du matériau, sinon texture blanche ; il a l'uniform `color` : couleur du renderer, sinon du matériau, sinon transparent ; sinon blanc). `Shader.samplesTextures()` (uniforms actifs de type sampler) ajouté pour cela. Les rectangles colorés fusionnent entre eux (texture blanche), les sprites d'une même texture entre eux ; colorés et sprites ne fusionnent pas.
+- Tampons du mode courant créés au démarrage du moteur et à l'ouverture d'un contexte (`Batches2D.prepare`), ceux de l'ancien mode supprimés à un changement de mode, ceux d'un contexte fermé supprimés à la frame suivante (`loadingIdle`) : le nombre d'objets GL ne dépend pas des scènes jouées (vérifications de fuites du kit et de `leakcheck`).
+- Texture blanche référencée par le lot du moteur du démarrage à la fin (`Batches2D.acquireWhiteTexture`, après le chargement des ressources).
+- `Shape2DRenderer` : l'envoi de la géométrie au maillage passe de `display()` à `draw()` (inutile quand le dessin est regroupé). Un `Shape2DRenderer` avec test de profondeur reste dessiné seul (le lot ne garde pas z).
+- `Engine.batch2DMode()` / `setBatch2DMode()` publics (touche M de `BatchStress2D`, commande `batch` de l'étape 7). `BatchStress2D` : touches M (mode) et S (`layerThenState`).
+- `DrawBatch2D.drawRegion` suit les retournements de `RectangularFace` (`Horizontal` = miroir des lignes, v ; `Vertical` = des colonnes, u).
+
+### Vérifié (étapes 4 à 6)
+- Tests sans GL : `DrawBatch2DTest`, `BatchStateTableTest`, `Batch2DOptionTest`, `Shape2DBatchGeometryTest`, `UniformValuesTest` (valeurs d'un renderer regroupable).
+- Tests GL du kit : `DrawBatch2DGLTest` (1 appel pour un état, 1 par état alterné, anneau sur 180 flushs relus au pixel, changement de mode à chaud), `RectangleBatchGLTest` (image de 17 rectangles — rotations, retournements, rotations de texture, références, transparence, additif, matériau partagé, un renderer dessiné seul au milieu — identique au pixel près en `off`, `orphan` et `ring` ; matériaux égaux = 1 appel ; matériau changé ré-interné ; `drawRegion` = `RectangleRenderer`) ; contrôles de fuites du kit.
+- En jeu : `SharedMaterial2D` capturée en `off`/`orphan`/`ring` (trois lancements, `-Dmightylib.batch2D`) : 0 pixel différent sur 592 200 (script local `tools/scripts/compare_batch_modes.py`) ; `leakcheck` sans fuite sur `BatchStress2D`, `SharedMaterial2D`, `Scene2D`, `VectorShapes2D`, `MultiWindowScene` ; second contexte ouvert puis fermé : objets GL revenus à leur nombre ; `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` chargées sans ligne suspecte ; console ouverte sur `SharedMaterial2D` sans erreur.
+- Non comparables automatiquement (animées) : `Scene2D`, `VectorShapes2D`, `BatchStress2D` — à vérifier à l'œil.

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /*
  * Values of uniforms by name, sent at each draw by their location: each location is found once per program (the
@@ -33,9 +34,12 @@ final class UniformValues {
     // The sink and program the locations belong to
     private IUniformSink resolvedFor;
     private long resolvedStamp;
+    // Incremented by each put and remove: what depends on the names is checked again when it changes
+    private int version;
 
     /** @return the previous value of this name, null when none */
     ShaderValue put(ShaderValue value, boolean optional) {
+        ++version;
         Entry entry = new Entry(value, optional);
         Entry previous = byName.put(value.getName(), entry);
         if (previous != null) {
@@ -52,6 +56,7 @@ final class UniformValues {
         if (previous == null)
             return false;
 
+        ++version;
         entries.remove(previous);
         return true;
     }
@@ -72,6 +77,20 @@ final class UniformValues {
 
     int size() {
         return entries.size();
+    }
+
+    int version() {
+        return version;
+    }
+
+    // Every value has one of these names
+    boolean onlyNames(Set<String> names) {
+        for (Entry entry : entries) {
+            if (!names.contains(entry.value.getName()))
+                return false;
+        }
+
+        return true;
     }
 
     Collection<ShaderValue> values() {

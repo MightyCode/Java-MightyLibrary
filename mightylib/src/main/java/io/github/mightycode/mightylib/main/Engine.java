@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.console.internal.LogCapture;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.graphics.color.IColorService;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
@@ -121,6 +122,21 @@ public final class Engine implements IView {
     }
 
     public GLResources glResources() { return glResources; }
+
+    /** How the 2D draws are sent now: EngineConfig.setBatch2DMode at the start, then setBatch2DMode. */
+    public EBatch2DMode batch2DMode() {
+        return glResources == null ? config.getBatch2DMode() : Batches2D.of(this).mode();
+    }
+
+    /**
+     * Changes how the 2D draws are sent, at once (the draws waiting are sent first). Main thread.
+     * @throws IllegalStateException without window (nothing is drawn)
+     */
+    public void setBatch2DMode(EBatch2DMode mode) {
+        if (glResources == null)
+            throw new IllegalStateException("No 2D batch without window");
+        Batches2D.of(this).setMode(mode);
+    }
 
     // The shaders: declarations and prelude of their sources (service mightylib:shaders)
     public IShaderService shaders() { return service(EngineServices.SHADERS); }
@@ -416,6 +432,8 @@ public final class Engine implements IView {
         mainContext.setSceneManager(sceneManager);
 
         loadResources();
+        // Unit 0 of the batched draws without texture, referenced until the end of the engine
+        Batches2D.of(this).acquireWhiteTexture(glResources, resources);
         sceneManager.init(config.getStartScene().get(), new String[]{"start"});
 
         // The standard input and the debug server only exist in debug mode, never in a test

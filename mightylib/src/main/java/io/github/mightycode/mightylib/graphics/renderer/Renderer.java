@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.graphics.renderer;
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.utils.IDisplayable;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -16,8 +18,11 @@ import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.utils.math.UUID;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
+
+import java.util.Set;
 
 
 /**
@@ -66,6 +71,20 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
     private final ShaderValue linearColors;
     // Size of the viewport of the draw, in pixels: sent with the other values
     private final Vector2f viewportSize = new Vector2f();
+
+    // The values a batched draw gives itself: a renderer with others is drawn alone
+    static final Set<String> BATCH_HANDLED_VALUES = Set.of(ShaderUniforms.PROJECTION, ShaderUniforms.VIEW,
+            ShaderUniforms.MODEL, ShaderUniforms.COLOR, ShaderUniforms.LINEAR_COLORS, ShaderUniforms.VIEWPORT_SIZE);
+
+    // Order of the draw in a sorted view (setLayer, setSortDepth)
+    private int layer;
+    private float sortDepth;
+    // Its values checked for a batched draw, at this version of them
+    private int checkedOverridesVersion = -1;
+    private boolean overridesBatchable;
+    private ShaderValue projectionValue;
+    private ShaderValue viewValue;
+    private ShaderValue colorValue;
 
     /*
      * A material of its own, of the program of the shader (the fallback one while it loads or when it failed); the
@@ -187,6 +206,10 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
     @Override
     public void display(){
         if(visible) {
+            DrawBatch2D batch = Views.current().batch2D();
+            if (batch != null && batch.isEnabled() && submitToBatch(batch))
+                return;
+
             // Drawn alone: the batched draws asked before are sent first (a barrier)
             GLContext.FlushCurrentDraws(getClass());
             applyRenderState();
@@ -194,6 +217,99 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
             updateShader();
             draw();
         }
+    }
+
+    // ---- 2D batch ----
+
+    /**
+     * Hook called by display when the view batches its 2D draws (DrawBatch2D, mode not OFF), before anything is
+     * drawn: writes the draw in the batch (batchState, batchColor, modelMatrix, then DrawBatch2D.beginDraw, vertex,
+     * index, endDraw) and returns true, or returns false to be drawn alone (display goes on as without batch). The
+     * base returns false.
+     */
+    protected boolean submitToBatch(DrawBatch2D batch) {
+        return false;
+    }
+
+    /**
+     * The state of the batched draw of this renderer (material, camera, color mode), -1 when it can't be batched:
+     * its own values are more than the camera, the model and the color, or its material can't be batched now
+     * (Material.batchPart). Starts the batch: call it right before the draw is written.
+     */
+    protected final int batchState(DrawBatch2D batch) {
+        if (overrides.version() != checkedOverridesVersion)
+            checkOverrides();
+        if (!overridesBatchable)
+            return -1;
+
+        Object projection = projectionValue.getObject();
+        Object view = viewValue.getObject();
+        if (!(projection instanceof Matrix4f) || !(view instanceof Matrix4f))
+            return -1;
+
+        BatchStateTable table = batch.stateTable();
+        int part = material.batchPart(table);
+        if (part < 0)
+            return -1;
+
+        int camera = table.camera((Matrix4f) projection, (Matrix4f) view);
+        return table.state(part, camera, resolveColorSpace().isLinear());
+    }
+
+    private void checkOverrides() {
+        checkedOverridesVersion = overrides.version();
+        projectionValue = overrides.get(ShaderUniforms.PROJECTION);
+        viewValue = overrides.get(ShaderUniforms.VIEW);
+        colorValue = overrides.get(ShaderUniforms.COLOR);
+        overridesBatchable = projectionValue != null && viewValue != null
+                && overrides.onlyNames(BATCH_HANDLED_VALUES);
+    }
+
+    /**
+     * The color of the vertices of the batched draw, RGBA in an int (after batchState): the color of this renderer
+     * (else of its material, else transparent, like the uniform) when its program reads the uniform color, white
+     * otherwise (a program of texture only).
+     */
+    protected final int batchColor() {
+        if (!material.batchReadsColor())
+            return 0xFFFFFFFF;
+
+        ShaderValue color = colorValue != null ? colorValue : material.getShaderValue(ShaderUniforms.COLOR);
+        if (color == null || color.getObject() == null)
+            return 0;
+        if (color.getObject() instanceof Color4f)
+            return ((Color4f) color.getObject()).toIntRGBA();
+        if (color.getObject() instanceof Integer)
+            return (Integer) color.getObject();
+        return 0;
+    }
+
+    /** The model matrix of the renderer (read only): what a batched draw applies to its vertices itself. */
+    protected final Matrix4fc modelMatrix() {
+        return model;
+    }
+
+    /**
+     * The layer of the draw for the sort key of its view (IDrawSortKey, DrawSortKeys); without key (the default
+     * order), ignored. A layer does not move a draw over what is drawn after a barrier (a renderer drawn alone).
+     */
+    public final Renderer setLayer(int layer) {
+        this.layer = layer;
+        return this;
+    }
+
+    public final int getLayer() {
+        return layer;
+    }
+
+    // The depth of the draw for the sort key of its view (DrawSortKeys.layerThenDepth), 0 by default
+    public final Renderer setSortDepth(float sortDepth) {
+        this.sortDepth = sortDepth;
+        return this;
+    }
+
+    public final float getSortDepth() {
+        return sortDepth;
     }
 
     // Hook: sets the OpenGL state of the draw (that of the material) before the program is used; call super

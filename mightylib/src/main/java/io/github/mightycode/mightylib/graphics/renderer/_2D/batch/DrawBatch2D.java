@@ -4,8 +4,17 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batch
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchUploader;
+import io.github.mightycode.mightylib.graphics.renderer.Material;
+import io.github.mightycode.mightylib.main.IView;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
+import io.github.mightycode.mightylib.scenes.camera.Camera;
+import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
 import org.apiguardian.api.API;
+import org.joml.Matrix4f;
+import org.joml.Vector2fc;
+import org.joml.Vector4fc;
 import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
@@ -307,6 +316,120 @@ public final class DrawBatch2D {
         entryCounts[drawCount] = indexCount - drawFirstIndex;
         // Computed when the draw is asked: the function reads values that may change before the flush
         keys[drawCount] = (sortKey.key(drawLayer, drawDepth, drawState) & ~CALL_INDEX_MASK) | drawCount;
+    }
+
+    // ---- Drawing without renderer ----
+
+    /** The state of draws of this material with the 2D camera of the current view (see state(Material, Camera)). */
+    public int state(Material material) {
+        return state(material, Views.current().camera2D());
+    }
+
+    /**
+     * The state of draws of this material seen through this camera, in the color mode of the material and the
+     * current view: -1 when the material can't be batched now (its shader or the batch shader still loading, or a
+     * shader without batch equivalent, "batch" in shaders.json). Valid until the next barrier: asked again after.
+     */
+    public int state(Material material, Camera camera) {
+        Objects.requireNonNull(material, "material");
+        BatchStateTable stateTable = stateTable();
+        int part = material.batchPart(stateTable);
+        if (part < 0)
+            return -1;
+
+        // The matrices of the camera themselves (the getters of matrices give copies)
+        Matrix4f projection = (Matrix4f) camera.getProjection().getObject();
+        Matrix4f view = (Matrix4f) camera.getView().getObject();
+        IView current = Views.current();
+        boolean linear = current.engine().colors().resolve(material.getColorSpace(), current.colorSpace()).isLinear();
+        return stateTable.state(part, stateTable.camera(projection, view), linear);
+    }
+
+    /**
+     * A rectangle of the main texture of the material (the texture a texture shader reads; colorShape2D reads
+     * none: a colored rectangle), like a RectangleRenderer: size in world units, its reference point (0 to 1 of its
+     * size, 0 0 for the top left corner) placed at position, turned by rotation (radians) around it, the part of
+     * the texture region (u0, v0, u1, v1 in its x, y, z, w; null for the whole texture), flipped like
+     * RectangleRenderer.setTextureFlip, multiplied by color (null for white). False when the material can't be
+     * batched now (nothing drawn).
+     */
+    public boolean drawRegion(Material material, Vector2fc position, Vector2fc size, Vector2fc reference,
+                              float rotation, Vector4fc region, EFlip flip, Color4f color) {
+        return drawRegion(material, position, size, reference, rotation, region, flip, color, 0, 0f);
+    }
+
+    // The same with the layer and the depth of the draw, for the sort key of the view
+    public boolean drawRegion(Material material, Vector2fc position, Vector2fc size, Vector2fc reference,
+                              float rotation, Vector4fc region, EFlip flip, Color4f color, int layer, float depth) {
+        int state = state(material);
+        if (state < 0)
+            return false;
+
+        float width = size.x(), height = size.y();
+        float left = -(reference == null ? 0 : reference.x()) * width;
+        float top = -(reference == null ? 0 : reference.y()) * height;
+        float cos = (float) Math.cos(rotation), sin = (float) Math.sin(rotation);
+        float px = position.x(), py = position.y();
+
+        float u0 = region == null ? 0 : region.x(), v0 = region == null ? 0 : region.y();
+        float u1 = region == null ? 1 : region.z(), v1 = region == null ? 1 : region.w();
+        // Like RectangularFace: a flip is named by its axis, Horizontal mirrors the rows (v), Vertical the columns (u)
+        if (flip == EFlip.Horizontal || flip == EFlip.HorizontalVertical) {
+            float v = v0;
+            v0 = v1;
+            v1 = v;
+        }
+        if (flip == EFlip.Vertical || flip == EFlip.HorizontalVertical) {
+            float u = u0;
+            u0 = u1;
+            u1 = u;
+        }
+
+        // Corners in the order of RectangleRenderer: (0, h), (0, 0), (w, 0), (w, h)
+        float x0 = left, y0 = top + height, x1 = left, y1 = top;
+        float x2 = left + width, y2 = top, x3 = left + width, y3 = top + height;
+        quad(state, layer, depth,
+                px + cos * x0 - sin * y0, py + sin * x0 + cos * y0, u0, v1,
+                px + cos * x1 - sin * y1, py + sin * x1 + cos * y1, u0, v0,
+                px + cos * x2 - sin * y2, py + sin * x2 + cos * y2, u1, v0,
+                px + cos * x3 - sin * y3, py + sin * x3 + cos * y3, u1, v1,
+                color == null ? -1 : color.toIntRGBA());
+        drawnOutsideRenderer();
+        return true;
+    }
+
+    /** A rectangle of the whole texture of the material (or of its color), its top left corner at position. */
+    public boolean drawRectangle(Material material, Vector2fc position, Vector2fc size, Color4f color) {
+        return drawRegion(material, position, size, null, 0f, null, EFlip.None, color, 0, 0f);
+    }
+
+    /**
+     * Any quad of the material: its 4 corners (x, y pairs, in order around it: triangles 0 3 2 and 0 2 1), their
+     * texture coordinates (u, v pairs), one color (null for white). False when the material can't be batched now.
+     */
+    public boolean drawQuad(Material material, float[] corners, float[] textureCoordinates, Color4f color,
+                            int layer, float depth) {
+        if (corners.length != 8 || textureCoordinates.length != 8)
+            throw new IllegalArgumentException("A quad has 4 corners and 4 texture coordinates (8 floats each)");
+
+        int state = state(material);
+        if (state < 0)
+            return false;
+
+        quad(state, layer, depth,
+                corners[0], corners[1], textureCoordinates[0], textureCoordinates[1],
+                corners[2], corners[3], textureCoordinates[2], textureCoordinates[3],
+                corners[4], corners[5], textureCoordinates[4], textureCoordinates[5],
+                corners[6], corners[7], textureCoordinates[6], textureCoordinates[7],
+                color == null ? -1 : color.toIntRGBA());
+        drawnOutsideRenderer();
+        return true;
+    }
+
+    // Mode OFF: a draw of this API is sent at once (one draw call, like a renderer drawn alone)
+    private void drawnOutsideRenderer() {
+        if (!isEnabled())
+            send(true);
     }
 
     // ---- Barriers ----

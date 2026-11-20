@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.renderer.Material;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawSortKeys;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
@@ -22,8 +24,10 @@ import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * Measure of the 2D drawing: N rectangles, three textured ones (regions of one tile set, like an atlas) for one
- * colored one, of several sizes and turning. Up doubles N, Down halves it. The counters are those of the command
- * stats (renderCpuMs: CPU time of the display of the windows, without the buffer swap).
+ * colored one, of several sizes and turning. Up doubles N, Down halves it, M changes the mode of the 2D batch (off,
+ * orphan, ring, instanced), S sorts the draws by state (DrawSortKeys.layerThenState: the sprites together, the
+ * colored rectangles together). The counters are those of the command stats (renderCpuMs: CPU time of the display of the
+ * windows, without the buffer swap).
  */
 public class BatchStress2D extends Scene {
     private static final int START_COUNT = 1000;
@@ -56,7 +60,7 @@ public class BatchStress2D extends Scene {
 
         help = new Text();
         help.setFontSize(20).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 10));
-        help.setText("Up : N x2   Down : N / 2   ESC : menu");
+        help.setText("Up : N x2   Down : N / 2   M : mode of the batch   S : sort by state   ESC : menu");
         counters = new Text();
         counters.setFontSize(18).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 40));
     }
@@ -105,6 +109,12 @@ public class BatchStress2D extends Scene {
             resize(Math.min(MAX_COUNT, rectangles.size() * 2));
         if (keyboard.keyPressed(GLFW_KEY_DOWN))
             resize(Math.max(1, rectangles.size() / 2));
+        if (keyboard.keyPressed(GLFW_KEY_S))
+            setDrawSortKey(batch2D().getDrawSortKey() == null ? DrawSortKeys.layerThenState() : null);
+        if (keyboard.keyPressed(GLFW_KEY_M)) {
+            EBatch2DMode[] modes = EBatch2DMode.values();
+            engine().setBatch2DMode(modes[(engine().batch2DMode().ordinal() + 1) % modes.length]);
+        }
 
         time += GameTime.DeltaTime();
         for (int i = 0; i < rectangles.size(); ++i)
@@ -119,9 +129,13 @@ public class BatchStress2D extends Scene {
 
     private String describeCounters() {
         JSONObject stats = EngineStats.toJson();
-        return "N " + rectangles.size() + "   fps " + stats.optInt("fps") + "   frame " + stats.optDouble("frameMs")
-                + " ms   render CPU " + stats.optDouble("renderCpuMs") + " ms"
-                + "\ndraw calls " + stats.optDouble("drawCallsPerFrame") + "   program binds "
+        return "N " + rectangles.size() + "   mode " + engine().batch2DMode().optionName()
+                + (batch2D().getDrawSortKey() == null ? "" : " sorted by state") + "   fps "
+                + stats.optInt("fps") + "   frame " + stats.optDouble("frameMs") + " ms   render CPU "
+                + stats.optDouble("renderCpuMs") + " ms"
+                + "\ndraw calls " + stats.optDouble("drawCallsPerFrame") + " (batch "
+                + stats.optDouble("batchFlushesPerFrame") + " for " + stats.optDouble("batchedDrawsPerFrame")
+                + " draws, barriers " + stats.optDouble("batchBarriersPerFrame") + ")   program binds "
                 + stats.optDouble("programBindsPerFrame") + "   texture binds " + stats.optDouble("textureBindsPerFrame")
                 + "   uniforms " + stats.optDouble("uniformUploadsPerFrame");
     }

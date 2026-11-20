@@ -6,6 +6,10 @@ import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.internal.IPendingDraws;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.main.Engine;
+import io.github.mightycode.mightylib.resources.EngineResources;
+import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.resources.texture.TextureData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +25,8 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
 
     private final BatchStateTable table = new BatchStateTable();
     private EBatch2DMode mode;
+    // Its references are dropped with the GL elements when GLResources is released
+    private Texture whiteTexture;
 
     private final List<BatchContext> contexts = new ArrayList<>();
     private BatchContext last;
@@ -33,12 +39,31 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
 
     /** The batches of this engine, created with the mode of its configuration at the first call. */
     public static Batches2D of(Engine engine) {
-        return of(engine.glResources(), engine.config().getBatch2DMode());
+        return engine.glResources().shared(Batches2D.class, () -> new Batches2D(engine.config().getBatch2DMode()));
     }
 
-    // The mode is the one at the creation only
-    public static Batches2D of(GLResources glResources, EBatch2DMode mode) {
-        return glResources.shared(Batches2D.class, () -> new Batches2D(mode));
+    // The batches of the engine of these GL resources, created at its start
+    public static Batches2D of(GLResources glResources) {
+        return glResources.shared(Batches2D.class, () -> {
+            throw new IllegalStateException("The 2D batches are created at the start of the engine");
+        });
+    }
+
+    /**
+     * The white texture of the engine (EngineResources.WHITE_TEXTURE), referenced from the start of the engine to
+     * its end: unit 0 of a batched draw whose program reads no texture, or whose material has none.
+     */
+    public Texture whiteTexture() {
+        if (whiteTexture == null)
+            throw new IllegalStateException("The white texture is taken once the resources of the engine are loaded");
+        return whiteTexture;
+    }
+
+    // Once the batch of the engine is loaded (its white texture), before any scene draws
+    public void acquireWhiteTexture(GLResources glResources, Resources resources) {
+        if (whiteTexture == null)
+            whiteTexture = (Texture) glResources.acquire(
+                    resources.getResourceOrFallback(TextureData.class, EngineResources.WHITE_TEXTURE), true);
     }
 
     public BatchStateTable table() {
@@ -152,6 +177,7 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
         contexts.clear();
         orphaned.clear();
         last = null;
+        whiteTexture = null;
         table.delete();
     }
 }

@@ -12,8 +12,10 @@ import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,6 +48,8 @@ public class Shader extends GLElement {
     // Changes with each new program (never reused, unlike the GL ids): a location found for a stamp stays valid
     private static long NextProgramStamp;
     private long programStamp;
+    // The current program has an active sampler uniform
+    private boolean samplesTextures;
 
     // These belong to the current program: emptied with each new program
     // Values sent, by location, to skip those unchanged
@@ -192,12 +196,44 @@ public class Shader extends GLElement {
         program = newProgram;
         programVersion = version;
         programStamp = ++NextProgramStamp;
+        samplesTextures = ReadsTextures(newProgram);
         build = null;
         afterLink();
     }
 
     // Called once a new program is in use (first load, hot reload)
     protected void afterLink() {}
+
+    // An active uniform of the program is a sampler (read when the program is linked)
+    private static boolean ReadsTextures(int program) {
+        int count = glGetProgrami(program, GL_ACTIVE_UNIFORMS);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer size = stack.mallocInt(1);
+            IntBuffer type = stack.mallocInt(1);
+            for (int i = 0; i < count; ++i) {
+                glGetActiveUniform(program, i, size, type);
+                if (IsSamplerType(type.get(0)))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    // The GL types of the samplers (1D to cube arrays, shadow, integer, rectangle, buffer, multisample)
+    static boolean IsSamplerType(int type) {
+        return (type >= 0x8B5D && type <= 0x8B64) || (type >= 0x8DC0 && type <= 0x8DC5)
+                || (type >= 0x8DC9 && type <= 0x8DD8) || (type >= 0x900C && type <= 0x900F)
+                || (type >= 0x9108 && type <= 0x910D);
+    }
+
+    /**
+     * The current program reads a texture (it has an active sampler uniform): known once linked, false before. A
+     * batched draw binds the texture of its material for such a program, the white texture otherwise.
+     */
+    public boolean samplesTextures() {
+        return samplesTextures;
+    }
 
     private void deleteProgram() {
         if (program != -1) {

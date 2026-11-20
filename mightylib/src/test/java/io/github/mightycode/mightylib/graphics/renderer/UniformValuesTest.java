@@ -122,4 +122,27 @@ class UniformValuesTest {
         assertFalse(values.has("a"));
         assertFalse(values.remove("a"));
     }
+    // A renderer whose values are only those a batched draw gives itself stays batched; one more is drawn alone
+    @Test
+    void onlyTheValuesOfTheBatchKeepARendererBatched() {
+        UniformValues values = new UniformValues();
+        for (String name : Renderer.BATCH_HANDLED_VALUES)
+            values.put(value(name, 0f), true);
+        assertTrue(values.onlyNames(Renderer.BATCH_HANDLED_VALUES));
+
+        int version = values.version();
+        values.put(value("time", 1f), false);
+        assertTrue(values.version() > version);
+        assertFalse(values.onlyNames(Renderer.BATCH_HANDLED_VALUES));
+
+        version = values.version();
+        assertTrue(values.remove("time"));
+        assertTrue(values.version() > version);
+        assertTrue(values.onlyNames(Renderer.BATCH_HANDLED_VALUES));
+
+        // Nothing removed: same version
+        version = values.version();
+        assertFalse(values.remove("time"));
+        assertEquals(version, values.version());
+    }
 }
