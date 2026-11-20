@@ -7,9 +7,9 @@ import io.github.mightycode.mightylib.graphics.lighting.lights.LightDecrease;
 import io.github.mightycode.mightylib.graphics.lighting.lights.SpotLight;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
-import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
 import io.github.mightycode.mightylib.graphics.lighting.lights.PointLight;
-import io.github.mightycode.mightylib.graphics.lighting.materials.Material;
+import io.github.mightycode.mightylib.graphics.lighting.materials.PhongMaterial;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -78,13 +78,13 @@ public class Scene3DBis extends Scene {
         /// RENDERERS ///
 
         LightDecrease lightDecrease = new LightDecrease(1.0f, 0.09f, 0.032f);
-        BasicMaterial directionalReference = Material.Ruby();
+        BasicPhongMaterial directionalReference = PhongMaterial.Ruby();
 
-        BasicMaterial pointLightReference = new BasicMaterial(
+        BasicPhongMaterial pointLightReference = new BasicPhongMaterial(
                 new Vector3f(0.05f), new Vector3f( 0.8f), new Vector3f( 1.0f)
         );
 
-        BasicMaterial spotLightReference = Material.YellowPlastic();
+        BasicPhongMaterial spotLightReference = PhongMaterial.YellowPlastic();
 
         DirectionalLight directionalLight = new DirectionalLight(directionalReference)
                 .setDirection(new Vector3f(-0.2f, -1.0f, -0.3f));
@@ -124,7 +124,7 @@ public class Scene3DBis extends Scene {
                             RendererUtils.ToLightDirection(directionalLight.getDirection()))
                     .addShaderValue("material.shininess", Float.class, 64f);
 
-            directionalLight.copyBasicMaterial().addToRenderer(cubeTexturedMaterial, "light");
+            directionalLight.copyBasicPhongMaterial().addToRenderer(cubeTexturedMaterial, "light");
         }
 
         Vector3f shiftToPreviousChunk = new Vector3f(20, 0, 0);

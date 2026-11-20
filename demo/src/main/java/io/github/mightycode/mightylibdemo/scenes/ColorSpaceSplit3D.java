@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
-import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
-import io.github.mightycode.mightylib.graphics.lighting.materials.Material;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.materials.PhongMaterial;
 import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -44,7 +44,7 @@ public class ColorSpaceSplit3D extends Scene {
         addUpdatable(cameraComponent);
         camera3D().lookAt(new Vector3f(0, 2, 0));
 
-        BasicMaterial lightMaterial = new BasicMaterial(new Vector3f(0.2f), new Vector3f(0.5f), new Vector3f(1));
+        BasicPhongMaterial lightMaterial = new BasicPhongMaterial(new Vector3f(0.2f), new Vector3f(0.5f), new Vector3f(1));
 
         light = new CubeRenderer("colorShape3D");
         light.setPosition(new Vector3f(0, 4, 3));
@@ -70,7 +70,7 @@ public class ColorSpaceSplit3D extends Scene {
         material.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()));
         lightMaterial.addToRenderer(material, "light");
-        Material.Emerald().addToRenderer(material, "material");
+        PhongMaterial.Emerald().addToRenderer(material, "material");
 
         textured = new CubeRenderer("textureMaterial3D");
         textured.setPosition(new Vector3f(3f, 2f, 0f));

@@ -1,11 +1,11 @@
 package io.github.mightycode.mightylib.graphics.lighting.lights;
 
-import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;
 
-public final class SpotLight extends BasicMaterial {
+public final class SpotLight extends BasicPhongMaterial {
     private Vector3f position, direction;
     private final LightDecrease lightDecrease;
 
@@ -26,7 +26,7 @@ public final class SpotLight extends BasicMaterial {
         shouldUseDistance = true;
     }
 
-    public SpotLight(BasicMaterial mat, LightDecrease lightDecrease) {
+    public SpotLight(BasicPhongMaterial mat, LightDecrease lightDecrease) {
         this(mat.Ambient, mat.Diffuse, mat.Specular, lightDecrease);
     }
 
@@ -116,7 +116,7 @@ public final class SpotLight extends BasicMaterial {
     // A spotlight with the same settings and its own vectors (LightDecrease is immutable: shared)
     @Override
     public SpotLight copy(){
-        SpotLight copy = new SpotLight(copyBasicMaterial(), lightDecrease);
+        SpotLight copy = new SpotLight(copyBasicPhongMaterial(), lightDecrease);
         copy.position = position == null ? null : new Vector3f(position);
         copy.direction = direction == null ? null : new Vector3f(direction);
         copy.cutOff = cutOff;

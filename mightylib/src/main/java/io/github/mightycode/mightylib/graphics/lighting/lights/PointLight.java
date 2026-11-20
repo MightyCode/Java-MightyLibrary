@@ -1,10 +1,10 @@
 package io.github.mightycode.mightylib.graphics.lighting.lights;
 
-import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import org.joml.Vector3f;
 
-public final class PointLight extends BasicMaterial {
+public final class PointLight extends BasicPhongMaterial {
     private Vector3f position;
     private boolean shouldUseDistance;
     private LightDecrease lightDecrease = null;
@@ -16,11 +16,11 @@ public final class PointLight extends BasicMaterial {
         shouldUseDistance = false;
     }
 
-    public PointLight(BasicMaterial material){
+    public PointLight(BasicPhongMaterial material){
         this(material.Ambient, material.Diffuse, material.Specular);
     }
 
-    public PointLight(BasicMaterial material, LightDecrease lightDecrease){
+    public PointLight(BasicPhongMaterial material, LightDecrease lightDecrease){
         this(material.Ambient, material.Diffuse, material.Specular, lightDecrease);
     }
 
@@ -85,7 +85,7 @@ public final class PointLight extends BasicMaterial {
     // A point light with the same settings and its own vectors (LightDecrease is immutable: shared)
     @Override
     public PointLight copy(){
-        PointLight copy = new PointLight(copyBasicMaterial(), lightDecrease);
+        PointLight copy = new PointLight(copyBasicPhongMaterial(), lightDecrease);
         copy.position = position == null ? null : new Vector3f(position);
         copy.shouldUseDistance = shouldUseDistance;
         copy.currentNumber = currentNumber;
