@@ -102,3 +102,37 @@ Une étape = un commit. Les étapes 1 et 2 peuvent être fusionnées seules ; 3 
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/shared-material`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Vérifications manuelles : celles du « Bilan ».
+
+## Bilan
+
+### Fait
+Branche `feature/shared-material`, un commit par étape (voir `git log dev..`), plus l'étape 0 :
+- 0. Compteur `Program` dans `GenDeleteResources` (prérequis, qui n'était pas fait).
+- 1. Renommage `BasicPhongMaterial` / `PhongMaterial` (et `copyBasicPhongMaterial`, `PhongMaterialCopyTest`).
+- 2. `GLStateCache` (+ `IGLStateApplier`, `GLStateApplier`) dans `GLContext` ; `EBlendMode` dans `RenderState` ; scissor, `clear()` des vues, liaisons de textures et `Shader.use` passent par lui ; `RenderState.restore` supprimé ; compteurs `glStateChangesPerFrame`, `glStateChangesSkippedPerFrame` (le compteur `textureBindsPerFrame` existait déjà et compte maintenant les liaisons envoyées).
+- 3. `RefCount`, `Mesh.retain/release/references`, `MeshRenderer` retient son mesh ; `setColorMode`/`setNoColorNoTextureMode` ne touchent plus aux canaux (`MeshRenderer.isTextureEnabled`).
+- 4. `Material`, `IUniformTarget`, `Renderer.material()/setMaterial`, surcharges, locations entières (`Shader.location`, `sendValue`, `programStamp`), `IShaderUniforms.addTo/update`.
+- 5. Constructeurs `(Material)` des renderers (`MeshRenderer`, `CubeRenderer`, `Shape2DRenderer`, `RectangleRenderer`), cubes de `Scene3DBis` sur deux `Material` partagés, `ModelRenderer.sortKeyPart(mesh)`.
+- 6. `SharedObjects` (registre faible), commande `gl materials`, `retainedObjects` dans `gl`, lu par `leakcheck` (`scenario.py`, `SceneRunner`).
+- 7. Démo `SharedMaterial2D`. 8. Docs.
+
+### Écarts au plan, et pourquoi
+- Étape 0 faite ici : le prérequis (« Programmes dans `GenDeleteResources` ») n'était pas fait.
+- Étape 5, passage « des renderers » : tous passent par `Renderer`/`MeshRenderer` (donc par un `Material`) sans changement de code ; seuls les constructeurs `(Material)` ont été ajoutés là où le partage sert (démo, `Scene3DBis`). `SkyboxRenderer` lie encore son cubemap lui-même (noté dans `later.md`). `Scene3D` n'a pas de partage de `PhongMaterial` entre deux objets de même valeur : seule `Scene3DBis` en a.
+- `Window.glEnable2D`/`glDisable2D` ne sont pas passés par le cache : ils ne touchent que d'anciennes matrices fixes, aucun état mis en cache.
+- `FrameBuffer` : liaisons de textures par le cache ; `bind`/`unbind` de framebuffers non mis en cache (hors plan).
+- Les textures de `Material.setMainTexture(String)` sont acquises comme avant : une texture hors du batch du jeu donne le repli (c'est pourquoi `SharedMaterial2D` utilise `painting`, `hexagon`, `slime`, du batch `init`).
+- `IUniformSink`/`UniformValues` (package-private) : ajoutés pour tester l'envoi par location sans GL.
+
+### Vérifié, et comment
+- `mvn -o test` (tous les modules) vert à chaque étape ; tests ajoutés : `GLStateCacheTest`, `GLStateCacheGLTest`, `RefCountTest`, `SharedMeshTest`, `UniformValuesTest`, `MaterialTest`, `LiveObjectsTest`, `GLMaterialsComTest`.
+- Captures de `Scene2D`, `VectorShapes2D`, `ColorSpaceSplit2D`, `WaveFunctionCollapse2D`, `Box2D`, `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`, `ColorSpaceSplit3D` comparées pixel par pixel à celles de `dev` (script dans le scratchpad) : identiques, sauf les zones animées de `Scene2D` (0,3 %) et un compteur de `WaveFunctionCollapse2D`. `ColorSpaceSplit3D` diffère de `dev` quand on la lance après une autre scène (déjà sur `dev`, noté dans `later.md`).
+- `leakcheck` sans fuite : `Scene2D`, `VectorShapes2D`, `CustomRenderer2D`, `Scene3D`, `Scene3DBis`, `Game3D2D`, `SharedMaterial2D`.
+- Rechargement à chaud (`reload ShaderData texture2D colorShape2D` sur `ColorSpaceSplit2D`) : rendu identique.
+- `stats` (état GL, par frame, envoyés/évités) : `Scene2D` 12/225, `VectorShapes2D` 17/546, `Scene3D` 121/344 environ.
+
+### À vérifier à la main
+- `SharedMaterial2D` : T change la texture de toute la grille, B son blend (ALPHA, ADDITIVE, MULTIPLY) ; rectangles de couleurs différentes (surcharge) ; deux rectangles sur un même `Mesh` ; les cinq blends côte à côte, distincts ; `gl materials` dans la console liste la grille à 18 références.
+- `VectorShapes2D`, une tilemap (`Scene2D`), une animation, la console : rendu identique à `dev`.
+- Scènes 3D `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` : rendu identique.
+- Rechargement à chaud d'un shader pendant l'affichage (`watch` ou `reload`) : pas de scintillement ni d'erreur dans le journal.
