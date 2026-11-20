@@ -9,11 +9,30 @@ public final class DrawSortKeys {
     private static final int MIDDLE_SHIFT = DrawBatch2D.CALL_INDEX_BITS;
     private static final long MIDDLE_MASK = 0xFFFFFFL;
 
-    private static final IDrawSortKey LAYER_THEN_DEPTH = (layer, depth, state) ->
-            layerBits(layer) | (orderedDepth(depth) & MIDDLE_MASK) << MIDDLE_SHIFT;
+    private static final IDrawSortKey LAYER_THEN_DEPTH = new IDrawSortKey() {
+        @Override
+        public long key(int layer, float depth, int state) {
+            return layerBits(layer) | (orderedDepth(depth) & MIDDLE_MASK) << MIDDLE_SHIFT;
+        }
 
-    private static final IDrawSortKey LAYER_THEN_STATE = (layer, depth, state) ->
-            layerBits(layer) | (state & MIDDLE_MASK) << MIDDLE_SHIFT;
+        // Named in the command batch
+        @Override
+        public String toString() {
+            return "layerThenDepth";
+        }
+    };
+
+    private static final IDrawSortKey LAYER_THEN_STATE = new IDrawSortKey() {
+        @Override
+        public long key(int layer, float depth, int state) {
+            return layerBits(layer) | (state & MIDDLE_MASK) << MIDDLE_SHIFT;
+        }
+
+        @Override
+        public String toString() {
+            return "layerThenState";
+        }
+    };
 
     private DrawSortKeys() {}
 

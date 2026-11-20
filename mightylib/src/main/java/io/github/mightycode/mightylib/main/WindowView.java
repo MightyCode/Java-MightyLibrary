@@ -66,7 +66,7 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
     @Override
     public final DrawBatch2D batch2D() {
         if (batch2D == null)
-            batch2D = new DrawBatch2D(Batches2D.of(engine()));
+            batch2D = Batches2D.of(engine()).createBatch(getClass().getSimpleName());
         return batch2D;
     }
 

@@ -15,6 +15,7 @@ import org.apiguardian.api.API;
 import org.joml.Matrix4f;
 import org.joml.Vector2fc;
 import org.joml.Vector4fc;
+import org.json.JSONObject;
 import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
@@ -635,6 +636,29 @@ public final class DrawBatch2D {
         }
 
         return causes;
+    }
+
+    /**
+     * The batch for the command batch: started or not, its sort key (its toString, null for the order of the calls),
+     * the counters of the last frame of its view and the causes of its barriers.
+     */
+    @API(status = INTERNAL)
+    public JSONObject describe() {
+        JSONObject causes = new JSONObject();
+        for (Map.Entry<String, int[]> cause : lastFrameBarrierCauses().entrySet())
+            causes.put(cause.getKey(), new JSONObject().put("count", cause.getValue()[0])
+                    .put("whileSorted", cause.getValue()[1]));
+
+        return new JSONObject()
+                .put("sortKey", sortKey == null ? JSONObject.NULL : sortKey.toString())
+                .put("started", isStarted())
+                .put("draws", last.draws)
+                .put("drawCalls", last.drawCalls)
+                .put("flushes", last.flushes)
+                .put("barriers", last.barriers)
+                .put("barriersWhileSorted", last.barriersWhileSorted)
+                .put("sorts", last.sorts)
+                .put("barrierCauses", causes);
     }
 
     // Capacities of the arrays (tests: nothing grows once the frames are stable)

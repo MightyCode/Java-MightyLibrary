@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.internal.IPendingDraws;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.resources.EngineResources;
@@ -11,9 +12,14 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 
 /**
  * The 2D batches of one engine: the mode, the table of the states, and the batch context of each OpenGL context
@@ -32,6 +38,8 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     private BatchContext last;
     // Of destroyed contexts: their buffers are deleted once another context is current
     private final List<BatchContext> orphaned = new ArrayList<>();
+    // The batches of the views and their names (weak: a view no longer used takes its batch with it)
+    private final Map<DrawBatch2D, String> views = new WeakHashMap<>();
 
     private Batches2D(EBatch2DMode mode) {
         this.mode = Objects.requireNonNull(mode, "mode");
@@ -136,6 +144,38 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     // The batch contexts alive (command batch)
     public List<BatchContext> contexts() {
         return new ArrayList<>(contexts);
+    }
+
+    /** A batch of a view of this engine, named for the command batch (forgotten with its view). */
+    public DrawBatch2D createBatch(String viewName) {
+        DrawBatch2D batch = new DrawBatch2D(this);
+        views.put(batch, viewName);
+        return batch;
+    }
+
+    /**
+     * For the command batch: the mode, the table of the states, the contexts, and each view with a batch (the
+     * counters of its last frame).
+     */
+    public JSONObject describe() {
+        JSONArray viewArray = new JSONArray();
+        for (Map.Entry<DrawBatch2D, String> view : views.entrySet())
+            viewArray.put(view.getKey().describe().put("view", view.getValue()));
+
+        JSONArray contextArray = new JSONArray();
+        for (BatchContext batchContext : contexts)
+            contextArray.put(new JSONObject().put("context", batchContext.context().getName())
+                    .put("waitingView", batchContext.active() == null ? JSONObject.NULL
+                            : views.getOrDefault(batchContext.active(), "?"))
+                    .put("ringBlocks", batchContext.pendingRingBlocks()));
+
+        return new JSONObject()
+                .put("mode", mode.optionName())
+                .put("table", new JSONObject().put("materialParts", table.materialParts())
+                        .put("cameras", table.cameras()).put("generation", table.generation())
+                        .put("resets", table.resets()))
+                .put("contexts", contextArray)
+                .put("views", viewArray);
     }
 
     void contextDestroyed(BatchContext batchContext) {
