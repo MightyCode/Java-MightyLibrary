@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.shader;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLElement;
+import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -158,7 +159,7 @@ public class Shader extends GLElement {
     }
 
     private int link() {
-        int id = glCreateProgram();
+        int id = GenDeleteResources.GenProgram();
         Logger.CheckOpenGLError("Create program of " + getName() + " (id : " + id + ")");
 
         glAttachShader(id, build.vertexId);
@@ -173,7 +174,7 @@ public class Shader extends GLElement {
 
         if (glGetProgrami(id, GL_LINK_STATUS) == GL_FALSE) {
             String log = glGetProgramInfoLog(id);
-            glDeleteProgram(id);
+            GenDeleteResources.DeleteProgram(id);
             throw new ResourceException("program does not link:\n\t" + log.trim());
         }
 
@@ -196,7 +197,7 @@ public class Shader extends GLElement {
         if (program != -1) {
             // The id can be reused by a new program, it must not be considered bound anymore
             GLContext.forgetProgram(program);
-            glDeleteProgram(program);
+            GenDeleteResources.DeleteProgram(program);
             Logger.CheckOpenGLError("Delete program of " + getName() + " (id : " + program + ")");
             program = -1;
         }
