@@ -109,6 +109,8 @@ public final class DrawBatch2D {
     // Counters of the current frame of the view, and of the last one (rolled by endView)
     private final FrameCounters current = new FrameCounters();
     private final FrameCounters last = new FrameCounters();
+    // The frame of the engine the view was last displayed in (endView), -1 before
+    private long shownFrame = -1;
 
     // While the draws are sent: a barrier asked by what the sending does is not one
     private boolean sending;
@@ -496,6 +498,12 @@ public final class DrawBatch2D {
 
         last.copyFrom(current);
         current.clear();
+        shownFrame = backend.frame();
+    }
+
+    /** The view of this batch was displayed in the last frame of the engine (its counters are not old ones). */
+    public boolean shownLastFrame() {
+        return shownFrame == backend.frame();
     }
 
     // Sends the waiting draws; end: the batch is no longer started (the ids of the table may change)
@@ -781,6 +789,7 @@ public final class DrawBatch2D {
         return new JSONObject()
                 .put("sortKey", sortKey == null ? JSONObject.NULL : sortKey.toString())
                 .put("started", isStarted())
+                .put("shownLastFrame", shownLastFrame())
                 .put("draws", last.draws)
                 .put("drawCalls", last.drawCalls)
                 .put("flushes", last.flushes)

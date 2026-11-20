@@ -70,8 +70,10 @@ public final class BatchGenCom extends BaseCommand {
         if (views != null) {
             for (int i = 0; i < views.length(); ++i) {
                 JSONObject view = views.getJSONObject(i);
-                // A view that drew nothing last frame (a loading screen not shown) is in the data only
-                if (view.optInt("draws") == 0 && view.optInt("barriers") == 0)
+                // A view not displayed in the last frame (a scene left, its batch not collected yet), or that drew
+                // nothing (a loading screen not shown), is in the data only
+                if (!view.optBoolean("shownLastFrame", true)
+                        || (view.optInt("draws") == 0 && view.optInt("barriers") == 0))
                     continue;
                 message.append("\n").append(view.optString("view")).append(": ")
                         .append(view.optInt("draws")).append(" draws in ").append(view.optInt("drawCalls"))

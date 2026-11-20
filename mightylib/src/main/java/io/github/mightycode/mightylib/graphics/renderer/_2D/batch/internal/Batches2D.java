@@ -31,6 +31,8 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
 
     private final BatchStateTable table = new BatchStateTable();
     private EBatch2DMode mode;
+    // Frames of the engine (frameStarted): the views displayed in the last one
+    private long frame;
     // Its references are dropped with the GL elements when GLResources is released
     private Texture whiteTexture;
 
@@ -80,7 +82,13 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
 
     // A frame of the engine starts, before its windows are displayed
     public void frameStarted() {
+        ++frame;
         table.frameStarted();
+    }
+
+    @Override
+    public long frame() {
+        return frame;
     }
 
     @Override

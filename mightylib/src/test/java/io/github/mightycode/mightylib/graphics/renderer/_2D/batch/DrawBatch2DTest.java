@@ -240,6 +240,35 @@ class DrawBatch2DTest {
         assertArrayEquals(new int[]{1, 0}, batch.lastFrameBarrierCauses().get(DrawBatch2D.CAUSE_TABLE_FULL));
     }
 
+    // A view is shown in the last frame once displayed in it: a view of another frame is an old one (command batch)
+    @Test
+    void aViewIsShownInTheFrameItWasDisplayedIn() {
+        long[] frame = {1};
+        DrawBatch2D counted = new DrawBatch2D(new IBatchBackend() {
+            @Override
+            public IBatchTarget target() {
+                return target;
+            }
+
+            @Override
+            public EBatch2DMode mode() {
+                return EBatch2DMode.ORPHAN;
+            }
+
+            @Override
+            public long frame() {
+                return frame[0];
+            }
+        });
+
+        assertFalse(counted.shownLastFrame());
+        counted.endView();
+        assertTrue(counted.shownLastFrame());
+        assertTrue(counted.describe().getBoolean("shownLastFrame"));
+        ++frame[0];
+        assertFalse(counted.shownLastFrame());
+    }
+
     @Test
     void neighborsOfTheSameStateAreOneDrawCall() {
         int a = state("a");

@@ -10,4 +10,9 @@ public interface IBatchBackend {
     IBatchTarget target();
 
     EBatch2DMode mode();
+
+    // The frame of the engine being displayed, or the last one displayed (0 when frames are not counted)
+    default long frame() {
+        return 0;
+    }
 }
