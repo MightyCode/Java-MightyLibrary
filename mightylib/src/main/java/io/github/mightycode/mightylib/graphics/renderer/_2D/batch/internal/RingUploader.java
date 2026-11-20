@@ -9,7 +9,6 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.util.Arrays;
 
 import static org.lwjgl.opengl.GL15C.*;
 import static org.lwjgl.opengl.GL30C.*;
@@ -37,12 +36,8 @@ final class RingUploader implements IBatchUploader {
     private long vertexStart;
     private long indexStart;
 
-    // Blocks still maybe read by the GPU, oldest first: [start, end) and the fence after their draws (circular)
-    private long[] blockStarts = new long[32];
-    private long[] blockEnds = new long[32];
-    private long[] blockFences = new long[32];
-    private int blockFirst;
-    private int blockCount;
+    // Blocks still maybe read by the GPU, oldest first
+    private final RingBlocks blocks = new RingBlocks();
 
     private boolean unmapFailureReported;
 
@@ -78,7 +73,7 @@ final class RingUploader implements IBatchUploader {
             start = 0;
         }
 
-        if (blockCount >= CHECK_SIGNALED_FROM)
+        if (blocks.count() >= CHECK_SIGNALED_FROM)
             dropSignaledBlocks();
         waitForBlocksOver(start, start + size);
 
@@ -114,7 +109,7 @@ final class RingUploader implements IBatchUploader {
 
     // A new storage: what the GPU still reads keeps the previous one (orphaned), the fences are no longer needed
     private void grow(long size) {
-        while (blockCount > 0)
+        while (blocks.count() > 0)
             popBlock(false);
 
         capacity = Math.max(size, capacity * 2);
@@ -122,20 +117,15 @@ final class RingUploader implements IBatchUploader {
         head = 0;
     }
 
-    // Blocks are written in order: those over the new block are the oldest ones, at the front of the queue
+    // The blocks are done in order: waiting for the last one over the range waits for those before it
     private void waitForBlocksOver(long start, long end) {
-        while (blockCount > 0) {
-            int first = blockFirst;
-            if (blockStarts[first] >= end || blockEnds[first] <= start)
-                return;
-
+        for (int over = blocks.blocksOver(start, end); over > 0; --over)
             popBlock(true);
-        }
     }
 
     private void dropSignaledBlocks() {
-        while (blockCount > 0) {
-            int status = glClientWaitSync(blockFences[blockFirst], 0, 0);
+        while (blocks.count() > 0) {
+            int status = glClientWaitSync(blocks.firstFence(), 0, 0);
             if (status != GL_ALREADY_SIGNALED && status != GL_CONDITION_SATISFIED)
                 return;
 
@@ -144,7 +134,7 @@ final class RingUploader implements IBatchUploader {
     }
 
     private void popBlock(boolean wait) {
-        long fence = blockFences[blockFirst];
+        long fence = blocks.firstFence();
         if (wait) {
             int status;
             do {
@@ -156,8 +146,7 @@ final class RingUploader implements IBatchUploader {
         }
 
         glDeleteSync(fence);
-        blockFirst = (blockFirst + 1) % blockFences.length;
-        --blockCount;
+        blocks.removeFirst();
     }
 
     @Override
@@ -170,35 +159,13 @@ final class RingUploader implements IBatchUploader {
     // The block is read by the draws just sent: a fence after them
     @Override
     public void flushEnded() {
-        if (blockCount == blockFences.length) {
-            int size = blockFences.length * 2;
-            long[] starts = new long[size];
-            long[] ends = new long[size];
-            long[] fences = new long[size];
-            for (int i = 0; i < blockCount; ++i) {
-                int from = (blockFirst + i) % blockFences.length;
-                starts[i] = blockStarts[from];
-                ends[i] = blockEnds[from];
-                fences[i] = blockFences[from];
-            }
-            blockStarts = starts;
-            blockEnds = ends;
-            blockFences = fences;
-            blockFirst = 0;
-        }
-
-        int last = (blockFirst + blockCount) % blockFences.length;
-        blockStarts[last] = vertexStart;
-        blockEnds[last] = head;
-        blockFences[last] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-        ++blockCount;
-
+        blocks.add(vertexStart, head, glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
         glBindVertexArray(0);
     }
 
     // Blocks waiting for the GPU (tests, command batch)
     int pendingBlocks() {
-        return blockCount;
+        return blocks.count();
     }
 
     long capacity() {
@@ -212,9 +179,8 @@ final class RingUploader implements IBatchUploader {
 
     // The fences and the buffer (shared objects), with a context current
     void deleteBuffers() {
-        while (blockCount > 0)
+        while (blocks.count() > 0)
             popBlock(false);
-        Arrays.fill(blockFences, 0L);
         GenDeleteResources.DeleteBuffers(buffer);
     }
 }
