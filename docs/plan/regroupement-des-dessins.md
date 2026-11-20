@@ -161,3 +161,13 @@ Données envoyées par quad divisées par deux (52 octets d'instance contre 80 d
 - Commande `batch` : les vues sans dessin ni barrière dans la dernière frame (écrans de chargement non affichés) ne sont que dans les `data`. `Batches2D.createBatch(nom)` garde les lots des vues (références faibles) pour les décrire.
 - `instanced` : une série d'état part en instances si tous ses triangles sont des quads (groupes d'indices `b+0 3 2 0 2 1`), parallélogrammes (positions et coordonnées de texture, à l'arrondi près) d'une seule couleur, et si son matériau a un programme instancié chargé ; sinon elle passe par les sommets (orphelinage) dans le même envoi. L'instance porte la transformation affine et des coordonnées de texture affines (`sprite2DInstanced` modifié : rotations de texture comprises), pas un rectangle de texture. Pas de `baseInstance` en GL 3.3 : les attributs d'instance sont repointés pour chaque série.
 - Vérifié : `DrawBatch2DTest` (instance affine d'un quad tourné, 100 quads = 1 appel instancié, repli pour triangle, quad déformé, deux couleurs, séries mélangées, ordre trié), `RectangleBatchGLTest` (image identique au pixel près en `instanced`, tous les rectangles instanciés), `DrawBatch2DGLTest` (aller-retour entre les quatre modes, objets GL inchangés), `BatchGenComTest`.
+
+### Étape 9 : docs
+`architecture.md` (Lot de dessins 2D), `debug-tools.md` (commande `batch`, stats, option, comparaison de captures), `decisions.md`, `current.md` (premier objectif réduit à son reste), `later.md` (instancing et particules), `CLAUDE.md` (tests). Ce plan n'est pas supprimé : il l'est à la fusion de la PR (`/pr-ml`).
+
+### À vérifier à la main (utilisateur)
+- `BatchStress2D` dans les quatre modes (touche M) : rendu identique, N au clavier (Haut/Bas), S (tri par état), compteurs à l'écran et `?stats`.
+- `Scene2D`, `VectorShapes2D` et les autres scènes de formes en `off` puis `orphan` : rendu identique (animées : pas de comparaison automatique).
+- `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` inchangées.
+- Console ouverte par-dessus une scène regroupée ; `MultiWindowScene` (second contexte).
+- Branche : `feature/draw-batch-2d` (poussée, pas de PR : `/pr-ml feature/draw-batch-2d`).
