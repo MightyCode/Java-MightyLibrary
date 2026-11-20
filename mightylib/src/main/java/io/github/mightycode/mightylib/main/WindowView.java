@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.color.PictureSettings;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_SRGB;
 
 /**
  * What a window opened by a context shows (a dialog, a tool window): a small scene without scene changes or loading
@@ -250,18 +250,15 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
      * and by setAndDisplayRealScene.
      */
     protected final void setScissor(int x, int y, int width, int height) {
-        glEnable(GL_SCISSOR_TEST);
-        glScissor(x, y, width, height);
+        GLContext.currentState().scissor(x, y, width, height);
     }
 
     protected final void clearScissor() {
-        glDisable(GL_SCISSOR_TEST);
+        GLContext.currentState().disableScissor();
     }
 
     protected final void clear() {
-        // Without the sRGB encoding: the clear color is stored as written, whatever the mode of the draws
-        glDisable(GL_FRAMEBUFFER_SRGB);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GLContext.ClearColorAndDepth();
     }
 
     // The clear color is a state of the OpenGL context of the window, applied again before each display

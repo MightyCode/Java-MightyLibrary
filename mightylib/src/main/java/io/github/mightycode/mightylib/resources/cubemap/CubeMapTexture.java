@@ -1,8 +1,8 @@
 package io.github.mightycode.mightylib.resources.cubemap;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
-import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.texture.ETextureColorSpace;
 import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -10,10 +10,8 @@ import io.github.mightycode.mightylib.utils.Logger;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
 import static org.lwjgl.opengl.GL12.GL_TEXTURE_WRAP_R;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-import static org.lwjgl.opengl.GL13.glActiveTexture;
 
 /**
  * GL_TEXTURE_CUBE_MAP of a CubeMapData, one face sent per loading step. While it is not loaded, the element of the
@@ -37,9 +35,8 @@ public final class CubeMapTexture extends GLElement {
 
     // Bound to the texture unit, for a samplerCube
     public void bind(int textureUnit) {
-        glActiveTexture(GL_TEXTURE0 + textureUnit);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, currentId());
-        EngineStats.countTextureBind();
+        GLContext.currentState().activeTexture(textureUnit);
+        GLContext.currentState().bindTexture(GL_TEXTURE_CUBE_MAP, currentId());
         if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Bind cubemap " + data.getDataName());
     }
@@ -67,7 +64,7 @@ public final class CubeMapTexture extends GLElement {
             uploadedVersion = data.getVersion();
         }
 
-        glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+        GLContext.currentState().bindTexture(GL_TEXTURE_CUBE_MAP, textureId);
         sendFace(sentFaces++);
 
         return sentFaces == CubeMapData.FACE_COUNT;
@@ -92,7 +89,7 @@ public final class CubeMapTexture extends GLElement {
             pendingVersion = version;
         }
 
-        glBindTexture(GL_TEXTURE_CUBE_MAP, pendingId);
+        GLContext.currentState().bindTexture(GL_TEXTURE_CUBE_MAP, pendingId);
         sendFace(pendingFaces++);
         if (pendingFaces < CubeMapData.FACE_COUNT)
             return false;
@@ -106,7 +103,7 @@ public final class CubeMapTexture extends GLElement {
 
     private static int create() {
         int id = GenDeleteResources.GenTexture();
-        glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+        GLContext.currentState().bindTexture(GL_TEXTURE_CUBE_MAP, id);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);

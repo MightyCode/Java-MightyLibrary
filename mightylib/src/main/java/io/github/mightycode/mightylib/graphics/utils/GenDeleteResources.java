@@ -142,6 +142,8 @@ public final class GenDeleteResources {
     public static void DeleteTexture(int texture) {
         CheckMainThread("DeleteTexture");
         Textures.remove(texture);
+        // The id can be reused by a new texture, it must not be considered bound anymore
+        GLContext.forgetTexture(texture);
         glDeleteTextures(texture);
     }
 

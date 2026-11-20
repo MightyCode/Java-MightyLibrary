@@ -265,12 +265,9 @@ public class Shader extends GLElement {
     public void use() {
         checkVersion();
 
-        GLContext context = GLContext.current();
-        if (context.currentProgram() == program)
+        if (!GLContext.currentState().useProgram(program))
             return;
 
-        glUseProgram(program);
-        context.setCurrentProgram(program);
         EngineStats.countProgramBind();
 
         if (Logger.isGLErrorCheck())
@@ -278,8 +275,7 @@ public class Shader extends GLElement {
     }
 
     public void use(String message) {
-        glUseProgram(program);
-        GLContext.current().setCurrentProgram(program);
+        GLContext.currentState().useProgram(program);
         Logger.CheckOpenGLError(message);
     }
 

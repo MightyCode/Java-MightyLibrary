@@ -180,7 +180,6 @@ public abstract class Renderer extends UUID implements IDisplayable {
             getShader().use();
             updateShader();
             draw();
-            renderState.restore();
         }
     }
 
@@ -239,6 +238,16 @@ public abstract class Renderer extends UUID implements IDisplayable {
 
     public final boolean isFaceCulling() {
         return renderState.isFaceCulling();
+    }
+
+    // How the draws mix with what is already drawn (ALPHA by default)
+    public final Renderer setBlendMode(EBlendMode blendMode) {
+        renderState.setBlendMode(blendMode);
+        return this;
+    }
+
+    public final EBlendMode getBlendMode() {
+        return renderState.getBlendMode();
     }
 
     /*
