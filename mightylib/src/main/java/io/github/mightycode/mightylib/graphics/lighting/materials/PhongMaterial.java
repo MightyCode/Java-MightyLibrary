@@ -1,6 +1,6 @@
 package io.github.mightycode.mightylib.graphics.lighting.materials;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.IUniformTarget;
 import org.joml.Vector3f;
 
 public final class PhongMaterial extends BasicPhongMaterial {
@@ -18,17 +18,17 @@ public final class PhongMaterial extends BasicPhongMaterial {
     }
 
     @Override
-    public void addToRenderer(Renderer renderer, String structureName) {
-        super.addToRenderer(renderer, structureName);
+    public void addTo(IUniformTarget target, String structureName) {
+        super.addTo(target, structureName);
 
-        renderer.addShaderValue(structureName + ".shininess", Float.class, Shininess);
+        target.addShaderValue(structureName + ".shininess", Float.class, Shininess);
     }
 
     @Override
-    public void updateRenderer(Renderer renderer, String structureName) {
-        super.updateRenderer(renderer, structureName);
+    public void update(IUniformTarget target, String structureName) {
+        super.update(target, structureName);
 
-        renderer.updateShaderValue(structureName + ".shininess", Shininess);
+        target.updateShaderValue(structureName + ".shininess", Shininess);
     }
 
     public static PhongMaterial Emerald(){

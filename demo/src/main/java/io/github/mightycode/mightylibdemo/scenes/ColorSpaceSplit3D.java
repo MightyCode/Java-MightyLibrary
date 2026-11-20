@@ -69,8 +69,8 @@ public class ColorSpaceSplit3D extends Scene {
         material.setNormal();
         material.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()));
-        lightMaterial.addToRenderer(material, "light");
-        PhongMaterial.Emerald().addToRenderer(material, "material");
+        lightMaterial.addTo(material, "light");
+        PhongMaterial.Emerald().addTo(material, "material");
 
         textured = new CubeRenderer("textureMaterial3D");
         textured.setPosition(new Vector3f(3f, 2f, 0f));
@@ -82,7 +82,7 @@ public class ColorSpaceSplit3D extends Scene {
         textured.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()))
                 .addShaderValue("material.shininess", Float.class, 64f);
-        lightMaterial.addToRenderer(textured, "light");
+        lightMaterial.addTo(textured, "light");
     }
 
     @Override

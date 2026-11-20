@@ -1,9 +1,9 @@
 package io.github.mightycode.mightylib.graphics.lighting;
 
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.IUniformTarget;
 
 public interface IShaderUniforms {
-    void addToRenderer(Renderer renderer, String structureName);
+    void addTo(IUniformTarget target, String structureName);
 
-    void updateRenderer(Renderer renderer, String structureName);
+    void update(IUniformTarget target, String structureName);
 }

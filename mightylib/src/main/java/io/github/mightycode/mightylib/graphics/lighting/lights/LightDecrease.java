@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.lighting.lights;
 
 import io.github.mightycode.mightylib.graphics.lighting.IShaderUniforms;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.IUniformTarget;
 
 public final class LightDecrease implements IShaderUniforms {
     private final float constant;
@@ -15,15 +15,15 @@ public final class LightDecrease implements IShaderUniforms {
     }
 
     @Override
-    public void addToRenderer(Renderer renderer, String structureName){
-        renderer.addShaderValue(structureName + ".constant", Float.class, constant)
+    public void addTo(IUniformTarget target, String structureName){
+        target.addShaderValue(structureName + ".constant", Float.class, constant)
                 .addShaderValue(structureName + ".linear", Float.class, linear)
                 .addShaderValue(structureName + ".quadratic", Float.class, quadratic);
     }
 
     @Override
-    public void updateRenderer(Renderer renderer, String structureName){
-        renderer.updateShaderValue(structureName + ".constant", constant)
+    public void update(IUniformTarget target, String structureName){
+        target.updateShaderValue(structureName + ".constant", constant)
                 .updateShaderValue(structureName + ".linear", linear)
                 .updateShaderValue(structureName + ".quadratic", quadratic);
 

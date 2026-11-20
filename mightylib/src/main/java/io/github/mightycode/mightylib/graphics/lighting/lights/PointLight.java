@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.lighting.lights;
 
 import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.IUniformTarget;
 import org.joml.Vector3f;
 
 public final class PointLight extends BasicPhongMaterial {
@@ -55,30 +55,30 @@ public final class PointLight extends BasicPhongMaterial {
     }
 
     @Override
-    public void addToRenderer(Renderer renderer, String structureName) {
+    public void addTo(IUniformTarget target, String structureName) {
         String name = structureName + "[" + currentNumber + "]";
 
-        super.addToRenderer(renderer, name);
+        super.addTo(target, name);
 
-        renderer.addShaderValue(name + ".useDistance", Integer.class, shouldUseDistance ? 1 : 0);
-        renderer.addShaderValue(name + ".position", Vector3f.class, position);
+        target.addShaderValue(name + ".useDistance", Integer.class, shouldUseDistance ? 1 : 0);
+        target.addShaderValue(name + ".position", Vector3f.class, position);
 
         if (shouldUseDistance){
-            lightDecrease.addToRenderer(renderer, name);
+            lightDecrease.addTo(target, name);
         }
     }
 
     @Override
-    public void updateRenderer(Renderer renderer, String structureName) {
+    public void update(IUniformTarget target, String structureName) {
         String name = structureName + "[" + currentNumber + "]";
 
-        super.updateRenderer(renderer, name);
+        super.update(target, name);
 
-        renderer.updateShaderValue(name + ".useDistance", shouldUseDistance? 1 : 0);
-        renderer.updateShaderValue(name + ".position", position);
+        target.updateShaderValue(name + ".useDistance", shouldUseDistance? 1 : 0);
+        target.updateShaderValue(name + ".position", position);
 
         if (shouldUseDistance){
-            lightDecrease.updateRenderer(renderer, name);
+            lightDecrease.update(target, name);
         }
     }
 

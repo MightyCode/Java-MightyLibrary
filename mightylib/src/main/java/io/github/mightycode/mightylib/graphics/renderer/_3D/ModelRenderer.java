@@ -246,7 +246,8 @@ public final class ModelRenderer extends Renderer {
     public void draw() {
         // Decided on the current program: it can change (fallback while loading, hot reload)
         boolean bindSpecular = specularUniform != null && hasUniform(specularUniform);
-        boolean sendMeshShininess = !hasShaderValue(SHININESS_UNIFORM) && hasUniform(SHININESS_UNIFORM);
+        boolean sendMeshShininess = !hasShaderValue(SHININESS_UNIFORM) && !material().hasShaderValue(SHININESS_UNIFORM)
+                && hasUniform(SHININESS_UNIFORM);
 
         for (int i = 0; i < shown.sent; ++i) {
             shown.diffuseTextures[i].bindRenderTexture(DIFFUSE_UNIT);

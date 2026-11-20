@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.lighting.lights;
 
 import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.IUniformTarget;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import org.joml.Vector3f;
 
@@ -79,36 +79,36 @@ public final class SpotLight extends BasicPhongMaterial {
     }
 
     @Override
-    public void addToRenderer(Renderer renderer, String structureName) {
-        super.addToRenderer(renderer, structureName);
+    public void addTo(IUniformTarget target, String structureName) {
+        super.addTo(target, structureName);
 
-        renderer.addShaderValue(structureName + ".enabled", Integer.class, enabled ? 1 : 0);
+        target.addShaderValue(structureName + ".enabled", Integer.class, enabled ? 1 : 0);
 
-        renderer.addShaderValue(structureName + ".cutOff", Float.class, cutOff);
-        renderer.addShaderValue(structureName + ".outerCutOff", Float.class, outerCutOff);
-        renderer.addShaderValue(structureName + ".position", Vector3f.class, position);
-        renderer.addShaderValue(structureName + ".direction", Vector3f.class, direction);
+        target.addShaderValue(structureName + ".cutOff", Float.class, cutOff);
+        target.addShaderValue(structureName + ".outerCutOff", Float.class, outerCutOff);
+        target.addShaderValue(structureName + ".position", Vector3f.class, position);
+        target.addShaderValue(structureName + ".direction", Vector3f.class, direction);
 
-        renderer.addShaderValue(structureName + ".useDistance", Integer.class, shouldUseDistance ? 1 : 0);
-        lightDecrease.addToRenderer(renderer, structureName);
+        target.addShaderValue(structureName + ".useDistance", Integer.class, shouldUseDistance ? 1 : 0);
+        lightDecrease.addTo(target, structureName);
     }
 
     @Override
-    public void updateRenderer(Renderer renderer, String structureName) {
-        super.updateRenderer(renderer, structureName);
+    public void update(IUniformTarget target, String structureName) {
+        super.update(target, structureName);
 
-        renderer.updateShaderValue(structureName + ".enabled", enabled ? 1 : 0);
+        target.updateShaderValue(structureName + ".enabled", enabled ? 1 : 0);
 
         if (enabled) {
-            renderer.updateShaderValue(structureName + ".position", position);
-            renderer.updateShaderValue(structureName + ".direction", direction);
+            target.updateShaderValue(structureName + ".position", position);
+            target.updateShaderValue(structureName + ".direction", direction);
 
-            renderer.updateShaderValue(structureName + ".cutOff", cutOff);
-            renderer.updateShaderValue(structureName + ".outerCutOff", outerCutOff);
+            target.updateShaderValue(structureName + ".cutOff", cutOff);
+            target.updateShaderValue(structureName + ".outerCutOff", outerCutOff);
 
-            renderer.updateShaderValue(structureName + ".useDistance", shouldUseDistance ? 1 : 0);
+            target.updateShaderValue(structureName + ".useDistance", shouldUseDistance ? 1 : 0);
             if (shouldUseDistance) {
-                lightDecrease.updateRenderer(renderer, structureName);
+                lightDecrease.update(target, structureName);
             }
         }
     }

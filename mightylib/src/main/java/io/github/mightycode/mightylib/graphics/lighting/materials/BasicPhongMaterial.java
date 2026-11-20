@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.lighting.materials;
 
 import io.github.mightycode.mightylib.graphics.lighting.IShaderUniforms;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.IUniformTarget;
 import org.joml.Vector3f;
 
 public class BasicPhongMaterial implements IShaderUniforms {
@@ -19,15 +19,15 @@ public class BasicPhongMaterial implements IShaderUniforms {
      * Assuming that the shader contains struct Material with attributes
      */
     @Override
-    public void addToRenderer(Renderer renderer, String structureName){
-        renderer.addShaderValue(structureName + ".ambient", Vector3f.class, Ambient)
+    public void addTo(IUniformTarget target, String structureName){
+        target.addShaderValue(structureName + ".ambient", Vector3f.class, Ambient)
                 .addShaderValue(structureName + ".diffuse", Vector3f.class, Diffuse)
                 .addShaderValue(structureName + ".specular", Vector3f.class, Specular);
     }
 
     @Override
-    public void updateRenderer(Renderer renderer, String structureName){
-        renderer.updateShaderValue(structureName + ".ambient", Ambient)
+    public void update(IUniformTarget target, String structureName){
+        target.updateShaderValue(structureName + ".ambient", Ambient)
                 .updateShaderValue(structureName + ".diffuse", Diffuse)
                 .updateShaderValue(structureName + ".specular", Specular);
 

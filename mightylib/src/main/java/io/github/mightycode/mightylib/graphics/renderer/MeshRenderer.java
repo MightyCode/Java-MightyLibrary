@@ -1,12 +1,12 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
-import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 
 /**
- * A renderer which draws one Mesh, with its textures. The renderer retains its mesh and releases it in unload: a
+ * A renderer which draws one Mesh, with the textures of its material. The renderer retains its mesh and releases it
+ * in unload: a
  * mesh given to several renderers is shared, unloaded by the release of the last one (Mesh.retain).
  * A subclass fills the mesh (getMesh) in its constructor and can redefine the hooks of Renderer;
  * the mesh is drawn by draw() (bind, then Mesh.draw).
@@ -17,16 +17,12 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
  */
 public class MeshRenderer extends Renderer {
     // Texture units 1 to MAX_TEXTURE_CHANNELS of addTextureChannel (unit 0 is the main texture)
-    public static final int MAX_TEXTURE_CHANNELS = 30;
+    public static final int MAX_TEXTURE_CHANNELS = Material.MAX_TEXTURE_CHANNELS;
 
     private final Mesh mesh;
 
     // Texture mode (see the class)
     private boolean textureEnabled;
-
-    // Textures channels
-    private IRenderTextureBindable mainTexture;
-    private IRenderTextureBindable[] textures;
 
     // A renderer with a new empty mesh, to fill through getMesh()
     public MeshRenderer(String shaderName, boolean useEbo) {
@@ -35,27 +31,15 @@ public class MeshRenderer extends Renderer {
 
     // A renderer drawing the given mesh, retained until this renderer is unloaded (shared with its other users)
     public MeshRenderer(Mesh mesh, String shaderName) {
-        super(shaderName);
+        this(mesh, new Material(shaderName));
+    }
+
+    // A renderer drawing the given mesh with the given material, both retained until this renderer is unloaded
+    public MeshRenderer(Mesh mesh, Material material) {
+        super(material);
 
         this.mesh = mesh;
         mesh.retain();
-        mainTexture = null;
-    }
-
-    // Hook: binds the textures, then sends the values (a subclass calls super)
-    @Override
-    public void updateShader(){
-        if (mainTexture != null)
-            mainTexture.bindRenderTexture(0);
-
-        if (textures != null) {
-            for (int i = 0; i < textures.length; ++i) {
-                if (textures[i] != null)
-                    textures[i].bindRenderTexture(i + 1);
-            }
-        }
-
-        super.updateShader();
     }
 
     // Hook: binds the mesh and draws it (Mesh.draw is the hook of the draw call itself)
@@ -69,31 +53,25 @@ public class MeshRenderer extends Renderer {
         setMainTextureChannel(acquireTexture(name));
     }
 
+    // The sampler nameOfUniform reads unit 0 (a value of the material)
     public final void setMainTextureChannel(String name, String nameOfUniform) {
-        addShaderValue(nameOfUniform, Integer.class, 0);
+        material().addShaderValue(nameOfUniform, Integer.class, 0);
 
         setMainTextureChannel(name);
     }
 
+    /**
+     * The texture on unit 0, in the material (shared with its other renderers when it is shared); a GL element is
+     * referenced by the material until replaced or freed. Turns the texture mode on.
+     */
     public final void setMainTextureChannel(IRenderTextureBindable texture) {
-        if (mainTexture instanceof GLElement) {
-            if (texture instanceof GLElement) {
-                if (mainTexture == texture) {
-                    glResources().releaseResource((GLElement) texture);
-                    return;
-                }
-            }
-
-            glResources().releaseResource((GLElement) mainTexture);
-        }
-
+        material().setMainTexture(texture);
         textureEnabled = true;
-        mainTexture = texture;
     }
 
     /**
      * The texture of this name bound on the unit channelNumber (1 to MAX_TEXTURE_CHANNELS), sent to the sampler
-     * nameOfUniform; the texture already on this unit is released.
+     * nameOfUniform (both in the material); the texture already on this unit is released.
      * @throws IllegalArgumentException if channelNumber is out of range
      */
     public final void addTextureChannel(String name, String nameOfUniform, int channelNumber) {
@@ -101,25 +79,17 @@ public class MeshRenderer extends Renderer {
         addTextureChannel(acquireTexture(name), nameOfUniform, channelNumber);
     }
 
-    // Same with a texture of the caller (released by this renderer when it is a GL element)
+    // Same with a texture of the caller (released by the material when it is a GL element)
     public final void addTextureChannel(IRenderTextureBindable texture, String nameOfUniform, int channelNumber) {
         checkTextureChannel(channelNumber);
-        addShaderValue(nameOfUniform, Integer.class, channelNumber);
+        material().addShaderValue(nameOfUniform, Integer.class, channelNumber);
+        material().setTextureChannel(texture, channelNumber);
 
         textureEnabled = true;
-
-        if (textures == null)
-            textures = new IRenderTextureBindable[MAX_TEXTURE_CHANNELS];
-        else if (textures[channelNumber - 1] instanceof GLElement)
-            glResources().releaseResource((GLElement) textures[channelNumber - 1]);
-
-        textures[channelNumber - 1] = texture;
     }
 
     static void checkTextureChannel(int channelNumber) {
-        if (channelNumber <= 0 || channelNumber > MAX_TEXTURE_CHANNELS)
-            throw new IllegalArgumentException("Texture channel " + channelNumber + " out of 1.." + MAX_TEXTURE_CHANNELS
-                    + " (unit 0 is the main texture: setMainTextureChannel)");
+        Material.checkTextureChannel(channelNumber);
     }
 
     // The color, and the texture mode off when disableTexture
@@ -155,25 +125,15 @@ public class MeshRenderer extends Renderer {
         return mesh;
     }
 
-    // The texture bound on unit 0, null when none
+    // The texture bound on unit 0 (of the material), null when none
     protected final IRenderTextureBindable getMainTexture() {
-        return mainTexture;
+        return material().getMainTexture();
     }
 
-    // Hook: a subclass releases what it created, then calls super (the mesh, the textures, the program)
+    // Hook: a subclass releases what it created, then calls super (the mesh, the material)
     @Override
     public void unload() {
         mesh.release();
-
-        if (mainTexture instanceof GLElement)
-            glResources().releaseResource((GLElement) mainTexture);
-
-        if (textures != null) {
-            for (IRenderTextureBindable texture : textures) {
-                if (texture instanceof GLElement)
-                    glResources().releaseResource((GLElement) texture);
-            }
-        }
 
         super.unload();
     }

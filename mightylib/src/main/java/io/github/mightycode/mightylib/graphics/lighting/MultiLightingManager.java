@@ -47,7 +47,7 @@ public final class MultiLightingManager {
 
         pointLight.setLightCurrentNumber(pointLights.size() - 1);
         for (Renderer renderer : renderers) {
-            pointLight.addToRenderer(renderer, directionalStructName);
+            pointLight.addTo(renderer, directionalStructName);
 
             renderer.updateShaderValue(pointStructName + ".numberPointLights", pointLights.size());
         }
@@ -56,13 +56,13 @@ public final class MultiLightingManager {
     public void addRenderer(Renderer renderer){
         renderers.add(renderer);
 
-        directionalLight.addToRenderer(renderer, directionalStructName);
-        spotLight.addToRenderer(renderer, spotStructName);
+        directionalLight.addTo(renderer, directionalStructName);
+        spotLight.addTo(renderer, spotStructName);
 
         renderer.addShaderValue("numberPointLights", Integer.class, pointLights.size());
         for (int i = 0; i < pointLights.size(); ++i) {
             pointLights.get(i).setLightCurrentNumber(i);
-            pointLights.get(i).addToRenderer(renderer, pointStructName);
+            pointLights.get(i).addTo(renderer, pointStructName);
         }
     }
 
@@ -71,12 +71,12 @@ public final class MultiLightingManager {
             pointLights.get(i).setLightCurrentNumber(i);
 
         for (Renderer renderer : renderers){
-            directionalLight.updateRenderer(renderer, directionalStructName);
+            directionalLight.update(renderer, directionalStructName);
 
-            spotLight.updateRenderer(renderer, spotStructName);
+            spotLight.update(renderer, spotStructName);
 
             for (PointLight pointLight : pointLights)
-                pointLight.updateRenderer(renderer, pointStructName);
+                pointLight.update(renderer, pointStructName);
         }
     }
 

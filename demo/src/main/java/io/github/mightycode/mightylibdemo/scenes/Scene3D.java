@@ -153,8 +153,8 @@ public class Scene3D extends Scene {
 
         cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()));
-        lightMaterial.addToRenderer(cubeColorMaterial, "light");
-        PhongMaterial.Emerald().addToRenderer(cubeColorMaterial, "material");
+        lightMaterial.addTo(cubeColorMaterial, "light");
+        PhongMaterial.Emerald().addTo(cubeColorMaterial, "material");
 
         cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
         cubeTexturedMaterial.setPosition(new Vector3f(3f, 3.0f, -8f));
@@ -168,7 +168,7 @@ public class Scene3D extends Scene {
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()))
                 .addShaderValue("material.shininess", Float.class, 64f);
 
-        lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
+        lightMaterial.addTo(cubeTexturedMaterial, "light");
 
         // 3D Model
         // stall.obj has no material: its texture is given here

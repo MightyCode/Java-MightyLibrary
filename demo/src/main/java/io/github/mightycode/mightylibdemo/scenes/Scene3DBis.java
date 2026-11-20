@@ -124,7 +124,7 @@ public class Scene3DBis extends Scene {
                             RendererUtils.ToLightDirection(directionalLight.getDirection()))
                     .addShaderValue("material.shininess", Float.class, 64f);
 
-            directionalLight.copyBasicPhongMaterial().addToRenderer(cubeTexturedMaterial, "light");
+            directionalLight.copyBasicPhongMaterial().addTo(cubeTexturedMaterial, "light");
         }
 
         Vector3f shiftToPreviousChunk = new Vector3f(20, 0, 0);
@@ -156,8 +156,8 @@ public class Scene3DBis extends Scene {
                     .addShaderValue("material.shininess", Float.class, 64f)
                     .addShaderValue("light.useDistance", Integer.class, 1);
 
-            lightDecrease.addToRenderer(cubeTexturedMaterial, "light");
-            pointLightReference.addToRenderer(cubeTexturedMaterial, "light");
+            lightDecrease.addTo(cubeTexturedMaterial, "light");
+            pointLightReference.addTo(cubeTexturedMaterial, "light");
         }
 
         shiftToPreviousChunk = new Vector3f(0, 0, -30);

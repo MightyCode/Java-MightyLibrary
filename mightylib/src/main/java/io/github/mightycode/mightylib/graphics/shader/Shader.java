@@ -14,6 +14,7 @@ import org.joml.Vector4f;
 import org.lwjgl.BufferUtils;
 
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -42,9 +43,13 @@ public class Shader extends GLElement {
     // Program being built (load or reload), from the sources taken at its start
     private Build build;
 
+    // Changes with each new program (never reused, unlike the GL ids): a location found for a stamp stays valid
+    private static long NextProgramStamp;
+    private long programStamp;
+
     // These belong to the current program: emptied with each new program
-    // Values sent, to skip those unchanged
-    private final HashMap<String, ShaderValue> lastValues = new HashMap<>();
+    // Values sent, by location, to skip those unchanged
+    private ShaderValue[] lastValues = new ShaderValue[16];
     // Uniform locations never change for a linked program
     private final HashMap<String, Integer> uniformLocations = new HashMap<>();
     // Uniforms already reported missing
@@ -186,6 +191,7 @@ public class Shader extends GLElement {
         deleteProgram();
         program = newProgram;
         programVersion = version;
+        programStamp = ++NextProgramStamp;
         build = null;
         afterLink();
     }
@@ -202,7 +208,7 @@ public class Shader extends GLElement {
             program = -1;
         }
 
-        lastValues.clear();
+        Arrays.fill(lastValues, null);
         uniformLocations.clear();
         missingUniforms.clear();
     }
@@ -279,8 +285,16 @@ public class Shader extends GLElement {
         Logger.CheckOpenGLError(message);
     }
 
+    /**
+     * Identifies the current program: changes with each new program (first load, hot reload). The locations read
+     * with one stamp are valid as long as the stamp does not change.
+     */
+    public long programStamp() {
+        return programStamp;
+    }
+
     // Location of the uniform in the current program, -1 when absent (or no program)
-    public int getLink(String valueName) {
+    public int location(String valueName) {
         if (program == -1)
             return -1;
 
@@ -302,14 +316,40 @@ public class Shader extends GLElement {
         return true;
     }
 
+    // A uniform of a value not found in the current program (removed by the GLSL compiler when unused): reported once
+    public void reportMissingUniform(String name) {
+        if (reportsMissingUniforms() && missingUniforms.add(name))
+            System.err.println("--Uniform " + name + " not found in shader " + getName()
+                    + " (unused or absent), its values are ignored");
+    }
+
     /**
-     * Send the value to the current program (skipped when unchanged). Only this program gets it: a new one
-     * (hot reload, fallback) has none of the values sent before, so a renderer keeps its values and sends them
-     * at each draw (Renderer.shaderValues).
+     * Send the value to the uniform of its name in the current program, found by name (once per program): a value
+     * sent at each draw rather keeps its location (location, sendValue). Reported once when absent.
      */
     public void sendValueToShader(ShaderValue value) {
-        ShaderValue lastValue = lastValues.get(value.getName());
+        int link = location(value.getName());
+        if (link == -1) {
+            reportMissingUniform(value.getName());
+            return;
+        }
 
+        sendValue(link, value);
+    }
+
+    /**
+     * Send the value to the uniform at this location of the current program (location, valid for programStamp),
+     * skipped when it is the last value sent there. Only this program gets it: a new one (hot reload, fallback) has
+     * none of the values sent before, so a renderer keeps its values and sends them at each draw.
+     */
+    public void sendValue(int link, ShaderValue value) {
+        if (link < 0)
+            return;
+
+        if (link >= lastValues.length)
+            lastValues = Arrays.copyOf(lastValues, Math.max(link + 1, lastValues.length * 2));
+
+        ShaderValue lastValue = lastValues[link];
         if (value.hasSameValue(lastValue) && !value.shouldForceUpdate())
             return;
 
@@ -317,22 +357,10 @@ public class Shader extends GLElement {
 
         // Remember the sent value, in place when possible to avoid allocating
         if (lastValue == null || !lastValue.copyValueFrom(value))
-            lastValues.put(value.getName(), value.copy());
+            lastValues[link] = value.copy();
 
         use();
         EngineStats.countUniformUpload();
-        int link = getLink(value.getName());
-
-        if (Logger.isGLErrorCheck())
-            Logger.CheckOpenGLError("Get uniform location : " + value.getName());
-
-        // Removed by the GLSL compiler when unused: reported once, ignored
-        if (link == -1) {
-            if (reportsMissingUniforms() && missingUniforms.add(value.getName()))
-                System.err.println("--Uniform " + value.getName() + " not found in shader " + getName()
-                        + " (unused or absent), its values are ignored");
-            return;
-        }
 
         if (value.getType() == Float.class) {
             Float v = value.getObjectTyped(Float.class);

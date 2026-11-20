@@ -1,7 +1,7 @@
 package io.github.mightycode.mightylib.graphics.lighting.lights;
 
 import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
-import io.github.mightycode.mightylib.graphics.renderer.Renderer;
+import io.github.mightycode.mightylib.graphics.renderer.IUniformTarget;
 import org.joml.Vector3f;
 
 public final class DirectionalLight extends BasicPhongMaterial {
@@ -32,16 +32,16 @@ public final class DirectionalLight extends BasicPhongMaterial {
     }
 
     @Override
-    public void addToRenderer(Renderer renderer, String structureName) {
-        super.addToRenderer(renderer, structureName);
+    public void addTo(IUniformTarget target, String structureName) {
+        super.addTo(target, structureName);
 
-        renderer.addShaderValue(structureName + ".direction", Vector3f.class, direction);
+        target.addShaderValue(structureName + ".direction", Vector3f.class, direction);
     }
 
     @Override
-    public void updateRenderer(Renderer renderer, String structureName) {
-        super.updateRenderer(renderer, structureName);
+    public void update(IUniformTarget target, String structureName) {
+        super.update(target, structureName);
 
-        renderer.updateShaderValue(structureName + ".direction", direction);
+        target.updateShaderValue(structureName + ".direction", direction);
     }
 }
