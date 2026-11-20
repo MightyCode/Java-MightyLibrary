@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.lighting.MultiLightingManager;
 import io.github.mightycode.mightylib.graphics.lighting.lights.DirectionalLight;
 import io.github.mightycode.mightylib.graphics.lighting.lights.LightDecrease;
 import io.github.mightycode.mightylib.graphics.lighting.lights.SpotLight;
+import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.graphics.renderer._3D.shape.CubeRenderer;
 import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
@@ -102,29 +103,24 @@ public class Scene3DBis extends Scene {
             new Vector3f(-1.3f,  1.0f, -1.5f)
         };
 
+        // Every cube lit by the directional light draws alike: one material, shared (retained by each cube)
+        Material directionalMaterial = texturedCubeMaterial()
+                .addShaderValue("light.vector", Vector4f.class,
+                        RendererUtils.ToLightDirection(directionalLight.getDirection()));
+        directionalLight.copyBasicPhongMaterial().addTo(directionalMaterial, "light");
+
         cubeTexturedMaterialsDirectional = new CubeRenderer[positions.length];
 
         for (int i = 0; i < cubeTexturedMaterialsDirectional.length; ++i){
-            CubeRenderer cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
+            CubeRenderer cubeTexturedMaterial = new CubeRenderer(directionalMaterial);
             cubeTexturedMaterial.setTexturePosition();
             cubeTexturedMaterial.setNormal();
-            cubeTexturedMaterial.setMainTextureChannel("container2", "material.diffuse");
-            cubeTexturedMaterial.addTextureChannel("container2_specular",
-                    "material.specular", 1);
 
             float angle = MightyMath.toRads(20.0f * i);
             cubeTexturedMaterial.setPosition(positions[i]);
             cubeTexturedMaterial.setRotation(angle, new Vector3f(1.0f, 0.3f, 0.5f).normalize());
 
             this.cubeTexturedMaterialsDirectional[i] = cubeTexturedMaterial;
-
-            cubeTexturedMaterial
-                    .addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
-                    .addShaderValue("light.vector", Vector4f.class,
-                            RendererUtils.ToLightDirection(directionalLight.getDirection()))
-                    .addShaderValue("material.shininess", Float.class, 64f);
-
-            directionalLight.copyBasicPhongMaterial().addTo(cubeTexturedMaterial, "light");
         }
 
         Vector3f shiftToPreviousChunk = new Vector3f(20, 0, 0);
@@ -135,29 +131,25 @@ public class Scene3DBis extends Scene {
         lightPoint.setColorMode(new Color4f(pointLightReference.Diffuse, 1));
         lightPoint.setNormal();
 
+        // Same for the cubes lit by the point light
+        Material pointMaterial = texturedCubeMaterial()
+                .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(lightPoint.position()))
+                .addShaderValue("light.useDistance", Integer.class, 1);
+        lightDecrease.addTo(pointMaterial, "light");
+        pointLightReference.addTo(pointMaterial, "light");
+
         cubeTexturedMaterialsPoint = new CubeRenderer[positions.length];
 
         for (int i = 0; i < cubeTexturedMaterialsDirectional.length; ++i){
-            CubeRenderer cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
+            CubeRenderer cubeTexturedMaterial = new CubeRenderer(pointMaterial);
             cubeTexturedMaterial.setTexturePosition();
             cubeTexturedMaterial.setNormal();
-            cubeTexturedMaterial.setMainTextureChannel("container2", "material.diffuse");
-            cubeTexturedMaterial.addTextureChannel("container2_specular", "material.specular", 1);
 
             float angle = MightyMath.toRads(20.0f * i);
             cubeTexturedMaterial.setPosition(positions[i].add(shiftToPreviousChunk, new Vector3f()));
             cubeTexturedMaterial.setRotation(angle, new Vector3f(1.0f, 0.3f, 0.5f).normalize());
 
             this.cubeTexturedMaterialsPoint[i] = cubeTexturedMaterial;
-
-            cubeTexturedMaterial
-                    .addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
-                    .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(lightPoint.position()))
-                    .addShaderValue("material.shininess", Float.class, 64f)
-                    .addShaderValue("light.useDistance", Integer.class, 1);
-
-            lightDecrease.addTo(cubeTexturedMaterial, "light");
-            pointLightReference.addTo(cubeTexturedMaterial, "light");
         }
 
         shiftToPreviousChunk = new Vector3f(0, 0, -30);
@@ -217,6 +209,16 @@ public class Scene3DBis extends Scene {
         }
     }
 
+    // The textured cube of the demo: container textures, its samplers, the camera, the shininess
+    private Material texturedCubeMaterial() {
+        return new Material("textureMaterial3D")
+                .setMainTexture("container2")
+                .setTextureChannel("container2_specular", 1)
+                .addShaderValue("material.diffuse", Integer.class, 0)
+                .addShaderValue("material.specular", Integer.class, 1)
+                .addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
+                .addShaderValue("material.shininess", Float.class, 64f);
+    }
 
     @Override
     public void update() {
@@ -233,14 +235,9 @@ public class Scene3DBis extends Scene {
             context().getMouseManager().invertCursorState();
         }
 
-        for (int i = 0; i < cubeTexturedMaterialsDirectional.length; ++i) {
-            cubeTexturedMaterialsDirectional[i].updateShaderValue("viewPos", camera3D().getCamPosRef());
-            //cubeTexturedMaterial.updateShaderValue("light.position", light.position());
-
-            cubeTexturedMaterialsPoint[i].updateShaderValue("viewPos", camera3D().getCamPosRef());
-
-            cubeMultiLights[i].updateShaderValue("viewPos", camera3D().getCamPosRef());
-        }
+        // The textured cubes read the camera position through their shared material
+        for (CubeRenderer cube : cubeMultiLights)
+            cube.updateShaderValue("viewPos", camera3D().getCamPosRef());
 
         lightManager.getSpotLight().setPosition(camera3D().getCamPosRef()).setDirection(camera3D().getLookAtVector());
         lightManager.update();

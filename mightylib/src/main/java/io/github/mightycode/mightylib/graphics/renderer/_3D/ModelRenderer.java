@@ -215,6 +215,20 @@ public final class ModelRenderer extends Renderer {
         return shown.sent;
     }
 
+    /**
+     * The part of the sort key of the draw of one mesh (0 to getNumberOfSentMeshes - 1): the one of the base material
+     * (program, blend, depth), its texture bits mixed with the textures of the mesh (each mesh binds its own).
+     */
+    public int sortKeyPart(int meshIndex) {
+        if (meshIndex < 0 || meshIndex >= shown.sent)
+            throw new IndexOutOfBoundsException("Mesh " + meshIndex + " out of the " + shown.sent + " sent meshes");
+
+        int hash = 31 * System.identityHashCode(shown.diffuseTextures[meshIndex])
+                + System.identityHashCode(shown.specularTextures[meshIndex]);
+        hash ^= (hash >>> 14) ^ (hash >>> 28);
+        return material().sortKeyPart() ^ ((hash & 0x3FFF) << 6);
+    }
+
     // Send the next mesh: the first version is displayed as it is sent, a newer one replaces it once complete
     private boolean sendNextMesh() {
         if (pending == null)

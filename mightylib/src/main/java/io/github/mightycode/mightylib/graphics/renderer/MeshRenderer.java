@@ -29,6 +29,11 @@ public class MeshRenderer extends Renderer {
         this(new Mesh(useEbo), shaderName);
     }
 
+    // A renderer with a new empty mesh drawn with the material (retained until this renderer is unloaded)
+    public MeshRenderer(Material material, boolean useEbo) {
+        this(new Mesh(useEbo), material);
+    }
+
     // A renderer drawing the given mesh, retained until this renderer is unloaded (shared with its other users)
     public MeshRenderer(Mesh mesh, String shaderName) {
         this(mesh, new Material(shaderName));

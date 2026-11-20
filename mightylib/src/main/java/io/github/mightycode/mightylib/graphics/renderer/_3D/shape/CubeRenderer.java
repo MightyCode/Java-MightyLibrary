@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._3D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
@@ -36,7 +37,12 @@ public final class CubeRenderer extends MeshRenderer {
 
 
     public CubeRenderer(String shaderName){
-        super(shaderName, true);
+        this(new Material(shaderName));
+    }
+
+    // A cube drawn with the material (shared with its other renderers)
+    public CubeRenderer(Material material){
+        super(material, true);
 
         faces = new HashMap<>();
         for (EDirection3D direction3D : EDirection3D.values())
