@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.test;
 
+import io.github.mightycode.mightylib.inputs.KitInputAccess;
 import io.github.mightycode.mightylib.main.EWindowMode;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.EngineConfig;
@@ -85,7 +86,8 @@ public final class TestEngine implements AutoCloseable {
 
     /**
      * Starts the engine as the game does, with strict resources, the silent sound, neither standard input nor debug
-     * server, then loads the resources.
+     * server, the real keyboard, mouse and gamepads ignored (only the simulated inputs count), then loads the
+     * resources.
      * @throws IllegalStateException if another test engine runs, or if the engine can't start (the error is named)
      */
     public TestEngine start() {
@@ -115,6 +117,8 @@ public final class TestEngine implements AutoCloseable {
 
         clock = NANOS_PER_SECOND;
         KitTimeAccess.setClock(() -> clock);
+        // Only the simulated inputs: a mouse moved or a key pressed at the machine during the tests changes nothing
+        KitInputAccess.setRealDevicesIgnored(true);
 
         int status;
         try {
@@ -279,6 +283,7 @@ public final class TestEngine implements AutoCloseable {
                     scope.close();
                 KitEngineAccess.resetProcessState();
                 KitTimeAccess.reset();
+                KitInputAccess.setRealDevicesIgnored(false);
             } finally {
                 // Whatever failed above, the next test can start an engine
                 if (shared == this)

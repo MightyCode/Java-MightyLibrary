@@ -21,7 +21,10 @@ class GlfwGamepadSource implements IGamepadSource {
         // Detach from GLFW before freeing: glfwSetJoystickCallback looks up the previous closure by its address
         GLFWJoystickCallback previous = callback;
         callback = connectionCallback == null ? null
-                : GLFWJoystickCallback.create((jid, event) -> connectionCallback.changed(jid, event == GLFW_CONNECTED));
+                : GLFWJoystickCallback.create((jid, event) -> {
+                    if (!RealDevices.isIgnored())
+                        connectionCallback.changed(jid, event == GLFW_CONNECTED);
+                });
         glfwSetJoystickCallback(callback);
 
         if (previous != null)
@@ -30,7 +33,8 @@ class GlfwGamepadSource implements IGamepadSource {
 
     @Override
     public boolean isPresent(int joystickId) {
-        return glfwJoystickPresent(joystickId);
+        // Ignored real devices: no gamepad is ever connected
+        return !RealDevices.isIgnored() && glfwJoystickPresent(joystickId);
     }
 
     @Override
@@ -51,7 +55,7 @@ class GlfwGamepadSource implements IGamepadSource {
 
     @Override
     public boolean read(int joystickId, boolean[] buttons, float[] axes) {
-        if (!glfwGetGamepadState(joystickId, state))
+        if (RealDevices.isIgnored() || !glfwGetGamepadState(joystickId, state))
             return false;
 
         ByteBuffer stateButtons = state.buttons();
