@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Matrix4fc;
@@ -88,13 +89,13 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     }
 
     /**
-     * Batched when its shader has a batch equivalent ("batch" in shaders.json) and its depth test is off: the
-     * vertices of calculatePosition transformed by the model, the coordinates of calculateTexturePosition, the
-     * triangles of getIndices (asked again when they change, like for the mesh).
+     * Batched when its shader has a batch equivalent ("batch" in shaders.json), its depth test is off and its mesh
+     * draws triangles: the vertices of calculatePosition transformed by the model, the coordinates of
+     * calculateTexturePosition, the triangles of getIndices (asked again when they change, like for the mesh).
      */
     @Override
     protected boolean submitToBatch(DrawBatch2D batch) {
-        if (isDepthTest())
+        if (!CanBatch(isDepthTest(), getMesh().getDrawMode()))
             return false;
 
         refreshBatchGeometry();
@@ -116,6 +117,11 @@ public abstract class Shape2DRenderer extends MeshRenderer {
             batch.index(index);
         batch.endDraw();
         return true;
+    }
+
+    // The batch keeps no depth, and draws its indices as a list of triangles (not lines, strips or fans)
+    static boolean CanBatch(boolean depthTest, EDrawMode drawMode) {
+        return !depthTest && drawMode == EDrawMode.Triangles;
     }
 
     private void refreshBatchGeometry() {

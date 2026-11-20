@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
+import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
@@ -20,6 +21,15 @@ class Shape2DBatchGeometryTest {
     private static Matrix4f model(float x, float y, float angle, float width, float height) {
         return new Matrix4f().translate(new Vector3f(x, y, 0)).rotate(angle, new Vector3f(0, 0, 1))
                 .scale(new Vector3f(width, height, 1));
+    }
+
+    // Only a list of triangles without depth test: lines, strips and fans would be drawn as triangles
+    @Test
+    void onlyTrianglesWithoutDepthAreBatched() {
+        for (EDrawMode mode : EDrawMode.values()) {
+            assertEquals(mode == EDrawMode.Triangles, Shape2DRenderer.CanBatch(false, mode), mode.name());
+            assertFalse(Shape2DRenderer.CanBatch(true, mode), mode.name());
+        }
     }
 
     @Test
