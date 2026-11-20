@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
-import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
@@ -108,8 +107,7 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         size.set(scale().x, scale().y);
         reference.set(getReferencePoint());
         texturePosition.set(getTexturePosition());
-        texturedValue.setObject(getMainTexture() != null
-                && getMesh().isEnableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL) ? 1 : 0);
+        texturedValue.setObject(getMainTexture() != null && isTextureEnabled() ? 1 : 0);
 
         strokeWidthValue.setObject(stroke.width());
         strokeColorValue.setObject(stroke.color());

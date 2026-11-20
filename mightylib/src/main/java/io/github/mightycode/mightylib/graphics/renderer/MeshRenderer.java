@@ -6,15 +6,23 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 
 /**
- * A renderer which draws one Mesh, with its textures. The renderer owns its mesh: unload releases it.
+ * A renderer which draws one Mesh, with its textures. The renderer retains its mesh and releases it in unload: a
+ * mesh given to several renderers is shared, unloaded by the release of the last one (Mesh.retain).
  * A subclass fills the mesh (getMesh) in its constructor and can redefine the hooks of Renderer;
  * the mesh is drawn by draw() (bind, then Mesh.draw).
+ * <p>
+ * Texture mode: on with a texture (setMainTextureChannel, addTextureChannel), off with setColorMode(color) and
+ * setNoColorNoTextureMode (isTextureEnabled, read by the renderers whose shader has both modes). The mesh is never
+ * changed by the mode: a shader of color only does not read the texture coordinates.
  */
 public class MeshRenderer extends Renderer {
     // Texture units 1 to MAX_TEXTURE_CHANNELS of addTextureChannel (unit 0 is the main texture)
     public static final int MAX_TEXTURE_CHANNELS = 30;
 
     private final Mesh mesh;
+
+    // Texture mode (see the class)
+    private boolean textureEnabled;
 
     // Textures channels
     private IRenderTextureBindable mainTexture;
@@ -25,11 +33,12 @@ public class MeshRenderer extends Renderer {
         this(new Mesh(useEbo), shaderName);
     }
 
-    // A renderer drawing the given mesh, which it owns from now on
+    // A renderer drawing the given mesh, retained until this renderer is unloaded (shared with its other users)
     public MeshRenderer(Mesh mesh, String shaderName) {
         super(shaderName);
 
         this.mesh = mesh;
+        mesh.retain();
         mainTexture = null;
     }
 
@@ -78,7 +87,7 @@ public class MeshRenderer extends Renderer {
             glResources().releaseResource((GLElement) mainTexture);
         }
 
-        mesh.enableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
+        textureEnabled = true;
         mainTexture = texture;
     }
 
@@ -97,7 +106,7 @@ public class MeshRenderer extends Renderer {
         checkTextureChannel(channelNumber);
         addShaderValue(nameOfUniform, Integer.class, channelNumber);
 
-        mesh.enableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
+        textureEnabled = true;
 
         if (textures == null)
             textures = new IRenderTextureBindable[MAX_TEXTURE_CHANNELS];
@@ -113,17 +122,17 @@ public class MeshRenderer extends Renderer {
                     + " (unit 0 is the main texture: setMainTextureChannel)");
     }
 
-    // The color and the texture coordinates cut when disableTexture
+    // The color, and the texture mode off when disableTexture
     public final ShaderValue setColorMode(Color4f color, boolean disableTexture) {
         ShaderValue value = super.setColorMode(color);
 
         if (disableTexture)
-            mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
+            textureEnabled = false;
 
         return value;
     }
 
-    // Hook (call super): the color, the texture coordinates cut
+    // Hook (call super): the color, the texture mode off
     @Override
     public ShaderValue setColorMode(Color4f color) {
         return setColorMode(color, true);
@@ -132,9 +141,14 @@ public class MeshRenderer extends Renderer {
     // Hook (call super)
     @Override
     public void setNoColorNoTextureMode() {
-        mesh.disableVbo(Mesh.COMMON_TEXTURE_POSITION_CHANNEL);
+        textureEnabled = false;
 
         super.setNoColorNoTextureMode();
+    }
+
+    // A texture is set and the texture mode was not turned off since (see the class)
+    public final boolean isTextureEnabled() {
+        return textureEnabled;
     }
 
     public final Mesh getMesh(){
@@ -149,7 +163,7 @@ public class MeshRenderer extends Renderer {
     // Hook: a subclass releases what it created, then calls super (the mesh, the textures, the program)
     @Override
     public void unload() {
-        mesh.unload();
+        mesh.release();
 
         if (mainTexture instanceof GLElement)
             glResources().releaseResource((GLElement) mainTexture);
