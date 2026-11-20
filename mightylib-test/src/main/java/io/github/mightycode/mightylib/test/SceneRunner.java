@@ -201,6 +201,11 @@ public final class SceneRunner {
             for (String name : objects.keySet())
                 counters.put("gl." + name, objects.getInt(name));
         }
+        JSONObject retained = gl.optJSONObject("retainedObjects");
+        if (retained != null) {
+            for (String name : retained.keySet())
+                counters.put("retained." + name, retained.getInt(name));
+        }
         JSONObject shared = gl.optJSONObject("sharedElements");
         if (shared != null) {
             for (String kind : shared.keySet()) {

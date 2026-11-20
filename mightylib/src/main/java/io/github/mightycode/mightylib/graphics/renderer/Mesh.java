@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.internal.RefCount;
+import io.github.mightycode.mightylib.graphics.internal.SharedObjects;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
@@ -79,9 +80,13 @@ public class Mesh {
     private int glDrawMode;
 
     // The renderers (and the game) that use this mesh: the last release unloads it
-    private final RefCount references = new RefCount("Mesh", this::unload);
+    private final RefCount references = new RefCount("Mesh", () -> {
+        SharedObjects.MESHES.unregister(this);
+        unload();
+    });
 
     public Mesh(boolean useEbo) {
+        SharedObjects.MESHES.register(this);
         setDrawMode(EDrawMode.Triangles);
 
         verticesToDraw = 0;

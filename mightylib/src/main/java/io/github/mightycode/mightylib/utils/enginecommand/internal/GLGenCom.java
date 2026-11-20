@@ -3,6 +3,9 @@ package io.github.mightycode.mightylib.utils.enginecommand.internal;
 import io.github.mightycode.mightylib.main.Views;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.SharedObjects;
+import io.github.mightycode.mightylib.graphics.renderer.Material;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.text.DrawnTexts;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandCondition;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandContext;
@@ -15,6 +18,9 @@ import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 
 import org.json.JSONObject;
+
+import java.util.List;
+import java.util.function.ToIntFunction;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
@@ -35,10 +41,66 @@ public final class GLGenCom extends BaseCommand {
         root.executes("Compare it before and after a scene change to find leaks", context -> describe(false))
                 .then(literal("summary", "The shared elements given by type as elements/references")
                         .executes(context -> describe(true)))
+                .then(literal("materials", "The materials and meshes in use: shader, references, blend, sort key part, version")
+                        .executes("See what is shared between renderers", GLGenCom::materials))
                 .then(literal("text", "The texts drawn by the last frame as text, from top to bottom then left to right")
                         .option(Option.of(CONTAINS, "Keep only the texts that contain this string")
                                 .value("string", word()))
                         .executes("Check what is on screen without a screenshot", GLGenCom::drawnTexts));
+    }
+
+    // The objects retained by at least one user: what a scene that is left must have given back
+    private static int retained(List<?> objects, ToIntFunction<Object> references) {
+        int count = 0;
+        for (Object object : objects) {
+            if (references.applyAsInt(object) > 0)
+                ++count;
+        }
+        return count;
+    }
+
+    private static CommandResult materials(CommandContext context) {
+        JSONArray materials = new JSONArray();
+        int shared = 0;
+        for (Material material : SharedObjects.MATERIALS.snapshot()) {
+            if (material.references() <= 0)
+                continue;
+
+            if (material.references() > 1)
+                ++shared;
+
+            JSONObject json = new JSONObject();
+            json.put("shader", material.getShader().getName());
+            json.put("references", material.references());
+            json.put("blend", material.getBlendMode().name());
+            json.put("sortKeyPart", material.sortKeyPart());
+            json.put("version", material.version());
+            materials.put(json);
+        }
+
+        JSONArray meshes = new JSONArray();
+        int sharedMeshes = 0;
+        for (Mesh mesh : SharedObjects.MESHES.snapshot()) {
+            if (mesh.references() <= 0)
+                continue;
+
+            if (mesh.references() > 1)
+                ++sharedMeshes;
+
+            JSONObject json = new JSONObject();
+            json.put("references", mesh.references());
+            json.put("vbos", mesh.getVboCount());
+            json.put("vertices", mesh.getVertexCount());
+            meshes.put(json);
+        }
+
+        JSONObject data = new JSONObject();
+        data.put("materials", materials);
+        data.put("meshes", meshes);
+        data.put("sharedMaterials", shared);
+        data.put("sharedMeshes", sharedMeshes);
+        return CommandResult.ok(materials.length() + " material(s) alive, " + shared + " shared; "
+                + meshes.length() + " mesh(es) alive, " + sharedMeshes + " shared", data);
     }
 
     private static CommandResult drawnTexts(CommandContext context) {
@@ -77,6 +139,12 @@ public final class GLGenCom extends BaseCommand {
             glObjects.put(type.name(), GenDeleteResources.Count(type));
 
         data.put("glObjects", glObjects);
+
+        // Retained by at least one user: a scene that is left must have given them back
+        JSONObject sharedObjects = new JSONObject();
+        sharedObjects.put("Material", retained(SharedObjects.MATERIALS.snapshot(), o -> ((Material) o).references()));
+        sharedObjects.put("Mesh", retained(SharedObjects.MESHES.snapshot(), o -> ((Mesh) o).references()));
+        data.put("retainedObjects", sharedObjects);
 
         data.put("glContexts", describeContexts());
         JSONObject shared = Views.engine().glResources().describe();
