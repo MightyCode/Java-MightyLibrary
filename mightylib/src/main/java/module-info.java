@@ -49,6 +49,7 @@ module io.github.mightycode.mightylib {
     exports io.github.mightycode.mightylib.graphics.lighting.materials;
     exports io.github.mightycode.mightylib.graphics.renderer;
     exports io.github.mightycode.mightylib.graphics.renderer._2D;
+    exports io.github.mightycode.mightylib.graphics.renderer._2D.batch;
     exports io.github.mightycode.mightylib.graphics.renderer._2D.shape;
     exports io.github.mightycode.mightylib.graphics.renderer._3D;
     exports io.github.mightycode.mightylib.graphics.renderer._3D.heightMap;
