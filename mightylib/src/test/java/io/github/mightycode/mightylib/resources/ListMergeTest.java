@@ -53,7 +53,8 @@ class ListMergeTest {
         Map<String, DataType> data = new HashMap<>();
         loader.create(data);
 
-        assertEquals(Set.of("a", "b", "c"), data.keySet());
+        // Plus the white texture the loader always declares
+        assertEquals(Set.of("a", "b", "c", EngineResources.WHITE_TEXTURE), data.keySet());
         assertEquals("textures/a.png", ((TextureData) data.get("a")).path());
         assertEquals("textures/gui/b2.png", ((TextureData) data.get("b")).path());
         assertEquals("textures/c.png", ((TextureData) data.get("c")).path());

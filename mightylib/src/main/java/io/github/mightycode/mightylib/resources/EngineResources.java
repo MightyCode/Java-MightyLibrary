@@ -35,6 +35,9 @@ public final class EngineResources {
     public static final String GRID_2D = "grid2D";
     // Geometric shapes (polylines, arrows, polygons): triangles of Stroker extruded by the vertex shader
     public static final String STROKE_2D = "stroke2D";
+    // Batch shaders (tags batch2D, batch2DInstanced): texture x vertex color; texture2D and colorShape2D link to them
+    public static final String SPRITE_2D = "sprite2D";
+    public static final String SPRITE_2D_INSTANCED = "sprite2DInstanced";
     public static final String MULTI_COLORED_SHAPE_2D = "multiColoredShape2D";
     public static final String COLORED_TEXT = "coloredText";
     public static final String POST_PROCESSING = "postProcessing";
@@ -47,7 +50,7 @@ public final class EngineResources {
     private static final List<String> SHADERS = List.of(
             COLOR_SHAPE_2D, TEXTURE_2D,
             ROUNDED_RECTANGLE_2D, CIRCLE_2D, ELLIPSE_2D, TRIANGLE_2D, ARC_2D, REGULAR_POLYGON_2D,
-            POINTS_2D, GRID_2D, STROKE_2D,
+            POINTS_2D, GRID_2D, STROKE_2D, SPRITE_2D, SPRITE_2D_INSTANCED,
             MULTI_COLORED_SHAPE_2D, COLORED_TEXT, POST_PROCESSING,
             COLOR_SHAPE_3D, TEXTURE_3D, SKYBOX, MULTI_COLORED_LIGHTING_3D, TEXTURE_MULTIPLE_LIGHTS_3D);
 
@@ -55,6 +58,12 @@ public final class EngineResources {
     public static List<String> shaders() {
         return SHADERS;
     }
+
+    // ---- Textures ----
+
+    // White 1x1 sRGB texture (ColorTextureData, no file), declared by the texture loader and loaded by the batch of
+    // the engine: the texture of a colored draw in a 2D batch
+    public static final String WHITE_TEXTURE = "color/ffffffff";
 
     // ---- Fonts (textures/fonts/fonts.json, atlas in textures/textures.json) ----
 

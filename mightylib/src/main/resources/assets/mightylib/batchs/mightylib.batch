@@ -11,7 +11,8 @@
             "type": "TextureData",
             "files": [
                 "engineSans",
-                "engineMono"
+                "engineMono",
+                "color/ffffffff"
             ],
             "regex": []
         },
@@ -37,6 +38,8 @@
                 "points2D",
                 "grid2D",
                 "stroke2D",
+                "sprite2D",
+                "sprite2DInstanced",
                 "multiColoredShape2D",
                 "coloredText",
                 "postProcessing",

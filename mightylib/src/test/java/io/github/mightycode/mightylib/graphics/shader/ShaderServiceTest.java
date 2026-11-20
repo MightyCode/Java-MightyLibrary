@@ -49,6 +49,62 @@ class ShaderServiceTest {
         assertTrue(declarations.has("c"));
     }
 
+    // "batch" and "batchInstanced" name a declared shader with the matching tag
+    @Test
+    void batchLinksAreRead(@TempDir Path root) throws IOException {
+        writeList(root, "{\"shaders\": {"
+                + "\"sprite\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\", \"batch2D\"]},"
+                + "\"spriteI\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\", \"batch2DInstanced\"]},"
+                + "\"a\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"], \"batch\": \"sprite\","
+                + " \"batchInstanced\": \"spriteI\"},"
+                + "\"b\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"]}}}");
+        ShaderService service = service(root);
+
+        assertEquals("sprite", service.batchShader("a"));
+        assertEquals("spriteI", service.batchInstancedShader("a"));
+        assertNull(service.batchShader("b"));
+        assertNull(service.batchInstancedShader("b"));
+        assertNull(service.batchShader("unknown"));
+    }
+
+    // An unknown target, a target without the tag (the instanced tag is not the batch one), a value that is not a
+    // name: no link, the shader is drawn alone
+    @Test
+    void invalidBatchLinksAreIgnored(@TempDir Path root) throws IOException {
+        writeList(root, "{\"shaders\": {"
+                + "\"spriteI\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"batch2DInstanced\"]},"
+                + "\"plain\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"]},"
+                + "\"missing\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"nothing\"},"
+                + "\"untagged\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"plain\","
+                + " \"batchInstanced\": \"plain\"},"
+                + "\"wrongTag\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"spriteI\"},"
+                + "\"notAName\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": 3}}}");
+        ShaderService service = service(root);
+
+        assertNull(service.batchShader("missing"));
+        assertNull(service.batchShader("untagged"));
+        assertNull(service.batchInstancedShader("untagged"));
+        assertNull(service.batchShader("wrongTag"));
+        assertNull(service.batchShader("notAName"));
+    }
+
+    // A higher source makes a shader of the engine batched, or links it to its own batch shader
+    @Test
+    void batchLinksFollowTheMergedEntries(@TempDir Path low, @TempDir Path high) throws IOException {
+        writeList(low, "{\"shaders\": {"
+                + "\"sprite\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"batch2D\"]},"
+                + "\"a\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"sprite\"},"
+                + "\"b\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": []}}}");
+        writeList(high, "{\"shaders\": {"
+                + "\"mySprite\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"batch2D\"]},"
+                + "\"a\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"mySprite\"},"
+                + "\"b\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"sprite\"}}}");
+        ShaderService service = service(low, high);
+
+        assertEquals("mySprite", service.batchShader("a"));
+        assertEquals("sprite", service.batchShader("b"));
+    }
+
     // A copy, even deep: a caller can't change the shaders of the service
     @Test
     void declarationsAreACopy(@TempDir Path root) throws IOException {

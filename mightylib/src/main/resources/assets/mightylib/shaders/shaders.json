@@ -5,7 +5,9 @@
 				"2D/essential/colorShape2DV.glsl",
 				"2D/essential/colorShape2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "sprite2D",
+			"batchInstanced": "sprite2DInstanced"
 		},
 		"roundedRectangle2D": {
 			"files": [
@@ -75,7 +77,23 @@
 				"2D/essential/texture2DV.glsl",
 				"2D/essential/texture2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "sprite2D",
+			"batchInstanced": "sprite2DInstanced"
+		},
+		"sprite2D": {
+			"files": [
+				"2D/batch/sprite2DV.glsl",
+				"2D/batch/sprite2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"sprite2DInstanced": {
+			"files": [
+				"2D/batch/sprite2DInstancedV.glsl",
+				"2D/batch/sprite2DF.glsl"
+			],
+			"tags" : ["2D", "batch2DInstanced"]
 		},
 		"multiColoredShape2D": {
 			"files": [

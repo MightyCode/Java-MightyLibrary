@@ -7,6 +7,9 @@ import io.github.mightycode.mightylib.resources.internal.BatchLoader;
 import io.github.mightycode.mightylib.resources.sound.SoundData;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import io.github.mightycode.mightylib.resources.source.ClasspathSource;
+import io.github.mightycode.mightylib.resources.texture.TextureData;
+import io.github.mightycode.mightylib.resources.texture.TextureDataLoader;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +43,16 @@ class ResourceLoadersTest {
         @Override
         public String folder() {
             return "shaders/";
+        }
+
+        @Override
+        public String batchShader(String shaderName) {
+            return null;
+        }
+
+        @Override
+        public String batchInstancedShader(String shaderName) {
+            return null;
         }
 
         @Override
@@ -124,6 +137,21 @@ class ResourceLoadersTest {
         Resources resources = create(mandatory());
         assertSame(ShaderData.class, resources.getClassFromName("ShaderData"));
         assertNull(resources.getClassFromName("Shader"));
+    }
+
+    // The white texture of the engine is declared by the texture loader: textures.json does not list it
+    @Test
+    void theTextureLoaderDeclaresTheWhiteTexture() {
+        ResourceSources engine = ResourceSources.of(
+                new ClasspathSource(ResourceLoadersTest.class.getClassLoader(), "assets/mightylib/"));
+        try {
+            Resources resources = new Resources(new Resources.AllResourcesMethod(), 1, engine,
+                    List.of(new TextureDataLoader()));
+            resources.init();
+            assertTrue(resources.isExistingResource(TextureData.class, EngineResources.WHITE_TEXTURE));
+        } finally {
+            engine.close();
+        }
     }
 
     @Test

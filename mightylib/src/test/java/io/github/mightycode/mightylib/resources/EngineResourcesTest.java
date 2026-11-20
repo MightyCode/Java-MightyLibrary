@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.graphics.shader.ShaderService;
 import io.github.mightycode.mightylib.graphics.shader.ShaderPreprocessor;
+import io.github.mightycode.mightylib.graphics.shader.ShaderServiceTestAccess;
+import io.github.mightycode.mightylib.resources.texture.ColorTextureData;
 import io.github.mightycode.mightylib.graphics.text.FontFile;
 import io.github.mightycode.mightylib.resources.source.ClasspathSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
@@ -101,11 +103,31 @@ class EngineResourcesTest {
         assertEquals(EngineResources.shaders(), batchFiles("ShaderData"));
     }
 
+    // The white texture of the batches: its name is the one of a white ColorTextureData, so a model asking for
+    // white shares it
+    @Test
+    void theWhiteTextureIsAWhiteColorTexture() {
+        assertEquals(ColorTextureData.NameOf(0xFFFFFFFF), EngineResources.WHITE_TEXTURE);
+        assertEquals(EngineResources.WHITE_TEXTURE, new ColorTextureData(0xFFFFFFFF).getDataName());
+    }
+
+    // texture2D and colorShape2D are batched by sprite2D (and sprite2DInstanced) in the engine alone
+    @Test
+    void theEssentialShadersLinkToTheSpriteBatch() {
+        ShaderService service = ShaderServiceTestAccess.create(engine);
+        for (String name : List.of(EngineResources.TEXTURE_2D, EngineResources.COLOR_SHAPE_2D)) {
+            assertEquals(EngineResources.SPRITE_2D, service.batchShader(name), name);
+            assertEquals(EngineResources.SPRITE_2D_INSTANCED, service.batchInstancedShader(name), name);
+        }
+    }
+
     @Test
     void theBatchLoadsTheTwoRegularFontsOnly() {
         assertEquals(List.of(EngineResources.DEFAULT_FONT, EngineResources.CONSOLE_FONT),
                 EngineResources.loadedFonts());
-        assertEquals(EngineResources.loadedFonts(), batchFiles("TextureData"));
+        List<String> textures = new ArrayList<>(EngineResources.loadedFonts());
+        textures.add(EngineResources.WHITE_TEXTURE);
+        assertEquals(textures, batchFiles("TextureData"));
         assertEquals(EngineResources.loadedFonts(), batchFiles("FontFace"));
     }
 
