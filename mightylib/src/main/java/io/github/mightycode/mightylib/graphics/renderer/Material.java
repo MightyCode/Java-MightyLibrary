@@ -7,8 +7,11 @@ import io.github.mightycode.mightylib.graphics.internal.LiveObjects;
 import io.github.mightycode.mightylib.graphics.internal.RefCount;
 import io.github.mightycode.mightylib.graphics.internal.SharedObjects;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderData;
+import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -17,6 +20,7 @@ import io.github.mightycode.mightylib.resources.texture.TextureData;
 import org.apiguardian.api.API;
 
 import static org.apiguardian.api.API.Status.EXPERIMENTAL;
+import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
  * How things are drawn, shared by the renderers that draw them alike: the program (its fallback while it loads or
@@ -61,6 +65,29 @@ public final class Material implements IUniformTarget {
         free();
     });
     private int version;
+
+    // Names the 2D batch gives itself to the batch program (not taken from the values of the material)
+    private static final UniformValues BATCH_VALUES = new UniformValues();
+
+    static {
+        for (String name : Renderer.BATCH_HANDLED_VALUES)
+            BATCH_VALUES.put(new ShaderValue(name, Integer.class, 0), true);
+    }
+
+    // The batch equivalent of the shader (resolved at the first batched draw) and the part of the material in the
+    // 2D batches, valid for this table, generation, version and program
+    private boolean batchShaderResolved;
+    private Shader batchShader;
+    private ShaderSink batchSink;
+    // Its instanced equivalent ("batchInstanced"), null when none
+    private Shader batchInstancedShader;
+    private ShaderSink batchInstancedSink;
+    private BatchStateTable batchTable;
+    private int batchGeneration;
+    private int batchVersion;
+    private long batchProgramStamp;
+    private int batchPartId = -1;
+    private boolean batchReadsColor;
 
     /**
      * Takes the program of the shader (the fallback one while it loads or when it failed); the tag of the shader
@@ -336,6 +363,17 @@ public final class Material implements IUniformTarget {
 
     private void free() {
         glResources.releaseResource(shader);
+        if (batchShader != null) {
+            glResources.releaseResource(batchShader);
+            batchShader = null;
+            batchSink = null;
+        }
+        if (batchInstancedShader != null) {
+            glResources.releaseResource(batchInstancedShader);
+            batchInstancedShader = null;
+            batchInstancedSink = null;
+        }
+        batchTable = null;
         releaseTexture(mainTexture);
         mainTexture = null;
         if (textures != null) {
@@ -387,6 +425,72 @@ public final class Material implements IUniformTarget {
 
         // Folds the high bits into the kept ones
         return hash ^ (hash >>> 14) ^ (hash >>> 28);
+    }
+
+    // ---- 2D batches ----
+
+    /**
+     * The id of the part of this material in the 2D batches of the table (its batch program, textures, state and
+     * values), -1 when its draws can't be batched now: its program is not loaded, its shader has no batch equivalent
+     * ("batch" in shaders.json), or the batch program is not loaded yet. Built again when the version, the program
+     * or the table generation changes, otherwise an int read. Main thread.
+     */
+    @API(status = INTERNAL)
+    public int batchPart(BatchStateTable table) {
+        if (!shader.isLoaded())
+            return -1;
+        if (!batchShaderResolved)
+            resolveBatchShader();
+        if (batchShader == null || !batchShader.isLoaded())
+            return -1;
+
+        if (table == batchTable && table.partsGeneration() == batchGeneration && version == batchVersion
+                && shader.programStamp() == batchProgramStamp)
+            return batchPartId;
+
+        boolean readsTextures = shader.samplesTextures();
+        batchReadsColor = shader.location(ShaderUniforms.COLOR) != -1;
+        IRenderTextureBindable unit0 = readsTextures && mainTexture != null ? mainTexture
+                : Batches2D.of(glResources).whiteTexture();
+        IRenderTextureBindable[] channels = readsTextures && textures != null ? textures.clone() : null;
+        MaterialBatchPart part = new MaterialBatchPart(batchShader, batchInstancedShader, unit0, channels,
+                renderState, values.size() > 0 ? this : null);
+
+        batchPartId = table.materialPart(part);
+        batchTable = table;
+        batchGeneration = table.partsGeneration();
+        batchVersion = version;
+        batchProgramStamp = shader.programStamp();
+        return batchPartId;
+    }
+
+    // The batch equivalent of the shader, held until the material is freed (null when it has none)
+    private void resolveBatchShader() {
+        batchShaderResolved = true;
+        String name = shader.getData().getDataName();
+        String batchName = Views.engine().shaders().batchShader(name);
+        if (batchName == null)
+            return;
+
+        batchShader = (Shader) glResources.acquire(resources.getResourceOrFallback(ShaderData.class, batchName), true);
+        batchSink = new ShaderSink(batchShader);
+
+        String instancedName = Views.engine().shaders().batchInstancedShader(name);
+        if (instancedName != null) {
+            batchInstancedShader = (Shader) glResources.acquire(
+                    resources.getResourceOrFallback(ShaderData.class, instancedName), true);
+            batchInstancedSink = new ShaderSink(batchInstancedShader);
+        }
+    }
+
+    // The program of the material has the uniform color: its batched draws take the color of the renderer
+    boolean batchReadsColor() {
+        return batchReadsColor;
+    }
+
+    // The common values to the batch program, but those the batch gives itself (camera, color, color mode)
+    void sendBatchValues(boolean instanced) {
+        values.send(instanced ? batchInstancedSink : batchSink, BATCH_VALUES);
     }
 
     // The values of the material sent to a program

@@ -43,6 +43,7 @@ public final class DemoScenes {
 
     static final List<Entry<?>> ALL = List.of(
             scene(MenuScene.class, MenuScene::new, "The menu of the demo: the registered scenes, filtered, sorted and described."),
+            scene(BatchStress2D.class, BatchStress2D::new, "Measure of the 2D drawing: N textured and colored rectangles, turning. Up doubles N, Down halves it, M changes the mode of the 2D batch, S sorts the draws by state; the render time and the draw calls are shown."),
             scene(Box2D.class, Box2D::new, "Physics with JBox2D: bodies and shapes in a world, with a camera that moves, zooms and drags."),
             scene(CollisionGridScene2D.class, CollisionGridScene2D::new, "Collision2DGrid: obstacles sorted into the cells of a grid, only the ones near the rectangle that follows the mouse are tested. Grey: ignored, blue: tested, red: colliding."),
             scene(CommandsScene2D.class, CommandsScene2D::new, "A scene with its own command, spawn, that creates shapes. Open the console with the key left of 1 and try: spawn 3 --color red"),

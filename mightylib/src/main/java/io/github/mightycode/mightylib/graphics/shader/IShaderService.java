@@ -16,12 +16,29 @@ import static org.apiguardian.api.API.Status.EXPERIMENTAL;
  */
 @API(status = EXPERIMENTAL)
 public interface IShaderService extends IEngineService {
+    // Tag of a shader that draws a 2D batch (fixed vertex format: position, UV, color RGBA8)
+    String BATCH_2D_TAG = "batch2D";
+    // Tag of a shader that draws a 2D batch of sprite quads by instances
+    String BATCH_2D_INSTANCED_TAG = "batch2DInstanced";
+
     /**
      * The declared shaders by name (the "shaders" object of the merged shaders.json): "files" (vertex, fragment, and
      * geometry when there are three, relative to folder()), "tags", optional "defines". A copy: changing it changes
      * nothing in the service.
      */
     JSONObject declarations();
+
+    /**
+     * The batch equivalent of a shader: the "batch" field of its entry, when it names a declared shader tagged
+     * BATCH_2D_TAG; null otherwise (no field, unknown or untagged target: the shader is drawn alone). Any thread.
+     */
+    String batchShader(String shaderName);
+
+    /**
+     * The instanced batch equivalent of a shader: the "batchInstanced" field of its entry, when it names a declared
+     * shader tagged BATCH_2D_INSTANCED_TAG; null otherwise. Any thread.
+     */
+    String batchInstancedShader(String shaderName);
 
     // Logical folder of the shaders in the sources of the resources, ending with '/' (an include not found next to
     // its file is searched there)

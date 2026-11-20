@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
@@ -57,6 +58,7 @@ public final class EngineConfig {
     private long watchResourcesInterval = ResourceWatcher.DEFAULT_INTERVAL_MS;
     private boolean openGLErrorCheck;
     private ERenderColorSpace colorSpace = ERenderColorSpace.GAMMA;
+    private EBatch2DMode batch2DMode = EBatch2DMode.ORPHAN;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
     // Commands of the player: unset (null) gives DEV in debug mode, none in release
     private boolean commandAccessSet;
@@ -203,6 +205,18 @@ public final class EngineConfig {
     }
 
     public static final String COLOR_SPACE_PROPERTY = "mightylib.colorSpace";
+
+    /**
+     * How the 2D draws are sent at the start (then changed by the command batch mode): ORPHAN by default, OFF draws
+     * each renderer alone. The system property BATCH_2D_PROPERTY (-Dmightylib.batch2D=off|orphan|ring|instanced)
+     * overrides it.
+     */
+    public EngineConfig setBatch2DMode(EBatch2DMode batch2DMode) {
+        this.batch2DMode = Objects.requireNonNull(batch2DMode, "batch2DMode");
+        return this;
+    }
+
+    public static final String BATCH_2D_PROPERTY = "mightylib.batch2D";
 
     /**
      * Development: a folder on the disk replaces the classpath source of the engine (its files in the jar, under
@@ -553,6 +567,21 @@ public final class EngineConfig {
 
         System.err.println("--" + COLOR_SPACE_PROPERTY + " : unknown value ->" + property + "<-, expected linear or gamma");
         return colorSpace;
+    }
+
+    // The property wins over the configuration; an unknown value is ignored, with a line in the log
+    public EBatch2DMode getBatch2DMode() {
+        String property = System.getProperty(BATCH_2D_PROPERTY);
+        if (property == null)
+            return batch2DMode;
+
+        EBatch2DMode value = EBatch2DMode.parse(property);
+        if (value != null)
+            return value;
+
+        System.err.println("--" + BATCH_2D_PROPERTY + " : unknown value ->" + property
+                + "<-, expected off, orphan, ring or instanced");
+        return batch2DMode;
     }
 
     // Launch option -Dmightylib.sound=silent: no device is opened; another value is ignored, with a line in the log

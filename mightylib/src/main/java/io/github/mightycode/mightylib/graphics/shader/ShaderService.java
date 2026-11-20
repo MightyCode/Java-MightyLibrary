@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.main.MainThread;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Collections;
@@ -14,7 +15,8 @@ import java.util.TreeMap;
 
 /**
  * The shader service of the engine: GLSL 330 core, shaders/shaders.json read once at its creation, merged by entry
- * through the sources (a higher source adds shaders or replaces those of the same name), global defines. No GL.
+ * through the sources (a higher source adds shaders or replaces those of the same name), global defines, batch
+ * equivalents ("batch", "batchInstanced" fields, checked against the tags of their target). No GL.
  */
 public final class ShaderService implements IShaderService {
     public static final String LIST_FILE_NAME = "shaders.json";
@@ -22,6 +24,9 @@ public final class ShaderService implements IShaderService {
     public static final String VERSION = "#version 330 core";
 
     private final JSONObject declarations;
+    // Shader name to its batch equivalent ("batch" and "batchInstanced" fields), checked once: immutable
+    private final Map<String, String> batchShaders;
+    private final Map<String, String> batchInstancedShaders;
     // Reads again every ShaderData (main thread)
     private final Runnable reloadShaders;
 
@@ -42,6 +47,61 @@ public final class ShaderService implements IShaderService {
                 FileMethods.readJSONObjectLayers(sources, FOLDER + LIST_FILE_NAME), "shaders");
         JSONObject shaders = merged.optJSONObject("shaders");
         declarations = shaders == null ? new JSONObject() : shaders;
+        batchShaders = batchLinks(declarations, "batch", BATCH_2D_TAG);
+        batchInstancedShaders = batchLinks(declarations, "batchInstanced", BATCH_2D_INSTANCED_TAG);
+    }
+
+    // Shader name to the shader named by its field, when that one is declared with the tag; an error line otherwise
+    private static Map<String, String> batchLinks(JSONObject declarations, String field, String tag) {
+        Map<String, String> links = new TreeMap<>();
+        for (String name : declarations.keySet()) {
+            JSONObject entry = declarations.optJSONObject(name);
+            if (entry == null || !entry.has(field))
+                continue;
+
+            Object value = entry.get(field);
+            if (!(value instanceof String)) {
+                System.err.println("--Shader " + name + ": \"" + field + "\" is not a shader name, drawn alone");
+                continue;
+            }
+
+            String target = (String) value;
+            JSONObject targetEntry = declarations.optJSONObject(target);
+            if (targetEntry == null) {
+                System.err.println("--Shader " + name + ": its \"" + field + "\" shader " + target
+                        + " is not declared, drawn alone");
+            } else if (!hasTag(targetEntry, tag)) {
+                System.err.println("--Shader " + name + ": its \"" + field + "\" shader " + target
+                        + " is not tagged " + tag + ", drawn alone");
+            } else {
+                links.put(name, target);
+            }
+        }
+
+        return Collections.unmodifiableMap(links);
+    }
+
+    private static boolean hasTag(JSONObject entry, String tag) {
+        JSONArray tags = entry.optJSONArray("tags");
+        if (tags == null)
+            return false;
+
+        for (int i = 0; i < tags.length(); ++i) {
+            if (tag.equals(tags.opt(i)))
+                return true;
+        }
+
+        return false;
+    }
+
+    @Override
+    public String batchShader(String shaderName) {
+        return batchShaders.get(shaderName);
+    }
+
+    @Override
+    public String batchInstancedShader(String shaderName) {
+        return batchInstancedShaders.get(shaderName);
     }
 
     @Override

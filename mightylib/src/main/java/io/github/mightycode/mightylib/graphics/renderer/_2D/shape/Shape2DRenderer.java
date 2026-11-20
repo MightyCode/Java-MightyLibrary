@@ -4,8 +4,11 @@ import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -30,6 +33,15 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     private boolean indicesDirty = true;
     private boolean positionDirty = true;
     private boolean textureDirty = true;
+
+    // The same geometry for the batched draws, kept on the CPU
+    private boolean batchIndicesDirty = true;
+    private boolean batchPositionDirty = true;
+    private boolean batchTextureDirty = true;
+    private int[] batchIndices;
+    private float[] batchPositions;
+    private float[] batchTextures;
+    private float[] batchTransformed = new float[0];
 
     public Shape2DRenderer(String shaderName, boolean useEbo) {
         this(new Material(shaderName), useEbo);
@@ -68,12 +80,79 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         }
     }
 
-    // Hook (call super): sends the changed geometry, then draws
+    // Hook (call super): sends the changed geometry to the mesh, then draws it (drawn alone, not batched)
     @Override
-    public void display() {
+    public void draw() {
         uploadGeometry();
 
-        super.display();
+        super.draw();
+    }
+
+    /**
+     * Batched when its shader has a batch equivalent ("batch" in shaders.json), its depth test is off and its mesh
+     * draws triangles: the vertices of calculatePosition transformed by the model, the coordinates of
+     * calculateTexturePosition, the triangles of getIndices (asked again when they change, like for the mesh).
+     */
+    @Override
+    protected boolean submitToBatch(DrawBatch2D batch) {
+        if (!CanBatch(isDepthTest(), getMesh().getDrawMode()))
+            return false;
+
+        refreshBatchGeometry();
+        int vertexCount = batchPositions.length / 2;
+        if (batchTextures.length < vertexCount * 2)
+            return false;
+
+        int state = batchState(batch);
+        if (state < 0)
+            return false;
+
+        int color = batchColor();
+        TransformPositions(modelMatrix(), batchPositions, batchTransformed);
+        batch.beginDraw(state, getLayer(), getSortDepth());
+        for (int i = 0; i < vertexCount; ++i)
+            batch.vertex(batchTransformed[2 * i], batchTransformed[2 * i + 1], batchTextures[2 * i],
+                    batchTextures[2 * i + 1], color);
+        for (int index : batchIndices)
+            batch.index(index);
+        batch.endDraw();
+        return true;
+    }
+
+    // The batch keeps no depth, and draws its indices as a list of triangles (not lines, strips or fans)
+    static boolean CanBatch(boolean depthTest, EDrawMode drawMode) {
+        return !depthTest && drawMode == EDrawMode.Triangles;
+    }
+
+    private void refreshBatchGeometry() {
+        if (batchIndicesDirty) {
+            batchIndices = getIndices();
+            batchIndicesDirty = false;
+        }
+
+        if (batchPositionDirty) {
+            batchPositions = calculatePosition();
+            if (batchTransformed.length != batchPositions.length)
+                batchTransformed = new float[batchPositions.length];
+            batchPositionDirty = false;
+        }
+
+        if (batchTextureDirty) {
+            batchTextures = calculateTexturePosition();
+            batchTextureDirty = false;
+        }
+    }
+
+    // The 2D positions (x, y pairs) by the model, like its vertex shader: model * (x, y, 0, 1), affine
+    static void TransformPositions(Matrix4fc model, float[] positions, float[] transformed) {
+        float m00 = model.m00(), m01 = model.m01(), m10 = model.m10(), m11 = model.m11();
+        float m30 = model.m30(), m31 = model.m31();
+        for (int i = 0; i < positions.length; i += 2) {
+            float x = positions[i];
+            float y = positions[i + 1];
+            transformed[i] = m00 * x + m10 * y + m30;
+            transformed[i + 1] = m01 * x + m11 * y + m31;
+        }
     }
 
     // Hook: the indices of the triangles, asked at the first display and again after updateShapeIndices
@@ -92,6 +171,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         this.referencePoint = Direction.DirectionToRangedVector(reference, REFERENCE_RANGE_DIRECTION);
 
         positionDirty = true;
+        batchPositionDirty = true;
 
         return this;
     }
@@ -105,6 +185,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         referenceDirection = Direction.RangedVectorToDirection(reference, REFERENCE_RANGE_DIRECTION);
 
         positionDirty = true;
+        batchPositionDirty = true;
 
         return this;
     }
@@ -117,6 +198,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     public final Shape2DRenderer setTexturePosition(Vector4f newTexturePosition){
         texturePosition = newTexturePosition;
         textureDirty = true;
+        batchTextureDirty = true;
 
         return this;
     }
@@ -162,6 +244,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     // Sent at the next display
     public final Shape2DRenderer updateShapeTexture(){
         textureDirty = true;
+        batchTextureDirty = true;
 
         return this;
     }
@@ -169,6 +252,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     // Sent at the next display
     public final Shape2DRenderer updateShapeIndices(){
         indicesDirty = true;
+        batchIndicesDirty = true;
 
         return this;
     }
@@ -176,6 +260,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     // Sent at the next display
     public final Shape2DRenderer updateShapePosition(){
         positionDirty = true;
+        batchPositionDirty = true;
 
         return this;
     }

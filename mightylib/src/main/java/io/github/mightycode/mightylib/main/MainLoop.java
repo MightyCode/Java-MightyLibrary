@@ -75,7 +75,9 @@ public final class MainLoop {
         boolean windowed = !engine.isHeadless();
         DrawnTexts.beginFrame();
         if (windowed) {
+            long renderStart = System.nanoTime();
             engine.displayWindows();
+            EngineStats.countRenderNanos(System.nanoTime() - renderStart);
 
             // What follows (loading queues, main thread tasks, screenshots) works in the main window
             engine.contexts().requireMainWindow().getWindow().bindWindow();

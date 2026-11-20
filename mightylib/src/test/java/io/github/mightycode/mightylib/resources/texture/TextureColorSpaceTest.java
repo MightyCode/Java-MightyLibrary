@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.DataTypeTestAccess;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.LoaderTestAccess;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import org.json.JSONObject;
@@ -62,7 +63,9 @@ class TextureColorSpaceTest {
                 + "\"wrong\":{\"file\":\"wrong.png\",\"qualityType\":\"pixelart\",\"colorSpace\":\"gamma\"},"
                 + "\"right\":{\"file\":\"right.png\",\"qualityType\":\"pixelart\"}}");
 
-        assertEquals(2, data.size());
+        // Plus the white texture the loader always declares
+        assertEquals(3, data.size());
+        assertTrue(data.containsKey(EngineResources.WHITE_TEXTURE));
         ResourceException error = assertThrows(ResourceException.class, () -> loader.initWithFile(texture(data, "wrong")));
         assertTrue(error.getMessage().contains("gamma"), error.getMessage());
         assertEquals("gamma", details(texture(data, "wrong")).getString("rejectedColorSpace"));

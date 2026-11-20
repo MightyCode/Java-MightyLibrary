@@ -15,6 +15,9 @@ import io.github.mightycode.mightylib.main.WindowConfig;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.WindowView;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.IDrawSortKey;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -46,6 +49,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     private final Engine engine;
     private final Resources resources;
     private final GLResources glResources;
+    // The 2D batch of the view, created at the first use
+    private DrawBatch2D batch2D;
 
     private final WindowContext mainContext;
     private Camera3D main3DCamera;
@@ -173,6 +178,22 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     // The GL elements of the engine (GPU side of the resources)
     protected final GLResources glResources() { return glResources; }
+
+    /** The 2D batch of the scene: its batched draws, sent at its barriers and at the end of display. */
+    @Override
+    public final DrawBatch2D batch2D() {
+        if (batch2D == null)
+            batch2D = Batches2D.of(engine).createBatch(getClass().getSimpleName());
+        return batch2D;
+    }
+
+    /**
+     * The order of the batched 2D draws of the scene (IDrawSortKey, DrawSortKeys), null for the order they are asked
+     * (the default, nothing sorted).
+     */
+    public final void setDrawSortKey(IDrawSortKey sortKey) {
+        batch2D().setDrawSortKey(sortKey);
+    }
 
     // Changes the scene of the window, preloads the next one or quits the game; null before init()
     protected final SceneManagerInterface sceneManager() { return sceneManagerInterface; }
@@ -386,6 +407,9 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
             // The code of the scene draws in its window: its OpenGL context is the current one
             mainContext.getWindow().bindWindow();
             display0();
+            // The draws of the scene are sent before another view draws
+            if (batch2D != null)
+                batch2D.endView();
         }
     }
 
@@ -460,10 +484,12 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
      * and by setAndDisplayRealScene.
      */
     protected final void setScissor(int x, int y, int width, int height) {
+        GLContext.FlushCurrentDraws(GLContext.CAUSE_SCISSOR);
         GLContext.currentState().scissor(x, y, width, height);
     }
 
     protected final void clearScissor() {
+        GLContext.FlushCurrentDraws(GLContext.CAUSE_SCISSOR);
         GLContext.currentState().disableScissor();
     }
 

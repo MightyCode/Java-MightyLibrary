@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.resources.texture;
 
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.resources.DataType;
+import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
@@ -46,6 +47,9 @@ public final class TextureDataLoader extends ResourceLoader {
 
     @Override
     public void create(Map<String, DataType> data){
+        // Of the engine, without file: textures.json may replace it by declaring the same name
+        data.put(EngineResources.WHITE_TEXTURE, new ColorTextureData(0xFFFFFFFF));
+
         // Merged by entry: the textures of a higher source are added, or replace those of the same name
         for (JSONObject layer : FileMethods.readJSONObjectLayers(resources().sources(), LIST_TEXTURES))
             create(data, layer, "");

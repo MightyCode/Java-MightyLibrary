@@ -28,6 +28,7 @@ public final class ListGeneralCommand {
         registry.register(new SceneGenCom());
         registry.register(new GLGenCom());
         registry.register(new TextureUploadGenCom());
+        registry.register(new BatchGenCom());
         registry.register(new ResourcesGenCom());
         registry.register(new InputGenCom());
         registry.register(new GamepadGenCom());

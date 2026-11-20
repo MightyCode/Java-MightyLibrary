@@ -36,6 +36,16 @@ class ShadersGenComTest {
         }
 
         @Override
+        public String batchShader(String shaderName) {
+            return null;
+        }
+
+        @Override
+        public String batchInstancedShader(String shaderName) {
+            return null;
+        }
+
+        @Override
         public String prelude(Map<String, String> entryDefines) {
             return "#version 330 core\n";
         }
