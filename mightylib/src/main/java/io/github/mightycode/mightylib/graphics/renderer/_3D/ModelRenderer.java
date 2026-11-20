@@ -117,6 +117,8 @@ public final class ModelRenderer extends Renderer {
             glMesh.setEbo(mesh.getIndices());
             Logger.CheckOpenGLError("Send mesh " + mesh.getName() + " of model " + modelName);
 
+            // Retained by this set until released, like the mesh of a MeshRenderer
+            glMesh.retain();
             glMeshes[sent] = glMesh;
             ++sent;
 
@@ -134,7 +136,7 @@ public final class ModelRenderer extends Renderer {
 
         void release() {
             for (int i = 0; i < sent; ++i)
-                glMeshes[i].unload();
+                glMeshes[i].release();
 
             for (Texture texture : diffuseTextures)
                 glResources().releaseResource(texture);

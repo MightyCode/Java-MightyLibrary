@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.renderer;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.internal.LiveObjects;
 import io.github.mightycode.mightylib.graphics.internal.RefCount;
 import io.github.mightycode.mightylib.graphics.internal.SharedObjects;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
@@ -53,8 +54,10 @@ public final class Material implements IUniformTarget {
     private IRenderTextureBindable[] textures;
     private final RenderState renderState;
 
+    private final LiveObjects<Material> liveMaterials = SharedObjects.of(glResources).materials();
+
     private final RefCount references = new RefCount("Material", () -> {
-        SharedObjects.MATERIALS.unregister(this);
+        liveMaterials.unregister(this);
         free();
     });
     private int version;
@@ -70,7 +73,7 @@ public final class Material implements IUniformTarget {
         in2D = shaderData.isDimension2DShader();
 
         renderState = new RenderState(!in2D, !in2D, false);
-        SharedObjects.MATERIALS.register(this);
+        liveMaterials.register(this);
     }
 
     // ---- Program ----

@@ -1,10 +1,12 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.LiveObjects;
 import io.github.mightycode.mightylib.graphics.internal.RefCount;
 import io.github.mightycode.mightylib.graphics.internal.SharedObjects;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
@@ -79,14 +81,17 @@ public class Mesh {
     private EDrawMode drawMode;
     private int glDrawMode;
 
+    // The live meshes of the engine of the view that creates the mesh
+    private final LiveObjects<Mesh> liveMeshes = SharedObjects.of(Views.engine().glResources()).meshes();
+
     // The renderers (and the game) that use this mesh: the last release unloads it
     private final RefCount references = new RefCount("Mesh", () -> {
-        SharedObjects.MESHES.unregister(this);
+        liveMeshes.unregister(this);
         unload();
     });
 
     public Mesh(boolean useEbo) {
-        SharedObjects.MESHES.register(this);
+        liveMeshes.register(this);
         setDrawMode(EDrawMode.Triangles);
 
         verticesToDraw = 0;

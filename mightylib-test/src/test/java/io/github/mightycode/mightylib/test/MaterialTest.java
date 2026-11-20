@@ -2,13 +2,16 @@ package io.github.mightycode.mightylib.test;
 
 import io.github.mightycode.mightylib.graphics.renderer.EBlendMode;
 import io.github.mightycode.mightylib.graphics.renderer.Material;
+import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.EngineResources;
+import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import org.junit.jupiter.api.Test;
 
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -125,6 +128,34 @@ class MaterialTest {
             other.unload();
             assertTrue(shared.isFreed());
         });
+    }
+
+    @Test
+    void aMaterialOrMeshRetainedByNobodyIsCountedAsOrphan(SceneRunner runner) {
+        runner.frames(1);
+        Map<String, Integer> before = runner.leakSnapshot();
+        try (Views.Scope ignored = Views.enter(runner.scene())) {
+            Material material = new Material(EngineResources.COLOR_SHAPE_2D);
+            Mesh mesh = new Mesh(false);
+            mesh.addVboFloat(Mesh.COMMON_VERTEX_POSITION_CHANNEL, new float[]{0, 0, 1, 0, 0, 1}, 2, Mesh.STATIC_STORE);
+
+            Map<String, Integer> orphans = runner.leakSnapshot();
+            assertEquals(before.get("retained.orphanMaterial") + 1, orphans.get("retained.orphanMaterial"));
+            assertEquals(before.get("retained.orphanMesh") + 1, orphans.get("retained.orphanMesh"));
+
+            CommandResult result = runner.execute("gl materials");
+            assertTrue(result.isSuccess(), result.getMessage());
+            assertEquals(orphans.get("retained.orphanMaterial"), result.getData().getInt("orphanMaterials"));
+            assertEquals(orphans.get("retained.orphanMesh"), result.getData().getInt("orphanMeshes"));
+
+            // Drawn by a renderer: no longer an orphan, and freed with it
+            MeshRenderer renderer = new MeshRenderer(mesh, material);
+            Map<String, Integer> drawn = runner.leakSnapshot();
+            assertEquals(before.get("retained.orphanMaterial"), drawn.get("retained.orphanMaterial"));
+            assertEquals(before.get("retained.orphanMesh"), drawn.get("retained.orphanMesh"));
+            renderer.unload();
+        }
+        runner.assertNoLeak(before);
     }
 
     @Test

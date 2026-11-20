@@ -20,7 +20,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.function.ToIntFunction;
+import java.util.function.Predicate;
 
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.Arguments.word;
 import static io.github.mightycode.mightylib.utils.enginecommand.syntax.CommandNode.literal;
@@ -49,21 +49,38 @@ public final class GLGenCom extends BaseCommand {
                         .executes("Check what is on screen without a screenshot", GLGenCom::drawnTexts));
     }
 
-    // The objects retained by at least one user: what a scene that is left must have given back
-    private static int retained(List<?> objects, ToIntFunction<Object> references) {
+    // The live materials and meshes of the engine of the command
+    private static SharedObjects sharedObjects() {
+        return SharedObjects.of(Views.engine().glResources());
+    }
+
+    private static <T> int count(List<T> objects, Predicate<T> condition) {
         int count = 0;
-        for (Object object : objects) {
-            if (references.applyAsInt(object) > 0)
+        for (T object : objects) {
+            if (condition.test(object))
                 ++count;
         }
         return count;
     }
 
+    // Created, never retained (or retained then given back without being freed): holds its program and textures
+    private static boolean isOrphan(Material material) {
+        return material.references() == 0 && !material.isFreed();
+    }
+
+    // Retained by nobody but still holding its buffers (a mesh freed by its last release has none)
+    private static boolean isOrphan(Mesh mesh) {
+        return mesh.references() == 0 && mesh.getVboCount() > 0;
+    }
+
     private static CommandResult materials(CommandContext context) {
         JSONArray materials = new JSONArray();
         int shared = 0;
-        for (Material material : SharedObjects.MATERIALS.snapshot()) {
-            if (material.references() <= 0)
+        int orphans = 0;
+        for (Material material : sharedObjects().materials().snapshot()) {
+            if (isOrphan(material))
+                ++orphans;
+            else if (material.references() <= 0)
                 continue;
 
             if (material.references() > 1)
@@ -80,8 +97,11 @@ public final class GLGenCom extends BaseCommand {
 
         JSONArray meshes = new JSONArray();
         int sharedMeshes = 0;
-        for (Mesh mesh : SharedObjects.MESHES.snapshot()) {
-            if (mesh.references() <= 0)
+        int orphanMeshes = 0;
+        for (Mesh mesh : sharedObjects().meshes().snapshot()) {
+            if (isOrphan(mesh))
+                ++orphanMeshes;
+            else if (mesh.references() <= 0)
                 continue;
 
             if (mesh.references() > 1)
@@ -99,8 +119,11 @@ public final class GLGenCom extends BaseCommand {
         data.put("meshes", meshes);
         data.put("sharedMaterials", shared);
         data.put("sharedMeshes", sharedMeshes);
-        return CommandResult.ok(materials.length() + " material(s) alive, " + shared + " shared; "
-                + meshes.length() + " mesh(es) alive, " + sharedMeshes + " shared", data);
+        data.put("orphanMaterials", orphans);
+        data.put("orphanMeshes", orphanMeshes);
+        return CommandResult.ok(materials.length() + " material(s) alive, " + shared + " shared, " + orphans
+                + " retained by nobody; " + meshes.length() + " mesh(es) alive, " + sharedMeshes + " shared, "
+                + orphanMeshes + " retained by nobody", data);
     }
 
     private static CommandResult drawnTexts(CommandContext context) {
@@ -142,8 +165,13 @@ public final class GLGenCom extends BaseCommand {
 
         // Retained by at least one user: a scene that is left must have given them back
         JSONObject sharedObjects = new JSONObject();
-        sharedObjects.put("Material", retained(SharedObjects.MATERIALS.snapshot(), o -> ((Material) o).references()));
-        sharedObjects.put("Mesh", retained(SharedObjects.MESHES.snapshot(), o -> ((Mesh) o).references()));
+        List<Material> liveMaterials = sharedObjects().materials().snapshot();
+        List<Mesh> liveMeshes = sharedObjects().meshes().snapshot();
+        sharedObjects.put("Material", count(liveMaterials, material -> material.references() > 0));
+        sharedObjects.put("Mesh", count(liveMeshes, mesh -> mesh.references() > 0));
+        // Created but retained by nobody, never freed: they hold their program, textures or buffers
+        sharedObjects.put("orphanMaterial", count(liveMaterials, GLGenCom::isOrphan));
+        sharedObjects.put("orphanMesh", count(liveMeshes, GLGenCom::isOrphan));
         data.put("retainedObjects", sharedObjects);
 
         data.put("glContexts", describeContexts());
