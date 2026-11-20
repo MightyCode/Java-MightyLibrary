@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
@@ -31,7 +32,12 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     private boolean textureDirty = true;
 
     public Shape2DRenderer(String shaderName, boolean useEbo) {
-        super(shaderName, useEbo);
+        this(new Material(shaderName), useEbo);
+    }
+
+    // Drawn with the material (shared with its other renderers)
+    public Shape2DRenderer(Material material, boolean useEbo) {
+        super(material, useEbo);
 
         referenceDirection = EDirection.LeftUp;
         referencePoint = new Vector2f();
