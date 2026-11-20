@@ -59,6 +59,9 @@ public class BatchStress2D extends Scene {
 
         spriteMaterial = new Material("texture2D").setMainTexture("tileset");
         colorMaterial = new Material("colorShape2D");
+        // Kept by the scene: N may drop every renderer of one of them, then grow again
+        spriteMaterial.retain();
+        colorMaterial.retain();
         resize(START_COUNT);
 
         help = new Text();
@@ -182,6 +185,8 @@ public class BatchStress2D extends Scene {
         textBackground.unload();
         help.unload();
         counters.unload();
-        // The materials are freed with their last renderer
+        // Freed now: their renderers are gone
+        spriteMaterial.release();
+        colorMaterial.release();
     }
 }
