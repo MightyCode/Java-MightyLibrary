@@ -173,8 +173,9 @@ class MaterialTest {
 
             first.removeShaderValue("common");
             assertFalse(first.hasShaderValue("common"));
-            // The value of the material is the one sent again
-            assertEquals(1f, first.getShaderValue("common").getObject());
+            // The renderer has no value of its own anymore: the one of the material is the one sent again
+            assertNull(first.getShaderValue("common"));
+            assertEquals(1f, first.material().getShaderValue("common").getObject());
             assertThrows(IllegalArgumentException.class, () -> first.updateShaderValue("common", 3f));
 
             first.unload();

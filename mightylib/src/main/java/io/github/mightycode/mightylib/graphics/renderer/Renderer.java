@@ -289,10 +289,10 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
         return overrides.has(name);
     }
 
-    // The value sent under this name: the one of this renderer, otherwise of its material, null when there is none
+    // The value of this renderer under this name, null when none (like hasShaderValue; material().getShaderValue
+    // for the one of its material)
     public final ShaderValue getShaderValue(String name) {
-        ShaderValue value = overrides.get(name);
-        return value != null ? value : material.getShaderValue(name);
+        return overrides.get(name);
     }
 
     // Removes a value of this renderer (the one of its material, if any, is sent again)
