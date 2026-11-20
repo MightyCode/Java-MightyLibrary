@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawSortKeys;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RoundedRectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
@@ -45,6 +46,8 @@ public class BatchStress2D extends Scene {
     private Material colorMaterial;
 
     private Text help;
+    // Grey rounded rectangle under the texts, to read them over the moving rectangles
+    private RoundedRectangleRenderer textBackground;
     private Text counters;
     private float counterTimer;
     private float time;
@@ -63,6 +66,12 @@ public class BatchStress2D extends Scene {
         help.setText("Up : N x2   Down : N / 2   M : mode of the batch   S : sort by state   ESC : menu");
         counters = new Text();
         counters.setFontSize(18).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 40));
+
+        textBackground = new RoundedRectangleRenderer();
+        textBackground.setCornerRadius(8f);
+        textBackground.setColorMode(new Color4f(0.25f, 0.25f, 0.27f, 0.88f));
+        textBackground.setPosition(new Vector2f(4, 4));
+        fitBackground();
     }
 
     private void resize(int count) {
@@ -124,7 +133,15 @@ public class BatchStress2D extends Scene {
         if (counterTimer <= 0) {
             counterTimer = 0.5f;
             counters.setText(describeCounters());
+            fitBackground();
         }
+    }
+
+    // Around the two texts, with a margin
+    private void fitBackground() {
+        float right = Math.max(help.leftUpPosition().x + help.size().x, counters.leftUpPosition().x + counters.size().x);
+        float bottom = counters.leftUpPosition().y + counters.size().y;
+        textBackground.setSizePix(right + 8 - 4, bottom + 14 - 4);
     }
 
     private String describeCounters() {
@@ -147,6 +164,7 @@ public class BatchStress2D extends Scene {
         for (RectangleRenderer rectangle : rectangles)
             rectangle.display();
 
+        textBackground.display();
         help.display();
         counters.display();
 
@@ -161,6 +179,7 @@ public class BatchStress2D extends Scene {
             rectangle.unload();
         rectangles.clear();
         speeds.clear();
+        textBackground.unload();
         help.unload();
         counters.unload();
         // The materials are freed with their last renderer
