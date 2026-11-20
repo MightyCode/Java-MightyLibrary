@@ -56,6 +56,8 @@ public final class GLContext {
     private final Set<Integer> rbos = new LinkedHashSet<>();
     // Deletions asked while another context was current
     private final List<Runnable> deferred = new ArrayList<>();
+    // Draws asked in this context and not sent yet (the 2D batches), null when nothing batches here
+    private IPendingDraws pendingDraws;
 
     private GLContext(String name, long windowHandle, boolean root) {
         this.name = name;
@@ -146,6 +148,34 @@ public final class GLContext {
             KHRDebug.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, KHRDebug.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
     }
 
+    // ---- Waiting draws ----
+
+    // Causes of the barriers of the engine that are not a renderer
+    public static final String CAUSE_CONTEXT = "context";
+    public static final String CAUSE_CLEAR = "clear";
+    public static final String CAUSE_SCISSOR = "scissor";
+    public static final String CAUSE_FRAMEBUFFER = "framebuffer";
+
+    public IPendingDraws pendingDraws() {
+        return pendingDraws;
+    }
+
+    public void setPendingDraws(IPendingDraws pendingDraws) {
+        this.pendingDraws = pendingDraws;
+    }
+
+    /** Sends the draws waiting in this context (a barrier), nothing when none. */
+    public void flushDraws(Object cause) {
+        if (pendingDraws != null)
+            pendingDraws.flush(cause);
+    }
+
+    /** Sends the draws waiting in the current context, if there is one (before a draw alone, a clear...). */
+    public static void FlushCurrentDraws(Object cause) {
+        if (current != null && current.pendingDraws != null)
+            current.pendingDraws.flush(cause);
+    }
+
     // ---- Current context ----
 
     public static GLContext current() {
@@ -165,6 +195,10 @@ public final class GLContext {
             throw new IllegalStateException("The OpenGL context " + name + " is destroyed");
 
         if (current != this) {
+            // Sent in the context they were asked in, before it stops being current
+            if (current != null)
+                current.flushDraws(CAUSE_CONTEXT);
+
             glfwMakeContextCurrent(windowHandle);
             GL.setCapabilities(capabilities);
             current = this;
@@ -213,6 +247,7 @@ public final class GLContext {
      * mask made writable and the sRGB encoding disabled first (the clear color is stored as written).
      */
     public static void ClearColorAndDepth() {
+        FlushCurrentDraws(CAUSE_CLEAR);
         GLStateCache state = currentState();
         state.depthMask(true);
         state.capability(GLStateCache.FRAMEBUFFER_SRGB, false);
@@ -286,6 +321,11 @@ public final class GLContext {
 
         destroyed = true;
         LIVE.remove(this);
+        if (pendingDraws != null) {
+            IPendingDraws dropped = pendingDraws;
+            pendingDraws = null;
+            dropped.contextDestroyed();
+        }
         if (current == this) {
             current = null;
             glfwMakeContextCurrent(NULL);

@@ -1,8 +1,10 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchUploader;
+import io.github.mightycode.mightylib.main.utils.EngineStats;
 import org.apiguardian.api.API;
 import org.lwjgl.BufferUtils;
 
@@ -13,7 +15,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 import static org.apiguardian.api.API.Status.INTERNAL;
 
@@ -46,8 +47,8 @@ public final class DrawBatch2D {
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
     private static final int[] QUAD_INDICES = {0, 3, 2, 0, 2, 1};
 
-    // The context current when the batch starts
-    private final Supplier<IBatchTarget> targets;
+    // The mode, and the target of the context current when the batch starts
+    private final IBatchBackend backend;
     // Set while the batch is started: from its first draw (or state) to its flush
     private IBatchTarget target;
     private BatchStateTable table;
@@ -89,13 +90,23 @@ public final class DrawBatch2D {
     private final FrameCounters current = new FrameCounters();
     private final FrameCounters last = new FrameCounters();
 
-    /**
-     * A batch of a view (Scene, WindowView); targets gives the batch target of the OpenGL context current when the
-     * batch starts.
-     */
+    // While the draws are sent: a barrier asked by what the sending does is not one
+    private boolean sending;
+
+    /** A batch of a view (Scene, WindowView), with the mode and the targets of its engine. */
     @API(status = INTERNAL)
-    public DrawBatch2D(Supplier<IBatchTarget> targets) {
-        this.targets = Objects.requireNonNull(targets, "targets");
+    public DrawBatch2D(IBatchBackend backend) {
+        this.backend = Objects.requireNonNull(backend, "backend");
+    }
+
+    /** How the draws are sent now (the mode of the engine). */
+    public EBatch2DMode mode() {
+        return backend.mode();
+    }
+
+    /** False in mode OFF: every renderer draws alone. */
+    public boolean isEnabled() {
+        return backend.mode().isBatched();
     }
 
     // ---- Order ----
@@ -133,7 +144,7 @@ public final class DrawBatch2D {
         if (target != null)
             return;
 
-        IBatchTarget newTarget = targets.get();
+        IBatchTarget newTarget = backend.target();
         // Flushes the batch that had draws waiting in this context: done before this one is started
         newTarget.begin(this);
         target = newTarget;
@@ -156,6 +167,7 @@ public final class DrawBatch2D {
         if (drawCount == MAX_DRAWS) {
             // The batch stays started: the state asked by the caller stays valid
             current.countBarrier(CAUSE_FULL, sortKey != null);
+            EngineStats.countBatchBarrier();
             send(false);
         }
 
@@ -313,11 +325,24 @@ public final class DrawBatch2D {
      */
     @API(status = INTERNAL)
     public void barrier(Object cause) {
+        if (target == null || sending)
+            return;
+
+        if (drawCount > 0) {
+            current.countBarrier(cause, sortKey != null);
+            EngineStats.countBatchBarrier();
+        }
+        send(true);
+    }
+
+    /** The context of the waiting draws is destroyed: they are dropped, the batch is no longer started. */
+    @API(status = INTERNAL)
+    public void discard() {
         if (target == null)
             return;
 
-        if (drawCount > 0)
-            current.countBarrier(cause, sortKey != null);
+        inDraw = false;
+        drawCount = 0;
         send(true);
     }
 
@@ -334,13 +359,15 @@ public final class DrawBatch2D {
     private void send(boolean end) {
         if (inDraw)
             throw new IllegalStateException("Flush of a batch during a draw: endDraw first");
-        if (target == null)
+        if (target == null || sending)
             return;
 
+        sending = true;
         try {
             if (drawCount > 0)
                 drawRuns();
         } finally {
+            sending = false;
             vertexCount = 0;
             indexCount = 0;
             drawCount = 0;
@@ -383,6 +410,8 @@ public final class DrawBatch2D {
 
         current.drawCalls += runCount;
         ++current.flushes;
+        EngineStats.countBatchFlushes(runCount);
+        EngineStats.countBatchedDraws(drawCount);
     }
 
     // The indices in the order of the keys, the runs of the same state in it

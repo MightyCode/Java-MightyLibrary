@@ -19,6 +19,10 @@ public final class EngineStats {
     private static long bufferUploadBytes;
     // CPU time of the windows display (Engine.displayWindows), without the buffer swap
     private static long renderNanos;
+    // 2D batches: draw calls they sent, draws they gathered, barriers that cut them
+    private static long batchFlushes;
+    private static long batchedDraws;
+    private static long batchBarriers;
 
     // Values of the last full second
     private static int fps;
@@ -33,6 +37,9 @@ public final class EngineStats {
     private static double glStateChangesSkippedPerFrame;
     private static double bufferUploadBytesPerSecond;
     private static double renderCpuMs;
+    private static double batchFlushesPerFrame;
+    private static double batchedDrawsPerFrame;
+    private static double batchBarriersPerFrame;
 
     // Worst frames since the last resetMax, to check that a loading screen stays fluid
     private static long lastFrameStart = -1;
@@ -80,6 +87,11 @@ public final class EngineStats {
     public static void countBufferUpload(long bytes) { bufferUploadBytes += bytes; }
     // Called by the main loop around Engine.displayWindows
     public static void countRenderNanos(long nanos) { renderNanos += nanos; }
+    // A flush of a 2D batch: its draw calls, and the draws they gathered
+    public static void countBatchFlushes(int drawCalls) { batchFlushes += drawCalls; }
+    public static void countBatchedDraws(int draws) { batchedDraws += draws; }
+    // A barrier that sent the waiting draws of a 2D batch
+    public static void countBatchBarrier() { ++batchBarriers; }
 
     // Called once per second by the main loop
     public static void endSecond(int frames, int ticks, long frameNanos, long tickNanos) {
@@ -98,6 +110,10 @@ public final class EngineStats {
         bufferUploadBytesPerSecond = bufferUploadBytes;
         renderCpuMs = renderNanos / 1e6 / frameCount;
         renderNanos = 0;
+        batchFlushesPerFrame = batchFlushes / frameCount;
+        batchedDrawsPerFrame = batchedDraws / frameCount;
+        batchBarriersPerFrame = batchBarriers / frameCount;
+        batchFlushes = batchedDraws = batchBarriers = 0;
 
         drawCalls = programBinds = uniformUploads = textureBinds = bufferUploadBytes = glStateChanges = glStateChangesSkipped = 0;
     }
@@ -121,6 +137,9 @@ public final class EngineStats {
         json.put("maxSwapMsSinceReset", round(maxSwapMs));
         json.put("renderCpuMs", round(renderCpuMs));
         json.put("drawCallsPerFrame", round(drawCallsPerFrame));
+        json.put("batchFlushesPerFrame", round(batchFlushesPerFrame));
+        json.put("batchedDrawsPerFrame", round(batchedDrawsPerFrame));
+        json.put("batchBarriersPerFrame", round(batchBarriersPerFrame));
         json.put("programBindsPerFrame", round(programBindsPerFrame));
         json.put("uniformUploadsPerFrame", round(uniformUploadsPerFrame));
         json.put("textureBindsPerFrame", round(textureBindsPerFrame));

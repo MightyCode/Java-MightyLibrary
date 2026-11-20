@@ -73,12 +73,15 @@ public final class FrameBuffer implements IRenderTextureBindable {
             throw new IllegalStateException("The framebuffer " + fbo + " belongs to the OpenGL context " + owner.getName()
                     + ", the current one is " + GLContext.current().getName());
 
+        // The batched draws asked before go to the framebuffer they were asked for
+        GLContext.FlushCurrentDraws(GLContext.CAUSE_FRAMEBUFFER);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
         Logger.CheckOpenGLError("Bind FrameBuffer : " + fbo);
     }
 
 
     public void unbindFrameBuffer(){
+        GLContext.FlushCurrentDraws(GLContext.CAUSE_FRAMEBUFFER);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         Logger.CheckOpenGLError("Unbind FrameBuffer : " + fbo);
     }

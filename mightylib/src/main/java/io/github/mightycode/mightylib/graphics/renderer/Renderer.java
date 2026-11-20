@@ -187,6 +187,8 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
     @Override
     public void display(){
         if(visible) {
+            // Drawn alone: the batched draws asked before are sent first (a barrier)
+            GLContext.FlushCurrentDraws(getClass());
             applyRenderState();
             getShader().use();
             updateShader();

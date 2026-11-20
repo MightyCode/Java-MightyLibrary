@@ -40,6 +40,7 @@ final class ConsoleWindowView extends WindowView {
     @Override
     public void display() {
         // Drawn straight on the window, in its real pixels
+        GLContext.FlushCurrentDraws(GLContext.CAUSE_FRAMEBUFFER);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         Vector2i size = window().getWindow().getInfo().getSizeRef();
         glClearColor(0f, 0f, 0f, 1f);

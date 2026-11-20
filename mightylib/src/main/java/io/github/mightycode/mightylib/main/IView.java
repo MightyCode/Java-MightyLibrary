@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.color.PictureSettings;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
@@ -35,6 +36,11 @@ public interface IView {
 
     // Settings of the final pass; null (the default): those of the engine (the player's)
     default PictureSettings picture() {
+        return null;
+    }
+
+    // The 2D batch of the draws of the view (Scene, WindowView); null (the default): every renderer draws alone
+    default DrawBatch2D batch2D() {
         return null;
     }
 }

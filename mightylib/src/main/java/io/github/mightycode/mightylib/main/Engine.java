@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.console.internal.LogCapture;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.graphics.color.IColorService;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
@@ -407,6 +408,8 @@ public final class Engine implements IView {
         // The batches send the GL elements of their data (textures) during the loading
         glResources = new GLResources(config.getMaxGLUploadMillisecondsPerFrame());
         resources.setGLElementSink(glResources);
+        // The buffers of the 2D batches of the main window, before any scene draws
+        Batches2D.of(this).prepare();
 
         System.out.println("--Create the scene manager");
         sceneManager = registrations.sceneManagerFactory().create(this, mainContext, true, config.getLoadingScene());
@@ -470,6 +473,7 @@ public final class Engine implements IView {
 
         try (Views.Scope ignored = Views.enter(context)) {
             context.getMainWindow().getWindow().bindWindow();
+            Batches2D.of(this).prepare();
             manager.init(startScene.get(), new String[]{"start"});
         }
 

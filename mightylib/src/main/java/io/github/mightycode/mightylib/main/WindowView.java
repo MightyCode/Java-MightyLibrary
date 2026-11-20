@@ -4,6 +4,9 @@ import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.color.PictureSettings;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.IDrawSortKey;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.graphics.surface.BasicBindableObject;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
@@ -39,6 +42,8 @@ import static org.lwjgl.opengl.GL11.*;
  */
 public abstract class WindowView extends UUID implements IView, IUpdatableDisplayable {
     private Engine engine;
+    // The 2D batch of the view, created at the first use
+    private DrawBatch2D batch2D;
     private WindowContext windowContext;
     private Camera2D main2DCamera;
     private Camera3D main3DCamera;
@@ -56,6 +61,22 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
     private PictureSettings picture;
 
     // ---- IView ----
+
+    /** The 2D batch of the view: its batched draws, sent at its barriers and at the end of display. */
+    @Override
+    public final DrawBatch2D batch2D() {
+        if (batch2D == null)
+            batch2D = new DrawBatch2D(Batches2D.of(engine()));
+        return batch2D;
+    }
+
+    /**
+     * The order of the batched 2D draws of the view (IDrawSortKey, DrawSortKeys), null for the order they are asked
+     * (the default, nothing sorted).
+     */
+    public final void setDrawSortKey(IDrawSortKey sortKey) {
+        batch2D().setDrawSortKey(sortKey);
+    }
 
     @Override
     public final Engine engine() {
@@ -250,10 +271,12 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
      * and by setAndDisplayRealScene.
      */
     protected final void setScissor(int x, int y, int width, int height) {
+        GLContext.FlushCurrentDraws(GLContext.CAUSE_SCISSOR);
         GLContext.currentState().scissor(x, y, width, height);
     }
 
     protected final void clearScissor() {
+        GLContext.FlushCurrentDraws(GLContext.CAUSE_SCISSOR);
         GLContext.currentState().disableScissor();
     }
 
@@ -307,6 +330,9 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 
             display();
+            // The draws of the view are sent before another view draws
+            if (batch2D != null)
+                batch2D.endView();
         }
     }
 

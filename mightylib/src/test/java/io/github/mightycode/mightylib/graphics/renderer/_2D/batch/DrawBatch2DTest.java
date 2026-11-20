@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchMaterial;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchUploader;
@@ -122,6 +123,20 @@ class DrawBatch2DTest {
         }
     }
 
+    private static IBatchBackend backend(IBatchTarget target) {
+        return new IBatchBackend() {
+            @Override
+            public IBatchTarget target() {
+                return target;
+            }
+
+            @Override
+            public EBatch2DMode mode() {
+                return EBatch2DMode.ORPHAN;
+            }
+        };
+    }
+
     private final List<String> log = new ArrayList<>();
     private final Matrix4f projection = new Matrix4f();
     private final Matrix4f view = new Matrix4f();
@@ -131,7 +146,7 @@ class DrawBatch2DTest {
     @BeforeEach
     void create() {
         target = new FakeTarget(log);
-        batch = new DrawBatch2D(() -> target);
+        batch = new DrawBatch2D(backend(target));
     }
 
     private int state(String name) {
@@ -431,7 +446,7 @@ class DrawBatch2DTest {
     // Two views of one context: the second one sends the draws of the first before its own
     @Test
     void anotherBatchOfTheContextFlushesTheFirst() {
-        DrawBatch2D other = new DrawBatch2D(() -> target);
+        DrawBatch2D other = new DrawBatch2D(backend(target));
         int a = state("a");
         quad(a, 0);
 
