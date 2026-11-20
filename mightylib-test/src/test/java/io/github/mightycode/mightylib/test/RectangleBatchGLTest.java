@@ -231,11 +231,19 @@ class RectangleBatchGLTest {
                 engine.setBatch2DMode(EBatch2DMode.RING);
                 ByteBuffer ring = capture.draw(scene, drawing);
 
+                engine.setBatch2DMode(EBatch2DMode.INSTANCED);
+                ByteBuffer instanced = capture.draw(scene, drawing);
+                // The rectangles are drawn by instances (the one with a value of its own, alone)
+                assertTrue(scene.batch2D().lastFrameInstancedDrawCalls() > 0);
+                assertEquals(scene.batch2D().lastFrameDrawCalls(), scene.batch2D().lastFrameInstancedDrawCalls());
+
                 int pixels = capture.size.x * capture.size.y * 4;
                 assertTrue(countDifferent(alone, orphan) <= pixels / 2000, "orphan: " + compare(alone, orphan));
                 assertTrue(countDifferent(alone, ring) <= pixels / 2000, "ring: " + compare(alone, ring));
+                assertTrue(countDifferent(alone, instanced) <= pixels / 2000,
+                        "instanced: " + compare(alone, instanced));
                 System.out.println("--Batch against alone, orphan: " + compare(alone, orphan) + "; ring: "
-                        + compare(alone, ring));
+                        + compare(alone, ring) + "; instanced: " + compare(alone, instanced));
             }
 
             try (Views.Scope ignored = Views.enter(scene)) {

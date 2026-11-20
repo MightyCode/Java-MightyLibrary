@@ -19,4 +19,19 @@ public interface IBatchUploader {
 
     // The flush is done: what the uploader needs to know before the next one (a fence of its region)
     default void flushEnded() {}
+
+    // Draws quads by instances (mode INSTANCED): the batch gives the instances of its runs of quads
+    default boolean drawsInstances() {
+        return false;
+    }
+
+    /** The instances of one flush (count of DrawBatch2D.INSTANCE_BYTES from the start), before their draws. */
+    default void uploadInstances(ByteBuffer instances, int count) {
+        throw new UnsupportedOperationException("No instances in this mode");
+    }
+
+    // One instanced draw call: count quads from firstInstance of the last upload, the instanced state applied
+    default void drawInstances(int firstInstance, int count) {
+        throw new UnsupportedOperationException("No instances in this mode");
+    }
 }

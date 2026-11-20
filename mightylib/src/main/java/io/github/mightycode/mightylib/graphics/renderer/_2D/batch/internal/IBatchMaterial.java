@@ -15,4 +15,14 @@ public interface IBatchMaterial {
      * @param linear true for a linear draw (ERenderColorSpace resolved for the draw)
      */
     void apply(boolean linear, Matrix4f projection, Matrix4f view);
+
+    // Its draws of quads can be drawn by instances now (an instanced batch program, loaded)
+    default boolean hasInstanced() {
+        return false;
+    }
+
+    // Like apply, with the instanced batch program (only when hasInstanced)
+    default void applyInstanced(boolean linear, Matrix4f projection, Matrix4f view) {
+        throw new UnsupportedOperationException("No instanced batch program");
+    }
 }

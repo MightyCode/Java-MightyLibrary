@@ -21,6 +21,8 @@ public final class BatchContext implements IBatchTarget, IPendingDraws {
 
     private OrphanUploader orphan;
     private RingUploader ring;
+    // Mode INSTANCED, with the orphan uploader for the runs drawn by vertices
+    private InstancedUploader instanced;
 
     BatchContext(GLContext context, Batches2D owner) {
         this.context = context;
@@ -59,6 +61,11 @@ public final class BatchContext implements IBatchTarget, IPendingDraws {
 
         if (orphan == null)
             orphan = new OrphanUploader();
+        if (owner.mode() == EBatch2DMode.INSTANCED) {
+            if (instanced == null)
+                instanced = new InstancedUploader(orphan);
+            return instanced;
+        }
         return orphan;
     }
 
@@ -88,6 +95,11 @@ public final class BatchContext implements IBatchTarget, IPendingDraws {
             ring = null;
         }
 
+        if (mode != EBatch2DMode.INSTANCED && instanced != null) {
+            instanced.delete();
+            instanced = null;
+        }
+
         if ((mode == EBatch2DMode.RING || mode == EBatch2DMode.OFF) && orphan != null) {
             orphan.delete();
             orphan = null;
@@ -96,6 +108,14 @@ public final class BatchContext implements IBatchTarget, IPendingDraws {
 
     // With a context of the engine current: the buffers; the vertex arrays too when their context is alive
     void delete(boolean contextAlive) {
+        if (instanced != null) {
+            if (contextAlive)
+                instanced.delete();
+            else
+                instanced.deleteBuffers();
+            instanced = null;
+        }
+
         if (orphan != null) {
             if (contextAlive)
                 orphan.delete();

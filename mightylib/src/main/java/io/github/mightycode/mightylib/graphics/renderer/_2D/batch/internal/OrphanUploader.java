@@ -81,6 +81,11 @@ final class OrphanUploader implements IBatchUploader {
             Logger.CheckOpenGLError("Upload of a 2D batch");
     }
 
+    // Its vertex array bound again (after the instanced draws of the same flush)
+    void bind() {
+        glBindVertexArray(vao);
+    }
+
     @Override
     public void draw(int firstIndex, int indexCount) {
         EngineStats.countDrawCall();

@@ -20,6 +20,8 @@ import java.util.Objects;
  */
 final class MaterialBatchPart implements IBatchMaterial {
     private final Shader shader;
+    // Of the runs of quads drawn by instances, null when the shader has none ("batchInstanced")
+    private final Shader instancedShader;
     private final IRenderTextureBindable mainTexture;
     // Units 1 to MAX_TEXTURE_CHANNELS, null when none
     private final IRenderTextureBindable[] channels;
@@ -40,9 +42,10 @@ final class MaterialBatchPart implements IBatchMaterial {
     private final Vector2f viewportSize = new Vector2f();
     private final ShaderValue viewport = new ShaderValue(ShaderUniforms.VIEWPORT_SIZE, Vector2f.class, viewportSize);
 
-    MaterialBatchPart(Shader shader, IRenderTextureBindable mainTexture, IRenderTextureBindable[] channels,
-                      RenderState state, Material values) {
+    MaterialBatchPart(Shader shader, Shader instancedShader, IRenderTextureBindable mainTexture,
+                      IRenderTextureBindable[] channels, RenderState state, Material values) {
         this.shader = Objects.requireNonNull(shader, "shader");
+        this.instancedShader = instancedShader;
         this.mainTexture = Objects.requireNonNull(mainTexture, "mainTexture");
         this.channels = channels;
         depthTest = state.isDepthTest();
@@ -56,6 +59,7 @@ final class MaterialBatchPart implements IBatchMaterial {
         renderState.setBlendMode(blendMode);
 
         int h = System.identityHashCode(shader);
+        h = 31 * h + System.identityHashCode(instancedShader);
         h = 31 * h + System.identityHashCode(mainTexture);
         h = 31 * h + (channels == null ? 0 : identityHash(channels));
         h = 31 * h + (depthTest ? 4 : 0) + (depthWrite ? 2 : 0) + (faceCulling ? 1 : 0);
@@ -73,8 +77,23 @@ final class MaterialBatchPart implements IBatchMaterial {
 
     @Override
     public void apply(boolean linear, Matrix4f projectionMatrix, Matrix4f viewMatrix) {
+        applyWith(shader, false, linear, projectionMatrix, viewMatrix);
+    }
+
+    @Override
+    public boolean hasInstanced() {
+        return instancedShader != null && instancedShader.isLoaded();
+    }
+
+    @Override
+    public void applyInstanced(boolean linear, Matrix4f projectionMatrix, Matrix4f viewMatrix) {
+        applyWith(instancedShader, true, linear, projectionMatrix, viewMatrix);
+    }
+
+    private void applyWith(Shader program, boolean instanced, boolean linear, Matrix4f projectionMatrix,
+                           Matrix4f viewMatrix) {
         renderState.apply(linear);
-        shader.use();
+        program.use();
 
         mainTexture.bindRenderTexture(0);
         if (channels != null) {
@@ -85,26 +104,26 @@ final class MaterialBatchPart implements IBatchMaterial {
         }
 
         if (values != null)
-            values.sendBatchValues();
+            values.sendBatchValues(instanced);
 
         // Optional: a batch program of a game may not have them
         projection.setObject(projectionMatrix);
         view.setObject(viewMatrix);
         linearColors.setObject(linear ? 1 : 0);
-        sendIfPresent(projection);
-        sendIfPresent(view);
-        sendIfPresent(linearColors);
+        SendIfPresent(program, projection);
+        SendIfPresent(program, view);
+        SendIfPresent(program, linearColors);
         GLContext context = GLContext.currentOrNull();
         if (context != null) {
             viewportSize.set(context.viewportWidth(), context.viewportHeight());
-            sendIfPresent(viewport);
+            SendIfPresent(program, viewport);
         }
     }
 
-    private void sendIfPresent(ShaderValue value) {
-        int location = shader.location(value.getName());
+    private static void SendIfPresent(Shader program, ShaderValue value) {
+        int location = program.location(value.getName());
         if (location != -1)
-            shader.sendValue(location, value);
+            program.sendValue(location, value);
     }
 
     // Compared by identity: the objects, not their content (a texture is the same one whatever it holds)
@@ -116,7 +135,8 @@ final class MaterialBatchPart implements IBatchMaterial {
             return false;
 
         MaterialBatchPart part = (MaterialBatchPart) other;
-        return hash == part.hash && shader == part.shader && mainTexture == part.mainTexture
+        return hash == part.hash && shader == part.shader && instancedShader == part.instancedShader
+                && mainTexture == part.mainTexture
                 && sameObjects(channels, part.channels) && depthTest == part.depthTest
                 && depthWrite == part.depthWrite && faceCulling == part.faceCulling && blendMode == part.blendMode
                 && values == part.values && valuesVersion == part.valuesVersion;

@@ -79,6 +79,9 @@ public final class Material implements IUniformTarget {
     private boolean batchShaderResolved;
     private Shader batchShader;
     private ShaderSink batchSink;
+    // Its instanced equivalent ("batchInstanced"), null when none
+    private Shader batchInstancedShader;
+    private ShaderSink batchInstancedSink;
     private BatchStateTable batchTable;
     private int batchGeneration;
     private int batchVersion;
@@ -365,6 +368,11 @@ public final class Material implements IUniformTarget {
             batchShader = null;
             batchSink = null;
         }
+        if (batchInstancedShader != null) {
+            glResources.releaseResource(batchInstancedShader);
+            batchInstancedShader = null;
+            batchInstancedSink = null;
+        }
         batchTable = null;
         releaseTexture(mainTexture);
         mainTexture = null;
@@ -445,8 +453,8 @@ public final class Material implements IUniformTarget {
         IRenderTextureBindable unit0 = readsTextures && mainTexture != null ? mainTexture
                 : Batches2D.of(glResources).whiteTexture();
         IRenderTextureBindable[] channels = readsTextures && textures != null ? textures.clone() : null;
-        MaterialBatchPart part = new MaterialBatchPart(batchShader, unit0, channels, renderState,
-                values.size() > 0 ? this : null);
+        MaterialBatchPart part = new MaterialBatchPart(batchShader, batchInstancedShader, unit0, channels,
+                renderState, values.size() > 0 ? this : null);
 
         batchPartId = table.materialPart(part);
         batchTable = table;
@@ -459,12 +467,20 @@ public final class Material implements IUniformTarget {
     // The batch equivalent of the shader, held until the material is freed (null when it has none)
     private void resolveBatchShader() {
         batchShaderResolved = true;
-        String batchName = Views.engine().shaders().batchShader(shader.getData().getDataName());
+        String name = shader.getData().getDataName();
+        String batchName = Views.engine().shaders().batchShader(name);
         if (batchName == null)
             return;
 
         batchShader = (Shader) glResources.acquire(resources.getResourceOrFallback(ShaderData.class, batchName), true);
         batchSink = new ShaderSink(batchShader);
+
+        String instancedName = Views.engine().shaders().batchInstancedShader(name);
+        if (instancedName != null) {
+            batchInstancedShader = (Shader) glResources.acquire(
+                    resources.getResourceOrFallback(ShaderData.class, instancedName), true);
+            batchInstancedSink = new ShaderSink(batchInstancedShader);
+        }
     }
 
     // The program of the material has the uniform color: its batched draws take the color of the renderer
@@ -473,8 +489,8 @@ public final class Material implements IUniformTarget {
     }
 
     // The common values to the batch program, but those the batch gives itself (camera, color, color mode)
-    void sendBatchValues() {
-        values.send(batchSink, BATCH_VALUES);
+    void sendBatchValues(boolean instanced) {
+        values.send(instanced ? batchInstancedSink : batchSink, BATCH_VALUES);
     }
 
     // The values of the material sent to a program

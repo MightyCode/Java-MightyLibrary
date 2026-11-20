@@ -100,6 +100,17 @@ public final class BatchStateTable implements IGLSharedState {
         parts[materialPartOf(state)].apply(isLinear(state), projections[camera], views[camera]);
     }
 
+    // The quads of the state can be drawn by instances now
+    public boolean hasInstanced(int state) {
+        return parts[materialPartOf(state)].hasInstanced();
+    }
+
+    /** Before the instanced draws of a run: the state with the instanced batch program. */
+    public void applyInstanced(int state) {
+        int camera = cameraOf(state);
+        parts[materialPartOf(state)].applyInstanced(isLinear(state), projections[camera], views[camera]);
+    }
+
     // ---- Material parts ----
 
     /**

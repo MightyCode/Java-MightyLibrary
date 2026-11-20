@@ -35,6 +35,17 @@ class DrawBatch2DTest {
             log.add("apply " + name);
         }
 
+        // A name starting with "i" has an instanced program
+        @Override
+        public boolean hasInstanced() {
+            return name.startsWith("i");
+        }
+
+        @Override
+        public void applyInstanced(boolean linear, Matrix4f projection, Matrix4f view) {
+            log.add("applyInstanced " + name);
+        }
+
         @Override
         public boolean equals(Object other) {
             return other instanceof FakePart && ((FakePart) other).name.equals(name);
@@ -84,6 +95,32 @@ class DrawBatch2DTest {
         @Override
         public void draw(int firstIndex, int indexCount) {
             log.add("draw " + firstIndex + " " + indexCount);
+        }
+
+        // Mode INSTANCED when set
+        boolean instancing;
+        final List<float[]> instanceUploads = new ArrayList<>();
+
+        @Override
+        public boolean drawsInstances() {
+            return instancing;
+        }
+
+        @Override
+        public void uploadInstances(ByteBuffer instances, int count) {
+            assertEquals(count * DrawBatch2D.INSTANCE_BYTES, instances.remaining());
+            float[] floats = new float[count * 12];
+            for (int i = 0; i < count; ++i) {
+                for (int j = 0; j < 12; ++j)
+                    floats[i * 12 + j] = instances.getFloat(i * DrawBatch2D.INSTANCE_BYTES + j * 4);
+            }
+            instanceUploads.add(floats);
+            log.add("uploadInstances " + count);
+        }
+
+        @Override
+        public void drawInstances(int firstInstance, int count) {
+            log.add("instances " + firstInstance + " " + count);
         }
     }
 
@@ -531,5 +568,128 @@ class DrawBatch2DTest {
         assertEquals(11999, Arrays.stream(indices).max().orElse(-1));
         Map<String, int[]> causes = batch.lastFrameBarrierCauses();
         assertTrue(causes.isEmpty());
+    }
+
+    // ---- Mode INSTANCED ----
+
+    // A unit quad at x with texture coordinates of a parallelogram (an affine shape, like a RectangleRenderer)
+    private void affineQuad(int state, float x, int layer) {
+        batch.quad(state, layer, 0f,
+                x, 1, 0, 1,
+                x, 0, 0, 0,
+                x + 1, 0, 1, 0,
+                x + 1, 1, 1, 1,
+                -1);
+    }
+
+    private List<String> instancedLog() {
+        List<String> lines = new ArrayList<>();
+        for (String line : log)
+            lines.add(line.startsWith("upload ") ? "upload vertices" : line);
+        return lines;
+    }
+
+    // A quad turned and scaled: its instance is the affine map of the unit quad, positions and texture coordinates
+    @Test
+    void aQuadIsItsAffineInstance() {
+        target.uploader.instancing = true;
+        int state = state("i");
+        // Corners (0, 1), (0, 0), (1, 0), (1, 1) of the unit quad by x' = 2x - y + 10, y' = x + 3y + 20
+        batch.quad(state, 0, 0f,
+                9, 23, 0.1f, 0.9f,
+                10, 20, 0.1f, 0.5f,
+                12, 21, 0.4f, 0.5f,
+                11, 24, 0.4f, 0.9f,
+                0x11223344);
+        batch.endView();
+
+        assertEquals(List.of("uploadInstances 1", "applyInstanced i", "instances 0 1"), instancedLog());
+        float[] instance = target.uploader.instanceUploads.get(0);
+        // Rows of the transform (x axis, y axis, origin), texture origin, its change along x, then along y
+        assertArrayEquals(new float[]{2, -1, 10, 1, 3, 20, 0.1f, 0.5f, 0.3f, 0f, 0f, 0.4f}, instance, 1e-6f);
+        assertEquals(1, batch.lastFrameInstancedDrawCalls());
+    }
+
+    @Test
+    void quadsOfOneStateAreOneInstancedCall() {
+        target.uploader.instancing = true;
+        int state = state("i");
+        for (int i = 0; i < 100; ++i)
+            affineQuad(state, i, 0);
+        batch.endView();
+
+        assertEquals(List.of("uploadInstances 100", "applyInstanced i", "instances 0 100"), instancedLog());
+    }
+
+    // A triangle in the run, a quad that is not a parallelogram, two colors: the run is drawn by its vertices
+    @Test
+    void aRunOfOtherShapesIsDrawnByVertices() {
+        target.uploader.instancing = true;
+        int state = state("i");
+        affineQuad(state, 0, 0);
+        batch.beginDraw(state);
+        batch.vertex(0, 0, 0, 0, -1);
+        batch.vertex(1, 0, 0, 0, -1);
+        batch.vertex(0, 1, 0, 0, -1);
+        batch.index(0);
+        batch.index(1);
+        batch.index(2);
+        batch.endDraw();
+        batch.endView();
+        assertEquals(List.of("upload vertices", "apply i", "draw 0 9"), instancedLog());
+
+        log.clear();
+        int other = state("i");
+        batch.quad(other, 0, 0f, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 5, 5, 0, 0, -1);
+        batch.endView();
+        assertEquals(List.of("upload vertices", "apply i", "draw 0 6"), instancedLog());
+
+        log.clear();
+        int colors = state("i");
+        batch.beginDraw(colors);
+        batch.vertex(0, 1, 0, 0, -1);
+        batch.vertex(0, 0, 0, 0, 0x00FF00FF);
+        batch.vertex(1, 0, 0, 0, -1);
+        batch.vertex(1, 1, 0, 0, -1);
+        for (int index : new int[]{0, 3, 2, 0, 2, 1})
+            batch.index(index);
+        batch.endDraw();
+        batch.endView();
+        assertEquals(List.of("upload vertices", "apply i", "draw 0 6"), instancedLog());
+    }
+
+    // One flush: the runs of quads by instances, the others by vertices, in the order of the runs
+    @Test
+    void instancedAndVertexRunsMix() {
+        target.uploader.instancing = true;
+        int instanced = state("i");
+        int plain = state("p");
+        affineQuad(instanced, 0, 0);
+        affineQuad(instanced, 1, 0);
+        affineQuad(plain, 2, 0);
+        affineQuad(instanced, 3, 0);
+        batch.endView();
+
+        assertEquals(List.of("upload vertices", "uploadInstances 3", "applyInstanced i", "instances 0 2",
+                "apply p", "draw 12 6", "applyInstanced i", "instances 2 1"), instancedLog());
+        assertEquals(2, batch.lastFrameInstancedDrawCalls());
+    }
+
+    // Sorted: the runs are built from the sorted indices, their quads become instances alike
+    @Test
+    void sortedQuadsAreInstancesInTheirOrder() {
+        target.uploader.instancing = true;
+        batch.setDrawSortKey(DrawSortKeys.layerThenDepth());
+        int state = state("i");
+        affineQuad(state, 0, 2);
+        affineQuad(state, 1, 1);
+        affineQuad(state, 2, 3);
+        batch.endView();
+
+        float[] instances = target.uploader.instanceUploads.get(0);
+        // The origin x of each instance (vertex 1 of the quad): sorted by layer
+        assertEquals(1f, instances[2]);
+        assertEquals(0f, instances[12 + 2]);
+        assertEquals(2f, instances[24 + 2]);
     }
 }

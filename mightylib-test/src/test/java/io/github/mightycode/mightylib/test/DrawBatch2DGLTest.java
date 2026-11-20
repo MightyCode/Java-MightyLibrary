@@ -228,8 +228,8 @@ class DrawBatch2DGLTest {
     void theModeChangesWhileTheGameRuns(SceneRunner runner) {
         try (Fixture fixture = fixture(runner); Views.Scope ignored = Views.enter(runner.scene())) {
             fixture.bind();
-            EBatch2DMode[] modes = {EBatch2DMode.RING, EBatch2DMode.ORPHAN, EBatch2DMode.OFF, EBatch2DMode.RING,
-                    EBatch2DMode.ORPHAN};
+            EBatch2DMode[] modes = {EBatch2DMode.RING, EBatch2DMode.INSTANCED, EBatch2DMode.ORPHAN, EBatch2DMode.OFF,
+                    EBatch2DMode.INSTANCED, EBatch2DMode.RING, EBatch2DMode.ORPHAN};
             for (int i = 0; i < modes.length; ++i) {
                 int shift = i * 11;
                 fixture.batches.setMode(modes[i]);

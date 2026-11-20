@@ -43,6 +43,11 @@ import static org.apiguardian.api.API.Status.INTERNAL;
 public final class DrawBatch2D {
     /** Bytes of a vertex: position (2 floats, transformed), texture coordinates (2 floats), color (RGBA8). */
     public static final int VERTEX_BYTES = 20;
+    /**
+     * Bytes of an instance (mode INSTANCED): the rows of the affine transform of the unit quad (6 floats), the texture
+     * coordinates at its corner (0, 0) and along its axes (6 floats), color (RGBA8).
+     */
+    public static final int INSTANCE_BYTES = 52;
     /** Low bits of a sort key replaced by the index of the draw in its segment (IDrawSortKey). */
     public static final int CALL_INDEX_BITS = 24;
     public static final long CALL_INDEX_MASK = (1L << CALL_INDEX_BITS) - 1;
@@ -95,6 +100,10 @@ public final class DrawBatch2D {
     private int[] entryCounts = new int[0];
     private long[] keys = new long[0];
     private IntBuffer sortedIndices;
+
+    // Mode INSTANCED: the instances of the runs of quads, and the first instance of each run (-1: drawn by vertices)
+    private ByteBuffer instances = BufferUtils.createByteBuffer(64 * INSTANCE_BYTES);
+    private int[] runInstanceFirsts = new int[0];
 
     // Counters of the current frame of the view, and of the last one (rolled by endView)
     private final FrameCounters current = new FrameCounters();
@@ -517,18 +526,37 @@ public final class DrawBatch2D {
         }
 
         IBatchUploader uploader = target.uploader();
-        vertices.position(0).limit(vertexCount * VERTEX_BYTES);
-        drawn.position(0).limit(indexCount);
-        try {
-            uploader.upload(vertices, vertexCount, drawn, indexCount);
-        } finally {
-            vertices.clear();
-            drawn.clear();
+        int instanceCount = uploader.drawsInstances() ? buildInstances(drawn) : 0;
+        // Every run drawn by instances: the vertices are not sent
+        boolean regularRuns = instanceCount == 0 || hasRegularRun();
+        if (regularRuns) {
+            vertices.position(0).limit(vertexCount * VERTEX_BYTES);
+            drawn.position(0).limit(indexCount);
+            try {
+                uploader.upload(vertices, vertexCount, drawn, indexCount);
+            } finally {
+                vertices.clear();
+                drawn.clear();
+            }
+        }
+        if (instanceCount > 0) {
+            instances.position(0).limit(instanceCount * INSTANCE_BYTES);
+            try {
+                uploader.uploadInstances(instances, instanceCount);
+            } finally {
+                instances.clear();
+            }
         }
 
         for (int run = 0; run < runCount; ++run) {
-            table.apply(runStates[run]);
-            uploader.draw(runFirsts[run], runCounts[run]);
+            if (instanceCount > 0 && runInstanceFirsts[run] >= 0) {
+                table.applyInstanced(runStates[run]);
+                uploader.drawInstances(runInstanceFirsts[run], runCounts[run] / 6);
+                ++current.instancedDrawCalls;
+            } else {
+                table.apply(runStates[run]);
+                uploader.draw(runFirsts[run], runCounts[run]);
+            }
         }
         uploader.flushEnded();
 
@@ -536,6 +564,92 @@ public final class DrawBatch2D {
         ++current.flushes;
         EngineStats.countBatchFlushes(runCount);
         EngineStats.countBatchedDraws(drawCount);
+    }
+
+    private boolean hasRegularRun() {
+        for (int run = 0; run < runCount; ++run) {
+            if (runInstanceFirsts[run] < 0)
+                return true;
+        }
+        return false;
+    }
+
+    /*
+     * Mode INSTANCED: the runs whose state has an instanced program and whose triangles are all quads (groups of 6
+     * indices b+0 3 2 0 2 1, like quad: whatever draws they come from, they draw the quad of the vertices b to b+3)
+     * that are parallelograms of one color get their instances (runInstanceFirsts, -1 for the others).
+     * Returns the count of instances written.
+     */
+    private int buildInstances(IntBuffer drawn) {
+        if (runInstanceFirsts.length < runCount)
+            runInstanceFirsts = new int[runStates.length];
+
+        int count = 0;
+        for (int run = 0; run < runCount; ++run) {
+            runInstanceFirsts[run] = -1;
+            int indexTotal = runCounts[run];
+            if (indexTotal % 6 != 0 || !table.hasInstanced(runStates[run]))
+                continue;
+
+            int quads = indexTotal / 6;
+            if ((count + quads) * INSTANCE_BYTES > instances.capacity())
+                instances = grow(instances, count * INSTANCE_BYTES,
+                        Math.max(instances.capacity() * 2, (count + quads) * INSTANCE_BYTES));
+
+            boolean all = true;
+            int first = runFirsts[run];
+            for (int quad = 0; quad < quads && all; ++quad)
+                all = writeInstance(drawn, first + quad * 6, count + quad);
+
+            if (all) {
+                runInstanceFirsts[run] = count;
+                count += quads;
+            }
+        }
+
+        return count;
+    }
+
+    // The quad of the 6 indices at index as an instance (affine position, affine texture coordinates, color)
+    private boolean writeInstance(IntBuffer drawn, int index, int instance) {
+        int base = drawn.get(index);
+        for (int i = 0; i < 6; ++i) {
+            if (drawn.get(index + i) != base + QUAD_INDICES[i])
+                return false;
+        }
+
+        int a0 = base * VERTEX_BYTES, a1 = a0 + VERTEX_BYTES, a2 = a1 + VERTEX_BYTES, a3 = a2 + VERTEX_BYTES;
+        int color = vertices.getInt(a1 + 16);
+        if (vertices.getInt(a0 + 16) != color || vertices.getInt(a2 + 16) != color
+                || vertices.getInt(a3 + 16) != color)
+            return false;
+
+        // Corner (0, 0) of the unit quad is vertex 1, its axes go to vertex 2 (x) and vertex 0 (y)
+        float x1 = vertices.getFloat(a1), y1 = vertices.getFloat(a1 + 4);
+        float xx = vertices.getFloat(a2) - x1, xy = vertices.getFloat(a2 + 4) - y1;
+        float yx = vertices.getFloat(a0) - x1, yy = vertices.getFloat(a0 + 4) - y1;
+        float u1 = vertices.getFloat(a1 + 8), v1 = vertices.getFloat(a1 + 12);
+        float ux = vertices.getFloat(a2 + 8) - u1, vx = vertices.getFloat(a2 + 12) - v1;
+        float uy = vertices.getFloat(a0 + 8) - u1, vy = vertices.getFloat(a0 + 12) - v1;
+
+        // Vertex 3 is the fourth corner of the parallelogram (an affine shape), within the rounding of floats
+        float positionTolerance = 1e-4f * (1 + Math.abs(xx) + Math.abs(xy) + Math.abs(yx) + Math.abs(yy)
+                + Math.abs(x1) + Math.abs(y1));
+        float textureTolerance = 1e-5f * (1 + Math.abs(ux) + Math.abs(vx) + Math.abs(uy) + Math.abs(vy)
+                + Math.abs(u1) + Math.abs(v1));
+        if (Math.abs(vertices.getFloat(a3) - (x1 + xx + yx)) > positionTolerance
+                || Math.abs(vertices.getFloat(a3 + 4) - (y1 + xy + yy)) > positionTolerance
+                || Math.abs(vertices.getFloat(a3 + 8) - (u1 + ux + uy)) > textureTolerance
+                || Math.abs(vertices.getFloat(a3 + 12) - (v1 + vx + vy)) > textureTolerance)
+            return false;
+
+        int at = instance * INSTANCE_BYTES;
+        instances.putFloat(at, xx).putFloat(at + 4, yx).putFloat(at + 8, x1);
+        instances.putFloat(at + 12, xy).putFloat(at + 16, yy).putFloat(at + 20, y1);
+        instances.putFloat(at + 24, u1).putFloat(at + 28, v1);
+        instances.putFloat(at + 32, ux).putFloat(at + 36, vx).putFloat(at + 40, uy).putFloat(at + 44, vy);
+        instances.putInt(at + 48, color);
+        return true;
     }
 
     // The indices in the order of the keys, the runs of the same state in it
@@ -618,6 +732,11 @@ public final class DrawBatch2D {
         return last.barriersWhileSorted;
     }
 
+    /** Draw calls of the last frame that drew quads by instances (mode INSTANCED). */
+    public int lastFrameInstancedDrawCalls() {
+        return last.instancedDrawCalls;
+    }
+
     /** Segments sorted in the last frame. */
     public int lastFrameSorts() {
         return last.sorts;
@@ -658,6 +777,7 @@ public final class DrawBatch2D {
                 .put("barriers", last.barriers)
                 .put("barriersWhileSorted", last.barriersWhileSorted)
                 .put("sorts", last.sorts)
+                .put("instancedDrawCalls", last.instancedDrawCalls)
                 .put("barrierCauses", causes);
     }
 
@@ -676,6 +796,7 @@ public final class DrawBatch2D {
         int barriers;
         int barriersWhileSorted;
         int sorts;
+        int instancedDrawCalls;
         Object[] causes = new Object[4];
         int[] causeCounts = new int[4];
         int[] causeSortedCounts = new int[4];
@@ -713,6 +834,7 @@ public final class DrawBatch2D {
             barriers = other.barriers;
             barriersWhileSorted = other.barriersWhileSorted;
             sorts = other.sorts;
+            instancedDrawCalls = other.instancedDrawCalls;
             if (causes.length < other.causeCount) {
                 causes = new Object[other.causes.length];
                 causeCounts = new int[other.causes.length];
@@ -726,7 +848,7 @@ public final class DrawBatch2D {
         }
 
         void clear() {
-            draws = drawCalls = flushes = barriers = barriersWhileSorted = sorts = 0;
+            draws = drawCalls = flushes = barriers = barriersWhileSorted = sorts = instancedDrawCalls = 0;
             Arrays.fill(causes, 0, causeCount, null);
             causeCount = 0;
         }

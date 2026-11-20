@@ -144,3 +144,20 @@ Sans tri, sprites et rectangles colorés alternent (3 pour 1, deux textures) : u
 - Tests GL du kit : `DrawBatch2DGLTest` (1 appel pour un état, 1 par état alterné, anneau sur 180 flushs relus au pixel, changement de mode à chaud), `RectangleBatchGLTest` (image de 17 rectangles — rotations, retournements, rotations de texture, références, transparence, additif, matériau partagé, un renderer dessiné seul au milieu — identique au pixel près en `off`, `orphan` et `ring` ; matériaux égaux = 1 appel ; matériau changé ré-interné ; `drawRegion` = `RectangleRenderer`) ; contrôles de fuites du kit.
 - En jeu : `SharedMaterial2D` capturée en `off`/`orphan`/`ring` (trois lancements, `-Dmightylib.batch2D`) : 0 pixel différent sur 592 200 (script local `tools/scripts/compare_batch_modes.py`) ; `leakcheck` sans fuite sur `BatchStress2D`, `SharedMaterial2D`, `Scene2D`, `VectorShapes2D`, `MultiWindowScene` ; second contexte ouvert puis fermé : objets GL revenus à leur nombre ; `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` chargées sans ligne suspecte ; console ouverte sur `SharedMaterial2D` sans erreur.
 - Non comparables automatiquement (animées) : `Scene2D`, `VectorShapes2D`, `BatchStress2D` — à vérifier à l'œil.
+
+### Mesures du mode `instanced` (étape 8)
+`renderCpuMs` (appels de dessin) dans `BatchStress2D` :
+
+| N | instanced | instanced trié par état (S) |
+|---|---|---|
+| 1 000 | 0,30 (502) | 0,22 (4) |
+| 8 000 | 1,70 (4 002) | 1,25 (4) |
+| 32 000 | 7,41 (16 002) | 5,19 (4) |
+| 128 000 | 41,1 (64 002) | 34,5 (4) |
+
+Données envoyées par quad divisées par deux (52 octets d'instance contre 80 de sommets et 24 d'indices), mais pas de gain CPU : les instances sont reconstruites à l'envoi à partir des sommets déjà écrits, et le coût par dessin (renderer, état, transformation) domine. L'instancing paiera pour des particules écrites directement en instances (sans passer par les sommets ni par un renderer chacune) : cible à inscrire dans `later.md` (« Effets 2D »).
+
+### Étapes 7 et 8 : écarts et vérifications
+- Commande `batch` : les vues sans dessin ni barrière dans la dernière frame (écrans de chargement non affichés) ne sont que dans les `data`. `Batches2D.createBatch(nom)` garde les lots des vues (références faibles) pour les décrire.
+- `instanced` : une série d'état part en instances si tous ses triangles sont des quads (groupes d'indices `b+0 3 2 0 2 1`), parallélogrammes (positions et coordonnées de texture, à l'arrondi près) d'une seule couleur, et si son matériau a un programme instancié chargé ; sinon elle passe par les sommets (orphelinage) dans le même envoi. L'instance porte la transformation affine et des coordonnées de texture affines (`sprite2DInstanced` modifié : rotations de texture comprises), pas un rectangle de texture. Pas de `baseInstance` en GL 3.3 : les attributs d'instance sont repointés pour chaque série.
+- Vérifié : `DrawBatch2DTest` (instance affine d'un quad tourné, 100 quads = 1 appel instancié, repli pour triangle, quad déformé, deux couleurs, séries mélangées, ordre trié), `RectangleBatchGLTest` (image identique au pixel près en `instanced`, tous les rectangles instanciés), `DrawBatch2DGLTest` (aller-retour entre les quatre modes, objets GL inchangés), `BatchGenComTest`.
