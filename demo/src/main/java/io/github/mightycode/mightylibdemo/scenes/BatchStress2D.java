@@ -1,0 +1,154 @@
+package io.github.mightycode.mightylibdemo.scenes;
+
+import io.github.mightycode.mightylib.graphics.renderer.Material;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
+import io.github.mightycode.mightylib.graphics.text.Text;
+import io.github.mightycode.mightylib.inputs.KeyboardManager;
+import io.github.mightycode.mightylib.main.utils.EngineStats;
+import io.github.mightycode.mightylib.main.utils.GameTime;
+import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
+import org.joml.Vector4f;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import static org.lwjgl.glfw.GLFW.*;
+
+/**
+ * Measure of the 2D drawing: N rectangles, three textured ones (regions of one tile set, like an atlas) for one
+ * colored one, of several sizes and turning. Up doubles N, Down halves it. The counters are those of the command
+ * stats (renderCpuMs: CPU time of the display of the windows, without the buffer swap).
+ */
+public class BatchStress2D extends Scene {
+    private static final int START_COUNT = 1000;
+    private static final int MAX_COUNT = 1 << 17;
+    // Tiles per side of the tile set used as an atlas
+    private static final int TILES = 8;
+
+    private final List<RectangleRenderer> rectangles = new ArrayList<>();
+    private final List<Float> speeds = new ArrayList<>();
+    // Same seed at each launch: the same picture for the same N
+    private final Random random = new Random(42);
+    private Vector2i area;
+
+    private Material spriteMaterial;
+    private Material colorMaterial;
+
+    private Text help;
+    private Text counters;
+    private float counterTimer;
+    private float time;
+
+    @Override
+    public void launch(String[] args) {
+        setClearColor(30, 30, 40, 1f);
+        area = context().getWindow().getInfo().getVirtualSizeCopy();
+
+        spriteMaterial = new Material("texture2D").setMainTexture("tileset");
+        colorMaterial = new Material("colorShape2D");
+        resize(START_COUNT);
+
+        help = new Text();
+        help.setFontSize(20).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 10));
+        help.setText("Up : N x2   Down : N / 2   ESC : menu");
+        counters = new Text();
+        counters.setFontSize(18).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 40));
+    }
+
+    private void resize(int count) {
+        while (rectangles.size() > count) {
+            rectangles.remove(rectangles.size() - 1).unload();
+            speeds.remove(speeds.size() - 1);
+        }
+
+        while (rectangles.size() < count)
+            rectangles.add(create(rectangles.size()));
+    }
+
+    private RectangleRenderer create(int index) {
+        RectangleRenderer rectangle;
+        if (index % 4 == 3) {
+            rectangle = new RectangleRenderer(colorMaterial);
+            rectangle.setColorMode(new Color4f(random.nextFloat(), random.nextFloat(), random.nextFloat(), 1f));
+        } else {
+            rectangle = new RectangleRenderer(spriteMaterial);
+            float x = random.nextInt(TILES) / (float) TILES;
+            float y = random.nextInt(TILES) / (float) TILES;
+            rectangle.setTexturePosition(new Vector4f(x, y, x + 1f / TILES, y + 1f / TILES));
+        }
+
+        float size = 8 + random.nextFloat() * 40;
+        rectangle.setSizePix(size, size * (0.5f + random.nextFloat()));
+        rectangle.setReferenceDirection(EDirection.None);
+        rectangle.setPosition(new Vector2f(random.nextFloat() * area.x, random.nextFloat() * area.y));
+        speeds.add((random.nextFloat() - 0.5f) * 4f);
+        return rectangle;
+    }
+
+    @Override
+    public void update() {
+        super.update();
+
+        KeyboardManager keyboard = context().getKeyboardManager();
+        if (keyboard.keyPressed(GLFW_KEY_ESCAPE)) {
+            sceneManager().setNewScene(new MenuScene(), new String[]{});
+            return;
+        }
+
+        if (keyboard.keyPressed(GLFW_KEY_UP))
+            resize(Math.min(MAX_COUNT, rectangles.size() * 2));
+        if (keyboard.keyPressed(GLFW_KEY_DOWN))
+            resize(Math.max(1, rectangles.size() / 2));
+
+        time += GameTime.DeltaTime();
+        for (int i = 0; i < rectangles.size(); ++i)
+            rectangles.get(i).setRotationZ(time * speeds.get(i));
+
+        counterTimer -= GameTime.DeltaTime();
+        if (counterTimer <= 0) {
+            counterTimer = 0.5f;
+            counters.setText(describeCounters());
+        }
+    }
+
+    private String describeCounters() {
+        JSONObject stats = EngineStats.toJson();
+        return "N " + rectangles.size() + "   fps " + stats.optInt("fps") + "   frame " + stats.optDouble("frameMs")
+                + " ms   render CPU " + stats.optDouble("renderCpuMs") + " ms"
+                + "\ndraw calls " + stats.optDouble("drawCallsPerFrame") + "   program binds "
+                + stats.optDouble("programBindsPerFrame") + "   texture binds " + stats.optDouble("textureBindsPerFrame")
+                + "   uniforms " + stats.optDouble("uniformUploadsPerFrame");
+    }
+
+    @Override
+    public void display() {
+        clear();
+
+        for (RectangleRenderer rectangle : rectangles)
+            rectangle.display();
+
+        help.display();
+        counters.display();
+
+        super.display();
+    }
+
+    @Override
+    public void unload() {
+        super.unload();
+
+        for (RectangleRenderer rectangle : rectangles)
+            rectangle.unload();
+        rectangles.clear();
+        speeds.clear();
+        help.unload();
+        counters.unload();
+        // The materials are freed with their last renderer
+    }
+}

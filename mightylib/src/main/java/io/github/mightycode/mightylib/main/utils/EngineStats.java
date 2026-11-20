@@ -17,6 +17,8 @@ public final class EngineStats {
     private static long glStateChanges;
     private static long glStateChangesSkipped;
     private static long bufferUploadBytes;
+    // CPU time of the windows display (Engine.displayWindows), without the buffer swap
+    private static long renderNanos;
 
     // Values of the last full second
     private static int fps;
@@ -30,6 +32,7 @@ public final class EngineStats {
     private static double glStateChangesPerFrame;
     private static double glStateChangesSkippedPerFrame;
     private static double bufferUploadBytesPerSecond;
+    private static double renderCpuMs;
 
     // Worst frames since the last resetMax, to check that a loading screen stays fluid
     private static long lastFrameStart = -1;
@@ -75,6 +78,8 @@ public final class EngineStats {
     public static void countGLStateChange() { ++glStateChanges; }
     public static void countGLStateSkipped() { ++glStateChangesSkipped; }
     public static void countBufferUpload(long bytes) { bufferUploadBytes += bytes; }
+    // Called by the main loop around Engine.displayWindows
+    public static void countRenderNanos(long nanos) { renderNanos += nanos; }
 
     // Called once per second by the main loop
     public static void endSecond(int frames, int ticks, long frameNanos, long tickNanos) {
@@ -91,6 +96,8 @@ public final class EngineStats {
         glStateChangesPerFrame = glStateChanges / frameCount;
         glStateChangesSkippedPerFrame = glStateChangesSkipped / frameCount;
         bufferUploadBytesPerSecond = bufferUploadBytes;
+        renderCpuMs = renderNanos / 1e6 / frameCount;
+        renderNanos = 0;
 
         drawCalls = programBinds = uniformUploads = textureBinds = bufferUploadBytes = glStateChanges = glStateChangesSkipped = 0;
     }
@@ -112,6 +119,7 @@ public final class EngineStats {
         json.put("maxFrameIntervalMsSinceReset", round(maxFrameIntervalMs));
         json.put("maxTickMsSinceReset", round(maxTickMs));
         json.put("maxSwapMsSinceReset", round(maxSwapMs));
+        json.put("renderCpuMs", round(renderCpuMs));
         json.put("drawCallsPerFrame", round(drawCallsPerFrame));
         json.put("programBindsPerFrame", round(programBindsPerFrame));
         json.put("uniformUploadsPerFrame", round(uniformUploadsPerFrame));

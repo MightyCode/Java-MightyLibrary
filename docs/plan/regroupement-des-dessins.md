@@ -104,3 +104,16 @@ Décisions prises :
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/draw-batch-2d`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Mesures de référence (étape 2, dessin immédiat, avant le lot)
+`BatchStress2D` (3 rectangles `texture2D` d'un tileset pour 1 `colorShape2D`, entrelacés : pire cas d'alternance de programmes), fenêtre de la démo, 70 fps max, RTX 4080 SUPER :
+
+| N | fps | frameMs | renderCpuMs | drawCalls | programBinds | uniforms |
+|---|---|---|---|---|---|---|
+| 1 000 | 70 | 0,23 | 0,22 | 1 002 | 501 | 1 252 |
+| 8 000 | 70 | 10,1 | 10,1 | 8 002 | 4 001 | 10 002 |
+| 32 000 | 17 | 50,2 | 50,2 | 32 002 | 16 001 | 40 002 |
+| 128 000 | 4 | 221,8 | 221,8 | 128 002 | 64 001 | 160 002 |
+
+Écart : l'« atlas » de la scène est le tileset `tileset` découpé en régions (une texture, plusieurs régions : même effet pour le lot), pas un `TextureDataAtlas` construit par la scène.
