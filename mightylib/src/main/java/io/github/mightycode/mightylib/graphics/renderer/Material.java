@@ -444,7 +444,7 @@ public final class Material implements IUniformTarget {
         if (batchShader == null || !batchShader.isLoaded())
             return -1;
 
-        if (table == batchTable && table.generation() == batchGeneration && version == batchVersion
+        if (table == batchTable && table.partsGeneration() == batchGeneration && version == batchVersion
                 && shader.programStamp() == batchProgramStamp)
             return batchPartId;
 
@@ -458,7 +458,7 @@ public final class Material implements IUniformTarget {
 
         batchPartId = table.materialPart(part);
         batchTable = table;
-        batchGeneration = table.generation();
+        batchGeneration = table.partsGeneration();
         batchVersion = version;
         batchProgramStamp = shader.programStamp();
         return batchPartId;

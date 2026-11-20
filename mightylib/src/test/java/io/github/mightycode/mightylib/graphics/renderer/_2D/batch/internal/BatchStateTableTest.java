@@ -167,6 +167,78 @@ class BatchStateTableTest {
         assertEquals(1, table.materialParts());
     }
 
+    // Many cameras: only they are emptied, the material parts keep their ids, the copies of the matrices are reused
+    @Test
+    void theCamerasAloneAreEmptiedWithoutTheParts() {
+        BatchStateTable table = new BatchStateTable(100, 2);
+        table.batchStarted();
+        int part = table.materialPart(new Part(1));
+        int first = table.camera(new Matrix4f(), new Matrix4f());
+        Matrix4f copy = table.projectionOf(first);
+        int state = table.state(part, first, false);
+        table.camera(new Matrix4f(), new Matrix4f());
+        table.camera(new Matrix4f(), new Matrix4f());
+        table.batchEnded();
+
+        assertEquals(0, table.cameras());
+        assertEquals(1, table.materialParts());
+        assertEquals(0, table.partsGeneration());
+        assertEquals(1, table.generation());
+        assertFalse(table.isCurrent(state));
+
+        table.batchStarted();
+        assertEquals(part, table.materialPart(new Part(1)));
+        Matrix4f projection = new Matrix4f().ortho2D(0, 10, 10, 0);
+        int slot = table.camera(projection, new Matrix4f());
+        assertSame(copy, table.projectionOf(slot));
+        assertEquals(projection, table.projectionOf(slot));
+        table.batchEnded();
+    }
+
+    // As many parts drawn each frame as the threshold: it doubles instead of building them all again each frame
+    @Test
+    void partsDrawnEachFrameRaiseTheThreshold() {
+        BatchStateTable table = new BatchStateTable(4, 100);
+        Matrix4f projection = new Matrix4f();
+        Matrix4f view = new Matrix4f();
+
+        table.frameStarted();
+        table.batchStarted();
+        for (int i = 0; i < 6; ++i)
+            table.state(table.materialPart(new Part(i)), table.camera(projection, view), false);
+        table.batchEnded();
+        assertEquals(6, table.materialParts());
+        assertEquals(8, table.materialPartsThreshold());
+        assertEquals(0, table.partsGeneration());
+
+        // Next frame: one part drawn, three new ones not drawn: the others are no longer used, emptied
+        table.frameStarted();
+        table.batchStarted();
+        table.state(table.materialPart(new Part(0)), table.camera(projection, view), false);
+        for (int i = 10; i < 13; ++i)
+            table.materialPart(new Part(i));
+        table.batchEnded();
+        assertEquals(0, table.materialParts());
+        assertEquals(1, table.partsGeneration());
+        assertEquals(8, table.materialPartsThreshold());
+    }
+
+    // Every camera slot taken: no room for a state, emptied at the end of the batch
+    @Test
+    void aFullTableHasNoRoom() {
+        BatchStateTable table = new BatchStateTable();
+        table.batchStarted();
+        Matrix4f projection = new Matrix4f();
+        for (int i = 0; i < BatchStateTable.MAX_CAMERAS; ++i)
+            table.camera(projection, new Matrix4f());
+        assertFalse(table.hasRoom());
+        assertThrows(IllegalStateException.class, () -> table.camera(projection, new Matrix4f()));
+
+        table.batchEnded();
+        assertTrue(table.hasRoom());
+        assertEquals(0, table.cameras());
+    }
+
     @Test
     void anEndWithoutStartFails() {
         assertThrows(IllegalStateException.class, () -> new BatchStateTable().batchEnded());

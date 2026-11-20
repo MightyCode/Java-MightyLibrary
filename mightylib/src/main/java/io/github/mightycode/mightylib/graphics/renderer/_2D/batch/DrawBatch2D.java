@@ -35,7 +35,7 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * sort key (setDrawSortKey), in the order of their keys inside each segment between two barriers.
  * <p>
  * Barriers (the draws asked before are sent): a renderer drawn alone, a clear of the view, a scissor, a framebuffer
- * bound, flush(), the end of the display of the view, too many draws (MAX_DRAWS). Code that calls OpenGL itself
+ * bound, flush(), the end of the display of the view, too many draws (MAX_DRAWS), a full table of states. Code that calls OpenGL itself
  * between draws calls flush() first (like RenderState.invalidateContextState after).
  * <p>
  * Low level, for a renderer of its own: beginDraw with a state, vertex and index, endDraw (or quad). Main thread only.
@@ -58,6 +58,7 @@ public final class DrawBatch2D {
     public static final String CAUSE_FLUSH = "flush";
     public static final String CAUSE_FULL = "full";
     public static final String CAUSE_SORT_KEY = "sortKey";
+    public static final String CAUSE_TABLE_FULL = "tableFull";
 
     private static final boolean LITTLE_ENDIAN = ByteOrder.nativeOrder() == ByteOrder.LITTLE_ENDIAN;
     private static final int[] QUAD_INDICES = {0, 3, 2, 0, 2, 1};
@@ -151,11 +152,20 @@ public final class DrawBatch2D {
 
     /**
      * The table of the states, with the batch started: the states of its draws are asked after this call (a
-     * started batch keeps the ids valid until its flush).
+     * started batch keeps the ids valid until its flush). A table without room for one more state (BatchStateTable
+     * .hasRoom) is emptied first: the draws waiting are sent (a barrier), then the batch starts again.
      */
     @API(status = INTERNAL)
     public BatchStateTable stateTable() {
         start();
+        if (!table.hasRoom()) {
+            barrier(CAUSE_TABLE_FULL);
+            start();
+            if (!table.hasRoom())
+                throw new IllegalStateException("The table of the 2D batch states is full and another batch has"
+                        + " draws waiting: it can't be emptied");
+        }
+
         return table;
     }
 

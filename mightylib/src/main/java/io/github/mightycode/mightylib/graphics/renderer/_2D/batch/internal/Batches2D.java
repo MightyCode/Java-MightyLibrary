@@ -78,6 +78,11 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
         return table;
     }
 
+    // A frame of the engine starts, before its windows are displayed
+    public void frameStarted() {
+        table.frameStarted();
+    }
+
     @Override
     public EBatch2DMode mode() {
         return mode;
@@ -172,8 +177,9 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
         return new JSONObject()
                 .put("mode", mode.optionName())
                 .put("table", new JSONObject().put("materialParts", table.materialParts())
+                        .put("materialPartsThreshold", table.materialPartsThreshold())
                         .put("cameras", table.cameras()).put("generation", table.generation())
-                        .put("resets", table.resets()))
+                        .put("partsGeneration", table.partsGeneration()).put("resets", table.resets()))
                 .put("contexts", contextArray)
                 .put("views", viewArray);
     }

@@ -633,6 +633,8 @@ public final class Engine implements IView {
 
     // Each window shows its view
     void displayWindows() {
+        if (glResources != null)
+            Batches2D.of(this).frameStarted();
         for (Context context : contexts.getContexts())
             context.displayWindows();
     }

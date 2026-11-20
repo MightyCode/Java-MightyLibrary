@@ -223,6 +223,23 @@ class DrawBatch2DTest {
         return order;
     }
 
+    // No room for one more state: the draws waiting are sent, the table emptied, the drawing goes on
+    @Test
+    void aFullTableSendsTheDrawsFirst() {
+        quad(state("a"), 0);
+        BatchStateTable table = target.table;
+        while (table.hasRoom())
+            table.camera(projection, new Matrix4f());
+
+        int b = state("b");
+        assertTrue(table.cameras() < 2);
+        quad(b, 1);
+        batch.endView();
+
+        assertEquals(List.of("apply a", "draw 0 6", "apply b", "draw 0 6"), draws());
+        assertArrayEquals(new int[]{1, 0}, batch.lastFrameBarrierCauses().get(DrawBatch2D.CAUSE_TABLE_FULL));
+    }
+
     @Test
     void neighborsOfTheSameStateAreOneDrawCall() {
         int a = state("a");

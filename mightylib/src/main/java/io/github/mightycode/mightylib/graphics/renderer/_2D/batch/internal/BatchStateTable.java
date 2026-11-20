@@ -18,8 +18,12 @@ import java.util.Map;
  * slot is retired and a new one made, so the waiting draws keep the camera they were asked with.
  * <p>
  * Ids stay valid while a batch has draws waiting: the table is emptied (generation incremented) only when no batch
- * of the engine has any, once it holds more than its thresholds. A batch is started (batchStarted) before any state of
- * its draws is asked. Main thread only.
+ * of the engine has any, once it holds more than its thresholds. Above the threshold of the cameras alone, only the
+ * cameras are emptied (the material parts keep their ids: partsGeneration unchanged, nothing rebuilt). Above the
+ * threshold of the material parts, the table is emptied, unless more than half of it was used in the current frame (a
+ * game that draws that many materials each frame): the threshold doubles instead, up to MAX_MATERIAL_PARTS / 2. When
+ * no state fits (hasRoom false), the batch sends its draws first, then the table is emptied (DrawBatch2D.stateTable).
+ * A batch is started (batchStarted) before any state of its draws is asked. Main thread only.
  */
 public final class BatchStateTable implements IGLSharedState {
     public static final int CAMERA_BITS = 10;
@@ -34,12 +38,13 @@ public final class BatchStateTable implements IGLSharedState {
     private static final int RESET_MATERIAL_PARTS = 4096;
     private static final int RESET_CAMERAS = 256;
 
-    private final int resetMaterialParts;
+    private int resetMaterialParts;
     private final int resetCameras;
 
-    // Material parts by content, and by id
+    // Material parts by content, and by id; the frame each one was last drawn in
     private final Map<IBatchMaterial, Integer> partIds = new HashMap<>();
     private IBatchMaterial[] parts = new IBatchMaterial[64];
+    private long[] partFrames = new long[64];
     private int partCount;
 
     // Camera slots: the matrices of the camera (identity), their copies, the epoch of the last draw, retired or not
@@ -55,7 +60,10 @@ public final class BatchStateTable implements IGLSharedState {
     // Batches started and not flushed; the epoch changes each time none is left
     private int pendingBatches;
     private long epoch;
+    // Frames of the engine (frameStarted), for the material parts used each frame
+    private long frame;
     private int generation;
+    private int partsGeneration;
     private int resets;
 
     public BatchStateTable() {
@@ -70,8 +78,10 @@ public final class BatchStateTable implements IGLSharedState {
 
     // ---- States ----
 
-    // A state of the current generation
+    // A state of the current generation (its material part counted as drawn in this frame)
     public int state(int materialPart, int camera, boolean linear) {
+        if (materialPart >= 0 && materialPart < partCount)
+            partFrames[materialPart] = frame;
         return (generation & GENERATION_MASK) << GENERATION_SHIFT | materialPart << MATERIAL_SHIFT | camera << 1
                 | (linear ? 1 : 0);
     }
@@ -125,10 +135,14 @@ public final class BatchStateTable implements IGLSharedState {
         if (partCount == MAX_MATERIAL_PARTS)
             throw new IllegalStateException(MAX_MATERIAL_PARTS + " different materials in the batches without a"
                     + " flush: the table of the states can't be emptied while draws wait");
-        if (partCount == parts.length)
+        if (partCount == parts.length) {
             parts = Arrays.copyOf(parts, parts.length * 2);
+            partFrames = Arrays.copyOf(partFrames, parts.length);
+        }
 
         parts[partCount] = part;
+        // Not drawn yet
+        partFrames[partCount] = -1;
         partIds.put(part, partCount);
         return partCount++;
     }
@@ -194,10 +208,24 @@ public final class BatchStateTable implements IGLSharedState {
         int slot = cameraCount++;
         projectionSources[slot] = projection;
         viewSources[slot] = view;
-        projections[slot] = new Matrix4f(projection);
-        views[slot] = new Matrix4f(view);
+        // The copies of a slot emptied by a reset are reused: a camera moved between draws allocates nothing
+        if (projections[slot] == null) {
+            projections[slot] = new Matrix4f(projection);
+            views[slot] = new Matrix4f(view);
+        } else {
+            projections[slot].set(projection);
+            views[slot].set(view);
+        }
         retired[slot] = false;
         return slot;
+    }
+
+    /**
+     * Room for one more state: a new material part and a new camera fit. When not, the draws waiting are sent and the
+     * table emptied before a state is asked (DrawBatch2D.stateTable).
+     */
+    public boolean hasRoom() {
+        return partCount < MAX_MATERIAL_PARTS && cameraCount < MAX_CAMERAS;
     }
 
     // The copies of the camera of a state
@@ -225,19 +253,48 @@ public final class BatchStateTable implements IGLSharedState {
             return;
 
         ++epoch;
-        if (partCount > resetMaterialParts || cameraCount > resetCameras)
-            reset();
+        if (partCount > resetMaterialParts || partCount == MAX_MATERIAL_PARTS) {
+            if (partCount < MAX_MATERIAL_PARTS && keepsUsedParts())
+                resetMaterialParts *= 2;
+            else
+                reset();
+        }
+
+        if (cameraCount > resetCameras || cameraCount == MAX_CAMERAS)
+            resetCameras();
+    }
+
+    // More than half of the threshold drawn in this frame: emptying the table would build them all again each frame
+    private boolean keepsUsedParts() {
+        if (resetMaterialParts * 2 > MAX_MATERIAL_PARTS / 2)
+            return false;
+
+        int used = 0;
+        for (int i = 0; i < partCount; ++i) {
+            if (partFrames[i] == frame)
+                ++used;
+        }
+
+        return used * 2 > resetMaterialParts;
+    }
+
+    // A new frame of the engine (before its views draw)
+    public void frameStarted() {
+        ++frame;
     }
 
     private void reset() {
         partIds.clear();
         Arrays.fill(parts, 0, partCount, null);
         partCount = 0;
+        ++partsGeneration;
+        resetCameras();
+    }
 
+    // The ids of the states change (generation), those of the material parts stay
+    private void resetCameras() {
         Arrays.fill(projectionSources, 0, cameraCount, null);
         Arrays.fill(viewSources, 0, cameraCount, null);
-        Arrays.fill(projections, 0, cameraCount, null);
-        Arrays.fill(views, 0, cameraCount, null);
         cameraCount = 0;
         lastCamera = -1;
 
@@ -245,9 +302,19 @@ public final class BatchStateTable implements IGLSharedState {
         ++resets;
     }
 
-    /** Changes when the ids are given again from 0: an id kept by a cache is valid only for its generation. */
+    /** Changes when the ids of the states change (a state kept by a cache is valid only for its generation). */
     public int generation() {
         return generation;
+    }
+
+    /** Changes when the ids of the material parts are given again from 0 (an id kept by a material). */
+    public int partsGeneration() {
+        return partsGeneration;
+    }
+
+    // Material parts above which the table is emptied (doubles when that many are drawn each frame)
+    public int materialPartsThreshold() {
+        return resetMaterialParts;
     }
 
     public int materialParts() {
