@@ -182,6 +182,8 @@ def gl_snapshot(connection, reader, timeout):
     counters = {}
     for name, count in data.get("glObjects", {}).items():
         counters["gl." + name] = count
+    for name, count in data.get("retainedObjects", {}).items():
+        counters["retained." + name] = count
     for kind, elements in shared.items():
         if isinstance(elements, dict):
             for name, references in elements.items():

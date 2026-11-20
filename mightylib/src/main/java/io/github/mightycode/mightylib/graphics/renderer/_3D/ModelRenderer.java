@@ -117,6 +117,8 @@ public final class ModelRenderer extends Renderer {
             glMesh.setEbo(mesh.getIndices());
             Logger.CheckOpenGLError("Send mesh " + mesh.getName() + " of model " + modelName);
 
+            // Retained by this set until released, like the mesh of a MeshRenderer
+            glMesh.retain();
             glMeshes[sent] = glMesh;
             ++sent;
 
@@ -134,7 +136,7 @@ public final class ModelRenderer extends Renderer {
 
         void release() {
             for (int i = 0; i < sent; ++i)
-                glMeshes[i].unload();
+                glMeshes[i].release();
 
             for (Texture texture : diffuseTextures)
                 glResources().releaseResource(texture);
@@ -215,6 +217,20 @@ public final class ModelRenderer extends Renderer {
         return shown.sent;
     }
 
+    /**
+     * The part of the sort key of the draw of one mesh (0 to getNumberOfSentMeshes - 1): the one of the base material
+     * (program, blend, depth), its texture bits mixed with the textures of the mesh (each mesh binds its own).
+     */
+    public int sortKeyPart(int meshIndex) {
+        if (meshIndex < 0 || meshIndex >= shown.sent)
+            throw new IndexOutOfBoundsException("Mesh " + meshIndex + " out of the " + shown.sent + " sent meshes");
+
+        int hash = 31 * System.identityHashCode(shown.diffuseTextures[meshIndex])
+                + System.identityHashCode(shown.specularTextures[meshIndex]);
+        hash ^= (hash >>> 14) ^ (hash >>> 28);
+        return material().sortKeyPart() ^ ((hash & 0x3FFF) << 6);
+    }
+
     // Send the next mesh: the first version is displayed as it is sent, a newer one replaces it once complete
     private boolean sendNextMesh() {
         if (pending == null)
@@ -246,7 +262,8 @@ public final class ModelRenderer extends Renderer {
     public void draw() {
         // Decided on the current program: it can change (fallback while loading, hot reload)
         boolean bindSpecular = specularUniform != null && hasUniform(specularUniform);
-        boolean sendMeshShininess = !hasShaderValue(SHININESS_UNIFORM) && hasUniform(SHININESS_UNIFORM);
+        boolean sendMeshShininess = !hasShaderValue(SHININESS_UNIFORM) && !material().hasShaderValue(SHININESS_UNIFORM)
+                && hasUniform(SHININESS_UNIFORM);
 
         for (int i = 0; i < shown.sent; ++i) {
             shown.diffuseTextures[i].bindRenderTexture(DIFFUSE_UNIT);

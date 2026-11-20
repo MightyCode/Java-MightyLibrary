@@ -17,8 +17,6 @@ import java.util.Set;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL13.GL_MULTISAMPLE;
-import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
-import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL32C.GL_PROGRAM_POINT_SIZE;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
@@ -28,7 +26,8 @@ import static org.lwjgl.system.MemoryUtil.NULL;
  * All the contexts of the engine share their objects with a hidden root context (textures, buffers and programs
  * are created once and usable in every window), except the vertex arrays, the framebuffers and the renderbuffers,
  * which each context owns: they are tracked here, and deleted in the context that owns them (immediately when it
- * is current, at its next makeCurrent otherwise). The bound program is a state of the context too.
+ * is current, at its next makeCurrent otherwise). The OpenGL state (capabilities, blend, depth mask, scissor, bound
+ * program and textures) is a state of the context too, kept by its GLStateCache.
  * <p>
  * Main thread only. A context is current from makeCurrent until another one is.
  */
@@ -45,8 +44,8 @@ public final class GLContext {
     private Callback debugMessageCallback;
     private boolean destroyed;
 
-    // Program bound in this context, -1 when unknown: avoids sending glUseProgram again
-    private int currentProgram = -1;
+    // State last set in this context: a change equal to it is not sent again
+    private final GLStateCache state;
     // Size of the viewport of this context in pixels (glViewport through setViewport), 0 before the first one
     private int viewportWidth;
     private int viewportHeight;
@@ -66,6 +65,7 @@ public final class GLContext {
         // The context of the window must be current for the capabilities to be created
         glfwMakeContextCurrent(windowHandle);
         capabilities = GL.createCapabilities();
+        state = new GLStateCache(new GLStateApplier());
         current = this;
         LIVE.add(this);
 
@@ -122,10 +122,9 @@ public final class GLContext {
     private void applyDefaultState() {
         glfwSwapInterval(0);
 
-        glActiveTexture(GL_TEXTURE0);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_DEPTH_TEST);
+        state.activeTexture(0);
+        state.blend(true, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        state.capability(GLStateCache.DEPTH_TEST, true);
 
         // Enable antiAliasing
         glEnable(GL_MULTISAMPLE);
@@ -201,18 +200,35 @@ public final class GLContext {
         return windows > 1;
     }
 
-    // ---- Bound program ----
+    // ---- State ----
 
-    public int currentProgram() { return currentProgram; }
+    /** The OpenGL state of this context: every state change of the engine goes through it. */
+    public GLStateCache state() { return state; }
 
-    public void setCurrentProgram(int program) { currentProgram = program; }
+    /** The state of the current context. */
+    public static GLStateCache currentState() { return current().state; }
+
+    /**
+     * glClear of the color and the depth of the bound framebuffer (limited by the scissor when enabled): the depth
+     * mask made writable and the sRGB encoding disabled first (the clear color is stored as written).
+     */
+    public static void ClearColorAndDepth() {
+        GLStateCache state = currentState();
+        state.depthMask(true);
+        state.capability(GLStateCache.FRAMEBUFFER_SRGB, false);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
 
     // A program is deleted (its id can be reused): no context considers it bound anymore
     public static void forgetProgram(int program) {
-        for (GLContext context : LIVE) {
-            if (context.currentProgram == program)
-                context.currentProgram = -1;
-        }
+        for (GLContext context : LIVE)
+            context.state.forgetProgram(program);
+    }
+
+    // A texture is deleted (its id can be reused): no context considers it bound anymore
+    public static void forgetTexture(int texture) {
+        for (GLContext context : LIVE)
+            context.state.forgetTexture(texture);
     }
 
     // ---- Viewport ----

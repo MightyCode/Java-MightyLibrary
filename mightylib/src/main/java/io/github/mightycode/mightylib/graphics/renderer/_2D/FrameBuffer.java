@@ -38,7 +38,7 @@ public final class FrameBuffer implements IRenderTextureBindable {
     private void update(IGLBindable bindable){
         renderTextureId = GenDeleteResources.GenTexture();
 
-        glBindTexture(GL_TEXTURE_2D, renderTextureId);
+        GLContext.currentState().bindTexture(GL_TEXTURE_2D, renderTextureId);
         Logger.CheckOpenGLError("Generate Texture : " + renderTextureId);
 
         // Always sRGB: a linear draw is encoded by the card (GL_FRAMEBUFFER_SRGB), a gamma draw is stored as written;
@@ -50,7 +50,7 @@ public final class FrameBuffer implements IRenderTextureBindable {
         glTexParameteri(bindable.getTextureType(), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         Logger.CheckOpenGLError("Texture Parameters : " + renderTextureId);
 
-        glBindTexture(GL_TEXTURE_2D, 0);
+        GLContext.currentState().bindTexture(GL_TEXTURE_2D, 0);
         Logger.CheckOpenGLError("Bind Texture : " + renderTextureId);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, renderTextureId, 0);
         Logger.CheckOpenGLError("FrameBuffer Texture 2D : " + renderTextureId);
@@ -90,8 +90,8 @@ public final class FrameBuffer implements IRenderTextureBindable {
 
     @Override
     public void bindRenderTexture(int position){
-        glActiveTexture(GL_TEXTURE0 + position);
-        glBindTexture(GL_TEXTURE_2D, renderTextureId);
+        GLContext.currentState().activeTexture(position);
+        GLContext.currentState().bindTexture(GL_TEXTURE_2D, renderTextureId);
 
         // Called for each draw: avoid building the message when checks are disabled
         if (Logger.isGLErrorCheck())
@@ -99,7 +99,7 @@ public final class FrameBuffer implements IRenderTextureBindable {
     }
 
     public void unbindRenderTexture(){
-        glBindTexture(GL_TEXTURE_2D, 0);
+        GLContext.currentState().bindTexture(GL_TEXTURE_2D, 0);
         Logger.CheckOpenGLError("Unbind Texture : " + renderTextureId);
     }
 

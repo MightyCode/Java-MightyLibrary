@@ -88,6 +88,8 @@ public class MouseManager {
         glfwSetScrollCallback(windowInfo.getWindowId(), new GLFWScrollCallback() {
             @Override
             public void invoke(final long window, final double xOffset, final double yOffset) {
+                if (RealDevices.isIgnored())
+                    return;
                 // Several scroll events can happen during one tick
                 mouseScroll.x += (float) xOffset;
                 mouseScroll.y += (float) yOffset;
@@ -110,13 +112,20 @@ public class MouseManager {
         return !captured && isButton(buttonId) && (realButton(buttonId) || buttonSimulation.getState(buttonId));
     }
 
-    // The button of the real mouse now (GLFW), whatever the capture
+    // The button of the real mouse now (GLFW), whatever the capture; never pressed when the real devices are ignored
     protected boolean realButton(int buttonId) {
+        if (RealDevices.isIgnored())
+            return false;
         return glfwGetMouseButton(windowInfo.getWindowId(), buttonId) == GLFW_PRESS;
     }
 
-    // The position of the real cursor now (GLFW), in window pixels
+    // The position of the real cursor now (GLFW), in window pixels; still at 0, 0 when the real devices are ignored
     protected void realCursor(double[] x, double[] y) {
+        if (RealDevices.isIgnored()) {
+            x[0] = 0;
+            y[0] = 0;
+            return;
+        }
         glfwGetCursorPos(windowInfo.getWindowId(), x, y);
     }
 

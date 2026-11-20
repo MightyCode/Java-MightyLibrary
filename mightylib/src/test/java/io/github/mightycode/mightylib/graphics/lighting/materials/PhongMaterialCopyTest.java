@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 // A copy has its own vectors: changing it leaves the original as it is (the copies shared them)
-class MaterialCopyTest {
+class PhongMaterialCopyTest {
     @Test
     void basicMaterialCopyIsDeep() {
-        BasicMaterial original = new BasicMaterial(new Vector3f(1), new Vector3f(2), new Vector3f(3));
-        BasicMaterial copy = original.copy();
+        BasicPhongMaterial original = new BasicPhongMaterial(new Vector3f(1), new Vector3f(2), new Vector3f(3));
+        BasicPhongMaterial copy = original.copy();
         copy.Ambient.set(9);
         copy.Diffuse.set(9);
         copy.Specular.set(9);
@@ -18,18 +18,18 @@ class MaterialCopyTest {
         assertEquals(new Vector3f(1), original.Ambient);
         assertEquals(new Vector3f(2), original.Diffuse);
         assertEquals(new Vector3f(3), original.Specular);
-        assertEquals(new Vector3f(3), original.copyBasicMaterial().Specular);
-        assertNotSame(original.Ambient, original.copyBasicMaterial().Ambient);
+        assertEquals(new Vector3f(3), original.copyBasicPhongMaterial().Specular);
+        assertNotSame(original.Ambient, original.copyBasicPhongMaterial().Ambient);
     }
 
     @Test
     void materialCopyIsDeep() {
-        Material original = Material.Gold();
-        Material copy = original.copy();
+        PhongMaterial original = PhongMaterial.Gold();
+        PhongMaterial copy = original.copy();
         copy.Diffuse.set(0);
         copy.Shininess = 1;
 
-        assertEquals(Material.Gold().Diffuse, original.Diffuse);
-        assertEquals(Material.Gold().Shininess, original.Shininess);
+        assertEquals(PhongMaterial.Gold().Diffuse, original.Diffuse);
+        assertEquals(PhongMaterial.Gold().Shininess, original.Shininess);
     }
 }

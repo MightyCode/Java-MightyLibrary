@@ -14,6 +14,8 @@ public final class EngineStats {
     private static long programBinds;
     private static long uniformUploads;
     private static long textureBinds;
+    private static long glStateChanges;
+    private static long glStateChangesSkipped;
     private static long bufferUploadBytes;
 
     // Values of the last full second
@@ -25,6 +27,8 @@ public final class EngineStats {
     private static double programBindsPerFrame;
     private static double uniformUploadsPerFrame;
     private static double textureBindsPerFrame;
+    private static double glStateChangesPerFrame;
+    private static double glStateChangesSkippedPerFrame;
     private static double bufferUploadBytesPerSecond;
 
     // Worst frames since the last resetMax, to check that a loading screen stays fluid
@@ -67,6 +71,9 @@ public final class EngineStats {
     public static void countProgramBind() { ++programBinds; }
     public static void countUniformUpload() { ++uniformUploads; }
     public static void countTextureBind() { ++textureBinds; }
+    // An OpenGL state change sent, or skipped because the context already had it (GLStateCache)
+    public static void countGLStateChange() { ++glStateChanges; }
+    public static void countGLStateSkipped() { ++glStateChangesSkipped; }
     public static void countBufferUpload(long bytes) { bufferUploadBytes += bytes; }
 
     // Called once per second by the main loop
@@ -81,9 +88,11 @@ public final class EngineStats {
         programBindsPerFrame = programBinds / frameCount;
         uniformUploadsPerFrame = uniformUploads / frameCount;
         textureBindsPerFrame = textureBinds / frameCount;
+        glStateChangesPerFrame = glStateChanges / frameCount;
+        glStateChangesSkippedPerFrame = glStateChangesSkipped / frameCount;
         bufferUploadBytesPerSecond = bufferUploadBytes;
 
-        drawCalls = programBinds = uniformUploads = textureBinds = bufferUploadBytes = 0;
+        drawCalls = programBinds = uniformUploads = textureBinds = bufferUploadBytes = glStateChanges = glStateChangesSkipped = 0;
     }
 
     public static int getFps() { return fps; }
@@ -107,6 +116,8 @@ public final class EngineStats {
         json.put("programBindsPerFrame", round(programBindsPerFrame));
         json.put("uniformUploadsPerFrame", round(uniformUploadsPerFrame));
         json.put("textureBindsPerFrame", round(textureBindsPerFrame));
+        json.put("glStateChangesPerFrame", round(glStateChangesPerFrame));
+        json.put("glStateChangesSkippedPerFrame", round(glStateChangesSkippedPerFrame));
         json.put("bufferUploadBytesPerSecond", (long) bufferUploadBytesPerSecond);
         json.put("usedMemoryMB", (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024));
         json.put("maxMemoryMB", runtime.maxMemory() / (1024 * 1024));

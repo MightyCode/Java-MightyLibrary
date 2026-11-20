@@ -1,8 +1,12 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.LiveObjects;
+import io.github.mightycode.mightylib.graphics.internal.RefCount;
+import io.github.mightycode.mightylib.graphics.internal.SharedObjects;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
+import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
@@ -18,7 +22,13 @@ import static org.lwjgl.opengl.GL40.GL_PATCHES;
 /**
  * Geometry only: vertex buffers (one per attribute, each on a channel = attribute location in the shader),
  * an optional element buffer, the draw mode, and one vertex array per OpenGL context. The program and the
- * OpenGL state of the draw belong to the renderer (MeshRenderer) which owns the mesh.
+ * OpenGL state of the draw belong to the renderers (MeshRenderer) which draw the mesh.
+ * <p>
+ * Shareable: each renderer that draws it retains it (retain) and releases it when unloaded (release); the last
+ * release unloads it. A mesh created by a renderer is retained by it only; one created by the game starts without
+ * reference, and the game retains it itself to keep it after its renderers. The attributes a draw reads are decided
+ * by the shader: a channel the shader does not read is ignored.
+ * <p>
  * Hooks: draw() (instanced draw for example), called with the vertex array bound; unload() (release what the
  * subclass created, then call super). The other methods are final.
  */
@@ -71,7 +81,17 @@ public class Mesh {
     private EDrawMode drawMode;
     private int glDrawMode;
 
+    // The live meshes of the engine of the view that creates the mesh
+    private final LiveObjects<Mesh> liveMeshes = SharedObjects.of(Views.engine().glResources()).meshes();
+
+    // The renderers (and the game) that use this mesh: the last release unloads it
+    private final RefCount references = new RefCount("Mesh", () -> {
+        liveMeshes.unregister(this);
+        unload();
+    });
+
     public Mesh(boolean useEbo) {
+        liveMeshes.register(this);
         setDrawMode(EDrawMode.Triangles);
 
         verticesToDraw = 0;
@@ -487,6 +507,25 @@ public class Mesh {
         vbosInteger.clear();
         vbosChannel.clear();
         layoutChanged();
+    }
+
+    /** One more user of this mesh (a renderer that draws it, or the game to keep it). */
+    public final void retain() {
+        references.retain();
+    }
+
+    /**
+     * A user is done with this mesh: the last one unloads it.
+     * @return true when this release unloaded the mesh
+     * @throws IllegalStateException when released more times than retained
+     */
+    public final boolean release() {
+        return references.release();
+    }
+
+    /** Number of users that retained this mesh and did not release it. */
+    public final int references() {
+        return references.references();
     }
 
     public void unload(){

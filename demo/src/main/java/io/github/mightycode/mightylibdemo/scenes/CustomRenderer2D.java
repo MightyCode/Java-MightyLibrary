@@ -59,7 +59,7 @@ public class CustomRenderer2D extends Scene {
         first.setPosition(new Vector3f(centerX - 150, centerY, 1f));
         first.setScale(new Vector3f(180f, 180f, 1f));
 
-        // The renderer owns the mesh given to it: unloaded with it
+        // Retained by the renderer it is given to: unloaded when its last renderer is (Mesh.retain to keep it longer)
         Mesh secondMesh = new Mesh(false);
         secondMesh.setDrawMode(EDrawMode.TriangleFan);
         fillStar(secondMesh, 0.6f);

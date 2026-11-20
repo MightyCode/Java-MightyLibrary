@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.cubemap;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.resources.texture.ETextureColorSpace;
@@ -23,7 +24,7 @@ public final class CubeMapPlaceholders implements IGLSharedState {
     int placeholderId() {
         if (placeholderId == -1) {
             placeholderId = GenDeleteResources.GenTexture();
-            glBindTexture(GL_TEXTURE_CUBE_MAP, placeholderId);
+            GLContext.currentState().bindTexture(GL_TEXTURE_CUBE_MAP, placeholderId);
             ByteBuffer transparent = BufferUtils.createByteBuffer(4);
             for (int face = 0; face < CubeMapData.FACE_COUNT; ++face)
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, Texture.InternalFormat(ETextureColorSpace.SRGB), 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, transparent);

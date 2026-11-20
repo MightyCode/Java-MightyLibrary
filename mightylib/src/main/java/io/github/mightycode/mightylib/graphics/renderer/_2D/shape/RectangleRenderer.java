@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
@@ -10,7 +11,12 @@ public class RectangleRenderer extends Shape2DRenderer {
     private final RectangularFace face;
 
     public RectangleRenderer(String shaderName) {
-        super(shaderName, true);
+        this(new Material(shaderName));
+    }
+
+    // A rectangle drawn with the material (shared with its other renderers)
+    public RectangleRenderer(Material material) {
+        super(material, true);
 
         face = new RectangularFace();
         setTexturePosition(RectangularFace.BasicTexturePosition());

@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -24,7 +25,7 @@ public final class TexturePlaceholders implements IGLSharedState {
     int placeholderId() {
         if (placeholderId == -1) {
             placeholderId = GenDeleteResources.GenTexture();
-            glBindTexture(GL_TEXTURE_2D, placeholderId);
+            GLContext.currentState().bindTexture(GL_TEXTURE_2D, placeholderId);
             ByteBuffer transparent = BufferUtils.createByteBuffer(4);
             glTexImage2D(GL_TEXTURE_2D, 0, Texture.InternalFormat(ETextureColorSpace.SRGB), 1, 1, 0, GL_RGBA,
                     GL_UNSIGNED_BYTE, transparent);
@@ -45,7 +46,7 @@ public final class TexturePlaceholders implements IGLSharedState {
                 return -1;
 
             fallbackRectangleId = GenDeleteResources.GenTexture();
-            glBindTexture(GL_TEXTURE_RECTANGLE, fallbackRectangleId);
+            GLContext.currentState().bindTexture(GL_TEXTURE_RECTANGLE, fallbackRectangleId);
             glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, fallback.getWidth(), fallback.getHeight(), 0,
                     GL_RGBA, GL_UNSIGNED_BYTE, fallback.getData());
             glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

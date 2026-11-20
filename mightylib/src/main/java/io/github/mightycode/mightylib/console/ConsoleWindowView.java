@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.console;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowView;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -42,7 +43,7 @@ final class ConsoleWindowView extends WindowView {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         Vector2i size = window().getWindow().getInfo().getSizeRef();
         glClearColor(0f, 0f, 0f, 1f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GLContext.ClearColorAndDepth();
 
         boolean focused = glfwGetWindowAttrib(window().getWindow().getInfo().getWindowId(), GLFW_FOCUSED) == 1;
         try (Views.Scope ignored = Views.enter(consoleView)) {

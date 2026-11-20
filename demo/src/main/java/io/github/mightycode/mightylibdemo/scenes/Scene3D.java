@@ -7,8 +7,8 @@ import io.github.mightycode.mightylib.graphics.lighting.lights.LightDecrease;
 import io.github.mightycode.mightylib.graphics.lighting.lights.PointLight;
 import io.github.mightycode.mightylib.graphics.lighting.lights.SpotLight;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
-import io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial;
-import io.github.mightycode.mightylib.graphics.lighting.materials.Material;
+import io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial;
+import io.github.mightycode.mightylib.graphics.lighting.materials.PhongMaterial;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapColorFunctions;
 import io.github.mightycode.mightylib.graphics.renderer._3D.heightMap.HeightMapRenderer;
 import io.github.mightycode.mightylib.graphics.text.Text;
@@ -121,7 +121,7 @@ public class Scene3D extends Scene {
         light.setColorMode(ColorList.White());
         light.setNormal();
 
-        BasicMaterial lightMaterial = new BasicMaterial(
+        BasicPhongMaterial lightMaterial = new BasicPhongMaterial(
                 new Vector3f(0.2f), new Vector3f(0.5f), new Vector3f(1)
         );
 
@@ -153,8 +153,8 @@ public class Scene3D extends Scene {
 
         cubeColorMaterial.addShaderValue("viewPos", Vector3f.class, camera3D().getCamPosRef())
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()));
-        lightMaterial.addToRenderer(cubeColorMaterial, "light");
-        Material.Emerald().addToRenderer(cubeColorMaterial, "material");
+        lightMaterial.addTo(cubeColorMaterial, "light");
+        PhongMaterial.Emerald().addTo(cubeColorMaterial, "material");
 
         cubeTexturedMaterial = new CubeRenderer("textureMaterial3D");
         cubeTexturedMaterial.setPosition(new Vector3f(3f, 3.0f, -8f));
@@ -168,7 +168,7 @@ public class Scene3D extends Scene {
                 .addShaderValue("light.vector", Vector4f.class, RendererUtils.ToLightPosition(light.position()))
                 .addShaderValue("material.shininess", Float.class, 64f);
 
-        lightMaterial.addToRenderer(cubeTexturedMaterial, "light");
+        lightMaterial.addTo(cubeTexturedMaterial, "light");
 
         // 3D Model
         // stall.obj has no material: its texture is given here
@@ -244,11 +244,11 @@ public class Scene3D extends Scene {
         LightDecrease lightDecrease = new LightDecrease(1.0f, 0.09f, 0.032f);
 
         backpackLights = new MultiLightingManager("dirLight", "pointLights", "spotLight");
-        backpackLights.setDirectionalLight(new DirectionalLight(new BasicMaterial(
+        backpackLights.setDirectionalLight(new DirectionalLight(new BasicPhongMaterial(
                 new Vector3f(0.05f), new Vector3f(0.3f), new Vector3f(0.3f)))
                 .setDirection(new Vector3f(-0.2f, -1.0f, -0.3f)));
 
-        backpackLights.setSpotLight(new SpotLight(new BasicMaterial(
+        backpackLights.setSpotLight(new SpotLight(new BasicPhongMaterial(
                 new Vector3f(0f), new Vector3f(0.6f), new Vector3f(0.8f)), lightDecrease)
                 .setPosition(camera3D().getCamPosRef()).setDirection(camera3D().getLookAtVector())
                 .enable());
@@ -268,7 +268,7 @@ public class Scene3D extends Scene {
         for (int i = 0; i < offsets.length; ++i) {
             Vector3f position = new Vector3f(center).add(offsets[i]);
 
-            backpackLights.addPointLight(new PointLight(new BasicMaterial(
+            backpackLights.addPointLight(new PointLight(new BasicPhongMaterial(
                     new Vector3f(colors[i]).mul(0.05f), colors[i], colors[i]), lightDecrease)
                     .setPosition(position));
 

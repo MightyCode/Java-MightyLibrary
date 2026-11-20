@@ -1,15 +1,15 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
+import io.github.mightycode.mightylib.graphics.internal.GLStateCache;
 
 import java.util.Objects;
 
-import static org.lwjgl.opengl.GL11.*;
-import static org.lwjgl.opengl.GL30.GL_FRAMEBUFFER_SRGB;
-
 /**
- * The OpenGL state a renderer draws with: depth test, depth write, face culling and color space, applied before each
- * draw. The depth mask is left writable and the sRGB encoding disabled between draws (glClear depends on them).
+ * The OpenGL state a renderer draws with: depth test, depth write, face culling, blend and color space, applied
+ * before each draw through the state cache of the current context (a state already set is not sent again). The
+ * state is left as the last draw set it; a clear of a view sets what glClear depends on itself.
  */
 public final class RenderState {
     private boolean depthTest;
@@ -17,8 +17,7 @@ public final class RenderState {
     private boolean faceCulling;
     // Level of the renderer: INHERIT takes the one of the view, then of the engine
     private ERenderColorSpace colorSpace = ERenderColorSpace.INHERIT;
-    // The mode of the last apply, undone by restore
-    private boolean linearApplied;
+    private EBlendMode blendMode = EBlendMode.ALPHA;
 
     public RenderState(boolean depthTest, boolean depthWrite, boolean faceCulling) {
         this.depthTest = depthTest;
@@ -58,9 +57,20 @@ public final class RenderState {
         this.colorSpace = Objects.requireNonNull(colorSpace, "colorSpace");
     }
 
-    // Without depth test nothing is written to the depth buffer: the mask matters only with the test
-    private boolean masksDepth() {
-        return depthTest && !depthWrite;
+    public EBlendMode getBlendMode() {
+        return blendMode;
+    }
+
+    public void setBlendMode(EBlendMode blendMode) {
+        this.blendMode = Objects.requireNonNull(blendMode, "blendMode");
+    }
+
+    /**
+     * The OpenGL state of the current context was changed without the engine (raw GL call, third-party library):
+     * every next state change is sent again. Main thread only.
+     */
+    public static void invalidateContextState() {
+        GLContext.currentState().invalidate();
     }
 
     // A gamma draw
@@ -70,32 +80,12 @@ public final class RenderState {
 
     // linear: the resolved mode of the draw (ERenderColorSpace.Resolve), the card encodes what is written in sRGB
     public void apply(boolean linear) {
-        linearApplied = linear;
-        if (linear)
-            glEnable(GL_FRAMEBUFFER_SRGB);
-
-        if (depthTest)
-            glEnable(GL_DEPTH_TEST);
-        else
-            glDisable(GL_DEPTH_TEST);
-
-        if (masksDepth())
-            glDepthMask(false);
-
-        if (faceCulling)
-            glEnable(GL_CULL_FACE);
-        else
-            glDisable(GL_CULL_FACE);
-    }
-
-    // After the draw: the depth mask back to writable, the sRGB encoding back to disabled
-    public void restore() {
-        if (masksDepth())
-            glDepthMask(true);
-
-        if (linearApplied) {
-            glDisable(GL_FRAMEBUFFER_SRGB);
-            linearApplied = false;
-        }
+        GLStateCache state = GLContext.currentState();
+        state.capability(GLStateCache.FRAMEBUFFER_SRGB, linear);
+        state.capability(GLStateCache.DEPTH_TEST, depthTest);
+        // Without depth test nothing is written to the depth buffer: the mask is left writable
+        state.depthMask(!depthTest || depthWrite);
+        state.capability(GLStateCache.CULL_FACE, faceCulling);
+        state.blend(blendMode.isEnabled(), blendMode.source(), blendMode.destination());
     }
 }

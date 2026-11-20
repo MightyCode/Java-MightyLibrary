@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -79,7 +80,7 @@ public final class TextureUploadBench {
     // { time in the calls, time until the card is done } in milliseconds
     private static double[] send(TextureUploader.Variant variant, ByteBuffer pixels, int width, int height) {
         int texture = GenDeleteResources.GenTexture();
-        glBindTexture(GL_TEXTURE_2D, texture);
+        GLContext.currentState().bindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
         glFinish();
 
@@ -102,7 +103,7 @@ public final class TextureUploadBench {
         glFinish();
         long totalNanos = System.nanoTime() - start;
 
-        glBindTexture(GL_TEXTURE_2D, 0);
+        GLContext.currentState().bindTexture(GL_TEXTURE_2D, 0);
         GenDeleteResources.DeleteTexture(texture);
 
         return new double[] { callNanos / 1e6, totalNanos / 1e6 };

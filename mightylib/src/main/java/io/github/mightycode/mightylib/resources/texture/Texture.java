@@ -1,12 +1,12 @@
 package io.github.mightycode.mightylib.resources.texture;
 
+import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.surface.IGLBindable;
 import io.github.mightycode.mightylib.graphics.surface.TextureParameters;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.Views;
-import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -86,11 +86,10 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
     @Override
     public final void bindRenderTexture(int texturePos) {
         // Active the texture to right position
-        glActiveTexture(GL_TEXTURE0 + texturePos);
+        GLContext.currentState().activeTexture(texturePos);
         if (isLoaded()){
             checkVersion();
-            glBindTexture(textureType, textureId);
-            EngineStats.countTextureBind();
+            GLContext.currentState().bindTexture(textureType, textureId);
 
             // Called for each draw: avoid building the message when checks are disabled
             if (Logger.isGLErrorCheck())
@@ -100,10 +99,9 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             // Same target as this texture: a rectangle sampler can't read a 2D texture
             int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? placeholders().fallbackRectangleId(resources) : -1;
             if (rectangleId != -1)
-                glBindTexture(GL_TEXTURE_RECTANGLE, rectangleId);
+                GLContext.currentState().bindTexture(GL_TEXTURE_RECTANGLE, rectangleId);
             else
-                glBindTexture(GL_TEXTURE_2D, getFallbackId());
-            EngineStats.countTextureBind();
+                GLContext.currentState().bindTexture(GL_TEXTURE_2D, getFallbackId());
         }
     }
 
@@ -138,7 +136,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
         if (pendingId == -1) {
             pendingId = GenDeleteResources.GenTexture();
             pendingVersion = version;
-            glBindTexture(textureType, pendingId);
+            GLContext.currentState().bindTexture(textureType, pendingId);
 
             if (isSentByStrips()) {
                 glTexImage2D(textureType, 0, InternalFormat(data.getColorSpace()), data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
@@ -149,7 +147,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
             }
             Logger.CheckOpenGLError("Send texture again : " + data.getDataName());
         } else {
-            glBindTexture(textureType, pendingId);
+            GLContext.currentState().bindTexture(textureType, pendingId);
         }
 
         if (pendingRows < data.getHeight())
@@ -237,7 +235,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 uploadedWidth = data.getWidth();
                 uploadedHeight = data.getHeight();
 
-                glBindTexture(this.textureType, textureId);
+                GLContext.currentState().bindTexture(this.textureType, textureId);
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType + " , quality type : " + qualityType + " , path : " + data.path() + " width : " + data.getWidth() + " , height : " + data.getHeight());
 
                 if (!isSentByStrips()) {
@@ -252,7 +250,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 glTexImage2D(this.textureType, 0, InternalFormat(data.getColorSpace()), data.getWidth(), data.getHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
                 Logger.CheckOpenGLError("Reserve texture : " + data.getDataName());
             } else {
-                glBindTexture(this.textureType, textureId);
+                GLContext.currentState().bindTexture(this.textureType, textureId);
             }
 
             uploadedRows = sendStrips(uploadedRows, remainingMilliseconds);

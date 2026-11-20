@@ -32,7 +32,7 @@ public final class FallbackShader extends Shader {
         FloatBuffer identity = new Matrix4f().get(BufferUtils.createFloatBuffer(16));
         use();
         for (String matrix : MATRICES) {
-            int link = getLink(matrix);
+            int link = location(matrix);
             if (link != -1)
                 glUniformMatrix4fv(link, false, identity);
         }

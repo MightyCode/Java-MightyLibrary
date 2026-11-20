@@ -24,7 +24,8 @@ public final class GenDeleteResources {
     private static Set<Integer> PBOs;
 
     private static Set<Integer> Textures;
-
+    // Programs are shared between the contexts, like buffers and textures
+    private static Set<Integer> Programs;
 
     private GenDeleteResources(){}
 
@@ -35,7 +36,8 @@ public final class GenDeleteResources {
         PixelBufferObject,
         Texture,
         FramebufferObject,
-        RenderBufferObject
+        RenderBufferObject,
+        Program
     }
 
     public static void Init() {
@@ -47,7 +49,7 @@ public final class GenDeleteResources {
         PBOs = new LinkedHashSet<>();
 
         Textures = new LinkedHashSet<>();
-
+        Programs = new LinkedHashSet<>();
 
         Initialized = true;
     }
@@ -140,7 +142,23 @@ public final class GenDeleteResources {
     public static void DeleteTexture(int texture) {
         CheckMainThread("DeleteTexture");
         Textures.remove(texture);
+        // The id can be reused by a new texture, it must not be considered bound anymore
+        GLContext.forgetTexture(texture);
         glDeleteTextures(texture);
+    }
+
+    // A linked program (its stages are transient: deleted once linked, not counted)
+    public static int GenProgram() {
+        CheckMainThread("GenProgram");
+        int program = glCreateProgram();
+        Programs.add(program);
+        return program;
+    }
+
+    public static void DeleteProgram(int program) {
+        CheckMainThread("DeleteProgram");
+        Programs.remove(program);
+        glDeleteProgram(program);
     }
 
     public static int GenFramebuffers() {
@@ -214,6 +232,10 @@ public final class GenDeleteResources {
                 System.out.print("RenderBufferObjects (RBOs): ");
                 TableDebug.printi(PerContext(GLContext::renderbuffers));
                 break;
+            case Program:
+                System.out.print("Programs: ");
+                TableDebug.printi(Programs);
+                break;
             default:
                 System.out.print("Unknown resource type.");
                 break;
@@ -241,6 +263,8 @@ public final class GenDeleteResources {
                 return PerContext(GLContext::framebuffers).size();
             case RenderBufferObject:
                 return PerContext(GLContext::renderbuffers).size();
+            case Program:
+                return Programs.size();
             default:
                 return 0;
         }

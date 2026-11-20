@@ -82,6 +82,8 @@ public final class KeyboardManager {
         glfwSetCharCallback(info.getWindowId(), new GLFWCharCallback() {
             @Override
             public void invoke(long window, int codepoint) {
+                if (RealDevices.isIgnored())
+                    return;
                 incomingText.appendCodePoint(codepoint);
             }
         });
@@ -89,7 +91,7 @@ public final class KeyboardManager {
         glfwSetKeyCallback(info.getWindowId(), new GLFWKeyCallback() {
             @Override
             public void invoke(long window, int key, int scancode, int action, int mods) {
-                if (action != GLFW_RELEASE && key != GLFW_KEY_UNKNOWN)
+                if (action != GLFW_RELEASE && key != GLFW_KEY_UNKNOWN && !RealDevices.isIgnored())
                     // The text that came before it in this tick: the editors put them back in order
                     incomingKeyEvents.add(new KeyEvent(key, scancode, mods, action == GLFW_REPEAT,
                             letterOf(key, scancode, mods), incomingText.length()));
@@ -173,7 +175,10 @@ public final class KeyboardManager {
             throw new IllegalArgumentException("Key must be between " + BEGIN_KEYS + " and " + (KEYS - 1));
     }
 
+    // The real key now (GLFW); never pressed when the real devices are ignored
     private boolean testState(int keyID){
+        if (RealDevices.isIgnored())
+            return false;
         return glfwGetKey(windowInfo.getWindowId(), keyID) == 1;
     }
 

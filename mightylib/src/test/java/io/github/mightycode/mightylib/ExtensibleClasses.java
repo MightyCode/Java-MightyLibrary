@@ -59,8 +59,8 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer",
             // ConsoleView
             "io.github.mightycode.mightylib.scenes.camera.Camera2D",
-            // The lights and Material (3D)
-            "io.github.mightycode.mightylib.graphics.lighting.materials.BasicMaterial",
+            // The lights and PhongMaterial (3D)
+            "io.github.mightycode.mightylib.graphics.lighting.materials.BasicPhongMaterial",
             // NodeIntersection, NodeSubIntersection
             "io.github.mightycode.mightylib.algorithms.graph.NodeContainer",
             // Base of Scene, WindowView, Renderer, DataType, Camera, Collision2D (their id)
