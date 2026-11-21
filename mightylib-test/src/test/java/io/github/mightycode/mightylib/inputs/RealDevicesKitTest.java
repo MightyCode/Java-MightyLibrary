@@ -14,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class RealDevicesKitTest {
     @Test
     void theRealDevicesAreIgnoredWhileATestEngineRuns(@TempDir Path game) {
-        assertFalse(RealDevices.isIgnored());
-
+        // No check before the engine: the idle engine kept by a @MightySceneTest class of the run may still be open
+        // (it ignores the real devices too); starting this one closes it
         try (TestEngine ignored = MightyTest.headless(new EngineConfig().setResourcesFolder(game.toString())).start()) {
             assertTrue(RealDevices.isIgnored());
             // No gamepad of the machine is seen, GLFW is not even asked
