@@ -2,6 +2,10 @@ package io.github.mightycode.mightylib.graphics.game;
 
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
+import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
+import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.map.*;
 import io.github.mightycode.mightylib.resources.texture.Texture;
@@ -84,6 +88,8 @@ public final class TileMapRenderer extends MeshRenderer {
     private static final int NUMBER_INDICES = 4;
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;
+    // The triangles of a tile, like setTilesIndices
+    private static final int[] QUAD_INDICES = {0, 1, 2, 2, 0, 3};
     private final int positionIndex;
     private final int textureIndex;
     private final Vector2f leftUpPosition;
@@ -105,6 +111,18 @@ public final class TileMapRenderer extends MeshRenderer {
     int[] tilesIndices = null;
     float[] tilesTexturePosition = null;
     float[] tilesPosition = null;
+
+    // Index of the compact arrays for the batched draw: the column of each tile, the first tile of each row of each
+    // layer (layer by layer, rows from the top; one more at the end), and the grid they were built with
+    private int[] tilesColumn = new int[0];
+    private int[] rowStarts = new int[]{0};
+    private int builtLayers, builtRows, builtColumns;
+    // Where a tile ends after its start (x, y), as placed by getTilePosition
+    private float tileEndX, tileEndY;
+    // Reused by each batched draw: the clip transform of the map, the box of the view, the visible range
+    private final Matrix4f clip = new Matrix4f();
+    private final Vector4f viewBox = new Vector4f();
+    private final int[] visibleRange = new int[4];
 
     public TileMapRenderer(String shaderName, boolean willChange, String layerCategory) {
         super(shaderName, true);
@@ -218,6 +236,7 @@ public final class TileMapRenderer extends MeshRenderer {
         tilesIndices = new int[tileNumber * 6];
         tilesTexturePosition = new float[tileNumber * 8];
         tilesPosition = new float[tileNumber * 8];
+        tilesColumn = new int[tileNumber];
 
         int rawTileType;
         int tileType;
@@ -225,12 +244,20 @@ public final class TileMapRenderer extends MeshRenderer {
         int layerIndexFrom = tilemap.getLayerCategoryFrom(layerCategory);
         int layerIndexTo = tilemap.getLayerCategoryTo(layerCategory);
 
+        builtLayers = java.lang.Math.max(0, layerIndexTo - layerIndexFrom + 1);
+        builtRows = tilemap.mapHeight();
+        builtColumns = tilemap.mapWidth();
+        rowStarts = new int[builtLayers * builtRows + 1];
+        tileEndX = tileSize.x - (leftUpPosition.x - position().x);
+        tileEndY = tileSize.y - (leftUpPosition.y - position().y);
+
         // Rebuilt from scratch below, otherwise the lists would grow at each reload
         for (AnimatedTile animatedTile : animatedTiles)
             animatedTile.clearConcernedTiles();
 
         for (int layer = layerIndexFrom; layer <= layerIndexTo; ++layer) {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
+                rowStarts[(layer - layerIndexFrom) * builtRows + y] = tileCount;
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
                     rawTileType = tilemap.getTileType(layerCategory, layer, x, y);
 
@@ -258,6 +285,7 @@ public final class TileMapRenderer extends MeshRenderer {
                     tileType = tileSet.getConvertedId(rawTileType);
 
                     setTilesIndices(tilesIndices, tileCount);
+                    tilesColumn[tileCount] = x;
 
                     Vector4f rect = getTilePosition(x, y);
 
@@ -277,9 +305,82 @@ public final class TileMapRenderer extends MeshRenderer {
             }
         }
 
+        rowStarts[rowStarts.length - 1] = tileCount;
+
         getMesh().setEbo(tilesIndices);
         getMesh().updateVbo(tilesTexturePosition, textureIndex);
         getMesh().updateVbo(tilesPosition, positionIndex);
+    }
+
+    /**
+     * Batched (one draw for the layers of its category) when its shader has a batch equivalent: only the tiles in
+     * the view of its camera are written, a cost of the visible tiles, not of the map; the order of the tiles is the
+     * one of the mesh (layer, then row, then column).
+     */
+    @Override
+    protected boolean submitToBatch(DrawBatch2D batch) {
+        if (tilemap == null || !BatchGeometry2D.CanBatch(isDepthTest(), getMesh().getDrawMode()))
+            return false;
+
+        visibleTiles();
+        int firstColumn = visibleRange[0], lastColumn = visibleRange[1];
+        int firstRow = visibleRange[2], lastRow = visibleRange[3];
+        if (firstColumn > lastColumn || firstRow > lastRow)
+            return true;
+
+        int state = batchState(batch);
+        if (state < 0)
+            return false;
+
+        int color = batchColor();
+        Matrix4fc model = modelMatrix();
+        batch.beginDraw(state, getLayer(), getSortDepth());
+        int written = 0;
+        for (int layer = 0; layer < builtLayers; ++layer) {
+            for (int row = firstRow; row <= lastRow; ++row) {
+                int rowIndex = layer * builtRows + row;
+                int end = rowStarts[rowIndex + 1];
+                int tile = TileVisibility.FirstInRow(tilesColumn, rowStarts[rowIndex], end, firstColumn);
+                for (; tile < end && tilesColumn[tile] <= lastColumn; ++tile) {
+                    int at = tile * SIZE_COORDINATES;
+                    for (int corner = 0; corner < NUMBER_INDICES; ++corner) {
+                        float x = tilesPosition[at + 2 * corner];
+                        float y = tilesPosition[at + 2 * corner + 1];
+                        batch.vertex(BatchGeometry2D.TransformX(model, x, y), BatchGeometry2D.TransformY(model, x, y),
+                                tilesTexturePosition[at + 2 * corner], tilesTexturePosition[at + 2 * corner + 1],
+                                color);
+                    }
+                    for (int index = 0; index < SIZE_INDICES; ++index)
+                        batch.index(written + QUAD_INDICES[index]);
+                    written += NUMBER_INDICES;
+                }
+            }
+        }
+        batch.endDraw();
+        return true;
+    }
+
+    // The columns (visibleRange 0, 1) and rows (2, 3) in the view of the camera of the renderer, all without camera
+    private void visibleTiles() {
+        ShaderValue projection = getShaderValue(ShaderUniforms.PROJECTION);
+        ShaderValue view = getShaderValue(ShaderUniforms.VIEW);
+        boolean known = projection != null && view != null && projection.getObject() instanceof Matrix4f
+                && view.getObject() instanceof Matrix4f;
+        if (known) {
+            clip.set((Matrix4f) projection.getObject()).mul((Matrix4f) view.getObject()).mul(modelMatrix());
+            known = TileVisibility.LocalBox(clip, viewBox);
+        }
+
+        if (!known) {
+            visibleRange[0] = 0;
+            visibleRange[1] = builtColumns - 1;
+            visibleRange[2] = 0;
+            visibleRange[3] = builtRows - 1;
+            return;
+        }
+
+        TileVisibility.Range(viewBox.x, viewBox.z, tileSize.x, 0, tileEndX, builtColumns, visibleRange, 0);
+        TileVisibility.Range(viewBox.y, viewBox.w, tileSize.y, 0, tileEndY, builtRows, visibleRange, 2);
     }
 
     public void update(){
@@ -410,6 +511,9 @@ public final class TileMapRenderer extends MeshRenderer {
 
     public void reset() {
         this.tilemap = null;
+        tilesColumn = new int[0];
+        rowStarts = new int[]{0};
+        builtLayers = 0;
         this.tileSetAtlas = null;
         getMesh().setEbo(new int[0]);
         getMesh().updateVbo(new float[0], positionIndex);
