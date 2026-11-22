@@ -53,6 +53,9 @@ public class BatchRenderers2D extends Scene {
     private float zoom = 1f;
     private boolean cameraMoves = true;
     private float counterTimer;
+    private final Vector2f cameraPosition = new Vector2f();
+    // The mode of the batch of the engine when the scene starts, given back when it ends (M changes it)
+    private EBatch2DMode modeAtLaunch;
 
     @Override
     protected String[] getInvolvedBatch() {
@@ -62,6 +65,7 @@ public class BatchRenderers2D extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(52, 189, 235, 1f);
+        modeAtLaunch = engine().batch2DMode();
         hudCamera = camera2D().copy();
 
         mapRenderer = new LayersTileMapRenderer("texture2D", false);
@@ -166,7 +170,7 @@ public class BatchRenderers2D extends Scene {
         if (cameraMoves)
             time += GameTime.DeltaTime();
         camera2D().setZoomLevel(zoom);
-        camera2D().setPos(new Vector2f((float) Math.sin(time * 0.4) * 500, (float) Math.cos(time * 0.3) * 250));
+        camera2D().setPos(cameraPosition.set((float) Math.sin(time * 0.4) * 500, (float) Math.cos(time * 0.3) * 250));
 
         for (Animation2DRenderer animation : animations)
             animation.update();
@@ -210,6 +214,8 @@ public class BatchRenderers2D extends Scene {
     public void unload() {
         super.unload();
 
+        if (modeAtLaunch != null)
+            engine().setBatch2DMode(modeAtLaunch);
         mapRenderer.unload();
         for (Animation2DRenderer animation : animations)
             animation.unload();
