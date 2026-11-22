@@ -94,7 +94,7 @@ public class MeshRenderer extends Renderer {
         if (positions == null)
             return false;
         int vertexCount = positions.length / 2;
-        if (textures != null && textures.length < 2 * vertexCount || colors != null && colors.length < 4 * vertexCount
+        if ((textures != null && textures.length < 2 * vertexCount) || (colors != null && colors.length < 4 * vertexCount)
                 || data.maxIndex() >= vertexCount)
             return false;
 

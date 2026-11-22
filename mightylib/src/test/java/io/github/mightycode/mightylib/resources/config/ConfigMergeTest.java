@@ -3,6 +3,9 @@ package io.github.mightycode.mightylib.resources.config;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.nio.file.Path;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 // The deep merge of the layers of a configuration and the dotted keys
@@ -39,5 +42,11 @@ class ConfigMergeTest {
     @Test
     void pathOfAConfiguration() {
         assertEquals("configs/mightylib/display.json", ConfigData.PathOf("mightylib/display"));
+    }
+
+    @Test
+    void aRootIsNotAConfigurationFile() {
+        Path root = Path.of("").toAbsolutePath().getRoot();
+        assertThrows(IOException.class, () -> ConfigData.WriteAtomically(root, "{}"));
     }
 }

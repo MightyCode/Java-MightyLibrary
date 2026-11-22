@@ -253,9 +253,13 @@ public final class ConfigData extends SingleSourceDataType {
 
     // A temporary file next to it, renamed: the file is never half written
     static void WriteAtomically(Path file, String content) throws IOException {
-        Path parent = file.toAbsolutePath().getParent();
+        Path absolute = file.toAbsolutePath();
+        Path parent = absolute.getParent();
+        Path name = absolute.getFileName();
+        if (parent == null || name == null)
+            throw new IOException("A configuration file can't be a root: " + file);
         Files.createDirectories(parent);
-        Path temporary = Files.createTempFile(parent, file.getFileName().toString(), ".tmp");
+        Path temporary = Files.createTempFile(parent, name.toString(), ".tmp");
         try {
             Files.write(temporary, content.getBytes(StandardCharsets.UTF_8));
             try {

@@ -7,7 +7,6 @@ import io.github.mightycode.mightylib.utils.Logger;
 
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.lwjgl.opengl.GL15C.*;
 import static org.lwjgl.opengl.GL30C.glBindVertexArray;
@@ -37,7 +36,8 @@ final class FormatArrays {
     }
 
     private final GLContext owner = GLContext.current();
-    private final Map<BatchFormat, Arrays> arrays = new IdentityHashMap<>();
+    // By identity: one set of vertex arrays per format object
+    private final IdentityHashMap<BatchFormat, Arrays> arrays = new IdentityHashMap<>();
     // The buffers of the uploader the vertex arrays read (the vertices, the indices, the instances)
     private final int vertexBuffer;
     private final int elementBuffer;

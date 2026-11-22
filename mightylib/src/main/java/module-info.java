@@ -7,6 +7,8 @@
  * "assets/mightylib" (package "assets", not a package of any module, so not encapsulated) then reads it as a path
  * (folder or jar file system), never through the module.
  */
+// jbox2d.library is an automatic module in the public API, required transitive on purpose (docs/later.md)
+@SuppressWarnings("requires-transitive-automatic")
 module io.github.mightycode.mightylib {
     // In the public API (signatures): readable by the modules that read the engine
     requires transitive java.desktop;

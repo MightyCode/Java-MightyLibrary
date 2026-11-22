@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * An engine driven by a test: started from the configuration of the game (same plugins), it only runs when the test
@@ -37,7 +39,7 @@ public final class TestEngine implements AutoCloseable {
     // The engine has a process-wide state (main thread, workers, time): one test engine at a time
     private static final AtomicBoolean RUNNING = new AtomicBoolean();
     // An engine with a window kept between the tests (@MightySceneTest): closed when another engine starts
-    private static TestEngine shared;
+    private static final AtomicReference<TestEngine> SHARED = new AtomicReference<>();
     // The configurations already given to a started engine (weak: forgotten with them)
     private static final Set<EngineConfig> STARTED_CONFIGS = Collections.synchronizedSet(
             Collections.newSetFromMap(new WeakHashMap<>()));
@@ -54,7 +56,8 @@ public final class TestEngine implements AutoCloseable {
     private Engine engine;
     private Views.Scope scope;
     private SceneRunner runner;
-    private long clock;
+    // Read by GameTime from any thread (workers included)
+    private final AtomicLong clock = new AtomicLong();
     private boolean owner;
     private boolean closed;
 
@@ -97,7 +100,7 @@ public final class TestEngine implements AutoCloseable {
         if (!STARTED_CONFIGS.add(config))
             throw new IllegalStateException("This EngineConfig already started a test engine: give a new one to each"
                     + " engine (a Supplier<EngineConfig>, as the JUnit annotations do)");
-        TestEngine idle = shared;
+        TestEngine idle = SHARED.get();
         if (idle != null && idle != this)
             idle.close();
         if (!RUNNING.compareAndSet(false, true))
@@ -115,8 +118,8 @@ public final class TestEngine implements AutoCloseable {
             config.setDisplay(config.getDisplay().setMode(EWindowMode.WINDOWED).setVsync(false));
         }
 
-        clock = NANOS_PER_SECOND;
-        KitTimeAccess.setClock(() -> clock);
+        clock.set(NANOS_PER_SECOND);
+        KitTimeAccess.setClock(clock::get);
         // Only the simulated inputs: a mouse moved or a key pressed at the machine during the tests changes nothing
         KitInputAccess.setRealDevicesIgnored(true);
 
@@ -145,7 +148,7 @@ public final class TestEngine implements AutoCloseable {
     /** One tick then one frame, without waiting: the time moves by one tick first. */
     public TestEngine step() {
         requireStarted();
-        clock += Math.round((double) NANOS_PER_SECOND / config.getTps());
+        clock.addAndGet(Math.round((double) NANOS_PER_SECOND / config.getTps()));
         KitEngineAccess.tick(engine);
         KitEngineAccess.frame(engine, Long.MAX_VALUE);
         return this;
@@ -170,7 +173,7 @@ public final class TestEngine implements AutoCloseable {
         if (seconds < 0)
             throw new IllegalArgumentException("The time only moves forward");
 
-        clock += Math.round(seconds * (double) NANOS_PER_SECOND);
+        clock.addAndGet(Math.round(seconds * (double) NANOS_PER_SECOND));
         return this;
     }
 
@@ -244,7 +247,7 @@ public final class TestEngine implements AutoCloseable {
 
     // Kept between tests by the JUnit extension: the next engine to start closes it first
     void markShared() {
-        shared = this;
+        SHARED.set(this);
     }
 
     /** With a window: the driver of its scenes and inputs. */
@@ -259,7 +262,7 @@ public final class TestEngine implements AutoCloseable {
 
     /** The time of the manual clock, in seconds (GameTime.currentTime reads it). */
     public float time() {
-        return (float) ((double) clock / NANOS_PER_SECOND);
+        return (float) ((double) clock.get() / NANOS_PER_SECOND);
     }
 
     void requireStarted() {
@@ -286,8 +289,7 @@ public final class TestEngine implements AutoCloseable {
                 KitInputAccess.setRealDevicesIgnored(false);
             } finally {
                 // Whatever failed above, the next test can start an engine
-                if (shared == this)
-                    shared = null;
+                SHARED.compareAndSet(this, null);
                 if (owner)
                     RUNNING.set(false);
             }

@@ -79,7 +79,7 @@ public class BatchRenderers2D extends Scene {
             animation.init(animator);
             animation.setShiftRotation(EDirection.None);
             animation.setScale(new Vector2f(4 + i));
-            animation.setHorizontalFlip(i % 2 == 1);
+            animation.setHorizontalFlip(i % 2 != 0);
             animation.setPosition(new Vector2f(150 + i * 170, 520));
             animations.add(animation);
         }

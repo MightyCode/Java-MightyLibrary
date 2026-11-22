@@ -109,7 +109,7 @@ public final class ShaderLoader extends ResourceLoader {
                 result.put(name, null);
         }
 
-        return result;
+        return Collections.unmodifiableMap(result);
     }
 
     private boolean isTagIn(JSONArray array, String tag){
