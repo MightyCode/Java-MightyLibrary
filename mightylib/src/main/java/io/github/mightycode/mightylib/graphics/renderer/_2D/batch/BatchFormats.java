@@ -52,6 +52,27 @@ public final class BatchFormats {
             .template(new float[]{-1, -1, -1, 1, 1, 1, 1, -1}, new int[]{0, 1, 2, 0, 2, 3})
             .build();
 
+    /**
+     * Program of the geometric shapes (2D/shape/stroke2DBatchV.glsl), per vertex: the attributes of stroke2DV.glsl
+     * (base, extrusion, coverage, paint), then the values of its shape (rows of the 2D affine model, size, fill and
+     * stroke colors, stroke width, unit, antialiasing and textured, texture position, bounding box): shapes of other
+     * widths and colors share a draw call.
+     */
+    public static final BatchFormat STROKE = BatchFormat.builder("stroke")
+            .vertex("aBase", 2, EBatchAttributeType.FLOAT)
+            .vertex("aExtrusion", 4, EBatchAttributeType.FLOAT)
+            .vertex("aCoverage", 4, EBatchAttributeType.FLOAT)
+            .vertex("aPaint", 2, EBatchAttributeType.FLOAT)
+            .vertex("aModel0", 3, EBatchAttributeType.FLOAT)
+            .vertex("aModel1", 3, EBatchAttributeType.FLOAT)
+            .vertex("aSize", 2, EBatchAttributeType.FLOAT)
+            .vertex("aColor", 1, EBatchAttributeType.INT)
+            .vertex("aStrokeColor", 1, EBatchAttributeType.INT)
+            .vertex("aStroke", 4, EBatchAttributeType.FLOAT)
+            .vertex("aTexturePosition", 4, EBatchAttributeType.FLOAT)
+            .vertex("aBounds", 4, EBatchAttributeType.FLOAT)
+            .build();
+
     private static BatchFormat.Builder shape(String name, String placeName, int placeComponents) {
         return BatchFormat.builder(name)
                 .vertex("aCorner", 2, EBatchAttributeType.FLOAT)
@@ -79,6 +100,7 @@ public final class BatchFormats {
                 EngineResources.REGULAR_POLYGON_2D_BATCH, EngineResources.GRID_2D_BATCH})
             formats.put(shape, SHAPE);
         formats.put(EngineResources.POINTS_2D_BATCH, POINT);
+        formats.put(EngineResources.STROKE_2D_BATCH, STROKE);
         return formats;
     }
 }

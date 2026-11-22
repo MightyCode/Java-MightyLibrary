@@ -48,6 +48,7 @@
                 "regularPolygon2DBatch",
                 "grid2DBatch",
                 "points2DBatch",
+                "stroke2DBatch",
                 "multiColoredShape2D",
                 "coloredText",
                 "postProcessing",

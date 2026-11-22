@@ -47,6 +47,8 @@ public final class EngineResources {
     public static final String REGULAR_POLYGON_2D_BATCH = "regularPolygon2DBatch";
     public static final String GRID_2D_BATCH = "grid2DBatch";
     public static final String POINTS_2D_BATCH = "points2DBatch";
+    // Batch program of the geometric shapes (BatchFormats.STROKE): stroke2D links to it
+    public static final String STROKE_2D_BATCH = "stroke2DBatch";
     public static final String MULTI_COLORED_SHAPE_2D = "multiColoredShape2D";
     public static final String COLORED_TEXT = "coloredText";
     public static final String POST_PROCESSING = "postProcessing";
@@ -61,7 +63,7 @@ public final class EngineResources {
             ROUNDED_RECTANGLE_2D, CIRCLE_2D, ELLIPSE_2D, TRIANGLE_2D, ARC_2D, REGULAR_POLYGON_2D,
             POINTS_2D, GRID_2D, STROKE_2D, SPRITE_2D, SPRITE_2D_INSTANCED,
             ROUNDED_RECTANGLE_2D_BATCH, CIRCLE_2D_BATCH, ELLIPSE_2D_BATCH, TRIANGLE_2D_BATCH, ARC_2D_BATCH,
-            REGULAR_POLYGON_2D_BATCH, GRID_2D_BATCH, POINTS_2D_BATCH,
+            REGULAR_POLYGON_2D_BATCH, GRID_2D_BATCH, POINTS_2D_BATCH, STROKE_2D_BATCH,
             MULTI_COLORED_SHAPE_2D, COLORED_TEXT, POST_PROCESSING,
             COLOR_SHAPE_3D, TEXTURE_3D, SKYBOX, MULTI_COLORED_LIGHTING_3D, TEXTURE_MULTIPLE_LIGHTS_3D);
 

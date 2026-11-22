@@ -167,7 +167,7 @@ public final class PointsRenderer extends VectorShape2DRenderer {
 
     // One instance per point: its center, the values of the renderer
     @Override
-    void writeBatchInstances(DrawBatch2D batch, int fill) {
+    void writeBatchDraw(DrawBatch2D batch, int fill) {
         for (Vector2f point : points) {
             BatchGeometry2D.WriteModelRows(batch, modelMatrix());
             batch.put(point.x, point.y);

@@ -151,7 +151,7 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
 
     /**
      * Batched when its shader links to a batch program of the format of the shape (BatchFormats.SHAPE, POINT for
-     * PointsRenderer), its depth test is off and its model stays in the plane (BatchGeometry2D.IsAffine2D): one
+     * PointsRenderer, STROKE for the geometric shapes), its depth test is off and its model stays in the plane (BatchGeometry2D.IsAffine2D): one
      * instance with the values updateShader sends (a value a subclass sends itself in updateShader is not in it).
      */
     @Override
@@ -166,7 +166,7 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         computeValues();
         int fill = batchColor();
         batch.beginDraw(state, getLayer(), getSortDepth());
-        writeBatchInstances(batch, fill);
+        writeBatchDraw(batch, fill);
         batch.endDraw();
         return true;
     }
@@ -176,11 +176,28 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         return BatchFormats.SHAPE;
     }
 
-    // The instances of the draw: one for the shape
-    void writeBatchInstances(DrawBatch2D batch, int fill) {
+    // The values of the draw (between beginDraw and endDraw): one instance for the shape
+    void writeBatchDraw(DrawBatch2D batch, int fill) {
         BatchGeometry2D.WriteModelRows(batch, modelMatrix());
         batch.put(size.x, size.y, reference.x, reference.y);
         writeInstanceValues(batch, fill);
+    }
+
+    // The size of the shape, the values of the stroke: read by the subclasses for their draw
+    final Vector2f batchSize() {
+        return size;
+    }
+
+    final Vector4f batchTexturePosition() {
+        return texturePosition;
+    }
+
+    final boolean batchTextured() {
+        return isTextured();
+    }
+
+    final ShapeStroke batchStroke() {
+        return stroke;
     }
 
     // What follows the place of the instance in BatchFormats.SHAPE and POINT

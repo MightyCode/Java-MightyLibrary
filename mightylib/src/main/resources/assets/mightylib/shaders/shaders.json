@@ -134,7 +134,15 @@
 				"2D/shape/stroke2DV.glsl",
 				"2D/shape/stroke2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "stroke2DBatch"
+		},
+		"stroke2DBatch": {
+			"files": [
+				"2D/shape/stroke2DBatchV.glsl",
+				"2D/shape/stroke2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
 		},
 		"texture2D": {
 			"files": [
