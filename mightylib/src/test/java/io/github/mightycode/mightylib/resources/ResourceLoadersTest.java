@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.shader.ShaderData;
 import io.github.mightycode.mightylib.graphics.shader.ShaderLoader;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
@@ -52,6 +53,11 @@ class ResourceLoadersTest {
 
         @Override
         public String batchInstancedShader(String shaderName) {
+            return null;
+        }
+
+        @Override
+        public BatchFormat batchFormat(String batchShaderName) {
             return null;
         }
 

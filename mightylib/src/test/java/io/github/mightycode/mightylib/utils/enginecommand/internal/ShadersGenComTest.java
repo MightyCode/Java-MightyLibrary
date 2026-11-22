@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.utils.enginecommand.internal;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.registry.Identifier;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
@@ -42,6 +43,11 @@ class ShadersGenComTest {
 
         @Override
         public String batchInstancedShader(String shaderName) {
+            return null;
+        }
+
+        @Override
+        public BatchFormat batchFormat(String batchShaderName) {
             return null;
         }
 

@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * What a plugin registers, by section (resources, commands, inputs, scenes, services, lifecycle), during IPlugin.register only. Each plugin
+ * What a plugin registers, by section (resources, commands, inputs, scenes, services, shaders, lifecycle), during IPlugin.register only. Each plugin
  * gets its own registry, bound to its namespace: it registers identifiers of its namespace only, and replaces those of
  * the others explicitly (replace). Pure data: no GL, no engine.
  */
@@ -18,6 +18,7 @@ public final class EngineRegistry {
     private final InputsSection inputs;
     private final ScenesSection scenes;
     private final ServicesSection services;
+    private final ShadersSection shaders;
     private final LifecycleSection lifecycle;
 
     private EngineRegistry(Registrations registrations, String namespace, ClassLoader classLoader) {
@@ -28,6 +29,7 @@ public final class EngineRegistry {
         inputs = new InputsSection(registrations, this);
         scenes = new ScenesSection(registrations, this);
         services = new ServicesSection(registrations, this);
+        shaders = new ShadersSection(registrations, namespace);
         lifecycle = new LifecycleSection(registrations, namespace);
     }
 
@@ -108,6 +110,11 @@ public final class EngineRegistry {
     public ServicesSection services() {
         registrations.checkOpen();
         return services;
+    }
+
+    public ShadersSection shaders() {
+        registrations.checkOpen();
+        return shaders;
     }
 
     public LifecycleSection lifecycle() {

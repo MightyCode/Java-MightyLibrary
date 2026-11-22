@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -88,6 +89,14 @@ public final class BatchGenCom extends BaseCommand {
                     for (String cause : causes.keySet())
                         message.append(" ").append(shortName(cause)).append(" x")
                                 .append(causes.getJSONObject(cause).optInt("count"));
+                }
+
+                // The batch formats of the draw calls (a format cuts the runs)
+                JSONObject formats = view.optJSONObject("formats");
+                if (formats != null && !formats.isEmpty()) {
+                    message.append(", formats");
+                    for (String format : new TreeSet<>(formats.keySet()))
+                        message.append(" ").append(format).append(" x").append(formats.optInt(format));
                 }
             }
         }

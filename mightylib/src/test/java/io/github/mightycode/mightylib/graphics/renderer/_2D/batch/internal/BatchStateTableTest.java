@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 
@@ -9,9 +11,20 @@ import static org.junit.jupiter.api.Assertions.*;
 class BatchStateTableTest {
     private static final class Part implements IBatchMaterial {
         private final int content;
+        private final BatchFormat format;
 
         Part(int content) {
+            this(content, BatchFormats.SPRITE);
+        }
+
+        Part(int content, BatchFormat format) {
             this.content = content;
+            this.format = format;
+        }
+
+        @Override
+        public BatchFormat format() {
+            return format;
         }
 
         @Override
@@ -19,7 +32,7 @@ class BatchStateTableTest {
 
         @Override
         public boolean equals(Object other) {
-            return other instanceof Part && ((Part) other).content == content;
+            return other instanceof Part && ((Part) other).content == content && ((Part) other).format == format;
         }
 
         @Override
@@ -39,6 +52,19 @@ class BatchStateTableTest {
         assertEquals(first, table.materialPart(new Part(1)));
         assertEquals(2, table.materialParts());
         assertEquals(new Part(2), table.materialPartById(second));
+    }
+
+    // The format is a part of the state: the same content in another format is another state, its format read back
+    @Test
+    void anotherFormatIsAnotherState() {
+        BatchStateTable table = new BatchStateTable();
+        int camera = table.camera(new Matrix4f(), new Matrix4f());
+        int sprite = table.state(table.materialPart(new Part(1)), camera, false);
+        int instanced = table.state(table.materialPart(new Part(1, BatchFormats.SPRITE_INSTANCED)), camera, false);
+
+        assertNotEquals(sprite, instanced);
+        assertSame(BatchFormats.SPRITE, table.formatOf(sprite));
+        assertSame(BatchFormats.SPRITE_INSTANCED, table.formatOf(instanced));
     }
 
     @Test

@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchMaterial;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
@@ -19,9 +21,12 @@ import java.util.Objects;
  * materials that draw alike share their batched draws.
  */
 final class MaterialBatchPart implements IBatchMaterial {
+    private final Batches2D batches;
     private final Shader shader;
+    private final BatchFormat format;
     // Of the runs of quads drawn by instances, null when the shader has none ("batchInstanced")
     private final Shader instancedShader;
+    private final BatchFormat instancedFormat;
     private final IRenderTextureBindable mainTexture;
     // Units 1 to MAX_TEXTURE_CHANNELS, null when none
     private final IRenderTextureBindable[] channels;
@@ -42,10 +47,14 @@ final class MaterialBatchPart implements IBatchMaterial {
     private final Vector2f viewportSize = new Vector2f();
     private final ShaderValue viewport = new ShaderValue(ShaderUniforms.VIEWPORT_SIZE, Vector2f.class, viewportSize);
 
-    MaterialBatchPart(Shader shader, Shader instancedShader, IRenderTextureBindable mainTexture,
+    MaterialBatchPart(Batches2D batches, Shader shader, BatchFormat format, Shader instancedShader,
+                      BatchFormat instancedFormat, IRenderTextureBindable mainTexture,
                       IRenderTextureBindable[] channels, RenderState state, Material values) {
+        this.batches = Objects.requireNonNull(batches, "batches");
         this.shader = Objects.requireNonNull(shader, "shader");
+        this.format = Objects.requireNonNull(format, "format");
         this.instancedShader = instancedShader;
+        this.instancedFormat = instancedFormat;
         this.mainTexture = Objects.requireNonNull(mainTexture, "mainTexture");
         this.channels = channels;
         depthTest = state.isDepthTest();
@@ -59,6 +68,7 @@ final class MaterialBatchPart implements IBatchMaterial {
         renderState.setBlendMode(blendMode);
 
         int h = System.identityHashCode(shader);
+        h = 31 * h + System.identityHashCode(format);
         h = 31 * h + System.identityHashCode(instancedShader);
         h = 31 * h + System.identityHashCode(mainTexture);
         h = 31 * h + (channels == null ? 0 : identityHash(channels));
@@ -81,8 +91,20 @@ final class MaterialBatchPart implements IBatchMaterial {
     }
 
     @Override
+    public BatchFormat format() {
+        return format;
+    }
+
+    @Override
+    public BatchFormat instancedFormat() {
+        return instancedFormat;
+    }
+
+    // Its program loaded and reading its format (otherwise the quads are drawn by vertices)
+    @Override
     public boolean hasInstanced() {
-        return instancedShader != null && instancedShader.isLoaded();
+        return instancedShader != null && instancedShader.isLoaded()
+                && batches.readsFormat(instancedShader, instancedFormat);
     }
 
     @Override
@@ -135,7 +157,8 @@ final class MaterialBatchPart implements IBatchMaterial {
             return false;
 
         MaterialBatchPart part = (MaterialBatchPart) other;
-        return hash == part.hash && shader == part.shader && instancedShader == part.instancedShader
+        return hash == part.hash && shader == part.shader && format == part.format
+                && instancedShader == part.instancedShader
                 && mainTexture == part.mainTexture
                 && sameObjects(channels, part.channels) && depthTest == part.depthTest
                 && depthWrite == part.depthWrite && faceCulling == part.faceCulling && blendMode == part.blendMode
@@ -163,7 +186,7 @@ final class MaterialBatchPart implements IBatchMaterial {
 
     @Override
     public String toString() {
-        return "MaterialBatchPart[" + shader.getName() + ", " + mainTexture.getClass().getSimpleName()
+        return "MaterialBatchPart[" + shader.getName() + ", " + format.name() + ", " + mainTexture.getClass().getSimpleName()
                 + (channels == null ? "" : ", channels " + Arrays.stream(channels).filter(Objects::nonNull).count())
                 + ", " + blendMode + (values == null ? "" : ", values v" + valuesVersion) + "]";
     }

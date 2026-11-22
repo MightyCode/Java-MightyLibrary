@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.main;
 import io.github.mightycode.mightylib.console.Console;
 import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.color.ColorService;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.shader.ShaderService;
 import io.github.mightycode.mightylib.inputs.EngineActions;
 import io.github.mightycode.mightylib.inputs.InputManager;
@@ -24,6 +26,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.internal.ListGeneralCo
 
 import org.json.JSONObject;
 
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
@@ -76,7 +79,10 @@ final class EnginePlugin implements IPlugin {
         registry.services().sceneManager(SceneManager::new).inputManager(InputManager::new);
 
         // No fallback: it fails only on a shaders.json that can't be read
-        registry.services().register(EngineServices.SHADERS, engine -> new ShaderService(engine.resources()));
+        registry.services().register(EngineServices.SHADERS,
+                engine -> new ShaderService(engine.resources(), engine.registrations().batchFormats()));
+        for (Map.Entry<String, BatchFormat> format : BatchFormats.engineFormats().entrySet())
+            registry.shaders().batchFormat(format.getKey(), format.getValue());
 
         // No fallback: it can't fail
         registry.services().register(EngineServices.COLORS, engine -> new ColorService(engine.config().getColorSpace(), engine.resources()));

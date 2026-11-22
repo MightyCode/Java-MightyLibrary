@@ -27,7 +27,8 @@ class BatchGenComTest {
                 .put("whileSorted", 1));
         JSONObject view = new JSONObject().put("view", "MyScene").put("draws", 1000).put("drawCalls", 3)
                 .put("barriers", 2).put("barriersWhileSorted", 1).put("sortKey", "layerThenDepth")
-                .put("barrierCauses", causes).put("shownLastFrame", true);
+                .put("barrierCauses", causes).put("shownLastFrame", true)
+                .put("formats", new JSONObject().put("sprite", 2).put("circle", 1));
         // A scene left, its batch not collected yet: its last frame is an old one
         JSONObject left = new JSONObject().put("view", "LeftScene").put("draws", 500).put("drawCalls", 2)
                 .put("barriers", 0).put("sortKey", JSONObject.NULL).put("barrierCauses", new JSONObject())
@@ -57,6 +58,8 @@ class BatchGenComTest {
         assertTrue(result.getMessage().contains("sorted by layerThenDepth (1 barriers cut the sort)"),
                 result.getMessage());
         assertTrue(result.getMessage().contains("MyRenderer x2"), result.getMessage());
+        // The draw calls by batch format, sorted by name
+        assertTrue(result.getMessage().contains("formats circle x1 sprite x2"), result.getMessage());
         assertEquals("orphan", result.getData().getString("mode"));
         // A view not displayed in the last frame is in the data only
         assertFalse(result.getMessage().contains("LeftScene"), result.getMessage());

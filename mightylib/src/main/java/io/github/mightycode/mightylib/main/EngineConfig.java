@@ -59,6 +59,7 @@ public final class EngineConfig {
     private boolean openGLErrorCheck;
     private ERenderColorSpace colorSpace = ERenderColorSpace.GAMMA;
     private EBatch2DMode batch2DMode = EBatch2DMode.ORPHAN;
+    private boolean debugDraw = true;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
     // Commands of the player: unset (null) gives DEV in debug mode, none in release
     private boolean commandAccessSet;
@@ -217,6 +218,18 @@ public final class EngineConfig {
     }
 
     public static final String BATCH_2D_PROPERTY = "mightylib.batch2D";
+
+    /**
+     * The debug drawings (IView.debugDraw) recorded and drawn at the start (true by default, in release too), then
+     * changed by the command debugdraw. The system property DEBUG_DRAW_PROPERTY (-Dmightylib.debugDraw=on|off)
+     * overrides it.
+     */
+    public EngineConfig setDebugDraw(boolean debugDraw) {
+        this.debugDraw = debugDraw;
+        return this;
+    }
+
+    public static final String DEBUG_DRAW_PROPERTY = "mightylib.debugDraw";
 
     /**
      * Development: a folder on the disk replaces the classpath source of the engine (its files in the jar, under
@@ -582,6 +595,24 @@ public final class EngineConfig {
         System.err.println("--" + BATCH_2D_PROPERTY + " : unknown value ->" + property
                 + "<-, expected off, orphan, ring or instanced");
         return batch2DMode;
+    }
+
+    // The property wins over the configuration; an unknown value is ignored, with a line in the log
+    public boolean isDebugDraw() {
+        String property = System.getProperty(DEBUG_DRAW_PROPERTY);
+        if (property == null)
+            return debugDraw;
+
+        switch (property.trim().toLowerCase(Locale.ROOT)) {
+            case "on":
+                return true;
+            case "off":
+                return false;
+            default:
+                System.err.println("--" + DEBUG_DRAW_PROPERTY + " : unknown value ->" + property
+                        + "<-, expected on or off");
+                return debugDraw;
+        }
     }
 
     // Launch option -Dmightylib.sound=silent: no device is opened; another value is ignored, with a line in the log

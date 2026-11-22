@@ -16,6 +16,21 @@ public final class BatchGeometry2D {
         return !depthTest && drawMode == EDrawMode.Triangles;
     }
 
+    /**
+     * The model keeps the plane z = 0 (a translation, rotation and scale in it, any z translation): what the batch
+     * programs of instances rebuild from its two rows (WriteModelRows).
+     */
+    public static boolean IsAffine2D(Matrix4fc model) {
+        return model.m02() == 0f && model.m12() == 0f && model.m03() == 0f && model.m13() == 0f
+                && model.m23() == 0f && model.m33() == 1f;
+    }
+
+    // The two rows of the 2D affine model: m00 m10 m30, then m01 m11 m31 (instance attributes of 3 floats each)
+    public static void WriteModelRows(DrawBatch2D batch, Matrix4fc model) {
+        batch.put(model.m00(), model.m10(), model.m30());
+        batch.put(model.m01(), model.m11(), model.m31());
+    }
+
     // The x of the 2D position (x, y) by the model, like the vertex shaders of the 2D renderers
     public static float TransformX(Matrix4fc model, float x, float y) {
         return model.m00() * x + model.m10() * y + model.m30();

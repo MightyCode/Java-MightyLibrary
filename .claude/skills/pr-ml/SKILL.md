@@ -13,7 +13,7 @@ L'argument est la branche (par défaut la branche courante), suivie éventuellem
 La PR est ouverte **après** l'analyse, les corrections et les docs, pas avant : sa description reflète l'état final, l'historique de la PR ne contient pas les allers-retours de correction, et ce qui n'a pas encore été relu n'est pas publié.
 
 ## 1. État
-- `git status --short` (propre, sinon demander quoi en faire), `git fetch`, `git branch --show-current`. Jamais de PR depuis `dev` ni `master` ; sur `dev` avec des modifications : demander l'objectif, créer la branche de sujet d'après lui.
+- `git status --short` (propre, sinon demander quoi en faire ; sauf les fichiers de `.idea/` hors `workspace.xml` : les commiter sans demander, règle Git de `CLAUDE.md`), `git fetch`, `git branch --show-current`. Jamais de PR depuis `dev` ni `master` ; sur `dev` avec des modifications : demander l'objectif, créer la branche de sujet d'après lui.
 - `git log --oneline dev..<branche>` et `git diff --stat dev...<branche>`.
 - Un plan existe-t-il (`docs/plan/`, sa section « Bilan ») ? Le lire en entier : il décrit ce que la branche devait faire et ce qui est à vérifier à la main.
 

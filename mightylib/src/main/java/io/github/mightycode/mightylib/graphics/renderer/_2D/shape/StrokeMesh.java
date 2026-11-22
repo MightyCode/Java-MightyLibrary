@@ -32,6 +32,10 @@ final class StrokeMesh {
     private final List<float[]> paints = new ArrayList<>();
     private final List<int[]> indexParts = new ArrayList<>();
     private int vertexCount;
+    // The attributes sent by the last upload, kept for the batch
+    private float[] uploadedExtrusions = new float[0];
+    private float[] uploadedCoverages = new float[0];
+    private float[] uploadedPaints = new float[0];
 
     // Bounding box of the bases: min x, min y, width, height
     private float minX, minY, maxX, maxY;
@@ -149,9 +153,25 @@ final class StrokeMesh {
 
     // The attributes other than the bases, sent to the vertex buffers of this mesh
     void upload(Mesh mesh) {
-        mesh.updateVbo(concat(extrusions, vertexCount * 4), extrusionIndex);
-        mesh.updateVbo(concat(coverages, vertexCount * 4), coverageIndex);
-        mesh.updateVbo(concat(paints, vertexCount * 2), paintIndex);
+        uploadedExtrusions = concat(extrusions, vertexCount * 4);
+        uploadedCoverages = concat(coverages, vertexCount * 4);
+        uploadedPaints = concat(paints, vertexCount * 2);
+        mesh.updateVbo(uploadedExtrusions, extrusionIndex);
+        mesh.updateVbo(uploadedCoverages, coverageIndex);
+        mesh.updateVbo(uploadedPaints, paintIndex);
+    }
+
+    // The attributes of the last upload (not copies: read only)
+    float[] uploadedExtrusions() {
+        return uploadedExtrusions;
+    }
+
+    float[] uploadedCoverages() {
+        return uploadedCoverages;
+    }
+
+    float[] uploadedPaints() {
+        return uploadedPaints;
     }
 
     private static float[] concat(List<float[]> parts, int total) {

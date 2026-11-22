@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 
-import io.github.mightycode.mightylib.graphics.internal.GLContext;
-import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -9,32 +8,36 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.List;
 
 import static org.lwjgl.opengl.GL15C.*;
 import static org.lwjgl.opengl.GL30C.*;
 import static org.lwjgl.opengl.GL32C.*;
 
 /**
- * Mode RING: one buffer for the vertices and the indices, written in turn like a ring without waiting for the GPU
- * (glMapBufferRange unsynchronized). Each flush writes a block (its vertices, then its indices) after the previous
- * one, wrapping to the start when the end is reached; a fence is put after the draws of each block, and a block is
- * written again only once the fences of what it covers are passed. A flush bigger than the ring makes it grow.
+ * Mode RING: one buffer for the vertices, the indices and the instances, written in turn like a ring without waiting
+ * for the GPU (glMapBufferRange unsynchronized). Each flush writes a block (its vertices, its indices, its instances)
+ * after the previous one, wrapping to the start when the end is reached; a fence is put after the draws of each block,
+ * and a block is written again only once the fences of what it covers are passed. A flush bigger than the ring makes
+ * it grow. The attributes of each format are pointed at the block (no base vertex: the formats have their own sizes).
  */
 final class RingUploader implements IBatchUploader {
     private static final long INITIAL_BYTES = 1024 * 1024;
     // Signaled fences are checked when this many blocks wait (keeps the queue short with many small flushes)
     private static final int CHECK_SIGNALED_FROM = 16;
     private static final long WAIT_NANOS = 1_000_000_000L;
+    // Start of a block: a multiple of the largest alignment the attributes need
+    private static final long BLOCK_ALIGNMENT = 16;
 
-    private final GLContext owner;
-    private final int vao;
     private final int buffer;
+    private final FormatArrays arrays;
     private long capacity = INITIAL_BYTES;
     private long head;
 
     // The block of the current flush
-    private long vertexStart;
+    private long blockStart;
     private long indexStart;
+    private long instanceStart;
 
     // Blocks still maybe read by the GPU, oldest first
     private final RingBlocks blocks = new RingBlocks();
@@ -42,30 +45,24 @@ final class RingUploader implements IBatchUploader {
     private boolean unmapFailureReported;
 
     RingUploader() {
-        owner = GLContext.current();
-        vao = GenDeleteResources.GenVertexArrays();
         buffer = GenDeleteResources.GenBuffers();
-
-        glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
         glBufferData(GL_ARRAY_BUFFER, capacity, GL_STREAM_DRAW);
-        OrphanUploader.SetVertexLayout(0);
-        // The same buffer holds the indices
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
-        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        // The same buffer holds the vertices, the indices and the instances
+        arrays = new FormatArrays(buffer, buffer, buffer);
         Logger.CheckOpenGLError("Create the ring buffer of the 2D batch");
     }
 
     @Override
-    public void upload(ByteBuffer vertices, int vertexCount, IntBuffer indices, int indexCount) {
-        long vertexBytes = (long) vertexCount * DrawBatch2D.VERTEX_BYTES;
-        long indexBytes = (long) indexCount * Integer.BYTES;
-        long size = vertexBytes + indexBytes;
+    public void upload(ByteBuffer vertices, IntBuffer indices, ByteBuffer instances) {
+        long vertexBytes = vertices.remaining();
+        long indexBytes = (long) indices.remaining() * Integer.BYTES;
+        long instanceBytes = instances.remaining();
+        long size = vertexBytes + indexBytes + instanceBytes;
 
-        glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, buffer);
-        // The vertices start on a whole vertex (the base vertex of the draws), the indices follow on 4 bytes
-        long start = roundUp(head, DrawBatch2D.VERTEX_BYTES);
+        long start = roundUp(head, BLOCK_ALIGNMENT);
         if (size > capacity) {
             grow(size);
             start = 0;
@@ -84,19 +81,23 @@ final class RingUploader implements IBatchUploader {
             Logger.CheckOpenGLError("Map the ring buffer of the 2D batch");
             glBufferSubData(GL_ARRAY_BUFFER, start, vertices);
             glBufferSubData(GL_ARRAY_BUFFER, start + vertexBytes, indices);
+            glBufferSubData(GL_ARRAY_BUFFER, start + vertexBytes + indexBytes, instances);
         } else {
             long address = MemoryUtil.memAddress(mapped);
             MemoryUtil.memCopy(MemoryUtil.memAddress(vertices), address, vertexBytes);
             MemoryUtil.memCopy(MemoryUtil.memAddress(indices), address + vertexBytes, indexBytes);
+            MemoryUtil.memCopy(MemoryUtil.memAddress(instances), address + vertexBytes + indexBytes, instanceBytes);
             if (!glUnmapBuffer(GL_ARRAY_BUFFER) && !unmapFailureReported) {
                 // The content was lost (display mode change...): the next flushes write it again
                 unmapFailureReported = true;
                 System.err.println("--Ring buffer of the 2D batch: content lost while mapped, drawn once wrong");
             }
         }
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        vertexStart = start;
+        blockStart = start;
         indexStart = start + vertexBytes;
+        instanceStart = indexStart + indexBytes;
         head = start + size;
         EngineStats.countBufferUpload(size);
         if (Logger.isGLErrorCheck())
@@ -150,17 +151,27 @@ final class RingUploader implements IBatchUploader {
     }
 
     @Override
-    public void draw(int firstIndex, int indexCount) {
+    public void draw(BatchFormat format, int firstIndex, int indexCount) {
         EngineStats.countDrawCall();
-        glDrawElementsBaseVertex(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT,
-                indexStart + (long) firstIndex * Integer.BYTES, (int) (vertexStart / DrawBatch2D.VERTEX_BYTES));
+        arrays.draw(format, blockStart, indexStart + (long) firstIndex * Integer.BYTES, indexCount);
+    }
+
+    @Override
+    public void drawInstances(BatchFormat format, int firstByte, int count) {
+        EngineStats.countDrawCall();
+        arrays.drawInstances(format, instanceStart + firstByte, count);
+    }
+
+    // The vertex arrays of the registered formats, made at the creation of the uploader
+    void prepare(List<BatchFormat> formats) {
+        arrays.prepare(formats);
     }
 
     // The block is read by the draws just sent: a fence after them
     @Override
     public void flushEnded() {
-        blocks.add(vertexStart, head, glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
-        glBindVertexArray(0);
+        blocks.add(blockStart, head, glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
+        arrays.unbind();
     }
 
     // Blocks waiting for the GPU (tests, command batch)
@@ -173,12 +184,13 @@ final class RingUploader implements IBatchUploader {
     }
 
     void delete() {
-        GenDeleteResources.DeleteVertexArrays(owner, vao);
+        arrays.delete(true);
         deleteBuffers();
     }
 
-    // The fences and the buffer (shared objects), with a context current
+    // The fences and the buffers (shared objects), with a context current; the vertex arrays died with their context
     void deleteBuffers() {
+        arrays.delete(false);
         while (blocks.count() > 0)
             popBlock(false);
         GenDeleteResources.DeleteBuffers(buffer);

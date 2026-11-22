@@ -1,5 +1,11 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
+import org.joml.Matrix4fc;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
 
 /*
@@ -15,6 +21,9 @@ abstract class GeometricShape2DRenderer extends VectorShape2DRenderer {
 
     private boolean geometryDirty;
     private boolean builtWithStroke;
+    // The bases and indices of the last geometry built, for the batch
+    private float[] batchBases = new float[0];
+    private int[] batchIndices = new int[0];
 
     GeometricShape2DRenderer(String shaderName) {
         super(shaderName);
@@ -47,6 +56,8 @@ abstract class GeometricShape2DRenderer extends VectorShape2DRenderer {
             buildGeometry(strokeMesh, withStroke);
             strokeMesh.writeBounds(bounds);
             strokeMesh.upload(getMesh());
+            batchBases = strokeMesh.bases();
+            batchIndices = strokeMesh.indices();
             updateShapeIndices();
             updateShapePosition();
             updateShapeTexture();
@@ -58,6 +69,43 @@ abstract class GeometricShape2DRenderer extends VectorShape2DRenderer {
             return;
 
         super.display();
+    }
+
+    @Override
+    BatchFormat batchFormat() {
+        return BatchFormats.STROKE;
+    }
+
+    // Its vertices with the values of the shape on each, then its triangles
+    @Override
+    void writeBatchDraw(DrawBatch2D batch, int fill) {
+        float[] extrusions = strokeMesh.uploadedExtrusions();
+        float[] coverages = strokeMesh.uploadedCoverages();
+        float[] paints = strokeMesh.uploadedPaints();
+        Matrix4fc model = modelMatrix();
+        Vector2f size = batchSize();
+        Vector4f texture = batchTexturePosition();
+        ShapeStroke stroke = batchStroke();
+        int strokeColor = stroke.color().toIntRGBA();
+        float width = stroke.width(), unit = stroke.unit().shaderValue(), antialiased = isAntialiasing() ? 1f : 0f;
+        float textured = batchTextured() ? 1f : 0f;
+
+        int count = batchBases.length / 2;
+        for (int i = 0; i < count; ++i) {
+            batch.put(batchBases[2 * i], batchBases[2 * i + 1]);
+            batch.put(extrusions[4 * i], extrusions[4 * i + 1], extrusions[4 * i + 2], extrusions[4 * i + 3]);
+            batch.put(coverages[4 * i], coverages[4 * i + 1], coverages[4 * i + 2], coverages[4 * i + 3]);
+            batch.put(paints[2 * i], paints[2 * i + 1]);
+            BatchGeometry2D.WriteModelRows(batch, model);
+            batch.put(size.x, size.y);
+            batch.putInt(fill);
+            batch.putInt(strokeColor);
+            batch.put(width, unit, antialiased, textured);
+            batch.put(texture.x, texture.y, texture.z, texture.w);
+            batch.put(bounds.x, bounds.y, bounds.z, bounds.w);
+        }
+        for (int index : batchIndices)
+            batch.index(index);
     }
 
     @Override

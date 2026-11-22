@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.main;
 
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.color.PictureSettings;
+import io.github.mightycode.mightylib.graphics.debug.DebugDraw2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -41,6 +42,11 @@ public interface IView {
 
     // The 2D batch of the draws of the view (Scene, WindowView); null (the default): every renderer draws alone
     default DrawBatch2D batch2D() {
+        return null;
+    }
+
+    // The debug drawings of the view, drawn over it at the end of its display (Scene, WindowView); null: none
+    default DebugDraw2D debugDraw() {
         return null;
     }
 }

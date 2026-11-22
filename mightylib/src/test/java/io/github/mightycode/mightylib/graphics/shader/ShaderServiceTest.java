@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.main.MainThreadTestAccess;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
@@ -18,6 +20,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ShaderServiceTest {
+    // The batch programs of the lists of these tests have a format
+    private static final Map<String, BatchFormat> FORMATS = Map.of("sprite", BatchFormats.SPRITE,
+            "spriteI", BatchFormats.SPRITE_INSTANCED, "mySprite", BatchFormats.SPRITE);
+
     private static void writeList(Path root, String json) throws IOException {
         Files.createDirectories(root.resolve("shaders"));
         Files.writeString(root.resolve("shaders/shaders.json"), json);
@@ -28,7 +34,7 @@ class ShaderServiceTest {
         for (int i = 0; i < roots.length; ++i)
             sources[i] = new FolderSource(roots[i]);
 
-        return new ShaderService(ResourceSources.of(sources), () -> {});
+        return new ShaderService(ResourceSources.of(sources), () -> {}, FORMATS);
     }
 
     // A higher source adds shaders and replaces those of the same name, entry by entry
@@ -88,6 +94,22 @@ class ShaderServiceTest {
         assertNull(service.batchShader("notAName"));
     }
 
+    // A batch program without format (registry.shaders().batchFormat) can't be read: its shaders are drawn alone
+    @Test
+    void aBatchProgramWithoutFormatIsNotLinked(@TempDir Path root) throws IOException {
+        writeList(root, "{\"shaders\": {"
+                + "\"sprite\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"batch2D\"]},"
+                + "\"noFormat\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"batch2D\"]},"
+                + "\"a\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"noFormat\"},"
+                + "\"b\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [], \"batch\": \"sprite\"}}}");
+        ShaderService service = service(root);
+
+        assertNull(service.batchShader("a"));
+        assertEquals("sprite", service.batchShader("b"));
+        assertSame(BatchFormats.SPRITE, service.batchFormat("sprite"));
+        assertNull(service.batchFormat("noFormat"));
+    }
+
     // A higher source makes a shader of the engine batched, or links it to its own batch shader
     @Test
     void batchLinksFollowTheMergedEntries(@TempDir Path low, @TempDir Path high) throws IOException {
@@ -142,7 +164,7 @@ class ShaderServiceTest {
     private ShaderService counting(Path root) throws IOException {
         MainThreadTestAccess.setCurrentAsMain();
         writeList(root, "{\"shaders\": {}}");
-        return new ShaderService(ResourceSources.of(new FolderSource(root)), () -> ++reloads);
+        return new ShaderService(ResourceSources.of(new FolderSource(root)), () -> ++reloads, FORMATS);
     }
 
     // Globals sorted by name, then those of the entry, which win over a global of the same name

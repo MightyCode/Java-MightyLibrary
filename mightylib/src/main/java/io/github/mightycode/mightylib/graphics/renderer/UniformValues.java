@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -85,8 +86,14 @@ final class UniformValues {
 
     // Every value has one of these names
     boolean onlyNames(Set<String> names) {
+        return onlyNames(names, Collections.emptySet());
+    }
+
+    // Every value is named in one of the two sets
+    boolean onlyNames(Set<String> names, Set<String> others) {
         for (Entry entry : entries) {
-            if (!names.contains(entry.value.getName()))
+            String name = entry.value.getName();
+            if (!names.contains(name) && !others.contains(name))
                 return false;
         }
 

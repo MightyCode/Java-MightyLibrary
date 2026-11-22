@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.graphics.internal.LiveObjects;
 import io.github.mightycode.mightylib.graphics.internal.RefCount;
 import io.github.mightycode.mightylib.graphics.internal.SharedObjects;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.graphics.shader.Shader;
@@ -82,6 +83,9 @@ public final class Material implements IUniformTarget {
     // Its instanced equivalent ("batchInstanced"), null when none
     private Shader batchInstancedShader;
     private ShaderSink batchInstancedSink;
+    // The formats they read (registry.shaders().batchFormat)
+    private BatchFormat batchFormat;
+    private BatchFormat batchInstancedFormat;
     private BatchStateTable batchTable;
     private int batchGeneration;
     private int batchVersion;
@@ -443,6 +447,9 @@ public final class Material implements IUniformTarget {
             resolveBatchShader();
         if (batchShader == null || !batchShader.isLoaded())
             return -1;
+        Batches2D batches = Batches2D.of(glResources);
+        if (!batches.readsFormat(batchShader, batchFormat))
+            return -1;
 
         if (table == batchTable && table.partsGeneration() == batchGeneration && version == batchVersion
                 && shader.programStamp() == batchProgramStamp)
@@ -450,11 +457,10 @@ public final class Material implements IUniformTarget {
 
         boolean readsTextures = shader.samplesTextures();
         batchReadsColor = shader.location(ShaderUniforms.COLOR) != -1;
-        IRenderTextureBindable unit0 = readsTextures && mainTexture != null ? mainTexture
-                : Batches2D.of(glResources).whiteTexture();
+        IRenderTextureBindable unit0 = readsTextures && mainTexture != null ? mainTexture : batches.whiteTexture();
         IRenderTextureBindable[] channels = readsTextures && textures != null ? textures.clone() : null;
-        MaterialBatchPart part = new MaterialBatchPart(batchShader, batchInstancedShader, unit0, channels,
-                renderState, values.size() > 0 ? this : null);
+        MaterialBatchPart part = new MaterialBatchPart(batches, batchShader, batchFormat, batchInstancedShader,
+                batchInstancedFormat, unit0, channels, renderState, values.size() > 0 ? this : null);
 
         batchPartId = table.materialPart(part);
         batchTable = table;
@@ -474,9 +480,11 @@ public final class Material implements IUniformTarget {
 
         batchShader = (Shader) glResources.acquire(resources.getResourceOrFallback(ShaderData.class, batchName), true);
         batchSink = new ShaderSink(batchShader);
+        batchFormat = Views.engine().shaders().batchFormat(batchName);
 
         String instancedName = Views.engine().shaders().batchInstancedShader(name);
         if (instancedName != null) {
+            batchInstancedFormat = Views.engine().shaders().batchFormat(instancedName);
             batchInstancedShader = (Shader) glResources.acquire(
                     resources.getResourceOrFallback(ShaderData.class, instancedName), true);
             batchInstancedSink = new ShaderSink(batchInstancedShader);

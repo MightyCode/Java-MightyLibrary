@@ -16,7 +16,9 @@ import org.lwjgl.system.MemoryStack;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +52,8 @@ public class Shader extends GLElement {
     private long programStamp;
     // The current program has an active sampler uniform
     private boolean samplesTextures;
+    // The active vertex attributes of the current program (empty before the first one)
+    private List<ShaderAttribute> attributes = Collections.emptyList();
 
     // These belong to the current program: emptied with each new program
     // Values sent, by location, to skip those unchanged
@@ -197,6 +201,7 @@ public class Shader extends GLElement {
         programVersion = version;
         programStamp = ++NextProgramStamp;
         samplesTextures = ReadsTextures(newProgram);
+        attributes = ReadAttributes(newProgram);
         build = null;
         afterLink();
     }
@@ -218,6 +223,30 @@ public class Shader extends GLElement {
         }
 
         return false;
+    }
+
+    // The active vertex attributes of a linked program
+    private static List<ShaderAttribute> ReadAttributes(int program) {
+        int count = glGetProgrami(program, GL_ACTIVE_ATTRIBUTES);
+        List<ShaderAttribute> read = new ArrayList<>(count);
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer size = stack.mallocInt(1);
+            IntBuffer type = stack.mallocInt(1);
+            for (int i = 0; i < count; ++i) {
+                String name = glGetActiveAttrib(program, i, size, type);
+                read.add(new ShaderAttribute(name, glGetAttribLocation(program, name), type.get(0)));
+            }
+        }
+
+        return Collections.unmodifiableList(read);
+    }
+
+    /**
+     * The active vertex attributes of the current program (empty before it is linked; a new list with each new
+     * program): checked against the format of a batch program (BatchFormat.check).
+     */
+    public List<ShaderAttribute> attributes() {
+        return attributes;
     }
 
     // The GL types of the samplers (1D to cube arrays, shadow, integer, rectangle, buffer, multisample)

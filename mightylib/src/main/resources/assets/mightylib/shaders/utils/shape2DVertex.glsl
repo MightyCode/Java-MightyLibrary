@@ -2,14 +2,34 @@
 // The quad of the shape (unit square of Shape2DRenderer, moved by its reference point, then model) is widened by the
 // outer part of the stroke and one pixel of anti-aliasing; the fragment shader works in the frame of the shape
 // (origin at its center, world units, axes of the shape), independent of the camera.
-// Every parameter reaches the fragment shader through an out: a batch will give them per instance instead.
+// Every parameter reaches the fragment shader through an out: a batch program gives them per instance instead.
 // Replaceable by a higher source (game, mod): keep the names of the functions and of the outs.
 #include "utils/colorsManipulation.glsl"
 
 uniform mat4 projection;
 uniform mat4 view;
-uniform mat4 model;
 uniform vec2 mlViewportSize;
+
+// The values of one shape: uniforms of shape2DV.glsl, or globals that a batch program fills from the attributes of
+// each instance before calling shapeVertex (SHAPE_BATCH, 2D/shape/shape2DInstancedV.glsl)
+#ifdef SHAPE_BATCH
+// The same values as the uniforms below
+mat4 model;
+vec2 shapeSize;
+vec2 shapeReference;
+int color;
+int strokeColor;
+float strokeWidth;
+float strokeAlignment;
+float strokeUnit;
+float antialiasing;
+float shapeMargin;
+vec4 shapeTexturePosition;
+int shapeTextured;
+vec4 shapeParams0;
+vec4 shapeParams1;
+#else
+uniform mat4 model;
 
 // Size of the shape (its scale) and its reference point (0..1 of the size, the point at its position)
 uniform vec2 shapeSize;
@@ -31,6 +51,7 @@ uniform int shapeTextured;
 // Parameters of the shape itself, read by its fragment shader
 uniform vec4 shapeParams0;
 uniform vec4 shapeParams1;
+#endif
 
 // Position in the frame of the shape: world units, origin at its center
 out vec2 shapeLocal;

@@ -1,6 +1,10 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -154,6 +158,21 @@ public final class PointsRenderer extends VectorShape2DRenderer {
     @Override
     protected float[] calculateTexturePosition() {
         return new float[points.size() * 8];
+    }
+
+    @Override
+    BatchFormat batchFormat() {
+        return BatchFormats.POINT;
+    }
+
+    // One instance per point: its center, the values of the renderer
+    @Override
+    void writeBatchDraw(DrawBatch2D batch, int fill) {
+        for (Vector2f point : points) {
+            BatchGeometry2D.WriteModelRows(batch, modelMatrix());
+            batch.put(point.x, point.y);
+            writeInstanceValues(batch, fill);
+        }
     }
 
     @Override
