@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.registry;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -76,6 +77,15 @@ final class Entries<K, V> {
         }
 
         return values;
+    }
+
+    // Keys to values, in registration order: a new map
+    Map<K, V> toMap() {
+        Map<K, V> map = new LinkedHashMap<>();
+        for (Map.Entry<K, Entry<V>> entry : entries.entrySet())
+            map.put(entry.getKey(), entry.getValue().value);
+
+        return map;
     }
 
     // Null if the key is not registered

@@ -1,5 +1,8 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatchAttributeType;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FakeLoader;
 import io.github.mightycode.mightylib.resources.source.FolderSource;
@@ -117,6 +120,27 @@ class EngineRegistryTest {
         assertEquals(List.of(gameHelp), registrations.commands("game"));
         assertSame(gameLoader, registrations.loaders().get(0));
         assertEquals(2, registrations.loaders().size());
+    }
+
+    // The formats of the batch programs: by shader name, a collision names both plugins, a later plugin replaces
+    @Test
+    void batchFormatsByShaderName() {
+        BatchFormat mine = BatchFormat.builder("mine").vertex("aPos", 2, EBatchAttributeType.FLOAT).build();
+        Registrations registrations = EngineRegistry.Collect(
+                engine(registry -> registry.shaders().batchFormat("sprite2D", BatchFormats.SPRITE)
+                        .batchFormat("other", BatchFormats.SPRITE)),
+                List.of(plugin("game", registry -> registry.shaders().replaceBatchFormat("other", mine)
+                        .batchFormat("myShape", mine))));
+
+        assertEquals(List.of("sprite2D", "other", "myShape"), List.copyOf(registrations.batchFormats().keySet()));
+        assertSame(mine, registrations.batchFormats().get("other"));
+
+        IllegalStateException twice = assertThrows(IllegalStateException.class, () -> EngineRegistry.Collect(
+                engine(registry -> registry.shaders().batchFormat("sprite2D", BatchFormats.SPRITE)),
+                List.of(plugin("game", registry -> registry.shaders().batchFormat("sprite2D", mine)))));
+        assertTrue(twice.getMessage().contains("mightylib") && twice.getMessage().contains("game"));
+        assertThrows(IllegalStateException.class, () -> EngineRegistry.Collect(EMPTY_ENGINE,
+                List.of(plugin("game", registry -> registry.shaders().replaceBatchFormat("none", mine)))));
     }
 
     @Test

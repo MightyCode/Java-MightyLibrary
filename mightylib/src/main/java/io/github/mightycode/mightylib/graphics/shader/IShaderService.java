@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.shader;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.services.IEngineService;
 import org.apiguardian.api.API;
 import org.json.JSONObject;
@@ -16,7 +17,7 @@ import static org.apiguardian.api.API.Status.EXPERIMENTAL;
  */
 @API(status = EXPERIMENTAL)
 public interface IShaderService extends IEngineService {
-    // Tag of a shader that draws a 2D batch (fixed vertex format: position, UV, color RGBA8)
+    // Tag of a shader that draws a 2D batch (its format: registry.shaders().batchFormat)
     String BATCH_2D_TAG = "batch2D";
     // Tag of a shader that draws a 2D batch of sprite quads by instances
     String BATCH_2D_INSTANCED_TAG = "batch2DInstanced";
@@ -30,7 +31,8 @@ public interface IShaderService extends IEngineService {
 
     /**
      * The batch equivalent of a shader: the "batch" field of its entry, when it names a declared shader tagged
-     * BATCH_2D_TAG; null otherwise (no field, unknown or untagged target: the shader is drawn alone). Any thread.
+     * BATCH_2D_TAG with a batch format; null otherwise (no field, unknown or untagged target, no format: the shader is
+     * drawn alone). Any thread.
      */
     String batchShader(String shaderName);
 
@@ -39,6 +41,9 @@ public interface IShaderService extends IEngineService {
      * shader tagged BATCH_2D_INSTANCED_TAG; null otherwise. Any thread.
      */
     String batchInstancedShader(String shaderName);
+
+    /** The format a batch program reads (registry.shaders().batchFormat), null when none. Any thread. */
+    BatchFormat batchFormat(String batchShaderName);
 
     // Logical folder of the shaders in the sources of the resources, ending with '/' (an include not found next to
     // its file is searched there)

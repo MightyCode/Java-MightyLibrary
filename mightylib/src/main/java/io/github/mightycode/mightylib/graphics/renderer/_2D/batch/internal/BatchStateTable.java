@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import org.joml.Matrix4f;
 
 import java.util.Arrays;
@@ -11,9 +12,9 @@ import java.util.Map;
  * The states of the batched draws of one engine, as ints: comparing two draws is comparing two ints.
  * <p>
  * A state packs four parts, high to low: the generation of the table (4 low bits, to refuse a state kept across a
- * reset), the material part (an IBatchMaterial interned by its content, 16 bits), the camera slot (10 bits) and the
- * color mode (1 bit). A camera slot is the camera of the draws whose matrices are the
- * same objects (Camera.getProjection, getView): its content is copied, and updated in place when it changed while no
+ * reset), the material part (an IBatchMaterial interned by its content, its format included, 16 bits), the camera
+ * slot (10 bits) and the color mode (1 bit). A camera slot is the camera of the draws whose matrices are the same
+ * objects (Camera.getProjection, getView): its content is copied, and updated in place when it changed while no
  * draw of the slot waits in a batch; changed while draws of it wait (a camera moved between two draws of a view), the
  * slot is retired and a new one made, so the waiting draws keep the camera they were asked with.
  * <p>
@@ -108,6 +109,11 @@ public final class BatchStateTable implements IGLSharedState {
     public void apply(int state) {
         int camera = cameraOf(state);
         parts[materialPartOf(state)].apply(isLinear(state), projections[camera], views[camera]);
+    }
+
+    // The format of the draws of the state (the one of its batch program)
+    public BatchFormat formatOf(int state) {
+        return parts[materialPartOf(state)].format();
     }
 
     // The quads of the state can be drawn by instances now

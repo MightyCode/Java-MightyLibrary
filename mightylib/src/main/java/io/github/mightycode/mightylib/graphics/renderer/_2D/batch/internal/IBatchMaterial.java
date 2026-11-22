@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import org.joml.Matrix4f;
 
 /**
@@ -16,7 +17,15 @@ public interface IBatchMaterial {
      */
     void apply(boolean linear, Matrix4f projection, Matrix4f view);
 
-    // Its draws of quads can be drawn by instances now (an instanced batch program, loaded)
+    // What its batch program reads: its draws are written in this format (another format is another part)
+    BatchFormat format();
+
+    // The format of its instanced batch program (hasInstanced), null when none
+    default BatchFormat instancedFormat() {
+        return null;
+    }
+
+    // Its draws of quads can be drawn by instances now (an instanced batch program, loaded, reading its format)
     default boolean hasInstanced() {
         return false;
     }

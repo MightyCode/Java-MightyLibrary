@@ -41,13 +41,10 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * Low level, for a renderer of its own: beginDraw with a state, vertex and index, endDraw (or quad). Main thread only.
  */
 public final class DrawBatch2D {
-    /** Bytes of a vertex: position (2 floats, transformed), texture coordinates (2 floats), color (RGBA8). */
-    public static final int VERTEX_BYTES = 20;
-    /**
-     * Bytes of an instance (mode INSTANCED): the rows of the affine transform of the unit quad (6 floats), the texture
-     * coordinates at its corner (0, 0) and along its axes (6 floats), color (RGBA8).
-     */
-    public static final int INSTANCE_BYTES = 52;
+    /** Bytes of a vertex of BatchFormats.SPRITE: position (2 floats, transformed), texture coordinates, color. */
+    public static final int VERTEX_BYTES = BatchFormats.SPRITE.vertexBytes();
+    /** Bytes of an instance of BatchFormats.SPRITE_INSTANCED (mode INSTANCED: quads of sprites as instances). */
+    public static final int INSTANCE_BYTES = BatchFormats.SPRITE_INSTANCED.instanceBytes();
     /** Low bits of a sort key replaced by the index of the draw in its segment (IDrawSortKey). */
     public static final int CALL_INDEX_BITS = 24;
     public static final long CALL_INDEX_MASK = (1L << CALL_INDEX_BITS) - 1;

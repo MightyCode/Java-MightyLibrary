@@ -4,8 +4,10 @@ import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.internal.IPendingDraws;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
+import io.github.mightycode.mightylib.graphics.shader.Shader;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -42,6 +44,8 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     private final List<BatchContext> orphaned = new ArrayList<>();
     // The batches of the views and their names (weak: a view no longer used takes its batch with it)
     private final Map<DrawBatch2D, String> views = new WeakHashMap<>();
+    // The batch programs checked against their format: the program stamp checked, and whether it reads it
+    private final Map<Shader, FormatCheck> formatChecks = new WeakHashMap<>();
 
     private Batches2D(EBatch2DMode mode) {
         this.mode = Objects.requireNonNull(mode, "mode");
@@ -78,6 +82,36 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
 
     public BatchStateTable table() {
         return table;
+    }
+
+    /**
+     * The current program of this batch program reads this format (BatchFormat.check), checked once per program
+     * (a hot reload is checked again): otherwise one error line, and the draws of its shaders are drawn alone.
+     */
+    public boolean readsFormat(Shader program, BatchFormat format) {
+        FormatCheck check = formatChecks.get(program);
+        if (check == null || check.stamp != program.programStamp() || check.format != format) {
+            String error = format.check(program.attributes());
+            if (error != null)
+                System.err.println("--Batch program " + program.getName() + ": " + error
+                        + ", the shaders linked to it are drawn alone");
+            check = new FormatCheck(program.programStamp(), format, error == null);
+            formatChecks.put(program, check);
+        }
+
+        return check.reads;
+    }
+
+    private static final class FormatCheck {
+        final long stamp;
+        final BatchFormat format;
+        final boolean reads;
+
+        FormatCheck(long stamp, BatchFormat format, boolean reads) {
+            this.stamp = stamp;
+            this.format = format;
+            this.reads = reads;
+        }
     }
 
     // A frame of the engine starts, before its windows are displayed
@@ -232,6 +266,7 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
         orphaned.clear();
         last = null;
         whiteTexture = null;
+        formatChecks.clear();
         table.delete();
     }
 }

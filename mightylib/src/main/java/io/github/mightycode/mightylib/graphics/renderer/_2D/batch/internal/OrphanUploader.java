@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.utils.GenDeleteResources;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
@@ -10,8 +11,6 @@ import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.GL15C.*;
-import static org.lwjgl.opengl.GL20C.glEnableVertexAttribArray;
-import static org.lwjgl.opengl.GL20C.glVertexAttribPointer;
 import static org.lwjgl.opengl.GL30C.glBindVertexArray;
 
 /**
@@ -46,15 +45,10 @@ final class OrphanUploader implements IBatchUploader {
         Logger.CheckOpenGLError("Create the buffers of the 2D batch");
     }
 
-    // The fixed format of DrawBatch2D on the buffer bound to GL_ARRAY_BUFFER, from offset, in the bound vertex array
+    // The format of sprite2D on the buffer bound to GL_ARRAY_BUFFER, from offset, in the bound vertex array
     static void SetVertexLayout(long offset) {
-        int stride = DrawBatch2D.VERTEX_BYTES;
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, stride, offset);
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, stride, offset + 8);
-        glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, true, stride, offset + 16);
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
+        BatchLayouts.PointAttributes(BatchFormats.SPRITE, false, offset);
+        BatchLayouts.EnableAttributes(BatchFormats.SPRITE, false);
     }
 
     @Override

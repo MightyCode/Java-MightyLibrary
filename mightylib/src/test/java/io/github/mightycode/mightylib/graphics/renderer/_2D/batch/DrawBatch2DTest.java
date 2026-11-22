@@ -31,6 +31,11 @@ class DrawBatch2DTest {
         }
 
         @Override
+        public BatchFormat format() {
+            return BatchFormats.SPRITE;
+        }
+
+        @Override
         public void apply(boolean linear, Matrix4f projection, Matrix4f view) {
             log.add("apply " + name);
         }

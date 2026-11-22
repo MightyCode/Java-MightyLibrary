@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.test;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer.RenderState;
@@ -44,6 +46,11 @@ class DrawBatch2DGLTest {
             this.name = name;
             this.shader = shader;
             this.white = white;
+        }
+
+        @Override
+        public BatchFormat format() {
+            return BatchFormats.SPRITE;
         }
 
         @Override

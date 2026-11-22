@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.registry;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.inputs.IInputManagerFactory;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.resources.DataType;
@@ -31,6 +32,7 @@ public final class Registrations {
     final Entries<Identifier, InputsSection.Input> inputs = new Entries<>("Input", Identifier::toString);
     final Entries<Identifier, ScenesSection.SceneEntry> scenes = new Entries<>("Scene", Identifier::toString);
     final Entries<ServiceKey<?>, ServiceDeclaration<?>> services = new Entries<>("Service", ServiceKey::toString);
+    final Entries<String, BatchFormat> batchFormats = new Entries<>("Batch format of the shader", name -> name);
     final Replaceable<ISceneManagerFactory> sceneManagerFactory = new Replaceable<>("Scene manager factory");
     final Replaceable<IInputManagerFactory> inputManagerFactory = new Replaceable<>("Input manager factory");
     final LifecycleHooks lifecycle = new LifecycleHooks();
@@ -132,6 +134,11 @@ public final class Registrations {
                 player.close();
             throw e;
         }
+    }
+
+    // The batch format of each batch program, by shader name (a new map)
+    public Map<String, BatchFormat> batchFormats() {
+        return Collections.unmodifiableMap(batchFormats.toMap());
     }
 
     // The loaders of every plugin, in registration order
