@@ -116,3 +116,19 @@ Décisions prises :
 
 ### Discussion B2 — relecture, PR, fusion (`/pr-ml feature/batch-format-2d`)
 - Le skill `/pr-ml` décrit tout le processus ; il supprime ce plan. Vérifications manuelles : celles du « Bilan A2 ».
+
+## Bilan A1
+**Fait** (étapes 1 à 7, un commit par étape) : `Animation2DRenderer`, `MeshRenderer` générique (`Mesh.keepCpuData`, `MeshCpuData`), atlas des polices en 2D, `Text`, `TileMapRenderer` (tuiles visibles) passent au lot ; `GraphRenderer`, `NodesRenderer`, `MatrixRenderer` aussi ; scène `BatchRenderers2D` ; docs listées mises à jour pour A1.
+
+**Écarts au plan**
+- `ConsoleView` a maintenant son lot (envoyé à la fin de la console, overlay et fenêtre) : sans lui le texte de la console restait dessiné seul.
+- Nouveau `"qualityType": "linear"` (linéaire sans mipmaps) pour les atlas des polices : `realistic` ajoutait des mipmaps. `"textureType": "rectangle"` supprimé de `textures.json`.
+- Géométrie commune dans `batch/internal/BatchGeometry2D` (`CanBatch`, transformation, écriture des triangles) plutôt que dans `Shape2DRenderer`.
+- Test GL des tuiles dans la démo (`TileMapBatchGLTest`, sa carte `map`) ; helpers GL partagés `BatchPictures` dans le kit.
+- Texte regroupé identique au pixel seulement si l'atlas est blanc (ceux du moteur) ; un atlas coloré d'un jeu serait différent en gamma (`textureIn`).
+- Bug trouvé, noté dans `later.md` : `TileMapRenderer` avec une référence autre que `LeftUp`.
+- Le chemin de Maven d'IntelliJ a changé (`plugins/maven-plugin/lib/maven3`) : `MIGHTY_MVN` à définir ; `CLAUDE.md` et `scenario.py` à corriger (hors sujet).
+
+**Vérifié** : `mvn test` complet ; tests GL au pixel (`off` = `orphan` = `ring` = `instanced`) pour animations, maillages, textes, carte ; en jeu `Scene2D` et console comparées avant/après à la capture, `stats`/`batch` (console : 17 dessins en 2 appels ; `Scene2D` : la carte n'est plus une barrière), `leakcheck BatchRenderers2D` sans fuite.
+
+**À vérifier à la main** : `Scene2D` (carte en déplacement et zoom, slime) ; console ouverte (texte identique) ; `BatchRenderers2D` : M pour passer de `off` aux autres modes, Space arrête la caméra, Haut/Bas zoom — l'image ne doit pas changer.

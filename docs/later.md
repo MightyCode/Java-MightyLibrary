@@ -44,9 +44,10 @@ Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en 
 
 ## Bugs relevés en passant (non corrigés)
 - **`Material` : ce qui reste** : attributs nommés du `Mesh` (en plus des canaux) si un besoin apparaît ; matériau complet par sous-mesh de `ModelRenderer` (aujourd'hui un matériau de base et des textures par sous-mesh, part de clé par sous-mesh) ; lumières en uniform block partagé (UBO) ; `SkyboxRenderer` lie encore son cubemap lui-même (hors du `Material` et de sa part de clé).
+- **`TileMapRenderer` : référence autre que `LeftUp`** : `getTilePosition` ne décale que le bord droit et bas de chaque tuile par `leftUpPosition - position` (le bord gauche et haut reste), les tuiles changent de taille ; à vérifier avec `setReference(EDirection.None)` et corriger.
 - **`ColorSpaceSplit3D` ne s'affiche pas pareil selon la scène précédente** (≈ 3 % de l'image, jusqu'à 37 niveaux d'écart, déjà sur `dev`) : ouverte directement ou après `TerrainGeneration3D` ; l'état de la caméra entre deux scènes est le suspect.
 - **`network` n'est pas sûr entre threads** : les drapeaux sont `volatile` et le compteur de messages atomique, mais `receivedMessages` et `messageToSend` (listes et table ordinaires) sont lus et écrits par le thread réseau et par le moteur sans verrou. À reprendre avec le réseau (file concurrente entre les deux), pas avant.
-- Sans démo : `ReducedGraph` / `GraphRenderer` / `NodesRenderer`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
+- Sans démo : `ReducedGraph`, `Screenshot`, `network` (`ClientTcp`/`ServerTcp`), `InputSimulation` (hors commandes).
 - **Configuration réseau mal formée** (`NetworkConfigurationLoader.initWithFile`) : plus de cinq lignes utiles (`ArrayIndexOutOfBoundsException`), une ligne sans `= ` ou un port manquant ou non numérique (`NumberFormatException`) donnent une exception brute au lieu d'une `ResourceException` nommant le fichier et la ligne (comme `TextFormat`) ; un autre type de donnée affiche `ERROR LOAD` sans préfixe `--`. À reprendre avec le réseau.
 
 ## Manuel et documentation de l'API (cap proposé, **points précis à discuter avant de commencer**)
