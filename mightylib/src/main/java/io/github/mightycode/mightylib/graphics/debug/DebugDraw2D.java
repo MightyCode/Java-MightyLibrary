@@ -28,7 +28,8 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * Drawings for debugging, asked from anywhere in the code of a view (IView.debugDraw), without renderer: lines,
  * polylines, rectangles, circles, crosses, arrows, texts, in the coordinates of the world (the 2D camera of the view)
  * or of the screen (EDebugSpace), widths in pixels of the screen. Drawn over everything at the end of the display of
- * the view (before its final pass), in its 2D batch; each lives one frame by default (asked again at each frame), or
+ * the view (before its final pass), in its 2D batch; each lives one frame by default (asked again at each frame; with
+ * several ticks of update in a frame, only those of the last tick are drawn), or
  * as long as its IDebugLifetime says (DebugLifetimes), or until its handle is removed. Dropped when the scene is left
  * or the window closed. Off with the switch of the engine (DebugDraws). Main thread.
  */
@@ -202,6 +203,15 @@ public final class DebugDraw2D {
     }
 
     // ---- Frame ----
+
+    /**
+     * A tick of update of the view starts: the drawings of one frame asked by the previous tick (several ticks in a
+     * frame) are dropped, those of this tick replace them; the others are kept.
+     */
+    @API(status = INTERNAL)
+    public void updateStarted() {
+        queue.endFrame();
+    }
 
     /**
      * End of the display of the view (Scene, WindowView), once per frame: the lifetimes are asked, then the

@@ -64,6 +64,17 @@ class DebugDraw2DTest {
         assertEquals(0, frame());
     }
 
+    // Two ticks of update before a display: the drawings of one frame of the first are replaced by the second's
+    @Test
+    void aNewTickReplacesTheDrawingsOfOneFrame() {
+        draw.line(0, 0, 1, 1, RED);
+        draw.line(EDebugSpace.WORLD, 0, 0, 1, 1, RED, 1, DebugLifetimes.frames(2));
+        draw.updateStarted();
+        assertEquals(1, draw.size());
+        draw.line(0, 0, 2, 2, RED);
+        assertEquals(2, draw.size());
+    }
+
     @Test
     void aDrawingOfNFramesIsDrawnInNFrames() {
         draw.cross(EDebugSpace.WORLD, 0, 0, 4, RED, 1, DebugLifetimes.frames(3));

@@ -383,6 +383,9 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
                 if (loadingScene != null)
                     loadingScene.updateByManager();
             } else {
+                // A new tick: the drawings of one frame asked by the previous tick are replaced by those of this one
+                if (debugDraw != null)
+                    debugDraw.updateStarted();
                 update();
             }
         }

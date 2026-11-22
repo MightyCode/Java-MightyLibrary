@@ -340,6 +340,9 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
 
     final void updateByContext() {
         try (Views.Scope ignored = Views.enter(this)) {
+            // A new tick: the drawings of one frame asked by the previous tick are replaced by those of this one
+            if (debugDraw != null)
+                debugDraw.updateStarted();
             update();
         }
     }
