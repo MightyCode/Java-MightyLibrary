@@ -6,7 +6,6 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="mightylib-parent" />
         <module name="mightylib" />
         <module name="mightylib-demo" />
         <module name="mightylib-test" />
@@ -18,6 +17,7 @@
       <module name="Java-MightyLibrary" options="-Xlint:-exports -Xlint:-requires-automatic" />
       <module name="mightylib" options="-Xlint:-exports -Xlint:-requires-automatic" />
       <module name="mightylib-demo" options="" />
+      <module name="mightylib-parent" options="-Xlint:-exports -Xlint:-requires-automatic" />
       <module name="mightylib-test" options="-Xlint:-exports -Xlint:-requires-automatic" />
     </option>
   </component>
