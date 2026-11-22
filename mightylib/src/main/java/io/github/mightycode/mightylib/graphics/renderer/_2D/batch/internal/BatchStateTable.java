@@ -116,6 +116,11 @@ public final class BatchStateTable implements IGLSharedState {
         return parts[materialPartOf(state)].format();
     }
 
+    // The format of the instanced program of the state (mode INSTANCED), null when none
+    public BatchFormat instancedFormatOf(int state) {
+        return parts[materialPartOf(state)].instancedFormat();
+    }
+
     // The quads of the state can be drawn by instances now
     public boolean hasInstanced(int state) {
         return parts[materialPartOf(state)].hasInstanced();

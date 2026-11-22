@@ -18,6 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,13 +49,26 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     // The batch programs checked against their format: the program stamp checked, and whether it reads it
     private final Map<Shader, FormatCheck> formatChecks = new WeakHashMap<>();
 
-    private Batches2D(EBatch2DMode mode) {
+    // The formats of the batch programs registered: their vertex arrays are made with the buffers of a mode
+    private final List<BatchFormat> formats;
+
+    private Batches2D(EBatch2DMode mode, Collection<BatchFormat> formats) {
         this.mode = Objects.requireNonNull(mode, "mode");
+        this.formats = new ArrayList<>(new LinkedHashSet<>(formats));
     }
 
-    /** The batches of this engine, created with the mode of its configuration at the first call. */
+    /**
+     * The batches of this engine, created with the mode of its configuration and the batch formats of its registry
+     * at the first call.
+     */
     public static Batches2D of(Engine engine) {
-        return engine.glResources().shared(Batches2D.class, () -> new Batches2D(engine.config().getBatch2DMode()));
+        return engine.glResources().shared(Batches2D.class, () -> new Batches2D(engine.config().getBatch2DMode(),
+                engine.registrations() == null ? List.of() : engine.registrations().batchFormats().values()));
+    }
+
+    // The formats whose vertex arrays are made with the buffers of each mode (the others at their first draw)
+    List<BatchFormat> formats() {
+        return formats;
     }
 
     // The batches of the engine of these GL resources, created at its start

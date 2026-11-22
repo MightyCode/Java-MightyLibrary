@@ -29,16 +29,19 @@ import java.util.Objects;
 import static org.apiguardian.api.API.Status.INTERNAL;
 
 /**
- * The 2D draws of a view, sent together: each batched draw writes its vertices (already transformed, in the fixed
- * format of VERTEX_BYTES) when it is asked, then the draws are sent at the next barrier, neighbors of the same state
- * in a single draw call. By default in the order they were asked (nothing sorted, a constant cost per draw); with a
+ * The 2D draws of a view, sent together: each batched draw writes its vertices (already transformed) or its instances
+ * in the format of the batch program of its state (BatchFormat) when it is asked, then the draws are sent at the next
+ * barrier, neighbors of the same state in a single draw call. By default in the order they were asked (nothing sorted, a constant cost per draw); with a
  * sort key (setDrawSortKey), in the order of their keys inside each segment between two barriers.
  * <p>
  * Barriers (the draws asked before are sent): a renderer drawn alone, a clear of the view, a scissor, a framebuffer
  * bound, flush(), the end of the display of the view, too many draws (MAX_DRAWS), a full table of states. Code that calls OpenGL itself
  * between draws calls flush() first (like RenderState.invalidateContextState after).
  * <p>
- * Low level, for a renderer of its own: beginDraw with a state, vertex and index, endDraw (or quad). Main thread only.
+ * Low level, for a renderer of its own: beginDraw with a state, then its values in the order of the attributes of its
+ * format (put, putInt, putColor: each vertex, or each instance for a format with instances, is complete once its
+ * last attribute is written; vertex writes one of BatchFormats.SPRITE), the indices of its triangles (index, formats
+ * without instances), endDraw (or quad). Main thread only.
  */
 public final class DrawBatch2D {
     /** Bytes of a vertex of BatchFormats.SPRITE: position (2 floats, transformed), texture coordinates, color. */
@@ -66,24 +69,47 @@ public final class DrawBatch2D {
     private IBatchTarget target;
     private BatchStateTable table;
 
+    // Vertices of every format: those of a draw start on a multiple of the size of its vertex (its index base)
     private ByteBuffer vertices = BufferUtils.createByteBuffer(256 * VERTEX_BYTES);
-    private int vertexCount;
-    // Indices of the vertices, in the order of the draws
+    private int vertexBytes;
+    // Indices of the vertices (in the vertices of their format), in the order of the draws
     private IntBuffer indices = BufferUtils.createIntBuffer(384);
     private int indexCount;
+    // Instances of the formats with instances, in the order of the draws
+    private ByteBuffer instances = BufferUtils.createByteBuffer(64 * INSTANCE_BYTES);
+    private int instanceBytes;
 
     // The draw being asked
     private boolean inDraw;
     private int drawState;
     private int drawLayer;
     private float drawDepth;
+    private BatchFormat drawFormat;
+    private boolean drawInstanced;
+    // Bytes of a vertex (or an instance) of the format, its values (kinds and offsets), the next one to write
+    private int drawStride;
+    private byte[] drawSlots;
+    private int[] drawSlotOffsets;
+    private int slot;
+    // Bytes used when the draw began (before the padding of its first vertex), the vertex (or instance) written
+    private int drawStartBytes;
+    private int elementAt;
+    // Formats without instances: its first vertex (index base), vertices and first index
     private int drawFirstVertex;
+    private int drawVertexCount;
     private int drawFirstIndex;
+    // Formats with instances: the byte of its first instance, its instances
+    private int drawFirstInstanceByte;
+    private int drawInstanceCount;
 
     // Draws of the segment
     private int drawCount;
 
-    // Draw calls of the segment: in the order of the draws, built while they are asked; sorted, built at the flush
+    /*
+     * Draw calls of the segment: in the order of the draws, built while they are asked; sorted, built at the flush. A
+     * run of a format without instances: its first index and index count; with instances: the byte of its first
+     * instance and its instance count.
+     */
     private int[] runStates = new int[64];
     private int[] runFirsts = new int[64];
     private int[] runCounts = new int[64];
@@ -98,9 +124,10 @@ public final class DrawBatch2D {
     private int[] entryCounts = new int[0];
     private long[] keys = new long[0];
     private IntBuffer sortedIndices;
+    private ByteBuffer sortedInstances;
+    private int sortedInstanceBytes;
 
-    // Mode INSTANCED: the instances of the runs of quads, and the first instance of each run (-1: drawn by vertices)
-    private ByteBuffer instances = BufferUtils.createByteBuffer(64 * INSTANCE_BYTES);
+    // Mode INSTANCED: the byte of the first instance of each run of sprite quads drawn as instances (-1: by vertices)
     private int[] runInstanceFirsts = new int[0];
 
     // Counters of the current frame of the view, and of the last one (rolled by endView)
@@ -180,14 +207,14 @@ public final class DrawBatch2D {
         table.batchStarted();
     }
 
-    /** A draw of this state, layer 0 and depth 0: its vertices and indices follow, then endDraw. */
+    /** A draw of this state, layer 0 and depth 0: its values and indices follow, then endDraw. */
     public void beginDraw(int state) {
         beginDraw(state, 0, 0f);
     }
 
     /**
-     * A draw of this state (asked to this batch, see stateTable): its vertices and indices follow, then endDraw.
-     * Layer and depth are read by the sort key only.
+     * A draw of this state (asked to this batch, see stateTable): its values (in the format of the state) and indices
+     * follow, then endDraw. Layer and depth are read by the sort key only.
      */
     public void beginDraw(int state, int layer, float depth) {
         if (inDraw)
@@ -208,46 +235,164 @@ public final class DrawBatch2D {
         drawState = state;
         drawLayer = layer;
         drawDepth = depth;
-        drawFirstVertex = vertexCount;
+        BatchFormat format = table.formatOf(state);
+        if (format != drawFormat) {
+            drawFormat = format;
+            drawInstanced = format.hasInstances();
+            drawStride = drawInstanced ? format.instanceBytes() : format.vertexBytes();
+            drawSlots = format.slots(drawInstanced);
+            drawSlotOffsets = format.slotOffsets(drawInstanced);
+        }
+        slot = 0;
         drawFirstIndex = indexCount;
+        if (drawInstanced) {
+            drawStartBytes = instanceBytes;
+            drawFirstInstanceByte = instanceBytes;
+            drawInstanceCount = 0;
+        } else {
+            drawStartBytes = vertexBytes;
+            // The vertices of the draw start on a whole vertex of its format: their indices count in its size
+            vertexBytes = (vertexBytes + drawStride - 1) / drawStride * drawStride;
+            drawFirstVertex = vertexBytes / drawStride;
+            drawVertexCount = 0;
+        }
+    }
+
+    // The format of the draw being asked (the one of its state), null outside of a draw
+    public BatchFormat drawFormat() {
+        return inDraw ? drawFormat : null;
+    }
+
+    /** The next float value of the draw (an attribute FLOAT of its format, component by component). */
+    public void put(float value) {
+        int at = slotAt(BatchFormat.SLOT_FLOAT);
+        (drawInstanced ? instances : vertices).putFloat(at, value);
+        slotDone();
+    }
+
+    public void put(float first, float second) {
+        put(first);
+        put(second);
+    }
+
+    public void put(float first, float second, float third) {
+        put(first);
+        put(second);
+        put(third);
+    }
+
+    public void put(float first, float second, float third, float fourth) {
+        put(first);
+        put(second);
+        put(third);
+        put(fourth);
+    }
+
+    /** The next int value of the draw (an attribute INT of its format, component by component). */
+    public void putInt(int value) {
+        int at = slotAt(BatchFormat.SLOT_INT);
+        (drawInstanced ? instances : vertices).putInt(at, value);
+        slotDone();
     }
 
     /**
-     * A vertex of the draw: position (transformed: world units of the camera of the state), texture coordinates, and
-     * color as RGBA in an int (Color4f.toIntRGBA), multiplied with the texture by the batch shader.
+     * The next attribute NORMALIZED_UBYTE of the draw, at once: RGBA in an int (Color4f.toIntRGBA), R in the first
+     * byte read.
+     */
+    public void putColor(int rgba) {
+        int at = slotAt(BatchFormat.SLOT_COLOR);
+        // In memory R, G, B, A: read as 4 normalized bytes
+        (drawInstanced ? instances : vertices).putInt(at, LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba);
+        slotDone();
+    }
+
+    // The byte of the next value, checked against the kind of the format; room made for its vertex (or instance)
+    private int slotAt(byte kind) {
+        if (!inDraw)
+            throw new IllegalStateException("Value written outside of beginDraw and endDraw");
+        if (drawSlots[slot] != kind)
+            throw new IllegalStateException("Value " + slot + " of a " + (drawInstanced ? "instance" : "vertex")
+                    + " of the batch format " + drawFormat.name() + " is not a " + SlotName(kind) + " but a "
+                    + SlotName(drawSlots[slot]));
+
+        if (slot == 0) {
+            if (drawInstanced) {
+                if (instanceBytes + drawStride > instances.capacity())
+                    instances = grow(instances, instanceBytes, Math.max(instances.capacity() * 2,
+                            instanceBytes + drawStride));
+                elementAt = instanceBytes;
+            } else {
+                if (vertexBytes + drawStride > vertices.capacity())
+                    vertices = grow(vertices, vertexBytes, Math.max(vertices.capacity() * 2, vertexBytes + drawStride));
+                elementAt = vertexBytes;
+            }
+        }
+
+        return elementAt + drawSlotOffsets[slot];
+    }
+
+    private static String SlotName(byte kind) {
+        return kind == BatchFormat.SLOT_FLOAT ? "float (put)" : kind == BatchFormat.SLOT_INT ? "int (putInt)"
+                : "color (putColor)";
+    }
+
+    // The value is written: the last one of a vertex (or an instance) completes it
+    private void slotDone() {
+        if (++slot < drawSlots.length)
+            return;
+
+        slot = 0;
+        if (drawInstanced) {
+            instanceBytes += drawStride;
+            ++drawInstanceCount;
+        } else {
+            vertexBytes += drawStride;
+            ++drawVertexCount;
+        }
+    }
+
+    /**
+     * A vertex of a draw in BatchFormats.SPRITE (or a format with the same values): position (transformed: world
+     * units of the camera of the state), texture coordinates, and color as RGBA in an int (Color4f.toIntRGBA),
+     * multiplied with the texture by the batch shader.
      */
     public void vertex(float x, float y, float u, float v, int rgba) {
         if (!inDraw)
             throw new IllegalStateException("vertex outside of beginDraw and endDraw");
 
-        putVertex(x, y, u, v, rgba);
-    }
+        if (drawFormat == BatchFormats.SPRITE && slot == 0) {
+            if (vertexBytes + VERTEX_BYTES > vertices.capacity())
+                vertices = grow(vertices, vertexBytes, vertices.capacity() * 2);
 
-    private void putVertex(float x, float y, float u, float v, int rgba) {
-        if ((vertexCount + 1) * VERTEX_BYTES > vertices.capacity())
-            vertices = grow(vertices, vertexCount * VERTEX_BYTES, vertices.capacity() * 2);
-
-        int at = vertexCount * VERTEX_BYTES;
-        vertices.putFloat(at, x);
-        vertices.putFloat(at + 4, y);
-        vertices.putFloat(at + 8, u);
-        vertices.putFloat(at + 12, v);
-        // In memory R, G, B, A: read as 4 normalized bytes
-        vertices.putInt(at + 16, LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba);
-        ++vertexCount;
+            int at = vertexBytes;
+            vertices.putFloat(at, x);
+            vertices.putFloat(at + 4, y);
+            vertices.putFloat(at + 8, u);
+            vertices.putFloat(at + 12, v);
+            // In memory R, G, B, A: read as 4 normalized bytes
+            vertices.putInt(at + 16, LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba);
+            vertexBytes += VERTEX_BYTES;
+            ++drawVertexCount;
+        } else {
+            put(x, y, u, v);
+            putColor(rgba);
+        }
     }
 
     /** An index of a triangle of the draw: a vertex of this draw, 0 for its first one. */
     public void index(int vertexOfDraw) {
         if (!inDraw)
             throw new IllegalStateException("index outside of beginDraw and endDraw");
-
-        int vertex = drawFirstVertex + vertexOfDraw;
-        if (vertexOfDraw < 0 || vertex >= vertexCount)
-            throw new IllegalArgumentException("Index " + vertexOfDraw + " of a draw of " + (vertexCount - drawFirstVertex)
+        if (drawInstanced)
+            throw new IllegalStateException("index in a draw of the batch format " + drawFormat.name()
+                    + ": its instances are drawn as its template");
+        if (slot != 0)
+            throw new IllegalStateException("index in the middle of a vertex of the batch format " + drawFormat.name());
+        if (vertexOfDraw < 0 || vertexOfDraw >= drawVertexCount)
+            throw new IllegalArgumentException("Index " + vertexOfDraw + " of a draw of " + drawVertexCount
                     + " vertices: the vertices come before the indices");
 
-        putIndex(vertex);
+        putIndex(drawFirstVertex + vertexOfDraw);
     }
 
     private void putIndex(int vertex) {
@@ -257,35 +402,57 @@ public final class DrawBatch2D {
         indices.put(indexCount++, vertex);
     }
 
-    /** Ends the draw: a draw without index draws nothing (its vertices are dropped). */
+    /**
+     * Ends the draw: a draw without index (without instance for a format with instances) draws nothing (its values
+     * are dropped). Ended in the middle of a vertex (or an instance): dropped, IllegalStateException.
+     */
     public void endDraw() {
         if (!inDraw)
             throw new IllegalStateException("endDraw without beginDraw");
 
         inDraw = false;
-        int count = indexCount - drawFirstIndex;
+        if (slot != 0) {
+            slot = 0;
+            dropDraw();
+            throw new IllegalStateException("endDraw in the middle of a " + (drawInstanced ? "instance" : "vertex")
+                    + " of the batch format " + drawFormat.name() + " (" + drawSlots.length + " values each)");
+        }
+
+        int count = drawInstanced ? drawInstanceCount : indexCount - drawFirstIndex;
         if (count == 0) {
-            vertexCount = drawFirstVertex;
+            dropDraw();
             return;
         }
 
+        int first = drawInstanced ? drawFirstInstanceByte : drawFirstIndex;
         if (sortKey == null) {
-            // Same state as the previous draw: the same draw call
-            if (runCount > 0 && runStates[runCount - 1] == drawState)
-                runCounts[runCount - 1] += count;
+            // Same state as the previous draw, and its data right after: the same draw call
+            int last = runCount - 1;
+            if (last >= 0 && runStates[last] == drawState
+                    && (!drawInstanced || runFirsts[last] + runCounts[last] * drawStride == first))
+                runCounts[last] += count;
             else
-                addRun(drawState, drawFirstIndex, count);
+                addRun(drawState, first, count);
         } else {
-            addEntry(count);
+            addEntry(first, count);
         }
 
         ++drawCount;
         ++current.draws;
     }
 
+    // The values and indices of the draw being ended are dropped
+    private void dropDraw() {
+        if (drawInstanced)
+            instanceBytes = drawStartBytes;
+        else
+            vertexBytes = drawStartBytes;
+        indexCount = drawFirstIndex;
+    }
+
     /**
-     * A quad of this state: its corners in order around it (triangles 0 3 2 and 0 2 1, like RectangularFace), each
-     * with its texture coordinates, one color.
+     * A quad of this state (BatchFormats.SPRITE): its corners in order around it (triangles 0 3 2 and 0 2 1, like
+     * RectangularFace), each with its texture coordinates, one color.
      */
     public void quad(int state, int layer, float depth,
                      float x0, float y0, float u0, float v0,
@@ -294,10 +461,10 @@ public final class DrawBatch2D {
                      float x3, float y3, float u3, float v3,
                      int rgba) {
         beginDraw(state, layer, depth);
-        putVertex(x0, y0, u0, v0, rgba);
-        putVertex(x1, y1, u1, v1, rgba);
-        putVertex(x2, y2, u2, v2, rgba);
-        putVertex(x3, y3, u3, v3, rgba);
+        vertex(x0, y0, u0, v0, rgba);
+        vertex(x1, y1, u1, v1, rgba);
+        vertex(x2, y2, u2, v2, rgba);
+        vertex(x3, y3, u3, v3, rgba);
         for (int index : QUAD_INDICES)
             putIndex(drawFirstVertex + index);
         endDraw();
@@ -317,7 +484,7 @@ public final class DrawBatch2D {
         ++runCount;
     }
 
-    private void addEntry(int count) {
+    private void addEntry(int first, int count) {
         if (drawCount == entryStates.length) {
             int size = Math.max(64, entryStates.length * 2);
             entryStates = Arrays.copyOf(entryStates, size);
@@ -331,8 +498,8 @@ public final class DrawBatch2D {
         entryStates[drawCount] = drawState;
         entryLayers[drawCount] = drawLayer;
         entryDepths[drawCount] = drawDepth;
-        entryFirsts[drawCount] = drawFirstIndex;
-        entryCounts[drawCount] = indexCount - drawFirstIndex;
+        entryFirsts[drawCount] = first;
+        entryCounts[drawCount] = count;
         // Computed when the draw is asked: the function reads values that may change before the flush
         keys[drawCount] = (sortKey.key(drawLayer, drawDepth, drawState) & ~CALL_INDEX_MASK) | drawCount;
     }
@@ -516,8 +683,9 @@ public final class DrawBatch2D {
                 drawRuns();
         } finally {
             sending = false;
-            vertexCount = 0;
+            vertexBytes = 0;
             indexCount = 0;
+            instanceBytes = 0;
             drawCount = 0;
             runCount = 0;
 
@@ -533,44 +701,54 @@ public final class DrawBatch2D {
     }
 
     private void drawRuns() {
-        IntBuffer drawn = indices;
-        if (sortKey != null) {
+        IntBuffer drawnIndices = indices;
+        int drawnInstanceBytes = instanceBytes;
+        boolean sorted = sortKey != null;
+        if (sorted) {
             sortRuns();
-            drawn = sortedIndices;
+            drawnIndices = sortedIndices;
+            drawnInstanceBytes = sortedInstanceBytes;
             ++current.sorts;
         }
 
+        // Mode INSTANCED: the runs of sprite quads become instances, after those of the formats with instances
+        int convertedFrom = drawnInstanceBytes;
+        if (backend.mode() == EBatch2DMode.INSTANCED)
+            drawnInstanceBytes = buildInstances(drawnIndices, sorted, drawnInstanceBytes);
+        boolean converted = drawnInstanceBytes > convertedFrom;
+        ByteBuffer drawnInstances = sorted ? sortedInstances : instances;
+
+        // Every run of vertices drawn by instances: the vertices are not sent
+        boolean regularRuns = !converted || hasRegularRun();
         IBatchUploader uploader = target.uploader();
-        int instanceCount = uploader.drawsInstances() ? buildInstances(drawn) : 0;
-        // Every run drawn by instances: the vertices are not sent
-        boolean regularRuns = instanceCount == 0 || hasRegularRun();
-        if (regularRuns) {
-            vertices.position(0).limit(vertexCount * VERTEX_BYTES);
-            drawn.position(0).limit(indexCount);
-            try {
-                uploader.upload(vertices, vertexCount, drawn, indexCount);
-            } finally {
-                vertices.clear();
-                drawn.clear();
-            }
-        }
-        if (instanceCount > 0) {
-            instances.position(0).limit(instanceCount * INSTANCE_BYTES);
-            try {
-                uploader.uploadInstances(instances, instanceCount);
-            } finally {
-                instances.clear();
-            }
+        vertices.position(0).limit(regularRuns ? vertexBytes : 0);
+        drawnIndices.position(0).limit(regularRuns ? indexCount : 0);
+        drawnInstances.position(0).limit(drawnInstanceBytes);
+        try {
+            uploader.upload(vertices, drawnIndices, drawnInstances);
+        } finally {
+            vertices.clear();
+            drawnIndices.clear();
+            drawnInstances.clear();
         }
 
         for (int run = 0; run < runCount; ++run) {
-            if (instanceCount > 0 && runInstanceFirsts[run] >= 0) {
-                table.applyInstanced(runStates[run]);
-                uploader.drawInstances(runInstanceFirsts[run], runCounts[run] / 6);
+            int state = runStates[run];
+            BatchFormat format = table.formatOf(state);
+            if (converted && runInstanceFirsts[run] >= 0) {
+                table.applyInstanced(state);
+                uploader.drawInstances(BatchFormats.SPRITE_INSTANCED, runInstanceFirsts[run], runCounts[run] / 6);
                 ++current.instancedDrawCalls;
+                current.countFormat(BatchFormats.SPRITE_INSTANCED);
+            } else if (format.hasInstances()) {
+                table.apply(state);
+                uploader.drawInstances(format, runFirsts[run], runCounts[run]);
+                ++current.instancedDrawCalls;
+                current.countFormat(format);
             } else {
-                table.apply(runStates[run]);
-                uploader.draw(runFirsts[run], runCounts[run]);
+                table.apply(state);
+                uploader.draw(format, runFirsts[run], runCounts[run]);
+                current.countFormat(format);
             }
         }
         uploader.flushEnded();
@@ -583,50 +761,63 @@ public final class DrawBatch2D {
 
     private boolean hasRegularRun() {
         for (int run = 0; run < runCount; ++run) {
-            if (runInstanceFirsts[run] < 0)
+            if (runInstanceFirsts[run] < 0 && !table.formatOf(runStates[run]).hasInstances())
                 return true;
         }
         return false;
     }
 
     /*
-     * Mode INSTANCED: the runs whose state has an instanced program and whose triangles are all quads (groups of 6
-     * indices b+0 3 2 0 2 1, like quad: whatever draws they come from, they draw the quad of the vertices b to b+3)
-     * that are parallelograms of one color get their instances (runInstanceFirsts, -1 for the others).
-     * Returns the count of instances written.
+     * Mode INSTANCED: the runs of BatchFormats.SPRITE whose state has an instanced program of
+     * BatchFormats.SPRITE_INSTANCED and whose triangles are all quads (groups of 6 indices b+0 3 2 0 2 1, like quad:
+     * whatever draws they come from, they draw the quad of the vertices b to b+3) that are parallelograms of one color
+     * get their instances, written from byte at of the drawn instances (runInstanceFirsts, -1 for the others).
+     * Returns the bytes of the drawn instances after them.
      */
-    private int buildInstances(IntBuffer drawn) {
+    private int buildInstances(IntBuffer drawn, boolean sorted, int at) {
         if (runInstanceFirsts.length < runCount)
             runInstanceFirsts = new int[runStates.length];
 
-        int count = 0;
         for (int run = 0; run < runCount; ++run) {
             runInstanceFirsts[run] = -1;
+            int state = runStates[run];
             int indexTotal = runCounts[run];
-            if (indexTotal % 6 != 0 || !table.hasInstanced(runStates[run]))
+            if (indexTotal % 6 != 0 || table.formatOf(state) != BatchFormats.SPRITE || !table.hasInstanced(state)
+                    || table.instancedFormatOf(state) != BatchFormats.SPRITE_INSTANCED)
                 continue;
 
             int quads = indexTotal / 6;
-            if ((count + quads) * INSTANCE_BYTES > instances.capacity())
-                instances = grow(instances, count * INSTANCE_BYTES,
-                        Math.max(instances.capacity() * 2, (count + quads) * INSTANCE_BYTES));
+            ByteBuffer target = drawnInstances(sorted, at, at + quads * INSTANCE_BYTES);
 
             boolean all = true;
             int first = runFirsts[run];
             for (int quad = 0; quad < quads && all; ++quad)
-                all = writeInstance(drawn, first + quad * 6, count + quad);
+                all = writeInstance(drawn, first + quad * 6, target, at + quad * INSTANCE_BYTES);
 
             if (all) {
-                runInstanceFirsts[run] = count;
-                count += quads;
+                runInstanceFirsts[run] = at;
+                at += quads * INSTANCE_BYTES;
             }
         }
 
-        return count;
+        return at;
     }
 
-    // The quad of the 6 indices at index as an instance (affine position, affine texture coordinates, color)
-    private boolean writeInstance(IntBuffer drawn, int index, int instance) {
+    // The instances drawn by this flush (used bytes written), with room for bytes
+    private ByteBuffer drawnInstances(boolean sorted, int used, int bytes) {
+        if (sorted) {
+            if (sortedInstances.capacity() < bytes)
+                sortedInstances = grow(sortedInstances, used, Math.max(sortedInstances.capacity() * 2, bytes));
+            return sortedInstances;
+        }
+
+        if (instances.capacity() < bytes)
+            instances = grow(instances, used, Math.max(instances.capacity() * 2, bytes));
+        return instances;
+    }
+
+    // The quad of the 6 indices at index as an instance at byte at (affine position, affine texture coordinates, color)
+    private boolean writeInstance(IntBuffer drawn, int index, ByteBuffer target, int at) {
         int base = drawn.get(index);
         for (int i = 0; i < 6; ++i) {
             if (drawn.get(index + i) != base + QUAD_INDICES[i])
@@ -658,38 +849,58 @@ public final class DrawBatch2D {
                 || Math.abs(vertices.getFloat(a3 + 12) - (v1 + vx + vy)) > textureTolerance)
             return false;
 
-        int at = instance * INSTANCE_BYTES;
-        instances.putFloat(at, xx).putFloat(at + 4, yx).putFloat(at + 8, x1);
-        instances.putFloat(at + 12, xy).putFloat(at + 16, yy).putFloat(at + 20, y1);
-        instances.putFloat(at + 24, u1).putFloat(at + 28, v1);
-        instances.putFloat(at + 32, ux).putFloat(at + 36, vx).putFloat(at + 40, uy).putFloat(at + 44, vy);
-        instances.putInt(at + 48, color);
+        target.putFloat(at, xx).putFloat(at + 4, yx).putFloat(at + 8, x1);
+        target.putFloat(at + 12, xy).putFloat(at + 16, yy).putFloat(at + 20, y1);
+        target.putFloat(at + 24, u1).putFloat(at + 28, v1);
+        target.putFloat(at + 32, ux).putFloat(at + 36, vx).putFloat(at + 40, uy).putFloat(at + 44, vy);
+        target.putInt(at + 48, color);
         return true;
     }
 
-    // The indices in the order of the keys, the runs of the same state in it
+    // The indices and the instances in the order of the keys, the runs of the same state in it
     private void sortRuns() {
         Arrays.sort(keys, 0, drawCount);
 
         if (sortedIndices == null || sortedIndices.capacity() < indexCount)
             sortedIndices = BufferUtils.createIntBuffer(Math.max(indexCount, indices.capacity()));
+        if (sortedInstances == null || sortedInstances.capacity() < instanceBytes)
+            sortedInstances = BufferUtils.createByteBuffer(Math.max(instanceBytes, instances.capacity()));
 
         runCount = 0;
         int out = 0;
+        int outBytes = 0;
         for (int k = 0; k < drawCount; ++k) {
             int entry = (int) (keys[k] & CALL_INDEX_MASK);
             int first = entryFirsts[entry];
             int count = entryCounts[entry];
-            for (int i = 0; i < count; ++i)
-                sortedIndices.put(out + i, indices.get(first + i));
-
             int state = entryStates[entry];
-            if (runCount > 0 && runStates[runCount - 1] == state)
-                runCounts[runCount - 1] += count;
-            else
-                addRun(state, out, count);
-            out += count;
+            BatchFormat format = table.formatOf(state);
+            int last = runCount - 1;
+            if (format.hasInstances()) {
+                int bytes = count * format.instanceBytes();
+                instances.position(first).limit(first + bytes);
+                sortedInstances.position(outBytes);
+                sortedInstances.put(instances);
+                instances.clear();
+                sortedInstances.clear();
+
+                if (last >= 0 && runStates[last] == state)
+                    runCounts[last] += count;
+                else
+                    addRun(state, outBytes, count);
+                outBytes += bytes;
+            } else {
+                for (int i = 0; i < count; ++i)
+                    sortedIndices.put(out + i, indices.get(first + i));
+
+                if (last >= 0 && runStates[last] == state)
+                    runCounts[last] += count;
+                else
+                    addRun(state, out, count);
+                out += count;
+            }
         }
+        sortedInstanceBytes = outBytes;
     }
 
     private static ByteBuffer grow(ByteBuffer buffer, int used, int capacity) {
@@ -747,7 +958,7 @@ public final class DrawBatch2D {
         return last.barriersWhileSorted;
     }
 
-    /** Draw calls of the last frame that drew quads by instances (mode INSTANCED). */
+    /** Draw calls of the last frame that drew instances (formats with instances, sprite quads in mode INSTANCED). */
     public int lastFrameInstancedDrawCalls() {
         return last.instancedDrawCalls;
     }
@@ -772,9 +983,18 @@ public final class DrawBatch2D {
         return causes;
     }
 
+    /** Draw calls of the last frame of the view by the name of their batch format. A new map. */
+    public Map<String, Integer> lastFrameFormatCalls() {
+        Map<String, Integer> calls = new LinkedHashMap<>();
+        for (int i = 0; i < last.formatCount; ++i)
+            calls.merge(last.formats[i].name(), last.formatCalls[i], Integer::sum);
+
+        return calls;
+    }
+
     /**
      * The batch for the command batch: started or not, its sort key (its toString, null for the order of the calls),
-     * the counters of the last frame of its view and the causes of its barriers.
+     * the counters of the last frame of its view, the causes of its barriers and its draw calls by format.
      */
     @API(status = INTERNAL)
     public JSONObject describe() {
@@ -794,15 +1014,18 @@ public final class DrawBatch2D {
                 .put("barriersWhileSorted", last.barriersWhileSorted)
                 .put("sorts", last.sorts)
                 .put("instancedDrawCalls", last.instancedDrawCalls)
-                .put("barrierCauses", causes);
+                .put("barrierCauses", causes)
+                .put("formats", new JSONObject(lastFrameFormatCalls()));
     }
 
     // Capacities of the arrays (tests: nothing grows once the frames are stable)
     int vertexCapacity() { return vertices.capacity() / VERTEX_BYTES; }
+    int instanceCapacity() { return instances.capacity(); }
     int indexCapacity() { return indices.capacity(); }
     int entryCapacity() { return entryStates.length; }
     int runCapacity() { return runStates.length; }
     int sortedIndexCapacity() { return sortedIndices == null ? 0 : sortedIndices.capacity(); }
+    int sortedInstanceCapacity() { return sortedInstances == null ? 0 : sortedInstances.capacity(); }
 
     // Counters of a frame of the view
     private static final class FrameCounters {
@@ -813,6 +1036,10 @@ public final class DrawBatch2D {
         int barriersWhileSorted;
         int sorts;
         int instancedDrawCalls;
+        // Draw calls by format
+        BatchFormat[] formats = new BatchFormat[4];
+        int[] formatCalls = new int[4];
+        int formatCount;
         Object[] causes = new Object[4];
         int[] causeCounts = new int[4];
         int[] causeSortedCounts = new int[4];
@@ -843,6 +1070,23 @@ public final class DrawBatch2D {
                 ++causeSortedCounts[i];
         }
 
+        void countFormat(BatchFormat format) {
+            int i = 0;
+            while (i < formatCount && formats[i] != format)
+                ++i;
+            if (i == formatCount) {
+                if (formatCount == formats.length) {
+                    formats = Arrays.copyOf(formats, formatCount * 2);
+                    formatCalls = Arrays.copyOf(formatCalls, formatCount * 2);
+                }
+                formats[i] = format;
+                formatCalls[i] = 0;
+                ++formatCount;
+            }
+
+            ++formatCalls[i];
+        }
+
         void copyFrom(FrameCounters other) {
             draws = other.draws;
             drawCalls = other.drawCalls;
@@ -861,12 +1105,21 @@ public final class DrawBatch2D {
             System.arraycopy(other.causeSortedCounts, 0, causeSortedCounts, 0, other.causeCount);
             Arrays.fill(causes, other.causeCount, causes.length, null);
             causeCount = other.causeCount;
+
+            if (formats.length < other.formatCount) {
+                formats = new BatchFormat[other.formats.length];
+                formatCalls = new int[other.formats.length];
+            }
+            System.arraycopy(other.formats, 0, formats, 0, other.formatCount);
+            System.arraycopy(other.formatCalls, 0, formatCalls, 0, other.formatCount);
+            formatCount = other.formatCount;
         }
 
         void clear() {
             draws = drawCalls = flushes = barriers = barriersWhileSorted = sorts = instancedDrawCalls = 0;
             Arrays.fill(causes, 0, causeCount, null);
             causeCount = 0;
+            formatCount = 0;
         }
     }
 }

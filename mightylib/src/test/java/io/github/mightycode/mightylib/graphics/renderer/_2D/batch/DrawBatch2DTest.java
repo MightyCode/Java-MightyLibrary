@@ -24,15 +24,22 @@ class DrawBatch2DTest {
     private static final class FakePart implements IBatchMaterial {
         private final String name;
         private final List<String> log;
+        private final BatchFormat format;
 
-        FakePart(String name, List<String> log) {
+        FakePart(String name, List<String> log, BatchFormat format) {
             this.name = name;
             this.log = log;
+            this.format = format;
         }
 
         @Override
         public BatchFormat format() {
-            return BatchFormats.SPRITE;
+            return format;
+        }
+
+        @Override
+        public BatchFormat instancedFormat() {
+            return hasInstanced() ? BatchFormats.SPRITE_INSTANCED : null;
         }
 
         @Override
@@ -53,7 +60,8 @@ class DrawBatch2DTest {
 
         @Override
         public boolean equals(Object other) {
-            return other instanceof FakePart && ((FakePart) other).name.equals(name);
+            return other instanceof FakePart && ((FakePart) other).name.equals(name)
+                    && ((FakePart) other).format == format;
         }
 
         @Override
@@ -62,70 +70,87 @@ class DrawBatch2DTest {
         }
     }
 
-    // Keeps what was uploaded and logs the draw calls
+    // Keeps what was uploaded and logs the draw calls (the vertices read as BatchFormats.SPRITE)
     private static final class FakeUploader implements IBatchUploader {
         private final List<String> log;
         final List<float[]> vertexUploads = new ArrayList<>();
         final List<int[]> colorUploads = new ArrayList<>();
         final List<int[]> indexUploads = new ArrayList<>();
+        // Instances read as BatchFormats.SPRITE_INSTANCED (12 floats), and their bytes
+        final List<float[]> instanceUploads = new ArrayList<>();
+        final List<ByteBuffer> instanceBytes = new ArrayList<>();
+        final List<ByteBuffer> vertexBytes = new ArrayList<>();
 
         FakeUploader(List<String> log) {
             this.log = log;
         }
 
         @Override
-        public void upload(ByteBuffer vertices, int vertexCount, IntBuffer indices, int indexCount) {
-            assertEquals(vertexCount * DrawBatch2D.VERTEX_BYTES, vertices.remaining());
-            assertEquals(indexCount, indices.remaining());
-            float[] floats = new float[vertexCount * 4];
-            int[] colors = new int[vertexCount];
-            for (int i = 0; i < vertexCount; ++i) {
-                for (int j = 0; j < 4; ++j)
-                    floats[i * 4 + j] = vertices.getFloat(i * DrawBatch2D.VERTEX_BYTES + j * 4);
-                int at = i * DrawBatch2D.VERTEX_BYTES + 16;
-                // Bytes in memory: R, G, B, A
-                colors[i] = (vertices.get(at) & 0xFF) << 24 | (vertices.get(at + 1) & 0xFF) << 16
-                        | (vertices.get(at + 2) & 0xFF) << 8 | (vertices.get(at + 3) & 0xFF);
+        public void upload(ByteBuffer vertices, IntBuffer indices, ByteBuffer instances) {
+            assertEquals(0, vertices.position());
+            assertEquals(0, indices.position());
+            assertEquals(0, instances.position());
+            if (vertices.remaining() > 0 || indices.remaining() > 0) {
+                int vertexCount = vertices.remaining() / DrawBatch2D.VERTEX_BYTES;
+                int indexCount = indices.remaining();
+                float[] floats = new float[vertexCount * 4];
+                int[] colors = new int[vertexCount];
+                for (int i = 0; i < vertexCount; ++i) {
+                    for (int j = 0; j < 4; ++j)
+                        floats[i * 4 + j] = vertices.getFloat(i * DrawBatch2D.VERTEX_BYTES + j * 4);
+                    int at = i * DrawBatch2D.VERTEX_BYTES + 16;
+                    // Bytes in memory: R, G, B, A
+                    colors[i] = (vertices.get(at) & 0xFF) << 24 | (vertices.get(at + 1) & 0xFF) << 16
+                            | (vertices.get(at + 2) & 0xFF) << 8 | (vertices.get(at + 3) & 0xFF);
+                }
+                int[] read = new int[indexCount];
+                for (int i = 0; i < indexCount; ++i)
+                    read[i] = indices.get(i);
+
+                vertexUploads.add(floats);
+                colorUploads.add(colors);
+                indexUploads.add(read);
+                vertexBytes.add(copy(vertices));
+                log.add("upload " + vertexCount + " " + indexCount);
             }
-            int[] read = new int[indexCount];
-            for (int i = 0; i < indexCount; ++i)
-                read[i] = indices.get(i);
 
-            vertexUploads.add(floats);
-            colorUploads.add(colors);
-            indexUploads.add(read);
-            log.add("upload " + vertexCount + " " + indexCount);
-        }
-
-        @Override
-        public void draw(int firstIndex, int indexCount) {
-            log.add("draw " + firstIndex + " " + indexCount);
-        }
-
-        // Mode INSTANCED when set
-        boolean instancing;
-        final List<float[]> instanceUploads = new ArrayList<>();
-
-        @Override
-        public boolean drawsInstances() {
-            return instancing;
-        }
-
-        @Override
-        public void uploadInstances(ByteBuffer instances, int count) {
-            assertEquals(count * DrawBatch2D.INSTANCE_BYTES, instances.remaining());
-            float[] floats = new float[count * 12];
-            for (int i = 0; i < count; ++i) {
-                for (int j = 0; j < 12; ++j)
-                    floats[i * 12 + j] = instances.getFloat(i * DrawBatch2D.INSTANCE_BYTES + j * 4);
+            if (instances.remaining() > 0) {
+                int count = instances.remaining() / DrawBatch2D.INSTANCE_BYTES;
+                float[] floats = new float[count * 12];
+                for (int i = 0; i < count; ++i) {
+                    for (int j = 0; j < 12; ++j)
+                        floats[i * 12 + j] = instances.getFloat(i * DrawBatch2D.INSTANCE_BYTES + j * 4);
+                }
+                instanceUploads.add(floats);
+                instanceBytes.add(copy(instances));
+                log.add("uploadInstances " + count);
             }
-            instanceUploads.add(floats);
-            log.add("uploadInstances " + count);
+        }
+
+        private static ByteBuffer copy(ByteBuffer buffer) {
+            ByteBuffer copy = ByteBuffer.allocate(buffer.remaining()).order(buffer.order());
+            copy.put(buffer.duplicate());
+            copy.flip();
+            return copy;
         }
 
         @Override
-        public void drawInstances(int firstInstance, int count) {
-            log.add("instances " + firstInstance + " " + count);
+        public void draw(BatchFormat format, int firstIndex, int indexCount) {
+            log.add("draw " + (format == BatchFormats.SPRITE ? "" : format.name() + " ") + firstIndex + " "
+                    + indexCount);
+        }
+
+        // Sprite instances counted in instances, the others named by their format with their first byte
+        int lastSpriteInstanceByte = -1;
+
+        @Override
+        public void drawInstances(BatchFormat format, int firstByte, int count) {
+            if (format == BatchFormats.SPRITE_INSTANCED)
+                lastSpriteInstanceByte = firstByte;
+            if (format == BatchFormats.SPRITE_INSTANCED)
+                log.add("instances " + firstByte / DrawBatch2D.INSTANCE_BYTES + " " + count);
+            else
+                log.add("instances " + format.name() + " " + firstByte + " " + count);
         }
     }
 
@@ -165,7 +190,10 @@ class DrawBatch2DTest {
         }
     }
 
-    private static IBatchBackend backend(IBatchTarget target) {
+    // The mode of the backend of the tests (INSTANCED: sprite quads as instances)
+    private EBatch2DMode mode = EBatch2DMode.ORPHAN;
+
+    private IBatchBackend backend(IBatchTarget target) {
         return new IBatchBackend() {
             @Override
             public IBatchTarget target() {
@@ -174,7 +202,7 @@ class DrawBatch2DTest {
 
             @Override
             public EBatch2DMode mode() {
-                return EBatch2DMode.ORPHAN;
+                return mode;
             }
         };
     }
@@ -192,8 +220,12 @@ class DrawBatch2DTest {
     }
 
     private int state(String name) {
+        return state(name, BatchFormats.SPRITE);
+    }
+
+    private int state(String name, BatchFormat format) {
         BatchStateTable table = batch.stateTable();
-        return table.state(table.materialPart(new FakePart(name, log)), table.camera(projection, view), false);
+        return table.state(table.materialPart(new FakePart(name, log, format)), table.camera(projection, view), false);
     }
 
     // A unit quad at x, its corners carrying their order in u
@@ -539,7 +571,7 @@ class DrawBatch2DTest {
         quad(a, 0);
 
         BatchStateTable table = other.stateTable();
-        int b = table.state(table.materialPart(new FakePart("b", log)), table.camera(projection, view), false);
+        int b = table.state(table.materialPart(new FakePart("b", log, BatchFormats.SPRITE)), table.camera(projection, view), false);
         other.quad(b, 0, 0f, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, -1);
         other.endView();
         batch.endView();
@@ -643,7 +675,7 @@ class DrawBatch2DTest {
     // A quad turned and scaled: its instance is the affine map of the unit quad, positions and texture coordinates
     @Test
     void aQuadIsItsAffineInstance() {
-        target.uploader.instancing = true;
+        mode = EBatch2DMode.INSTANCED;
         int state = state("i");
         // Corners (0, 1), (0, 0), (1, 0), (1, 1) of the unit quad by x' = 2x - y + 10, y' = x + 3y + 20
         batch.quad(state, 0, 0f,
@@ -663,7 +695,7 @@ class DrawBatch2DTest {
 
     @Test
     void quadsOfOneStateAreOneInstancedCall() {
-        target.uploader.instancing = true;
+        mode = EBatch2DMode.INSTANCED;
         int state = state("i");
         for (int i = 0; i < 100; ++i)
             affineQuad(state, i, 0);
@@ -675,7 +707,7 @@ class DrawBatch2DTest {
     // A triangle in the run, a quad that is not a parallelogram, two colors: the run is drawn by its vertices
     @Test
     void aRunOfOtherShapesIsDrawnByVertices() {
-        target.uploader.instancing = true;
+        mode = EBatch2DMode.INSTANCED;
         int state = state("i");
         affineQuad(state, 0, 0);
         batch.beginDraw(state);
@@ -712,7 +744,7 @@ class DrawBatch2DTest {
     // One flush: the runs of quads by instances, the others by vertices, in the order of the runs
     @Test
     void instancedAndVertexRunsMix() {
-        target.uploader.instancing = true;
+        mode = EBatch2DMode.INSTANCED;
         int instanced = state("i");
         int plain = state("p");
         affineQuad(instanced, 0, 0);
@@ -729,7 +761,7 @@ class DrawBatch2DTest {
     // Sorted: the runs are built from the sorted indices, their quads become instances alike
     @Test
     void sortedQuadsAreInstancesInTheirOrder() {
-        target.uploader.instancing = true;
+        mode = EBatch2DMode.INSTANCED;
         batch.setDrawSortKey(DrawSortKeys.layerThenDepth());
         int state = state("i");
         affineQuad(state, 0, 2);
@@ -742,5 +774,203 @@ class DrawBatch2DTest {
         assertEquals(1f, instances[2]);
         assertEquals(0f, instances[12 + 2]);
         assertEquals(2f, instances[24 + 2]);
+    }
+
+    // ---- Formats ----
+
+    // Per vertex: a position, an int, a color (16 bytes: not the size of a sprite vertex)
+    private static final BatchFormat LINE = BatchFormat.builder("line")
+            .vertex("aPos", 2, EBatchAttributeType.FLOAT)
+            .vertex("aValue", 1, EBatchAttributeType.INT)
+            .vertex("aColor", 4, EBatchAttributeType.NORMALIZED_UBYTE)
+            .build();
+    // Per instance: two floats and a color, drawn as a triangle of gl_VertexID
+    private static final BatchFormat DOT = BatchFormat.builder("dot")
+            .instance("aCenter", 2, EBatchAttributeType.FLOAT)
+            .instance("aColor", 4, EBatchAttributeType.NORMALIZED_UBYTE)
+            .template(null, new int[]{0, 1, 2})
+            .build();
+
+    private void lineDraw(int state, float x, int value) {
+        batch.beginDraw(state);
+        for (int i = 0; i < 3; ++i) {
+            batch.put(x + i, 0);
+            batch.putInt(value);
+            batch.putColor(0x11223344);
+        }
+        batch.index(0);
+        batch.index(1);
+        batch.index(2);
+        batch.endDraw();
+    }
+
+    private void dots(int state, float x, int count) {
+        batch.beginDraw(state);
+        for (int i = 0; i < count; ++i) {
+            batch.put(x + i, 1);
+            batch.putColor(0x11223344);
+        }
+        batch.endDraw();
+    }
+
+    // The draw calls, instanced ones included
+    private List<String> calls() {
+        List<String> calls = new ArrayList<>();
+        for (String line : log) {
+            if (line.startsWith("instances") || line.startsWith("apply") || line.startsWith("draw"))
+                calls.add(line);
+        }
+
+        return calls;
+    }
+
+    // The values land at the offsets of the format; the vertices of a draw start on a whole vertex of their format
+    @Test
+    void valuesAreWrittenInTheFormat() {
+        int sprite = state("s");
+        int line = state("l", LINE);
+        quad(sprite, 0);
+        lineDraw(line, 5, 42);
+        batch.endView();
+
+        ByteBuffer vertices = target.uploader.vertexBytes.get(0);
+        // 4 sprite vertices (80 bytes) then the line vertices from byte 80 (vertex 5 of 16 bytes)
+        assertEquals(80 + 3 * 16, vertices.remaining());
+        assertEquals(5f, vertices.getFloat(80));
+        assertEquals(42, vertices.getInt(80 + 8));
+        assertEquals(0x11, vertices.get(80 + 12) & 0xFF);
+        assertEquals(7f, vertices.getFloat(80 + 2 * 16));
+        assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1, 5, 6, 7}, target.uploader.indexUploads.get(0));
+        assertEquals(List.of("apply s", "draw 0 6", "apply l", "draw line 6 3"), draws());
+    }
+
+    // A sprite vertex after a line one: padded to a whole sprite vertex
+    @Test
+    void theVerticesOfAnotherFormatArePadded() {
+        int sprite = state("s");
+        int line = state("l", LINE);
+        lineDraw(line, 0, 1);
+        quad(sprite, 0);
+        batch.endView();
+
+        // 48 bytes of lines, the sprite starts at 60 (vertex 3 of 20 bytes)
+        assertEquals(60 + 80, target.uploader.vertexBytes.get(0).remaining());
+        assertArrayEquals(new int[]{0, 1, 2, 3, 6, 5, 3, 5, 4}, target.uploader.indexUploads.get(0));
+    }
+
+    // A value of the wrong kind, an index in the middle of a vertex, an end in the middle: refused
+    @Test
+    void writesAreCheckedAgainstTheFormat() {
+        int line = state("l", LINE);
+        batch.beginDraw(line);
+        batch.put(1, 2);
+        assertThrows(IllegalStateException.class, () -> batch.put(3));
+        assertThrows(IllegalStateException.class, () -> batch.index(0));
+        assertThrows(IllegalStateException.class, batch::endDraw);
+        // The draw is dropped: the batch goes on
+        assertEquals(0, batch.pendingDraws());
+        lineDraw(line, 0, 1);
+        batch.endView();
+        assertEquals(List.of("apply l", "draw line 0 3"), draws());
+
+        int dot = state("d", DOT);
+        batch.beginDraw(dot);
+        batch.put(0, 0);
+        batch.putColor(-1);
+        assertThrows(IllegalStateException.class, () -> batch.index(0));
+        batch.endDraw();
+    }
+
+    // Draws of a format with instances: neighbors of one state are one instanced call, no vertex sent
+    @Test
+    void instancesOfOneStateAreOneCall() {
+        int dot = state("d", DOT);
+        dots(dot, 0, 2);
+        dots(dot, 10, 3);
+        batch.endView();
+
+        assertEquals(List.of("apply d", "instances dot 0 5"), calls());
+        ByteBuffer instances = target.uploader.instanceBytes.get(0);
+        assertEquals(5 * 12, instances.remaining());
+        assertEquals(10f, instances.getFloat(2 * 12));
+        assertEquals(1, batch.lastFrameInstancedDrawCalls());
+        assertTrue(target.uploader.vertexUploads.isEmpty());
+    }
+
+    // A change of format is a change of state: the run is cut, each run drawn in its format
+    @Test
+    void anotherFormatCutsTheRun() {
+        int sprite = state("s");
+        int dot = state("d", DOT);
+        quad(sprite, 0);
+        dots(dot, 0, 1);
+        quad(sprite, 1);
+        batch.endView();
+
+        assertEquals(List.of("apply s", "draw 0 6", "apply d", "instances dot 0 1", "apply s", "draw 6 6"), calls());
+        assertEquals(Map.of("sprite", 2, "dot", 1), batch.lastFrameFormatCalls());
+    }
+
+    // Sorted: the instances are gathered in the order of the keys
+    @Test
+    void sortedInstancesAreGatheredInTheirOrder() {
+        batch.setDrawSortKey(DrawSortKeys.layerThenDepth());
+        int dot = state("d", DOT);
+        batch.beginDraw(dot, 2, 0f);
+        batch.put(2, 0);
+        batch.putColor(-1);
+        batch.endDraw();
+        batch.beginDraw(dot, 1, 0f);
+        batch.put(1, 0);
+        batch.putColor(-1);
+        batch.put(1.5f, 0);
+        batch.putColor(-1);
+        batch.endDraw();
+        batch.endView();
+
+        assertEquals(List.of("apply d", "instances dot 0 3"), calls());
+        ByteBuffer instances = target.uploader.instanceBytes.get(0);
+        assertEquals(1f, instances.getFloat(0));
+        assertEquals(1.5f, instances.getFloat(12));
+        assertEquals(2f, instances.getFloat(24));
+    }
+
+    // Instances, sprite quads made instances (mode INSTANCED) after them, sorted: nothing grows once stable
+    @Test
+    void instancesGrowNoMoreOnceTheFramesAreStable() {
+        mode = EBatch2DMode.INSTANCED;
+        batch.setDrawSortKey(DrawSortKeys.layerThenDepth());
+        int[] capacities = null;
+        for (int frame = 0; frame < 4; ++frame) {
+            int dot = state("d", DOT);
+            int sprite = state("i");
+            for (int i = 0; i < 500; ++i) {
+                dots(dot, i, 2);
+                affineQuad(sprite, i, i % 3);
+            }
+            batch.endView();
+
+            int[] now = {batch.instanceCapacity(), batch.sortedInstanceCapacity(), batch.vertexCapacity(),
+                    batch.sortedIndexCapacity()};
+            if (frame > 0)
+                assertArrayEquals(capacities, now, "frame " + frame);
+            capacities = now;
+        }
+    }
+
+    // The sprite quads made instances come after the instances of the formats, in the same upload
+    @Test
+    void convertedQuadsFollowTheInstancesOfTheFormats() {
+        mode = EBatch2DMode.INSTANCED;
+        int dot = state("d", DOT);
+        int sprite = state("i");
+        dots(dot, 0, 2);
+        affineQuad(sprite, 0, 0);
+        batch.endView();
+
+        assertEquals(List.of("apply d", "instances dot 0 2", "applyInstanced i"), calls().subList(0, 3));
+        // The quad instance from byte 24: 24 / 52 is not a whole sprite instance, logged by the format below
+        assertEquals(2 * 12 + DrawBatch2D.INSTANCE_BYTES, target.uploader.instanceBytes.get(0).remaining());
+        assertEquals(24, target.uploader.lastSpriteInstanceByte);
     }
 }
