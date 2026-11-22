@@ -14,7 +14,7 @@ Le travail d'un développeur qui prend la prochaine ligne de `docs/current.md`, 
 - Un plan existe-t-il (`docs/plan/<sujet>.md`) ? Le lire en entier et le suivre à la place du cadrage de l'étape 2.
 
 ## 1. État
-- `git status --short` propre (sinon demander quoi en faire), `git fetch`, être sur `dev` à jour de `origin/dev` (`git pull`). Jamais de travail directement sur `dev` ni `master`.
+- `git status --short` propre (sinon demander quoi en faire ; sauf les fichiers de `.idea/` hors `workspace.xml` : les commiter sans demander sur la branche de sujet, règle Git de `CLAUDE.md`), `git fetch`, être sur `dev` à jour de `origin/dev` (`git pull`). Jamais de travail directement sur `dev` ni `master`.
 - Si la dernière revue de bonnes pratiques date de 7 jours ou plus (`CLAUDE.md`), le rappeler en une ligne.
 
 ## 2. Cadrer (rien n'est modifié)
