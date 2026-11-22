@@ -109,8 +109,6 @@ public final class Animation {
     public AnimationData getData(){ return data(); }
 
 
-    private static final float EDGE_INSET = 0.01f;
-
     public Vector4f currentTexturePosition() {
         Vector4f computedPosition = new Vector4f(0, 0, 0, 0);
 
@@ -118,12 +116,10 @@ public final class Animation {
         Vector4i texturePositions = data.getFramePositionCopy();
         TextureData texture = texture();
 
-        // Inset by a hundredth of a texel: a fragment exactly on an edge of the frame must not read the neighbor
-        // frame of the sheet (float rounding of a coordinate on the border of two texels)
-        computedPosition.x = (texturePositions.x + EDGE_INSET) / (texture.getWidth() * 1.0f);
-        computedPosition.y = (texturePositions.z + texturePositions.x - EDGE_INSET) / (texture.getWidth() * 1.0f);
-        computedPosition.z = (texturePositions.y + EDGE_INSET) / (texture.getHeight() * 1.0f);
-        computedPosition.w = (texturePositions.w + texturePositions.y - EDGE_INSET) / (texture.getHeight() * 1.0f);
+        computedPosition.x = (texturePositions.x) / (texture.getWidth() * 1.0f);
+        computedPosition.y = (texturePositions.z + texturePositions.x) / (texture.getWidth() * 1.0f);
+        computedPosition.z = (texturePositions.y) / (texture.getHeight() * 1.0f);
+        computedPosition.w = (texturePositions.w + texturePositions.y) / (texture.getHeight() * 1.0f);
 
         return computedPosition;
     }
