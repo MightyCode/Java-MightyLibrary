@@ -28,7 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-
 public final class TextureDataLoader extends ResourceLoader {
     private static final String TEXTURES_FOLDER = "textures";
     private static final String LIST_TEXTURES = TEXTURES_FOLDER + "/textures.json";
