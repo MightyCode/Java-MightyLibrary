@@ -15,6 +15,7 @@ import io.github.mightycode.mightylib.main.WindowConfig;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.WindowView;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
+import io.github.mightycode.mightylib.graphics.debug.DebugDraw2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.IDrawSortKey;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
@@ -51,6 +52,9 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     private final GLResources glResources;
     // The 2D batch of the view, created at the first use
     private DrawBatch2D batch2D;
+    private DebugDraw2D debugDraw;
+    // Its debug drawings were drawn in the current display
+    private boolean debugDrawn;
 
     private final WindowContext mainContext;
     private Camera3D main3DCamera;
@@ -185,6 +189,26 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         if (batch2D == null)
             batch2D = Batches2D.of(engine).createBatch(getClass().getSimpleName());
         return batch2D;
+    }
+
+    /**
+     * The debug drawings of the scene: drawn over it at the end of its display (before the final pass of
+     * setAndDisplayRealScene), dropped when the scene is left.
+     */
+    @Override
+    public final DebugDraw2D debugDraw() {
+        if (debugDraw == null)
+            debugDraw = new DebugDraw2D(engine.debugDraws(), this, getClass().getSimpleName());
+        return debugDraw;
+    }
+
+    // Once per frame, at the end of the drawing of the scene
+    private void drawDebug() {
+        if (debugDraw == null || debugDrawn)
+            return;
+
+        debugDrawn = true;
+        debugDraw.drawFrame(batch2D());
     }
 
     /**
@@ -406,7 +430,11 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
         try (Views.Scope ignored = Views.enter(this)) {
             // The code of the scene draws in its window: its OpenGL context is the current one
             mainContext.getWindow().bindWindow();
+            debugDrawn = false;
             display0();
+            // A scene drawn without virtual scene: its debug drawings at the end
+            if (!isWaitingForLoading)
+                drawDebug();
             // The draws of the scene are sent before another view draws
             if (batch2D != null)
                 batch2D.endView();
@@ -470,6 +498,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
     // Draw on the window again and display the virtual scene on it, scaled
     protected final void setAndDisplayRealScene(){
+        // The debug drawings over the scene, on its virtual scene
+        drawDebug();
         scRenderer.unbindFrameBuff();
         mainContext.getWindow().setRealViewport();
         // A scissor of the virtual scene left enabled would cut the final pass (the window has another size)
@@ -534,6 +564,8 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
     public void unload() {
         if (scRenderer != null)
             scRenderer.unload();
+        if (debugDraw != null)
+            debugDraw.delete();
 
         // An object added as updatable and displayable is unloaded once (it would release its GL elements twice)
         Set<Object> unloaded = Collections.newSetFromMap(new IdentityHashMap<>());

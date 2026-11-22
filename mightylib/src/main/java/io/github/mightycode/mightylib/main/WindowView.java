@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.color.PictureSettings;
 import io.github.mightycode.mightylib.graphics.renderer._2D.VirtualSceneRenderer;
+import io.github.mightycode.mightylib.graphics.debug.DebugDraw2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.IDrawSortKey;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
@@ -44,6 +45,9 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
     private Engine engine;
     // The 2D batch of the view, created at the first use
     private DrawBatch2D batch2D;
+    private DebugDraw2D debugDraw;
+    // Its debug drawings were drawn in the current display
+    private boolean debugDrawn;
     private WindowContext windowContext;
     private Camera2D main2DCamera;
     private Camera3D main3DCamera;
@@ -68,6 +72,26 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
         if (batch2D == null)
             batch2D = Batches2D.of(engine()).createBatch(getClass().getSimpleName());
         return batch2D;
+    }
+
+    /**
+     * The debug drawings of the view: drawn over it at the end of its display (before the final pass of
+     * setAndDisplayRealScene), dropped when its window closes.
+     */
+    @Override
+    public final DebugDraw2D debugDraw() {
+        if (debugDraw == null)
+            debugDraw = new DebugDraw2D(engine().debugDraws(), this, getClass().getSimpleName());
+        return debugDraw;
+    }
+
+    // Once per frame, at the end of the drawing of the view
+    private void drawDebug() {
+        if (debugDraw == null || debugDrawn)
+            return;
+
+        debugDrawn = true;
+        debugDraw.drawFrame(batch2D());
     }
 
     /**
@@ -257,6 +281,8 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
     }
 
     protected final void setAndDisplayRealScene() {
+        // The debug drawings over the view, on its virtual scene
+        drawDebug();
         scRenderer.unbindFrameBuff();
         windowContext.getWindow().setRealViewport();
         // A scissor of the virtual scene left enabled would cut the final pass (the window has another size)
@@ -329,7 +355,10 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
             if (clearColor != null)
                 glClearColor(clearColor[0], clearColor[1], clearColor[2], clearColor[3]);
 
+            debugDrawn = false;
             display();
+            // A view drawn without virtual scene: its debug drawings at the end
+            drawDebug();
             // The draws of the view are sent before another view draws
             if (batch2D != null)
                 batch2D.endView();
@@ -340,6 +369,8 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
         try (Views.Scope ignored = Views.enter(this)) {
             engine.commands().removeOwnedBy(CommandOwner.Of(this, "window"));
             unload();
+            if (debugDraw != null)
+                debugDraw.delete();
         }
     }
 }

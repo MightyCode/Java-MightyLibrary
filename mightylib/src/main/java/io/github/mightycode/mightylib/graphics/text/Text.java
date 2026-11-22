@@ -324,8 +324,6 @@ public final class Text extends MeshRenderer {
         FontChar fontChar;
         Vector4f currentCharOffset = new Vector4f();
 
-        Vector2f sizeTemp = new Vector2f();
-        Vector2f posTemp = new Vector2f();
         Vector4f temp = new Vector4f();
 
         Vector2f textReference = new Vector2f();
@@ -414,16 +412,10 @@ public final class Text extends MeshRenderer {
 
                 fontChar = usedFont().getFontFile().getCharacter(c);
 
-                sizeTemp.x = (float)((fontChar.getWidth()) * fontSize);
-                sizeTemp.y = (float)((fontChar.getHeight()) * fontSize);
-
-                posTemp.x = currentCharOffset.x /*+ fontChar.getxOffset() * fontSize*/ - textReference.x + lineAlignmentOffset + padding.x;
-                posTemp.y = currentCharOffset.y /*+ fontChar.getyOffset() * fontSize*/ - textReference.y + padding.y;
-
-                temp.x = (posTemp.x);
-                temp.y = (sizeTemp.x + posTemp.x);
-                temp.z = (posTemp.y);
-                temp.w = (sizeTemp.y + posTemp.y);
+                // Left, right, top, bottom of the character, its pen at the left top
+                TextLayout.CharacterQuad(fontChar, fontSize,
+                        currentCharOffset.x - textReference.x + lineAlignmentOffset + padding.x,
+                        currentCharOffset.y - textReference.y + padding.y, temp);
 
                 charPositions[charCount * SIZE_COORDINATES] = temp.x;
                 charPositions[charCount * SIZE_COORDINATES + 1] = temp.z;

@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.console.internal.LogCapture;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.GLResources;
+import io.github.mightycode.mightylib.graphics.debug.DebugDraws;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.graphics.color.IColorService;
@@ -122,6 +123,15 @@ public final class Engine implements IView {
     }
 
     public GLResources glResources() { return glResources; }
+
+    // The debug drawings of the views: the switch (EngineConfig.setDebugDraw at the start), the drawings of each view
+    private DebugDraws debugDraws;
+
+    public DebugDraws debugDraws() {
+        if (debugDraws == null)
+            debugDraws = new DebugDraws(config.isDebugDraw());
+        return debugDraws;
+    }
 
     /** How the 2D draws are sent now: EngineConfig.setBatch2DMode at the start, then setBatch2DMode. */
     public EBatch2DMode batch2DMode() {
