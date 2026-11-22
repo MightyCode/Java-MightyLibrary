@@ -45,12 +45,18 @@ public final class DebugLifetimes {
         return lifetime == ONE_FRAME;
     }
 
-    /** Drawn in count frames, the one it is asked in included (at least one). */
+    /**
+     * Drawn in count frames, the one it is asked in included (at least one). One per drawing: it counts the frames
+     * each time it is asked, so shared by two drawings it ends twice as fast (like seconds).
+     */
     public static IDebugLifetime frames(int count) {
         return new Frames(count);
     }
 
-    /** Drawn while seconds of the time of the game (GameTime.DeltaTime) have not passed since it was asked. */
+    /**
+     * Drawn while seconds of the time of the game (GameTime.DeltaTime) have not passed since it was asked. One per
+     * drawing (it counts the time each time it is asked); oneFrame, untilRemoved and whileTrue can be shared.
+     */
     public static IDebugLifetime seconds(float seconds) {
         return new Seconds(seconds, GameTime::DeltaTime);
     }

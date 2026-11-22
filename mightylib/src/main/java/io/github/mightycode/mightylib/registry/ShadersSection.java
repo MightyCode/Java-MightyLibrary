@@ -20,7 +20,7 @@ public final class ShadersSection {
 
     /**
      * The format the batch program of this shader name reads (several programs may read the same format).
-     * @throws IllegalStateException if a format is registered for this shader
+     * @throws IllegalStateException if a format is already registered for this shader
      */
     public ShadersSection batchFormat(String shaderName, BatchFormat format) {
         registrations.checkOpen();

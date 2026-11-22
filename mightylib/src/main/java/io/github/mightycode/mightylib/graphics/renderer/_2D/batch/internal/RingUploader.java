@@ -162,12 +162,12 @@ final class RingUploader implements IBatchUploader {
         arrays.drawInstances(format, instanceStart + firstByte, count);
     }
 
-    // The block is read by the draws just sent: a fence after them
     // The vertex arrays of the registered formats, made at the creation of the uploader
     void prepare(List<BatchFormat> formats) {
         arrays.prepare(formats);
     }
 
+    // The block is read by the draws just sent: a fence after them
     @Override
     public void flushEnded() {
         blocks.add(blockStart, head, glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
