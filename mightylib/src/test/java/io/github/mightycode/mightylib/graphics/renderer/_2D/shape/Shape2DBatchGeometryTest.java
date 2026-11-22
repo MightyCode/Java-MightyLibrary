@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -27,8 +28,8 @@ class Shape2DBatchGeometryTest {
     @Test
     void onlyTrianglesWithoutDepthAreBatched() {
         for (EDrawMode mode : EDrawMode.values()) {
-            assertEquals(mode == EDrawMode.Triangles, Shape2DRenderer.CanBatch(false, mode), mode.name());
-            assertFalse(Shape2DRenderer.CanBatch(true, mode), mode.name());
+            assertEquals(mode == EDrawMode.Triangles, BatchGeometry2D.CanBatch(false, mode), mode.name());
+            assertFalse(BatchGeometry2D.CanBatch(true, mode), mode.name());
         }
     }
 
@@ -43,13 +44,12 @@ class Shape2DBatchGeometryTest {
             float[] positions = RendererUtils.calculatePositionForSquare(new Vector2f(1, 1), point);
             for (float angle : angles) {
                 Matrix4f model = model(123.5f, -40.25f, angle, 37f, 12.5f);
-                float[] transformed = new float[positions.length];
-                Shape2DRenderer.TransformPositions(model, positions, transformed);
-
                 for (int i = 0; i < positions.length; i += 2) {
                     Vector4f shader = model.transform(new Vector4f(positions[i], positions[i + 1], 0, 1));
-                    assertEquals(shader.x, transformed[i], 1e-3f, reference + " " + angle);
-                    assertEquals(shader.y, transformed[i + 1], 1e-3f, reference + " " + angle);
+                    assertEquals(shader.x, BatchGeometry2D.TransformX(model, positions[i], positions[i + 1]), 1e-3f,
+                            reference + " " + angle);
+                    assertEquals(shader.y, BatchGeometry2D.TransformY(model, positions[i], positions[i + 1]), 1e-3f,
+                            reference + " " + angle);
                 }
             }
         }
@@ -59,9 +59,10 @@ class Shape2DBatchGeometryTest {
     @Test
     void theIdentityKeepsThePositions() {
         float[] positions = {0, 0, 1, 2, -3, 4.5f};
-        float[] transformed = new float[positions.length];
-        Shape2DRenderer.TransformPositions(new Matrix4f(), positions, transformed);
-        assertArrayEquals(positions, transformed);
+        for (int i = 0; i < positions.length; i += 2) {
+            assertEquals(positions[i], BatchGeometry2D.TransformX(new Matrix4f(), positions[i], positions[i + 1]));
+            assertEquals(positions[i + 1], BatchGeometry2D.TransformY(new Matrix4f(), positions[i], positions[i + 1]));
+        }
     }
 
     // The batch takes the texture coordinates of the same hook as the mesh: every flip and rotation of the face

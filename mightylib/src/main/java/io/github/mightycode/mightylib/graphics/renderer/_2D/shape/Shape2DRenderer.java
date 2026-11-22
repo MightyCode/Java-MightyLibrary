@@ -5,10 +5,9 @@ import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
-import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
-import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -41,7 +40,6 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     private int[] batchIndices;
     private float[] batchPositions;
     private float[] batchTextures;
-    private float[] batchTransformed = new float[0];
 
     public Shape2DRenderer(String shaderName, boolean useEbo) {
         this(new Material(shaderName), useEbo);
@@ -95,7 +93,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
      */
     @Override
     protected boolean submitToBatch(DrawBatch2D batch) {
-        if (!CanBatch(isDepthTest(), getMesh().getDrawMode()))
+        if (!BatchGeometry2D.CanBatch(isDepthTest(), getMesh().getDrawMode()))
             return false;
 
         refreshBatchGeometry();
@@ -107,21 +105,9 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         if (state < 0)
             return false;
 
-        int color = batchColor();
-        TransformPositions(modelMatrix(), batchPositions, batchTransformed);
-        batch.beginDraw(state, getLayer(), getSortDepth());
-        for (int i = 0; i < vertexCount; ++i)
-            batch.vertex(batchTransformed[2 * i], batchTransformed[2 * i + 1], batchTextures[2 * i],
-                    batchTextures[2 * i + 1], color);
-        for (int index : batchIndices)
-            batch.index(index);
-        batch.endDraw();
+        BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), batchPositions,
+                batchTextures, vertexCount, batchColor(), batchIndices, batchIndices.length);
         return true;
-    }
-
-    // The batch keeps no depth, and draws its indices as a list of triangles (not lines, strips or fans)
-    static boolean CanBatch(boolean depthTest, EDrawMode drawMode) {
-        return !depthTest && drawMode == EDrawMode.Triangles;
     }
 
     private void refreshBatchGeometry() {
@@ -132,26 +118,12 @@ public abstract class Shape2DRenderer extends MeshRenderer {
 
         if (batchPositionDirty) {
             batchPositions = calculatePosition();
-            if (batchTransformed.length != batchPositions.length)
-                batchTransformed = new float[batchPositions.length];
             batchPositionDirty = false;
         }
 
         if (batchTextureDirty) {
             batchTextures = calculateTexturePosition();
             batchTextureDirty = false;
-        }
-    }
-
-    // The 2D positions (x, y pairs) by the model, like its vertex shader: model * (x, y, 0, 1), affine
-    static void TransformPositions(Matrix4fc model, float[] positions, float[] transformed) {
-        float m00 = model.m00(), m01 = model.m01(), m10 = model.m10(), m11 = model.m11();
-        float m30 = model.m30(), m31 = model.m31();
-        for (int i = 0; i < positions.length; i += 2) {
-            float x = positions[i];
-            float y = positions[i + 1];
-            transformed[i] = m00 * x + m10 * y + m30;
-            transformed[i + 1] = m01 * x + m11 * y + m31;
         }
     }
 
