@@ -3,43 +3,35 @@
 		"fonts": {
 			"engineSans": {
 				"file": "engineSans_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			},
 			"engineSansBold": {
 				"file": "engineSansBold_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			},
 			"engineSansItalic": {
 				"file": "engineSansItalic_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			},
 			"engineSansBoldItalic": {
 				"file": "engineSansBoldItalic_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			},
 			"engineMono": {
 				"file": "engineMono_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			},
 			"engineMonoBold": {
 				"file": "engineMonoBold_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			},
 			"engineMonoItalic": {
 				"file": "engineMonoItalic_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			},
 			"engineMonoBoldItalic": {
 				"file": "engineMonoBoldItalic_0.png",
-				"qualityType": "realistic",
-				"textureType": "rectangle"
+				"qualityType": "linear"
 			}
 		}
 	}

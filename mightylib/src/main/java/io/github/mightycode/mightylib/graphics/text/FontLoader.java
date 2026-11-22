@@ -11,8 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
-
 public final class FontLoader extends ResourceLoader {
     @Override
     public Class<? extends DataType> getType() {
@@ -33,13 +31,13 @@ public final class FontLoader extends ResourceLoader {
     }
 
     /**
-     * Each character is a magenta and black box. The font shader reads a rectangle texture: the fallback font has its
-     * own checkerboard of this type, owned for the whole program (the TextureData loader must be registered first).
+     * Each character is a magenta and black box: the fallback font has its own checkerboard, owned for the whole
+     * program (the TextureData loader must be registered first).
      */
     @Override
     public DataType createFallback() {
         TextureData atlas = resources().addOwnedResource(TextureData.class,
-                new FallbackTextureData(FALLBACK_ATLAS_NAME, GL_TEXTURE_RECTANGLE), "fallback font");
+                new FallbackTextureData(FALLBACK_ATLAS_NAME), "fallback font");
 
         return new FontFace(atlas, FontFile.CreateBoxes(FallbackTextureData.SIZE));
     }

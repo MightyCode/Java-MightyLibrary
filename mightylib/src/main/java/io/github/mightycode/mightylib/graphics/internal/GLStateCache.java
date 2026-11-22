@@ -29,7 +29,6 @@ public final class GLStateCache {
     // Targets whose bindings are cached (GL constants); another target is always sent
     private static final int[] TARGETS = {
             0x0DE1, // GL_TEXTURE_2D
-            0x84F5, // GL_TEXTURE_RECTANGLE
             0x8513, // GL_TEXTURE_CUBE_MAP
             0x8C1A  // GL_TEXTURE_2D_ARRAY
     };

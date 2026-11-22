@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.text;
 
 import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import org.joml.Vector4f;
 import org.joml.Vector4i;
 
 import java.io.*;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 public final class FontFile {
     private static final int SPACE_CHAR_CODE = 32;
+    private static final double HALF_TEXEL = 0.5;
     private final String path;
     private Vector4i padding;
 
@@ -178,6 +180,18 @@ public final class FontFile {
     }
 
     public int getReferenceSize() { return size; }
+
+    /**
+     * The part of the atlas of the character in texture coordinates (x, y = u left and right, z, w = v top and bottom,
+     * in 0..1), inset by half a texel: with linear filtering, sampling exactly on the glyph border blends the
+     * neighbor glyph of the atlas when there is no spacing between them.
+     */
+    void textureBounds(FontChar fontChar, Vector4f bounds) {
+        bounds.x = (float) ((fontChar.getxAtlas() + HALF_TEXEL) / atlasWidth);
+        bounds.y = (float) ((fontChar.getxAtlas() + fontChar.getWidthAtlas() - HALF_TEXEL) / atlasWidth);
+        bounds.z = (float) ((fontChar.getyAtlas() + HALF_TEXEL) / atlasHeight);
+        bounds.w = (float) ((fontChar.getyAtlas() + fontChar.getHeightAtlas() - HALF_TEXEL) / atlasHeight);
+    }
 
     public int atlasWidth(){ return atlasWidth; }
 

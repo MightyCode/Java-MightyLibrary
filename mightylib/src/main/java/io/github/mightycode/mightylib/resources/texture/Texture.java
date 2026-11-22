@@ -15,7 +15,6 @@ import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
 import static org.lwjgl.opengl.GL21.GL_SRGB8_ALPHA8;
-import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 /**
  * The OpenGL texture of a TextureData, sent in strips for a big one, sent again when its data is reloaded, replaced
@@ -96,12 +95,7 @@ public class Texture extends GLElement implements IGLBindable, IRenderTextureBin
                 Logger.CheckOpenGLError("Bind texture : " + data.getDataName() + " , texture id : " + textureId + " , texture type : " + textureType);
         // Failed or still loading: the fallback texture instead
         } else {
-            // Same target as this texture: a rectangle sampler can't read a 2D texture
-            int rectangleId = data != null && data.defaultTextureType == GL_TEXTURE_RECTANGLE ? placeholders().fallbackRectangleId(resources) : -1;
-            if (rectangleId != -1)
-                GLContext.currentState().bindTexture(GL_TEXTURE_RECTANGLE, rectangleId);
-            else
-                GLContext.currentState().bindTexture(GL_TEXTURE_2D, getFallbackId());
+            GLContext.currentState().bindTexture(GL_TEXTURE_2D, getFallbackId());
         }
     }
 
