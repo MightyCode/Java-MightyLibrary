@@ -24,7 +24,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
   - Linux : `mvn`/`java` (JDK 21) sont dans le PATH : `mvn -o -q compile`.
   - Windows : `mvn`/`java` ne sont pas dans le PATH, utiliser les outils d'IntelliJ :
     ```bash
-    JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn" -o -q compile
+    JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven-plugin/lib/maven3/bin/mvn" -o -q compile
     ```
   - Tests : même commande avec `test` au lieu de `compile` (quelques secondes ; les tests tagués `gl` ouvrent une fenêtre cachée, `-DexcludedGroups=gl` les écarte). Un seul module : `-pl <module> -am` (sans `-am`, les autres modules viennent du dépôt local, peut-être périmés).
   - `package` au lieu de `compile` : la démo est compilée et testée contre les jars de la bibliothèque et du kit (vérification que la bibliothèque se suffit) ; à lancer quand les poms (dont `bom`, `base-parent`, `game-parent`, `mightylib-test`) ou la frontière bibliothèque/démo changent.
