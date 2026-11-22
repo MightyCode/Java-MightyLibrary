@@ -909,9 +909,10 @@ public final class DrawBatch2D {
         sortedInstanceBytes = outBytes;
     }
 
+    // used may go past the buffer: the padding before the first vertex of a draw (nothing written there yet)
     private static ByteBuffer grow(ByteBuffer buffer, int used, int capacity) {
         ByteBuffer grown = BufferUtils.createByteBuffer(capacity);
-        buffer.position(0).limit(used);
+        buffer.position(0).limit(Math.min(used, buffer.capacity()));
         grown.put(buffer);
         buffer.clear();
         grown.clear();

@@ -858,6 +858,38 @@ class DrawBatch2DTest {
         assertArrayEquals(new int[]{0, 1, 2, 3, 6, 5, 3, 5, 4}, target.uploader.indexUploads.get(0));
     }
 
+    // The padding of a larger vertex goes past the end of the full buffer: it grows, the vertices before are kept
+    @Test
+    void thePaddingPastTheEndOfTheBufferGrowsIt() {
+        int sprite = state("s");
+        int stroke = state("t", BatchFormats.STROKE);
+        // 252 sprite vertices: 5040 bytes of 5120, padded to 5168 for a vertex of 136 bytes
+        for (int q = 0; q < 63; ++q)
+            quad(sprite, q);
+        batch.beginDraw(stroke);
+        for (int v = 0; v < 3; ++v) {
+            for (int f = 0; f < 20; ++f)
+                batch.put(v);
+            batch.putInt(v);
+            batch.putInt(v);
+            for (int f = 0; f < 12; ++f)
+                batch.put(v);
+        }
+        batch.index(0);
+        batch.index(1);
+        batch.index(2);
+        batch.endDraw();
+        batch.endView();
+
+        ByteBuffer vertices = target.uploader.vertexBytes.get(0);
+        assertEquals(5168 + 3 * 136, vertices.remaining());
+        // The last sprite quad kept, the stroke vertices from vertex 38 of 136 bytes
+        assertEquals(62f, vertices.getFloat(62 * 80));
+        assertEquals(2f, vertices.getFloat(5168 + 2 * 136));
+        int[] indices = target.uploader.indexUploads.get(0);
+        assertArrayEquals(new int[]{38, 39, 40}, Arrays.copyOfRange(indices, indices.length - 3, indices.length));
+    }
+
     // A value of the wrong kind, an index in the middle of a vertex, an end in the middle: refused
     @Test
     void writesAreCheckedAgainstTheFormat() {
