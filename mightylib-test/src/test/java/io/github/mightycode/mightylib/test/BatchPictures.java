@@ -95,7 +95,9 @@ final class BatchPictures {
             Engine engine = Views.engine();
             engine.setBatch2DMode(EBatch2DMode.OFF);
             ByteBuffer alone = draw(scene, drawing);
-            StringBuilder report = new StringBuilder("--Batch against alone");
+            int drawn = drawnPixels(alone);
+            assertTrue(drawn > 200, "Almost nothing drawn: " + drawn + " pixels");
+            StringBuilder report = new StringBuilder("--Batch against alone (" + drawn + " pixels drawn)");
             for (EBatch2DMode mode : EBatch2DMode.values()) {
                 if (mode == EBatch2DMode.OFF)
                     continue;
@@ -131,6 +133,17 @@ final class BatchPictures {
         }
 
         return different + " channels differ by more than 1 (largest difference " + maximum + ")";
+    }
+
+    // Pixels not of the clear color of Capture.draw
+    static int drawnPixels(ByteBuffer picture) {
+        int drawn = 0;
+        for (int i = 0; i < picture.capacity(); i += 4) {
+            if (Math.abs((picture.get(i) & 0xFF) - 51) > 2 || Math.abs((picture.get(i + 1) & 0xFF) - 77) > 2
+                    || Math.abs((picture.get(i + 2) & 0xFF) - 102) > 2)
+                ++drawn;
+        }
+        return drawn;
     }
 
     static int countDifferent(ByteBuffer expected, ByteBuffer actual) {

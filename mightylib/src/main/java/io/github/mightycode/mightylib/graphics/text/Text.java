@@ -59,6 +59,8 @@ public final class Text extends MeshRenderer {
         this.padding = new Vector4f(0, 0, 0, 0);
         this.leftUpPosition = new Vector2f(0, 0);
 
+        // Batched with the other 2D draws (MeshRenderer.submitToBatch): the batch reads the characters on the CPU
+        getMesh().keepCpuData();
         // Dynamic: text content can change every frame (debug info, counters...)
         getMesh().setEboStorage(Mesh.DYNAMIC_STORE);
         getMesh().setEbo(new int[0]);

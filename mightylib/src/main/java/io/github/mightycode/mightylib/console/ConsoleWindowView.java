@@ -49,6 +49,7 @@ final class ConsoleWindowView extends WindowView {
         boolean focused = glfwGetWindowAttrib(window().getWindow().getInfo().getWindowId(), GLFW_FOCUSED) == 1;
         try (Views.Scope ignored = Views.enter(consoleView)) {
             panel.display(0, 0, size.x, size.y, focused);
+            consoleView.endView();
         }
     }
 

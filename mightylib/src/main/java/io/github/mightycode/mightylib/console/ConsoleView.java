@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.console;
 
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.WindowContext;
@@ -43,6 +45,8 @@ final class ConsoleView implements IView {
     private final Engine engine;
     private final WindowContext window;
     private final PixelCamera camera;
+    // Its batched 2D draws (the rows of text, the backgrounds), created at the first draw
+    private DrawBatch2D batch2D;
 
     ConsoleView(Engine engine, WindowContext window) {
         this.engine = engine;
@@ -64,6 +68,19 @@ final class ConsoleView implements IView {
     @Override
     public Camera3D camera3D() {
         throw new IllegalStateException("The console has no 3D camera");
+    }
+
+    @Override
+    public DrawBatch2D batch2D() {
+        if (batch2D == null)
+            batch2D = Batches2D.of(engine).createBatch(getClass().getSimpleName());
+        return batch2D;
+    }
+
+    // End of the draws of the console: its batched draws are sent before another view draws
+    void endView() {
+        if (batch2D != null)
+            batch2D.endView();
     }
 
     // Drawn straight on the window, which is not sRGB: never linear, whatever the mode of the engine
