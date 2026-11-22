@@ -39,6 +39,8 @@ public final class MatrixRenderer {
 
         // Setup the renderer
         renderer = new MeshRenderer(EngineResources.MULTI_COLORED_SHAPE_2D, true);
+        // Batched with the other 2D draws: the batch reads the geometry on the CPU
+        renderer.getMesh().keepCpuData();
         renderer.setColorMode(ColorList.Red());
         renderer.getMesh().setEboStorage(Mesh.STATIC_STORE);
         renderer.getMesh().setEbo(new int[0]);

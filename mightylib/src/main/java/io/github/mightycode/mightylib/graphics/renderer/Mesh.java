@@ -79,6 +79,9 @@ public class Mesh {
     private int verticesToDraw;
 
     private EDrawMode drawMode;
+
+    // The copy of the float vbos and of the ebo on the CPU, null until keepCpuData
+    private MeshCpuData cpuData;
     private int glDrawMode;
 
     // The live meshes of the engine of the view that creates the mesh
@@ -135,6 +138,8 @@ public class Mesh {
         glVertexAttribPointer(channel, vertexSize, GL_FLOAT, false, 0, 0);
         Logger.CheckOpenGLError("Vbo attrib pointer : " + vbo);
 
+        if (cpuData != null)
+            cpuData.addVbo(vbos.size(), vertices);
         return endAddVbo(vbo, channel, vertices.length, vertexSize, storage, false);
     }
 
@@ -154,6 +159,8 @@ public class Mesh {
         glBufferData(GL_ARRAY_BUFFER, vertices, storage);
         glVertexAttribIPointer(channel, vertexSize, GL_INT,0, 0);
 
+        if (cpuData != null)
+            cpuData.addVbo(vbos.size(), null);
         return endAddVbo(vbo, channel, vertices.length, vertexSize, storage, true);
     }
 
@@ -192,6 +199,8 @@ public class Mesh {
 
     public final void updateVbo(float[] vertices, int vboPosition){
         EngineStats.countBufferUpload((long) vertices.length * Float.BYTES);
+        if (cpuData != null)
+            cpuData.setVbo(vboPosition, vertices);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
 
@@ -219,7 +228,10 @@ public class Mesh {
     }
 
 
+    // Replaces the part of the vbo from startIndex, an offset in bytes
     public final void updateSubVbo(float[] vertices, int vboPosition, int startIndex){
+        if (cpuData != null)
+            cpuData.setSubVbo(vboPosition, vertices, startIndex);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
@@ -309,6 +321,8 @@ public class Mesh {
     public final void setEbo(int[] indices, int indicesSize){
         bind();
         this.indicesSize = indicesSize;
+        if (cpuData != null)
+            cpuData.setIndices(indices, indicesSize);
 
         if (!useEbo)
             System.err.print(">(Mesh.java) Providing EBO without using EBO !");
@@ -321,6 +335,8 @@ public class Mesh {
 
     public final void setEboNumberIndex(int newIndexSize) {
         this.indicesSize = newIndexSize;
+        if (cpuData != null)
+            cpuData.setIndexCount(newIndexSize);
     }
 
     public final void updateEbo(int[] newArray, int startIndex) {
@@ -332,6 +348,8 @@ public class Mesh {
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, startIndex, newArray);
+        if (cpuData != null)
+            cpuData.updateIndices(newArray, startIndex);
     }
 
     /**
@@ -469,6 +487,49 @@ public class Mesh {
                 // Nothing to do for the other values
                 break;
         }
+    }
+
+    /**
+     * Keeps on the CPU a copy of what is sent to the float vbos and to the ebo from now on (a vbo or an ebo sent before
+     * is unknown until updated again): the batched draws of a 2D MeshRenderer read it (MeshRenderer.submitToBatch).
+     * Costs a copy of each update. Ask it right after the creation of the mesh.
+     */
+    public final Mesh keepCpuData() {
+        if (cpuData != null)
+            return this;
+
+        cpuData = new MeshCpuData();
+        for (int i = 0; i < vbos.size(); ++i)
+            cpuData.addVbo(i, null);
+        if (indicesSize > 0)
+            cpuData.forgetIndices();
+        return this;
+    }
+
+    public final boolean isKeepingCpuData() {
+        return cpuData != null;
+    }
+
+    // The copy on the CPU, null without keepCpuData
+    MeshCpuData cpuData() {
+        return cpuData;
+    }
+
+    // The rank of the vbo of this channel, -1 when none
+    int vboOfChannel(int channel) {
+        return vbosChannel.indexOf(channel);
+    }
+
+    int vboChannel(int vbo) {
+        return vbosChannel.get(vbo);
+    }
+
+    int vboVertexSize(int vbo) {
+        return vbosVertexSize.get(vbo);
+    }
+
+    boolean isVboEnabled(int vbo) {
+        return vbosEnable.get(vbo);
     }
 
     public final EDrawMode getDrawMode(){

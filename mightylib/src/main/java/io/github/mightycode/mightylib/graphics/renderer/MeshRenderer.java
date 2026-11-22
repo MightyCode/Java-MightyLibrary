@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 
@@ -52,6 +54,57 @@ public class MeshRenderer extends Renderer {
     public void draw(){
         mesh.bind();
         mesh.draw();
+    }
+
+    /**
+     * Hook: batched when its mesh keeps its data on the CPU (Mesh.keepCpuData), has an ebo and draws a list of
+     * triangles, its depth test is off and its shader has a batch equivalent: the positions of channel 0 (2 floats)
+     * transformed by the model, the texture coordinates of channel 1 (2 floats) when enabled, the colors of an enabled
+     * vbo of 4 floats (RGBA, one per vertex; otherwise the color of the renderer). Another enabled attribute, an
+     * unknown vbo or an index past the vertices: drawn alone. A subclass that sends its geometry in draw sends it here
+     * too before calling super, or redefines it.
+     */
+    @Override
+    protected boolean submitToBatch(DrawBatch2D batch) {
+        MeshCpuData data = mesh.cpuData();
+        if (data == null || !mesh.isUsingEbo() || !BatchGeometry2D.CanBatch(isDepthTest(), mesh.getDrawMode()))
+            return false;
+
+        float[] positions = null, textures = null, colors = null;
+        for (int vbo = 0; vbo < mesh.getVboCount(); ++vbo) {
+            if (!mesh.isVboEnabled(vbo))
+                continue;
+
+            float[] values = data.vbo(vbo);
+            if (values == null)
+                return false;
+
+            int channel = mesh.vboChannel(vbo);
+            int size = mesh.vboVertexSize(vbo);
+            if (channel == Mesh.COMMON_VERTEX_POSITION_CHANNEL && size == 2)
+                positions = values;
+            else if (channel == Mesh.COMMON_TEXTURE_POSITION_CHANNEL && size == 2)
+                textures = values;
+            else if (size == 4 && colors == null)
+                colors = values;
+            else
+                return false;
+        }
+
+        if (positions == null)
+            return false;
+        int vertexCount = positions.length / 2;
+        if (textures != null && textures.length < 2 * vertexCount || colors != null && colors.length < 4 * vertexCount
+                || data.maxIndex() >= vertexCount)
+            return false;
+
+        int state = batchState(batch);
+        if (state < 0)
+            return false;
+
+        BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), positions, textures,
+                colors, vertexCount, batchColor(), data.indices(), data.indexCount());
+        return true;
     }
 
     public final void setMainTextureChannel(String name) {
