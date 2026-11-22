@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 
+import io.github.mightycode.mightylib.resources.EngineResources;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,13 +33,52 @@ public final class BatchFormats {
             .template(new float[]{0, 1, 0, 0, 1, 0, 1, 1}, new int[]{0, 3, 2, 0, 2, 1})
             .build();
 
+    /**
+     * Programs of the vector shapes (2D/shape/shape2DInstancedV.glsl with the fragment shader of each shape), one
+     * instance per shape: the corner of the unit square per vertex; per instance the rows of its 2D affine model, its
+     * size and reference point, fill and stroke colors (packed sRGB ints, Color4f.toIntRGBA), stroke width, alignment,
+     * unit and antialiasing, margin and textured, texture position, the parameters of the shape. The uniforms of
+     * shape2DV.glsl, in VectorShape2DRenderer.
+     */
+    public static final BatchFormat SHAPE = shape("shape", "aSizeReference", 4)
+            .template(new float[]{0, 1, 0, 0, 1, 0, 1, 1}, new int[]{0, 3, 2, 0, 2, 1})
+            .build();
+
+    /**
+     * Program of PointsRenderer (2D/shape/points2DInstancedV.glsl), one instance per point: SHAPE with the center of
+     * the point (in the frame of the renderer) instead of the size and reference point; corners -1 to 1.
+     */
+    public static final BatchFormat POINT = shape("point", "aCenter", 2)
+            .template(new float[]{-1, -1, -1, 1, 1, 1, 1, -1}, new int[]{0, 1, 2, 0, 2, 3})
+            .build();
+
+    private static BatchFormat.Builder shape(String name, String placeName, int placeComponents) {
+        return BatchFormat.builder(name)
+                .vertex("aCorner", 2, EBatchAttributeType.FLOAT)
+                .instance("aModel0", 3, EBatchAttributeType.FLOAT)
+                .instance("aModel1", 3, EBatchAttributeType.FLOAT)
+                .instance(placeName, placeComponents, EBatchAttributeType.FLOAT)
+                .instance("aColor", 1, EBatchAttributeType.INT)
+                .instance("aStrokeColor", 1, EBatchAttributeType.INT)
+                .instance("aStroke", 4, EBatchAttributeType.FLOAT)
+                .instance("aMarginTextured", 2, EBatchAttributeType.FLOAT)
+                .instance("aTexturePosition", 4, EBatchAttributeType.FLOAT)
+                .instance("aParams0", 4, EBatchAttributeType.FLOAT)
+                .instance("aParams1", 4, EBatchAttributeType.FLOAT);
+    }
+
     private BatchFormats() {}
 
     /** The batch programs of the engine (shaders.json of the engine) and their formats, registered by the engine. */
     public static Map<String, BatchFormat> engineFormats() {
         Map<String, BatchFormat> formats = new LinkedHashMap<>();
-        formats.put("sprite2D", SPRITE);
-        formats.put("sprite2DInstanced", SPRITE_INSTANCED);
+        formats.put(EngineResources.SPRITE_2D, SPRITE);
+        formats.put(EngineResources.SPRITE_2D_INSTANCED, SPRITE_INSTANCED);
+        for (String shape : new String[]{EngineResources.ROUNDED_RECTANGLE_2D_BATCH, EngineResources.CIRCLE_2D_BATCH,
+                EngineResources.ELLIPSE_2D_BATCH, EngineResources.TRIANGLE_2D_BATCH, EngineResources.ARC_2D_BATCH,
+                EngineResources.REGULAR_POLYGON_2D_BATCH, EngineResources.GRID_2D_BATCH})
+            formats.put(shape, SHAPE);
+        formats.put(EngineResources.POINTS_2D_BATCH, POINT);
         return formats;
     }
 }

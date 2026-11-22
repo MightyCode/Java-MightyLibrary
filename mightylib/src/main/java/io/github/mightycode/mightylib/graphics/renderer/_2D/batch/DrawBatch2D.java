@@ -258,6 +258,12 @@ public final class DrawBatch2D {
         }
     }
 
+    /** The format the draws of this state are written in (the one of its batch program), for a state of this batch. */
+    public BatchFormat formatOf(int state) {
+        start();
+        return table.formatOf(state);
+    }
+
     // The format of the draw being asked (the one of its state), null outside of a draw
     public BatchFormat drawFormat() {
         return inDraw ? drawFormat : null;

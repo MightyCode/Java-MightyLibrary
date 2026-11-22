@@ -1,12 +1,18 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
+
+import java.util.Set;
 
 /**
  * A 2D shape drawn by its signed distance on a quad (the rectangle of the shape, widened for the stroke and the
@@ -19,7 +25,9 @@ import org.joml.Vector4f;
  * <p>
  * A project adds its own shape: a fragment shader that includes utils/shape2D.glsl and gives its distance to
  * shapeColor (vertex shader 2D/shape/shape2DV.glsl), declared in shaders.json, and a subclass that sends its
- * parameters (writeShapeParameters) and, when it goes beyond its rectangle, its margin (extraMargin).
+ * parameters (writeShapeParameters) and, when it goes beyond its rectangle, its margin (extraMargin). To be batched,
+ * its entry links ("batch") to a batch program of the same fragment shader with 2D/shape/shape2DInstancedV.glsl
+ * (tags 2D and batch2D), registered with the format BatchFormats.SHAPE (registry.shaders().batchFormat).
  */
 public abstract class VectorShape2DRenderer extends Shape2DRenderer {
     private static final String SIZE = "shapeSize";
@@ -34,6 +42,11 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
     private static final String TEXTURED = "shapeTextured";
     private static final String PARAMETERS_0 = "shapeParams0";
     private static final String PARAMETERS_1 = "shapeParams1";
+
+    // The values written in the batch by submitToBatch: the renderer is batched with them
+    private static final Set<String> BATCH_VALUES = Set.of(SIZE, REFERENCE, STROKE_COLOR, STROKE_WIDTH,
+            STROKE_ALIGNMENT, STROKE_UNIT, ANTIALIASING, MARGIN, TEXTURE_POSITION, TEXTURED, PARAMETERS_0,
+            PARAMETERS_1);
 
     private final ShapeStroke stroke;
     private boolean antialiasing;
@@ -104,10 +117,8 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
      */
     @Override
     public void updateShader() {
-        size.set(scale().x, scale().y);
-        reference.set(getReferencePoint());
-        texturePosition.set(getTexturePosition());
-        texturedValue.setObject(getMainTexture() != null && isTextureEnabled() ? 1 : 0);
+        computeValues();
+        texturedValue.setObject(isTextured() ? 1 : 0);
 
         strokeWidthValue.setObject(stroke.width());
         strokeColorValue.setObject(stroke.color());
@@ -116,9 +127,72 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         antialiasingValue.setObject(antialiasing ? 1f : 0f);
         marginValue.setObject(Math.max(extraMargin(), 0f));
 
-        writeShapeParameters(parameters0, parameters1);
-
         super.updateShader();
+    }
+
+    // The values of the shape for its draw, alone or batched
+    private void computeValues() {
+        size.set(scale().x, scale().y);
+        reference.set(getReferencePoint());
+        texturePosition.set(getTexturePosition());
+        writeShapeParameters(parameters0, parameters1);
+    }
+
+    private boolean isTextured() {
+        return getMainTexture() != null && isTextureEnabled();
+    }
+
+    // ---- 2D batch ----
+
+    @Override
+    protected final Set<String> batchWrittenValues() {
+        return BATCH_VALUES;
+    }
+
+    /**
+     * Batched when its shader links to a batch program of the format of the shape (BatchFormats.SHAPE, POINT for
+     * PointsRenderer), its depth test is off and its model stays in the plane (BatchGeometry2D.IsAffine2D): one
+     * instance with the values updateShader sends (a value a subclass sends itself in updateShader is not in it).
+     */
+    @Override
+    protected final boolean submitToBatch(DrawBatch2D batch) {
+        if (isDepthTest() || !BatchGeometry2D.IsAffine2D(modelMatrix()))
+            return false;
+
+        int state = batchState(batch);
+        if (state < 0 || batch.formatOf(state) != batchFormat())
+            return false;
+
+        computeValues();
+        int fill = batchColor();
+        batch.beginDraw(state, getLayer(), getSortDepth());
+        writeBatchInstances(batch, fill);
+        batch.endDraw();
+        return true;
+    }
+
+    // The format of the batch program of the shape
+    BatchFormat batchFormat() {
+        return BatchFormats.SHAPE;
+    }
+
+    // The instances of the draw: one for the shape
+    void writeBatchInstances(DrawBatch2D batch, int fill) {
+        BatchGeometry2D.WriteModelRows(batch, modelMatrix());
+        batch.put(size.x, size.y, reference.x, reference.y);
+        writeInstanceValues(batch, fill);
+    }
+
+    // What follows the place of the instance in BatchFormats.SHAPE and POINT
+    final void writeInstanceValues(DrawBatch2D batch, int fill) {
+        batch.putInt(fill);
+        batch.putInt(stroke.color().toIntRGBA());
+        batch.put(stroke.width(), stroke.alignment().outsideFraction(), stroke.unit().shaderValue(),
+                antialiasing ? 1f : 0f);
+        batch.put(Math.max(extraMargin(), 0f), isTextured() ? 1f : 0f);
+        batch.put(texturePosition.x, texturePosition.y, texturePosition.z, texturePosition.w);
+        batch.put(parameters0.x, parameters0.y, parameters0.z, parameters0.w);
+        batch.put(parameters1.x, parameters1.y, parameters1.z, parameters1.w);
     }
 
     /**

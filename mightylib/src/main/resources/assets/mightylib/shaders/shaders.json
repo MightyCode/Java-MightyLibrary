@@ -14,56 +14,120 @@
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/roundedRectangle2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "roundedRectangle2DBatch"
 		},
 		"circle2D": {
 			"files": [
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/circle2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "circle2DBatch"
 		},
 		"ellipse2D": {
 			"files": [
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/ellipse2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "ellipse2DBatch"
 		},
 		"triangle2D": {
 			"files": [
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/triangle2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "triangle2DBatch"
 		},
 		"arc2D": {
 			"files": [
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/arc2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "arc2DBatch"
 		},
 		"regularPolygon2D": {
 			"files": [
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/regularPolygon2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "regularPolygon2DBatch"
 		},
 		"points2D": {
 			"files": [
 				"2D/shape/points2DV.glsl",
 				"2D/shape/points2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "points2DBatch"
 		},
 		"grid2D": {
 			"files": [
 				"2D/shape/shape2DV.glsl",
 				"2D/shape/grid2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "grid2DBatch"
+		},
+		"roundedRectangle2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"2D/shape/roundedRectangle2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"circle2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"2D/shape/circle2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"ellipse2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"2D/shape/ellipse2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"triangle2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"2D/shape/triangle2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"arc2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"2D/shape/arc2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"regularPolygon2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"2D/shape/regularPolygon2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"grid2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"2D/shape/grid2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"points2DBatch": {
+			"files": [
+				"2D/shape/points2DInstancedV.glsl",
+				"2D/shape/points2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
 		},
 		"stroke2D": {
 			"files": [

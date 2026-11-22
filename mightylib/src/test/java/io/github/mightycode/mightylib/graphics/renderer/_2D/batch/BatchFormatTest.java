@@ -41,6 +41,23 @@ class BatchFormatTest {
         assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1}, instanced.templateIndices());
     }
 
+    // The shapes: one instance of the values of shape2DV.glsl (model rows, place, two colors, stroke...), the points
+    // the same with their center; each batch program of a shape of the engine has its format
+    @Test
+    void theShapeFormatsHoldTheValuesOfAShape() {
+        assertEquals(4 * (3 + 3 + 4 + 1 + 1 + 4 + 2 + 4 + 4 + 4), BatchFormats.SHAPE.instanceBytes());
+        assertEquals(BatchFormats.SHAPE.instanceBytes() - 8, BatchFormats.POINT.instanceBytes());
+        assertEquals(BatchFormats.SHAPE.attribute("aColor").location(), BatchFormats.POINT.attribute("aColor")
+                .location());
+        assertEquals(EBatchAttributeType.INT, BatchFormats.SHAPE.attribute("aStrokeColor").type());
+        assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1}, BatchFormats.SHAPE.templateIndices());
+
+        for (String shape : new String[]{"roundedRectangle2D", "circle2D", "ellipse2D", "triangle2D", "arc2D",
+                "regularPolygon2D", "grid2D"})
+            assertSame(BatchFormats.SHAPE, BatchFormats.engineFormats().get(shape + "Batch"), shape);
+        assertSame(BatchFormats.POINT, BatchFormats.engineFormats().get("points2DBatch"));
+    }
+
     // Bytes padded to 4 for the colors, ints of 4 bytes; gl_VertexID only: the vertices come from the indices
     @Test
     void sizesAndOffsetsFollowTheTypes() {

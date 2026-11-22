@@ -38,6 +38,15 @@ public final class EngineResources {
     // Batch shaders (tags batch2D, batch2DInstanced): texture x vertex color; texture2D and colorShape2D link to them
     public static final String SPRITE_2D = "sprite2D";
     public static final String SPRITE_2D_INSTANCED = "sprite2DInstanced";
+    // Batch programs of the vector shapes (tag batch2D, BatchFormats.SHAPE and POINT): each vector shape links to its own
+    public static final String ROUNDED_RECTANGLE_2D_BATCH = "roundedRectangle2DBatch";
+    public static final String CIRCLE_2D_BATCH = "circle2DBatch";
+    public static final String ELLIPSE_2D_BATCH = "ellipse2DBatch";
+    public static final String TRIANGLE_2D_BATCH = "triangle2DBatch";
+    public static final String ARC_2D_BATCH = "arc2DBatch";
+    public static final String REGULAR_POLYGON_2D_BATCH = "regularPolygon2DBatch";
+    public static final String GRID_2D_BATCH = "grid2DBatch";
+    public static final String POINTS_2D_BATCH = "points2DBatch";
     public static final String MULTI_COLORED_SHAPE_2D = "multiColoredShape2D";
     public static final String COLORED_TEXT = "coloredText";
     public static final String POST_PROCESSING = "postProcessing";
@@ -51,6 +60,8 @@ public final class EngineResources {
             COLOR_SHAPE_2D, TEXTURE_2D,
             ROUNDED_RECTANGLE_2D, CIRCLE_2D, ELLIPSE_2D, TRIANGLE_2D, ARC_2D, REGULAR_POLYGON_2D,
             POINTS_2D, GRID_2D, STROKE_2D, SPRITE_2D, SPRITE_2D_INSTANCED,
+            ROUNDED_RECTANGLE_2D_BATCH, CIRCLE_2D_BATCH, ELLIPSE_2D_BATCH, TRIANGLE_2D_BATCH, ARC_2D_BATCH,
+            REGULAR_POLYGON_2D_BATCH, GRID_2D_BATCH, POINTS_2D_BATCH,
             MULTI_COLORED_SHAPE_2D, COLORED_TEXT, POST_PROCESSING,
             COLOR_SHAPE_3D, TEXTURE_3D, SKYBOX, MULTI_COLORED_LIGHTING_3D, TEXTURE_MULTIPLE_LIGHTS_3D);
 

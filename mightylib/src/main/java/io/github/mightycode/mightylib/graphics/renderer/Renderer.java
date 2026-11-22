@@ -22,6 +22,7 @@ import org.joml.Matrix4fc;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
+import java.util.Collections;
 import java.util.Set;
 
 
@@ -262,7 +263,16 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
         viewValue = overrides.get(ShaderUniforms.VIEW);
         colorValue = overrides.get(ShaderUniforms.COLOR);
         overridesBatchable = projectionValue != null && viewValue != null
-                && overrides.onlyNames(BATCH_HANDLED_VALUES);
+                && overrides.onlyNames(BATCH_HANDLED_VALUES, batchWrittenValues());
+    }
+
+    /**
+     * Hook read by batchState when the values of this renderer change: the names of its own values that its
+     * submitToBatch writes in the batch itself (in the format of its batch program), besides the camera, the model
+     * and the color. A renderer with other values is drawn alone. None by default.
+     */
+    protected Set<String> batchWrittenValues() {
+        return Collections.emptySet();
     }
 
     /**
