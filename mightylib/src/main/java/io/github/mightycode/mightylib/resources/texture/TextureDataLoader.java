@@ -28,8 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
-
 public final class TextureDataLoader extends ResourceLoader {
     private static final String TEXTURES_FOLDER = "textures";
     private static final String LIST_TEXTURES = TEXTURES_FOLDER + "/textures.json";
@@ -134,12 +132,8 @@ public final class TextureDataLoader extends ResourceLoader {
                     currentTexture.defaultAspectTexture = TextureParameters.PIXEL_ART_PARAMETERS;
                 } else if (temp.equals("realistic")){
                     currentTexture.defaultAspectTexture = TextureParameters.REALISTIC_PARAMETERS;
-                }
-
-                if (information.has("textureType")) {
-                    temp = information.getString("textureType");
-                    if (temp.equals("rectangle"))
-                        currentTexture.defaultTextureType = GL_TEXTURE_RECTANGLE;
+                } else if (temp.equals("linear")){
+                    currentTexture.defaultAspectTexture = TextureParameters.LINEAR_PARAMETERS;
                 }
 
                 if (information.has("colorSpace")) {

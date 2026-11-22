@@ -492,6 +492,7 @@ public final class Console implements IConsoleService {
             float height = Math.max(1, Math.round(size.y * OVERLAY_HEIGHT));
             try (Views.Scope ignored = Views.enter(overlayView)) {
                 overlay.display(0, size.y - height, size.x, height, true);
+                overlayView.endView();
             }
         } catch (RuntimeException e) {
             // A console that fails must not stop the game: it stays closed

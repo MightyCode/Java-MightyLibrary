@@ -15,8 +15,6 @@ public final class Text extends MeshRenderer {
     private static final int NUMBER_INDICES = 4;
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;
-    // Font atlases are rectangle textures, so texture coordinates are in texels
-    private static final float HALF_TEXEL = 0.5f;
 
     private float fontSize;
     private final int positionIndex;
@@ -61,6 +59,8 @@ public final class Text extends MeshRenderer {
         this.padding = new Vector4f(0, 0, 0, 0);
         this.leftUpPosition = new Vector2f(0, 0);
 
+        // Batched with the other 2D draws (MeshRenderer.submitToBatch): the batch reads the characters on the CPU
+        getMesh().keepCpuData();
         // Dynamic: text content can change every frame (debug info, counters...)
         getMesh().setEboStorage(Mesh.DYNAMIC_STORE);
         getMesh().setEbo(new int[0]);
@@ -437,12 +437,7 @@ public final class Text extends MeshRenderer {
                 charPositions[charCount * SIZE_COORDINATES + 6] = temp.y;
                 charPositions[charCount * SIZE_COORDINATES + 7] = temp.z;
 
-                // Inset by half a texel: with linear filtering, sampling exactly on the glyph border
-                // blends the neighbor glyph of the atlas when there is no spacing between them
-                temp.x = (float)(fontChar.getxAtlas()) + HALF_TEXEL;
-                temp.y = (float)(fontChar.getxAtlas() + fontChar.getWidthAtlas()) - HALF_TEXEL;
-                temp.z = (float)(fontChar.getyAtlas()) + HALF_TEXEL;
-                temp.w = (float)(fontChar.getyAtlas() + fontChar.getHeightAtlas()) - HALF_TEXEL;
+                usedFont().getFontFile().textureBounds(fontChar, temp);
 
                 texturePosition[charCount * SIZE_COORDINATES] = temp.x;
                 texturePosition[charCount * SIZE_COORDINATES + 1] = temp.z;

@@ -4,13 +4,11 @@ out vec4 FragColor;
 
 uniform int color;
 
-uniform sampler2DRect ourTexture;
+uniform sampler2D ourTexture;
 
 #include "utils/colorsManipulation.glsl"
 
 void main()
 {
     FragColor = texture(ourTexture, texCoords) * decodeColor(color);
-
-    //FragColor = vec4(0, 0, 0, 1);
 }

@@ -43,6 +43,7 @@ public final class DemoScenes {
 
     static final List<Entry<?>> ALL = List.of(
             scene(MenuScene.class, MenuScene::new, "The menu of the demo: the registered scenes, filtered, sorted and described."),
+            scene(BatchRenderers2D.class, BatchRenderers2D::new, "The renderers that go through the 2D batch: wrapped texts, a tile map larger than the screen under a moving camera (only the visible tiles are written), animations and the debug renderers (nodes, graph, matrix). M changes the mode of the batch to compare the pictures, Space stops the camera, Up and Down zoom."),
             scene(BatchStress2D.class, BatchStress2D::new, "Measure of the 2D drawing: N textured and colored rectangles, turning. Up doubles N, Down halves it, M changes the mode of the 2D batch, S sorts the draws by state; the render time and the draw calls are shown."),
             scene(Box2D.class, Box2D::new, "Physics with JBox2D: bodies and shapes in a world, with a camera that moves, zooms and drags."),
             scene(CollisionGridScene2D.class, CollisionGridScene2D::new, "Collision2DGrid: obstacles sorted into the cells of a grid, only the ones near the rectangle that follows the mouse are tested. Grey: ignored, blue: tested, red: colliding."),

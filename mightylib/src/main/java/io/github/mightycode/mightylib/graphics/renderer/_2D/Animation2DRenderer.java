@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.graphics.renderer._2D;
 import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -11,6 +13,8 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 public final class Animation2DRenderer extends MeshRenderer {
+    private static final int[] INDICES = RectangularFace.IndicesForSquare();
+
     private final Vector2f referencePosition;
     private Animator animator;
     private String currentTextureName;
@@ -24,6 +28,10 @@ public final class Animation2DRenderer extends MeshRenderer {
 
     private boolean horizontalFlip, verticalFlip;
 
+    // What the mesh has, kept on the CPU for the batched draws
+    private float[] positions;
+    private float[] textures;
+
     public Animation2DRenderer(String shaderName){
         super(shaderName, true);
 
@@ -33,11 +41,12 @@ public final class Animation2DRenderer extends MeshRenderer {
 
         texturePosition = RectangularFace.BasicTexturePosition();
 
-        int[] indices = RectangularFace.IndicesForSquare();
         getMesh().setEboStorage(Mesh.STATIC_STORE);
-        getMesh().setEbo(indices);
-        positionIndex = getMesh().addVboFloat(calculatePosition(), 2, Mesh.DYNAMIC_STORE);
-        textureIndex = getMesh().addVboFloat(texturePos(), 2, Mesh.DYNAMIC_STORE);
+        getMesh().setEbo(INDICES);
+        positions = calculatePosition();
+        textures = texturePos();
+        positionIndex = getMesh().addVboFloat(positions, 2, Mesh.DYNAMIC_STORE);
+        textureIndex = getMesh().addVboFloat(textures, 2, Mesh.DYNAMIC_STORE);
 
         referencePosition = new Vector2f();
 
@@ -80,7 +89,7 @@ public final class Animation2DRenderer extends MeshRenderer {
 
     public void updateInfoForFrame(){
         this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
-        getMesh().updateVbo(texturePos(), textureIndex);
+        updateTextures();
 
         updatePosition();
         this.setScale(this.animationScale);
@@ -148,7 +157,28 @@ public final class Animation2DRenderer extends MeshRenderer {
         this.offsetRotation.x = offsetRotation.x;
         this.offsetRotation.y = offsetRotation.y;
 
-        getMesh().updateVbo(calculatePosition(), positionIndex);
+        positions = calculatePosition();
+        getMesh().updateVbo(positions, positionIndex);
+    }
+
+    private void updateTextures() {
+        textures = texturePos();
+        getMesh().updateVbo(textures, textureIndex);
+    }
+
+    // Batched like a sprite when its shader has a batch equivalent and its depth test is off (see Renderer)
+    @Override
+    protected boolean submitToBatch(DrawBatch2D batch) {
+        if (!BatchGeometry2D.CanBatch(isDepthTest(), getMesh().getDrawMode()))
+            return false;
+
+        int state = batchState(batch);
+        if (state < 0)
+            return false;
+
+        BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), positions, textures,
+                positions.length / 2, batchColor(), INDICES, INDICES.length);
+        return true;
     }
 
     private float[] calculatePosition(){
@@ -187,7 +217,7 @@ public final class Animation2DRenderer extends MeshRenderer {
     public Animation2DRenderer setHorizontalFlip(boolean state){
         horizontalFlip = state;
 
-        getMesh().updateVbo(texturePos(), textureIndex);
+        updateTextures();
 
         return this;
     }
@@ -195,7 +225,7 @@ public final class Animation2DRenderer extends MeshRenderer {
     public Animation2DRenderer setVerticalFlip(boolean state){
         verticalFlip = state;
 
-        getMesh().updateVbo(texturePos(), textureIndex);
+        updateTextures();
 
         return this;
     }

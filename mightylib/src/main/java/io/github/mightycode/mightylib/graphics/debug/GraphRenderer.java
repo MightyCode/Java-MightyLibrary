@@ -37,6 +37,8 @@ public final class GraphRenderer {
     public GraphRenderer(Camera2D referenceCamera){
         // Setup the renderer
         renderer = new MeshRenderer(EngineResources.COLOR_SHAPE_2D, true);
+        // Batched with the other 2D draws: the batch reads the geometry on the CPU
+        renderer.getMesh().keepCpuData();
         renderer.setColorMode(ColorList.Blue());
         renderer.getMesh().setEboStorage(Mesh.DYNAMIC_STORE);
         renderer.getMesh().setEbo(new int[0]);

@@ -10,7 +10,6 @@ import org.lwjgl.BufferUtils;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL13.*;
-import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
 
 /**
  * State shared by the textures (GLResources.shared): the GL textures bound in place of a texture that is not loaded
@@ -19,7 +18,6 @@ import static org.lwjgl.opengl.GL31.GL_TEXTURE_RECTANGLE;
  */
 public final class TexturePlaceholders implements IGLSharedState {
     private int placeholderId = -1;
-    private int fallbackRectangleId = -1;
 
     // 1x1 transparent 2D texture
     int placeholderId() {
@@ -37,28 +35,6 @@ public final class TexturePlaceholders implements IGLSharedState {
         return placeholderId;
     }
 
-    // The fallback checkerboard as a rectangle texture, for the samplers of rectangle textures (fonts); -1 until ready.
-    // Linear like a font atlas: its values are coverage
-    int fallbackRectangleId(Resources resources) {
-        if (fallbackRectangleId == -1) {
-            TextureData fallback = resources.getFallback(TextureData.class);
-            if (fallback == null || !fallback.isLoaded())
-                return -1;
-
-            fallbackRectangleId = GenDeleteResources.GenTexture();
-            GLContext.currentState().bindTexture(GL_TEXTURE_RECTANGLE, fallbackRectangleId);
-            glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA8, fallback.getWidth(), fallback.getHeight(), 0,
-                    GL_RGBA, GL_UNSIGNED_BYTE, fallback.getData());
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_RECTANGLE, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            Logger.CheckOpenGLError("Create rectangle fallback texture");
-        }
-
-        return fallbackRectangleId;
-    }
-
     @Override
     public void loadingIdle() {
         TextureUploader.releaseBuffers();
@@ -71,11 +47,6 @@ public final class TexturePlaceholders implements IGLSharedState {
         if (placeholderId != -1) {
             GenDeleteResources.DeleteTexture(placeholderId);
             placeholderId = -1;
-        }
-
-        if (fallbackRectangleId != -1) {
-            GenDeleteResources.DeleteTexture(fallbackRectangleId);
-            fallbackRectangleId = -1;
         }
     }
 }

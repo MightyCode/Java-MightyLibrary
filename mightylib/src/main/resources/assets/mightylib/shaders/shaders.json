@@ -100,14 +100,18 @@
 				"2D/complex/multiColoredShape2DV.glsl",
 				"2D/complex/multiColoredShape2DF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "sprite2D",
+			"batchInstanced": "sprite2DInstanced"
 		},
 		"coloredText" : {
 			"files" : [
 				"font/coloredTextV.glsl",
 				"font/coloredTextF.glsl"
 			],
-			"tags" : ["2D"]
+			"tags" : ["2D"],
+			"batch": "sprite2D",
+			"batchInstanced": "sprite2DInstanced"
 		},
 		"postProcessing": {
 			"files": [

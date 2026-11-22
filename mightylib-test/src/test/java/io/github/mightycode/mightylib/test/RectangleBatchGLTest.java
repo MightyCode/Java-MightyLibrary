@@ -1,10 +1,7 @@
 package io.github.mightycode.mightylib.test;
 
-import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer.EBlendMode;
 import io.github.mightycode.mightylib.graphics.renderer.Material;
-import io.github.mightycode.mightylib.graphics.renderer.RenderState;
-import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batches2D;
@@ -12,147 +9,24 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.EngineResources;
-import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
 import io.github.mightycode.mightylib.utils.math.geometry.ERotation;
 import org.joml.Vector2f;
-import org.joml.Vector2i;
 import org.joml.Vector4f;
 import org.junit.jupiter.api.Test;
-import org.lwjgl.BufferUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
+import static io.github.mightycode.mightylib.test.BatchPictures.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.lwjgl.opengl.GL30C.*;
 
 // RectangleRenderer in the 2D batch: the same picture as drawn alone, one draw call for a state, alone when it can't
 @MightySceneTest(config = SceneRunnerTest.Config.class)
 class RectangleBatchGLTest {
-    // A 2D texture of the test, different in every corner (a gradient and a grid): flips and rotations show
-    private static final class Pattern implements IRenderTextureBindable {
-        private static final int SIZE = 64;
-        final int id;
-
-        Pattern() {
-            ByteBuffer pixels = BufferUtils.createByteBuffer(SIZE * SIZE * 4);
-            for (int y = 0; y < SIZE; ++y) {
-                for (int x = 0; x < SIZE; ++x) {
-                    pixels.put((byte) (x * 4)).put((byte) (y * 4)).put((byte) ((x / 8 + y / 8) % 2 * 200))
-                            .put((byte) 255);
-                }
-            }
-            pixels.flip();
-
-            id = glGenTextures();
-            glBindTexture(GL_TEXTURE_2D, id);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, SIZE, SIZE, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            RenderState.invalidateContextState();
-        }
-
-        @Override
-        public void bindRenderTexture(int position) {
-            GLContext.currentState().bindTexture(position, GL_TEXTURE_2D, id);
-        }
-
-        @Override public int getWidth() { return SIZE; }
-        @Override public int getHeight() { return SIZE; }
-        @Override public int getRenderTextureId() { return id; }
-
-        void delete() {
-            GLContext.forgetTexture(id);
-            glDeleteTextures(id);
-        }
-    }
-
-    // The draws of the scene go to a framebuffer of the size of its camera, read back
-    private static final class Capture implements AutoCloseable {
-        final Vector2i size;
-        final int texture;
-        final int framebuffer;
-        final int[] viewport = new int[4];
-
-        Capture(Scene scene) {
-            size = scene.context().getWindow().getInfo().getVirtualSizeCopy();
-            texture = glGenTextures();
-            glBindTexture(GL_TEXTURE_2D, texture);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size.x, size.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, (ByteBuffer) null);
-            framebuffer = glGenFramebuffers();
-            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
-            assertEquals(GL_FRAMEBUFFER_COMPLETE, glCheckFramebufferStatus(GL_FRAMEBUFFER));
-            glGetIntegerv(GL_VIEWPORT, viewport);
-            GLContext.setViewport(0, 0, size.x, size.y);
-            RenderState.invalidateContextState();
-        }
-
-        ByteBuffer draw(Scene scene, Runnable drawing) {
-            glClearColor(0.2f, 0.3f, 0.4f, 1f);
-            GLContext.ClearColorAndDepth();
-            drawing.run();
-            scene.batch2D().endView();
-
-            ByteBuffer pixels = BufferUtils.createByteBuffer(size.x * size.y * 4);
-            glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-            return pixels;
-        }
-
-        @Override
-        public void close() {
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            glDeleteFramebuffers(framebuffer);
-            glDeleteTextures(texture);
-            GLContext.setViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
-            RenderState.invalidateContextState();
-        }
-    }
-
-    // Pixels whose channels differ (by more than 1: the rounding of the vertices may differ between the two ways)
-    private static String compare(ByteBuffer expected, ByteBuffer actual) {
-        int different = 0, maximum = 0;
-        for (int i = 0; i < expected.capacity(); ++i) {
-            int difference = Math.abs((expected.get(i) & 0xFF) - (actual.get(i) & 0xFF));
-            maximum = Math.max(maximum, difference);
-            if (difference > 1)
-                ++different;
-        }
-
-        return different + " channels differ by more than 1 (largest difference " + maximum + ")";
-    }
-
-    private static int countDifferent(ByteBuffer expected, ByteBuffer actual) {
-        int different = 0;
-        for (int i = 0; i < expected.capacity(); ++i) {
-            if (Math.abs((expected.get(i) & 0xFF) - (actual.get(i) & 0xFF)) > 1)
-                ++different;
-        }
-        return different;
-    }
-
-    private static void inScene(SceneRunner runner, Consumer<Scene> test) {
-        runner.frames(1);
-        Scene scene = runner.scene();
-        Engine engine;
-        try (Views.Scope ignored = Views.enter(scene)) {
-            engine = Views.engine();
-        }
-
-        try {
-            test.accept(scene);
-        } finally {
-            try (Views.Scope ignored = Views.enter(scene)) {
-                engine.setBatch2DMode(EBatch2DMode.ORPHAN);
-            }
-        }
-    }
-
     // Textured rectangles (turned, flipped, a texture turned, several references), colored ones half
     // transparent over them, one additive, two on one material, one with a value of its own (drawn alone)
     private static List<RectangleRenderer> picture(Pattern pattern) {
