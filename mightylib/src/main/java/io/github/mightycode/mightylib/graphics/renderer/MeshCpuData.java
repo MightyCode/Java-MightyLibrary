@@ -45,6 +45,11 @@ final class MeshCpuData {
         System.arraycopy(data, 0, kept, start, count);
     }
 
+    // All the vbos removed (Mesh.unloadVBO): the next one added is the first again
+    void clearVbos() {
+        vbos.clear();
+    }
+
     // The vbo, null when unknown; read only
     float[] vbo(int vbo) {
         return vbo < vbos.size() ? vbos.get(vbo) : null;

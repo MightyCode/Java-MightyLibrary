@@ -567,6 +567,8 @@ public class Mesh {
         vbosVertexSize.clear();
         vbosInteger.clear();
         vbosChannel.clear();
+        if (cpuData != null)
+            cpuData.clearVbos();
         layoutChanged();
     }
 

@@ -40,6 +40,21 @@ class MeshCpuDataTest {
         assertArrayEquals(new float[]{1, 2}, data.vbo(1));
     }
 
+    // Mesh.unloadVBO: the copies are dropped, the next vbo added is the first again
+    @Test
+    void theVbosAreDroppedWhenCleared() {
+        MeshCpuData data = new MeshCpuData();
+        data.addVbo(0, new float[]{1, 2});
+        data.addVbo(1, new float[]{3, 4});
+        data.clearVbos();
+        assertNull(data.vbo(0));
+        assertNull(data.vbo(1));
+
+        data.addVbo(0, new float[]{5, 6});
+        assertArrayEquals(new float[]{5, 6}, data.vbo(0));
+        assertNull(data.vbo(1));
+    }
+
     // The offset is in bytes, like glBufferSubData; what is past the end is ignored
     @Test
     void aPartIsReplacedFromItsOffsetInBytes() {
