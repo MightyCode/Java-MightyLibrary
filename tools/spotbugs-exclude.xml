@@ -46,6 +46,20 @@
         </Or>
         <Bug pattern="AT_STALE_THREAD_WRITE_OF_PRIMITIVE,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"/>
     </Match>
+    <!-- Written by the loader (worker) with the rest of what it read, before the resource is handed to the main
+         thread, which orders the write; then changed and read on the main thread only. -->
+    <Match>
+        <Class name="io.github.mightycode.mightylib.resources.config.ConfigData"/>
+        <Field name="invalidPlayerLayer"/>
+        <Bug pattern="AT_STALE_THREAD_WRITE_OF_PRIMITIVE"/>
+    </Match>
+    <!-- A test engine is driven from the thread that started it only (its Javadoc); the detector takes these flags
+         for shared because the class also has atomic fields read by other threads. -->
+    <Match>
+        <Class name="io.github.mightycode.mightylib.test.TestEngine"/>
+        <Or><Field name="strictResources"/><Field name="owner"/><Field name="closed"/></Or>
+        <Bug pattern="AT_STALE_THREAD_WRITE_OF_PRIMITIVE"/>
+    </Match>
     <!-- FLAC samples have at most 24 bits (FlacStream refuses deeper files): side 25 bits, mid 26 bits, their sum
          can't overflow an int. -->
     <Match>

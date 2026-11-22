@@ -43,7 +43,7 @@ import mighty  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if os.name == "nt":
     _DEFAULT_JAVA = "C:/Autres/## Librairies ##/javajdk/bin/java"
-    _DEFAULT_MVN = "D:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn.cmd"
+    _DEFAULT_MVN = "D:/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven-plugin/lib/maven3/bin/mvn.cmd"
     _DEFAULT_MAVEN_JDK = os.path.expanduser("~/.jdks/ms-21.0.9")
 else:
     # Linux: java and mvn from the PATH, maven keeps the JAVA_HOME of the environment

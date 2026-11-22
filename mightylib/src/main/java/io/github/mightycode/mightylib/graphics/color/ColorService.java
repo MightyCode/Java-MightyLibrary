@@ -6,6 +6,8 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.config.ConfigData;
 import org.json.JSONObject;
 
+import java.util.concurrent.CompletableFuture;
+
 /**
  * The color service of the engine: the default color space of the draws, given at the start
  * (EngineConfig.setColorSpace, -Dmightylib.colorSpace), the final pass of the engine (EngineResources.POST_PROCESSING)
@@ -114,10 +116,19 @@ public final class ColorService implements IColorService {
 
     private void save(String key, float value, float gameValue) {
         if (value == gameValue) {
-            config.remove(key);
+            remove(key);
         } else if (config.getFloat(key, Float.NaN) != value) {
-            config.set(key, value);
+            set(key, value);
         }
+    }
+
+    // The writes log their own failure: nothing waits for them
+    private void set(String key, float value) {
+        CompletableFuture<Void> ignored = config.set(key, value);
+    }
+
+    private void remove(String key) {
+        CompletableFuture<Void> ignored = config.remove(key);
     }
 
     @Override
@@ -128,9 +139,9 @@ public final class ColorService implements IColorService {
             return;
         }
 
-        config.remove(GAMMA_KEY);
-        config.remove(BRIGHTNESS_KEY);
-        config.remove(CONTRAST_KEY);
+        remove(GAMMA_KEY);
+        remove(BRIGHTNESS_KEY);
+        remove(CONTRAST_KEY);
         picture = Read(config, false);
     }
 

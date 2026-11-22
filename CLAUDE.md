@@ -24,7 +24,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
   - Linux : `mvn`/`java` (JDK 21) sont dans le PATH : `mvn -o -q compile`.
   - Windows : `mvn`/`java` ne sont pas dans le PATH, utiliser les outils d'IntelliJ :
     ```bash
-    JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven/lib/maven3/bin/mvn" -o -q compile
+    JAVA_HOME="$HOME/.jdks/ms-21.0.9" "/d/Program Files/JetBrains/IntelliJ IDEA Community Edition 2024.2.3/plugins/maven-plugin/lib/maven3/bin/mvn" -o -q compile
     ```
   - Tests : même commande avec `test` au lieu de `compile` (quelques secondes ; les tests tagués `gl` ouvrent une fenêtre cachée, `-DexcludedGroups=gl` les écarte). Un seul module : `-pl <module> -am` (sans `-am`, les autres modules viennent du dépôt local, peut-être périmés).
   - `package` au lieu de `compile` : la démo est compilée et testée contre les jars de la bibliothèque et du kit (vérification que la bibliothèque se suffit) ; à lancer quand les poms (dont `bom`, `base-parent`, `game-parent`, `mightylib-test`) ou la frontière bibliothèque/démo changent.
@@ -45,7 +45,7 @@ Moteur de jeu 2D/3D en Java 11 (LWJGL 3.3.6, OpenGL 3.3 core, GLFW, OpenAL, STB,
 - **Fin de chaque objectif : nettoyer les docs dans le même commit, ou dans un commit de docs sur la même branche avant la fusion.** `current.md`/`later.md` = ce qui reste, jamais l'historique : supprimer la ligne de l'objectif atteint (ou la réduire à son reste), sans « fait ». Décrire le nouvel état dans `architecture.md` (au présent, sans historique). Relire le fichier après modification : plus aucune trace de ce qui est fini.
 - Un bug existant découvert hors du sujet en cours : le noter dans `docs/later.md` ou `docs/futur-discussion.md` (et le signaler), pas le corriger en douce.
 - Avant de commencer un gros point (passage de `later.md` à `current.md`), en discuter avec l'utilisateur pour s'assurer que tout est prévu (`/planification-ml`).
-- **Point hebdomadaire** : une revue des bonnes pratiques (`/revue-pratiques`) par semaine. Dernière revue : **2026-11-15**. Au début de toute nouvelle discussion, si la dernière revue date de 7 jours ou plus, le rappeler à l'utilisateur (une ligne) avant de commencer. Après chaque revue, mettre à jour cette date.
+- **Point hebdomadaire** : une revue des bonnes pratiques (`/revue-pratiques`) par semaine. Dernière revue : **2026-11-22**. Au début de toute nouvelle discussion, si la dernière revue date de 7 jours ou plus, le rappeler à l'utilisateur (une ligne) avant de commencer. Après chaque revue, mettre à jour cette date.
 - **Analyses automatiques, pendant la revue hebdomadaire** : `python tools/analyse.py` (Error Prone + SpotBugs) et `python tools/coverage.py` (JaCoCo) font partie de la revue ; on analyse leurs résultats puis on choisit les actions à mener (corrections par thème, tests à ajouter), sans date ni rappel à part.
 - Décrire comment vérifier manuellement ce qui n'a pas pu l'être (quelle scène, quoi observer).
 

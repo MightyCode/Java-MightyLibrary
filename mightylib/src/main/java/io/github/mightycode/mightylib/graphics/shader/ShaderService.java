@@ -180,7 +180,7 @@ public final class ShaderService implements IShaderService {
         publish(changed);
     }
 
-    private void publish(TreeMap<String, String> changed) {
+    private void publish(SortedMap<String, String> changed) {
         defines = Collections.unmodifiableSortedMap(changed);
         reloadShaders.run();
     }

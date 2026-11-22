@@ -42,12 +42,31 @@ merged = [b for b in git("branch", "--merged", BASE, "--format=%(refname:short)"
 print("fusionnées non supprimées:", ", ".join(merged) or "aucune")
 for branch in git("branch", "--no-merged", BASE, "--format=%(refname:short)").splitlines():
     print(f"non fusionnée: {branch} (+{git('rev-list', '--count', BASE + '..' + branch)}) {git('log', '-1', '--format=%ad %s', '--date=short', branch)[:80]}")
+DOC_FILES = re.compile(r"^(docs/|CLAUDE\.md$|README\.md$|licence\.md$)")
+TINY_LINES = 20
+
+
+# Allowed directly on the base branch (point 1): docs only, or a tiny commit outside the sources of the modules
+def allowed_direct(commit):
+    stats = [line.split("\t") for line in git("show", "--numstat", "--format=", commit).splitlines() if line]
+    files = [s[2] for s in stats]
+    if files and all(DOC_FILES.match(f) for f in files):
+        return "docs"
+    lines = sum(int(s[0]) + int(s[1]) for s in stats if s[0] != "-")
+    if lines <= TINY_LINES and not any("/src/main/" in f for f in files):
+        return "petit"
+    return None
+
+
 direct = [line for line in git("log", "--first-parent", "--no-merges", "--since=" + since, "--format=%h %s", BASE).splitlines()]
-print(f"commits directs sur {BASE} (hors fusion):", len(direct))
+kinds = [(line, allowed_direct(line.split()[0])) for line in direct]
+refused = [line for line, kind in kinds if kind is None]
+print(f"commits directs sur {BASE} (hors fusion): {len(direct)}, dont {len(direct) - len(refused)} admis"
+      f" (docs seules, ou au plus {TINY_LINES} lignes hors src/main)")
 if BASE != "master":
     print(f"{BASE} en avance sur master: {git('rev-list', '--count', 'master..' + BASE)} commits")
-for line in direct[:10]:
-    print("  ", line[:100])
+for line, kind in kinds[:10]:
+    print("  ", f"[{kind or 'NON ADMIS'}]", line[:100])
 
 section(f"[2][3][8] Commits de {BASE} depuis « {since} »")
 log = git("log", "--no-merges", "--since=" + since, "--name-only", "--format=@@%h %s", BASE)
