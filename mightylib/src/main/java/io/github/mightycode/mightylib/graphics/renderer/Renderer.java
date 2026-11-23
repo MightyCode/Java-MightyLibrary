@@ -348,7 +348,7 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
         if (!viewCulling || !batch.isViewCulling())
             return false;
 
-        ViewCullBounds bounds = batch.cullBounds().clear(model, getClass());
+        ViewCullBounds bounds = batch.cullBounds(state, model, getClass());
         if (viewCullBounds(bounds))
             bounds.margin(viewCullMargin, 0f);
         else

@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import org.joml.Vector2f;
@@ -27,6 +28,10 @@ public final class PointsRenderer extends VectorShape2DRenderer {
     private boolean cornersDirty;
     private float pointSize;
     private EPointShape pointShape;
+    // Box of the centers (view culling), computed again when they change
+    private final float[] centersBox = new float[4];
+    private boolean centersBoxDirty = true;
+    private boolean hasCentersBox;
 
     public PointsRenderer() {
         this(EngineResources.POINTS_2D);
@@ -64,6 +69,7 @@ public final class PointsRenderer extends VectorShape2DRenderer {
     public PointsRenderer setPoint(int index, Vector2f point) {
         points.get(index).set(point);
         updateShapePosition();
+        centersBoxDirty = true;
         return this;
     }
 
@@ -81,6 +87,7 @@ public final class PointsRenderer extends VectorShape2DRenderer {
         updateShapePosition();
         updateShapeTexture();
         cornersDirty = true;
+        centersBoxDirty = true;
         return this;
     }
 
@@ -158,6 +165,30 @@ public final class PointsRenderer extends VectorShape2DRenderer {
     @Override
     protected float[] calculateTexturePosition() {
         return new float[points.size() * 8];
+    }
+
+    // The quads of its points (shapePointVertex): the box of the centers, widened by a point and its margin
+    @Override
+    protected boolean viewCullBounds(ViewCullBounds out) {
+        if (centersBoxDirty) {
+            hasCentersBox = !points.isEmpty();
+            if (hasCentersBox) {
+                centersBox[0] = centersBox[1] = Float.POSITIVE_INFINITY;
+                centersBox[2] = centersBox[3] = Float.NEGATIVE_INFINITY;
+                for (Vector2f point : points) {
+                    centersBox[0] = Math.min(centersBox[0], point.x);
+                    centersBox[1] = Math.min(centersBox[1], point.y);
+                    centersBox[2] = Math.max(centersBox[2], point.x);
+                    centersBox[3] = Math.max(centersBox[3], point.y);
+                }
+                hasCentersBox = Float.isFinite(centersBox[0]) && Float.isFinite(centersBox[1])
+                        && Float.isFinite(centersBox[2]) && Float.isFinite(centersBox[3]);
+            }
+            centersBoxDirty = false;
+        }
+
+        return hasCentersBox && ShapeCullBounds.Points(out, centersBox, pointSize, batchStroke(), isAntialiasing(),
+                Math.max(extraMargin(), 0f));
     }
 
     @Override

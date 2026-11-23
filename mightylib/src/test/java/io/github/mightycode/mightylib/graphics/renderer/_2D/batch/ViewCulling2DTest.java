@@ -331,6 +331,26 @@ class ViewCulling2DTest {
         assertFalse(batch.isCulled(wave, bounds.clear(null, getClass()).world(815, 0, 820, 10).margin(5, 0)));
     }
 
+    // The box given to a draw knows the size of a pixel of its camera in the viewport (that of the shaders)
+    @Test
+    void theBoundsOfADrawKnowTheSizeOfAPixel() {
+        viewportWidth = 1600;
+        viewportHeight = 1200;
+        assertEquals(0.5f, batch.cullBounds(state(), null, getClass()).worldPerPixel(), 1e-5f);
+        batch.endView();
+
+        camera(30, -40, 4, 0.7f);
+        int state = state();
+        assertEquals(0.125f, batch.cullBounds(state, null, getClass()).worldPerPixel(), 1e-5f);
+        Matrix4f model = new Matrix4f().translate(5, 5, 0).rotateZ(1f).scale(0.5f, 0.5f, 1);
+        assertEquals(0.25f, batch.cullBounds(state, model, getClass()).localPerPixel(), 1e-5f);
+        batch.endView();
+
+        // Perspective: unknown
+        projection.setPerspective(1f, 4f / 3f, 0.1f, 100f);
+        assertTrue(Float.isNaN(batch.cullBounds(state(), null, getClass()).worldPerPixel()));
+    }
+
     @Test
     void theBoundsAreReusable() {
         bounds.clear(null, getClass()).local(10, 20, 0, -5).margin(1, 2);

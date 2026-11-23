@@ -529,9 +529,22 @@ public final class DrawBatch2D {
         return backend.viewCulling();
     }
 
-    /** The box reused by the draws of this batch (cleared by its user before each draw). */
+    /**
+     * The box reused by the draws of this batch, cleared for a draw of this state (asked to this batch): its model
+     * matrix, the class of what draws, the size of a pixel of the camera of the state in the viewport.
+     */
     @API(status = INTERNAL)
-    public ViewCullBounds cullBounds() {
+    public ViewCullBounds cullBounds(int state, Matrix4fc model, Class<?> owner) {
+        cullBounds.clear(model, owner);
+        if (table == null || !table.isCurrent(state))
+            return cullBounds;
+
+        int camera = BatchStateTable.cameraOf(state);
+        if (table.hasViewBox(camera) && viewportWidth > 0 && viewportHeight > 0) {
+            float clipX = 2f / viewportWidth, clipY = 2f / viewportHeight;
+            cullBounds.pixelToWorld(table.clipToWorld(camera, 0) * clipX, table.clipToWorld(camera, 2) * clipX,
+                    table.clipToWorld(camera, 1) * clipY, table.clipToWorld(camera, 3) * clipY);
+        }
         return cullBounds;
     }
 

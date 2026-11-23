@@ -41,7 +41,7 @@ class VectorShapeBatchGLTest {
     private static final EStrokeAlignment[] ALIGNMENTS = EStrokeAlignment.values();
 
     // Every shape of the engine: strokes of each alignment and unit, turned, mirrored, textured, sharp
-    private static List<VectorShape2DRenderer> picture(Pattern pattern) {
+    static List<VectorShape2DRenderer> picture(Pattern pattern) {
         List<VectorShape2DRenderer> shapes = new ArrayList<>();
         shapes.add(new CircleRenderer());
         shapes.add(new EllipseRenderer());
@@ -102,7 +102,7 @@ class VectorShapeBatchGLTest {
      * The batch program of a material is asked at its first batched draw, then loaded with the time of the frames
      * (drawn alone meanwhile): one batched display, then frames
      */
-    private static void requestBatchPrograms(SceneRunner runner, io.github.mightycode.mightylib.scenes.Scene scene,
+    static void requestBatchPrograms(SceneRunner runner, io.github.mightycode.mightylib.scenes.Scene scene,
                                              List<? extends VectorShape2DRenderer> shapes) {
         runner.frames(8);
         try (Views.Scope ignored = Views.enter(scene); Capture capture = new Capture(scene)) {
@@ -175,7 +175,7 @@ class VectorShapeBatchGLTest {
     }
 
     // Polylines of each join and cap, closed, an arrow, polygons filled and stroked (one textured): per vertex values
-    private static List<VectorShape2DRenderer> strokes(Pattern pattern) {
+    static List<VectorShape2DRenderer> strokes(Pattern pattern) {
         List<VectorShape2DRenderer> shapes = new ArrayList<>();
         EStrokeJoin[] joins = EStrokeJoin.values();
         EStrokeCap[] caps = EStrokeCap.values();
