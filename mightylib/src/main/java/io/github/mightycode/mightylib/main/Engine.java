@@ -148,6 +148,24 @@ public final class Engine implements IView {
         Batches2D.of(this).setMode(mode);
     }
 
+    /**
+     * The batched 2D draws outside the view are culled: EngineConfig.setViewCulling2D at the start, then
+     * setViewCulling2D.
+     */
+    public boolean isViewCulling2D() {
+        return glResources == null ? config.isViewCulling2D() : Batches2D.of(this).viewCulling();
+    }
+
+    /**
+     * Culls the batched 2D draws outside the view or not, from the next draw. Main thread.
+     * @throws IllegalStateException without window (nothing is drawn)
+     */
+    public void setViewCulling2D(boolean viewCulling) {
+        if (glResources == null)
+            throw new IllegalStateException("No 2D batch without window");
+        Batches2D.of(this).setViewCulling(viewCulling);
+    }
+
     // The shaders: declarations and prelude of their sources (service mightylib:shaders)
     public IShaderService shaders() { return service(EngineServices.SHADERS); }
     public IColorService colors() { return service(EngineServices.COLORS); }

@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,7 +25,12 @@ import java.util.Map;
  * threshold of the material parts, the table is emptied, unless more than half of it was used in the current frame (a
  * game that draws that many materials each frame): the threshold doubles instead, up to MAX_MATERIAL_PARTS / 2. When
  * no state fits (hasRoom false), the batch sends its draws first, then the table is emptied (DrawBatch2D.stateTable).
- * A batch is started (batchStarted) before any state of its draws is asked. Main thread only.
+ * A batch is started (batchStarted) before any state of its draws is asked.
+ * <p>
+ * Each camera slot keeps the box of its view in world units (view culling, DrawBatch2D.isCulled), computed when the
+ * slot gets its content: the corners of the clip space through the inverse of projection * view, their bounding box
+ * (larger than the view for a turned camera). A camera that is not an affine 2D transform (a perspective) has none.
+ * Main thread only.
  */
 public final class BatchStateTable implements IGLSharedState {
     public static final int CAMERA_BITS = 10;
@@ -57,6 +63,12 @@ public final class BatchStateTable implements IGLSharedState {
     private boolean[] retired = new boolean[8];
     private int cameraCount;
     private int lastCamera = -1;
+    // Box of the view of each slot (minX, minY, maxX, maxY in world units), and the linear part of the inverse of
+    // its transform (world per clip unit: x from clip x, x from clip y, y from clip x, y from clip y)
+    private float[] viewBoxes = new float[8 * 4];
+    private float[] clipToWorld = new float[8 * 4];
+    private boolean[] hasViewBox = new boolean[8];
+    private final Matrix4f clip = new Matrix4f();
 
     // Batches started and not flushed; the epoch changes each time none is left
     private int pendingBatches;
@@ -185,6 +197,7 @@ public final class BatchStateTable implements IGLSharedState {
             } else {
                 projections[slot].set(projection);
                 views[slot].set(view);
+                updateViewBox(slot);
             }
         }
 
@@ -214,6 +227,9 @@ public final class BatchStateTable implements IGLSharedState {
             views = Arrays.copyOf(views, size);
             lastUse = Arrays.copyOf(lastUse, size);
             retired = Arrays.copyOf(retired, size);
+            viewBoxes = Arrays.copyOf(viewBoxes, size * 4);
+            clipToWorld = Arrays.copyOf(clipToWorld, size * 4);
+            hasViewBox = Arrays.copyOf(hasViewBox, size);
         }
 
         int slot = cameraCount++;
@@ -228,7 +244,50 @@ public final class BatchStateTable implements IGLSharedState {
             views[slot].set(view);
         }
         retired[slot] = false;
+        updateViewBox(slot);
         return slot;
+    }
+
+    private void updateViewBox(int slot) {
+        clip.set(projections[slot]).mul(views[slot]);
+        hasViewBox[slot] = ViewBox(clip, viewBoxes, clipToWorld, slot * 4);
+    }
+
+    /**
+     * The box of the clip space (-1..1) in world units, for draws at z 0: written at box[at..at + 3] (minX, minY,
+     * maxX, maxY), and the linear part of the inverse transform at inverse[at..at + 3]. False when clip is not an
+     * invertible affine 2D transform (a perspective, a flat scale): nothing is culled.
+     */
+    static boolean ViewBox(Matrix4fc clip, float[] box, float[] inverse, int at) {
+        if (clip.m03() != 0f || clip.m13() != 0f || clip.m23() != 0f || clip.m33() != 1f)
+            return false;
+
+        // clip = A * world + t, A = [a c; b d] (columns: world x, world y)
+        float a = clip.m00(), b = clip.m01(), c = clip.m10(), d = clip.m11();
+        float tx = clip.m30(), ty = clip.m31();
+        float determinant = a * d - b * c;
+        if (determinant == 0f || !Float.isFinite(determinant))
+            return false;
+
+        // world = A^-1 * (clip - t), A^-1 = [p q; r s]
+        float p = d / determinant, q = -c / determinant, r = -b / determinant, s = a / determinant;
+        float centerX = -(p * tx + q * ty), centerY = -(r * tx + s * ty);
+        // Half extents of the image of the square -1..1: the sum of the absolute columns
+        float halfX = Math.abs(p) + Math.abs(q), halfY = Math.abs(r) + Math.abs(s);
+        if (!Float.isFinite(centerX) || !Float.isFinite(centerY) || !Float.isFinite(halfX) || !Float.isFinite(halfY))
+            return false;
+
+        // A little wider than the view: the rounding of floats never culls a draw that reaches a pixel of its edge
+        float slackX = 1e-5f * (Math.abs(centerX) + halfX), slackY = 1e-5f * (Math.abs(centerY) + halfY);
+        box[at] = centerX - halfX - slackX;
+        box[at + 1] = centerY - halfY - slackY;
+        box[at + 2] = centerX + halfX + slackX;
+        box[at + 3] = centerY + halfY + slackY;
+        inverse[at] = p;
+        inverse[at + 1] = q;
+        inverse[at + 2] = r;
+        inverse[at + 3] = s;
+        return true;
     }
 
     /**
@@ -246,6 +305,24 @@ public final class BatchStateTable implements IGLSharedState {
 
     public Matrix4f viewOf(int camera) {
         return views[camera];
+    }
+
+    // The box of the view of a camera slot in world units, when it has one (an affine 2D camera)
+    public boolean hasViewBox(int camera) {
+        return hasViewBox[camera];
+    }
+
+    public float viewMinX(int camera) { return viewBoxes[camera * 4]; }
+    public float viewMinY(int camera) { return viewBoxes[camera * 4 + 1]; }
+    public float viewMaxX(int camera) { return viewBoxes[camera * 4 + 2]; }
+    public float viewMaxY(int camera) { return viewBoxes[camera * 4 + 3]; }
+
+    /**
+     * World units of one clip unit along each axis of the clip space for a camera slot with a box: 0 world x per
+     * clip x, 1 world x per clip y, 2 world y per clip x, 3 world y per clip y.
+     */
+    public float clipToWorld(int camera, int component) {
+        return clipToWorld[camera * 4 + component];
     }
 
     // ---- Lifetime of the ids ----

@@ -73,6 +73,16 @@ public final class BatchContext implements IBatchTarget, IPendingDraws {
     }
 
     @Override
+    public int viewportWidth() {
+        return context.viewportWidth();
+    }
+
+    @Override
+    public int viewportHeight() {
+        return context.viewportHeight();
+    }
+
+    @Override
     public void flush(Object cause) {
         if (active != null)
             active.barrier(cause);

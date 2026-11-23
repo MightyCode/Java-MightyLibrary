@@ -265,6 +265,58 @@ class BatchStateTableTest {
         assertEquals(0, table.cameras());
     }
 
+    // The box of the view of a slot follows its content: updated in place, new slot, slot reused after a reset
+    @Test
+    void theViewBoxFollowsTheSlot() {
+        BatchStateTable table = new BatchStateTable(100, 1);
+        Matrix4f projection = new Matrix4f().setOrtho(0, 800, 600, 0, -10, 10);
+        Matrix4f view = new Matrix4f();
+
+        table.batchStarted();
+        int slot = table.camera(projection, view);
+        assertViewBox(table, slot, 0, 0, 800, 600);
+        table.batchEnded();
+
+        // Moved between flushes: the same slot, its box updated
+        view.translation(-100, -50, 0);
+        table.batchStarted();
+        assertEquals(slot, table.camera(projection, view));
+        assertViewBox(table, slot, 100, 50, 900, 650);
+
+        // Moved while its draws wait: the new slot has the new box, the retired one keeps its own
+        view.translation(-200, 0, 0).scaleLocal(2, 2, 1);
+        int moved = table.camera(projection, view);
+        assertNotEquals(slot, moved);
+        assertViewBox(table, slot, 100, 50, 900, 650);
+        assertViewBox(table, moved, 200, 0, 600, 300);
+        table.batchEnded();
+
+        // Above the threshold of the cameras: emptied, the slot reused by another camera gets its box
+        assertEquals(0, table.cameras());
+        table.batchStarted();
+        int reused = table.camera(new Matrix4f().setOrtho(-10, 10, -5, 5, -1, 1), new Matrix4f());
+        assertEquals(slot, reused);
+        assertViewBox(table, reused, -10, -5, 10, 5);
+        // A perspective has no box
+        int perspective = table.camera(new Matrix4f().setPerspective(1f, 1f, 0.1f, 10f), new Matrix4f());
+        assertFalse(table.hasViewBox(perspective));
+        // A flat scale neither
+        int flat = table.camera(new Matrix4f().scaling(0, 1, 1), new Matrix4f());
+        assertFalse(table.hasViewBox(flat));
+        table.batchEnded();
+    }
+
+    // Within the slack kept against the rounding of floats
+    private static void assertViewBox(BatchStateTable table, int slot, float minX, float minY, float maxX,
+                                      float maxY) {
+        assertTrue(table.hasViewBox(slot));
+        assertEquals(minX, table.viewMinX(slot), 0.02f);
+        assertEquals(minY, table.viewMinY(slot), 0.02f);
+        assertEquals(maxX, table.viewMaxX(slot), 0.02f);
+        assertEquals(maxY, table.viewMaxY(slot), 0.02f);
+        assertTrue(table.viewMinX(slot) <= minX && table.viewMaxX(slot) >= maxX);
+    }
+
     @Test
     void anEndWithoutStartFails() {
         assertThrows(IllegalStateException.class, () -> new BatchStateTable().batchEnded());

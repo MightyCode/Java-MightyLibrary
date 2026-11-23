@@ -22,4 +22,13 @@ public interface IBatchTarget {
 
     // The states of the draws (of the engine of the context)
     BatchStateTable table();
+
+    // Size in pixels of the viewport of the context (margins in pixels of the view culling), 0 when unknown
+    default int viewportWidth() {
+        return 0;
+    }
+
+    default int viewportHeight() {
+        return 0;
+    }
 }
