@@ -24,8 +24,8 @@ public interface IShaderService extends IEngineService {
 
     /**
      * The declared shaders by name (the "shaders" object of the merged shaders.json): "files" (vertex, fragment, and
-     * geometry when there are three, relative to folder()), "tags", optional "defines". A copy: changing it changes
-     * nothing in the service.
+     * geometry when there are three, relative to folder()), "tags", optional "defines", "batch", "batchInstanced",
+     * "cullMargin". A copy: changing it changes nothing in the service.
      */
     JSONObject declarations();
 
@@ -44,6 +44,17 @@ public interface IShaderService extends IEngineService {
 
     /** The format a batch program reads (registry.shaders().batchFormat), null when none. Any thread. */
     BatchFormat batchFormat(String batchShaderName);
+
+    /**
+     * The margin of the view culling of the 2D draws of a shader in world units ("cullMargin" of its entry: its
+     * vertices moved by it, waves, wind), 0 when none; checked by the loader before reading the shader (an invalid
+     * one makes it fail). Any thread.
+     *
+     * @throws IllegalArgumentException if the value is not a number >= 0
+     */
+    default float cullMargin(String shaderName) {
+        return 0f;
+    }
 
     // Logical folder of the shaders in the sources of the resources, ending with '/' (an include not found next to
     // its file is searched there)

@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -40,6 +41,9 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     private int[] batchIndices;
     private float[] batchPositions;
     private float[] batchTextures;
+    // Box of batchPositions (view culling), computed with them
+    private final float[] batchBox = new float[4];
+    private boolean hasBatchBox;
 
     public Shape2DRenderer(String shaderName, boolean useEbo) {
         this(new Material(shaderName), useEbo);
@@ -104,6 +108,8 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         int state = batchState(batch);
         if (state < 0)
             return false;
+        if (viewCulled(batch, state))
+            return true;
 
         BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), batchPositions,
                 batchTextures, vertexCount, batchColor(), batchIndices, batchIndices.length);
@@ -118,6 +124,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
 
         if (batchPositionDirty) {
             batchPositions = calculatePosition();
+            hasBatchBox = BatchGeometry2D.Box(batchPositions, batchPositions.length / 2, batchBox);
             batchPositionDirty = false;
         }
 
@@ -125,6 +132,19 @@ public abstract class Shape2DRenderer extends MeshRenderer {
             batchTextures = calculateTexturePosition();
             batchTextureDirty = false;
         }
+    }
+
+    /**
+     * Hook (see Renderer): the box of the positions of calculatePosition, computed with them; a subclass whose
+     * shader moves the vertices widens it (call super, then out.margin).
+     */
+    @Override
+    protected boolean viewCullBounds(ViewCullBounds out) {
+        if (!hasBatchBox)
+            return false;
+
+        out.local(batchBox[0], batchBox[1], batchBox[2], batchBox[3]);
+        return true;
     }
 
     // Hook: the indices of the triangles, asked at the first display and again after updateShapeIndices

@@ -83,9 +83,19 @@ public final class ShaderLoader extends ResourceLoader {
 
             ShaderData shader = new ShaderData(
                     currentShader,
-                    isTagIn(tags, "2D") || isTagIn(tags, "none"), entryDefines(JShader), sArrayFiles);
+                    isTagIn(tags, "2D") || isTagIn(tags, "none"), entryDefines(JShader),
+                    cullMargin(service, currentShader), sArrayFiles);
 
             data.put(currentShader, shader);
+        }
+    }
+
+    // NaN when invalid: checked when the shader is read (initWithFile), so the shader fails alone
+    private static float cullMargin(IShaderService service, String shaderName) {
+        try {
+            return service.cullMargin(shaderName);
+        } catch (IllegalArgumentException e) {
+            return Float.NaN;
         }
     }
 
@@ -141,6 +151,15 @@ public final class ShaderLoader extends ResourceLoader {
         for (Map.Entry<String, String> define : shader.getDefines().entrySet()) {
             try {
                 service.checkDefine(define.getKey(), define.getValue());
+            } catch (IllegalArgumentException e) {
+                throw new ResourceException("shader " + shader.getDataName() + ": " + e.getMessage());
+            }
+        }
+
+        // An invalid margin of view culling too
+        if (Float.isNaN(shader.getCullMargin())) {
+            try {
+                service.cullMargin(shader.getDataName());
             } catch (IllegalArgumentException e) {
                 throw new ResourceException("shader " + shader.getDataName() + ": " + e.getMessage());
             }

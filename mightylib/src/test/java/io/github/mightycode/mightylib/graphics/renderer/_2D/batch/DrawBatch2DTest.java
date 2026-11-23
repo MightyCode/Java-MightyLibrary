@@ -428,6 +428,36 @@ class DrawBatch2DTest {
         assertEquals(0, batch.sortedIndexCapacity());
     }
 
+    // A culled draw is not asked: nothing written, the run of its neighbors not cut, no index of a sorted segment
+    @Test
+    void aCulledDrawWritesNothingAndCutsNothing() {
+        ViewCullBounds bounds = new ViewCullBounds();
+        int a = state("a");
+        quad(a, 0);
+        // Identity camera: the view is -1..1
+        assertTrue(batch.isCulled(a, bounds.clear(null, getClass()).world(5, 5, 6, 6)));
+        quad(a, 0.5f);
+        batch.endView();
+
+        assertEquals(List.of("apply a", "draw 0 12"), draws());
+        assertEquals(8, target.uploader.vertexUploads.get(0).length / 4);
+        assertEquals(2, batch.lastFrameDraws());
+        assertEquals(1, batch.lastFrameCulled());
+
+        batch.setDrawSortKey(DrawSortKeys.layerThenDepth());
+        int b = state("b");
+        a = state("a");
+        quad(a, 0, 1, 0f);
+        assertTrue(batch.isCulled(b, bounds.clear(null, getClass()).world(5, 5, 6, 6)));
+        quad(a, 0.5f, 0, 0f);
+        batch.endView();
+
+        float[] vertices = target.uploader.vertexUploads.get(1);
+        assertEquals(List.of(0.5f, 0f), quadOrder(vertices, target.uploader.indexUploads.get(1)));
+        assertEquals(List.of("apply a", "draw 0 12"), draws().subList(2, 4));
+        assertEquals(2, batch.lastFrameDraws());
+    }
+
     // Equal keys keep the order of the calls; the vertices stay where they were written, only the indices move
     @Test
     void theSortIsStableAndMovesOnlyTheIndices() {

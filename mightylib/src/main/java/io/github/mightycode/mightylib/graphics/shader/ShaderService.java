@@ -123,6 +123,19 @@ public final class ShaderService implements IShaderService {
     }
 
     @Override
+    public float cullMargin(String shaderName) {
+        JSONObject entry = declarations.optJSONObject(shaderName);
+        Object value = entry == null ? null : entry.opt("cullMargin");
+        if (value == null)
+            return 0f;
+
+        float margin = value instanceof Number ? ((Number) value).floatValue() : Float.NaN;
+        if (!(margin >= 0f) || Float.isInfinite(margin))
+            throw new IllegalArgumentException("\"cullMargin\" " + value + " is not a number >= 0 (world units)");
+        return margin;
+    }
+
+    @Override
     public JSONObject declarations() {
         // A deep copy: read once by the loader, and by the command shaders
         return new JSONObject(declarations.toString());

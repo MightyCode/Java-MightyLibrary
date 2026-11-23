@@ -20,6 +20,8 @@ public class ShaderData extends DataType {
     private final boolean shader2D;
     // Of its entry in shaders.json (name to value, "" for none), sorted, immutable: written in its prelude
     private final Map<String, String> defines;
+    // Margin of the view culling of its 2D draws in world units ("cullMargin" of its entry), NaN when invalid
+    private final float cullMargin;
 
     // Files watched for hot reload: replaced in full, read by the watcher thread
     private volatile List<String> sourcePaths;
@@ -35,7 +37,14 @@ public class ShaderData extends DataType {
 
     // defines: written in the prelude of its sources after the global ones (IShaderService.prelude)
     public ShaderData(String name, boolean shader2D, Map<String, String> defines, String ... paths) {
+        this(name, shader2D, defines, 0f, paths);
+    }
+
+    // cullMargin: of its entry (IShaderService.cullMargin), NaN when invalid (the loader makes the shader fail)
+    public ShaderData(String name, boolean shader2D, Map<String, String> defines, float cullMargin,
+                      String ... paths) {
         super(TYPE_SET_UP.THREAD_CONTEXT, name);
+        this.cullMargin = cullMargin;
         this.paths = paths.clone();
         this.shader2D = shader2D;
         this.defines = Collections.unmodifiableSortedMap(new TreeMap<>(defines));
@@ -45,6 +54,11 @@ public class ShaderData extends DataType {
     // The defines of its entry, sorted by name
     public Map<String, String> getDefines() {
         return defines;
+    }
+
+    // Margin of the view culling of its 2D draws in world units, NaN when its entry has an invalid one
+    public float getCullMargin() {
+        return cullMargin;
     }
 
     public boolean isDimension2DShader() {
@@ -136,7 +150,7 @@ public class ShaderData extends DataType {
         if (getClass() != ShaderData.class || !validPaths())
             return null;
 
-        return new ShaderData(getDataName(), shader2D, defines, paths);
+        return new ShaderData(getDataName(), shader2D, defines, cullMargin, paths);
     }
 
     @Override

@@ -239,6 +239,32 @@ class ShaderServiceTest {
         assertEquals(List.of("A", "C"), List.copyOf(service.defines().keySet()));
     }
 
+    // "cullMargin": a number >= 0 in world units, 0 without; anything else refused (the shader fails when read)
+    @Test
+    void cullMarginsAreReadAndChecked(@TempDir Path root) throws IOException {
+        writeList(root, "{\"shaders\": {"
+                + "\"wave\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"], \"cullMargin\": 4.5},"
+                + "\"zero\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"], \"cullMargin\": 0},"
+                + "\"plain\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"]},"
+                + "\"negative\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"], \"cullMargin\": -1},"
+                + "\"text\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"], \"cullMargin\": \"8\"},"
+                + "\"none\": {\"files\": [\"v.glsl\", \"f.glsl\"], \"tags\": [\"2D\"], \"cullMargin\": null}}}");
+        ShaderService service = service(root);
+
+        assertEquals(4.5f, service.cullMargin("wave"));
+        assertEquals(0f, service.cullMargin("zero"));
+        assertEquals(0f, service.cullMargin("plain"));
+        assertEquals(0f, service.cullMargin("unknown"));
+        assertThrows(IllegalArgumentException.class, () -> service.cullMargin("negative"));
+        assertThrows(IllegalArgumentException.class, () -> service.cullMargin("text"));
+        assertThrows(IllegalArgumentException.class, () -> service.cullMargin("none"));
+
+        // Kept by the data of the shader (NaN: refused when the shader is read)
+        assertEquals(4.5f, new ShaderData("wave", true, Map.of(), 4.5f, "shaders/v.glsl", "shaders/f.glsl")
+                .getCullMargin());
+        assertEquals(0f, new ShaderData("plain", true, "shaders/v.glsl", "shaders/f.glsl").getCullMargin());
+    }
+
     // Two entries on the same files, with different defines: two shaders
     @Test
     void entryDefinesAreKeptByTheShaderData() {

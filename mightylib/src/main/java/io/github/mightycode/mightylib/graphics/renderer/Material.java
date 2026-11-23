@@ -459,8 +459,11 @@ public final class Material implements IUniformTarget {
         batchReadsColor = shader.location(ShaderUniforms.COLOR) != -1;
         IRenderTextureBindable unit0 = readsTextures && mainTexture != null ? mainTexture : batches.whiteTexture();
         IRenderTextureBindable[] channels = readsTextures && textures != null ? textures.clone() : null;
+        // The largest margin of view culling of its shader and of its batch programs
+        float cullMargin = Math.max(CullMargin(shader), Math.max(CullMargin(batchShader),
+                batchInstancedShader == null ? 0f : CullMargin(batchInstancedShader)));
         MaterialBatchPart part = new MaterialBatchPart(batches, batchShader, batchFormat, batchInstancedShader,
-                batchInstancedFormat, unit0, channels, renderState, values.size() > 0 ? this : null);
+                batchInstancedFormat, unit0, channels, renderState, values.size() > 0 ? this : null, cullMargin);
 
         batchPartId = table.materialPart(part);
         batchTable = table;
@@ -468,6 +471,12 @@ public final class Material implements IUniformTarget {
         batchVersion = version;
         batchProgramStamp = shader.programStamp();
         return batchPartId;
+    }
+
+    // "cullMargin" of the entry of the shader, 0 when invalid (the shader then failed: its fallback has none)
+    private static float CullMargin(Shader program) {
+        float margin = program.getData().getCullMargin();
+        return margin >= 0f ? margin : 0f;
     }
 
     // The batch equivalent of the shader, held until the material is freed (null when it has none)

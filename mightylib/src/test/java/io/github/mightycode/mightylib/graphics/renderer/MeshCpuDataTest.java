@@ -100,4 +100,37 @@ class MeshCpuDataTest {
         data.setIndices(new int[]{0, 1, 2}, 3);
         assertEquals(2, data.maxIndex());
     }
+
+    // The box of the positions of a vbo (view culling): computed again only when a vbo changed
+    @Test
+    void theBoxOfThePositionsFollowsTheVbos() {
+        MeshCpuData data = new MeshCpuData();
+        float[] box = new float[4];
+        assertFalse(data.positionBox(0, box));
+
+        data.addVbo(0, new float[]{1, 2, -3, 4, 5, -6});
+        data.addVbo(1, null);
+        assertTrue(data.positionBox(0, box));
+        assertArrayEquals(new float[]{-3, -6, 5, 4}, box);
+        // An unknown vbo: no box
+        assertFalse(data.positionBox(1, box));
+
+        data.setVbo(0, new float[]{10, 10, 20, 30});
+        assertTrue(data.positionBox(0, box));
+        assertArrayEquals(new float[]{10, 10, 20, 30}, box);
+
+        // Bytes 8 to 15: the second position
+        data.setSubVbo(0, new float[]{-1, 50}, 8);
+        assertTrue(data.positionBox(0, box));
+        assertArrayEquals(new float[]{-1, 10, 10, 50}, box);
+
+        // No position, or one that is not finite: no box
+        data.setVbo(0, new float[0]);
+        assertFalse(data.positionBox(0, box));
+        data.setVbo(0, new float[]{0, Float.NaN});
+        assertFalse(data.positionBox(0, box));
+
+        data.clearVbos();
+        assertFalse(data.positionBox(0, box));
+    }
 }

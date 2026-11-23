@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // The view culling of the batched draws without OpenGL: box of the view of a camera, boxes of the draws, margins
 class ViewCulling2DTest {
-    private static final class Part implements IBatchMaterial {
+    private static class Part implements IBatchMaterial {
         @Override
         public BatchFormat format() {
             return BatchFormats.SPRITE;
@@ -124,7 +124,7 @@ class ViewCulling2DTest {
     }
 
     private boolean culled(float minX, float minY, float maxX, float maxY) {
-        return batch.isCulled(state(), bounds.clear(null, this).world(minX, minY, maxX, maxY));
+        return batch.isCulled(state(), bounds.clear(null, getClass()).world(minX, minY, maxX, maxY));
     }
 
     @Test
@@ -208,11 +208,11 @@ class ViewCulling2DTest {
     @Test
     void worldMarginsWidenTheBox() {
         int state = state();
-        assertTrue(batch.isCulled(state, bounds.clear(null, this).world(810, 0, 820, 10)));
-        assertFalse(batch.isCulled(state, bounds.clear(null, this).world(810, 0, 820, 10).margin(10, 0)));
-        assertTrue(batch.isCulled(state, bounds.clear(null, this).world(810, 0, 820, 10).margin(9, 0)));
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(810, 0, 820, 10)));
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(810, 0, 820, 10).margin(10, 0)));
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(810, 0, 820, 10).margin(9, 0)));
         // Margins add up, negative ones are ignored
-        assertFalse(batch.isCulled(state, bounds.clear(null, this).world(810, 0, 820, 10).margin(5, 0)
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(810, 0, 820, 10).margin(5, 0)
                 .margin(5, 0).margin(-100, 0)));
     }
 
@@ -223,25 +223,25 @@ class ViewCulling2DTest {
         viewportHeight = 1200;
         int state = state();
         // Half a world unit per pixel
-        assertFalse(batch.isCulled(state, bounds.clear(null, this).world(805, 0, 810, 10).margin(0, 10)));
-        assertTrue(batch.isCulled(state, bounds.clear(null, this).world(805, 0, 810, 10).margin(0, 8)));
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(805, 0, 810, 10).margin(0, 10)));
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(805, 0, 810, 10).margin(0, 8)));
         // Margins in world units and pixels add up
-        assertFalse(batch.isCulled(state, bounds.clear(null, this).world(805, 0, 810, 10).margin(1, 8)));
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(805, 0, 810, 10).margin(1, 8)));
         batch.endView();
 
         // Zoom 4: a pixel is an eighth of a world unit, the view ends at x 200
         camera(0, 0, 4, 0);
         state = state();
-        assertFalse(batch.isCulled(state, bounds.clear(null, this).world(201, 0, 210, 10).margin(0, 8)));
-        assertTrue(batch.isCulled(state, bounds.clear(null, this).world(201, 0, 210, 10).margin(0, 7)));
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(201, 0, 210, 10).margin(0, 8)));
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(201, 0, 210, 10).margin(0, 7)));
     }
 
     // Without a known viewport, a margin in pixels can't be measured: never culled
     @Test
     void pixelMarginsWithoutViewportCullNothing() {
         viewportWidth = 0;
-        assertFalse(batch.isCulled(state(), bounds.clear(null, this).world(900, 0, 910, 10).margin(0, 1)));
-        assertTrue(batch.isCulled(state(), bounds.clear(null, this).world(900, 0, 910, 10)));
+        assertFalse(batch.isCulled(state(), bounds.clear(null, getClass()).world(900, 0, 910, 10).margin(0, 1)));
+        assertTrue(batch.isCulled(state(), bounds.clear(null, getClass()).world(900, 0, 910, 10)));
     }
 
     // A local box is transformed by the model matrix: the box of its 4 corners
@@ -250,30 +250,30 @@ class ViewCulling2DTest {
         int state = state();
         Matrix4f model = new Matrix4f().translate(900, 300, 0).rotateZ((float) Math.PI / 4);
         // Half diagonal of 50 * sqrt(2) = 70.7: from x 829.3
-        assertTrue(batch.isCulled(state, bounds.clear(model, this).local(-50, -50, 50, 50)));
+        assertTrue(batch.isCulled(state, bounds.clear(model, getClass()).local(-50, -50, 50, 50)));
         model.identity().translate(860, 300, 0).rotateZ((float) Math.PI / 4);
-        assertFalse(batch.isCulled(state, bounds.clear(model, this).local(-50, -50, 50, 50)));
+        assertFalse(batch.isCulled(state, bounds.clear(model, getClass()).local(-50, -50, 50, 50)));
         // Without rotation, the same box at 860 starts at 810
         model.identity().translate(860, 300, 0);
-        assertTrue(batch.isCulled(state, bounds.clear(model, this).local(-50, -50, 50, 50)));
+        assertTrue(batch.isCulled(state, bounds.clear(model, getClass()).local(-50, -50, 50, 50)));
         // Scaled by 2: from x 760
         model.scale(2);
-        assertFalse(batch.isCulled(state, bounds.clear(model, this).local(-50, -50, 50, 50)));
+        assertFalse(batch.isCulled(state, bounds.clear(model, getClass()).local(-50, -50, 50, 50)));
         // A world box ignores the model
         model.identity().translate(-5000, 0, 0);
-        assertFalse(batch.isCulled(state, bounds.clear(model, this).world(10, 10, 20, 20)));
+        assertFalse(batch.isCulled(state, bounds.clear(model, getClass()).world(10, 10, 20, 20)));
         // A model that is not affine in the plane: never culled
         model.setPerspective(1f, 1f, 0.1f, 10f);
-        assertFalse(batch.isCulled(state, bounds.clear(model, this).local(5000, 5000, 5010, 5010)));
+        assertFalse(batch.isCulled(state, bounds.clear(model, getClass()).local(5000, 5000, 5010, 5010)));
     }
 
     @Test
     void theCountersAreThoseOfTheLastFrame() {
         int state = state();
-        batch.isCulled(state, bounds.clear(null, this).world(0, 0, 10, 10));
-        batch.isCulled(state, bounds.clear(null, this).world(900, 0, 910, 10));
-        batch.isCulled(state, bounds.clear(null, this).world(-900, 0, -890, 10));
-        batch.isCulled(state, bounds.clear(null, this));
+        batch.isCulled(state, bounds.clear(null, getClass()).world(0, 0, 10, 10));
+        batch.isCulled(state, bounds.clear(null, getClass()).world(900, 0, 910, 10));
+        batch.isCulled(state, bounds.clear(null, getClass()).world(-900, 0, -890, 10));
+        batch.isCulled(state, bounds.clear(null, getClass()));
         batch.isCulled(state, null);
         assertEquals(0, batch.lastFrameCullTested());
         batch.endView();
@@ -293,7 +293,7 @@ class ViewCulling2DTest {
     void offCullsAndCountsNothing() {
         viewCulling = false;
         int state = state();
-        assertFalse(batch.isCulled(state, bounds.clear(null, this).world(900, 0, 910, 10)));
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(900, 0, 910, 10)));
         assertFalse(batch.isCulled(state, null));
         batch.endView();
         assertEquals(0, batch.lastFrameCullTested());
@@ -301,12 +301,39 @@ class ViewCulling2DTest {
         assertEquals(0, batch.lastFrameCullNoBounds());
 
         viewCulling = true;
-        assertTrue(batch.isCulled(state(), bounds.clear(null, this).world(900, 0, 910, 10)));
+        assertTrue(batch.isCulled(state(), bounds.clear(null, getClass()).world(900, 0, 910, 10)));
+    }
+
+    // The margin of the material part of the state ("cullMargin" of its shaders) widens every draw of it
+    @Test
+    void theMarginOfTheMaterialPartIsAdded() {
+        BatchStateTable stateTable = batch.stateTable();
+        int wave = stateTable.state(stateTable.materialPart(new Part() {
+            @Override
+            public float cullMargin() {
+                return 10f;
+            }
+
+            @Override
+            public boolean equals(Object other) {
+                return other == this;
+            }
+
+            @Override
+            public int hashCode() {
+                return 2;
+            }
+        }), stateTable.camera(projection, view), false);
+        assertFalse(batch.isCulled(wave, bounds.clear(null, getClass()).world(810, 0, 820, 10)));
+        assertTrue(batch.isCulled(wave, bounds.clear(null, getClass()).world(811, 0, 820, 10)));
+        assertTrue(batch.isCulled(state(), bounds.clear(null, getClass()).world(810, 0, 820, 10)));
+        // Added to the margin of the draw
+        assertFalse(batch.isCulled(wave, bounds.clear(null, getClass()).world(815, 0, 820, 10).margin(5, 0)));
     }
 
     @Test
     void theBoundsAreReusable() {
-        bounds.clear(null, this).local(10, 20, 0, -5).margin(1, 2);
+        bounds.clear(null, getClass()).local(10, 20, 0, -5).margin(1, 2);
         assertTrue(bounds.hasBox());
         assertTrue(bounds.isLocal());
         assertEquals(0, bounds.minX());
@@ -315,7 +342,7 @@ class ViewCulling2DTest {
         assertEquals(20, bounds.maxY());
         assertEquals(1, bounds.worldMargin());
         assertEquals(2, bounds.pixelMargin());
-        assertSame(this, bounds.owner());
+        assertSame(getClass(), bounds.owner());
 
         bounds.clear(null, null);
         assertFalse(bounds.hasBox());
@@ -327,6 +354,6 @@ class ViewCulling2DTest {
     @Test
     void aStateUnknownToTheTableIsRefused() {
         state();
-        assertThrows(IllegalArgumentException.class, () -> batch.isCulled(-1, bounds.clear(null, this)));
+        assertThrows(IllegalArgumentException.class, () -> batch.isCulled(-1, bounds.clear(null, getClass())));
     }
 }

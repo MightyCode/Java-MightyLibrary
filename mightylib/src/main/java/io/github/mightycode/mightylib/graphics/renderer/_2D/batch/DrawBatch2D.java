@@ -146,6 +146,9 @@ public final class DrawBatch2D {
     // While the draws are sent: a barrier asked by what the sending does is not one
     private boolean sending;
 
+    // The box of the draw tested by the view culling, reused
+    private final ViewCullBounds cullBounds = new ViewCullBounds();
+
     /** A batch of a view (Scene, WindowView), with the mode and the targets of its engine. */
     @API(status = INTERNAL)
     public DrawBatch2D(IBatchBackend backend) {
@@ -521,13 +524,25 @@ public final class DrawBatch2D {
 
     // ---- View culling ----
 
+    /** The view culling of the engine is on (EngineConfig.setViewCulling2D, Engine.setViewCulling2D). */
+    public boolean isViewCulling() {
+        return backend.viewCulling();
+    }
+
+    /** The box reused by the draws of this batch (cleared by its user before each draw). */
+    @API(status = INTERNAL)
+    public ViewCullBounds cullBounds() {
+        return cullBounds;
+    }
+
     /**
      * The view culling of a draw of this state, before it is written: true when its box, margins included, is wholly
      * outside the box of the view of the camera of the state (a box that touches it is not), the draw is then not
      * written. False without box (counted as such), for a camera that is not an affine 2D transform (a perspective)
      * or a local box with such a model matrix, and when the view culling of the engine is off
-     * (EngineConfig.setViewCulling2D; nothing counted then). Margins in pixels use the viewport of the context when
-     * the batch started.
+     * (EngineConfig.setViewCulling2D; nothing counted then). The margin of the material part of the state
+     * ("cullMargin" of its shaders) is added; margins in pixels use the viewport of the context when the batch
+     * started.
      */
     public boolean isCulled(int state, ViewCullBounds bounds) {
         if (!backend.viewCulling())
@@ -566,7 +581,7 @@ public final class DrawBatch2D {
             maxY = worldY + extentY;
         }
 
-        float marginX = bounds.worldMargin(), marginY = marginX;
+        float marginX = bounds.worldMargin() + table.cullMarginOf(state), marginY = marginX;
         float pixels = bounds.pixelMargin();
         if (pixels > 0f) {
             if (viewportWidth <= 0 || viewportHeight <= 0)
@@ -620,7 +635,7 @@ public final class DrawBatch2D {
      * size, 0 0 for the top left corner) placed at position, turned by rotation (radians) around it, the part of
      * the texture region (u0, v0, u1, v1 in its x, y, z, w; null for the whole texture), flipped like
      * RectangleRenderer.setTextureFlip, multiplied by color (null for white). False when the material can't be
-     * batched now (nothing drawn).
+     * batched now (nothing drawn); true when drawn, or culled (outside the view: nothing written).
      */
     public boolean drawRegion(Material material, Vector2fc position, Vector2fc size, Vector2fc reference,
                               float rotation, Vector4fc region, EFlip flip, Color4f color) {
@@ -657,11 +672,18 @@ public final class DrawBatch2D {
         // Corners in the order of RectangleRenderer: (0, h), (0, 0), (w, 0), (w, h)
         float x0 = left, y0 = top + height, x1 = left, y1 = top;
         float x2 = left + width, y2 = top, x3 = left + width, y3 = top + height;
+        float wx0 = px + cos * x0 - sin * y0, wy0 = py + sin * x0 + cos * y0;
+        float wx1 = px + cos * x1 - sin * y1, wy1 = py + sin * x1 + cos * y1;
+        float wx2 = px + cos * x2 - sin * y2, wy2 = py + sin * x2 + cos * y2;
+        float wx3 = px + cos * x3 - sin * y3, wy3 = py + sin * x3 + cos * y3;
+        if (cornersCulled(state, wx0, wy0, wx1, wy1, wx2, wy2, wx3, wy3))
+            return true;
+
         quad(state, layer, depth,
-                px + cos * x0 - sin * y0, py + sin * x0 + cos * y0, u0, v1,
-                px + cos * x1 - sin * y1, py + sin * x1 + cos * y1, u0, v0,
-                px + cos * x2 - sin * y2, py + sin * x2 + cos * y2, u1, v0,
-                px + cos * x3 - sin * y3, py + sin * x3 + cos * y3, u1, v1,
+                wx0, wy0, u0, v1,
+                wx1, wy1, u0, v0,
+                wx2, wy2, u1, v0,
+                wx3, wy3, u1, v1,
                 color == null ? -1 : color.toIntRGBA());
         drawnOutsideRenderer();
         return true;
@@ -674,7 +696,8 @@ public final class DrawBatch2D {
 
     /**
      * Any quad of the material: its 4 corners (x, y pairs, in order around it: triangles 0 3 2 and 0 2 1), their
-     * texture coordinates (u, v pairs), one color (null for white). False when the material can't be batched now.
+     * texture coordinates (u, v pairs), one color (null for white). False when the material can't be batched now,
+     * true when drawn or culled.
      */
     public boolean drawQuad(Material material, float[] corners, float[] textureCoordinates, Color4f color,
                             int layer, float depth) {
@@ -684,6 +707,9 @@ public final class DrawBatch2D {
         int state = state(material);
         if (state < 0)
             return false;
+        if (cornersCulled(state, corners[0], corners[1], corners[2], corners[3], corners[4], corners[5], corners[6],
+                corners[7]))
+            return true;
 
         quad(state, layer, depth,
                 corners[0], corners[1], textureCoordinates[0], textureCoordinates[1],
@@ -693,6 +719,18 @@ public final class DrawBatch2D {
                 color == null ? -1 : color.toIntRGBA());
         drawnOutsideRenderer();
         return true;
+    }
+
+    // A quad of this API outside the view: not written (batched draws only, like those of the renderers)
+    private boolean cornersCulled(int state, float x0, float y0, float x1, float y1, float x2, float y2, float x3,
+                                  float y3) {
+        if (!isEnabled() || !backend.viewCulling())
+            return false;
+
+        cullBounds.clear(null, DrawBatch2D.class).world(Math.min(Math.min(x0, x1), Math.min(x2, x3)),
+                Math.min(Math.min(y0, y1), Math.min(y2, y3)), Math.max(Math.max(x0, x1), Math.max(x2, x3)),
+                Math.max(Math.max(y0, y1), Math.max(y2, y3)));
+        return isCulled(state, cullBounds);
     }
 
     // Mode OFF: a draw of this API is sent at once (one draw call, like a renderer drawn alone)

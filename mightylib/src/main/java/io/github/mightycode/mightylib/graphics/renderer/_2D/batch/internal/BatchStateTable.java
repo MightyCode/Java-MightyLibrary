@@ -128,6 +128,11 @@ public final class BatchStateTable implements IGLSharedState {
         return parts[materialPartOf(state)].format();
     }
 
+    // Margin of the view culling of the draws of the state in world units (of its material part)
+    public float cullMarginOf(int state) {
+        return parts[materialPartOf(state)].cullMargin();
+    }
+
     // The format of the instanced program of the state (mode INSTANCED), null when none
     public BatchFormat instancedFormatOf(int state) {
         return parts[materialPartOf(state)].instancedFormat();

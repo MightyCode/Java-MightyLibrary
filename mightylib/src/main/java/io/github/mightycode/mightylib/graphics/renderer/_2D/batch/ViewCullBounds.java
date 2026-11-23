@@ -19,8 +19,8 @@ public final class ViewCullBounds {
     private float pixelMargin;
     // The model matrix a local box is transformed by (null: the identity)
     private Matrix4fc model;
-    // What the box is of (counters and tools of the command batch cull)
-    private Object owner;
+    // The class of what draws (counters and tools of the command batch cull)
+    private Class<?> owner;
 
     /** A box in the space of the model: transformed by the model matrix of the draw (the box of its 4 corners). */
     public ViewCullBounds local(float minX, float minY, float maxX, float maxY) {
@@ -52,9 +52,12 @@ public final class ViewCullBounds {
         return this;
     }
 
-    /** Before the box of a draw is asked: no box, no margin, the model matrix of the draw (null: the identity). */
+    /**
+     * Before the box of a draw is asked: no box, no margin, the model matrix of the draw (null: the identity), the
+     * class of what draws.
+     */
     @API(status = INTERNAL)
-    public ViewCullBounds clear(Matrix4fc model, Object owner) {
+    public ViewCullBounds clear(Matrix4fc model, Class<?> owner) {
         hasBox = false;
         local = false;
         minX = minY = maxX = maxY = 0f;
@@ -74,5 +77,5 @@ public final class ViewCullBounds {
     public float worldMargin() { return worldMargin; }
     public float pixelMargin() { return pixelMargin; }
     public Matrix4fc model() { return model; }
-    public Object owner() { return owner; }
+    public Class<?> owner() { return owner; }
 }
