@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer.RenderState;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.map.TileMap;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
@@ -13,6 +14,7 @@ import io.github.mightycode.mightylib.test.SceneRunner;
 import io.github.mightycode.mightylibdemo.main.DemoTestConfig;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.BufferUtils;
 
@@ -90,6 +92,8 @@ class TileMapBatchGLTest {
             map.setTileMap(tileMap);
             Vector2i tile = tileMap.tileSetAtlas().getTileSize();
             Vector2f mapSize = new Vector2f(tileMap.mapWidth() * tile.x, tileMap.mapHeight() * tile.y);
+            // Tiles of the map drawn or left out: the same in every view and mode (set by the first sample)
+            double[] tileCount = {-1};
             Vector2i screen = scene.context().getWindow().getInfo().getVirtualSizeCopy();
             Camera2D camera = scene.camera2D();
             Vector2f position = camera.getCamPosCopy();
@@ -123,7 +127,21 @@ class TileMapBatchGLTest {
                     for (EBatch2DMode mode : new EBatch2DMode[]{EBatch2DMode.ORPHAN, EBatch2DMode.RING,
                             EBatch2DMode.INSTANCED}) {
                         Views.engine().setBatch2DMode(mode);
+                        EngineStats.endSecond(1, 1, 0, 0);
                         ByteBuffer batched = capture(scene, map::display);
+                        // The tiles written and those left out are the tiles of the map
+                        EngineStats.endSecond(1, 1, 0, 0);
+                        JSONObject stats = EngineStats.toJson();
+                        double total = stats.getDouble("tilesCulledPerFrame") + stats.getDouble("tilesDrawnPerFrame");
+                        if (tileCount[0] < 0)
+                            tileCount[0] = total;
+                        assertTrue(total > 0, mode + ": " + total + " tiles");
+                        assertEquals(tileCount[0], total, 1.0, mode.toString());
+                        // Out of the map: every tile left out; in view: some written
+                        if (view[0] < -1)
+                            assertEquals(0, stats.getDouble("tilesDrawnPerFrame"), mode.toString());
+                        else
+                            assertTrue(stats.getDouble("tilesDrawnPerFrame") > 0, mode.toString());
                         int different = countDifferent(alone, batched);
                         assertTrue(different <= alone.capacity() / 2000,
                                 mode + " at " + view[0] + ", " + view[1] + " zoom " + view[2] + " rotation " + view[3]

@@ -28,7 +28,10 @@ class BatchGenComTest {
         JSONObject view = new JSONObject().put("view", "MyScene").put("draws", 1000).put("drawCalls", 3)
                 .put("barriers", 2).put("barriersWhileSorted", 1).put("sortKey", "layerThenDepth")
                 .put("barrierCauses", causes).put("shownLastFrame", true)
-                .put("formats", new JSONObject().put("sprite", 2).put("circle", 1));
+                .put("formats", new JSONObject().put("sprite", 2).put("circle", 1))
+                .put("bytes", 24000).put("bytesPerCall", 8000.0).put("drawsPerCall", 333.3)
+                .put("viewCull", new JSONObject().put("tested", 1200).put("culled", 200).put("noBounds", 5)
+                        .put("noBoundsClasses", new JSONObject().put("io.example.MyCustomRenderer", 5)));
         // A scene left, its batch not collected yet: its last frame is an old one
         JSONObject left = new JSONObject().put("view", "LeftScene").put("draws", 500).put("drawCalls", 2)
                 .put("barriers", 0).put("sortKey", JSONObject.NULL).put("barrierCauses", new JSONObject())
@@ -60,6 +63,12 @@ class BatchGenComTest {
         assertTrue(result.getMessage().contains("MyRenderer x2"), result.getMessage());
         // The draw calls by batch format, sorted by name
         assertTrue(result.getMessage().contains("formats circle x1 sprite x2"), result.getMessage());
+        assertTrue(result.getMessage().contains("24000 bytes sent (8000 and 333.3 draws per call)"),
+                result.getMessage());
+        assertTrue(result.getMessage().contains("view culling: 200 of 1200 tested culled, 5 without box"
+                + " MyCustomRenderer x5"), result.getMessage());
+        assertEquals(200, result.getData().getJSONArray("views").getJSONObject(0).getJSONObject("viewCull")
+                .getInt("culled"));
         assertEquals("orphan", result.getData().getString("mode"));
         // A view not displayed in the last frame is in the data only
         assertFalse(result.getMessage().contains("LeftScene"), result.getMessage());

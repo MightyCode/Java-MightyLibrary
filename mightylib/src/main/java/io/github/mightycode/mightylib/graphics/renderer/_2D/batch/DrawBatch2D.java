@@ -455,6 +455,9 @@ public final class DrawBatch2D {
             addEntry(first, count);
         }
 
+        // What the draw wrote: its vertices and indices, or its instances
+        current.countWritten(drawFormat, drawInstanced ? (long) drawInstanceCount * drawStride
+                : (long) drawVertexCount * drawStride + (long) (indexCount - drawFirstIndex) * Integer.BYTES);
         ++drawCount;
         ++current.draws;
     }
@@ -566,6 +569,7 @@ public final class DrawBatch2D {
             throw new IllegalArgumentException("State " + state + " unknown to the table of the batch");
         if (bounds == null || !bounds.hasBox()) {
             ++current.cullNoBounds;
+            current.countNoBounds(bounds == null ? null : bounds.owner());
             return false;
         }
 
@@ -794,6 +798,7 @@ public final class DrawBatch2D {
     public void endView() {
         send(true);
 
+        EngineStats.countViewCull(current.cullTested, current.culled, current.cullNoBounds);
         last.copyFrom(current);
         current.clear();
         shownFrame = backend.frame();
@@ -858,6 +863,9 @@ public final class DrawBatch2D {
         vertices.position(0).limit(regularRuns ? vertexBytes : 0);
         drawnIndices.position(0).limit(regularRuns ? indexCount : 0);
         drawnInstances.position(0).limit(drawnInstanceBytes);
+        long sentBytes = vertices.limit() + (long) drawnIndices.limit() * Integer.BYTES + drawnInstanceBytes;
+        current.bytesSent += sentBytes;
+        EngineStats.countBatchBytes(sentBytes);
         try {
             uploader.upload(vertices, drawnIndices, drawnInstances);
         } finally {
@@ -1113,6 +1121,54 @@ public final class DrawBatch2D {
         return last.cullNoBounds;
     }
 
+    /** Bytes of vertices, indices and instances sent to the GPU in the last frame of the view. */
+    public long lastFrameBytes() {
+        return last.bytesSent;
+    }
+
+    /** Draws gathered by each draw call of the last frame (0 without draw call). */
+    public double lastFrameDrawsPerCall() {
+        return last.drawCalls == 0 ? 0 : (double) last.draws / last.drawCalls;
+    }
+
+    /** Bytes sent by each draw call of the last frame (0 without draw call). */
+    public double lastFrameBytesPerCall() {
+        return last.drawCalls == 0 ? 0 : (double) last.bytesSent / last.drawCalls;
+    }
+
+    /**
+     * Bytes the draws of the last frame wrote, by the name of their batch format (a draw culled wrote none; the
+     * quads drawn by instances in mode INSTANCED are counted as written, not as sent). A new map.
+     */
+    public Map<String, Long> lastFrameFormatBytes() {
+        Map<String, Long> bytes = new LinkedHashMap<>();
+        for (int i = 0; i < last.writtenCount; ++i)
+            bytes.merge(last.writtenFormats[i].name(), last.writtenBytes[i], Long::sum);
+
+        return bytes;
+    }
+
+    /** Draws without box of the last frame by the name of the class that drew them (the 10 most). A new map. */
+    public Map<String, Integer> lastFrameNoBoundsClasses() {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        int[] order = new int[last.noBoundsCount];
+        int ordered = 0;
+        for (int i = 0; i < last.noBoundsCount; ++i) {
+            int at = ordered++;
+            while (at > 0 && last.noBoundsCounts[order[at - 1]] < last.noBoundsCounts[i]) {
+                order[at] = order[at - 1];
+                --at;
+            }
+            order[at] = i;
+        }
+
+        for (int i = 0; i < Math.min(10, ordered); ++i) {
+            Class<?> owner = last.noBoundsClasses[order[i]];
+            counts.put(owner == null ? "?" : owner.getName(), last.noBoundsCounts[order[i]]);
+        }
+        return counts;
+    }
+
     /** Segments sorted in the last frame. */
     public int lastFrameSorts() {
         return last.sorts;
@@ -1165,7 +1221,14 @@ public final class DrawBatch2D {
                 .put("sorts", last.sorts)
                 .put("instancedDrawCalls", last.instancedDrawCalls)
                 .put("barrierCauses", causes)
-                .put("formats", new JSONObject(lastFrameFormatCalls()));
+                .put("formats", new JSONObject(lastFrameFormatCalls()))
+                .put("formatBytes", new JSONObject(lastFrameFormatBytes()))
+                .put("bytes", last.bytesSent)
+                .put("drawsPerCall", lastFrameDrawsPerCall())
+                .put("bytesPerCall", lastFrameBytesPerCall())
+                .put("viewCull", new JSONObject().put("tested", last.cullTested).put("culled", last.culled)
+                        .put("noBounds", last.cullNoBounds)
+                        .put("noBoundsClasses", new JSONObject(lastFrameNoBoundsClasses())));
     }
 
     // Capacities of the arrays (tests: nothing grows once the frames are stable)
@@ -1190,6 +1253,15 @@ public final class DrawBatch2D {
         int cullTested;
         int culled;
         int cullNoBounds;
+        // Draws without box by class
+        Class<?>[] noBoundsClasses = new Class<?>[4];
+        int[] noBoundsCounts = new int[4];
+        int noBoundsCount;
+        // Bytes sent to the GPU, and bytes written by the draws by format
+        long bytesSent;
+        BatchFormat[] writtenFormats = new BatchFormat[4];
+        long[] writtenBytes = new long[4];
+        int writtenCount;
         // Draw calls by format
         BatchFormat[] formats = new BatchFormat[4];
         int[] formatCalls = new int[4];
@@ -1224,6 +1296,40 @@ public final class DrawBatch2D {
                 ++causeSortedCounts[i];
         }
 
+        void countNoBounds(Class<?> owner) {
+            int i = 0;
+            while (i < noBoundsCount && noBoundsClasses[i] != owner)
+                ++i;
+            if (i == noBoundsCount) {
+                if (noBoundsCount == noBoundsClasses.length) {
+                    noBoundsClasses = Arrays.copyOf(noBoundsClasses, noBoundsCount * 2);
+                    noBoundsCounts = Arrays.copyOf(noBoundsCounts, noBoundsCount * 2);
+                }
+                noBoundsClasses[i] = owner;
+                noBoundsCounts[i] = 0;
+                ++noBoundsCount;
+            }
+
+            ++noBoundsCounts[i];
+        }
+
+        void countWritten(BatchFormat format, long bytes) {
+            int i = 0;
+            while (i < writtenCount && writtenFormats[i] != format)
+                ++i;
+            if (i == writtenCount) {
+                if (writtenCount == writtenFormats.length) {
+                    writtenFormats = Arrays.copyOf(writtenFormats, writtenCount * 2);
+                    writtenBytes = Arrays.copyOf(writtenBytes, writtenCount * 2);
+                }
+                writtenFormats[i] = format;
+                writtenBytes[i] = 0;
+                ++writtenCount;
+            }
+
+            writtenBytes[i] += bytes;
+        }
+
         void countFormat(BatchFormat format) {
             int i = 0;
             while (i < formatCount && formats[i] != format)
@@ -1252,6 +1358,22 @@ public final class DrawBatch2D {
             cullTested = other.cullTested;
             culled = other.culled;
             cullNoBounds = other.cullNoBounds;
+            bytesSent = other.bytesSent;
+            if (noBoundsClasses.length < other.noBoundsCount) {
+                noBoundsClasses = new Class<?>[other.noBoundsClasses.length];
+                noBoundsCounts = new int[other.noBoundsClasses.length];
+            }
+            System.arraycopy(other.noBoundsClasses, 0, noBoundsClasses, 0, other.noBoundsCount);
+            System.arraycopy(other.noBoundsCounts, 0, noBoundsCounts, 0, other.noBoundsCount);
+            Arrays.fill(noBoundsClasses, other.noBoundsCount, noBoundsClasses.length, null);
+            noBoundsCount = other.noBoundsCount;
+            if (writtenFormats.length < other.writtenCount) {
+                writtenFormats = new BatchFormat[other.writtenFormats.length];
+                writtenBytes = new long[other.writtenFormats.length];
+            }
+            System.arraycopy(other.writtenFormats, 0, writtenFormats, 0, other.writtenCount);
+            System.arraycopy(other.writtenBytes, 0, writtenBytes, 0, other.writtenCount);
+            writtenCount = other.writtenCount;
             if (causes.length < other.causeCount) {
                 causes = new Object[other.causes.length];
                 causeCounts = new int[other.causes.length];
@@ -1275,6 +1397,10 @@ public final class DrawBatch2D {
         void clear() {
             draws = drawCalls = flushes = barriers = barriersWhileSorted = sorts = instancedDrawCalls = 0;
             cullTested = culled = cullNoBounds = 0;
+            bytesSent = 0;
+            Arrays.fill(noBoundsClasses, 0, noBoundsCount, null);
+            noBoundsCount = 0;
+            writtenCount = 0;
             Arrays.fill(causes, 0, causeCount, null);
             causeCount = 0;
             formatCount = 0;

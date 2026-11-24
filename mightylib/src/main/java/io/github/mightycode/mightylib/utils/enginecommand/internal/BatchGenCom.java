@@ -98,6 +98,27 @@ public final class BatchGenCom extends BaseCommand {
                     for (String format : new TreeSet<>(formats.keySet()))
                         message.append(" ").append(format).append(" x").append(formats.optInt(format));
                 }
+
+                // What was sent, and what the view culling left out (the classes that gave no box)
+                if (view.has("bytes"))
+                    message.append(", ").append(view.optLong("bytes")).append(" bytes sent (")
+                            .append(Math.round(view.optDouble("bytesPerCall"))).append(" and ")
+                            .append(Math.round(view.optDouble("drawsPerCall") * 10) / 10.0)
+                            .append(" draws per call)");
+                JSONObject cull = view.optJSONObject("viewCull");
+                if (cull != null && cull.optInt("tested") + cull.optInt("noBounds") > 0) {
+                    message.append(", view culling: ").append(cull.optInt("culled")).append(" of ")
+                            .append(cull.optInt("tested")).append(" tested culled");
+                    JSONObject noBounds = cull.optJSONObject("noBoundsClasses");
+                    if (cull.optInt("noBounds") > 0) {
+                        message.append(", ").append(cull.optInt("noBounds")).append(" without box");
+                        if (noBounds != null) {
+                            for (String owner : noBounds.keySet())
+                                message.append(" ").append(shortName(owner)).append(" x")
+                                        .append(noBounds.optInt(owner));
+                        }
+                    }
+                }
             }
         }
 
