@@ -164,11 +164,13 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         if (isDepthTest() || !BatchGeometry2D.IsAffine2D(modelMatrix()))
             return false;
 
-        int state = batchState(batch);
-        if (state < 0 || batch.formatOf(state) != batchFormat())
+        int place = batchPlace(batch);
+        if (place < 0 || batch.formatOf(place) != batchFormat())
             return false;
-        if (viewCulled(batch, state))
+        if (viewCulled(batch, place))
             return true;
+
+        int state = batchState(place);
 
         computeValues();
         int fill = batchColor();

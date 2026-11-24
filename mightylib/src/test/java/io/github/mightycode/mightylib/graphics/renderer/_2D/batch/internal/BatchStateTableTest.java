@@ -82,6 +82,12 @@ class BatchStateTableTest {
         assertFalse(BatchStateTable.isLinear(table.state(part, camera, false)));
         assertTrue(table.isCurrent(state));
         assertFalse(table.isCurrent(table.state(part + 1, camera, true)));
+
+        // The place of a draw (culled before its color mode is known) gets its mode after, the rest kept
+        int place = table.state(part, camera, false);
+        assertEquals(state, BatchStateTable.withLinear(place, true));
+        assertEquals(place, BatchStateTable.withLinear(state, false));
+        assertEquals(place, BatchStateTable.withLinear(place, false));
     }
 
     // The highest ids still give a non-negative state

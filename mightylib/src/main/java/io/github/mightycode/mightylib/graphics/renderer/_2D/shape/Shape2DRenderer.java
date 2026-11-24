@@ -105,11 +105,13 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         if (batchTextures.length < vertexCount * 2)
             return false;
 
-        int state = batchState(batch);
-        if (state < 0)
+        int place = batchPlace(batch);
+        if (place < 0)
             return false;
-        if (viewCulled(batch, state))
+        if (viewCulled(batch, place))
             return true;
+
+        int state = batchState(place);
 
         BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), batchPositions,
                 batchTextures, vertexCount, batchColor(), batchIndices, batchIndices.length);

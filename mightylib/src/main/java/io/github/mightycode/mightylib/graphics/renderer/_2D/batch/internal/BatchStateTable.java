@@ -125,6 +125,11 @@ public final class BatchStateTable implements IGLSharedState {
         return (state & 1) != 0;
     }
 
+    // The same state in this color mode
+    public static int withLinear(int state, boolean linear) {
+        return (state & ~1) | (linear ? 1 : 0);
+    }
+
     /** Before the draws of a run: applies the state (material part, then camera and color mode). */
     public void apply(int state) {
         int camera = cameraOf(state);

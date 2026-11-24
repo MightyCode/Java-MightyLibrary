@@ -229,9 +229,9 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
 
     /**
      * Hook called by display when the view batches its 2D draws (DrawBatch2D, mode not OFF), before anything is
-     * drawn: writes the draw in the batch (batchState, viewCulled: true returned without writing when culled, then
-     * batchColor, modelMatrix, DrawBatch2D.beginDraw, vertex, index, endDraw) and returns true, or returns false to
-     * be drawn alone (display goes on as without batch). The base returns false.
+     * drawn: writes the draw in the batch (batchPlace, viewCulled: true returned without writing when culled, then
+     * batchState of the place, batchColor, modelMatrix, DrawBatch2D.beginDraw, vertex, index, endDraw) and returns
+     * true, or returns false to be drawn alone (display goes on as without batch). The base returns false.
      */
     protected boolean submitToBatch(DrawBatch2D batch) {
         return false;
@@ -239,18 +239,26 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
 
     /**
      * The state of the batched draw of this renderer (material, camera, color mode), -1 when it can't be batched:
-     * its own values are more than the camera, the model and the color, or its material can't be batched now
-     * (Material.batchPart). Starts the batch: call it right before the draw is written.
+     * batchState(batchPlace(batch)). Starts the batch: call it right before the draw is written.
      */
     protected final int batchState(DrawBatch2D batch) {
+        int place = batchPlace(batch);
+        return place < 0 ? -1 : batchState(place);
+    }
+
+    /**
+     * The place of the batched draw of this renderer: its material part and its camera, what the view culling reads
+     * (viewCulled, DrawBatch2D.formatOf), the color mode not resolved yet; -1 when it can't be batched: its own
+     * values are more than the camera, the model and the color, or its material can't be batched now
+     * (Material.batchPart). Starts the batch: call it right before the draw is culled and written.
+     */
+    protected final int batchPlace(DrawBatch2D batch) {
         if (overrides.version() != checkedOverridesVersion)
             checkOverrides();
         if (!overridesBatchable)
             return -1;
 
-        Object projection = projectionValue.getObject();
-        Object view = viewValue.getObject();
-        if (!(projection instanceof Matrix4f) || !(view instanceof Matrix4f))
+        if (!(projectionValue.getObject() instanceof Matrix4f) || !(viewValue.getObject() instanceof Matrix4f))
             return -1;
 
         BatchStateTable table = batch.stateTable();
@@ -259,8 +267,12 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
             return -1;
 
         // The values themselves: a tracked camera is compared by its versions
-        int camera = table.camera(projectionValue, viewValue);
-        return table.state(part, camera, resolveColorSpace().isLinear());
+        return table.state(part, table.camera(projectionValue, viewValue), false);
+    }
+
+    /** The state of a draw at this place (batchPlace, not culled): with the color mode of the draw. */
+    protected final int batchState(int place) {
+        return BatchStateTable.withLinear(place, resolveColorSpace().isLinear());
     }
 
     private void checkOverrides() {
@@ -341,20 +353,20 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
     }
 
     /**
-     * Called by submitToBatch right after batchState: true when the draw is outside the view, then submitToBatch
+     * Called by submitToBatch right after batchPlace: true when the draw is outside the view, then submitToBatch
      * returns true without writing it. Asks viewCullBounds, adds the margin of this renderer (setViewCullMargin);
      * false at once when the view culling of this renderer or of the engine is off.
      */
-    protected final boolean viewCulled(DrawBatch2D batch, int state) {
+    protected final boolean viewCulled(DrawBatch2D batch, int place) {
         if (!viewCulling || !batch.isViewCulling())
             return false;
 
-        ViewCullBounds bounds = batch.cullBounds(state, model, getClass());
+        ViewCullBounds bounds = batch.cullBounds(place, model, getClass());
         if (viewCullBounds(bounds))
             bounds.margin(viewCullMargin, 0f);
         else
             bounds.clear(model, getClass());
-        return batch.isCulled(state, bounds);
+        return batch.isCulled(place, bounds);
     }
 
     /** The model matrix of the renderer (read only): what a batched draw applies to its vertices itself. */
