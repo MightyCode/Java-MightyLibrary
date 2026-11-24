@@ -15,6 +15,8 @@ import jdk.jfr.Name;
 @Label("Batch send")
 @Category("MightyLibrary")
 @Description("Send of the waiting draws of a 2D batch: sort, upload and draw calls")
+// The fields are read by JFR (reflection) when the event is committed
+@SuppressWarnings("UnusedVariable")
 public final class BatchSendEvent extends jdk.jfr.Event {
     @Label("Draws")
     private int draws;

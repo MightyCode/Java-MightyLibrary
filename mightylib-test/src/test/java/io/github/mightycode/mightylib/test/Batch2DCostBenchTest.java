@@ -100,7 +100,7 @@ class Batch2DCostBenchTest {
                 DrawBatch2D batch = scene.batch2D();
                 for (int view = 0; view < 2; ++view) {
                     camera.setPos(view == 0 ? position : new Vector2f(position).add(1_000_000f, 1_000_000f));
-                    measure(scene, batch, renderers, kind + (view == 0 ? " visible" : " hidden"));
+                    measure(batch, renderers, kind + (view == 0 ? " visible" : " hidden"));
                 }
             } finally {
                 camera.setPos(position);
@@ -117,7 +117,7 @@ class Batch2DCostBenchTest {
         Pattern pattern;
     }
 
-    private void measure(Scene scene, DrawBatch2D batch, List<Renderer> renderers, String name) {
+    private void measure(DrawBatch2D batch, List<Renderer> renderers, String name) {
         double[] displayNanos = new double[PASSES];
         double[] sendNanos = new double[PASSES];
         int drawn = 0, culled = 0;
