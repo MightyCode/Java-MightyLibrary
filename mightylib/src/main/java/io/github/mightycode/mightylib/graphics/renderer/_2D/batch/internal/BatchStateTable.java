@@ -312,6 +312,20 @@ public final class BatchStateTable implements IGLSharedState {
         return views[camera];
     }
 
+    // The object of the matrix of view of the slot (what the camera hands out: the identity of the camera)
+    public Matrix4f viewSourceOf(int camera) {
+        return viewSources[camera];
+    }
+
+    // The boxes of the views of the slots in use, by the object of their matrix of view (the tools of the culling)
+    public void snapshotViewBoxes(java.util.Map<Matrix4f, float[]> out) {
+        for (int i = 0; i < cameraCount; ++i) {
+            if (hasViewBox[i] && !retired[i] && viewSources[i] != null)
+                out.put(viewSources[i], new float[]{viewBoxes[i * 4], viewBoxes[i * 4 + 1], viewBoxes[i * 4 + 2],
+                        viewBoxes[i * 4 + 3]});
+        }
+    }
+
     // The box of the view of a camera slot in world units, when it has one (an affine 2D camera)
     public boolean hasViewBox(int camera) {
         return hasViewBox[camera];

@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batch
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchUploader;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.ViewCullTools;
 import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
@@ -600,24 +601,62 @@ public final class DrawBatch2D {
 
         float marginX = bounds.worldMargin() + table.cullMarginOf(state), marginY = marginX;
         float pixels = bounds.pixelMargin();
-        if (pixels > 0f) {
-            if (viewportWidth <= 0 || viewportHeight <= 0)
-                return false;
-
-            // A square of that many pixels on each side, in world units (its box, for a turned camera)
+        // World units of a pixel of the viewport along x and y (the box of a pixel, for a turned camera)
+        float pixelX = 0f, pixelY = 0f;
+        if (viewportWidth > 0 && viewportHeight > 0) {
             float clipX = 2f / viewportWidth, clipY = 2f / viewportHeight;
-            marginX += pixels * (Math.abs(table.clipToWorld(camera, 0)) * clipX
-                    + Math.abs(table.clipToWorld(camera, 1)) * clipY);
-            marginY += pixels * (Math.abs(table.clipToWorld(camera, 2)) * clipX
-                    + Math.abs(table.clipToWorld(camera, 3)) * clipY);
+            pixelX = Math.abs(table.clipToWorld(camera, 0)) * clipX + Math.abs(table.clipToWorld(camera, 1)) * clipY;
+            pixelY = Math.abs(table.clipToWorld(camera, 2)) * clipX + Math.abs(table.clipToWorld(camera, 3)) * clipY;
+        } else if (pixels > 0f) {
+            return false;
         }
 
-        boolean culled = maxX + marginX < table.viewMinX(camera) || minX - marginX > table.viewMaxX(camera)
-                || maxY + marginY < table.viewMinY(camera) || minY - marginY > table.viewMaxY(camera);
+        marginX += pixels * pixelX;
+        marginY += pixels * pixelY;
+
+        float viewMinX = table.viewMinX(camera), viewMinY = table.viewMinY(camera);
+        float viewMaxX = table.viewMaxX(camera), viewMaxY = table.viewMaxY(camera);
+        ViewCullTools tools = backend.cullTools();
+        boolean tooled = tools != null && tools.active();
+        if (tooled) {
+            float[] frozen = tools.frozenBox(table.viewSourceOf(camera));
+            if (frozen != null) {
+                viewMinX = frozen[0];
+                viewMinY = frozen[1];
+                viewMaxX = frozen[2];
+                viewMaxY = frozen[3];
+            }
+            // The test zone reduced on each side
+            viewMinX += tools.inset() * pixelX;
+            viewMaxX -= tools.inset() * pixelX;
+            viewMinY += tools.inset() * pixelY;
+            viewMaxY -= tools.inset() * pixelY;
+        }
+
+        boolean culled = maxX + marginX < viewMinX || minX - marginX > viewMaxX
+                || maxY + marginY < viewMinY || minY - marginY > viewMaxY;
         if (culled)
             ++current.culled;
+        if (tooled)
+            reportCulling(tools, state, bounds.owner(), minX - marginX, minY - marginY, maxX + marginX,
+                    maxY + marginY, culled);
         return culled;
     }
+
+    // The tools of the culling see the draw: listed when culled, its box drawn by the debug drawings of the view
+    private void reportCulling(ViewCullTools tools, int state, Class<?> owner, float minX, float minY, float maxX,
+                               float maxY, boolean culled) {
+        int camera = BatchStateTable.cameraOf(state);
+        if (culled)
+            tools.recordCulled(owner == null ? "?" : owner.getName(), minX, minY, maxX, maxY, camera);
+
+        if (tools.isShow() && table.viewSourceOf(camera) == Views.current().camera2D().getView().getObject())
+            Views.current().debugDraw().rect(minX, minY, maxX - minX, maxY - minY,
+                    culled ? SHOWN_CULLED : SHOWN_DRAWN);
+    }
+
+    private static final Color4f SHOWN_DRAWN = new Color4f(0.1f, 1f, 0.2f, 1f);
+    private static final Color4f SHOWN_CULLED = new Color4f(1f, 0.15f, 0.1f, 1f);
 
     // ---- Drawing without renderer ----
 

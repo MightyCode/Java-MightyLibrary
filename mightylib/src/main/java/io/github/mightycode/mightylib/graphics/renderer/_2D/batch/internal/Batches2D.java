@@ -34,6 +34,7 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     public static final String CAUSE_MODE = "mode";
 
     private final BatchStateTable table = new BatchStateTable();
+    private final ViewCullTools cullTools = new ViewCullTools();
     private EBatch2DMode mode;
     private boolean viewCulling;
     // Frames of the engine (frameStarted): the views displayed in the last one
@@ -135,6 +136,7 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     public void frameStarted() {
         ++frame;
         table.frameStarted();
+        cullTools.frameStarted();
     }
 
     @Override
@@ -145,6 +147,11 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     @Override
     public EBatch2DMode mode() {
         return mode;
+    }
+
+    @Override
+    public ViewCullTools cullTools() {
+        return cullTools;
     }
 
     @Override

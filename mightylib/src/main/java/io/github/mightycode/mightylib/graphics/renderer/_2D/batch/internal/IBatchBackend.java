@@ -16,6 +16,11 @@ public interface IBatchBackend {
         return 0;
     }
 
+    // The tools to check the view culling by eye (command batch cull), null without
+    default ViewCullTools cullTools() {
+        return null;
+    }
+
     // The view culling of the batched draws (DrawBatch2D.isCulled): on by default
     default boolean viewCulling() {
         return true;

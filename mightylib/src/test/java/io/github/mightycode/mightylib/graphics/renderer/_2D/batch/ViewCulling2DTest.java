@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatc
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchMaterial;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchUploader;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.ViewCullTools;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
@@ -54,6 +55,7 @@ class ViewCulling2DTest {
     private int viewportWidth = 800;
     private int viewportHeight = 600;
     private boolean viewCulling = true;
+    private final ViewCullTools tools = new ViewCullTools();
 
     private final IBatchTarget target = new IBatchTarget() {
         private final Uploader uploader = new Uploader();
@@ -106,6 +108,11 @@ class ViewCulling2DTest {
             @Override
             public boolean viewCulling() {
                 return viewCulling;
+            }
+
+            @Override
+            public ViewCullTools cullTools() {
+                return tools;
             }
         });
         // Like Camera2D: a virtual size of 800 x 600, y down
@@ -349,6 +356,86 @@ class ViewCulling2DTest {
         // Perspective: unknown
         projection.setPerspective(1f, 4f / 3f, 0.1f, 100f);
         assertTrue(Float.isNaN(batch.cullBounds(state(), null, getClass()).worldPerPixel()));
+    }
+
+    // The test zone reduced by pixels: what is that close to the edges is culled, in a viewport twice the view too
+    @Test
+    void theInsetReducesTheTestZone() {
+        int state = state();
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(50, 300, 60, 310)));
+        tools.setInset(100);
+        assertTrue(tools.active());
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(50, 300, 60, 310)));
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(740, 300, 760, 310)));
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(690, 300, 760, 310)));
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(300, 10, 310, 90)));
+        batch.endView();
+
+        // A viewport of 1600 x 1200: a pixel is half a unit
+        viewportWidth = 1600;
+        viewportHeight = 1200;
+        state = state();
+        assertTrue(batch.isCulled(state, bounds.clear(null, getClass()).world(30, 300, 49, 310)));
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(30, 300, 51, 310)));
+        tools.setInset(0);
+        assertFalse(tools.active());
+        assertFalse(batch.isCulled(state, bounds.clear(null, getClass()).world(30, 300, 49, 310)));
+    }
+
+    // Frozen: the camera moves, the boxes of the views stay; a new camera keeps its own; unfrozen, they follow again
+    @Test
+    void aFrozenBoxStaysWhileTheCameraMoves() {
+        state();
+        tools.freeze(batch.stateTable());
+        assertTrue(tools.isFrozen());
+        assertEquals(1, tools.describe().getInt("frozenCameras"));
+
+        camera(1000, 0, 1, 0);
+        int moved = state();
+        assertTrue(batch.isCulled(moved, bounds.clear(null, getClass()).world(1100, 100, 1110, 110)));
+        assertFalse(batch.isCulled(moved, bounds.clear(null, getClass()).world(100, 100, 110, 110)));
+
+        // Another camera (its own matrices): its real box
+        Matrix4f otherView = new Matrix4f().translation(-1000, 0, 0);
+        BatchStateTable stateTable = batch.stateTable();
+        int other = stateTable.state(stateTable.materialPart(new Part()), stateTable.camera(projection, otherView),
+                false);
+        assertFalse(batch.isCulled(other, bounds.clear(null, getClass()).world(1100, 100, 1110, 110)));
+        batch.endView();
+
+        tools.unfreeze();
+        assertFalse(tools.active());
+        assertFalse(batch.isCulled(state(), bounds.clear(null, getClass()).world(1100, 100, 1110, 110)));
+    }
+
+    // The list of the culled draws of the last complete frame, from the first call that asks for it
+    @Test
+    void theCulledDrawsOfTheLastFrameAreListed() {
+        int state = state();
+        assertNull(tools.listLast());
+        tools.setRecording(true);
+        batch.isCulled(state, bounds.clear(null, String.class).world(900, 0, 910, 10));
+        batch.isCulled(state, bounds.clear(null, Integer.class).world(0, 0, 10, 10));
+        assertNull(tools.listLast());
+
+        tools.frameStarted();
+        org.json.JSONObject list = tools.listLast();
+        assertEquals(1, list.getInt("count"));
+        assertFalse(list.getBoolean("truncated"));
+        org.json.JSONObject culled = list.getJSONArray("culled").getJSONObject(0);
+        assertEquals("java.lang.String", culled.getString("class"));
+        assertEquals(900f, culled.getJSONArray("box").getFloat(0));
+        assertEquals(10f, culled.getJSONArray("box").getFloat(3));
+
+        // The next frame replaces it; too many are truncated
+        for (int i = 0; i < ViewCullTools.MAX_LISTED + 5; ++i)
+            batch.isCulled(state, bounds.clear(null, String.class).world(900, 0, 910, 10));
+        tools.frameStarted();
+        assertEquals(ViewCullTools.MAX_LISTED, tools.listLast().getInt("count"));
+        assertTrue(tools.listLast().getBoolean("truncated"));
+
+        tools.setRecording(false);
+        assertNull(tools.listLast());
     }
 
     @Test
