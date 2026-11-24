@@ -140,8 +140,16 @@ Pas de nouvelle scène : `BatchStress2D` est la scène de mesure (et deviendra l
 - Filet d'un pixel au-dessus des animations (objectif à part de `current.md`).
 - 3D : rien à changer, ne pas casser (`Camera3D` reçoit seulement le marquage de version de l'étape 4 ; scènes 3D vérifiées à l'étape 4).
 
+## Cible fixée (étape 3, validée par l'utilisateur)
+Mesurée par `python tools/bench.py --isolated` à 16 000 renderers (le banc et le jeu concordent ; à 128 000 le chemin est borné par la mémoire, hors cible) :
+- rectangle visible ≤ 90 ns par dessin (aujourd'hui ~150 à 170) ;
+- dessin éliminé ≤ 50 ns (aujourd'hui ~85 à 100) ;
+- zéro allocation par dessin (`jdk.ObjectAllocationSample` sans `Identifier.hashCode` sur le chemin du lot).
+
+Ordre des étapes : 4 (caméra suivie), puis un correctif de l'espace de couleur résolu à chaque dessin (résolution sans allocation, ajouté à l'étape 7 mais fait avant l'étape 5), 5, 6, 7.
+
 ## Questions restantes
-- (Étape 3) Cible chiffrée définitive et ordre des étapes 4 à 7, à fixer avec l'utilisateur sur le rapport de mesure. Proposition : cibles mesurées par `python tools/bench.py --isolated` à 16 000 (le banc et le jeu concordent ; à 128 000 le chemin est borné par la mémoire) : rectangle visible ≤ 90 ns (aujourd'hui ~150 à 170), dessin éliminé ≤ 50 ns (aujourd'hui ~85 à 100), zéro allocation par dessin (JFR) ; ordre : 4 (caméra suivie), puis le correctif de l'espace de couleur résolu par dessin (une résolution sans allocation, avant l'étape 5 qui le laisse seulement aux dessins visibles), 5, 6, 7.
+Aucune.
 
 ## Modèles recommandés
 - Discussion A :
