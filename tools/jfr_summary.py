@@ -17,7 +17,7 @@ Sections:
                  batch flush: sort, upload, draw calls), in the same window
 
 --since / --until keep the events between those seconds after the start of the recording (the steady state, after
-the setup of a scenario); --root keeps the samples whose stack holds a method containing that text (for example
+the setup of a scenario), --last S the last S seconds; --root keeps the samples whose stack holds a method containing that text (for example
 --root Renderer.display for the display of the draws only). The binary `jfr` is searched next to the java of the
 scenario.py (MIGHTY_JAVA) or in the PATH.
 """
@@ -140,13 +140,16 @@ def durations_section(name, durations):
           f"p95 {p95 * 1000:.3f} ms, max {ordered[-1] * 1000:.3f} ms, total {sum(ordered) * 1000:.1f} ms")
 
 
-def summarize(path, java="java", since=None, until=None, root=None, top=25, thread="main"):
+def summarize(path, java="java", since=None, until=None, root=None, top=25, thread="main", last=None):
     events = read_events(path, java)
     if not events:
         print("jfr: no event in the recording")
         return
     times = [parse_time(event["values"]["startTime"]) for event in events if "startTime" in event["values"]]
     start = min(times)
+    if last is not None:
+        # The last seconds of the recording: the steady state at the end of a scenario
+        since = max(0.0, max(times) - start - last)
     low = start + since if since is not None else None
     high = start + until if until is not None else None
 
@@ -199,6 +202,7 @@ def main():
     parser.add_argument("file", help="recording (.jfr)")
     parser.add_argument("--since", type=float, default=None, help="seconds after the start of the recording")
     parser.add_argument("--until", type=float, default=None, help="seconds after the start of the recording")
+    parser.add_argument("--last", type=float, default=None, help="only the last seconds of the recording")
     parser.add_argument("--root", default=None, help="keep the method samples whose stack holds this text")
     parser.add_argument("--top", type=int, default=25, help="lines per list (default 25)")
     parser.add_argument("--thread", default="main", help="thread of the samples (default main, '' for every thread)")
@@ -207,7 +211,7 @@ def main():
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import scenario
     java = scenario.JAVA
-    summarize(args.file, java, args.since, args.until, args.root, args.top, args.thread)
+    summarize(args.file, java, args.since, args.until, args.root, args.top, args.thread, args.last)
 
 
 if __name__ == "__main__":

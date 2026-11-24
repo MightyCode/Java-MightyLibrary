@@ -64,6 +64,62 @@ Chaque étape garde verts les tests de rendu au pixel près du kit (`mvn -o -q t
 7. **Points chauds restants confirmés par la mesure.** Un commit par point (pistes listées aux Décisions), chacun avec son gain ; s'arrêter quand la cible fixée à l'étape 3 est atteinte, ou dire dans le Bilan pourquoi elle ne l'est pas (et ce qui la bloquerait : envoi GL, `display()` par objet → partition spatiale).
 8. **Mesure finale et documents.** Bancs et `renderCpuMs` (mêmes cas qu'à l'étape 3, tableau avant / après dans le Bilan) ; seuils proposés pour l'acceptation (appels et ms par frame) écrits dans `current.md` à la ligne « Test d'acceptation » ; documents ci-dessous.
 
+## Mesures (étape 3, 2026-11-24)
+Outils : `python tools/bench.py --isolated` (bancs, 16 000 renderers, médiane de 15 passes après 25 de chauffe) et `scenario.py --jfr` sur `BatchStress2D` (échantillons du thread principal sur les 8 dernières secondes, `jfr_summary.py --last 8`), `renderCpuMs` de `?stats` (médiane de 3). Machine de l'utilisateur, vsync actif (70 fps). Les échantillons JFR ne voient que le code Java : l'attente des appels GL natifs et de l'échange des tampons n'y est pas, `mightylib.BatchSend` donne la durée de l'envoi.
+
+### Bancs : ns par dessin (hors envoi GL)
+| Cas | visible | hors champ | envoi (`send`) |
+|---|---|---|---|
+| Lot seul, sans GL : écriture d'un rectangle | 32 | – | 0,2 |
+| Lot seul : test de culling + écriture | 46 | 14 (test seul) | 0,2 |
+| `display()` rectangle texturé | 170 | 83 | 5 |
+| rectangle coloré | 162 | 84 | 6 |
+| rectangles mêlés (3 texturés / 1 coloré : 8 000 appels pour 16 000 dessins) | 147 | 90 | 44 |
+| animation | 162 | 93 | 5 |
+| forme vectorielle sans contour | 209 | 102 | 6 |
+| forme avec contour | 220 | 101 | 6 |
+| texte (court, 1 `Text` = ~7 glyphes) | 503 | 125 | 33 |
+
+Le lot lui-même (écriture + culling) coûte ~46 ns ; les ~100 à 125 ns restants d'un rectangle visible sont dans `Renderer` avant et autour (état, caméra, espace de couleur, accesseurs). Hors champ, ~70 à 85 ns sont payés **avant** le test de culling (14 ns). Les bancs varient de ±15 % selon les cas déjà passés dans la même JVM (profil du JIT) : toujours comparer en `--isolated`.
+
+### `BatchStress2D` : frame entière
+| Cas | dessinés / éliminés | `renderCpuMs` | `display()` par renderer (frame − envoi) | `BatchSend` | appels |
+|---|---|---|---|---|---|
+| rectangles 16 000, tout visible | 16 000 / 0 | 2,9 ms | 133 ns | 0,72 ms (25 % de la frame) | 8 002 |
+| 16 000, ~10 % visibles | 1 980 / 14 020 | 1,9 ms | 104 ns | 0,08 ms | 783 |
+| 128 000, tout visible | 128 000 / 0 | 41 ms | 267 ns | 6,0 ms (15 %) | 64 002 |
+| 128 000, ~10 % visibles | 15 930 / 112 070 | 28,3 ms | 212 ns | 0,58 ms | 6 351 |
+| formes (F) 16 000, tout visible | 16 000 / 0 | 4,6 ms | 281 ns | 0,08 ms | 3 |
+| formes 16 000, ~10 % visibles | 1 950 / 14 050 | 2,5 ms | 149 ns | 0,02 ms | 3 |
+
+- **À 16 000, le jeu et le banc concordent** (133 contre 147 ns). **À 128 000 le coût double** (267 ns) : le chemin est borné par la mémoire (16 000 objets tiennent dans le cache, 128 000 non). Un dessin éliminé coûte encore ~200 ns à 128 000 (≈ 100 ns à 16 000) : le coût est surtout la première lecture de l'état du renderer (`CanBatch`, matériau, matrice) avant le test, que réduire le nombre d'instructions ne supprime pas.
+- Dessins éliminés : le culling économise peu de CPU (41 → 28 ms) car chaque `display()` paie son chemin avant le test ; la fin de la frame (envoi) tombe de 6 ms à 0,6 ms.
+- L'envoi n'est pas le gros du coût sauf quand les états alternent (rectangles non triés : 8 000 appels, 0,72 ms soit 45 ns par dessin) ; avec les formes (3 appels) il vaut ~5 ns par dessin.
+
+### Répartition du temps de `display()` (JFR, rectangles, part de `Renderer.display`)
+Les pourcentages sont en part des échantillons de `Renderer.display` (le total des échantillons contient aussi `update` et les tâches). Cumulés (une méthode contient les suivantes).
+
+| Étape du chemin | 16 000 visible | 16 000 ~10 % | 128 000 visible | 128 000 ~10 % |
+|---|---|---|---|---|
+| `Renderer.batchState` | 39 % | 55 % | 27 % | 30 % |
+| dont `BatchStateTable.camera` (deux `Matrix4f.equals`) | 19 % | 33 % | 18 % | 16 % |
+| dont `resolveColorSpace` (`Views.current` + `Engine.colors` → `ServiceSet.get`) | 13 % | 16 % | 7 % | 11 % |
+| dont `Material.batchPart` | 6 % | 1 % | 2 % | 1,5 % |
+| `Renderer.viewCulled` (boîte + `isCulled`) | 12 % | 17 % | 16 % | 15 % |
+| `BatchGeometry2D.WriteTriangles` | 27 % | 3 % | 13 % | 3 % |
+| `BatchGeometry2D.CanBatch` | 7 % | 12 % | 24 % | 31 % |
+| `Views.current` (tous appels, `ThreadLocal`) | 10 % | 11 % | 6 % | 9 % |
+
+Formes (F, 16 000) : `batchState` 25 % (visible) / 48 % (~10 %), dont `camera` 12 % / 21 %, `resolveColorSpace` 7 % / 20 %, `viewCulled` 17 % / 24 %. `BatchStress2D.update` (hors `display()`) prend 10 à 36 % des échantillons : `Renderer.setRotationZ` (matrice recalculée entièrement) ; hors périmètre, à noter dans `later.md`.
+
+### Allocations
+**Un `Object[]` de 24 octets par appel de `display()`**, éliminé ou non : `Identifier.hashCode` (`Objects.hash(namespace, path)`) ← `ServiceKey.hashCode` ← `ServiceSet.get` ← `Engine.colors()` ← `Renderer.resolveColorSpace`. 213 à 217 Mo sur 8 s à 16 000 (390 Ko par frame), 374 à 520 Mo à 128 000 ; 94 à 98 % de toutes les allocations échantillonnées de la fenêtre. Le pré-requis du plan (« aucune allocation par dessin, comme aujourd'hui ») est donc faux aujourd'hui. Aucune autre allocation par dessin dans les échantillons (le reste vient du chargement et de `GenDeleteResources`).
+
+### Lecture
+1. Gains attendus par ordre : comparaison des caméras (`camera` : 16 à 33 % de `display()`), espace de couleur résolu à chaque dessin avec allocation (7 à 20 %, et 100 % des allocations), ordre du culling (le test ne dépend que de la caméra : le chemin avant lui vaut 70 à 85 ns d'un dessin éliminé), écritures groupées (`WriteTriangles` 13 à 27 % des dessins visibles).
+2. `CanBatch` (7 à 31 %) est probablement la première lecture de mémoire froide (renderer, matériau) : il ne baissera pas par du code ; borne de l'approche « un `display()` par objet » (partition spatiale, `later.md`).
+3. Le GL (envoi) est secondaire ici sauf les états alternés ; hors périmètre.
+
 ## Démo
 Pas de nouvelle scène : `BatchStress2D` est la scène de mesure (et deviendra la scène d'acceptation). Si un cas manque au rapport (texte ou animations en nombre), l'ajouter aux bancs plutôt qu'à la scène, ce que fera l'objectif « Test d'acceptation ».
 
@@ -85,7 +141,7 @@ Pas de nouvelle scène : `BatchStress2D` est la scène de mesure (et deviendra l
 - 3D : rien à changer, ne pas casser (`Camera3D` reçoit seulement le marquage de version de l'étape 4 ; scènes 3D vérifiées à l'étape 4).
 
 ## Questions restantes
-- (Étape 3) Cible chiffrée définitive et ordre des étapes 4 à 7, fixés avec l'utilisateur sur le rapport de mesure.
+- (Étape 3) Cible chiffrée définitive et ordre des étapes 4 à 7, à fixer avec l'utilisateur sur le rapport de mesure. Proposition : cibles mesurées par `python tools/bench.py --isolated` à 16 000 (le banc et le jeu concordent ; à 128 000 le chemin est borné par la mémoire) : rectangle visible ≤ 90 ns (aujourd'hui ~150 à 170), dessin éliminé ≤ 50 ns (aujourd'hui ~85 à 100), zéro allocation par dessin (JFR) ; ordre : 4 (caméra suivie), puis le correctif de l'espace de couleur résolu par dessin (une résolution sans allocation, avant l'étape 5 qui le laisse seulement aux dessins visibles), 5, 6, 7.
 
 ## Modèles recommandés
 - Discussion A :
