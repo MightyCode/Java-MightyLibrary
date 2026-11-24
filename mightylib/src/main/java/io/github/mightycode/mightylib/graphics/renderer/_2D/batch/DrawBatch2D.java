@@ -500,7 +500,8 @@ public final class DrawBatch2D {
      * as RGBA floats in 0..1 by 4 (null: color, RGBA in an int, for all), then indexCount indices of these vertices.
      * Checked once for the whole draw; in BatchFormats.SPRITE written straight in the buffers, in another format of the
      * same values (x, y, u, v, color) value by value like vertex.
-     * @throws IllegalArgumentException an index outside of the vertices or arrays too short (nothing written)
+     * @throws IllegalArgumentException an index outside of the vertices, arrays too short, or a state whose format has
+     * other values or instances (nothing written)
      * @throws IllegalStateException in the middle of another draw
      */
     @API(status = INTERNAL)
@@ -513,6 +514,13 @@ public final class DrawBatch2D {
                     + " indices with arrays too short");
 
         beginDraw(state, layer, depth);
+        if (drawFormat != BatchFormats.SPRITE && !drawFormat.hasSpriteValues()) {
+            // Checked before any value: a value refused by put would leave the draw open
+            inDraw = false;
+            dropDraw();
+            throw new IllegalArgumentException("A draw of triangles in the batch format " + drawFormat.name()
+                    + ": its vertices are not x, y, u, v, color, or it has instances");
+        }
         float m00 = model.m00(), m10 = model.m10(), m30 = model.m30();
         float m01 = model.m01(), m11 = model.m11(), m31 = model.m31();
         if (drawFormat != BatchFormats.SPRITE) {

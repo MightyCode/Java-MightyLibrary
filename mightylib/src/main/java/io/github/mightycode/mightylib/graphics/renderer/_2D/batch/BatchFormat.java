@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 import io.github.mightycode.mightylib.graphics.shader.ShaderAttribute;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -26,6 +27,8 @@ public final class BatchFormat {
 
     // Kinds of the values written (slots)
     static final byte SLOT_FLOAT = 0, SLOT_INT = 1, SLOT_COLOR = 2;
+    // The values of a vertex of BatchFormats.SPRITE: x, y, u, v, color
+    private static final byte[] SPRITE_SLOTS = {SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT, SLOT_COLOR};
 
     /** An attribute of a format: its name in GLSL, components, type, read per instance or per vertex. */
     public static final class Attribute {
@@ -74,6 +77,8 @@ public final class BatchFormat {
     private final int[] vertexSlotOffsets;
     private final byte[] instanceSlots;
     private final int[] instanceSlotOffsets;
+    // Vertices of the values of BatchFormats.SPRITE (x, y, u, v, color), without instances: DrawBatch2D.triangles
+    private final boolean spriteValues;
     // Formats with instance attributes: the vertices (vertex attributes, floats) and the triangles of an instance
     private final float[] templateVertices;
     private final int[] templateIndices;
@@ -119,6 +124,7 @@ public final class BatchFormat {
                 }
             }
         }
+        spriteValues = instance == 0 && Arrays.equals(vertexSlots, SPRITE_SLOTS);
 
         if (instance > 0) {
             if (builder.templateIndices == null)
@@ -202,6 +208,11 @@ public final class BatchFormat {
 
     public int slotsPerInstance() {
         return instanceSlots.length;
+    }
+
+    // Vertices of the values of BatchFormats.SPRITE (x, y, u, v, color), no instance: what DrawBatch2D.triangles writes
+    boolean hasSpriteValues() {
+        return spriteValues;
     }
 
     // Template of an instance (null without instance attributes): vertex attributes of each vertex, then triangles

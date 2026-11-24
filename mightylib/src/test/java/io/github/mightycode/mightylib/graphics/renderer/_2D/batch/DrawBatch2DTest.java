@@ -1170,6 +1170,50 @@ class DrawBatch2DTest {
         batch.endDraw();
     }
 
+    // A format of other values, or with instances: refused before any value, nothing written, the batch goes on
+    @Test
+    void trianglesInAFormatOfOtherValuesAreRefused() {
+        int a = state("a");
+        int line = state("l", LINE);
+        int dot = state("d", DOT);
+        Matrix4f model = new Matrix4f();
+        quad(a, 0);
+        assertThrows(IllegalArgumentException.class, () -> batch.triangles(line, 0, 0f, model, TRIANGLE_POSITIONS,
+                null, null, 4, 0, TRIANGLE_INDICES, 6));
+        assertThrows(IllegalArgumentException.class, () -> batch.triangles(dot, 0, 0f, model, TRIANGLE_POSITIONS,
+                null, null, 4, 0, TRIANGLE_INDICES, 6));
+        assertNull(batch.drawFormat());
+        assertEquals(1, batch.pendingDraws());
+        quad(a, 1);
+        batch.endView();
+
+        assertEquals(8, target.uploader.vertexUploads.get(0).length / 4);
+        assertEquals(12, target.uploader.indexUploads.get(0).length);
+        assertTrue(target.uploader.instanceBytes.isEmpty());
+        assertEquals(2, batch.lastFrameDraws());
+    }
+
+    // Another format of the values of SPRITE: written value by value, the same bytes as vertex and index
+    @Test
+    void trianglesInAnotherFormatOfTheSpriteValues() {
+        BatchFormat spriteValues = BatchFormat.builder("spriteValues")
+                .vertex("aPos", 2, EBatchAttributeType.FLOAT)
+                .vertex("inTexCoords", 2, EBatchAttributeType.FLOAT)
+                .vertex("inColor", 4, EBatchAttributeType.NORMALIZED_UBYTE)
+                .build();
+        int b = state("b", spriteValues);
+        Matrix4f model = new Matrix4f().translate(3, 4, 0).rotateZ(0.3f);
+        trianglesByValues(b, model, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 0);
+        batch.endView();
+        batch.triangles(b, 0, 0f, model, TRIANGLE_POSITIONS, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 4, 0,
+                TRIANGLE_INDICES, 6);
+        batch.endView();
+
+        assertEquals(target.uploader.vertexBytes.get(0), target.uploader.vertexBytes.get(1));
+        assertArrayEquals(target.uploader.indexUploads.get(0), target.uploader.indexUploads.get(1));
+        assertEquals(List.of("apply b", "draw spriteValues 0 6", "apply b", "draw spriteValues 0 6"), draws());
+    }
+
     // Once the buffers have grown, a draw of triangles allocates nothing
     @Test
     void trianglesAtOnceAllocateNothing() {
