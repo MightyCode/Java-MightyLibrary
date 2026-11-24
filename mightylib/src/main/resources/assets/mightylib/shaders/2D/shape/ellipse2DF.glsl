@@ -1,6 +1,6 @@
-// EllipseRenderer: the ellipse in the size of the shape
-#include "utils/shape2D.glsl"
+// The shape alone (out of the batch): its body is ellipseDistance() of utils/shapeKinds2D.glsl
+#include "utils/shapeKinds2D.glsl"
 
 void main() {
-    FragColor = shapeColor(sdEllipse(shapeLocal, shapeHalfSize));
+    FragColor = shapeColor(ellipseDistance());
 }
