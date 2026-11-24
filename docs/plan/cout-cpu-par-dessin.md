@@ -172,3 +172,62 @@ Aucune.
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/batch-cpu-cost`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait
+- Étape 1 : `scenario.py --jfr` (`--jfr-file`), `tools/jfr_summary.py` (`--since`, `--until`, `--last`, `--root`, `--top`, `--thread`), événement `mightylib.BatchSend`.
+- Étape 2 : `DrawBatch2DBenchTest`, `Batch2DCostBenchTest`, `tools/bench.py` (`--no-gl`, `--isolated`, `--repeat`, `--json`).
+- Étape 3 : rapport « Mesures » ci-dessus, cible fixée avec l'utilisateur.
+- Étape 4 : `ShaderValue.version`/`markChanged`/`trackChanges`/`isTracked` ; `Camera.updateProjection`/`updateView` deviennent `final` et appellent les accroches `writeProjection`/`writeView` puis `markChanged` (les setters de `Camera3D` passent par `updateView`) ; `getProjection`/`getView` ne refont plus `setObject` ; `BatchStateTable.camera(ShaderValue, ShaderValue)` (version pour deux valeurs suivies, contenu sinon) ; `Renderer.batchState` et `DrawBatch2D.state(Material, Camera)` lui donnent les valeurs.
+- Correctif de l'espace de couleur : `Identifier.hashCode` calculé une fois (l'`Object[]` de `Objects.hash` à chaque `Engine.colors()`).
+- Étape 5 : `Renderer.batchPlace` (part de matériau et caméra, sans mode de couleur) avant `viewCulled`, `batchState(place)` après pour les dessins visibles ; `Material.batchPart` lit son chemin rapide d'abord (avec la marque du programme de lot), `Batches2D.of`/`readsFormat` seulement à la reconstruction ; `BatchStateTable.withLinear`.
+- Étape 6 : `DrawBatch2D.triangles` (dessin de triangles d'un coup, vérifié une fois), utilisé par `BatchGeometry2D.WriteTriangles` (donc `Shape2DRenderer`, `MeshRenderer`/`Text`, `Animation2DRenderer`).
+- Étape 7 : `Views.current` lit la dernière vue de son thread sans `ThreadLocal` (une entrée immuable fil + vue). Arrêtée là : cible atteinte.
+- Étape 8 : documents (`architecture.md`, `debug-tools.md`, `decisions.md`, `later.md`, `current.md`, `CLAUDE.md`) ; constats de l'analyse (champs de l'événement JFR lus par réflexion) déclarés.
+
+### Mesures finales (avant / après)
+Bancs (`bench.py --isolated`, ns par dessin, hors envoi ; avant = étape 3, chauffe de 25 passes ; après = médiane de 3 JVM, chauffe de 100 passes) :
+
+| Cas | visible avant → après | hors champ avant → après |
+|---|---|---|
+| lot seul : écriture d'un rectangle | 32 → 24 | – |
+| rectangle texturé | 170 → 68 | 83 → 38 |
+| rectangles mêlés | 147 → 88 | 90 → 44 |
+| rectangle coloré | 162 → 72 | 84 → 38 |
+| animation | 162 → 74 | 93 → 43 |
+| forme sans contour | 209 → 154 | 102 → 49 |
+| forme avec contour | 220 → 156 | 101 → 51 |
+| texte | 503 → 282 | 125 → 91 |
+
+Gains par étape (médiane de 3 JVM, rectangle texturé visible / hors champ) : étape 4 170 → 132 / 83 → 64 (une seule JVM) ; `Identifier` 132 → 120 ; étape 5 106 → 85 / 60 → 38 ; étape 6 82 → 75 (texte 459 → 335, lot seul 32 → 24) ; `Views` 71 → 68 / 41 → 38.
+
+`BatchStress2D` (`renderCpuMs`, médiane de 3 ; « par renderer » = (frame − `BatchSend`) / N) :
+
+| Cas | `renderCpuMs` avant → après | par renderer avant → après |
+|---|---|---|
+| rectangles 16 000 visibles | 2,9 → 2,2 ms | 133 → 86 ns |
+| 16 000, ~10 % visibles | 1,9 → 1,1 ms | 104 → 62 ns |
+| 128 000 visibles | 41 → 34,4 ms | 267 → 219 ns |
+| 128 000, ~10 % visibles | 28,3 → 21,9 ms | 212 → 161 ns |
+| formes 16 000 visibles | 4,6 → 3,9 ms | 281 → 228 ns |
+| formes 16 000, ~10 % | 2,5 → 1,9 ms | 149 → 111 ns |
+
+Allocations sur le chemin du lot : 213 à 520 Mo par 8 s → aucune (restent les suppressions de la fermeture du jeu dans la fenêtre JFR). `BatchSend` inchangé (0,69 ms à 16 000 rectangles non triés, 8 002 appels).
+
+### Écarts au plan et raisons
+- **Étape 5, mécanisme** : la part de matériau reste avant le culling (le plan la plaçait après, avec la marge en cache dans `Material`). Raison : le culling a besoin de la marge de la part, et un matériau qui ne se regroupe pas doit rester dessiné seul sans être éliminé (comportement et compteurs identiques) ; en lisant d'abord le chemin rapide de `batchPart`, la part ne coûte plus que quelques comparaisons. Seuls le mode de couleur (`resolveColorSpace`) et l'état sont repoussés après le test. Pas de marge en cache dans `Material`, `cullMarginOf` gardé.
+- **Étape 4, accroches** : `Camera.updateProjection`/`updateView` deviennent `final` et les sous-classes redéfinissent `writeProjection`/`writeView` (`Camera2D`, `Camera3D`, `ConsoleView.PixelCamera`) : seul moyen de garantir le marquage de version pour une sous-classe de `Camera2D` (extensible).
+- **Correctif de l'espace de couleur** : la cause de l'allocation était `Identifier.hashCode` (`Objects.hash`), corrigée là (profite à toute table indexée par identifiant) ; la recherche du service des couleurs (`ServiceSet.get`) reste à chaque dessin visible (~5 % du chemin), non retenue (cible atteinte).
+- **Bancs** : chauffe portée de 25 à 100 passes et `--repeat` ajouté : d'une JVM à l'autre, ±20 % sur certains cas.
+- **Étape 6** : l'état validé par `cullBounds`/`isCulled` est encore vérifié par `beginDraw` (`isCurrent`, quelques comparaisons, non vu par le JFR).
+- **Hors plan, notés dans `later.md`** : projection des caméras recalculée par multiplication (`ortho`/`perspective` au lieu de `setOrtho`/`setPerspective` : `invertView`, `setViewAngle` composent les projections) ; `Camera.superUpdateView` teste `shouldUpdateProjection` ; formes vectorielles écrites valeur par valeur (~38 % de leur chemin) ; transformations recalculées entièrement (`setRotationZ`).
+
+### Vérifié
+- `mvn -o test` vert à chaque étape (1 372 tests de la bibliothèque, kit et démo ; tests de rendu au pixel près du kit dont `ViewCullingGLTest`, `RectangleBatchGLTest`, `VectorShapeBatchGLTest`, `Animation2DBatchGLTest`, `TextBatchGLTest`, `DrawBatch2DGLTest`).
+- Nouveaux tests : `ShaderValueTest`, `CameraVersionTest`, `BatchStateTableTest` (caméra suivie, non suivie, autre matrice, `withLinear`), `IdentifierTest` (hash sans allocation, échoue sur l'ancien code), `DrawBatch2DTest` (`triangles` : mêmes octets, indice refusé sans rien écrire, refusé au milieu d'un dessin, aucune allocation), `ViewsTest` (deux threads).
+- En jeu (`scenario.py`) : `BatchStress2D` à 16 000 et 128 000, visible et ~10 %, formes F, `batch mode` dans les quatre modes, caméra déplacée et zoomée pendant le dessin ; `BatchRenderers2D`, `ViewCulling2D`, `Scene2D`, `Scene3D` chargées, journal sans erreur. `python tools/analyse.py` : aucun constat nouveau.
+
+### À vérifier à la main
+- `BatchStress2D` : rectangles puis formes (F) à 16 000 et 128 000 (Page Haut), `batch mode off|orphan|ring|instanced` : même image dans les quatre modes ; zoom (molette) et déplacement (Z Q S D, clic droit glissé) pendant le défilement : rien ne disparaît au bord ni ne reste figé.
+- `BatchRenderers2D`, `ViewCulling2D`, `Scene2D` : rendu inchangé.
+- `Scene3D` (et une autre scène 3D, `Game3D2D`) : caméra libre qui tourne et avance (les setters de `Camera3D` passent par `updateView`).
