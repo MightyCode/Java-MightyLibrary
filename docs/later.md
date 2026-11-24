@@ -91,6 +91,12 @@ Les estimations de `DataType.estimatedCpuBytes`/`estimatedGpuBytes` ne servent a
 - **Budget** : vérifier qu'un lot tient en mémoire (carte comprise), choisir quoi décharger pendant un chargement en continu, prévenir quand un mod est trop gros.
 - **Manifeste généré à la compilation** (prérequis) : pour chaque ressource, ses dépendances et sa taille décodée, sans lire le fichier. Aujourd'hui les dépendances d'une donnée non lue ne sont connues qu'après sa lecture (`dependenciesKnown` dans `describeBatch`) et les estimations avant lecture sont des ratios par format (pansements). Il servirait aussi d'index des sources classpath : aujourd'hui une source dans un jar est listée en ouvrant le jar comme système de fichiers zip (`ClasspathSource`), ce qui exige un préfixe tenu par un seul jar.
 
+## Culling 2D : suites
+
+- **Structure spatiale** (grille, arbre) : le culling de vue teste chaque renderer à son affichage (~30 ns, mais `display` et `batchState` restent payés par renderer : ~27 ms à 128 000 rectangles dont 88 % éliminés). À faire si un jeu a des centaines de milliers d'objets statiques : ne parcourir que les cellules de la vue (les tuiles ont déjà leur plage visible).
+- **Culling des dessins seuls 2D** (renderer sans lien de lot, test de profondeur) et de `DebugDraw2D` : non testés aujourd'hui.
+- **Événements de visibilité pour le jeu** (entrée et sortie de l'écran, comme `VisibleOnScreenNotifier2D` de Godot) : logique de jeu plutôt que rendu, à noter si un jeu le demande.
+
 ## Effets 2D : particules et post-traitement
 D'après LearnOpenGL « 2D Game » (Breakout).
 - **Particules** (absentes) : émetteurs (position, forme, débit, rafales) ; durée de vie, vitesse, forces, couleur/taille/rotation/opacité dans le temps, texture ou région d'atlas ; mélange additif ou alpha ; pool sans allocation par frame ; émetteurs en JSON (`DataType`), injectables ; espace monde ou local.
