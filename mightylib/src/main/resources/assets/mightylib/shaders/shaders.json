@@ -15,7 +15,7 @@
 				"2D/shape/roundedRectangle2DF.glsl"
 			],
 			"tags" : ["2D"],
-			"batch": "roundedRectangle2DBatch"
+			"batch": "shape2DBatch"
 		},
 		"circle2D": {
 			"files": [
@@ -23,7 +23,7 @@
 				"2D/shape/circle2DF.glsl"
 			],
 			"tags" : ["2D"],
-			"batch": "circle2DBatch"
+			"batch": "shape2DBatch"
 		},
 		"ellipse2D": {
 			"files": [
@@ -31,7 +31,7 @@
 				"2D/shape/ellipse2DF.glsl"
 			],
 			"tags" : ["2D"],
-			"batch": "ellipse2DBatch"
+			"batch": "shape2DBatch"
 		},
 		"triangle2D": {
 			"files": [
@@ -39,7 +39,7 @@
 				"2D/shape/triangle2DF.glsl"
 			],
 			"tags" : ["2D"],
-			"batch": "triangle2DBatch"
+			"batch": "shape2DBatch"
 		},
 		"arc2D": {
 			"files": [
@@ -47,7 +47,7 @@
 				"2D/shape/arc2DF.glsl"
 			],
 			"tags" : ["2D"],
-			"batch": "arc2DBatch"
+			"batch": "shape2DBatch"
 		},
 		"regularPolygon2D": {
 			"files": [
@@ -55,7 +55,7 @@
 				"2D/shape/regularPolygon2DF.glsl"
 			],
 			"tags" : ["2D"],
-			"batch": "regularPolygon2DBatch"
+			"batch": "shape2DBatch"
 		},
 		"points2D": {
 			"files": [
@@ -71,54 +71,12 @@
 				"2D/shape/grid2DF.glsl"
 			],
 			"tags" : ["2D"],
-			"batch": "grid2DBatch"
+			"batch": "shape2DBatch"
 		},
-		"roundedRectangle2DBatch": {
+		"shape2DBatch": {
 			"files": [
 				"2D/shape/shape2DInstancedV.glsl",
-				"2D/shape/roundedRectangle2DF.glsl"
-			],
-			"tags" : ["2D", "batch2D"]
-		},
-		"circle2DBatch": {
-			"files": [
-				"2D/shape/shape2DInstancedV.glsl",
-				"2D/shape/circle2DF.glsl"
-			],
-			"tags" : ["2D", "batch2D"]
-		},
-		"ellipse2DBatch": {
-			"files": [
-				"2D/shape/shape2DInstancedV.glsl",
-				"2D/shape/ellipse2DF.glsl"
-			],
-			"tags" : ["2D", "batch2D"]
-		},
-		"triangle2DBatch": {
-			"files": [
-				"2D/shape/shape2DInstancedV.glsl",
-				"2D/shape/triangle2DF.glsl"
-			],
-			"tags" : ["2D", "batch2D"]
-		},
-		"arc2DBatch": {
-			"files": [
-				"2D/shape/shape2DInstancedV.glsl",
-				"2D/shape/arc2DF.glsl"
-			],
-			"tags" : ["2D", "batch2D"]
-		},
-		"regularPolygon2DBatch": {
-			"files": [
-				"2D/shape/shape2DInstancedV.glsl",
-				"2D/shape/regularPolygon2DF.glsl"
-			],
-			"tags" : ["2D", "batch2D"]
-		},
-		"grid2DBatch": {
-			"files": [
-				"2D/shape/shape2DInstancedV.glsl",
-				"2D/shape/grid2DF.glsl"
+				"2D/shape/shape2DBatchF.glsl"
 			],
 			"tags" : ["2D", "batch2D"]
 		},

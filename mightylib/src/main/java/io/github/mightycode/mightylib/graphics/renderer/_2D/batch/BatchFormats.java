@@ -34,13 +34,16 @@ public final class BatchFormats {
             .build();
 
     /**
-     * Programs of the vector shapes (2D/shape/shape2DInstancedV.glsl with the fragment shader of each shape), one
-     * instance per shape: the corner of the unit square per vertex; per instance the rows of its 2D affine model, its
-     * size and reference point, fill and stroke colors (packed sRGB ints, Color4f.toIntRGBA), stroke width, alignment,
-     * unit and antialiasing, margin and textured, texture position, the parameters of the shape. The uniforms of
-     * shape2DV.glsl, in VectorShape2DRenderer.
+     * Programs of the vector shapes (2D/shape/shape2DInstancedV.glsl with 2D/shape/shape2DBatchF.glsl for the shapes
+     * of the engine, the program shape2DBatch, or the fragment shader of a shape of a project), one instance per
+     * shape: the corner of the unit square per vertex; per instance the rows of its 2D affine model, its size and
+     * reference point, fill and stroke colors (packed sRGB ints, Color4f.toIntRGBA), stroke width, alignment, unit
+     * and antialiasing, margin and textured, texture position, the parameters of the shape (the uniforms of
+     * shape2DV.glsl, in VectorShape2DRenderer), then its kind in shape2DBatch (utils/shapeTypes2D.glsl; 0 for a shape
+     * of a project, ignored by its program).
      */
     public static final BatchFormat SHAPE = shape("shape", "aSizeReference", 4)
+            .instance("aShapeType", 1, EBatchAttributeType.INT)
             .template(new float[]{0, 1, 0, 0, 1, 0, 1, 1}, new int[]{0, 3, 2, 0, 2, 1})
             .build();
 
@@ -95,10 +98,7 @@ public final class BatchFormats {
         Map<String, BatchFormat> formats = new LinkedHashMap<>();
         formats.put(EngineResources.SPRITE_2D, SPRITE);
         formats.put(EngineResources.SPRITE_2D_INSTANCED, SPRITE_INSTANCED);
-        for (String shape : new String[]{EngineResources.ROUNDED_RECTANGLE_2D_BATCH, EngineResources.CIRCLE_2D_BATCH,
-                EngineResources.ELLIPSE_2D_BATCH, EngineResources.TRIANGLE_2D_BATCH, EngineResources.ARC_2D_BATCH,
-                EngineResources.REGULAR_POLYGON_2D_BATCH, EngineResources.GRID_2D_BATCH})
-            formats.put(shape, SHAPE);
+        formats.put(EngineResources.SHAPE_2D_BATCH, SHAPE);
         formats.put(EngineResources.POINTS_2D_BATCH, POINT);
         formats.put(EngineResources.STROKE_2D_BATCH, STROKE);
         return formats;

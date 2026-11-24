@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.internal.ShapeTypes;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -55,5 +56,10 @@ public final class GridRenderer extends VectorShape2DRenderer {
     @Override
     protected void writeShapeParameters(Vector4f first, Vector4f second) {
         first.set(spacing.x, spacing.y, origin.x, origin.y);
+    }
+
+    @Override
+    int shapeType() {
+        return ShapeTypes.GRID;
     }
 }

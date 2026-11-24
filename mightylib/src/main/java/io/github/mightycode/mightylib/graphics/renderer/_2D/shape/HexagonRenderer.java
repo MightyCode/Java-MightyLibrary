@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.internal.ShapeTypes;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector3f;
@@ -35,5 +36,10 @@ public final class HexagonRenderer extends VectorShape2DRenderer {
     @Override
     protected void writeShapeParameters(Vector4f first, Vector4f second) {
         RegularPolygonShape.write(SIDES, 0f, first, second);
+    }
+
+    @Override
+    int shapeType() {
+        return ShapeTypes.REGULAR_POLYGON;
     }
 }

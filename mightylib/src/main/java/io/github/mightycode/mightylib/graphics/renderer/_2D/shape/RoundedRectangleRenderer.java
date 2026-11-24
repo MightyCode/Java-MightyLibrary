@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.internal.ShapeTypes;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import org.joml.Vector4f;
 
@@ -39,5 +40,10 @@ public final class RoundedRectangleRenderer extends VectorShape2DRenderer {
     @Override
     protected void writeShapeParameters(Vector4f first, Vector4f second) {
         first.set(radii);
+    }
+
+    @Override
+    int shapeType() {
+        return ShapeTypes.ROUNDED_RECTANGLE;
     }
 }
