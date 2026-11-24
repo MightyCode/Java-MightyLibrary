@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchSendEvent;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
@@ -857,8 +858,15 @@ public final class DrawBatch2D {
 
         sending = true;
         try {
-            if (drawCount > 0)
-                drawRuns();
+            if (drawCount > 0) {
+                BatchSendEvent sendEvent = new BatchSendEvent();
+                sendEvent.begin();
+                long sentBytes = drawRuns();
+                if (sendEvent.shouldCommit()) {
+                    sendEvent.setSent(drawCount, runCount, sentBytes);
+                    sendEvent.commit();
+                }
+            }
         } finally {
             sending = false;
             vertexBytes = 0;
@@ -878,7 +886,8 @@ public final class DrawBatch2D {
         }
     }
 
-    private void drawRuns() {
+    // Returns the bytes sent
+    private long drawRuns() {
         IntBuffer drawnIndices = indices;
         int drawnInstanceBytes = instanceBytes;
         boolean sorted = sortKey != null;
@@ -938,6 +947,7 @@ public final class DrawBatch2D {
         ++current.flushes;
         EngineStats.countBatchFlushes(runCount);
         EngineStats.countBatchedDraws(drawCount);
+        return sentBytes;
     }
 
     private boolean hasRegularRun() {
