@@ -161,6 +161,11 @@ class ViewCullingGLTest {
                     renderers.forEach(renderer -> renderer.setViewCulling(true));
 
                     // A margin of the renderer keeps those near the view
+                    // A margin is a number of world units, 0 or more
+                    assertThrows(IllegalArgumentException.class, () -> renderers.get(0).setViewCullMargin(-1f));
+                    assertThrows(IllegalArgumentException.class,
+                            () -> renderers.get(0).setViewCullMargin(Float.NaN));
+                    assertEquals(0f, renderers.get(0).getViewCullMargin());
                     renderers.forEach(renderer -> renderer.setViewCullMargin(10000));
                     capture.draw(scene, drawing);
                     assertEquals(0, batch.lastFrameCulled());

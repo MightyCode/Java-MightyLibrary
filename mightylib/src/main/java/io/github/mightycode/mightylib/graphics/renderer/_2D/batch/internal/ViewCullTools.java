@@ -5,7 +5,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.IdentityHashMap;
-import java.util.Map;
 
 /**
  * The tools to check the view culling by eye (command batch cull), shared by the batches of an engine: the test zone
@@ -22,7 +21,7 @@ public final class ViewCullTools {
     private boolean recording;
     private boolean active;
     // The boxes frozen by the object of the matrix of view of their camera slot (its content changes, not its identity)
-    private final Map<Matrix4f, float[]> frozen = new IdentityHashMap<>();
+    private final IdentityHashMap<Matrix4f, float[]> frozen = new IdentityHashMap<>();
     private boolean frozenOn;
 
     // The draws culled in the current frame of the engine, and in the last one
