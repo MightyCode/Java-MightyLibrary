@@ -59,18 +59,9 @@ public final class BatchGeometry2D {
     public static void WriteTriangles(DrawBatch2D batch, int state, int layer, float depth, Matrix4fc model,
                                       float[] positions, float[] textures, float[] colors, int vertexCount,
                                       int color, int[] indices, int indexCount) {
-        batch.beginDraw(state, layer, depth);
-        for (int i = 0; i < vertexCount; ++i) {
-            float x = positions[2 * i];
-            float y = positions[2 * i + 1];
-            float u = textures == null ? 0f : textures[2 * i];
-            float v = textures == null ? 0f : textures[2 * i + 1];
-            int rgba = colors == null ? color : PackRGBA(colors, 4 * i);
-            batch.vertex(TransformX(model, x, y), TransformY(model, x, y), u, v, rgba);
-        }
-        for (int i = 0; i < indexCount; ++i)
-            batch.index(indices[i]);
-        batch.endDraw();
+        // Checked once for the draw, written at once (DrawBatch2D.triangles)
+        batch.triangles(state, layer, depth, model, positions, textures, colors, vertexCount, color, indices,
+                indexCount);
     }
 
     /**

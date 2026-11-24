@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchSendEvent;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
@@ -490,6 +491,80 @@ public final class DrawBatch2D {
         vertex(x3, y3, u3, v3, rgba);
         for (int index : QUAD_INDICES)
             putIndex(drawFirstVertex + index);
+        endDraw();
+    }
+
+    /**
+     * One draw of triangles at once (the draws of the renderers of the engine): vertexCount vertices, their positions
+     * by pairs transformed by model, their texture coordinates by pairs (null: 0, 0, the white texture), their colors
+     * as RGBA floats in 0..1 by 4 (null: color, RGBA in an int, for all), then indexCount indices of these vertices.
+     * Checked once for the whole draw; in BatchFormats.SPRITE written straight in the buffers, in another format of the
+     * same values (x, y, u, v, color) value by value like vertex.
+     * @throws IllegalArgumentException an index outside of the vertices or arrays too short (nothing written)
+     * @throws IllegalStateException in the middle of another draw
+     */
+    @API(status = INTERNAL)
+    public void triangles(int state, int layer, float depth, Matrix4fc model, float[] positions, float[] textures,
+                          float[] colors, int vertexCount, int color, int[] triangleIndices, int indexCount) {
+        if (vertexCount < 0 || indexCount < 0 || positions.length < 2 * vertexCount
+                || (textures != null && textures.length < 2 * vertexCount)
+                || (colors != null && colors.length < 4 * vertexCount) || triangleIndices.length < indexCount)
+            throw new IllegalArgumentException("A draw of " + vertexCount + " vertices and " + indexCount
+                    + " indices with arrays too short");
+
+        beginDraw(state, layer, depth);
+        float m00 = model.m00(), m10 = model.m10(), m30 = model.m30();
+        float m01 = model.m01(), m11 = model.m11(), m31 = model.m31();
+        if (drawFormat != BatchFormats.SPRITE) {
+            for (int i = 0; i < vertexCount; ++i) {
+                float x = positions[2 * i], y = positions[2 * i + 1];
+                put(m00 * x + m10 * y + m30, m01 * x + m11 * y + m31, textures == null ? 0f : textures[2 * i],
+                        textures == null ? 0f : textures[2 * i + 1]);
+                putColor(colors == null ? color : BatchGeometry2D.PackRGBA(colors, 4 * i));
+            }
+        } else {
+            int bytes = vertexCount * VERTEX_BYTES;
+            if (vertexBytes + bytes > vertices.capacity())
+                vertices = grow(vertices, vertexBytes, Math.max(vertices.capacity() * 2, vertexBytes + bytes));
+
+            ByteBuffer out = vertices;
+            int at = vertexBytes;
+            int packed = LITTLE_ENDIAN ? Integer.reverseBytes(color) : color;
+            for (int i = 0; i < vertexCount; ++i, at += VERTEX_BYTES) {
+                float x = positions[2 * i], y = positions[2 * i + 1];
+                out.putFloat(at, m00 * x + m10 * y + m30);
+                out.putFloat(at + 4, m01 * x + m11 * y + m31);
+                out.putFloat(at + 8, textures == null ? 0f : textures[2 * i]);
+                out.putFloat(at + 12, textures == null ? 0f : textures[2 * i + 1]);
+                if (colors != null) {
+                    int rgba = BatchGeometry2D.PackRGBA(colors, 4 * i);
+                    packed = LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba;
+                }
+                // In memory R, G, B, A: read as 4 normalized bytes
+                out.putInt(at + 16, packed);
+            }
+            vertexBytes = at;
+            drawVertexCount = vertexCount;
+        }
+
+        if (indexCount + this.indexCount > indices.capacity())
+            indices = grow(indices, this.indexCount, Math.max(indices.capacity() * 2, this.indexCount + indexCount));
+        IntBuffer out = indices;
+        int first = drawFirstVertex, at = this.indexCount;
+        // Negative when any index is outside of 0 .. vertexCount - 1
+        int outside = 0;
+        for (int i = 0; i < indexCount; ++i) {
+            int index = triangleIndices[i];
+            outside |= index | (vertexCount - 1 - index);
+            out.put(at + i, first + index);
+        }
+        if (outside < 0) {
+            inDraw = false;
+            dropDraw();
+            throw new IllegalArgumentException("An index of a draw of " + vertexCount + " vertices is outside of them");
+        }
+
+        this.indexCount = at + indexCount;
         endDraw();
     }
 
