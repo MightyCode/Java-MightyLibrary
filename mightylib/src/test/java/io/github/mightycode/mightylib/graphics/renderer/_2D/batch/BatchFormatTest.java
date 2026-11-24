@@ -41,20 +41,30 @@ class BatchFormatTest {
         assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1}, instanced.templateIndices());
     }
 
-    // The shapes: one instance of the values of shape2DV.glsl (model rows, place, two colors, stroke...), the points
-    // the same with their center; each batch program of a shape of the engine has its format
+    // The shapes: one instance of the values of shape2DV.glsl (model rows, place, two colors, stroke...) then the
+    // kind of the shape, the points the same with their center and without kind; the common batch program of the
+    // shapes of the engine has the format of the shapes, no batch program of one shape is left
     @Test
     void theShapeFormatsHoldTheValuesOfAShape() {
-        assertEquals(4 * (3 + 3 + 4 + 1 + 1 + 4 + 2 + 4 + 4 + 4), BatchFormats.SHAPE.instanceBytes());
-        assertEquals(BatchFormats.SHAPE.instanceBytes() - 8, BatchFormats.POINT.instanceBytes());
+        assertEquals(4 * (3 + 3 + 4 + 1 + 1 + 4 + 2 + 4 + 4 + 4 + 1), BatchFormats.SHAPE.instanceBytes());
+        assertEquals(124, BatchFormats.SHAPE.instanceBytes());
+        List<BatchFormat.Attribute> attributes = BatchFormats.SHAPE.attributes();
+        BatchFormat.Attribute last = attributes.get(attributes.size() - 1);
+        assertEquals("aShapeType", last.name());
+        assertEquals(EBatchAttributeType.INT, last.type());
+        assertEquals(11, last.location());
+        assertTrue(last.perInstance());
+        assertNull(BatchFormats.POINT.attribute("aShapeType"));
+        assertEquals(BatchFormats.SHAPE.instanceBytes() - 8 - 4, BatchFormats.POINT.instanceBytes());
         assertEquals(BatchFormats.SHAPE.attribute("aColor").location(), BatchFormats.POINT.attribute("aColor")
                 .location());
         assertEquals(EBatchAttributeType.INT, BatchFormats.SHAPE.attribute("aStrokeColor").type());
         assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1}, BatchFormats.SHAPE.templateIndices());
 
+        assertSame(BatchFormats.SHAPE, BatchFormats.engineFormats().get("shape2DBatch"));
         for (String shape : new String[]{"roundedRectangle2D", "circle2D", "ellipse2D", "triangle2D", "arc2D",
                 "regularPolygon2D", "grid2D"})
-            assertSame(BatchFormats.SHAPE, BatchFormats.engineFormats().get(shape + "Batch"), shape);
+            assertFalse(BatchFormats.engineFormats().containsKey(shape + "Batch"), shape);
         assertSame(BatchFormats.POINT, BatchFormats.engineFormats().get("points2DBatch"));
     }
 

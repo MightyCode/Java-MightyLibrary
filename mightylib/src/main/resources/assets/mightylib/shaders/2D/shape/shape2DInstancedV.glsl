@@ -1,6 +1,7 @@
 // Batch program of the vector shapes (VectorShape2DRenderer), one instance per shape (BatchFormats.SHAPE): the values
 // of shape2DV.glsl are attributes of each instance, then shapeVertex computes the quad and the outs as for a shape
-// drawn alone. Each shape keeps its fragment shader.
+// drawn alone. The shapes of the engine share the fragment shape2DBatchF.glsl (chosen by aShapeType), a shape of a
+// project has its own batch program with its fragment.
 #define SHAPE_BATCH
 
 // Corner of the unit square of the shape (the vertices of Shape2DRenderer before the reference point)
@@ -19,10 +20,15 @@ layout (location = 7) in vec2 aMarginTextured;
 layout (location = 8) in vec4 aTexturePosition;
 layout (location = 9) in vec4 aParams0;
 layout (location = 10) in vec4 aParams1;
+// Kind of the shape in the common program shape2DBatch (utils/shapeTypes2D.glsl); unread by a fragment of a project
+layout (location = 11) in int aShapeType;
+
+flat out int shapeType;
 
 #include "utils/shape2DInstance.glsl"
 
 void main() {
+    shapeType = aShapeType;
     shapeReadInstance();
     shapeSize = aSizeReference.xy;
     shapeReference = aSizeReference.zw;

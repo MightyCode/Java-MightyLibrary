@@ -146,11 +146,9 @@ vec4 shapeFillColor() {
 }
 
 // The color of the fragment for the distance d to the edge of the shape: the stroke drawn over the fill
-// (inside the edge), alpha multiplied by the coverage; nothing covered is discarded
-vec4 shapeColor(float d) {
-    float pixel = shapeFragmentPixel();
-    vec4 fill = shapeFillColor();
-
+// (inside the edge), alpha multiplied by the coverage; nothing covered is discarded. pixel and fill:
+// shapeFragmentPixel() and shapeFillColor(), read by the caller in uniform control flow (derivatives, texture)
+vec4 shapeColorWith(float d, float pixel, vec4 fill) {
     float fillAlpha = fill.a * shapeCoverage(d, pixel);
     float strokeAlpha = 0.0;
     if (shapeStroke > 0.0) {
@@ -165,4 +163,9 @@ vec4 shapeColor(float d) {
 
     vec3 rgb = (shapeStrokeColor.rgb * strokeAlpha + fill.rgb * fillAlpha * (1.0 - strokeAlpha)) / alpha;
     return vec4(rgb, alpha);
+}
+
+// shapeColorWith at this fragment, for a shape that gives only its distance
+vec4 shapeColor(float d) {
+    return shapeColorWith(d, shapeFragmentPixel(), shapeFillColor());
 }

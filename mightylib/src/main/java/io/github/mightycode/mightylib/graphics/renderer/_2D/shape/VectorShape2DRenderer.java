@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.internal.ShapeTypes;
 import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -27,8 +28,11 @@ import java.util.Set;
  * A project adds its own shape: a fragment shader that includes utils/shape2D.glsl and gives its distance to
  * shapeColor (vertex shader 2D/shape/shape2DV.glsl), declared in shaders.json, and a subclass that sends its
  * parameters (writeShapeParameters) and, when it goes beyond its rectangle, its margin (extraMargin). To be batched,
- * its entry links ("batch") to a batch program of the same fragment shader with 2D/shape/shape2DInstancedV.glsl
- * (tags 2D and batch2D), registered with the format BatchFormats.SHAPE (registry.shaders().batchFormat).
+ * its entry links ("batch") to its own batch program: the same fragment shader with 2D/shape/shape2DInstancedV.glsl
+ * (tags 2D and batch2D), registered with the format BatchFormats.SHAPE (registry.shaders().batchFormat); the kind
+ * aShapeType of the format is ignored by it. The shapes of the engine share the batch program shape2DBatch, which
+ * chooses each shape by its kind: a shape of a project linked to it is drawn in magenta. Each change of batch
+ * program cuts the series of draws: a shape of a project between two shapes of the engine costs two more draw calls.
  */
 public abstract class VectorShape2DRenderer extends Shape2DRenderer {
     private static final String SIZE = "shapeSize";
@@ -195,6 +199,12 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         BatchGeometry2D.WriteModelRows(batch, modelMatrix());
         batch.put(size.x, size.y, reference.x, reference.y);
         writeInstanceValues(batch, fill);
+        batch.putInt(shapeType());
+    }
+
+    // The kind of the shape in the common batch program shape2DBatch: NONE for a shape of a project (its own program)
+    int shapeType() {
+        return ShapeTypes.NONE;
     }
 
     // The size of the shape, the values of the stroke: read by the subclasses for their draw

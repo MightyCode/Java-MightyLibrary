@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.internal.ShapeTypes;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -67,5 +68,10 @@ public final class TriangleRenderer extends VectorShape2DRenderer {
         float x = Math.max(Math.max(-vertex.x, vertex.x - 1f), 0f) * width;
         float y = Math.max(Math.max(-vertex.y, vertex.y - 1f), 0f) * height;
         return Math.max(x, y);
+    }
+
+    @Override
+    int shapeType() {
+        return ShapeTypes.TRIANGLE;
     }
 }

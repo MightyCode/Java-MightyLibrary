@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.internal.ShapeTypes;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 
@@ -26,5 +27,10 @@ public final class CircleRenderer extends VectorShape2DRenderer {
 
     public float getRadius() {
         return Math.min(Math.abs(scale().x), Math.abs(scale().y)) / 2;
+    }
+
+    @Override
+    int shapeType() {
+        return ShapeTypes.CIRCLE;
     }
 }

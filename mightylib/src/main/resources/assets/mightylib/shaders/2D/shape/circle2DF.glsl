@@ -1,6 +1,6 @@
-// CircleRenderer: the largest circle in the size of the shape
-#include "utils/shape2D.glsl"
+// The shape alone (out of the batch): its body is circleDistance() of utils/shapeKinds2D.glsl
+#include "utils/shapeKinds2D.glsl"
 
 void main() {
-    FragColor = shapeColor(sdCircle(shapeLocal, min(shapeHalfSize.x, shapeHalfSize.y)));
+    FragColor = shapeColor(circleDistance());
 }

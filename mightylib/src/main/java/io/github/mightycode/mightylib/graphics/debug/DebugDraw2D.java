@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.debug;
 import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.internal.ShapeTypes;
 import io.github.mightycode.mightylib.graphics.text.FontFace;
 import io.github.mightycode.mightylib.graphics.text.TextLayout;
 import io.github.mightycode.mightylib.main.IView;
@@ -387,6 +388,8 @@ public final class DebugDraw2D {
         batch.put(0f, 1f, 0f, 1f);
         batch.put(0f, 0f, 0f, 0f);
         batch.put(0f, 0f, 0f, 0f);
+        // Its kind in the common program of the shapes
+        batch.putInt(ShapeTypes.CIRCLE);
         batch.endDraw();
     }
 

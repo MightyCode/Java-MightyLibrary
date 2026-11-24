@@ -38,14 +38,10 @@ public final class EngineResources {
     // Batch shaders (tags batch2D, batch2DInstanced): texture x vertex color; texture2D and colorShape2D link to them
     public static final String SPRITE_2D = "sprite2D";
     public static final String SPRITE_2D_INSTANCED = "sprite2DInstanced";
-    // Batch programs of the vector shapes (tag batch2D, BatchFormats.SHAPE and POINT): each vector shape links to its own
-    public static final String ROUNDED_RECTANGLE_2D_BATCH = "roundedRectangle2DBatch";
-    public static final String CIRCLE_2D_BATCH = "circle2DBatch";
-    public static final String ELLIPSE_2D_BATCH = "ellipse2DBatch";
-    public static final String TRIANGLE_2D_BATCH = "triangle2DBatch";
-    public static final String ARC_2D_BATCH = "arc2DBatch";
-    public static final String REGULAR_POLYGON_2D_BATCH = "regularPolygon2DBatch";
-    public static final String GRID_2D_BATCH = "grid2DBatch";
+    // Batch program common to the vector shapes of the engine (tag batch2D, BatchFormats.SHAPE): the kind of each
+    // instance chooses the shape; all the vector shapes of the engine link to it
+    public static final String SHAPE_2D_BATCH = "shape2DBatch";
+    // Batch program of PointsRenderer (tag batch2D, BatchFormats.POINT)
     public static final String POINTS_2D_BATCH = "points2DBatch";
     // Batch program of the geometric shapes (BatchFormats.STROKE): stroke2D links to it
     public static final String STROKE_2D_BATCH = "stroke2DBatch";
@@ -62,8 +58,7 @@ public final class EngineResources {
             COLOR_SHAPE_2D, TEXTURE_2D,
             ROUNDED_RECTANGLE_2D, CIRCLE_2D, ELLIPSE_2D, TRIANGLE_2D, ARC_2D, REGULAR_POLYGON_2D,
             POINTS_2D, GRID_2D, STROKE_2D, SPRITE_2D, SPRITE_2D_INSTANCED,
-            ROUNDED_RECTANGLE_2D_BATCH, CIRCLE_2D_BATCH, ELLIPSE_2D_BATCH, TRIANGLE_2D_BATCH, ARC_2D_BATCH,
-            REGULAR_POLYGON_2D_BATCH, GRID_2D_BATCH, POINTS_2D_BATCH, STROKE_2D_BATCH,
+            SHAPE_2D_BATCH, POINTS_2D_BATCH, STROKE_2D_BATCH,
             MULTI_COLORED_SHAPE_2D, COLORED_TEXT, POST_PROCESSING,
             COLOR_SHAPE_3D, TEXTURE_3D, SKYBOX, MULTI_COLORED_LIGHTING_3D, TEXTURE_MULTIPLE_LIGHTS_3D);
 

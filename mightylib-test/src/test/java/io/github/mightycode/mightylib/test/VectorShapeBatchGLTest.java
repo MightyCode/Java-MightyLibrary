@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.test;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.ArcRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.ArrowRenderer;
@@ -19,7 +20,10 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RegularPolygon
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RoundedRectangleRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.TriangleRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.VectorShape2DRenderer;
+import io.github.mightycode.mightylib.main.EngineConfig;
 import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.registry.EngineRegistry;
+import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.test.BatchPictures.Capture;
 import io.github.mightycode.mightylib.test.BatchPictures.Pattern;
@@ -29,16 +33,51 @@ import org.joml.Vector2f;
 import org.joml.Vector4f;
 import org.junit.jupiter.api.Test;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static io.github.mightycode.mightylib.test.BatchPictures.inScene;
 import static org.junit.jupiter.api.Assertions.*;
 
-// The vector shapes in the 2D batch (one instance per shape, per point): the picture drawn alone in every mode
-@MightySceneTest(config = SceneRunnerTest.Config.class)
+// The vector shapes in the 2D batch (one instance per shape, per point): the picture drawn alone in every mode. The
+// source of the test adds a shape of a project (shaders/test/diamond2DF.glsl): its own batch program, and the same
+// linked by mistake to the common program of the shapes of the engine
+@MightySceneTest(config = VectorShapeBatchGLTest.Config.class, sources = "src/test/sources/projectshape")
 class VectorShapeBatchGLTest {
     private static final EStrokeAlignment[] ALIGNMENTS = EStrokeAlignment.values();
+    // The shaders of the shape of a project, in the source of the test
+    private static final String DIAMOND = "kitDiamond2D";
+    private static final String DIAMOND_BATCH = "kitDiamond2DBatch";
+    private static final String DIAMOND_IN_COMMON = "kitDiamondInCommon2D";
+
+    // The batch program of the shape of the project reads the format of the shapes, as a game registers it
+    static final class Plugin implements IPlugin {
+        @Override
+        public String namespace() {
+            return "kitshapes";
+        }
+
+        @Override
+        public void register(EngineRegistry registry) {
+            registry.shaders().batchFormat(DIAMOND_BATCH, BatchFormats.SHAPE);
+        }
+    }
+
+    static final class Config implements Supplier<EngineConfig> {
+        @Override
+        public EngineConfig get() {
+            return new SceneRunnerTest.Config().get().addPlugin(new Plugin());
+        }
+    }
+
+    // A shape of a project: its fragment shader gives its distance, nothing more
+    static final class DiamondRenderer extends VectorShape2DRenderer {
+        DiamondRenderer(String shaderName) {
+            super(shaderName);
+        }
+    }
 
     // Every shape of the engine: strokes of each alignment and unit, turned, mirrored, textured, sharp
     static List<VectorShape2DRenderer> picture(Pattern pattern) {
@@ -170,6 +209,134 @@ class VectorShapeBatchGLTest {
 
             try (Views.Scope ignored = Views.enter(scene)) {
                 circles.forEach(CircleRenderer::unload);
+            }
+        });
+    }
+
+    // The seven shapes of the engine mixed, another kind at each draw (strokes of each alignment and unit, sharp
+    // edges, turned): one draw call of the common program, the picture drawn alone, zoomed in too
+    @Test
+    void mixedShapesAreOneDrawCall(SceneRunner runner) {
+        inScene(runner, scene -> {
+            List<VectorShape2DRenderer> shapes = new ArrayList<>();
+            try (Views.Scope ignored = Views.enter(scene)) {
+                for (int i = 0; i < 21; ++i) {
+                    VectorShape2DRenderer shape;
+                    switch (i % 7) {
+                        case 0:
+                            shape = new RoundedRectangleRenderer().setCornerRadii(3, 9, 15, 0);
+                            break;
+                        case 1:
+                            shape = new CircleRenderer();
+                            break;
+                        case 2:
+                            shape = new EllipseRenderer();
+                            break;
+                        case 3:
+                            shape = new TriangleRenderer();
+                            break;
+                        case 4:
+                            shape = new ArcRenderer().setInnerRatio(0.4f).setAngles(0.2f * i, 3.5f);
+                            break;
+                        case 5:
+                            shape = i == 12 ? new HexagonRenderer() : new RegularPolygonRenderer(3 + i % 5);
+                            break;
+                        default:
+                            shape = new GridRenderer().setSpacing(9, 13);
+                            break;
+                    }
+                    shape.setSizePix(60 + (i % 4) * 9, 44 + (i % 3) * 11);
+                    shape.setPosition(new Vector2f(50 + (i % 7) * 125, 70 + (i / 7) * 150));
+                    shape.setRotationZ(i * 0.3f - 1f);
+                    shape.setColorMode(new Color4f(0.04f * i, 0.8f - 0.03f * i, 0.5f, i % 4 == 0 ? 0.7f : 1f));
+                    shape.setStrokeWidth(i % 3 == 0 ? 0 : 2 + i % 4);
+                    shape.setStrokeColor(new Color4f(1f, 0.25f, 0.04f * i, 1f));
+                    shape.setStrokeAlignment(ALIGNMENTS[i % ALIGNMENTS.length]);
+                    shape.setStrokeUnit(i % 2 == 0 ? EStrokeUnit.WORLD : EStrokeUnit.SCREEN_PIXELS);
+                    shape.setAntialiasing(i % 5 != 2);
+                    shapes.add(shape);
+                }
+            }
+            requestBatchPrograms(runner, scene, shapes);
+
+            try (Views.Scope ignored = Views.enter(scene); Capture capture = new Capture(scene)) {
+                Runnable drawing = () -> shapes.forEach(VectorShape2DRenderer::display);
+                capture.assertEveryModeDrawsTheSame(scene, drawing);
+
+                Camera2D camera = scene.camera2D();
+                camera.setZoomLevel(1.6f);
+                capture.assertEveryModeDrawsTheSame(scene, drawing);
+                camera.setZoomLevel(1f);
+
+                Views.engine().setBatch2DMode(EBatch2DMode.ORPHAN);
+                capture.draw(scene, drawing);
+                assertEquals(shapes.size(), scene.batch2D().lastFrameDraws());
+                assertEquals(1, scene.batch2D().lastFrameDrawCalls());
+            }
+
+            try (Views.Scope ignored = Views.enter(scene)) {
+                shapes.forEach(VectorShape2DRenderer::unload);
+            }
+        });
+    }
+
+    // Pixels of exactly the color (r, g, b)
+    private static int pixelsOf(ByteBuffer picture, int r, int g, int b) {
+        int count = 0;
+        for (int i = 0; i < picture.capacity(); i += 4) {
+            if ((picture.get(i) & 0xFF) == r && (picture.get(i + 1) & 0xFF) == g && (picture.get(i + 2) & 0xFF) == b)
+                ++count;
+        }
+        return count;
+    }
+
+    // A shape of a project with its own batch program between two circles: three series, the picture drawn alone;
+    // linked to the common program instead, its quad is magenta
+    @Test
+    void aShapeOfAProjectKeepsItsOwnProgram(SceneRunner runner) {
+        inScene(runner, scene -> {
+            List<VectorShape2DRenderer> shapes = new ArrayList<>();
+            DiamondRenderer inCommon;
+            try (Views.Scope ignored = Views.enter(scene)) {
+                for (int i = 0; i < 3; ++i) {
+                    VectorShape2DRenderer shape = i == 1 ? new DiamondRenderer(DIAMOND) : new CircleRenderer();
+                    shape.setSizePix(120, 90);
+                    shape.setPosition(new Vector2f(80 + i * 200, 120));
+                    shape.setRotationZ(0.3f * i);
+                    shape.setColorMode(new Color4f(0.3f * i, 0.7f, 0.2f, 1f));
+                    shape.setStrokeWidth(4);
+                    shape.setStrokeColor(new Color4f(1f, 0.9f, 0.1f, 1f));
+                    shapes.add(shape);
+                }
+                inCommon = new DiamondRenderer(DIAMOND_IN_COMMON);
+                inCommon.setSizePix(100, 100);
+                inCommon.setPosition(new Vector2f(300, 400));
+                inCommon.setColorMode(new Color4f(0.1f, 0.2f, 0.9f, 1f));
+            }
+            List<VectorShape2DRenderer> all = new ArrayList<>(shapes);
+            all.add(inCommon);
+            requestBatchPrograms(runner, scene, all);
+
+            try (Views.Scope ignored = Views.enter(scene); Capture capture = new Capture(scene)) {
+                Runnable drawing = () -> shapes.forEach(VectorShape2DRenderer::display);
+                capture.assertEveryModeDrawsTheSame(scene, drawing);
+
+                Views.engine().setBatch2DMode(EBatch2DMode.ORPHAN);
+                capture.draw(scene, drawing);
+                assertEquals(3, scene.batch2D().lastFrameDraws());
+                assertEquals(3, scene.batch2D().lastFrameDrawCalls());
+
+                // Alone: the diamond; in the common program: its whole quad magenta
+                Views.engine().setBatch2DMode(EBatch2DMode.OFF);
+                assertEquals(0, pixelsOf(capture.draw(scene, inCommon::display), 255, 0, 255));
+                Views.engine().setBatch2DMode(EBatch2DMode.ORPHAN);
+                ByteBuffer batched = capture.draw(scene, inCommon::display);
+                assertEquals(1, scene.batch2D().lastFrameDraws());
+                assertTrue(pixelsOf(batched, 255, 0, 255) >= 100 * 100, pixelsOf(batched, 255, 0, 255) + " magenta");
+            }
+
+            try (Views.Scope ignored = Views.enter(scene)) {
+                all.forEach(VectorShape2DRenderer::unload);
             }
         });
     }

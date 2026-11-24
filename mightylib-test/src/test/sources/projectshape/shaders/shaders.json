@@ -1,0 +1,27 @@
+{
+	"shaders": {
+		"kitDiamond2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"test/diamond2DF.glsl"
+			],
+			"tags" : ["2D"],
+			"batch": "kitDiamond2DBatch"
+		},
+		"kitDiamond2DBatch": {
+			"files": [
+				"2D/shape/shape2DInstancedV.glsl",
+				"test/diamond2DF.glsl"
+			],
+			"tags" : ["2D", "batch2D"]
+		},
+		"kitDiamondInCommon2D": {
+			"files": [
+				"2D/shape/shape2DV.glsl",
+				"test/diamond2DF.glsl"
+			],
+			"tags" : ["2D"],
+			"batch": "shape2DBatch"
+		}
+	}
+}
