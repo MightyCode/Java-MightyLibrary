@@ -3,12 +3,20 @@ package io.github.mightycode.mightylib.graphics.shader;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import org.joml.*;
 
+/**
+ * A named value for the uniforms of a shader. Its version changes at each setObject (and copyValueFrom) and at each
+ * markChanged: what keeps a copy of the content compares the version instead of the content when the value is tracked
+ * (trackChanges: its owner calls markChanged after each change of the content in place, like Camera for its
+ * matrices). An untracked value may be changed in place without notice: compare its content.
+ */
 public final class ShaderValue {
     private final String name;
     private Object object;
 
     private final Class<?> type;
     private boolean shouldForceUpdate;
+    private int version;
+    private boolean tracked;
 
     public ShaderValue(final String a, final Class<?> type, final Object object){
         this.name = a;
@@ -48,6 +56,30 @@ public final class ShaderValue {
 
     public void setObject(Object object) {
         this.object = object;
+        ++version;
+    }
+
+    // Changes at each setObject, copyValueFrom and markChanged
+    public int version() {
+        return version;
+    }
+
+    // The content was changed in place (a matrix updated): a new version
+    public void markChanged() {
+        ++version;
+    }
+
+    /**
+     * The owner promises to call markChanged after each change of the content in place: its version is then enough to
+     * know whether the content changed (BatchStateTable.camera). Set once, by the owner of the content.
+     */
+    public ShaderValue trackChanges() {
+        tracked = true;
+        return this;
+    }
+
+    public boolean isTracked() {
+        return tracked;
     }
 
     public void forceUpdate(){
@@ -93,6 +125,7 @@ public final class ShaderValue {
             return false;
         }
 
+        ++version;
         return true;
     }
 

@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
+import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import org.joml.Matrix4f;
 import org.junit.jupiter.api.Test;
 
@@ -146,6 +147,80 @@ class BatchStateTableTest {
         // The new slot is the one of these matrices now
         assertEquals(after, table.camera(projection, view));
         table.batchEnded();
+    }
+
+    // A tracked camera (its values marked at each change) moved while its draws wait: a new slot, seen by the version
+    @Test
+    void aTrackedCameraMovedWhileItsDrawsWaitGetsANewSlot() {
+        BatchStateTable table = new BatchStateTable();
+        Matrix4f view = new Matrix4f();
+        ShaderValue projectionValue = new ShaderValue("projection", Matrix4f.class, new Matrix4f()).trackChanges();
+        ShaderValue viewValue = new ShaderValue("view", Matrix4f.class, view).trackChanges();
+
+        table.batchStarted();
+        int before = table.camera(projectionValue, viewValue);
+        assertEquals(before, table.camera(projectionValue, viewValue));
+        view.translate(10, 0, 0);
+        viewValue.markChanged();
+        int after = table.camera(projectionValue, viewValue);
+
+        assertNotEquals(before, after);
+        assertEquals(new Matrix4f(), table.viewOf(before));
+        assertEquals(view, table.viewOf(after));
+        assertEquals(after, table.camera(projectionValue, viewValue));
+        table.batchEnded();
+
+        // Moved between flushes: the same slot, updated in place
+        view.translate(5, 0, 0);
+        viewValue.markChanged();
+        table.batchStarted();
+        assertEquals(after, table.camera(projectionValue, viewValue));
+        assertEquals(view, table.viewOf(after));
+        table.batchEnded();
+    }
+
+    // A tracked value is known by its version: its content changed in place without markChanged is not seen (the
+    // promise of its owner); an untracked one is compared by its content: changed in place, it is seen
+    @Test
+    void anUntrackedCameraIsComparedByItsContent() {
+        BatchStateTable table = new BatchStateTable();
+        Matrix4f trackedView = new Matrix4f();
+        ShaderValue projection = new ShaderValue("projection", Matrix4f.class, new Matrix4f()).trackChanges();
+        ShaderValue tracked = new ShaderValue("view", Matrix4f.class, trackedView).trackChanges();
+        Matrix4f rawView = new Matrix4f();
+        ShaderValue raw = new ShaderValue("view", Matrix4f.class, rawView);
+
+        table.batchStarted();
+        int trackedSlot = table.camera(projection, tracked);
+        int rawSlot = table.camera(projection, raw);
+        assertNotEquals(trackedSlot, rawSlot);
+
+        trackedView.translate(3, 0, 0);
+        assertEquals(trackedSlot, table.camera(projection, tracked));
+        assertEquals(new Matrix4f(), table.viewOf(trackedSlot));
+
+        rawView.translate(3, 0, 0);
+        int moved = table.camera(projection, raw);
+        assertNotEquals(rawSlot, moved);
+        assertEquals(rawView, table.viewOf(moved));
+
+        // Given by its matrices only: compared by content, even for a tracked camera
+        assertNotEquals(trackedSlot, table.camera((Matrix4f) projection.getObject(), trackedView));
+        table.batchEnded();
+    }
+
+    // Another matrix put in a tracked value (setObject): the slot of the new matrix
+    @Test
+    void anotherMatrixInATrackedValueIsAnotherCamera() {
+        BatchStateTable table = new BatchStateTable();
+        ShaderValue projection = new ShaderValue("projection", Matrix4f.class, new Matrix4f()).trackChanges();
+        ShaderValue view = new ShaderValue("view", Matrix4f.class, new Matrix4f()).trackChanges();
+        int first = table.camera(projection, view);
+        Matrix4f other = new Matrix4f().translate(1, 2, 0);
+        view.setObject(other);
+        int second = table.camera(projection, view);
+        assertNotEquals(first, second);
+        assertEquals(other, table.viewOf(second));
     }
 
     // Another batch waiting (another window) keeps the ids: the content of a slot it used is not changed

@@ -678,12 +678,10 @@ public final class DrawBatch2D {
         if (part < 0)
             return -1;
 
-        // The matrices of the camera themselves (the getters of matrices give copies)
-        Matrix4f projection = (Matrix4f) camera.getProjection().getObject();
-        Matrix4f view = (Matrix4f) camera.getView().getObject();
+        // The values of the matrices of the camera themselves (the getters of matrices give copies), tracked
         IView current = Views.current();
         boolean linear = current.engine().colors().resolve(material.getColorSpace(), current.colorSpace()).isLinear();
-        return stateTable.state(part, stateTable.camera(projection, view), linear);
+        return stateTable.state(part, stateTable.camera(camera.getProjection(), camera.getView()), linear);
     }
 
     /**

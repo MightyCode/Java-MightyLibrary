@@ -258,7 +258,8 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
         if (part < 0)
             return -1;
 
-        int camera = table.camera((Matrix4f) projection, (Matrix4f) view);
+        // The values themselves: a tracked camera is compared by its versions
+        int camera = table.camera(projectionValue, viewValue);
         return table.state(part, camera, resolveColorSpace().isLinear());
     }
 

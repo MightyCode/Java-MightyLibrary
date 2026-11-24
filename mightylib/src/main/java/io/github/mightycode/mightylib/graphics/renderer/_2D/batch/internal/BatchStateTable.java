@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
+import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import org.joml.Matrix4f;
 import org.joml.Matrix4fc;
 
@@ -17,7 +18,9 @@ import java.util.Map;
  * slot (10 bits) and the color mode (1 bit). A camera slot is the camera of the draws whose matrices are the same
  * objects (Camera.getProjection, getView): its content is copied, and updated in place when it changed while no
  * draw of the slot waits in a batch; changed while draws of it wait (a camera moved between two draws of a view), the
- * slot is retired and a new one made, so the waiting draws keep the camera they were asked with.
+ * slot is retired and a new one made, so the waiting draws keep the camera they were asked with. Given by their
+ * ShaderValues (camera(ShaderValue, ShaderValue)), matrices whose values are tracked (ShaderValue.trackChanges, the
+ * values of a Camera) are known as changed by their versions; the others by comparing their content to the copies.
  * <p>
  * Ids stay valid while a batch has draws waiting: the table is emptied (generation incremented) only when no batch
  * of the engine has any, once it holds more than its thresholds. Above the threshold of the cameras alone, only the
@@ -59,6 +62,11 @@ public final class BatchStateTable implements IGLSharedState {
     private Matrix4f[] viewSources = new Matrix4f[8];
     private Matrix4f[] projections = new Matrix4f[8];
     private Matrix4f[] views = new Matrix4f[8];
+    // The tracked values of the copies of a slot (null when given by matrices or not tracked), and their versions
+    private ShaderValue[] projectionValues = new ShaderValue[8];
+    private ShaderValue[] viewValues = new ShaderValue[8];
+    private int[] projectionVersions = new int[8];
+    private int[] viewVersions = new int[8];
     private long[] lastUse = new long[8];
     private boolean[] retired = new boolean[8];
     private int cameraCount;
@@ -188,13 +196,30 @@ public final class BatchStateTable implements IGLSharedState {
      * @throws IllegalStateException when MAX_CAMERAS slots are used while draws wait
      */
     public int camera(Matrix4f projection, Matrix4f view) {
+        return camera(projection, view, null, null);
+    }
+
+    /**
+     * The slot of the camera of these values of matrices (their objects, Matrix4f), with their current content: for
+     * tracked values (ShaderValue.isTracked) a change is known by their versions, the content is compared otherwise.
+     * @throws ClassCastException when a value doesn't hold a Matrix4f
+     * @throws IllegalStateException when MAX_CAMERAS slots are used while draws wait
+     */
+    public int camera(ShaderValue projectionValue, ShaderValue viewValue) {
+        return camera((Matrix4f) projectionValue.getObject(), (Matrix4f) viewValue.getObject(),
+                projectionValue.isTracked() ? projectionValue : null, viewValue.isTracked() ? viewValue : null);
+    }
+
+    // Values null: compared by content
+    private int camera(Matrix4f projection, Matrix4f view, ShaderValue projectionValue, ShaderValue viewValue) {
         int slot = lastCamera;
         if (slot < 0 || projectionSources[slot] != projection || viewSources[slot] != view || retired[slot])
             slot = findCamera(projection, view);
 
         if (slot < 0) {
             slot = newCamera(projection, view);
-        } else if (!projections[slot].equals(projection) || !views[slot].equals(view)) {
+            track(slot, projectionValue, viewValue);
+        } else if (changed(slot, projection, view, projectionValue, viewValue)) {
             if (pendingBatches > 0 && lastUse[slot] == epoch) {
                 // Draws of the slot wait with the previous content
                 retired[slot] = true;
@@ -204,11 +229,35 @@ public final class BatchStateTable implements IGLSharedState {
                 views[slot].set(view);
                 updateViewBox(slot);
             }
+            track(slot, projectionValue, viewValue);
+        } else if (projectionValues[slot] != projectionValue || viewValues[slot] != viewValue) {
+            // Same content, given by other values (or no longer tracked): the versions of these from now
+            track(slot, projectionValue, viewValue);
         }
 
         lastUse[slot] = epoch;
         lastCamera = slot;
         return slot;
+    }
+
+    // The content of the matrices differs from the copies of the slot: by the versions when both values are the
+    // tracked ones the copies were made from, by the content otherwise
+    private boolean changed(int slot, Matrix4f projection, Matrix4f view, ShaderValue projectionValue,
+                            ShaderValue viewValue) {
+        if (projectionValue != null && viewValue != null && projectionValues[slot] == projectionValue
+                && viewValues[slot] == viewValue)
+            return projectionValue.version() != projectionVersions[slot] || viewValue.version() != viewVersions[slot];
+
+        return !projections[slot].equals(projection) || !views[slot].equals(view);
+    }
+
+    // The copies of the slot are the content of these values now (both tracked, or compared by content after)
+    private void track(int slot, ShaderValue projectionValue, ShaderValue viewValue) {
+        boolean bothTracked = projectionValue != null && viewValue != null;
+        projectionValues[slot] = bothTracked ? projectionValue : null;
+        viewValues[slot] = bothTracked ? viewValue : null;
+        projectionVersions[slot] = bothTracked ? projectionValue.version() : 0;
+        viewVersions[slot] = bothTracked ? viewValue.version() : 0;
     }
 
     private int findCamera(Matrix4f projection, Matrix4f view) {
@@ -230,6 +279,10 @@ public final class BatchStateTable implements IGLSharedState {
             viewSources = Arrays.copyOf(viewSources, size);
             projections = Arrays.copyOf(projections, size);
             views = Arrays.copyOf(views, size);
+            projectionValues = Arrays.copyOf(projectionValues, size);
+            viewValues = Arrays.copyOf(viewValues, size);
+            projectionVersions = Arrays.copyOf(projectionVersions, size);
+            viewVersions = Arrays.copyOf(viewVersions, size);
             lastUse = Arrays.copyOf(lastUse, size);
             retired = Arrays.copyOf(retired, size);
             viewBoxes = Arrays.copyOf(viewBoxes, size * 4);
@@ -402,6 +455,8 @@ public final class BatchStateTable implements IGLSharedState {
     private void resetCameras() {
         Arrays.fill(projectionSources, 0, cameraCount, null);
         Arrays.fill(viewSources, 0, cameraCount, null);
+        Arrays.fill(projectionValues, 0, cameraCount, null);
+        Arrays.fill(viewValues, 0, cameraCount, null);
         cameraCount = 0;
         lastCamera = -1;
 
