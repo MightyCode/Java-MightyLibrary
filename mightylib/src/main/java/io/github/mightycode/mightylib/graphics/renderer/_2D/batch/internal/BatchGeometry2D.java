@@ -73,6 +73,34 @@ public final class BatchGeometry2D {
         batch.endDraw();
     }
 
+    /**
+     * The box of the first vertexCount positions (pairs x, y) written at box[0..3] (minX, minY, maxX, maxY): false
+     * without vertex or with a position that is not finite (no box: never culled).
+     */
+    public static boolean Box(float[] positions, int vertexCount, float[] box) {
+        if (positions == null || vertexCount <= 0 || positions.length < vertexCount * 2)
+            return false;
+
+        float minX = Float.POSITIVE_INFINITY, minY = Float.POSITIVE_INFINITY;
+        float maxX = Float.NEGATIVE_INFINITY, maxY = Float.NEGATIVE_INFINITY;
+        for (int i = 0; i < vertexCount; ++i) {
+            float x = positions[2 * i], y = positions[2 * i + 1];
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+
+        if (!Float.isFinite(minX) || !Float.isFinite(minY) || !Float.isFinite(maxX) || !Float.isFinite(maxY))
+            return false;
+
+        box[0] = minX;
+        box[1] = minY;
+        box[2] = maxX;
+        box[3] = maxY;
+        return true;
+    }
+
     // RGBA floats in 0..1 (clamped, rounded like the GPU converts a float to a normalized byte) to RGBA8 in an int
     public static int PackRGBA(float[] colors, int at) {
         return Channel(colors[at]) << 24 | Channel(colors[at + 1]) << 16 | Channel(colors[at + 2]) << 8

@@ -20,6 +20,11 @@ public interface IBatchMaterial {
     // What its batch program reads: its draws are written in this format (another format is another part)
     BatchFormat format();
 
+    // Margin of the view culling of its draws in world units: vertices moved by its programs ("cullMargin")
+    default float cullMargin() {
+        return 0f;
+    }
+
     // The format of its instanced batch program (hasInstanced), null when none
     default BatchFormat instancedFormat() {
         return null;

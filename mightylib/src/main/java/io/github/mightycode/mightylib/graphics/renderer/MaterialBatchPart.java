@@ -37,6 +37,8 @@ final class MaterialBatchPart implements IBatchMaterial {
     // With common values: the material, at this version (another version is another part)
     private final Material values;
     private final int valuesVersion;
+    // Margin of the view culling of its draws in world units ("cullMargin" of the shaders)
+    private final float cullMargin;
     private final int hash;
 
     private final RenderState renderState;
@@ -49,7 +51,7 @@ final class MaterialBatchPart implements IBatchMaterial {
 
     MaterialBatchPart(Batches2D batches, Shader shader, BatchFormat format, Shader instancedShader,
                       BatchFormat instancedFormat, IRenderTextureBindable mainTexture,
-                      IRenderTextureBindable[] channels, RenderState state, Material values) {
+                      IRenderTextureBindable[] channels, RenderState state, Material values, float cullMargin) {
         this.batches = Objects.requireNonNull(batches, "batches");
         this.shader = Objects.requireNonNull(shader, "shader");
         this.format = Objects.requireNonNull(format, "format");
@@ -63,6 +65,7 @@ final class MaterialBatchPart implements IBatchMaterial {
         blendMode = state.getBlendMode();
         this.values = values;
         valuesVersion = values == null ? 0 : values.version();
+        this.cullMargin = cullMargin;
 
         renderState = new RenderState(depthTest, depthWrite, faceCulling);
         renderState.setBlendMode(blendMode);
@@ -75,6 +78,7 @@ final class MaterialBatchPart implements IBatchMaterial {
         h = 31 * h + (depthTest ? 4 : 0) + (depthWrite ? 2 : 0) + (faceCulling ? 1 : 0);
         h = 31 * h + blendMode.ordinal();
         h = 31 * h + System.identityHashCode(values);
+        h = 31 * h + Float.floatToIntBits(cullMargin);
         hash = 31 * h + valuesVersion;
     }
 
@@ -88,6 +92,11 @@ final class MaterialBatchPart implements IBatchMaterial {
     @Override
     public void apply(boolean linear, Matrix4f projectionMatrix, Matrix4f viewMatrix) {
         applyWith(shader, false, linear, projectionMatrix, viewMatrix);
+    }
+
+    @Override
+    public float cullMargin() {
+        return cullMargin;
     }
 
     @Override
@@ -162,7 +171,8 @@ final class MaterialBatchPart implements IBatchMaterial {
                 && mainTexture == part.mainTexture
                 && sameObjects(channels, part.channels) && depthTest == part.depthTest
                 && depthWrite == part.depthWrite && faceCulling == part.faceCulling && blendMode == part.blendMode
-                && values == part.values && valuesVersion == part.valuesVersion;
+                && values == part.values && valuesVersion == part.valuesVersion
+                && Float.compare(cullMargin, part.cullMargin) == 0;
     }
 
     private static boolean sameObjects(Object[] first, Object[] second) {

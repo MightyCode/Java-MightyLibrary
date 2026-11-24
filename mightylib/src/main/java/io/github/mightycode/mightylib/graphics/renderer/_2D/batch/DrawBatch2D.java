@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.Batch
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchUploader;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.ViewCullTools;
 import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
@@ -13,6 +14,7 @@ import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
 import org.apiguardian.api.API;
 import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
 import org.joml.Vector2fc;
 import org.joml.Vector4fc;
 import org.json.JSONObject;
@@ -41,7 +43,10 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * Low level, for a renderer of its own: beginDraw with a state, then its values in the order of the attributes of its
  * format (put, putInt, putColor: each vertex, or each instance for a format with instances, is complete once its
  * last attribute is written; vertex writes one of BatchFormats.SPRITE), the indices of its triangles (index, formats
- * without instances), endDraw (or quad). Main thread only.
+ * without instances), endDraw (or quad).
+ * <p>
+ * View culling: a draw whose box is wholly outside the view of the camera of its state is not written (isCulled,
+ * asked by the renderers and the drawing without renderer before they write). Main thread only.
  */
 public final class DrawBatch2D {
     /** Bytes of a vertex of BatchFormats.SPRITE: position (2 floats, transformed), texture coordinates, color. */
@@ -68,6 +73,9 @@ public final class DrawBatch2D {
     // Set while the batch is started: from its first draw (or state) to its flush
     private IBatchTarget target;
     private BatchStateTable table;
+    // Size of the viewport of the context when the batch started (margins in pixels of the view culling)
+    private int viewportWidth;
+    private int viewportHeight;
 
     // Vertices of every format: those of a draw start on a multiple of the size of its vertex (its index base)
     private ByteBuffer vertices = BufferUtils.createByteBuffer(256 * VERTEX_BYTES);
@@ -139,6 +147,9 @@ public final class DrawBatch2D {
     // While the draws are sent: a barrier asked by what the sending does is not one
     private boolean sending;
 
+    // The box of the draw tested by the view culling, reused
+    private final ViewCullBounds cullBounds = new ViewCullBounds();
+
     /** A batch of a view (Scene, WindowView), with the mode and the targets of its engine. */
     @API(status = INTERNAL)
     public DrawBatch2D(IBatchBackend backend) {
@@ -204,6 +215,8 @@ public final class DrawBatch2D {
         newTarget.begin(this);
         target = newTarget;
         table = newTarget.table();
+        viewportWidth = newTarget.viewportWidth();
+        viewportHeight = newTarget.viewportHeight();
         table.batchStarted();
     }
 
@@ -443,6 +456,9 @@ public final class DrawBatch2D {
             addEntry(first, count);
         }
 
+        // What the draw wrote: its vertices and indices, or its instances
+        current.countWritten(drawFormat, drawInstanced ? (long) drawInstanceCount * drawStride
+                : (long) drawVertexCount * drawStride + (long) (indexCount - drawFirstIndex) * Integer.BYTES);
         ++drawCount;
         ++current.draws;
     }
@@ -510,6 +526,138 @@ public final class DrawBatch2D {
         keys[drawCount] = (sortKey.key(drawLayer, drawDepth, drawState) & ~CALL_INDEX_MASK) | drawCount;
     }
 
+    // ---- View culling ----
+
+    /** The view culling of the engine is on (EngineConfig.setViewCulling2D, Engine.setViewCulling2D). */
+    public boolean isViewCulling() {
+        return backend.viewCulling();
+    }
+
+    /**
+     * The box reused by the draws of this batch, cleared for a draw of this state (asked to this batch): its model
+     * matrix, the class of what draws, the size of a pixel of the camera of the state in the viewport.
+     */
+    @API(status = INTERNAL)
+    public ViewCullBounds cullBounds(int state, Matrix4fc model, Class<?> owner) {
+        cullBounds.clear(model, owner);
+        if (table == null || !table.isCurrent(state))
+            return cullBounds;
+
+        int camera = BatchStateTable.cameraOf(state);
+        if (table.hasViewBox(camera) && viewportWidth > 0 && viewportHeight > 0) {
+            float clipX = 2f / viewportWidth, clipY = 2f / viewportHeight;
+            cullBounds.pixelToWorld(table.clipToWorld(camera, 0) * clipX, table.clipToWorld(camera, 2) * clipX,
+                    table.clipToWorld(camera, 1) * clipY, table.clipToWorld(camera, 3) * clipY);
+        }
+        return cullBounds;
+    }
+
+    /**
+     * The view culling of a draw of this state, before it is written: true when its box, margins included, is wholly
+     * outside the box of the view of the camera of the state (a box that touches it is not), the draw is then not
+     * written. False without box (counted as such), for a camera that is not an affine 2D transform (a perspective)
+     * or a local box with such a model matrix, and when the view culling of the engine is off
+     * (EngineConfig.setViewCulling2D; nothing counted then). The margin of the material part of the state
+     * ("cullMargin" of its shaders) is added; margins in pixels use the viewport of the context when the batch
+     * started.
+     */
+    public boolean isCulled(int state, ViewCullBounds bounds) {
+        if (!backend.viewCulling())
+            return false;
+
+        start();
+        if (!table.isCurrent(state))
+            throw new IllegalArgumentException("State " + state + " unknown to the table of the batch");
+        if (bounds == null || !bounds.hasBox()) {
+            ++current.cullNoBounds;
+            current.countNoBounds(bounds == null ? null : bounds.owner());
+            return false;
+        }
+
+        ++current.cullTested;
+        int camera = BatchStateTable.cameraOf(state);
+        if (!table.hasViewBox(camera))
+            return false;
+
+        float minX = bounds.minX(), minY = bounds.minY(), maxX = bounds.maxX(), maxY = bounds.maxY();
+        Matrix4fc model = bounds.model();
+        if (bounds.isLocal() && model != null) {
+            // Draws at z 0: an affine transform of the plane when w stays 1
+            if (model.m03() != 0f || model.m13() != 0f || model.m33() != 1f)
+                return false;
+
+            // The box of the 4 transformed corners: center transformed, half extents by the absolute linear part
+            float centerX = (minX + maxX) * 0.5f, centerY = (minY + maxY) * 0.5f;
+            float halfX = (maxX - minX) * 0.5f, halfY = (maxY - minY) * 0.5f;
+            float worldX = model.m00() * centerX + model.m10() * centerY + model.m30();
+            float worldY = model.m01() * centerX + model.m11() * centerY + model.m31();
+            float extentX = Math.abs(model.m00()) * halfX + Math.abs(model.m10()) * halfY;
+            float extentY = Math.abs(model.m01()) * halfX + Math.abs(model.m11()) * halfY;
+            minX = worldX - extentX;
+            maxX = worldX + extentX;
+            minY = worldY - extentY;
+            maxY = worldY + extentY;
+        }
+
+        float marginX = bounds.worldMargin() + table.cullMarginOf(state), marginY = marginX;
+        float pixels = bounds.pixelMargin();
+        // World units of a pixel of the viewport along x and y (the box of a pixel, for a turned camera)
+        float pixelX = 0f, pixelY = 0f;
+        if (viewportWidth > 0 && viewportHeight > 0) {
+            float clipX = 2f / viewportWidth, clipY = 2f / viewportHeight;
+            pixelX = Math.abs(table.clipToWorld(camera, 0)) * clipX + Math.abs(table.clipToWorld(camera, 1)) * clipY;
+            pixelY = Math.abs(table.clipToWorld(camera, 2)) * clipX + Math.abs(table.clipToWorld(camera, 3)) * clipY;
+        } else if (pixels > 0f) {
+            return false;
+        }
+
+        marginX += pixels * pixelX;
+        marginY += pixels * pixelY;
+
+        float viewMinX = table.viewMinX(camera), viewMinY = table.viewMinY(camera);
+        float viewMaxX = table.viewMaxX(camera), viewMaxY = table.viewMaxY(camera);
+        ViewCullTools tools = backend.cullTools();
+        boolean tooled = tools != null && tools.active();
+        if (tooled) {
+            float[] frozen = tools.frozenBox(table.viewSourceOf(camera));
+            if (frozen != null) {
+                viewMinX = frozen[0];
+                viewMinY = frozen[1];
+                viewMaxX = frozen[2];
+                viewMaxY = frozen[3];
+            }
+            // The test zone reduced on each side
+            viewMinX += tools.inset() * pixelX;
+            viewMaxX -= tools.inset() * pixelX;
+            viewMinY += tools.inset() * pixelY;
+            viewMaxY -= tools.inset() * pixelY;
+        }
+
+        boolean culled = maxX + marginX < viewMinX || minX - marginX > viewMaxX
+                || maxY + marginY < viewMinY || minY - marginY > viewMaxY;
+        if (culled)
+            ++current.culled;
+        if (tooled)
+            reportCulling(tools, state, bounds.owner(), minX - marginX, minY - marginY, maxX + marginX,
+                    maxY + marginY, culled);
+        return culled;
+    }
+
+    // The tools of the culling see the draw: listed when culled, its box drawn by the debug drawings of the view
+    private void reportCulling(ViewCullTools tools, int state, Class<?> owner, float minX, float minY, float maxX,
+                               float maxY, boolean culled) {
+        int camera = BatchStateTable.cameraOf(state);
+        if (culled)
+            tools.recordCulled(owner == null ? "?" : owner.getName(), minX, minY, maxX, maxY, camera);
+
+        if (tools.isShow() && table.viewSourceOf(camera) == Views.current().camera2D().getView().getObject())
+            Views.current().debugDraw().rect(minX, minY, maxX - minX, maxY - minY,
+                    culled ? SHOWN_CULLED : SHOWN_DRAWN);
+    }
+
+    private static final Color4f SHOWN_DRAWN = new Color4f(0.1f, 1f, 0.2f, 1f);
+    private static final Color4f SHOWN_CULLED = new Color4f(1f, 0.15f, 0.1f, 1f);
+
     // ---- Drawing without renderer ----
 
     /** The state of draws of this material with the 2D camera of the current view (see state(Material, Camera)). */
@@ -543,7 +691,7 @@ public final class DrawBatch2D {
      * size, 0 0 for the top left corner) placed at position, turned by rotation (radians) around it, the part of
      * the texture region (u0, v0, u1, v1 in its x, y, z, w; null for the whole texture), flipped like
      * RectangleRenderer.setTextureFlip, multiplied by color (null for white). False when the material can't be
-     * batched now (nothing drawn).
+     * batched now (nothing drawn); true when drawn, or culled (outside the view: nothing written).
      */
     public boolean drawRegion(Material material, Vector2fc position, Vector2fc size, Vector2fc reference,
                               float rotation, Vector4fc region, EFlip flip, Color4f color) {
@@ -580,11 +728,18 @@ public final class DrawBatch2D {
         // Corners in the order of RectangleRenderer: (0, h), (0, 0), (w, 0), (w, h)
         float x0 = left, y0 = top + height, x1 = left, y1 = top;
         float x2 = left + width, y2 = top, x3 = left + width, y3 = top + height;
+        float wx0 = px + cos * x0 - sin * y0, wy0 = py + sin * x0 + cos * y0;
+        float wx1 = px + cos * x1 - sin * y1, wy1 = py + sin * x1 + cos * y1;
+        float wx2 = px + cos * x2 - sin * y2, wy2 = py + sin * x2 + cos * y2;
+        float wx3 = px + cos * x3 - sin * y3, wy3 = py + sin * x3 + cos * y3;
+        if (cornersCulled(state, wx0, wy0, wx1, wy1, wx2, wy2, wx3, wy3))
+            return true;
+
         quad(state, layer, depth,
-                px + cos * x0 - sin * y0, py + sin * x0 + cos * y0, u0, v1,
-                px + cos * x1 - sin * y1, py + sin * x1 + cos * y1, u0, v0,
-                px + cos * x2 - sin * y2, py + sin * x2 + cos * y2, u1, v0,
-                px + cos * x3 - sin * y3, py + sin * x3 + cos * y3, u1, v1,
+                wx0, wy0, u0, v1,
+                wx1, wy1, u0, v0,
+                wx2, wy2, u1, v0,
+                wx3, wy3, u1, v1,
                 color == null ? -1 : color.toIntRGBA());
         drawnOutsideRenderer();
         return true;
@@ -597,7 +752,8 @@ public final class DrawBatch2D {
 
     /**
      * Any quad of the material: its 4 corners (x, y pairs, in order around it: triangles 0 3 2 and 0 2 1), their
-     * texture coordinates (u, v pairs), one color (null for white). False when the material can't be batched now.
+     * texture coordinates (u, v pairs), one color (null for white). False when the material can't be batched now,
+     * true when drawn or culled.
      */
     public boolean drawQuad(Material material, float[] corners, float[] textureCoordinates, Color4f color,
                             int layer, float depth) {
@@ -607,6 +763,9 @@ public final class DrawBatch2D {
         int state = state(material);
         if (state < 0)
             return false;
+        if (cornersCulled(state, corners[0], corners[1], corners[2], corners[3], corners[4], corners[5], corners[6],
+                corners[7]))
+            return true;
 
         quad(state, layer, depth,
                 corners[0], corners[1], textureCoordinates[0], textureCoordinates[1],
@@ -616,6 +775,18 @@ public final class DrawBatch2D {
                 color == null ? -1 : color.toIntRGBA());
         drawnOutsideRenderer();
         return true;
+    }
+
+    // A quad of this API outside the view: not written (batched draws only, like those of the renderers)
+    private boolean cornersCulled(int state, float x0, float y0, float x1, float y1, float x2, float y2, float x3,
+                                  float y3) {
+        if (!isEnabled() || !backend.viewCulling())
+            return false;
+
+        cullBounds.clear(null, DrawBatch2D.class).world(Math.min(Math.min(x0, x1), Math.min(x2, x3)),
+                Math.min(Math.min(y0, y1), Math.min(y2, y3)), Math.max(Math.max(x0, x1), Math.max(x2, x3)),
+                Math.max(Math.max(y0, y1), Math.max(y2, y3)));
+        return isCulled(state, cullBounds);
     }
 
     // Mode OFF: a draw of this API is sent at once (one draw call, like a renderer drawn alone)
@@ -666,6 +837,7 @@ public final class DrawBatch2D {
     public void endView() {
         send(true);
 
+        EngineStats.countViewCull(current.cullTested, current.culled, current.cullNoBounds);
         last.copyFrom(current);
         current.clear();
         shownFrame = backend.frame();
@@ -730,6 +902,9 @@ public final class DrawBatch2D {
         vertices.position(0).limit(regularRuns ? vertexBytes : 0);
         drawnIndices.position(0).limit(regularRuns ? indexCount : 0);
         drawnInstances.position(0).limit(drawnInstanceBytes);
+        long sentBytes = vertices.limit() + (long) drawnIndices.limit() * Integer.BYTES + drawnInstanceBytes;
+        current.bytesSent += sentBytes;
+        EngineStats.countBatchBytes(sentBytes);
         try {
             uploader.upload(vertices, drawnIndices, drawnInstances);
         } finally {
@@ -970,6 +1145,69 @@ public final class DrawBatch2D {
         return last.instancedDrawCalls;
     }
 
+    /** Draws of the last frame whose box was tested by the view culling (isCulled). */
+    public int lastFrameCullTested() {
+        return last.cullTested;
+    }
+
+    /** Draws of the last frame culled (outside the view: not written). */
+    public int lastFrameCulled() {
+        return last.culled;
+    }
+
+    /** Draws of the last frame asked to the view culling without box (never culled). */
+    public int lastFrameCullNoBounds() {
+        return last.cullNoBounds;
+    }
+
+    /** Bytes of vertices, indices and instances sent to the GPU in the last frame of the view. */
+    public long lastFrameBytes() {
+        return last.bytesSent;
+    }
+
+    /** Draws gathered by each draw call of the last frame (0 without draw call). */
+    public double lastFrameDrawsPerCall() {
+        return last.drawCalls == 0 ? 0 : (double) last.draws / last.drawCalls;
+    }
+
+    /** Bytes sent by each draw call of the last frame (0 without draw call). */
+    public double lastFrameBytesPerCall() {
+        return last.drawCalls == 0 ? 0 : (double) last.bytesSent / last.drawCalls;
+    }
+
+    /**
+     * Bytes the draws of the last frame wrote, by the name of their batch format (a draw culled wrote none; the
+     * quads drawn by instances in mode INSTANCED are counted as written, not as sent). A new map.
+     */
+    public Map<String, Long> lastFrameFormatBytes() {
+        Map<String, Long> bytes = new LinkedHashMap<>();
+        for (int i = 0; i < last.writtenCount; ++i)
+            bytes.merge(last.writtenFormats[i].name(), last.writtenBytes[i], Long::sum);
+
+        return bytes;
+    }
+
+    /** Draws without box of the last frame by the name of the class that drew them (the 10 most). A new map. */
+    public Map<String, Integer> lastFrameNoBoundsClasses() {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        int[] order = new int[last.noBoundsCount];
+        int ordered = 0;
+        for (int i = 0; i < last.noBoundsCount; ++i) {
+            int at = ordered++;
+            while (at > 0 && last.noBoundsCounts[order[at - 1]] < last.noBoundsCounts[i]) {
+                order[at] = order[at - 1];
+                --at;
+            }
+            order[at] = i;
+        }
+
+        for (int i = 0; i < Math.min(10, ordered); ++i) {
+            Class<?> owner = last.noBoundsClasses[order[i]];
+            counts.put(owner == null ? "?" : owner.getName(), last.noBoundsCounts[order[i]]);
+        }
+        return counts;
+    }
+
     /** Segments sorted in the last frame. */
     public int lastFrameSorts() {
         return last.sorts;
@@ -1022,7 +1260,14 @@ public final class DrawBatch2D {
                 .put("sorts", last.sorts)
                 .put("instancedDrawCalls", last.instancedDrawCalls)
                 .put("barrierCauses", causes)
-                .put("formats", new JSONObject(lastFrameFormatCalls()));
+                .put("formats", new JSONObject(lastFrameFormatCalls()))
+                .put("formatBytes", new JSONObject(lastFrameFormatBytes()))
+                .put("bytes", last.bytesSent)
+                .put("drawsPerCall", lastFrameDrawsPerCall())
+                .put("bytesPerCall", lastFrameBytesPerCall())
+                .put("viewCull", new JSONObject().put("tested", last.cullTested).put("culled", last.culled)
+                        .put("noBounds", last.cullNoBounds)
+                        .put("noBoundsClasses", new JSONObject(lastFrameNoBoundsClasses())));
     }
 
     // Capacities of the arrays (tests: nothing grows once the frames are stable)
@@ -1043,6 +1288,19 @@ public final class DrawBatch2D {
         int barriersWhileSorted;
         int sorts;
         int instancedDrawCalls;
+        // View culling: draws tested, culled, without box
+        int cullTested;
+        int culled;
+        int cullNoBounds;
+        // Draws without box by class
+        Class<?>[] noBoundsClasses = new Class<?>[4];
+        int[] noBoundsCounts = new int[4];
+        int noBoundsCount;
+        // Bytes sent to the GPU, and bytes written by the draws by format
+        long bytesSent;
+        BatchFormat[] writtenFormats = new BatchFormat[4];
+        long[] writtenBytes = new long[4];
+        int writtenCount;
         // Draw calls by format
         BatchFormat[] formats = new BatchFormat[4];
         int[] formatCalls = new int[4];
@@ -1077,6 +1335,40 @@ public final class DrawBatch2D {
                 ++causeSortedCounts[i];
         }
 
+        void countNoBounds(Class<?> owner) {
+            int i = 0;
+            while (i < noBoundsCount && noBoundsClasses[i] != owner)
+                ++i;
+            if (i == noBoundsCount) {
+                if (noBoundsCount == noBoundsClasses.length) {
+                    noBoundsClasses = Arrays.copyOf(noBoundsClasses, noBoundsCount * 2);
+                    noBoundsCounts = Arrays.copyOf(noBoundsCounts, noBoundsCount * 2);
+                }
+                noBoundsClasses[i] = owner;
+                noBoundsCounts[i] = 0;
+                ++noBoundsCount;
+            }
+
+            ++noBoundsCounts[i];
+        }
+
+        void countWritten(BatchFormat format, long bytes) {
+            int i = 0;
+            while (i < writtenCount && writtenFormats[i] != format)
+                ++i;
+            if (i == writtenCount) {
+                if (writtenCount == writtenFormats.length) {
+                    writtenFormats = Arrays.copyOf(writtenFormats, writtenCount * 2);
+                    writtenBytes = Arrays.copyOf(writtenBytes, writtenCount * 2);
+                }
+                writtenFormats[i] = format;
+                writtenBytes[i] = 0;
+                ++writtenCount;
+            }
+
+            writtenBytes[i] += bytes;
+        }
+
         void countFormat(BatchFormat format) {
             int i = 0;
             while (i < formatCount && formats[i] != format)
@@ -1102,6 +1394,25 @@ public final class DrawBatch2D {
             barriersWhileSorted = other.barriersWhileSorted;
             sorts = other.sorts;
             instancedDrawCalls = other.instancedDrawCalls;
+            cullTested = other.cullTested;
+            culled = other.culled;
+            cullNoBounds = other.cullNoBounds;
+            bytesSent = other.bytesSent;
+            if (noBoundsClasses.length < other.noBoundsCount) {
+                noBoundsClasses = new Class<?>[other.noBoundsClasses.length];
+                noBoundsCounts = new int[other.noBoundsClasses.length];
+            }
+            System.arraycopy(other.noBoundsClasses, 0, noBoundsClasses, 0, other.noBoundsCount);
+            System.arraycopy(other.noBoundsCounts, 0, noBoundsCounts, 0, other.noBoundsCount);
+            Arrays.fill(noBoundsClasses, other.noBoundsCount, noBoundsClasses.length, null);
+            noBoundsCount = other.noBoundsCount;
+            if (writtenFormats.length < other.writtenCount) {
+                writtenFormats = new BatchFormat[other.writtenFormats.length];
+                writtenBytes = new long[other.writtenFormats.length];
+            }
+            System.arraycopy(other.writtenFormats, 0, writtenFormats, 0, other.writtenCount);
+            System.arraycopy(other.writtenBytes, 0, writtenBytes, 0, other.writtenCount);
+            writtenCount = other.writtenCount;
             if (causes.length < other.causeCount) {
                 causes = new Object[other.causes.length];
                 causeCounts = new int[other.causes.length];
@@ -1124,6 +1435,11 @@ public final class DrawBatch2D {
 
         void clear() {
             draws = drawCalls = flushes = barriers = barriersWhileSorted = sorts = instancedDrawCalls = 0;
+            cullTested = culled = cullNoBounds = 0;
+            bytesSent = 0;
+            Arrays.fill(noBoundsClasses, 0, noBoundsCount, null);
+            noBoundsCount = 0;
+            writtenCount = 0;
             Arrays.fill(causes, 0, causeCount, null);
             causeCount = 0;
             formatCount = 0;

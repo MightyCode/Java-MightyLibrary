@@ -34,7 +34,9 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     public static final String CAUSE_MODE = "mode";
 
     private final BatchStateTable table = new BatchStateTable();
+    private final ViewCullTools cullTools = new ViewCullTools();
     private EBatch2DMode mode;
+    private boolean viewCulling;
     // Frames of the engine (frameStarted): the views displayed in the last one
     private long frame;
     // Its references are dropped with the GL elements when GLResources is released
@@ -52,18 +54,19 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     // The formats of the batch programs registered: their vertex arrays are made with the buffers of a mode
     private final List<BatchFormat> formats;
 
-    private Batches2D(EBatch2DMode mode, Collection<BatchFormat> formats) {
+    private Batches2D(EBatch2DMode mode, boolean viewCulling, Collection<BatchFormat> formats) {
         this.mode = Objects.requireNonNull(mode, "mode");
+        this.viewCulling = viewCulling;
         this.formats = new ArrayList<>(new LinkedHashSet<>(formats));
     }
 
     /**
-     * The batches of this engine, created with the mode of its configuration and the batch formats of its registry
-     * at the first call.
+     * The batches of this engine, created with the mode and the view culling of its configuration and the batch
+     * formats of its registry at the first call.
      */
     public static Batches2D of(Engine engine) {
         return engine.glResources().shared(Batches2D.class, () -> new Batches2D(engine.config().getBatch2DMode(),
-                engine.registrations() == null ? List.of() : engine.registrations().batchFormats().values()));
+                engine.config().isViewCulling2D(), engine.registrations() == null ? List.of() : engine.registrations().batchFormats().values()));
     }
 
     // The formats whose vertex arrays are made with the buffers of each mode (the others at their first draw)
@@ -133,6 +136,7 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     public void frameStarted() {
         ++frame;
         table.frameStarted();
+        cullTools.frameStarted();
     }
 
     @Override
@@ -143,6 +147,21 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
     @Override
     public EBatch2DMode mode() {
         return mode;
+    }
+
+    @Override
+    public ViewCullTools cullTools() {
+        return cullTools;
+    }
+
+    @Override
+    public boolean viewCulling() {
+        return viewCulling;
+    }
+
+    // Takes effect at the next draw (a draw already written stays)
+    public void setViewCulling(boolean viewCulling) {
+        this.viewCulling = viewCulling;
     }
 
     /**
@@ -233,6 +252,7 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
 
         return new JSONObject()
                 .put("mode", mode.optionName())
+                .put("viewCulling", viewCulling)
                 .put("table", new JSONObject().put("materialParts", table.materialParts())
                         .put("materialPartsThreshold", table.materialPartsThreshold())
                         .put("cameras", table.cameras()).put("generation", table.generation())

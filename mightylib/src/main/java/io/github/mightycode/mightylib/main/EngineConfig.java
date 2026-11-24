@@ -60,6 +60,7 @@ public final class EngineConfig {
     private ERenderColorSpace colorSpace = ERenderColorSpace.GAMMA;
     private EBatch2DMode batch2DMode = EBatch2DMode.ORPHAN;
     private boolean debugDraw = true;
+    private boolean viewCulling2D = true;
     private int debugServerPort = DEFAULT_DEBUG_SERVER_PORT;
     // Commands of the player: unset (null) gives DEV in debug mode, none in release
     private boolean commandAccessSet;
@@ -218,6 +219,19 @@ public final class EngineConfig {
     }
 
     public static final String BATCH_2D_PROPERTY = "mightylib.batch2D";
+
+    /**
+     * The batched 2D draws wholly outside the view are culled before they are written (true by default, in release
+     * too), then changed by Engine.setViewCulling2D or the command batch cull; a renderer opts out with
+     * Renderer.setViewCulling(false). The system property VIEW_CULLING_2D_PROPERTY (-Dmightylib.viewCulling2D=on|off)
+     * overrides it.
+     */
+    public EngineConfig setViewCulling2D(boolean viewCulling2D) {
+        this.viewCulling2D = viewCulling2D;
+        return this;
+    }
+
+    public static final String VIEW_CULLING_2D_PROPERTY = "mightylib.viewCulling2D";
 
     /**
      * The debug drawings (IView.debugDraw) recorded and drawn at the start (true by default, in release too), then
@@ -595,6 +609,24 @@ public final class EngineConfig {
         System.err.println("--" + BATCH_2D_PROPERTY + " : unknown value ->" + property
                 + "<-, expected off, orphan, ring or instanced");
         return batch2DMode;
+    }
+
+    // The property wins over the configuration; an unknown value is ignored, with a line in the log
+    public boolean isViewCulling2D() {
+        String property = System.getProperty(VIEW_CULLING_2D_PROPERTY);
+        if (property == null)
+            return viewCulling2D;
+
+        switch (property.trim().toLowerCase(Locale.ROOT)) {
+            case "on":
+                return true;
+            case "off":
+                return false;
+            default:
+                System.err.println("--" + VIEW_CULLING_2D_PROPERTY + " : unknown value ->" + property
+                        + "<-, expected on or off");
+                return viewCulling2D;
+        }
     }
 
     // The property wins over the configuration; an unknown value is ignored, with a line in the log

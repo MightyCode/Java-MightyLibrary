@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,9 +19,16 @@ final class MeshCpuData {
     // -1 without index; Integer.MAX_VALUE when an index is unknown (part of the ebo set before the copy)
     private int maxIndex = -1;
     private boolean indicesKnown = true;
+    // Changes with the content of the vbos; the box of the positions of a vbo computed at a version (view culling)
+    private int version;
+    private int boxVbo = -1;
+    private int boxVersion;
+    private boolean hasBox;
+    private final float[] box = new float[4];
 
     // A new vbo at this index (rank of the vbo in the mesh), its data copied, null when not kept (integers)
     void addVbo(int vbo, float[] data) {
+        ++version;
         while (vbos.size() <= vbo)
             vbos.add(null);
         vbos.set(vbo, data == null ? null : data.clone());
@@ -27,6 +36,7 @@ final class MeshCpuData {
 
     // The whole vbo replaced (the array is copied: the caller may change it after)
     void setVbo(int vbo, float[] data) {
+        ++version;
         float[] kept = vbos.get(vbo);
         if (kept != null && kept.length == data.length)
             System.arraycopy(data, 0, kept, 0, data.length);
@@ -36,6 +46,7 @@ final class MeshCpuData {
 
     // A part of the vbo replaced from this offset in bytes (like glBufferSubData), what is past its end ignored
     void setSubVbo(int vbo, float[] data, int byteOffset) {
+        ++version;
         float[] kept = vbos.get(vbo);
         if (kept == null)
             return;
@@ -47,12 +58,30 @@ final class MeshCpuData {
 
     // All the vbos removed (Mesh.unloadVBO): the next one added is the first again
     void clearVbos() {
+        ++version;
         vbos.clear();
     }
 
     // The vbo, null when unknown; read only
     float[] vbo(int vbo) {
         return vbo < vbos.size() ? vbos.get(vbo) : null;
+    }
+
+    /**
+     * The box of the positions (pairs x, y) of this vbo written at out[0..3] (minX, minY, maxX, maxY), computed
+     * again only when a vbo changed: false when the vbo is unknown, empty or not finite.
+     */
+    boolean positionBox(int vbo, float[] out) {
+        if (vbo != boxVbo || version != boxVersion) {
+            float[] positions = vbo(vbo);
+            hasBox = positions != null && BatchGeometry2D.Box(positions, positions.length / 2, box);
+            boxVbo = vbo;
+            boxVersion = version;
+        }
+
+        if (hasBox)
+            System.arraycopy(box, 0, out, 0, 4);
+        return hasBox;
     }
 
     // The ebo replaced (the array copied), count of its indices drawn

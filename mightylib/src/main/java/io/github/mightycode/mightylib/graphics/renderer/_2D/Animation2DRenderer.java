@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
@@ -31,6 +32,8 @@ public final class Animation2DRenderer extends MeshRenderer {
     // What the mesh has, kept on the CPU for the batched draws
     private float[] positions;
     private float[] textures;
+    // Box of the positions (view culling), reused
+    private final float[] cullBox = new float[4];
 
     public Animation2DRenderer(String shaderName){
         super(shaderName, true);
@@ -175,9 +178,21 @@ public final class Animation2DRenderer extends MeshRenderer {
         int state = batchState(batch);
         if (state < 0)
             return false;
+        if (viewCulled(batch, state))
+            return true;
 
         BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), positions, textures,
                 positions.length / 2, batchColor(), INDICES, INDICES.length);
+        return true;
+    }
+
+    // The quad of the frame, in the space of the model
+    @Override
+    protected boolean viewCullBounds(ViewCullBounds out) {
+        if (!BatchGeometry2D.Box(positions, positions.length / 2, cullBox))
+            return false;
+
+        out.local(cullBox[0], cullBox[1], cullBox[2], cullBox[3]);
         return true;
     }
 

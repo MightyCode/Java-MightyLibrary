@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.graphics.renderer;
 
 import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
@@ -25,6 +26,9 @@ public class MeshRenderer extends Renderer {
 
     // Texture mode (see the class)
     private boolean textureEnabled;
+    // The vbo of the positions of the batched draw being written (view culling), its box
+    private int batchPositionVbo = -1;
+    private final float[] cullBox = new float[4];
 
     // A renderer with a new empty mesh, to fill through getMesh()
     public MeshRenderer(String shaderName, boolean useEbo) {
@@ -71,6 +75,7 @@ public class MeshRenderer extends Renderer {
             return false;
 
         float[] positions = null, textures = null, colors = null;
+        int positionVbo = -1;
         for (int vbo = 0; vbo < mesh.getVboCount(); ++vbo) {
             if (!mesh.isVboEnabled(vbo))
                 continue;
@@ -81,8 +86,10 @@ public class MeshRenderer extends Renderer {
 
             int channel = mesh.vboChannel(vbo);
             int size = mesh.vboVertexSize(vbo);
-            if (channel == Mesh.COMMON_VERTEX_POSITION_CHANNEL && size == 2)
+            if (channel == Mesh.COMMON_VERTEX_POSITION_CHANNEL && size == 2) {
                 positions = values;
+                positionVbo = vbo;
+            }
             else if (channel == Mesh.COMMON_TEXTURE_POSITION_CHANNEL && size == 2)
                 textures = values;
             else if (size == 4 && colors == null)
@@ -101,9 +108,26 @@ public class MeshRenderer extends Renderer {
         int state = batchState(batch);
         if (state < 0)
             return false;
+        batchPositionVbo = positionVbo;
+        if (viewCulled(batch, state))
+            return true;
 
         BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), positions, textures,
                 colors, vertexCount, batchColor(), data.indices(), data.indexCount());
+        return true;
+    }
+
+    /**
+     * Hook (see Renderer): the box of the positions of channel 0 kept on the CPU (Mesh.keepCpuData), computed again
+     * when the mesh changes; a subclass whose shader moves the vertices widens it (call super, then out.margin).
+     */
+    @Override
+    protected boolean viewCullBounds(ViewCullBounds out) {
+        MeshCpuData data = mesh.cpuData();
+        if (data == null || batchPositionVbo < 0 || !data.positionBox(batchPositionVbo, cullBox))
+            return false;
+
+        out.local(cullBox[0], cullBox[1], cullBox[2], cullBox[3]);
         return true;
     }
 

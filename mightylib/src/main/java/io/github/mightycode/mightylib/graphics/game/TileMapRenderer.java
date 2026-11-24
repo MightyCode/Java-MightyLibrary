@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.game;
 
+import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.graphics.renderer.MeshRenderer;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
@@ -325,8 +326,11 @@ public final class TileMapRenderer extends MeshRenderer {
         visibleTiles();
         int firstColumn = visibleRange[0], lastColumn = visibleRange[1];
         int firstRow = visibleRange[2], lastRow = visibleRange[3];
-        if (firstColumn > lastColumn || firstRow > lastRow)
+        int total = rowStarts[rowStarts.length - 1];
+        if (firstColumn > lastColumn || firstRow > lastRow) {
+            EngineStats.countTiles(total, 0);
             return true;
+        }
 
         int state = batchState(batch);
         if (state < 0)
@@ -357,6 +361,7 @@ public final class TileMapRenderer extends MeshRenderer {
             }
         }
         batch.endDraw();
+        EngineStats.countTiles(total - written / NUMBER_INDICES, written / NUMBER_INDICES);
         return true;
     }
 

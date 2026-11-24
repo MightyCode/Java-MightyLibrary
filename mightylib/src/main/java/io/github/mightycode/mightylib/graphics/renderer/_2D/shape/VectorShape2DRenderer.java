@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.renderer.RectangularFace;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.renderer.RendererUtils;
 import io.github.mightycode.mightylib.graphics.shader.ShaderUniforms;
@@ -162,6 +163,8 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         int state = batchState(batch);
         if (state < 0 || batch.formatOf(state) != batchFormat())
             return false;
+        if (viewCulled(batch, state))
+            return true;
 
         computeValues();
         int fill = batchColor();
@@ -169,6 +172,17 @@ public abstract class VectorShape2DRenderer extends Shape2DRenderer {
         writeBatchDraw(batch, fill);
         batch.endDraw();
         return true;
+    }
+
+    /**
+     * Hook (see Renderer): the quad its vertex shader places, the rectangle of its size around its reference point
+     * widened by the outer part of the stroke, a pixel of anti-aliasing and extraMargin. A subclass whose shader
+     * goes further than extraMargin widens it (call super, then out.margin).
+     */
+    @Override
+    protected boolean viewCullBounds(ViewCullBounds out) {
+        return ShapeCullBounds.VectorShape(out, scale().x, scale().y, getReferencePoint().x, getReferencePoint().y,
+                stroke, antialiasing, extraMargin());
     }
 
     // The format of the batch program of the shape

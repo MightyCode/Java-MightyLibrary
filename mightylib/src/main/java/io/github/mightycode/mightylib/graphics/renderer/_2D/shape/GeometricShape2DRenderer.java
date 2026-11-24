@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.shape;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormats;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import org.joml.Matrix4fc;
 import org.joml.Vector2f;
@@ -24,6 +25,10 @@ abstract class GeometricShape2DRenderer extends VectorShape2DRenderer {
     // The bases and indices of the last geometry built, for the batch
     private float[] batchBases = new float[0];
     private int[] batchIndices = new int[0];
+    // Box of the bases and longest extrusions of the last geometry built (view culling)
+    private final float[] basesBox = new float[4];
+    private final float[] longestExtrusions = new float[2];
+    private boolean hasBasesBox;
 
     GeometricShape2DRenderer(String shaderName) {
         super(shaderName);
@@ -58,6 +63,9 @@ abstract class GeometricShape2DRenderer extends VectorShape2DRenderer {
             strokeMesh.upload(getMesh());
             batchBases = strokeMesh.bases();
             batchIndices = strokeMesh.indices();
+            hasBasesBox = BatchGeometry2D.Box(batchBases, batchBases.length / 2, basesBox);
+            ShapeCullBounds.LongestExtrusions(strokeMesh.uploadedExtrusions(), batchBases.length / 2,
+                    longestExtrusions);
             updateShapeIndices();
             updateShapePosition();
             updateShapeTexture();
@@ -74,6 +82,13 @@ abstract class GeometricShape2DRenderer extends VectorShape2DRenderer {
     @Override
     BatchFormat batchFormat() {
         return BatchFormats.STROKE;
+    }
+
+    // Its triangles (strokeVertex): the box of the bases widened by the longest extrusions
+    @Override
+    protected final boolean viewCullBounds(ViewCullBounds out) {
+        return hasBasesBox && ShapeCullBounds.Stroke(out, basesBox, longestExtrusions[0], longestExtrusions[1],
+                scale().x, scale().y, batchStroke(), isAntialiasing());
     }
 
     // Its vertices with the values of the shape on each, then its triangles

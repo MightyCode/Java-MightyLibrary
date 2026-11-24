@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.GLResources;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
 import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.utils.IDisplayable;
@@ -57,6 +58,10 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
     private final Matrix4f model;
 
     private boolean visible;
+
+    // View culling of its batched draws (on by default), and its margin in world units (vertices moved by a shader)
+    private boolean viewCulling = true;
+    private float viewCullMargin;
 
     // Retained until unload (shared with its other renderers)
     private Material material;
@@ -224,9 +229,9 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
 
     /**
      * Hook called by display when the view batches its 2D draws (DrawBatch2D, mode not OFF), before anything is
-     * drawn: writes the draw in the batch (batchState, batchColor, modelMatrix, then DrawBatch2D.beginDraw, vertex,
-     * index, endDraw) and returns true, or returns false to be drawn alone (display goes on as without batch). The
-     * base returns false.
+     * drawn: writes the draw in the batch (batchState, viewCulled: true returned without writing when culled, then
+     * batchColor, modelMatrix, DrawBatch2D.beginDraw, vertex, index, endDraw) and returns true, or returns false to
+     * be drawn alone (display goes on as without batch). The base returns false.
      */
     protected boolean submitToBatch(DrawBatch2D batch) {
         return false;
@@ -292,6 +297,63 @@ public abstract class Renderer extends UUID implements IDisplayable, IUniformTar
         if (color.getObject() instanceof Integer)
             return (Integer) color.getObject();
         return 0;
+    }
+
+    // ---- View culling ----
+
+    /**
+     * Its batched draws are culled when outside the view (true by default; off: always written, like Bevy's
+     * NoFrustumCulling). The view culling of the engine (EngineConfig.setViewCulling2D) applies to all.
+     */
+    public final Renderer setViewCulling(boolean viewCulling) {
+        this.viewCulling = viewCulling;
+        return this;
+    }
+
+    public final boolean isViewCulling() {
+        return viewCulling;
+    }
+
+    /**
+     * Widens the box of its draws for the view culling by this margin in world units (vertices moved by its
+     * shader: waves, wind), added to the "cullMargin" of the shaders of its material.
+     */
+    public final Renderer setViewCullMargin(float worldUnits) {
+        if (!(worldUnits >= 0f))
+            throw new IllegalArgumentException("A margin of view culling is a number >= 0, not " + worldUnits);
+        viewCullMargin = worldUnits;
+        return this;
+    }
+
+    public final float getViewCullMargin() {
+        return viewCullMargin;
+    }
+
+    /**
+     * Hook asked by viewCulled before the batched draw is written: the box of the draw, in the space of the model
+     * (out.local, transformed by the model matrix) or in world units (out.world), with its margins (out.margin: a
+     * stroke, anti-aliasing in pixels). Returns false without box: the draw is never culled (counted as such). The
+     * base returns false.
+     */
+    protected boolean viewCullBounds(ViewCullBounds out) {
+        return false;
+    }
+
+    /**
+     * Called by submitToBatch right after batchState: true when the draw is outside the view, then submitToBatch
+     * returns true without writing it. Asks viewCullBounds, adds the margin of this renderer (setViewCullMargin);
+     * false at once when the view culling of this renderer or of the engine is off.
+     */
+    protected final boolean viewCulled(DrawBatch2D batch, int state) {
+        if (!viewCulling || !batch.isViewCulling())
+            return false;
+
+        ViewCullBounds bounds = batch.cullBounds(state, model, getClass());
+        if (viewCullBounds(bounds))
+            bounds.margin(viewCullMargin, 0f);
+        else
+            bounds.clear(model, getClass());
+        return batch.isCulled(state, bounds);
     }
 
     /** The model matrix of the renderer (read only): what a batched draw applies to its vertices itself. */

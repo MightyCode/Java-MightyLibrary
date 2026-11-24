@@ -428,6 +428,36 @@ class DrawBatch2DTest {
         assertEquals(0, batch.sortedIndexCapacity());
     }
 
+    // A culled draw is not asked: nothing written, the run of its neighbors not cut, no index of a sorted segment
+    @Test
+    void aCulledDrawWritesNothingAndCutsNothing() {
+        ViewCullBounds bounds = new ViewCullBounds();
+        int a = state("a");
+        quad(a, 0);
+        // Identity camera: the view is -1..1
+        assertTrue(batch.isCulled(a, bounds.clear(null, getClass()).world(5, 5, 6, 6)));
+        quad(a, 0.5f);
+        batch.endView();
+
+        assertEquals(List.of("apply a", "draw 0 12"), draws());
+        assertEquals(8, target.uploader.vertexUploads.get(0).length / 4);
+        assertEquals(2, batch.lastFrameDraws());
+        assertEquals(1, batch.lastFrameCulled());
+
+        batch.setDrawSortKey(DrawSortKeys.layerThenDepth());
+        int b = state("b");
+        a = state("a");
+        quad(a, 0, 1, 0f);
+        assertTrue(batch.isCulled(b, bounds.clear(null, getClass()).world(5, 5, 6, 6)));
+        quad(a, 0.5f, 0, 0f);
+        batch.endView();
+
+        float[] vertices = target.uploader.vertexUploads.get(1);
+        assertEquals(List.of(0.5f, 0f), quadOrder(vertices, target.uploader.indexUploads.get(1)));
+        assertEquals(List.of("apply a", "draw 0 12"), draws().subList(2, 4));
+        assertEquals(2, batch.lastFrameDraws());
+    }
+
     // Equal keys keep the order of the calls; the vertices stay where they were written, only the indices move
     @Test
     void theSortIsStableAndMovesOnlyTheIndices() {
@@ -598,6 +628,66 @@ class DrawBatch2DTest {
         batch.endView();
         assertEquals(0, batch.lastFrameDraws());
         assertEquals(0, batch.lastFrameDrawCalls());
+    }
+
+    // Bytes: written by the draws (format size x vertices + 4 x indices), sent by the flushes, per draw call
+    @Test
+    void theBytesAreThoseOfTheFormatsTimesTheValues() {
+        int a = state("a");
+        for (int i = 0; i < 5; ++i)
+            quad(a, i);
+        ViewCullBounds bounds = new ViewCullBounds();
+        // Culled (outside the view of the identity camera): writes nothing
+        assertTrue(batch.isCulled(a, bounds.clear(null, getClass()).world(5, 5, 6, 6)));
+        batch.endView();
+
+        long quadBytes = 4L * DrawBatch2D.VERTEX_BYTES + 6 * Integer.BYTES;
+        assertEquals(5 * quadBytes, batch.lastFrameBytes());
+        assertEquals(Map.of("sprite", 5 * quadBytes), batch.lastFrameFormatBytes());
+        assertEquals(5 * quadBytes, batch.lastFrameBytesPerCall());
+        assertEquals(5.0, batch.lastFrameDrawsPerCall());
+        assertEquals(5 * quadBytes, batch.describe().getLong("bytes"));
+        assertEquals(1, batch.describe().getJSONObject("viewCull").getInt("culled"));
+
+        // The next frame starts again
+        quad(state("a"), 0);
+        batch.endView();
+        assertEquals(quadBytes, batch.lastFrameBytes());
+    }
+
+    // Mode INSTANCED: the quads sent as instances are bytes of instances, not of vertices
+    @Test
+    void quadsSentAsInstancesAreCountedAsInstances() {
+        mode = EBatch2DMode.INSTANCED;
+        int a = state("i");
+        for (int i = 0; i < 3; ++i)
+            affineQuad(a, i, 0);
+        batch.endView();
+
+        assertEquals(3L * DrawBatch2D.INSTANCE_BYTES, batch.lastFrameBytes());
+        // What the draws wrote is still vertices and indices
+        assertEquals(3L * (4L * DrawBatch2D.VERTEX_BYTES + 6 * Integer.BYTES),
+                batch.lastFrameFormatBytes().get("sprite"));
+    }
+
+    // The draws without box are counted by the class that asked, the most often first
+    @Test
+    void theDrawsWithoutBoxAreCountedByClass() {
+        int a = state("a");
+        ViewCullBounds bounds = new ViewCullBounds();
+        for (int i = 0; i < 3; ++i)
+            batch.isCulled(a, bounds.clear(null, String.class));
+        for (int i = 0; i < 5; ++i)
+            batch.isCulled(a, bounds.clear(null, Integer.class));
+        batch.isCulled(a, null);
+        batch.endView();
+
+        assertEquals(9, batch.lastFrameCullNoBounds());
+        List<Map.Entry<String, Integer>> classes = new ArrayList<>(batch.lastFrameNoBoundsClasses().entrySet());
+        assertEquals("java.lang.Integer", classes.get(0).getKey());
+        assertEquals(5, classes.get(0).getValue());
+        assertEquals("java.lang.String", classes.get(1).getKey());
+        assertEquals("?", classes.get(2).getKey());
     }
 
     // Stable frames: once the arrays fit the frame, nothing grows anymore

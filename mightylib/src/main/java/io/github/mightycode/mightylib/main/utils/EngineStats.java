@@ -23,6 +23,13 @@ public final class EngineStats {
     private static long batchFlushes;
     private static long batchedDraws;
     private static long batchBarriers;
+    // 2D view culling: draws tested, culled, without box; bytes the batches sent; tiles of the maps culled, drawn
+    private static long viewCullTested;
+    private static long viewCulled;
+    private static long viewCullNoBounds;
+    private static long batchBytes;
+    private static long tilesCulled;
+    private static long tilesDrawn;
 
     // Values of the last full second
     private static int fps;
@@ -40,6 +47,14 @@ public final class EngineStats {
     private static double batchFlushesPerFrame;
     private static double batchedDrawsPerFrame;
     private static double batchBarriersPerFrame;
+    private static double viewCullTestedPerFrame;
+    private static double viewCulledPerFrame;
+    private static double viewCullNoBoundsPerFrame;
+    private static double batchBytesPerFrame;
+    private static double batchDrawsPerCall;
+    private static double batchBytesPerCall;
+    private static double tilesCulledPerFrame;
+    private static double tilesDrawnPerFrame;
 
     // Worst frames since the last resetMax, to check that a loading screen stays fluid
     private static long lastFrameStart = -1;
@@ -92,6 +107,19 @@ public final class EngineStats {
     public static void countBatchedDraws(int draws) { batchedDraws += draws; }
     // A barrier that sent the waiting draws of a 2D batch
     public static void countBatchBarrier() { ++batchBarriers; }
+    // Bytes of vertices, indices and instances a flush sent
+    public static void countBatchBytes(long bytes) { batchBytes += bytes; }
+    // The view culling of a 2D batch for a frame of its view
+    public static void countViewCull(int tested, int culled, int noBounds) {
+        viewCullTested += tested;
+        viewCulled += culled;
+        viewCullNoBounds += noBounds;
+    }
+    // The tiles of a map left out of its draw (outside the view), and written
+    public static void countTiles(int culled, int drawn) {
+        tilesCulled += culled;
+        tilesDrawn += drawn;
+    }
 
     // Called once per second by the main loop
     public static void endSecond(int frames, int ticks, long frameNanos, long tickNanos) {
@@ -113,7 +141,16 @@ public final class EngineStats {
         batchFlushesPerFrame = batchFlushes / frameCount;
         batchedDrawsPerFrame = batchedDraws / frameCount;
         batchBarriersPerFrame = batchBarriers / frameCount;
+        batchDrawsPerCall = batchFlushes == 0 ? 0 : (double) batchedDraws / batchFlushes;
+        batchBytesPerCall = batchFlushes == 0 ? 0 : (double) batchBytes / batchFlushes;
+        viewCullTestedPerFrame = viewCullTested / frameCount;
+        viewCulledPerFrame = viewCulled / frameCount;
+        viewCullNoBoundsPerFrame = viewCullNoBounds / frameCount;
+        batchBytesPerFrame = batchBytes / frameCount;
+        tilesCulledPerFrame = tilesCulled / frameCount;
+        tilesDrawnPerFrame = tilesDrawn / frameCount;
         batchFlushes = batchedDraws = batchBarriers = 0;
+        viewCullTested = viewCulled = viewCullNoBounds = batchBytes = tilesCulled = tilesDrawn = 0;
 
         drawCalls = programBinds = uniformUploads = textureBinds = bufferUploadBytes = glStateChanges = glStateChangesSkipped = 0;
     }
@@ -140,6 +177,14 @@ public final class EngineStats {
         json.put("batchFlushesPerFrame", round(batchFlushesPerFrame));
         json.put("batchedDrawsPerFrame", round(batchedDrawsPerFrame));
         json.put("batchBarriersPerFrame", round(batchBarriersPerFrame));
+        json.put("batchBytesPerFrame", (long) batchBytesPerFrame);
+        json.put("batchDrawsPerCall", round(batchDrawsPerCall));
+        json.put("batchBytesPerCall", (long) batchBytesPerCall);
+        json.put("viewCullTestedPerFrame", round(viewCullTestedPerFrame));
+        json.put("viewCulledPerFrame", round(viewCulledPerFrame));
+        json.put("viewCullNoBoundsPerFrame", round(viewCullNoBoundsPerFrame));
+        json.put("tilesCulledPerFrame", round(tilesCulledPerFrame));
+        json.put("tilesDrawnPerFrame", round(tilesDrawnPerFrame));
         json.put("programBindsPerFrame", round(programBindsPerFrame));
         json.put("uniformUploadsPerFrame", round(uniformUploadsPerFrame));
         json.put("textureBindsPerFrame", round(textureBindsPerFrame));
