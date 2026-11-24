@@ -22,8 +22,8 @@ import java.util.Arrays;
 @EnabledIfSystemProperty(named = "mightylib.bench", matches = "true")
 class DrawBatch2DBenchTest {
     private static final int DRAWS = 16000;
-    private static final int WARM_UP_PASSES = 40;
-    private static final int PASSES = 25;
+    private static final int WARM_UP_PASSES = 100;
+    private static final int PASSES = 31;
 
     private static final class Part implements IBatchMaterial {
         @Override

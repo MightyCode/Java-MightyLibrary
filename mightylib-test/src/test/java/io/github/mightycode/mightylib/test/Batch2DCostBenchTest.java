@@ -44,8 +44,8 @@ import static io.github.mightycode.mightylib.test.BatchPictures.*;
 @MightySceneTest(config = SceneRunnerTest.Config.class)
 class Batch2DCostBenchTest {
     private static final int DRAWS = 16000;
-    private static final int WARM_UP_PASSES = 25;
-    private static final int PASSES = 15;
+    private static final int WARM_UP_PASSES = 100;
+    private static final int PASSES = 31;
     private static final long SEED = 12345;
 
     // Makes the renderer of this index at a place of the screen (the camera at rest), the size in pixels
