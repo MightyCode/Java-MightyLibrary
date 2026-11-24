@@ -10,14 +10,12 @@ import io.github.mightycode.mightylib.main.utils.IUpdatableDisplayable;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera2D;
-import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DraggingCameraComponent;
-import io.github.mightycode.mightylib.scenes.camera.cameraComponents.MovingCameraComponent;
-import io.github.mightycode.mightylib.scenes.camera.cameraComponents.ZoomingCameraComponent;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylibdemo.main.ActionId;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -276,30 +274,7 @@ public class RopeSimulation2D extends Scene {
                 .setPosition(new Vector2f(size.x, 96))
                 .setText("i - Wind controlled : " + controlWind + " ");
 
-        DraggingCameraComponent draggingSceneComponent = new DraggingCameraComponent();
-        draggingSceneComponent.init(context().getInputManager(), context().getMouseManager(), camera2D());
-        draggingSceneComponent.initActionId(ActionId.RIGHT_CLICK);
-        addUpdatable(draggingSceneComponent);
-
-        MovingCameraComponent movingSceneComponent = new MovingCameraComponent();
-        movingSceneComponent.init(context().getInputManager(), camera2D());
-        movingSceneComponent.initActionIds(
-                new MovingCameraComponent.Inputs()
-                        .setMoveLeft(ActionId.MOVE_LEFT_2D)
-                        .setMoveRight(ActionId.MOVE_RIGHT_2D)
-                        .setMoveDown(ActionId.MOVE_DOWN_2D)
-                        .setMoveUp(ActionId.MOVE_UP_2D)
-                        .setQuickSpeed(ActionId.SHIFT)
-        );
-
-        addUpdatable(movingSceneComponent);
-
-        ZoomingCameraComponent zoomingSceneComponent = new ZoomingCameraComponent();
-        zoomingSceneComponent.init(context().getInputManager(), context().getMouseManager(),
-                camera2D(), context().getWindow().getInfo().getSizeRef());
-        zoomingSceneComponent.initActionId(ActionId.SHIFT);
-
-        addUpdatable(zoomingSceneComponent);
+        DemoCamera.free(this);
 
         addUpdatableAndDisplayable(
                 new DebugInfoCamera2D(hudCamera).init(camera2D(), new Vector2f(5, 5))

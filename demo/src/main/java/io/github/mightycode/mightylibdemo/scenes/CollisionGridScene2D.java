@@ -7,9 +7,11 @@ import io.github.mightycode.mightylib.physics.collision.Collision2D;
 import io.github.mightycode.mightylib.physics.collision.Collision2DGrid;
 import io.github.mightycode.mightylib.physics.collision.CollisionRectangle;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylibdemo.main.ActionId;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import org.joml.Vector2f;
 
 import java.util.HashSet;
@@ -48,6 +50,8 @@ public class CollisionGridScene2D extends Scene {
     public void launch(String[] args) {
         setClearColor(0.1f, 0.1f, 0.12f);
         context().getMouseManager().setCursor(true);
+        Camera2D hud = camera2D().copy();
+        DemoCamera.free(this);
 
         // Fixed seed : the same obstacles at every launch
         Random random = new Random(42);
@@ -72,6 +76,7 @@ public class CollisionGridScene2D extends Scene {
                 .setAlignment(ETextAlignment.Left)
                 .setColor(new Color4f(1, 1, 1, 1))
                 .setPosition(new Vector2f(20, 15));
+        info.setReferenceCamera(hud);
     }
 
     @Override

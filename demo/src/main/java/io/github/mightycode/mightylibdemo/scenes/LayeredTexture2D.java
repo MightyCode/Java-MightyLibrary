@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import io.github.mightycode.mightylibdemo.resources.LayeredTextureData;
 import org.joml.Vector2f;
@@ -37,6 +38,7 @@ public class LayeredTexture2D extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(0.2f, 0.2f, 0.25f);
 
         hero = square(layeredTexture(HERO), 0, "Layers of hero");

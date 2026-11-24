@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import org.joml.Vector2f;
 
 import java.util.List;
@@ -17,7 +18,7 @@ import static org.lwjgl.glfw.GLFW.*;
 /**
  * The debug drawings (IView.debugDraw), each lifetime: a point that moves, its cross and its arrow redrawn at each
  * frame (one frame), its trail kept 3 seconds of game time, a line to it while Space is held (while true), a circle
- * for 120 frames (C), a rectangle until removed (R again), texts on the screen. The camera moves and zooms (Up, Down):
+ * for 120 frames (C), a rectangle until removed (R again), texts on the screen. The camera moves and zooms (Z Q S D, arrows, right drag, wheel):
  * the world drawings follow it, the screen ones stay. The command debugdraw switches them off and counts them.
  */
 public class DebugDrawing2D extends Scene {
@@ -32,7 +33,6 @@ public class DebugDrawing2D extends Scene {
 
     private float time;
     private float trailTimer;
-    private float zoom = 1f;
     private final Vector2f point = new Vector2f();
     private final Vector2f previous = new Vector2f();
     private DebugDrawHandle rectangle = DebugDrawHandle.NONE;
@@ -40,6 +40,7 @@ public class DebugDrawing2D extends Scene {
     @Override
     public void launch(String[] args) {
         setClearColor(30, 34, 44, 1f);
+        DemoCamera.free(this);
         computePoint(0f, previous);
     }
 
@@ -57,12 +58,6 @@ public class DebugDrawing2D extends Scene {
             sceneManager().setNewScene(new MenuScene(), new String[]{});
             return;
         }
-
-        if (keyboard.keyPressed(GLFW_KEY_UP))
-            zoom = Math.min(4f, zoom * 1.25f);
-        if (keyboard.keyPressed(GLFW_KEY_DOWN))
-            zoom = Math.max(0.25f, zoom / 1.25f);
-        camera2D().setZoomLevel(zoom);
 
         time += GameTime.DeltaTime();
         computePoint(time, point);
@@ -106,7 +101,7 @@ public class DebugDrawing2D extends Scene {
 
         // On the screen: they stay where they are whatever the camera
         debug.text(EDebugSpace.SCREEN, 10, 10, "Space: line while held   C: circle 120 frames   R: rectangle until"
-                + " removed\nUp/Down: zoom   trail: 3 seconds   command debugdraw off|on|list   ESC: menu", WHITE,
+                + " removed\nZQSD/arrows: move   wheel: zoom   trail: 3 seconds   command debugdraw off|on|list   ESC: menu", WHITE,
                 18, DebugLifetimes.oneFrame());
         debug.text(EDebugSpace.SCREEN, 10, 60, debug.size() + " drawings alive", GREEN, 18,
                 DebugLifetimes.oneFrame());

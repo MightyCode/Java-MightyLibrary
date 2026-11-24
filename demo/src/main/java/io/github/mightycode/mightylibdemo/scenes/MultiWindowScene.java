@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
@@ -33,10 +34,11 @@ public class MultiWindowScene extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(0.12f, 0.14f, 0.2f);
 
         help = text(32, new Vector2f(VIRTUAL_WIDTH / 2f, 40));
-        help.setText("D : modal dialog   T : tool window   C : second context   ESC : menu");
+        help.setText("M : modal dialog   T : tool window   C : second context   ESC : menu");
 
         status = text(28, new Vector2f(VIRTUAL_WIDTH / 2f, 100));
 
@@ -67,7 +69,7 @@ public class MultiWindowScene extends Scene {
             return;
         }
 
-        if (keyboard.keyPressed(GLFW_KEY_D) && !isOpen(dialog)) {
+        if (keyboard.keyPressed(GLFW_KEY_M) && !isOpen(dialog)) {
             dialog = openWindow(new WindowConfig("Dialog").setSize(640, 360).setVirtualSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT)
                     .setModal(true), new MessageView("Modal dialog", new Vector2f(0.35f, 0.12f)));
             System.out.println("--MultiWindowScene: dialog opened");

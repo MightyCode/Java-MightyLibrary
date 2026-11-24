@@ -19,6 +19,7 @@ public class ActionId {
     public static final InputAction SHIFT = InputAction.of("demo:shift");
     public static final InputAction LEFT_CLICK = InputAction.of("demo:left_click");
     public static final InputAction RIGHT_CLICK = InputAction.of("demo:right_click");
+    public static final InputAction MIDDLE_CLICK = InputAction.of("demo:middle_click");
     public static final InputAction ESCAPE = InputAction.of("demo:escape");
     public static final InputAction ENTER = InputAction.of("demo:enter");
     public static final InputAction TAB = InputAction.of("demo:tab");

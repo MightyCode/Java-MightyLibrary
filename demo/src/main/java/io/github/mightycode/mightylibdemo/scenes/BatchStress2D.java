@@ -10,6 +10,8 @@ import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.scenes.camera.Camera2D;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -25,9 +27,10 @@ import static org.lwjgl.glfw.GLFW.*;
 
 /**
  * Measure of the 2D drawing: N rectangles, three textured ones (regions of one tile set, like an atlas) for one
- * colored one, of several sizes and turning. Up doubles N, Down halves it, M changes the mode of the 2D batch (off,
- * orphan, ring, instanced), S sorts the draws by state (DrawSortKeys.layerThenState: the sprites together, the
- * colored rectangles together). The counters are those of the command stats (renderCpuMs: CPU time of the display of the
+ * colored one, of several sizes and turning. Page Up doubles N, Page Down halves it, M changes the mode of the 2D batch (off,
+ * orphan, ring, instanced), O sorts the draws by state (DrawSortKeys.layerThenState: the sprites together, the
+ * colored rectangles together). Z Q S D or the arrows move the camera, the right button drags it, the wheel zooms
+ * (the texts stay on screen). The counters are those of the command stats (renderCpuMs: CPU time of the display of the
  * windows, without the buffer swap).
  */
 public class BatchStress2D extends Scene {
@@ -56,6 +59,8 @@ public class BatchStress2D extends Scene {
     public void launch(String[] args) {
         setClearColor(30, 30, 40, 1f);
         area = context().getWindow().getInfo().getVirtualSizeCopy();
+        Camera2D hud = camera2D().copy();
+        DemoCamera.free(this);
 
         spriteMaterial = new Material("texture2D").setMainTexture("tileset");
         colorMaterial = new Material("colorShape2D");
@@ -66,14 +71,17 @@ public class BatchStress2D extends Scene {
 
         help = new Text();
         help.setFontSize(20).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 10));
-        help.setText("Up : N x2   Down : N / 2   M : mode of the batch   S : sort by state   ESC : menu");
+        help.setText("PgUp : N x2   PgDn : N / 2   M : mode of the batch   O : sort by state   ZQSD/arrows : move   wheel : zoom   ESC : menu");
+        help.setReferenceCamera(hud);
         counters = new Text();
+        counters.setReferenceCamera(hud);
         counters.setFontSize(18).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 40));
 
         textBackground = new RoundedRectangleRenderer();
         textBackground.setCornerRadius(8f);
         textBackground.setColorMode(new Color4f(0.25f, 0.25f, 0.27f, 0.88f));
         textBackground.setPosition(new Vector2f(4, 4));
+        textBackground.setReferenceCamera(hud);
         fitBackground();
     }
 
@@ -117,11 +125,11 @@ public class BatchStress2D extends Scene {
             return;
         }
 
-        if (keyboard.keyPressed(GLFW_KEY_UP))
+        if (keyboard.keyPressed(GLFW_KEY_PAGE_UP))
             resize(Math.min(MAX_COUNT, rectangles.size() * 2));
-        if (keyboard.keyPressed(GLFW_KEY_DOWN))
+        if (keyboard.keyPressed(GLFW_KEY_PAGE_DOWN))
             resize(Math.max(1, rectangles.size() / 2));
-        if (keyboard.keyPressed(GLFW_KEY_S))
+        if (keyboard.keyPressed(GLFW_KEY_O))
             setDrawSortKey(batch2D().getDrawSortKey() == null ? DrawSortKeys.layerThenState() : null);
         if (keyboard.keyPressed(GLFW_KEY_M)) {
             EBatch2DMode[] modes = EBatch2DMode.values();
