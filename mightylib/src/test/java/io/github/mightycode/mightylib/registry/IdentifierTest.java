@@ -14,6 +14,22 @@ class IdentifierTest {
         assertEquals("demo:gui/move_right-2.d", identifier.toString());
     }
 
+    // An identifier is a key of maps read at each draw (the services of the engine): its hash allocates nothing
+    @Test
+    void theHashAllocatesNothing() {
+        com.sun.management.ThreadMXBean threads =
+                (com.sun.management.ThreadMXBean) java.lang.management.ManagementFactory.getThreadMXBean();
+        Identifier identifier = Identifier.of("mightylib", "colors");
+        long thread = Thread.currentThread().getId();
+        int sum = 0;
+        long before = threads.getThreadAllocatedBytes(thread);
+        for (int i = 0; i < 100_000; ++i)
+            sum += identifier.hashCode();
+        long allocated = threads.getThreadAllocatedBytes(thread) - before;
+        // 24 bytes a call before (Objects.hash): 2.4 MB
+        assertTrue(allocated < 10_000, allocated + " bytes allocated, hash sum " + sum);
+    }
+
     @Test
     void sameTextGivesEqualIdentifiers() {
         assertEquals(Identifier.of("demo", "jump"), Identifier.parse("demo:jump"));

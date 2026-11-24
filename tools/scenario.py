@@ -6,6 +6,8 @@ Usage:
     python tools/scenario.py --attach "stats"          # use an already running game
     python tools/scenario.py --no-compile "scene" ...  # skip compilation
     python tools/scenario.py --modulepath "scene" ...  # run the demo as a Java module (default: classpath)
+    python tools/scenario.py --jfr "scene BatchStress2D" wait-loaded "input key PAGE_UP" sleep:5
+                                                       # record a Java Flight Recorder profile, summarized at the end
 
 Steps are game commands (see `help` in the game) plus:
     wait-loaded                     wait until any scene change (command or game) is done and the scene is loaded
@@ -98,7 +100,17 @@ def prepare(compile_sources):
         run_maven("-o", "compile")
 
 
-def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, defines=(), module_path=False):
+JFR_FILE = os.path.join(ROOT, "target", "jfr", "scenario.jfr")
+
+
+def jfr_options(path):
+    # Inlined frames kept (DebugNonSafepoints), the "profile" settings (20 ms method samples, allocation samples)
+    return ["-XX:+UnlockDiagnosticVMOptions", "-XX:+DebugNonSafepoints",
+            f"-XX:StartFlightRecording=filename={path},settings=profile,dumponexit=true"]
+
+
+def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, defines=(), module_path=False,
+           jfr_path=None):
     with open(CLASSPATH_FILE, encoding="utf-8") as file:
         classpath = os.path.join(ROOT, "demo", "target", "classes") + os.pathsep + file.read().strip()
 
@@ -117,6 +129,11 @@ def launch(log_path, monitor, strict=False, capture_mouse=False, platform=None, 
         # The mouse of the user stays free while the game runs (3D scenes would capture it)
         options.append(f"-D{NO_CURSOR_CAPTURE_PROPERTY}=true")
     options.extend(f"-D{define}" for define in defines)
+    if jfr_path:
+        os.makedirs(os.path.dirname(jfr_path), exist_ok=True)
+        if os.path.exists(jfr_path):
+            os.remove(jfr_path)
+        options.extend(jfr_options(jfr_path))
 
     if module_path:
         # The same entries as a module path. ALL-MODULE-PATH: the natives of LWJGL are modules that nothing requires
@@ -370,6 +387,15 @@ def report_log(log_path):
     return not problems
 
 
+def summarize_jfr(path):
+    # The recording is written when the game exits
+    if not os.path.exists(path):
+        print(f"jfr: no recording at {path}")
+        return
+    import jfr_summary
+    jfr_summary.summarize(path, JAVA)
+
+
 def main():
     # The Windows console code page can't print every character of the game log
     for stream in (sys.stdout, sys.stderr):
@@ -399,6 +425,10 @@ def main():
     parser.add_argument("-D", dest="defines", action="append", default=[], metavar="KEY=VALUE",
                         help="system property given to the game, for example -D mightylib.commands.access=user"
                              " (repeatable)")
+    parser.add_argument("--jfr", action="store_true",
+                        help="record a Java Flight Recorder profile (target/jfr/scenario.jfr) and summarize it"
+                             " at the end with tools/jfr_summary.py (run it again with --since to keep the steady state)")
+    parser.add_argument("--jfr-file", default=JFR_FILE, help="file of --jfr")
     parser.add_argument("--attach", action="store_true", help="use an already running game, don't launch or close it")
     parser.add_argument("--keep-open", action="store_true", help="don't close the game at the end")
     parser.add_argument("--log", default=os.path.join(ROOT, "target", "scenario.log"),
@@ -412,7 +442,7 @@ def main():
 
     prepare(not args.no_compile)
     process = launch(args.log, args.monitor, args.strict, args.capture_mouse, args.platform, args.defines,
-                     args.modulepath)
+                     args.modulepath, args.jfr_file if args.jfr else None)
 
     # A blocked game (main thread stuck, no answer) must not block the caller forever
     def kill_blocked_game():
@@ -444,6 +474,8 @@ def main():
         os.remove(PORT_FILE)
 
     log_ok = report_log(args.log)
+    if args.jfr:
+        summarize_jfr(args.jfr_file)
     return 0 if success and log_ok else 1
 
 

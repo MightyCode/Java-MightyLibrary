@@ -87,6 +87,32 @@ class ViewsTest {
         assertInstanceOf(IllegalStateException.class, seen.get());
     }
 
+    // Each thread keeps its own view when the other one entered a view after it (the last view set is read first)
+    @Test
+    void twoThreadsKeepTheirOwnView() throws InterruptedException {
+        FakeView mine = new FakeView();
+        FakeView theirs = new FakeView();
+        AtomicReference<IView> seenByWorker = new AtomicReference<>();
+        try (Views.Scope ignored = Views.enter(mine)) {
+            Thread worker = new Thread(() -> {
+                try (Views.Scope inWorker = Views.enter(theirs)) {
+                    seenByWorker.set(Views.current());
+                }
+            });
+            worker.start();
+            worker.join();
+            assertSame(theirs, seenByWorker.get());
+            assertSame(mine, Views.current());
+
+            // The worker left its view: this thread still has its own
+            Thread leaving = new Thread(() -> Views.enter(theirs).close());
+            leaving.start();
+            leaving.join();
+            assertSame(mine, Views.current());
+        }
+        assertThrows(IllegalStateException.class, Views::current);
+    }
+
     @Test
     void aMainThreadTaskRunsWithTheViewThatPostedIt() {
         FakeView view = new FakeView();

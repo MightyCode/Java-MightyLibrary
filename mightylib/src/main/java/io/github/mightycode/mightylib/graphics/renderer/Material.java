@@ -90,6 +90,8 @@ public final class Material implements IUniformTarget {
     private int batchGeneration;
     private int batchVersion;
     private long batchProgramStamp;
+    // The program of the batch shader the part was built with (a new link checks its format again)
+    private long batchLinkStamp;
     private int batchPartId = -1;
     private boolean batchReadsColor;
 
@@ -437,7 +439,7 @@ public final class Material implements IUniformTarget {
      * The id of the part of this material in the 2D batches of the table (its batch program, textures, state and
      * values), -1 when its draws can't be batched now: its program is not loaded, its shader has no batch equivalent
      * ("batch" in shaders.json), or the batch program is not loaded yet. Built again when the version, the program
-     * or the table generation changes, otherwise an int read. Main thread.
+     * or the table generation changes, otherwise an int read (asked at each batched draw). Main thread.
      */
     @API(status = INTERNAL)
     public int batchPart(BatchStateTable table) {
@@ -447,13 +449,14 @@ public final class Material implements IUniformTarget {
             resolveBatchShader();
         if (batchShader == null || !batchShader.isLoaded())
             return -1;
+        // The part is the one built for these programs: their format was checked then
+        if (table == batchTable && table.partsGeneration() == batchGeneration && version == batchVersion
+                && shader.programStamp() == batchProgramStamp && batchShader.programStamp() == batchLinkStamp)
+            return batchPartId;
+
         Batches2D batches = Batches2D.of(glResources);
         if (!batches.readsFormat(batchShader, batchFormat))
             return -1;
-
-        if (table == batchTable && table.partsGeneration() == batchGeneration && version == batchVersion
-                && shader.programStamp() == batchProgramStamp)
-            return batchPartId;
 
         boolean readsTextures = shader.samplesTextures();
         batchReadsColor = shader.location(ShaderUniforms.COLOR) != -1;
@@ -470,6 +473,7 @@ public final class Material implements IUniformTarget {
         batchGeneration = table.partsGeneration();
         batchVersion = version;
         batchProgramStamp = shader.programStamp();
+        batchLinkStamp = batchShader.programStamp();
         return batchPartId;
     }
 

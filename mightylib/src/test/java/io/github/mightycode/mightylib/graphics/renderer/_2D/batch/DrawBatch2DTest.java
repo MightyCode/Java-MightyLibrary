@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchMaterial;
@@ -1094,5 +1095,148 @@ class DrawBatch2DTest {
         // The quad instance from byte 24: 24 / 52 is not a whole sprite instance, logged by the format below
         assertEquals(2 * 12 + DrawBatch2D.INSTANCE_BYTES, target.uploader.instanceBytes.get(0).remaining());
         assertEquals(24, target.uploader.lastSpriteInstanceByte);
+    }
+
+    // ---- Draws of triangles at once ----
+
+    private static final float[] TRIANGLE_POSITIONS = {0, 0, 2, 0, 2, 1, 0, 1};
+    private static final float[] TRIANGLE_TEXTURES = {0.1f, 0.2f, 0.3f, 0.2f, 0.3f, 0.4f, 0.1f, 0.4f};
+    private static final float[] TRIANGLE_COLORS = {1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0.5f, 1, 1, 1, 1};
+    private static final int[] TRIANGLE_INDICES = {0, 1, 2, 0, 2, 3};
+
+    // The same draw value by value, like vertex and index
+    private void trianglesByValues(int state, Matrix4f model, float[] textures, float[] colors, int color) {
+        batch.beginDraw(state);
+        for (int i = 0; i < 4; ++i) {
+            float x = TRIANGLE_POSITIONS[2 * i], y = TRIANGLE_POSITIONS[2 * i + 1];
+            batch.vertex(model.m00() * x + model.m10() * y + model.m30(), model.m01() * x + model.m11() * y + model.m31(),
+                    textures == null ? 0 : textures[2 * i], textures == null ? 0 : textures[2 * i + 1],
+                    colors == null ? color : BatchGeometry2D.PackRGBA(colors, 4 * i));
+        }
+        for (int index : TRIANGLE_INDICES)
+            batch.index(index);
+        batch.endDraw();
+    }
+
+    // Written at once: the bytes and indices of the draw written value by value, one run with its neighbors
+    @Test
+    void trianglesAtOnceAreTheDrawWrittenValueByValue() {
+        int a = state("a");
+        Matrix4f model = new Matrix4f().translate(3, 4, 0).rotateZ(0.3f).scale(2, 3, 1);
+        quad(a, 0);
+        trianglesByValues(a, model, TRIANGLE_TEXTURES, null, 0x11223344);
+        trianglesByValues(a, model, null, TRIANGLE_COLORS, 0);
+        batch.endView();
+        quad(a, 0);
+        batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, TRIANGLE_TEXTURES, null, 4, 0x11223344, TRIANGLE_INDICES,
+                6);
+        batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, null, TRIANGLE_COLORS, 4, 0, TRIANGLE_INDICES, 6);
+        batch.endView();
+
+        assertEquals(target.uploader.vertexBytes.get(0), target.uploader.vertexBytes.get(1));
+        assertArrayEquals(target.uploader.indexUploads.get(0), target.uploader.indexUploads.get(1));
+        assertEquals(List.of("apply a", "draw 0 18", "apply a", "draw 0 18"), draws());
+        assertEquals(3, batch.lastFrameDraws());
+    }
+
+    // An index outside of the vertices: refused, nothing written, the batch goes on
+    @Test
+    void trianglesWithAnIndexOutsideAreRefused() {
+        int a = state("a");
+        Matrix4f model = new Matrix4f();
+        quad(a, 0);
+        assertThrows(IllegalArgumentException.class, () -> batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, null,
+                null, 4, 0, new int[]{0, 1, 4}, 3));
+        assertThrows(IllegalArgumentException.class, () -> batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, null,
+                null, 4, 0, new int[]{0, -1, 2}, 3));
+        // Arrays shorter than the counts
+        assertThrows(IllegalArgumentException.class, () -> batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, null,
+                null, 5, 0, TRIANGLE_INDICES, 6));
+        assertEquals(1, batch.pendingDraws());
+        quad(a, 1);
+        batch.endView();
+
+        assertEquals(8, target.uploader.vertexUploads.get(0).length / 4);
+        assertEquals(12, target.uploader.indexUploads.get(0).length);
+        assertEquals(2, batch.lastFrameDraws());
+    }
+
+    @Test
+    void trianglesInTheMiddleOfADrawAreRefused() {
+        int a = state("a");
+        batch.beginDraw(a);
+        assertThrows(IllegalStateException.class, () -> batch.triangles(a, 0, 0f, new Matrix4f(), TRIANGLE_POSITIONS,
+                null, null, 4, 0, TRIANGLE_INDICES, 6));
+        batch.endDraw();
+    }
+
+    // A format of other values, or with instances: refused before any value, nothing written, the batch goes on
+    @Test
+    void trianglesInAFormatOfOtherValuesAreRefused() {
+        int a = state("a");
+        int line = state("l", LINE);
+        int dot = state("d", DOT);
+        Matrix4f model = new Matrix4f();
+        quad(a, 0);
+        assertThrows(IllegalArgumentException.class, () -> batch.triangles(line, 0, 0f, model, TRIANGLE_POSITIONS,
+                null, null, 4, 0, TRIANGLE_INDICES, 6));
+        assertThrows(IllegalArgumentException.class, () -> batch.triangles(dot, 0, 0f, model, TRIANGLE_POSITIONS,
+                null, null, 4, 0, TRIANGLE_INDICES, 6));
+        assertNull(batch.drawFormat());
+        assertEquals(1, batch.pendingDraws());
+        quad(a, 1);
+        batch.endView();
+
+        assertEquals(8, target.uploader.vertexUploads.get(0).length / 4);
+        assertEquals(12, target.uploader.indexUploads.get(0).length);
+        assertTrue(target.uploader.instanceBytes.isEmpty());
+        assertEquals(2, batch.lastFrameDraws());
+    }
+
+    // Another format of the values of SPRITE: written value by value, the same bytes as vertex and index
+    @Test
+    void trianglesInAnotherFormatOfTheSpriteValues() {
+        BatchFormat spriteValues = BatchFormat.builder("spriteValues")
+                .vertex("aPos", 2, EBatchAttributeType.FLOAT)
+                .vertex("inTexCoords", 2, EBatchAttributeType.FLOAT)
+                .vertex("inColor", 4, EBatchAttributeType.NORMALIZED_UBYTE)
+                .build();
+        int b = state("b", spriteValues);
+        Matrix4f model = new Matrix4f().translate(3, 4, 0).rotateZ(0.3f);
+        trianglesByValues(b, model, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 0);
+        batch.endView();
+        batch.triangles(b, 0, 0f, model, TRIANGLE_POSITIONS, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 4, 0,
+                TRIANGLE_INDICES, 6);
+        batch.endView();
+
+        assertEquals(target.uploader.vertexBytes.get(0), target.uploader.vertexBytes.get(1));
+        assertArrayEquals(target.uploader.indexUploads.get(0), target.uploader.indexUploads.get(1));
+        assertEquals(List.of("apply b", "draw spriteValues 0 6", "apply b", "draw spriteValues 0 6"), draws());
+    }
+
+    // Once the buffers have grown, a draw of triangles allocates nothing
+    @Test
+    void trianglesAtOnceAllocateNothing() {
+        com.sun.management.ThreadMXBean threads =
+                (com.sun.management.ThreadMXBean) java.lang.management.ManagementFactory.getThreadMXBean();
+        long thread = Thread.currentThread().getId();
+        Matrix4f model = new Matrix4f().translate(1, 2, 0);
+        for (int pass = 0; pass < 3; ++pass) {
+            long before = threads.getThreadAllocatedBytes(thread);
+            int a = state("a");
+            for (int i = 0; i < 2000; ++i)
+                batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 4, 0,
+                        TRIANGLE_INDICES, 6);
+            long allocated = threads.getThreadAllocatedBytes(thread) - before;
+            batch.endView();
+            target.uploader.vertexUploads.clear();
+            target.uploader.colorUploads.clear();
+            target.uploader.indexUploads.clear();
+            target.uploader.vertexBytes.clear();
+            log.clear();
+            // The first pass grows the buffers; the state asked each pass is a little
+            if (pass > 0)
+                assertTrue(allocated < 2_000, allocated + " bytes allocated by 2000 draws");
+        }
     }
 }

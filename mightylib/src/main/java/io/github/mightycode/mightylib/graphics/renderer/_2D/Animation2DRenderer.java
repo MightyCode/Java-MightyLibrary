@@ -175,11 +175,13 @@ public final class Animation2DRenderer extends MeshRenderer {
         if (!BatchGeometry2D.CanBatch(isDepthTest(), getMesh().getDrawMode()))
             return false;
 
-        int state = batchState(batch);
-        if (state < 0)
+        int place = batchPlace(batch);
+        if (place < 0)
             return false;
-        if (viewCulled(batch, state))
+        if (viewCulled(batch, place))
             return true;
+
+        int state = batchState(place);
 
         BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), positions, textures,
                 positions.length / 2, batchColor(), INDICES, INDICES.length);

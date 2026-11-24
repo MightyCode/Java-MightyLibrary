@@ -19,6 +19,11 @@
         </Or>
         <Bug pattern="VO_VOLATILE_INCREMENT,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE"/>
     </Match>
+    <!-- The fields of a Java Flight Recorder event are read by JFR (reflection) when it is committed. -->
+    <Match>
+        <Class name="io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchSendEvent"/>
+        <Bug pattern="URF_UNREAD_FIELD"/>
+    </Match>
     <!-- Public fields of pure data structures (decisions.md, guarded by PublicFieldsTest). -->
     <Match>
         <Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE"/>

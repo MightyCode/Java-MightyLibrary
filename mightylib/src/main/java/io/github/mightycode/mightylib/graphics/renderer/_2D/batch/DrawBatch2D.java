@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.graphics.renderer._2D.batch;
 
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
+import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchSendEvent;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchStateTable;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchBackend;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
@@ -492,6 +494,88 @@ public final class DrawBatch2D {
         endDraw();
     }
 
+    /**
+     * One draw of triangles at once (the draws of the renderers of the engine): vertexCount vertices, their positions
+     * by pairs transformed by model, their texture coordinates by pairs (null: 0, 0, the white texture), their colors
+     * as RGBA floats in 0..1 by 4 (null: color, RGBA in an int, for all), then indexCount indices of these vertices.
+     * Checked once for the whole draw; in BatchFormats.SPRITE written straight in the buffers, in another format of the
+     * same values (x, y, u, v, color) value by value like vertex.
+     * @throws IllegalArgumentException an index outside of the vertices, arrays too short, or a state whose format has
+     * other values or instances (nothing written)
+     * @throws IllegalStateException in the middle of another draw
+     */
+    @API(status = INTERNAL)
+    public void triangles(int state, int layer, float depth, Matrix4fc model, float[] positions, float[] textures,
+                          float[] colors, int vertexCount, int color, int[] triangleIndices, int indexCount) {
+        if (vertexCount < 0 || indexCount < 0 || positions.length < 2 * vertexCount
+                || (textures != null && textures.length < 2 * vertexCount)
+                || (colors != null && colors.length < 4 * vertexCount) || triangleIndices.length < indexCount)
+            throw new IllegalArgumentException("A draw of " + vertexCount + " vertices and " + indexCount
+                    + " indices with arrays too short");
+
+        beginDraw(state, layer, depth);
+        if (drawFormat != BatchFormats.SPRITE && !drawFormat.hasSpriteValues()) {
+            // Checked before any value: a value refused by put would leave the draw open
+            inDraw = false;
+            dropDraw();
+            throw new IllegalArgumentException("A draw of triangles in the batch format " + drawFormat.name()
+                    + ": its vertices are not x, y, u, v, color, or it has instances");
+        }
+        float m00 = model.m00(), m10 = model.m10(), m30 = model.m30();
+        float m01 = model.m01(), m11 = model.m11(), m31 = model.m31();
+        if (drawFormat != BatchFormats.SPRITE) {
+            for (int i = 0; i < vertexCount; ++i) {
+                float x = positions[2 * i], y = positions[2 * i + 1];
+                put(m00 * x + m10 * y + m30, m01 * x + m11 * y + m31, textures == null ? 0f : textures[2 * i],
+                        textures == null ? 0f : textures[2 * i + 1]);
+                putColor(colors == null ? color : BatchGeometry2D.PackRGBA(colors, 4 * i));
+            }
+        } else {
+            int bytes = vertexCount * VERTEX_BYTES;
+            if (vertexBytes + bytes > vertices.capacity())
+                vertices = grow(vertices, vertexBytes, Math.max(vertices.capacity() * 2, vertexBytes + bytes));
+
+            ByteBuffer out = vertices;
+            int at = vertexBytes;
+            int packed = LITTLE_ENDIAN ? Integer.reverseBytes(color) : color;
+            for (int i = 0; i < vertexCount; ++i, at += VERTEX_BYTES) {
+                float x = positions[2 * i], y = positions[2 * i + 1];
+                out.putFloat(at, m00 * x + m10 * y + m30);
+                out.putFloat(at + 4, m01 * x + m11 * y + m31);
+                out.putFloat(at + 8, textures == null ? 0f : textures[2 * i]);
+                out.putFloat(at + 12, textures == null ? 0f : textures[2 * i + 1]);
+                if (colors != null) {
+                    int rgba = BatchGeometry2D.PackRGBA(colors, 4 * i);
+                    packed = LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba;
+                }
+                // In memory R, G, B, A: read as 4 normalized bytes
+                out.putInt(at + 16, packed);
+            }
+            vertexBytes = at;
+            drawVertexCount = vertexCount;
+        }
+
+        if (indexCount + this.indexCount > indices.capacity())
+            indices = grow(indices, this.indexCount, Math.max(indices.capacity() * 2, this.indexCount + indexCount));
+        IntBuffer out = indices;
+        int first = drawFirstVertex, at = this.indexCount;
+        // Negative when any index is outside of 0 .. vertexCount - 1
+        int outside = 0;
+        for (int i = 0; i < indexCount; ++i) {
+            int index = triangleIndices[i];
+            outside |= index | (vertexCount - 1 - index);
+            out.put(at + i, first + index);
+        }
+        if (outside < 0) {
+            inDraw = false;
+            dropDraw();
+            throw new IllegalArgumentException("An index of a draw of " + vertexCount + " vertices is outside of them");
+        }
+
+        this.indexCount = at + indexCount;
+        endDraw();
+    }
+
     private void addRun(int state, int first, int count) {
         if (runCount == runStates.length) {
             int size = runStates.length * 2;
@@ -677,12 +761,10 @@ public final class DrawBatch2D {
         if (part < 0)
             return -1;
 
-        // The matrices of the camera themselves (the getters of matrices give copies)
-        Matrix4f projection = (Matrix4f) camera.getProjection().getObject();
-        Matrix4f view = (Matrix4f) camera.getView().getObject();
+        // The values of the matrices of the camera themselves (the getters of matrices give copies), tracked
         IView current = Views.current();
         boolean linear = current.engine().colors().resolve(material.getColorSpace(), current.colorSpace()).isLinear();
-        return stateTable.state(part, stateTable.camera(projection, view), linear);
+        return stateTable.state(part, stateTable.camera(camera.getProjection(), camera.getView()), linear);
     }
 
     /**
@@ -857,8 +939,15 @@ public final class DrawBatch2D {
 
         sending = true;
         try {
-            if (drawCount > 0)
-                drawRuns();
+            if (drawCount > 0) {
+                BatchSendEvent sendEvent = new BatchSendEvent();
+                sendEvent.begin();
+                long sentBytes = drawRuns();
+                if (sendEvent.shouldCommit()) {
+                    sendEvent.setSent(drawCount, runCount, sentBytes);
+                    sendEvent.commit();
+                }
+            }
         } finally {
             sending = false;
             vertexBytes = 0;
@@ -878,7 +967,8 @@ public final class DrawBatch2D {
         }
     }
 
-    private void drawRuns() {
+    // Returns the bytes sent
+    private long drawRuns() {
         IntBuffer drawnIndices = indices;
         int drawnInstanceBytes = instanceBytes;
         boolean sorted = sortKey != null;
@@ -938,6 +1028,7 @@ public final class DrawBatch2D {
         ++current.flushes;
         EngineStats.countBatchFlushes(runCount);
         EngineStats.countBatchedDraws(drawCount);
+        return sentBytes;
     }
 
     private boolean hasRegularRun() {

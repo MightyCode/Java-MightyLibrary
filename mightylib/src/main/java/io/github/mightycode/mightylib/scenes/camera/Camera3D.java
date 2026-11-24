@@ -74,11 +74,7 @@ public final class Camera3D extends Camera {
     }
 
     @Override
-    public void updateView() {
-        computeView();
-    }
-
-    private void computeView() {
+    protected void writeView() {
         view.identity();
         view.lookAt(camPos, camPos.add(camFront, new Vector3f()), camUp);
     }
@@ -101,7 +97,7 @@ public final class Camera3D extends Camera {
         camFront.z = (float) (Math.cos(MightyMath.toRads(pitch)) * yawSin);
         camFront.normalize();
 
-        computeView();
+        updateView();
     }
 
     public float getYaw() {
@@ -123,7 +119,7 @@ public final class Camera3D extends Camera {
     }
 
     @Override
-    public void updateProjection() {
+    protected void writeProjection() {
         if (viewMode == EViewMode.Perspective)
             projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
         else
@@ -144,25 +140,25 @@ public final class Camera3D extends Camera {
         camPos.y = newPos.y;
         camPos.z = newPos.z;
 
-        computeView();
+        updateView();
     }
 
     public void setX(float x) {
         camPos.x = x;
 
-        computeView();
+        updateView();
     }
 
     public void setY(float y) {
         camPos.y = y;
 
-        computeView();
+        updateView();
     }
 
     public void setZ(float z) {
         camPos.z = z;
 
-        computeView();
+        updateView();
     }
 
     public void moveX(float value){
@@ -181,14 +177,14 @@ public final class Camera3D extends Camera {
         camPos.x += speed * yawSin;
         camPos.z += speed * -yawCos;
 
-        computeView();
+        updateView();
     }
 
     public void speedAngZ(float speed) {
         camPos.x += speed * -yawCos;
         camPos.z += speed * -yawSin;
 
-        computeView();
+        updateView();
     }
 
     public Camera3D setSpeed(Vector3f value) {

@@ -26,7 +26,7 @@ final class ConsoleView implements IView {
         }
 
         @Override
-        public void updateProjection() {
+        protected void writeProjection() {
             projection.setOrtho(0, Math.max(1, windowInfo.getSizeRef().x), Math.max(1, windowInfo.getSizeRef().y), 0, -10, 10);
         }
 

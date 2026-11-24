@@ -8,6 +8,19 @@ package io.github.mightycode.mightylib.main;
  */
 public final class Views {
     private static final ThreadLocal<IView> CURRENT = new ThreadLocal<>();
+    // The view last set and its thread, in one immutable object: read at each draw without the ThreadLocal; a thread
+    // that reads the entry of another one sees its thread and asks the ThreadLocal
+    private static Last last;
+
+    private static final class Last {
+        final Thread thread;
+        final IView view;
+
+        Last(Thread thread, IView view) {
+            this.thread = thread;
+            this.view = view;
+        }
+    }
 
     private Views() {}
 
@@ -39,10 +52,11 @@ public final class Views {
             CURRENT.remove();
         else
             CURRENT.set(view);
+        last = new Last(Thread.currentThread(), view);
     }
 
     public static IView current() {
-        IView view = CURRENT.get();
+        IView view = currentOrNull();
         if (view == null)
             throw new IllegalStateException("No current view: this code must run in the engine (main thread, "
                     + "inside a scene or a MainThread task), or be given the view explicitly");
@@ -52,6 +66,9 @@ public final class Views {
 
     // Null when there is none: for the code that only passes the view along (MainThread, Commands)
     public static IView currentOrNull() {
+        Last entry = last;
+        if (entry != null && entry.thread == Thread.currentThread())
+            return entry.view;
         return CURRENT.get();
     }
 
