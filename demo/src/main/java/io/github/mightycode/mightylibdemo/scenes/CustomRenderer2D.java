@@ -7,11 +7,12 @@ import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_P;
 
 /**
  * Shows how to draw custom geometry with a custom shader: a star (triangle fan with a color per vertex)
@@ -49,6 +50,7 @@ public class CustomRenderer2D extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(20, 20, 40, 1f);
 
         Vector2i size = context().getWindow().getInfo().getSizeRef();
@@ -116,7 +118,7 @@ public class CustomRenderer2D extends Scene {
         if (inputManager.inputPressed(ActionId.ESCAPE))
             sceneManager().setNewScene(new MenuScene(), new String[]{});
 
-        if (keyboardManager.keyPressed(GLFW_KEY_D)) {
+        if (keyboardManager.keyPressed(GLFW_KEY_P)) {
             depthTest = !depthTest;
             applyDepth();
         }

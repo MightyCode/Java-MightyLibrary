@@ -5,12 +5,14 @@ import io.github.mightycode.mightylib.graphics.shader.IShaderService;
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_I;
 
 /**
  * The defines of the shaders. Two entries of resources/shaders/shaders.json on the same files: definesDemo2D without
@@ -31,13 +33,16 @@ public class ShaderDefines2D extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(0.12f, 0.12f, 0.16f);
         Vector2f size = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
 
         plain = square("definesDemo2D", new Vector2f(size.x / 2 - 200, size.y / 2 + 40));
         tinted = square("definesDemoTinted2D", new Vector2f(size.x / 2 + 200, size.y / 2 + 40));
 
+        Camera2D hud = camera2D().copy();
         help = new Text();
+        help.setReferenceCamera(hud);
         help.setFontSize(26)
                 .setReference(EDirection.LeftUp)
                 .setAlignment(ETextAlignment.Left)
@@ -60,7 +65,7 @@ public class ShaderDefines2D extends Scene {
         boolean inverted = shownInverted;
         return "Same GLSL files, two entries of shaders.json.\n"
                 + "Left: definesDemo2D, no define. Right: definesDemoTinted2D, define TINT of its entry.\n"
-                + "D: global define " + INVERT + " (" + (inverted ? "set" : "not set") + "), every shader is read again.\n"
+                + "I: global define " + INVERT + " (" + (inverted ? "set" : "not set") + "), every shader is read again.\n"
                 + "ESCAPE: menu";
     }
 
@@ -72,7 +77,7 @@ public class ShaderDefines2D extends Scene {
             sceneManager().setNewScene(new MenuScene(), new String[]{});
 
         IShaderService shaders = engine().shaders();
-        if (context().getKeyboardManager().keyPressed(GLFW_KEY_D)) {
+        if (context().getKeyboardManager().keyPressed(GLFW_KEY_I)) {
             if (shaders.defines().containsKey(INVERT)) {
                 shaders.removeDefine(INVERT);
             } else {

@@ -12,6 +12,7 @@ import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 
@@ -56,6 +57,7 @@ public class PathfindingScene2D extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this, ActionId.MIDDLE_CLICK);
         setClearColor(0.1f, 0.1f, 0.12f);
         context().getMouseManager().setCursor(true);
 

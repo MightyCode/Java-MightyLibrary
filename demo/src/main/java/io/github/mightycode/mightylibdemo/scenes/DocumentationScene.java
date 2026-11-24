@@ -13,6 +13,7 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.MightyMath;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 import org.json.JSONArray;
@@ -117,6 +118,7 @@ public class DocumentationScene extends Scene {
      */
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         // The configuration comes from the JSON resource of the batch: change the file, not the code
         JSONObject config = resources().getResource(JSONFile.class, "documentationScene").getObject();
 

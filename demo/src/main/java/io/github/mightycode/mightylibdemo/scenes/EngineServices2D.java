@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.services.RunningService;
 import io.github.mightycode.mightylib.sounds.SilentSoundService;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import io.github.mightycode.mightylibdemo.main.TickCounterService;
 import org.joml.Vector2f;
@@ -25,6 +26,7 @@ public class EngineServices2D extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(0.12f, 0.16f, 0.2f);
         Vector2f windowSize = new Vector2f(context().getWindow().getInfo().getVirtualSizeRef());
 

@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
@@ -27,6 +28,7 @@ public class TextPaddingScene extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(0.1f, 0.1f, 0.12f);
 
         texts = new Text[]{

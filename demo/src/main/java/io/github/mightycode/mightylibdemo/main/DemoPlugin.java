@@ -181,6 +181,7 @@ public class DemoPlugin implements IPlugin {
 
                 .action(ActionId.LEFT_CLICK, new InputSimple(GLFW_MOUSE_BUTTON_1, EInputType.Mouse))
                 .action(ActionId.RIGHT_CLICK, new InputSimple(GLFW_MOUSE_BUTTON_2, EInputType.Mouse))
+                .action(ActionId.MIDDLE_CLICK, new InputSimple(GLFW_MOUSE_BUTTON_3, EInputType.Mouse))
 
                 // 3D moves from the actions above (keys or left stick and triggers, progressive) : no double counting
                 .axis(AxisId.MOVE_RIGHT_3D, new AxisButtons(ActionId.MOVE_LEFT, ActionId.MOVE_RIGHT))

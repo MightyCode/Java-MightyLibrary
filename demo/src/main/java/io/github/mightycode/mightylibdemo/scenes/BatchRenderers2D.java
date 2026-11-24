@@ -16,6 +16,8 @@ import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.resources.map.TileMap;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
+import io.github.mightycode.mightylib.scenes.camera.cameraComponents.FreeCamera2DComponent;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -34,8 +36,8 @@ import static org.lwjgl.glfw.GLFW.*;
 /**
  * The renderers that go through the 2D batch: a long paragraph and colored texts, a tile map larger than the screen
  * seen by a moving camera (only its visible tiles are drawn), several animations, and the debug renderers (nodes,
- * graph, matrix). M changes the mode of the batch (off, orphan, ring, instanced) to compare the pictures, Space
- * stops the camera, Up and Down zoom. The counters are those of the command stats.
+ * graph, matrix). M changes the mode of the batch (off, orphan, ring, instanced) to compare the pictures. The camera
+ * follows a path until Space stops it or you move it (Z Q S D, arrows, right drag, wheel), Space starts it again. The counters are those of the command stats.
  */
 public class BatchRenderers2D extends Scene {
     private static final int ANIMATIONS = 6;
@@ -50,8 +52,8 @@ public class BatchRenderers2D extends Scene {
     private Camera2D hudCamera;
 
     private float time;
-    private float zoom = 1f;
     private boolean cameraMoves = true;
+    private FreeCamera2DComponent freeCamera;
     private float counterTimer;
     private final Vector2f cameraPosition = new Vector2f();
     // The mode of the batch of the engine when the scene starts, given back when it ends (M changes it)
@@ -67,6 +69,7 @@ public class BatchRenderers2D extends Scene {
         setClearColor(52, 189, 235, 1f);
         modeAtLaunch = engine().batch2DMode();
         hudCamera = camera2D().copy();
+        freeCamera = DemoCamera.free(this);
 
         mapRenderer = new LayersTileMapRenderer("texture2D", false);
         mapRenderer.setTileMap(resources().getResource(TileMap.class, "map"));
@@ -105,7 +108,7 @@ public class BatchRenderers2D extends Scene {
         help = new Text();
         help.setFontSize(18).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 10));
         help.setReferenceCamera(hudCamera);
-        help.setText("M : mode of the batch   Space : stop the camera   Up/Down : zoom   ESC : menu");
+        help.setText("M : mode of the batch   Space : camera path   ZQSD/arrows, right drag, wheel : move and zoom   ESC : menu");
         counters = new Text();
         counters.setFontSize(16).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 36));
         counters.setReferenceCamera(hudCamera);
@@ -162,15 +165,14 @@ public class BatchRenderers2D extends Scene {
         }
         if (keyboard.keyPressed(GLFW_KEY_SPACE))
             cameraMoves = !cameraMoves;
-        if (keyboard.keyPressed(GLFW_KEY_UP))
-            zoom = Math.min(4f, zoom * 1.25f);
-        if (keyboard.keyPressed(GLFW_KEY_DOWN))
-            zoom = Math.max(0.25f, zoom / 1.25f);
+        // The player takes the camera from the path
+        if (freeCamera.isInteracting())
+            cameraMoves = false;
 
-        if (cameraMoves)
+        if (cameraMoves) {
             time += GameTime.DeltaTime();
-        camera2D().setZoomLevel(zoom);
-        camera2D().setPos(cameraPosition.set((float) Math.sin(time * 0.4) * 500, (float) Math.cos(time * 0.3) * 250));
+            camera2D().setPos(cameraPosition.set((float) Math.sin(time * 0.4) * 500, (float) Math.cos(time * 0.3) * 250));
+        }
 
         for (Animation2DRenderer animation : animations)
             animation.update();

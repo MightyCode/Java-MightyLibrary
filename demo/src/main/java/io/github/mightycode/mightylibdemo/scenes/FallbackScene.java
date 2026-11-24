@@ -11,6 +11,7 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.sounds.SoundSourceCreationInfo;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 
@@ -57,6 +58,7 @@ public class FallbackScene extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(0.2f, 0.2f, 0.25f);
 
         unknownTexture = square("texture2D", "missingTexture", 0);

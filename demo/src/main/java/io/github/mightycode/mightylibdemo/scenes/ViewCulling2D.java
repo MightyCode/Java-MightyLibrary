@@ -25,6 +25,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylib.utils.math.geometry.Polygon;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
@@ -41,7 +42,7 @@ import static org.lwjgl.glfw.GLFW.*;
  * The view culling of the 2D draws: a world about twenty screens large filled with every batched renderer (rectangles,
  * animations, vector shapes with strokes in world units and in pixels, polylines, polygons, points, texts, a tile
  * map, meshes), a few of them out of the culling (setViewCulling(false)) or with a margin (setViewCullMargin). The
- * camera moves with the arrows, zooms with + and -, turns with Q and E. C turns the culling of the engine on or off,
+ * camera is the free camera of the demo (Z Q S D, arrows, right drag, wheel), + and - zoom too, Q and E turn it. C turns the culling of the engine on or off,
  * I reduces its test zone by 200 pixels (what is closer to the edges disappears: nothing may disappear farther),
  * B draws the box of each tested draw (green drawn, red culled), F freezes the boxes of the views (move the camera
  * to see what the frozen box would cull). The counters are those of the command stats and batch.
@@ -56,9 +57,7 @@ public class ViewCulling2D extends Scene {
 
     private float counterTimer;
     private float rotation;
-    private float zoom = 1f;
     private boolean culling = true, inset, boxes, frozen;
-    private final Vector2f position = new Vector2f();
 
     @Override
     protected String[] getInvolvedBatch() {
@@ -186,12 +185,13 @@ public class ViewCulling2D extends Scene {
         for (int i = 5; i < 10; ++i)
             items.get(i).setViewCullMargin(300);
 
-        position.set(width * 0.5f - screen.x * 0.5f, height * 0.5f - screen.y * 0.5f);
+        camera2D().setPos(new Vector2f(width * 0.5f - screen.x * 0.5f, height * 0.5f - screen.y * 0.5f));
+        DemoCamera.free(this);
 
         help = new Text();
         help.setFontSize(16).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 10));
         help.setReferenceCamera(hudCamera);
-        help.setText("Arrows : move   + - : zoom   Q E : turn   C : culling   I : test zone -" + INSET
+        help.setText("ZQSD/arrows, right drag : move   wheel, + - : zoom   Q E : turn   C : culling   I : test zone -" + INSET
                 + " px   B : boxes   F : freeze   ESC : menu");
         counters = new Text();
         counters.setFontSize(16).setReference(EDirection.LeftUp).setPosition(new Vector2f(10, 34));
@@ -229,19 +229,12 @@ public class ViewCulling2D extends Scene {
         }
 
         float delta = GameTime.DeltaTime();
-        float speed = 700f * delta / zoom;
-        if (keyboard.getKeyState(GLFW_KEY_LEFT))
-            position.x -= speed;
-        if (keyboard.getKeyState(GLFW_KEY_RIGHT))
-            position.x += speed;
-        if (keyboard.getKeyState(GLFW_KEY_UP))
-            position.y -= speed;
-        if (keyboard.getKeyState(GLFW_KEY_DOWN))
-            position.y += speed;
+        // The free camera (updated with the scene) moves and zooms with the wheel; + and - zoom too
+        float zoom = camera2D().getZoomLevel().x;
         if (keyboard.getKeyState(GLFW_KEY_EQUAL) || keyboard.getKeyState(GLFW_KEY_KP_ADD))
-            zoom = Math.min(8f, zoom * (1f + delta));
+            camera2D().setZoomLevel(Math.min(8f, zoom * (1f + delta)));
         if (keyboard.getKeyState(GLFW_KEY_MINUS) || keyboard.getKeyState(GLFW_KEY_KP_SUBTRACT))
-            zoom = Math.max(0.1f, zoom / (1f + delta));
+            camera2D().setZoomLevel(Math.max(0.1f, zoom / (1f + delta)));
         if (keyboard.getKeyState(GLFW_KEY_Q))
             rotation -= delta;
         if (keyboard.getKeyState(GLFW_KEY_E))
@@ -265,8 +258,6 @@ public class ViewCulling2D extends Scene {
         }
 
         camera2D().setRotation(rotation);
-        camera2D().setZoomLevel(zoom);
-        camera2D().setPos(position);
 
         for (Renderer item : items) {
             if (item instanceof Animation2DRenderer)

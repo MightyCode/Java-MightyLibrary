@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylib.graphics.renderer.EBlendMode;
 import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer.Mesh;
@@ -11,6 +12,7 @@ import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -61,6 +63,7 @@ public class SharedMaterial2D extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(225, 225, 232, 1f);
 
         // The grid of sprites: one material, retained by each of them
@@ -118,9 +121,12 @@ public class SharedMaterial2D extends Scene {
             blendLabels.add(label(14, new Vector2f(715 + i * 113, 232)).setText(modes[i].name()));
         }
 
+        Camera2D hud = camera2D().copy();
         help = label(20, new Vector2f(640, 20));
+        help.setReferenceCamera(hud);
         help.setText("T : texture of the shared material   B : its blend mode   ESC : menu");
         counters = label(16, new Vector2f(640, 650));
+        counters.setReferenceCamera(hud);
     }
 
     private static Text label(int size, Vector2f position) {

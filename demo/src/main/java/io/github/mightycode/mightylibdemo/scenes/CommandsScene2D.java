@@ -15,6 +15,7 @@ import io.github.mightycode.mightylib.utils.enginecommand.syntax.Option;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
+import io.github.mightycode.mightylibdemo.main.DemoCamera;
 import io.github.mightycode.mightylibdemo.main.ActionId;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -67,6 +68,7 @@ public class CommandsScene2D extends Scene {
 
     @Override
     public void launch(String[] args) {
+        DemoCamera.free(this);
         setClearColor(0.12f, 0.12f, 0.16f);
 
         Vector2i windowSize = context().getWindow().getInfo().getSizeCopy();
