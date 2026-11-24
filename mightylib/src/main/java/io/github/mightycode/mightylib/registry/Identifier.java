@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.registry;
 
-import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -16,10 +15,13 @@ public final class Identifier implements Comparable<Identifier> {
 
     private final String namespace;
     private final String path;
+    // Computed once: an identifier is a key of maps read at each draw (services), without allocation
+    private final int hash;
 
     private Identifier(String namespace, String path) {
         this.namespace = namespace;
         this.path = path;
+        hash = 31 * namespace.hashCode() + path.hashCode();
     }
 
     public static Identifier of(String namespace, String path) {
@@ -64,7 +66,7 @@ public final class Identifier implements Comparable<Identifier> {
 
     @Override
     public int hashCode() {
-        return Objects.hash(namespace, path);
+        return hash;
     }
 
     @Override
