@@ -109,19 +109,33 @@ public final class Animation {
     public AnimationData getData(){ return data(); }
 
 
-    public Vector4f currentTexturePosition() {
-        Vector4f computedPosition = new Vector4f(0, 0, 0, 0);
+    /*
+     * Texels kept inside each side of a frame. The frames of a sheet touch each other (no margin): sampling at the
+     * edge of a quad can read up to half a texel outside its frame, which drew a line of the neighbor frame above the
+     * animations. Cost: the outer rows and columns of a frame are drawn half as wide as the others (a margin in the
+     * sheets would avoid it, docs/later.md).
+     */
+    static final float FRAME_INSET = 0.5f;
 
+    public Vector4f currentTexturePosition() {
         FrameData data = data().getFrame(currentFrame);
-        Vector4i texturePositions = data.getFramePositionCopy();
         TextureData texture = texture();
 
-        computedPosition.x = (texturePositions.x) / (texture.getWidth() * 1.0f);
-        computedPosition.y = (texturePositions.z + texturePositions.x) / (texture.getWidth() * 1.0f);
-        computedPosition.z = (texturePositions.y) / (texture.getHeight() * 1.0f);
-        computedPosition.w = (texturePositions.w + texturePositions.y) / (texture.getHeight() * 1.0f);
+        return FrameTexturePosition(data.getFramePositionCopy(), texture.getWidth(), texture.getHeight(),
+                new Vector4f());
+    }
 
-        return computedPosition;
+    /**
+     * Texture coordinates of a frame (x, y, width, height in pixels) of a sheet of the given size, FRAME_INSET inside
+     * each side: left, right, top, bottom in out.
+     */
+    static Vector4f FrameTexturePosition(Vector4i frame, int sheetWidth, int sheetHeight, Vector4f out) {
+        float width = sheetWidth, height = sheetHeight;
+        // A frame thinner than two insets keeps its center
+        float insetX = Math.min(FRAME_INSET, frame.z * 0.5f), insetY = Math.min(FRAME_INSET, frame.w * 0.5f);
+
+        return out.set((frame.x + insetX) / width, (frame.x + frame.z - insetX) / width,
+                (frame.y + insetY) / height, (frame.y + frame.w - insetY) / height);
     }
 
 
