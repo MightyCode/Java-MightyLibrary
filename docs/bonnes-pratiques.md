@@ -19,7 +19,7 @@ Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill 
    *Vérification* : `grep -n -i -E "si les mesures|si un vrai jeu|seulement si" docs/current.md` est vide ; le point en cours avance d'une revue à l'autre.
 7. **Surface de l'API décidée avant le premier jar** : chaque package de `mightylib` a son statut (`package-info`, `@API` : `STABLE`, `EXPERIMENTAL`, `INTERNAL`), toute classe publique concrète est `final` sauf les classes extensibles choisies (`ExtensibleClasses`), dont chaque accroche a sa Javadoc courte. Tout ce qui est public est un engagement. Vérification : `ApiStatusTest`, `ModuleDescriptorTest` et `ExtensionFieldsTest` ; une nouvelle classe publique est `final`, un nouveau package a son `package-info`, une nouvelle classe extensible entre dans `ExtensibleClasses` avec ses accroches documentées.
    *Vérification* : la classification couvre les packages ajoutés depuis la dernière revue. Les classes extensibles choisies n'ont aucun champ `protected` (`ExtensionFieldsTest`).
-8. **Le code ancien gagne des tests quand on le touche** (`network/`, GUI, `DataFolder`, loaders maison, algorithmes) : c'est là que se cachent les bugs.
+8. **Le code ancien gagne des tests quand on le touche** (`network/`, GUI, loaders maison, algorithmes) : c'est là que se cachent les bugs.
    *Vérification* : les fichiers anciens modifiés dans la semaine ont gagné un test ou une vérification en jeu.
 
 ## Qualité du code
