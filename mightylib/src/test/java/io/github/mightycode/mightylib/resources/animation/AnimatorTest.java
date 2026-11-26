@@ -150,11 +150,36 @@ class AnimatorTest {
     }
 
     @Test
+    void aFrameChangeIsSeenOnlyUntilTheLateUpdate() {
+        addBoth();
+        // The first frame, seen once
+        assertTrue(animator.isFrameChanged());
+        animator.lateUpdate();
+        assertFalse(animator.isFrameChanged());
+
+        animator.update(FIRST / 2);
+        assertFalse(animator.isFrameChanged());
+        animator.update(FIRST / 2);
+        assertTrue(animator.isFrameChanged());
+        animator.lateUpdate();
+        assertFalse(animator.isFrameChanged());
+
+        // Back to the first frame of a loop: a change
+        animator.setCurrentAnimation(RUN, false);
+        animator.update(SECOND);
+        animator.lateUpdate();
+        animator.update(SECOND);
+        assertEquals(0, animator.getCurrentAnimation().getCurrentFrame());
+        assertTrue(animator.isFrameChanged());
+    }
+
+    @Test
     void clearRemovesTheAnimations() {
         addBoth();
         animator.clear();
 
         assertNull(animator.getCurrentAnimation());
+        assertNull(animator.getCurrentName());
         animator.setCurrentAnimation(WALK, false);
         assertNull(animator.getCurrentAnimation());
     }

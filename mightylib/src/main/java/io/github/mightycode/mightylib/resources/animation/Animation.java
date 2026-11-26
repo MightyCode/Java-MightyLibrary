@@ -45,6 +45,8 @@ public final class Animation {
     public void init(AnimationData animationData, boolean isLooping){
         this.animationData = animationData;
         this.looping = isLooping;
+        // The data usable now: the first update does not restart it again (a frame change seen twice)
+        usedData = resources.usable(AnimationData.class, animationData);
 
         restart();
     }
@@ -87,8 +89,9 @@ public final class Animation {
             if (currentFrame + 1 < data.frameNumber()) {
                 ++currentFrame;
             } else {
+                // The time past the end goes on in the next loop
                 if (looping)
-                    restart();
+                    currentFrame = 0;
                 else
                     animationFinished = true;
             }

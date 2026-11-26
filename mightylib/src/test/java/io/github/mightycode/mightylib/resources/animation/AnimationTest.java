@@ -78,6 +78,20 @@ class AnimationTest {
     }
 
     @Test
+    void theTimePastTheEndOfALoopGoesOnInTheNextOne() throws InterruptedException {
+        Animation animation = walk(true);
+        // Three loops and the first frame in one update
+        animation.update(3 * WALK_TIME + FIRST);
+        assertEquals(1, animation.getCurrentFrame());
+
+        // Past the end by half the first frame: halfway through it
+        animation.update(SECOND + THIRD + FIRST / 2);
+        assertEquals(0, animation.getCurrentFrame());
+        animation.update(FIRST / 2);
+        assertEquals(1, animation.getCurrentFrame());
+    }
+
+    @Test
     void withoutLoopItEndsOnTheLastFrame() throws InterruptedException {
         Animation animation = walk(false);
         animation.update(FIRST + SECOND + THIRD / 2);

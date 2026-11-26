@@ -80,6 +80,24 @@ class AnimationDataTest {
     }
 
     @Test
+    void aFrameTimeMustBeGreaterThanZero() {
+        // A time of 0 or less (or not finite) would never let the player leave the frame
+        for (String time : new String[]{"0", "-1", "-0.0", "NaN", "Infinity"}) {
+            ResourceException error = assertThrows(ResourceException.class, () -> frame("0,0,1,1,0,0," + time), time);
+            assertTrue(error.getMessage().contains("frame time"), error.getMessage());
+            assertTrue(error.getMessage().contains("line 1"), error.getMessage());
+        }
+        assertEquals(0.001f, frame("0,0,1,1,0,0,0.001").getFrameTime());
+    }
+
+    @Test
+    void anAnimationFileWithAFrameOfNoTimeIsRefused() {
+        ResourceException error = assertThrows(ResourceException.class,
+                () -> load("hero\n2\n0,0,1,1,0,0,0.5\n1,0,1,1,0,0,0\n"));
+        assertTrue(error.getMessage().contains("walk.anim"), error.getMessage());
+    }
+
+    @Test
     void animationFileGivesTheTextureAndTheFrames() throws IOException {
         AnimationData data = load("hero\n2\n0,0,16,16,8,15,0.1\n16,0,16,16,8,14,0.2\n");
 

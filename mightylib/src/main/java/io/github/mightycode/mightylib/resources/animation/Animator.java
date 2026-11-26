@@ -34,6 +34,7 @@ public final class Animator {
     public void clear(){
         animations.clear();
         currentAnimation = null;
+        currentAnimationName = null;
     }
 
 
@@ -53,8 +54,10 @@ public final class Animator {
         currentAnimation.update(seconds);
     }
 
+    // After the use of the changes of the tick (animationChanged, isFrameChanged): they are seen once
     public void lateUpdate(){
-
+        if (currentAnimation != null)
+            currentAnimation.lateUpdate();
         animationChanged = false;
     }
 
