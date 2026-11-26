@@ -8,6 +8,33 @@ import static io.github.mightycode.mightylib.utils.math.geometry.EDirection.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DirectionTest {
+    // Offset of the left top corner of a box of 20 x 10 from its point of reference (y goes down)
+    private static Vector2f anchor(EDirection reference) {
+        return Direction.AnchorOffset(reference, 20, 10, new Vector2f(7, 7));
+    }
+
+    @Test
+    void theAnchorOffsetPutsTheReferenceAtItsCornerOrCenter() {
+        assertEquals(new Vector2f(0, 0), anchor(LeftUp));
+        assertEquals(new Vector2f(-10, 0), anchor(Up));
+        assertEquals(new Vector2f(-20, 0), anchor(RightUp));
+        assertEquals(new Vector2f(0, -5), anchor(Left));
+        assertEquals(new Vector2f(-10, -5), anchor(None));
+        assertEquals(new Vector2f(-20, -5), anchor(Right));
+        assertEquals(new Vector2f(0, -10), anchor(LeftDown));
+        assertEquals(new Vector2f(-10, -10), anchor(Down));
+        assertEquals(new Vector2f(-20, -10), anchor(RightDown));
+        // Undefined: the left top corner
+        assertEquals(new Vector2f(0, 0), anchor(Undef));
+    }
+
+    @Test
+    void theAnchorOffsetIsWrittenInTheGivenVector() {
+        Vector2f out = new Vector2f();
+        assertSame(out, Direction.AnchorOffset(None, 3, 5, out));
+        assertEquals(new Vector2f(-1.5f, -2.5f), out);
+    }
+
     @Test
     void noneIsNeutralWhenAddingDirections() {
         for (EDirection direction : EDirection.values()) {

@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
 import io.github.mightycode.mightylib.graphics.game.LayersTileMapRenderer;
+import io.github.mightycode.mightylib.graphics.game.TileMapRenderer;
 import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.renderer.RenderState;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
@@ -11,9 +12,11 @@ import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.test.MightySceneTest;
 import io.github.mightycode.mightylib.test.SceneRunner;
+import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylibdemo.main.DemoTestConfig;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
+import org.joml.Vector3f;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.lwjgl.BufferUtils;
@@ -80,6 +83,94 @@ class TileMapBatchGLTest {
         return drawn;
     }
 
+    // Puts the point of the map (in parts of its size) at the center of the screen, with this zoom and rotation
+    private static void look(Camera2D camera, Vector2i screen, Vector2f mapSize, float[] view) {
+        // screen = zoom * (rotation * world - position): the point at the center of the screen
+        camera.setRotation(view[3]);
+        camera.setZoomLevel(view[2]);
+        float x = view[0] * mapSize.x, y = view[1] * mapSize.y;
+        float cos = (float) Math.cos(view[3]), sin = (float) Math.sin(view[3]);
+        camera.setPos(new Vector2f(cos * x - sin * y - screen.x * 0.5f / view[2],
+                sin * x + cos * y - screen.y * 0.5f / view[2]));
+    }
+
+    private static void place(LayersTileMapRenderer map, EDirection reference, Vector2f position) {
+        for (String category : map.getCategories()) {
+            TileMapRenderer renderer = map.getTileMapRenderer(category);
+            renderer.setReference(reference);
+            renderer.setPosition(new Vector3f(position, 0));
+        }
+    }
+
+    /*
+     * A map of reference None at the center of the map of reference LeftUp: the same picture, alone and batched, and
+     * the same tiles written (the culling follows the offset), seen whole or in part.
+     */
+    @Test
+    void aMapOfReferenceNoneIsTheMapMovedByHalfItsSize(SceneRunner runner) {
+        runner.start("Scene2D").untilLoaded();
+        runner.frames(5);
+        Scene scene = runner.scene();
+
+        try (Views.Scope ignored = Views.enter(scene)) {
+            TileMap tileMap = Views.engine().resources().getResource(TileMap.class, "map");
+            LayersTileMapRenderer leftUp = new LayersTileMapRenderer("texture2D", false);
+            LayersTileMapRenderer centered = new LayersTileMapRenderer("texture2D", false);
+            leftUp.setTileMap(tileMap);
+            centered.setTileMap(tileMap);
+            Vector2i tile = tileMap.tileSetAtlas().getTileSize();
+            Vector2f mapSize = new Vector2f(tileMap.mapWidth() * tile.x, tileMap.mapHeight() * tile.y);
+            // The offset of a reference is in whole pixels
+            place(centered, EDirection.None, new Vector2f((int) (mapSize.x / 2), (int) (mapSize.y / 2)));
+            Vector2i screen = scene.context().getWindow().getInfo().getVirtualSizeCopy();
+            Camera2D camera = scene.camera2D();
+            Vector2f position = camera.getCamPosCopy();
+            Vector2f zoom = camera.getZoomLevel();
+            float rotation = camera.getRotation();
+            try {
+                // The whole map, a part zoomed in, a turned corner
+                float[][] views = {{0.5f, 0.5f, 0.5f, 0}, {0.3f, 0.6f, 10f, 0}, {0f, 1f, 8f, -0.3f}};
+                for (float[] view : views) {
+                    look(camera, screen, mapSize, view);
+                    String at = "at " + view[0] + ", " + view[1] + " zoom " + view[2];
+
+                    Views.engine().setBatch2DMode(EBatch2DMode.OFF);
+                    ByteBuffer expected = capture(scene, leftUp::display);
+                    assertTrue(drawnPixels(expected) > 1000, at);
+                    assertEquals(0, countDifferent(expected, capture(scene, centered::display)), at + " alone");
+
+                    Views.engine().setBatch2DMode(EBatch2DMode.ORPHAN);
+                    EngineStats.endSecond(1, 1, 0, 0);
+                    capture(scene, leftUp::display);
+                    EngineStats.endSecond(1, 1, 0, 0);
+                    double leftUpDrawn = EngineStats.toJson().getDouble("tilesDrawnPerFrame");
+                    ByteBuffer batched = capture(scene, centered::display);
+                    EngineStats.endSecond(1, 1, 0, 0);
+                    JSONObject stats = EngineStats.toJson();
+                    assertEquals(leftUpDrawn, stats.getDouble("tilesDrawnPerFrame"), 0.0, at + ": tiles written");
+                    int different = countDifferent(expected, batched);
+                    assertTrue(different <= expected.capacity() / 2000, at + " batched: " + different
+                            + " channels differ");
+                }
+                // Zoomed in: tiles left out, others written
+                look(camera, screen, mapSize, views[1]);
+                EngineStats.endSecond(1, 1, 0, 0);
+                capture(scene, centered::display);
+                EngineStats.endSecond(1, 1, 0, 0);
+                JSONObject stats = EngineStats.toJson();
+                assertTrue(stats.getDouble("tilesCulledPerFrame") > 0, stats.toString());
+                assertTrue(stats.getDouble("tilesDrawnPerFrame") > 0, stats.toString());
+            } finally {
+                Views.engine().setBatch2DMode(EBatch2DMode.ORPHAN);
+                camera.setPos(position);
+                camera.setZoomLevel(zoom);
+                camera.setRotation(rotation);
+                leftUp.unload();
+                centered.unload();
+            }
+        }
+    }
+
     @Test
     void theVisibleTilesAreTheMapDrawnAlone(SceneRunner runner) {
         runner.start("Scene2D").untilLoaded();
@@ -105,13 +196,7 @@ class TileMapBatchGLTest {
                 float[][] views = {{0.5f, 0.5f, 0.5f, 0}, {0.5f, 0.5f, 16f, 0}, {0.3f, 0.6f, 10f, 0.6f},
                         {0f, 1f, 8f, -0.3f}, {-30f, -30f, 1, 0}};
                 for (float[] view : views) {
-                    // screen = zoom * (rotation * world - position): the point at the center of the screen
-                    camera.setRotation(view[3]);
-                    camera.setZoomLevel(view[2]);
-                    float x = view[0] * mapSize.x, y = view[1] * mapSize.y;
-                    float cos = (float) Math.cos(view[3]), sin = (float) Math.sin(view[3]);
-                    camera.setPos(new Vector2f(cos * x - sin * y - screen.x * 0.5f / view[2],
-                            sin * x + cos * y - screen.y * 0.5f / view[2]));
+                    look(camera, screen, mapSize, view);
 
                     Views.engine().setBatch2DMode(EBatch2DMode.OFF);
                     ByteBuffer alone = capture(scene, map::display);

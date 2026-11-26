@@ -63,6 +63,50 @@ public final class Direction {
         return EDirection.None;
     }
 
+    /**
+     * The offset of the left top corner of a box of this size from its point of reference, written in out without
+     * allocation (y goes down): x is 0 (left), -width / 2 (center) or -width (right), y is 0 (up), -height / 2
+     * (center) or -height (down). None is the center; Undef is the left top corner.
+     */
+    public static Vector2f AnchorOffset(EDirection reference, float width, float height, Vector2f out) {
+        float x = 0;
+        float y = 0;
+
+        switch (reference) {
+            case None:
+            case Up:
+            case Down:
+                x = -width / 2;
+                break;
+            case Right:
+            case RightUp:
+            case RightDown:
+                x = -width;
+                break;
+            default:
+                // Left side
+                break;
+        }
+
+        switch (reference) {
+            case None:
+            case Left:
+            case Right:
+                y = -height / 2;
+                break;
+            case Down:
+            case LeftDown:
+            case RightDown:
+                y = -height;
+                break;
+            default:
+                // Up side
+                break;
+        }
+
+        return out.set(x, y);
+    }
+
     public static EDirection strToEDirection(String direction){
         direction = direction.trim().toLowerCase(Locale.ROOT);
 

@@ -54,6 +54,18 @@ class TileVisibilityTest {
         assertArrayEquals(new int[]{1, 4}, range);
     }
 
+    // Tiles shifted by the reference of the map (start and end moved together): the range follows them
+    @Test
+    void theRangeFollowsTilesThatDoNotStartAtZero() {
+        int[] range = new int[2];
+        // Tiles from -40: tile 0 covers [-40, -24]; the screen [0, 32] shows tiles 2 to 4 ([-8, 8] to [24, 40])
+        TileVisibility.Range(0, 32, TILE, -40, TILE - 40, 100, range, 0);
+        assertArrayEquals(new int[]{2, 4}, range);
+        // The screen left of the map: nothing
+        TileVisibility.Range(-100, -40, TILE, -40, TILE - 40, 100, range, 0);
+        assertTrue(range[0] > range[1], range[0] + " to " + range[1]);
+    }
+
     // Bounded to the map
     @Test
     void theRangeStaysInTheMap() {
