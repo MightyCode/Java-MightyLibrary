@@ -82,7 +82,8 @@ class Animation2DBatchGLTest {
             try (Views.Scope ignored = Views.enter(scene)) {
                 Views.engine().resources().addPreLoadedResource(data);
             }
-            runner.frames(3);
+            // Loaded by steps of the scheduler: a fixed count of frames is not enough on a slow machine
+            runner.engine().loadUntilDone();
 
             try (Views.Scope ignored = Views.enter(scene)) {
                 try {
@@ -123,7 +124,7 @@ class Animation2DBatchGLTest {
             try (Views.Scope ignored = Views.enter(scene)) {
                 Views.engine().resources().addPreLoadedResource(data);
             }
-            runner.frames(3);
+            runner.engine().loadUntilDone();
 
             try (Views.Scope ignored = Views.enter(scene)) {
                 Views.engine().setBatch2DMode(EBatch2DMode.ORPHAN);
@@ -136,9 +137,13 @@ class Animation2DBatchGLTest {
                 Animation animation = animator.getCurrentAnimation();
 
                 try {
-                    // The cost of k changes against 4k: what grows with the count is allocated by each change
+                    // The cost of k changes against 4k: what grows with the count is allocated by each change. The
+                    // smallest gap of the passes: an allocation per change is in every pass (3000 changes, 48 KB at
+                    // least), the noise of the JVM on a shared machine (a few KB) is not
                     long[] allocated = new long[2];
-                    for (int pass = 0; pass < 3; ++pass) {
+                    long smallestGap = Long.MAX_VALUE;
+                    StringBuilder gaps = new StringBuilder();
+                    for (int pass = 0; pass < 4; ++pass) {
                         for (int size = 0; size < 2; ++size) {
                             EngineStats.endSecond(1, 1, 0, 0);
                             allocated[size] = changeFrames(animation, renderer, size == 0 ? 1000 : 4000);
@@ -147,10 +152,12 @@ class Animation2DBatchGLTest {
                             scene.batch2D().endView();
                             assertEquals(0, uploaded, "the mesh sends nothing while batched");
                         }
+                        // The first pass grows the buffers of the batch
+                        if (pass > 0)
+                            smallestGap = Math.min(smallestGap, allocated[1] - allocated[0]);
+                        gaps.append(' ').append(allocated[0]).append('/').append(allocated[1]);
                     }
-                    // The first passes grow the buffers of the batch
-                    assertTrue(allocated[1] - allocated[0] < 2_000, allocated[0] + " bytes allocated by 1000 frame "
-                            + "changes, " + allocated[1] + " by 4000");
+                    assertTrue(smallestGap < 2_000, "bytes allocated by 1000/4000 frame changes, per pass:" + gaps);
                 } finally {
                     renderer.unload();
                     Views.engine().resources().deleteResource(data);
