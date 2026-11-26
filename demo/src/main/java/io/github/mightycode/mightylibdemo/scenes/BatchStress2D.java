@@ -357,12 +357,20 @@ public class BatchStress2D extends Scene {
                 + "   uniforms " + stats.optDouble("uniformUploadsPerFrame");
     }
 
+    // The N objects, without the texts on the screen (BatchStress2DGLTest compares their pictures)
+    void displayObjects() {
+        for (Renderer renderer : renderers)
+            renderer.display();
+    }
+
+    int objectCount() {
+        return renderers.size();
+    }
+
     @Override
     public void display() {
         clear();
-
-        for (Renderer renderer : renderers)
-            renderer.display();
+        displayObjects();
 
         textBackground.display();
         help.display();
