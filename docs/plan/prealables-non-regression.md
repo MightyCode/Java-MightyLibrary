@@ -118,3 +118,36 @@ Décisions prises :
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/regression-groundwork`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait (un commit par étape)
+1. Kit : dossier du joueur temporaire par moteur (`TestEngine.playerDataFolder()`, `EngineConfig.DEFAULT_PLAYER_DATA_FOLDER`), dossier donné gardé ; `PlayerDataFolderKitTest` (4 cas).
+2. `utils/DataFolder` et `DataFolderTest` supprimés, `collect.py` (`LEGACY`) mis à jour.
+3. `Animation(Resources)`, `Animator(Resources)`, `update(float)` ; condition morte retirée ; `AnimationTest`, `AnimatorTest` sur une `Resources` construite à la main (`AnimationResources` : textures, animations, replis, batch chargé après coup).
+4. Bugs d'`Animation`, chaque test vu en échec avant la correction : `Animator.lateUpdate` → `Animation.lateUpdate` ; `clear()` remet le nom ; `FrameData` refuse 0, -1, -0.0, NaN, Infinity.
+5. `setOrtho`/`setPerspective`, drapeaux et `superUpdate*` supprimés ; `CameraProjectionTest` (5 cas en échec sur l'ancien code).
+6. `Direction.AnchorOffset`, `Text` migré, `TileMapRenderer` corrigé (`ReferenceOffset`, `TileEdges` package-private, culling) ; `DirectionTest`, `TileMapRendererTest`, `TileVisibilityTest`, `TileMapBatchGLTest` (nouveau cas en échec sur l'ancien code : 23 598 canaux différents).
+7. `TileMapReferences2D` inscrite dans `DemoScenes`.
+8. Docs (`architecture.md`, `current.md`, `later.md`, `futur-discussion.md`, `bonnes-pratiques.md`, `CLAUDE.md`).
+
+### Écarts au plan, et pourquoi
+- Étape 4, deux bugs de plus trouvés par les tests de l'étape 3, corrigés avec leur test : le temps au-delà de la fin d'une **boucle** était perdu (`restart()` remettait le temps à 0 : une longue mise à jour ou un tick en retard décalait la boucle) → `currentFrame = 0` en gardant le reste ; la **première mise à jour après `init`** redémarrait l'animation (première résolution de la donnée utilisable dans `data()`), donc le premier changement de frame était vu deux fois → `init` prend la donnée utilisable.
+- `Animation.update(float)` lit la donnée utilisable **avant** d'ajouter le temps : à l'image où la donnée devient chargée, l'animation redémarre puis avance de ce temps (avant : le temps de cette image était perdu).
+- `TileMapRenderer.setReference` avant `setTilemap` ne lève plus de `NullPointerException` (la carte est placée par `setTilemap`).
+- `TileMapBatchGLTest` : le dernier contrôle « plus de tuiles laissées qu'écrites » est devenu « des tuiles laissées et des tuiles écrites » (la carte de la démo n'a que 4 × 4 tuiles).
+- Rien de changé pour `CameraVersionTest` (il ne lisait pas les drapeaux supprimés) ni pour `PublicFieldsTest` (aucune liste ne nommait `DATA_FOLDER_PATH`).
+- Bugs relevés, non corrigés, notés dans `later.md` : angle de vue 3D de 120 donné en radians à JOML ; `.anim` de 0 frame chargé puis `NullPointerException` à `update`.
+
+### Vérifié, et comment
+- `mvn -o -q package` (tous les modules, tests GL compris) : vert ; aucun dossier `data/` dans `mightylib/`, `mightylib-test/`, `demo/` ensuite.
+- `scenario.py` : `BatchRenderers2D` et `BatchStress2D` (après les étapes 3 et 4), `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`, `Scene2D` (étape 5), `TextPaddingScene`, `CommandsScene2D` (étape 6), `TileMapReferences2D` (étape 7 : `?gl summary`, `input key hold D`, `input scroll 3`, `?camera`, une capture, `leakcheck` sans fuite) : 0 ligne de problème.
+- Scènes 3D identiques par construction : JOML `ortho`/`perspective` sur une matrice identité passent par `setOrtho`/`setPerspective`, et aucune scène ne recalcule la projection après la construction (le premier contrôle de `CameraProjectionTest` passait déjà sur l'ancien code). `?camera` ne donne pas les matrices : pas de comparaison en texte ni de capture.
+- `Text` identique par construction (`a - b` = `a + (-b)` en flottants) ; tests de texte (`DrawnTexts`, `TextWrap`, `Scene2DTest`, `TextBatchGLTest`) verts.
+- `TileMapReferences2D` (capture) : croix au coin, au milieu du côté ou au centre attendu pour les neuf références, cartes de même taille.
+
+### À vérifier à la main
+- Scènes 3D `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` identiques à `dev`.
+- Animations de `BatchRenderers2D` et `BatchStress2D` : même rythme, pas de saut au bouclage.
+- Textes centrés de `CommandsScene2D` et `TextPaddingScene` inchangés.
+- `TileMapReferences2D` : croix au bon point, cartes de même taille, aussi à fort zoom (molette).
+- Aucun dossier `data/` créé dans `mightylib/`, `mightylib-test/`, `demo/` après `mvn test`.
