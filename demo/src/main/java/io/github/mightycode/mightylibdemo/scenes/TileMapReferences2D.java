@@ -97,6 +97,10 @@ public class TileMapReferences2D extends Scene {
             return;
         }
 
+        // A reloaded map or tileset is built again, the animated tiles advance
+        for (LayersTileMapRenderer map : maps)
+            map.update();
+
         // One frame each: asked again at each frame
         for (Vector2f point : points)
             debugDraw().cross(point.x, point.y, crossSize, CROSS_COLOR);
