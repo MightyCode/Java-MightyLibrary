@@ -3,6 +3,8 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.BatchFormat;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatchAttributeType;
 
+import java.util.List;
+
 import static org.lwjgl.opengl.GL11C.GL_FLOAT;
 import static org.lwjgl.opengl.GL11C.GL_INT;
 import static org.lwjgl.opengl.GL11C.GL_UNSIGNED_BYTE;
@@ -21,7 +23,10 @@ final class BatchLayouts {
      */
     static void PointAttributes(BatchFormat format, boolean instance, long offset) {
         int stride = instance ? format.instanceBytes() : format.vertexBytes();
-        for (BatchFormat.Attribute attribute : format.attributes()) {
+        // Called for each draw call: by index, without iterator
+        List<BatchFormat.Attribute> attributes = format.attributes();
+        for (int i = 0; i < attributes.size(); ++i) {
+            BatchFormat.Attribute attribute = attributes.get(i);
             if (attribute.perInstance() != instance)
                 continue;
 
@@ -37,7 +42,9 @@ final class BatchLayouts {
 
     // Enables the vertex attributes (instance false) or the instance attributes, those read per instance
     static void EnableAttributes(BatchFormat format, boolean instance) {
-        for (BatchFormat.Attribute attribute : format.attributes()) {
+        List<BatchFormat.Attribute> attributes = format.attributes();
+        for (int i = 0; i < attributes.size(); ++i) {
+            BatchFormat.Attribute attribute = attributes.get(i);
             if (attribute.perInstance() != instance)
                 continue;
 
