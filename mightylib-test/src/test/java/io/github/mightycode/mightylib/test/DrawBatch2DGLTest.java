@@ -178,8 +178,9 @@ class DrawBatch2DGLTest {
         try (Views.Scope ignored = Views.enter(runner.scene())) {
             fixture = new Fixture();
         }
-        // The shader and the texture are sent with the time of the frames
-        runner.frames(3);
+        // The shader and the texture are sent with the time of the frames: a fixed count of frames is not enough on a
+        // slow machine
+        runner.engine().loadUntilDone();
         assertTrue(fixture.shader.isLoaded() && fixture.white.isLoaded());
         return fixture;
     }
@@ -419,7 +420,7 @@ class DrawBatch2DGLTest {
             Shader program = (Shader) engine.glResources().acquire(
                     engine.resources().getResource(ShaderData.class, format.getKey()), true);
             try {
-                runner.frames(3);
+                runner.engine().loadUntilDone();
                 assertTrue(program.isLoaded(), format.getKey());
                 assertNull(format.getValue().check(program.attributes()), format.getKey());
                 assertTrue(Batches2D.of(engine).readsFormat(program, format.getValue()), format.getKey());

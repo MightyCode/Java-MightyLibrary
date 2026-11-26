@@ -26,7 +26,8 @@ class EngineShadersGLTest {
             }
         }
 
-        runner.frames(3);
+        // Every program loaded, however slow the machine
+        runner.engine().loadUntilDone();
 
         try (Views.Scope ignored = Views.enter(runner.scene())) {
             for (int i = 0; i < materials.size(); ++i) {
