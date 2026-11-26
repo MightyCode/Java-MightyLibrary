@@ -7,7 +7,6 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
-import io.github.mightycode.mightylib.utils.DataFolder;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.resources.EngineResources;
@@ -79,7 +78,7 @@ public final class EngineConfig {
 
     private Resources.LoadingMethod resourcesLoadingMethod = new Resources.AllResourcesMethod();
     private String resourcesFolder = Resources.DEFAULT_FOLDER;
-    private String playerDataFolder = DataFolder.DATA_FOLDER_PATH;
+    private String playerDataFolder = DEFAULT_PLAYER_DATA_FOLDER;
     // Null: the classpath source of the engine
     private String engineResourcesFolder;
     private int maxThreads = Math.max(1, Runtime.getRuntime().availableProcessors() - 2);
@@ -181,9 +180,12 @@ public final class EngineConfig {
 
     public static final String STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict";
 
+    // The folder of the data of the player by default, relative to the working folder
+    public static final String DEFAULT_PLAYER_DATA_FOLDER = "data/";
+
     /**
-     * The folder of the data of the player ("data/" by default, relative to the working folder): its "configs" folder
-     * is the highest source of the resources, where ConfigData writes what the player changes.
+     * The folder of the data of the player (DEFAULT_PLAYER_DATA_FOLDER by default, relative to the working folder):
+     * its "configs" folder is the highest source of the resources, where ConfigData writes what the player changes.
      */
     public EngineConfig setPlayerDataFolder(String playerDataFolder) {
         this.playerDataFolder = Objects.requireNonNull(playerDataFolder, "playerDataFolder");

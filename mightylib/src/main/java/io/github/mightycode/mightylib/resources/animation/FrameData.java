@@ -35,6 +35,9 @@ public final class FrameData {
         hotPoint.y = TextFormat.integer(parts, 5, path, line, "hot point y");
 
         frameTime = TextFormat.decimal(parts, 6, path, line, "frame time");
+        // A frame of no time would never be left by the player
+        if (!(frameTime > 0) || Float.isInfinite(frameTime))
+            throw TextFormat.error(path, line, "frame time must be greater than 0, got " + parts[6].trim());
     }
 
 

@@ -15,7 +15,14 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,6 +51,9 @@ public final class TestEngine implements AutoCloseable {
     private static final Set<EngineConfig> STARTED_CONFIGS = Collections.synchronizedSet(
             Collections.newSetFromMap(new WeakHashMap<>()));
 
+    // Prefix of the temporary folder of the player data of each engine
+    static final String PLAYER_DATA_PREFIX = "mightylib-player-";
+
     // Namespace of the plugin that stacks the folders of the test above the sources of the game
     static final String SOURCES_NAMESPACE = "mightytest";
 
@@ -52,6 +62,9 @@ public final class TestEngine implements AutoCloseable {
     private final List<Path> sources = new ArrayList<>();
     private final RecordingGLSink sink = new RecordingGLSink();
     private boolean strictResources = true;
+    // The folder of the player data used by the engine; deleted at close when the kit created it
+    private Path playerDataFolder;
+    private boolean temporaryPlayerData;
 
     private Engine engine;
     private Views.Scope scope;
@@ -90,7 +103,8 @@ public final class TestEngine implements AutoCloseable {
     /**
      * Starts the engine as the game does, with strict resources, the silent sound, neither standard input nor debug
      * server, the real keyboard, mouse and gamepads ignored (only the simulated inputs count), then loads the
-     * resources.
+     * resources. The data of the player go to a temporary folder deleted at close, unless the configuration gives its
+     * own folder (EngineConfig.setPlayerDataFolder), used and kept.
      * @throws IllegalStateException if another test engine runs, or if the engine can't start (the error is named)
      */
     public TestEngine start() {
@@ -107,6 +121,12 @@ public final class TestEngine implements AutoCloseable {
             throw new IllegalStateException("Another test engine runs: close it first (one engine per JVM at a time)");
         owner = true;
 
+        try {
+            usePlayerDataFolder();
+        } catch (UncheckedIOException e) {
+            close();
+            throw e;
+        }
         if (!sources.isEmpty())
             config.addPlugin(new SourcesPlugin(sources));
 
@@ -143,6 +163,22 @@ public final class TestEngine implements AutoCloseable {
         }
 
         return this;
+    }
+
+    // The folder of the game ("data/" of the working folder) never receives what a test writes
+    private void usePlayerDataFolder() {
+        if (!EngineConfig.DEFAULT_PLAYER_DATA_FOLDER.equals(config.getPlayerDataFolder())) {
+            playerDataFolder = Paths.get(config.getPlayerDataFolder());
+            return;
+        }
+
+        try {
+            playerDataFolder = Files.createTempDirectory(PLAYER_DATA_PREFIX);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Can't create the temporary folder of the player data", e);
+        }
+        temporaryPlayerData = true;
+        config.setPlayerDataFolder(playerDataFolder.toString());
     }
 
     /** One tick then one frame, without waiting: the time moves by one tick first. */
@@ -232,6 +268,16 @@ public final class TestEngine implements AutoCloseable {
         return strictResources;
     }
 
+    /**
+     * The folder of the player data of this engine (where ConfigData writes): a temporary folder created at start and
+     * deleted at close, or the folder given by the configuration, kept. Still answered after close.
+     */
+    public Path playerDataFolder() {
+        if (playerDataFolder == null)
+            throw new IllegalStateException("The folder of the player data is chosen at start");
+        return playerDataFolder;
+    }
+
     // The configuration this engine started from (the kit added the plugin of the test sources)
     public EngineConfig config() {
         return config;
@@ -288,11 +334,40 @@ public final class TestEngine implements AutoCloseable {
                 KitTimeAccess.reset();
                 KitInputAccess.setRealDevicesIgnored(false);
             } finally {
+                // After the stop of the workers: no write of a configuration comes after the deletion
+                if (temporaryPlayerData)
+                    deleteFolder(playerDataFolder);
                 // Whatever failed above, the next test can start an engine
                 SHARED.compareAndSet(this, null);
                 if (owner)
                     RUNNING.set(false);
             }
+        }
+    }
+
+    // A failure is written, never thrown: the test itself passed
+    private static void deleteFolder(Path folder) {
+        if (!Files.exists(folder))
+            return;
+
+        try {
+            Files.walkFileTree(folder, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult postVisitDirectory(Path directory, IOException e) throws IOException {
+                    if (e != null)
+                        throw e;
+                    Files.delete(directory);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            System.err.println("--Test engine: can't delete the folder of the player data " + folder + " (" + e + ")");
         }
     }
 

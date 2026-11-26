@@ -107,7 +107,8 @@ public class Camera2D extends Camera {
 
     /**
      * Hook called by updateProjection: writes the matrix projection (an orthographic projection of the virtual size
-     * of the window). An override writes projection only here; updateProjection marks the change after.
+     * of the window), replacing the previous one. An override writes projection only here; updateProjection marks
+     * the change after.
      */
     @Override
     protected void writeProjection() {
@@ -116,7 +117,7 @@ public class Camera2D extends Camera {
         float bottom = (invertView) ? windowInfo.getVirtualSizeRef().y : 0;
         float top = (invertView) ? 0 : windowInfo.getVirtualSizeRef().y;
 
-        projection.ortho(left, right, top, bottom, -10, 10);
+        projection.setOrtho(left, right, top, bottom, -10, 10);
     }
 
     /**

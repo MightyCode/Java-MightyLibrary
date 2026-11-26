@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
+import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -326,7 +327,8 @@ public final class Text extends MeshRenderer {
 
         Vector4f temp = new Vector4f();
 
-        Vector2f textReference = new Vector2f();
+        // Offset of the left top corner of the rectangle from the position
+        Vector2f referenceOffset = new Vector2f();
         float lineAlignmentOffset = 0;
 
         float widestLine = 0;
@@ -352,40 +354,8 @@ public final class Text extends MeshRenderer {
         currentCharOffset.x = 0;
         int charCount = 0;
 
-        switch(this.reference){
-            case None:
-            case Up:
-            case Down:
-                textReference.x = rectangleSize.x / 2;
-                break;
-            case RightDown:
-            case Right:
-            case RightUp:
-                textReference.x = rectangleSize.x;
-                break;
-            default:
-                // Nothing to do for the other values
-                break;
-        }
-
-        switch(this.reference){
-            case None:
-            case Left:
-            case Right:
-                textReference.y = rectangleSize.y / 2;
-                break;
-            case LeftDown:
-            case Down:
-            case RightDown:
-                textReference.y = rectangleSize.y;
-                break;
-            default:
-                // Nothing to do for the other values
-                break;
-        }
-
-        leftUpPosition.x -= textReference.x;
-        leftUpPosition.y -= textReference.y;
+        Direction.AnchorOffset(this.reference, rectangleSize.x, rectangleSize.y, referenceOffset);
+        leftUpPosition.add(referenceOffset);
 
         for (int j = 0; j < lines.length; ++j) {
             switch(this.alignment){
@@ -414,8 +384,8 @@ public final class Text extends MeshRenderer {
 
                 // Left, right, top, bottom of the character, its pen at the left top
                 TextLayout.CharacterQuad(fontChar, fontSize,
-                        currentCharOffset.x - textReference.x + lineAlignmentOffset + padding.x,
-                        currentCharOffset.y - textReference.y + padding.y, temp);
+                        currentCharOffset.x + referenceOffset.x + lineAlignmentOffset + padding.x,
+                        currentCharOffset.y + referenceOffset.y + padding.y, temp);
 
                 charPositions[charCount * SIZE_COORDINATES] = temp.x;
                 charPositions[charCount * SIZE_COORDINATES + 1] = temp.z;

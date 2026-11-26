@@ -19,9 +19,6 @@ public abstract class Camera extends UUID {
     protected final Matrix4f projection, view;
     protected final ShaderValue projectionShaderValue, viewShaderValue;
 
-    private boolean shouldUpdateProjection;
-    private boolean shouldUpdateView;
-
     // Package-private: the hierarchy is closed, its subclasses are in this package
     Camera(WindowInfo windowInfo) {
         cameraId = CAMERA_COUNT.getAndIncrement();
@@ -33,9 +30,6 @@ public abstract class Camera extends UUID {
 
         projectionShaderValue = new ShaderValue("projection", Matrix4f.class, projection).trackChanges();
         viewShaderValue = new ShaderValue("view", Matrix4f.class, view).trackChanges();
-
-        shouldUpdateProjection = true;
-        shouldUpdateView = true;
     }
 
     public int getCameraId() {
@@ -63,39 +57,11 @@ public abstract class Camera extends UUID {
         viewShaderValue.markChanged();
     }
 
-    // Hook called by updateProjection: writes the matrix projection (the only place it is written)
+    // Hook called by updateProjection: replaces the matrix projection (the only place it is written)
     protected abstract void writeProjection();
 
     // Hook called by updateView: writes the matrix view (the only place it is written)
     protected abstract void writeView();
-
-    public void superUpdateProjection() {
-        if (shouldUpdateProjection) {
-            updateProjection();
-        }
-    }
-
-    public void superUpdateView() {
-        if (shouldUpdateProjection) {
-            updateView();
-        }
-    }
-
-    public void setShouldUpdateProjection(boolean shouldUpdateProjection) {
-        this.shouldUpdateProjection = shouldUpdateProjection;
-    }
-
-    public void setShouldUpdateView(boolean shouldUpdateView) {
-        this.shouldUpdateView = shouldUpdateView;
-    }
-
-    public boolean shouldUpdateProjection() {
-        return shouldUpdateProjection;
-    }
-
-    public boolean shouldUpdateView() {
-        return shouldUpdateView;
-    }
 
     // The value of the matrix itself: read it, don't change it (its changes are marked by updateProjection)
     public ShaderValue getProjection(){

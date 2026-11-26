@@ -10,6 +10,7 @@ import io.github.mightycode.mightylib.graphics.shader.ShaderValue;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.resources.map.*;
 import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.*;
 
@@ -93,7 +94,8 @@ public final class TileMapRenderer extends MeshRenderer {
     private static final int[] QUAD_INDICES = {0, 1, 2, 2, 0, 3};
     private final int positionIndex;
     private final int textureIndex;
-    private final Vector2f leftUpPosition;
+    // Offset of the left top corner of the map from the position of the renderer, set by the reference
+    private final Vector2f referenceOffset;
     private EDirection reference;
     private TileMap tilemap;
     // Version of the map the tiles were built with
@@ -118,8 +120,6 @@ public final class TileMapRenderer extends MeshRenderer {
     private int[] tilesColumn = new int[0];
     private int[] rowStarts = new int[]{0};
     private int builtLayers, builtRows, builtColumns;
-    // Where a tile ends after its start (x, y), as placed by getTilePosition
-    private float tileEndX, tileEndY;
     // Reused by each batched draw: the clip transform of the map, the box of the view, the visible range
     private final Matrix4f clip = new Matrix4f();
     private final Vector4f viewBox = new Vector4f();
@@ -131,7 +131,7 @@ public final class TileMapRenderer extends MeshRenderer {
         // Null let renderer's old setting for text
         this.reference = EDirection.LeftUp;
 
-        this.leftUpPosition = new Vector2f(0, 0);
+        this.referenceOffset = new Vector2f(0, 0);
 
         getMesh().setEboStorage(Mesh.STATIC_STORE);
         getMesh().setEbo(new int[0]);
@@ -151,7 +151,9 @@ public final class TileMapRenderer extends MeshRenderer {
             return this;
 
         this.reference = reference;
-        this.loadTileMapInformation();
+        // Without map yet: placed by setTilemap
+        if (tilemap != null)
+            this.loadTileMapInformation();
 
         return this;
     }
@@ -196,40 +198,8 @@ public final class TileMapRenderer extends MeshRenderer {
     }
 
     private void loadTileMapInformation() {
-        leftUpPosition.x = position().x;
-        leftUpPosition.y = position().y;
-
-        switch(this.reference){
-            case None:
-            case Up:
-            case Down:
-                leftUpPosition.x = (int)(-realMapSize.x * 0.5f);
-                break;
-            case RightDown:
-            case Right:
-            case RightUp:
-                leftUpPosition.x = -realMapSize.x;
-                break;
-            default:
-                // Nothing to do for the other values
-                break;
-        }
-
-        switch(this.reference){
-            case None:
-            case Left:
-            case Right:
-                leftUpPosition.y = (int)(realMapSize.y * 0.5f);
-                break;
-            case LeftDown:
-            case Down:
-            case RightDown:
-                leftUpPosition.y = -realMapSize.y;
-                break;
-            default:
-                // Nothing to do for the other values
-                break;
-        }
+        // Local: the position goes through the model matrix
+        ReferenceOffset(reference, realMapSize, referenceOffset);
 
         int tileNumber = tilemap.numberOfNonEmptyTile(layerCategory);
         int tileCount = 0;
@@ -249,8 +219,6 @@ public final class TileMapRenderer extends MeshRenderer {
         builtRows = tilemap.mapHeight();
         builtColumns = tilemap.mapWidth();
         rowStarts = new int[builtLayers * builtRows + 1];
-        tileEndX = tileSize.x - (leftUpPosition.x - position().x);
-        tileEndY = tileSize.y - (leftUpPosition.y - position().y);
 
         // Rebuilt from scratch below, otherwise the lists would grow at each reload
         for (AnimatedTile animatedTile : animatedTiles)
@@ -384,8 +352,11 @@ public final class TileMapRenderer extends MeshRenderer {
             return;
         }
 
-        TileVisibility.Range(viewBox.x, viewBox.z, tileSize.x, 0, tileEndX, builtColumns, visibleRange, 0);
-        TileVisibility.Range(viewBox.y, viewBox.w, tileSize.y, 0, tileEndY, builtRows, visibleRange, 2);
+        // A tile spans [i * size + offset, (i + 1) * size + offset], as placed by TileEdges
+        TileVisibility.Range(viewBox.x, viewBox.z, tileSize.x, referenceOffset.x, tileSize.x + referenceOffset.x,
+                builtColumns, visibleRange, 0);
+        TileVisibility.Range(viewBox.y, viewBox.w, tileSize.y, referenceOffset.y, tileSize.y + referenceOffset.y,
+                builtRows, visibleRange, 2);
     }
 
     public void update(){
@@ -446,12 +417,22 @@ public final class TileMapRenderer extends MeshRenderer {
 
     // X, Y from (x, z) -> X, Y to (y, w)
     private Vector4f getTilePosition(int x, int y) {
-        return new Vector4f(
-                x * tileSize.x,
-                (x + 1) * tileSize.x - (leftUpPosition.x - position().x),
-                y * tileSize.y,
-                (y + 1) * tileSize.y - (leftUpPosition.y - position().y)
-        );
+        return TileEdges(x, y, tileSize, referenceOffset, new Vector4f());
+    }
+
+    /**
+     * Offset of the left top corner of a map of this size (pixels) from its point of reference (Direction.AnchorOffset),
+     * in whole units toward zero: a map of an odd width is not placed half a pixel away.
+     */
+    static Vector2f ReferenceOffset(EDirection reference, Vector2i mapSize, Vector2f out) {
+        Direction.AnchorOffset(reference, mapSize.x, mapSize.y, out);
+        return out.set((int) out.x, (int) out.y);
+    }
+
+    // Left, right, top, bottom of the tile (x, y) of a map whose left top corner is at offset, written in out
+    static Vector4f TileEdges(int x, int y, Vector2i tileSize, Vector2f offset, Vector4f out) {
+        return out.set(x * tileSize.x + offset.x, (x + 1) * tileSize.x + offset.x,
+                y * tileSize.y + offset.y, (y + 1) * tileSize.y + offset.y);
     }
 
     private void setTilePosition(float[] tilesPosition, int tileCount, Vector4f rect) {
