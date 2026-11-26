@@ -42,14 +42,15 @@ CASES = [
     ("rect-16k-sorted", "rectangles", 4, False, True, 2.2, 4),
     ("rect-16k-10%", "rectangles", 4, True, False, 1.3, None),
     ("rect-128k", "rectangles", 7, False, False, 38.0, 64002),
-    ("rect-128k-10%", "rectangles", 7, True, False, 25.0, None),
+    # Varies a lot between runs (21.6 to 28.0 ms, JIT and memory): the highest + ~15 %
+    ("rect-128k-10%", "rectangles", 7, True, False, 32.0, None),
     ("shapes-16k", "shapes", 4, False, False, 5.7, 3),
     ("shapes-16k-10%", "shapes", 4, True, False, 2.6, 3),
     ("shapes-16k-sorted", "shapes", 4, False, True, 6.2, 3),
-    ("mix-16k", "mix", 4, False, False, None, None),
-    ("mix-16k-sorted", "mix", 4, False, True, None, None),
-    ("mix-16k-10%", "mix", 4, True, False, None, None),
-    ("mix-16k-10%-sorted", "mix", 4, True, True, None, None),
+    ("mix-16k", "mix", 4, False, False, 3.6, 3005),
+    ("mix-16k-sorted", "mix", 4, False, True, 3.4, 5),
+    ("mix-16k-10%", "mix", 4, True, False, 2.2, None),
+    ("mix-16k-10%-sorted", "mix", 4, True, True, 1.9, 5),
 ]
 
 
