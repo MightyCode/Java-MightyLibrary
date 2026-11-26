@@ -8,7 +8,7 @@ Usage:
     python tools/stress.py --list              # the cases and their thresholds, without launching the game
     python tools/stress.py --no-compile        # skip the compilation of scenario.py
 
-Each case is a mode of the scene (F cycles rectangles -> shapes), a number of objects N (Page Up doubles the 1 000
+Each case is a mode of the scene (F cycles rectangles -> shapes -> mix), a number of objects N (Page Up doubles the 1 000
 of the start), a view (everything visible, or ~10 % visible with the main 2D camera zoomed x3.2) and a sort (O:
 by state). The game runs with the vsync off and the batch in mode `orphan`; after a warm-up, 3 samples of `stats`
 are taken 1.2 s apart and the median is compared with the thresholds of the case: renderCpuMs (CPU time of the
@@ -32,7 +32,7 @@ SAMPLES = 3
 START_COUNT = 1000
 ZOOM_10_PERCENT = 3.2
 # Presses of F from the start of the scene for each mode
-MODES = {"rectangles": 0, "shapes": 1}
+MODES = {"rectangles": 0, "shapes": 1, "mix": 2}
 
 # name, mode, doublings of N, ~10 % visible, sorted by state, max renderCpuMs, max drawCallsPerFrame (None: measured,
 # not checked). Thresholds: measures of 2026-11-26 (median of 3 runs) + ~15 %; the 10 % cases have no bound of draw
@@ -46,6 +46,10 @@ CASES = [
     ("shapes-16k", "shapes", 4, False, False, 5.7, 3),
     ("shapes-16k-10%", "shapes", 4, True, False, 2.6, 3),
     ("shapes-16k-sorted", "shapes", 4, False, True, 6.2, 3),
+    ("mix-16k", "mix", 4, False, False, None, None),
+    ("mix-16k-sorted", "mix", 4, False, True, None, None),
+    ("mix-16k-10%", "mix", 4, True, False, None, None),
+    ("mix-16k-10%-sorted", "mix", 4, True, True, None, None),
 ]
 
 
