@@ -85,3 +85,33 @@ Pas de nouvelle scène : `BatchStress2D` est la scène de mesure existante, à c
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/batch-acceptance`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Vérifications manuelles : celles du « Bilan ».
+
+## Bilan
+
+### Fait (un commit par étape, plus un correctif)
+1. `tools/stress.py` (`ab49dbf8`) : 12 cas (rectangles, formes, mélange ; 16 000 ou 128 000 ; tout visible ou ~10 % ; trié ou non), médiane de 3 échantillons de `stats`, seuils `renderCpuMs` et appels dans le script, `PASS`/`FAIL`, `--case`, `--list`, `--json`, `--no-compile`.
+2. `Mesh` (`a0115f90`) : envoi différé des VBO float tenus en copie CPU ; `MeshCpuData` garde une plage sale par VBO ; nouveau test GL du kit `MeshUploadGLTest`.
+3. `Animation` (`4949f795`) : `setFrame`, `getCurrentFrame`, variantes `out` de `currentTexturePosition`/`currentHotPoint`/`getFrameSize` ; `Animation2DRenderer` sans allocation au changement de frame.
+4. Atlas (`f9228d59`) : `tools/generate_stress_atlas.py`, `stressAtlas.png` (448 × 666), `stressSlime.anim`, batch `stress`.
+5. Mélange (`76ae20c1`) : F en cycle à trois modes, motif de 16, cas du mélange dans `stress.py`.
+6. Correctif du lot (`0b32818d`) : `BatchLayouts.PointAttributes`/`EnableAttributes` allouaient un itérateur par appel de dessin (allocations qui croissaient avec les appels du mélange non trié), trouvé par le test de l'étape 6 et un profil JFR. Puis `BatchStress2DGLTest` (`a49ff31f`).
+7. Seuils et documents (ce commit).
+
+### Écarts au plan, et pourquoi
+- **Seuils remesurés** (étape 1, validés) : rectangles inchangés ; formes plus lentes qu'à la fixation de leurs seuils (≈ 5,0 ms contre 3,9) → 5,7 et 2,6 ms ; cas triés ajoutés (rectangles 2,2 ms en 4 appels, formes 6,2 ms) ; bornes d'appels 8 002 / 64 002 / 4 / 3. Étape 7 : `rect-128k-10%` relevé de 25 à 32 ms (21,6 à 28,0 ms d'une passe à l'autre, 28,0 déjà avant tout changement de code : bruit, pas régression) ; mélange 3,6 / 3,4 / 2,2 / 1,9 ms, appels 3 005 et 5 (validés).
+- **Envoi dans `Mesh.bind()`, pas dans `draw()`** : `draw()` est une accroche redéfinissable (une sous-classe aurait sauté l'envoi) ; `bind()` est final et précède tout dessin. Plage sale (début, fin) plutôt qu'un drapeau : un seul envoi de l'union des plages. `updateSubVbo` d'un VBO inconnu de la copie : envoi immédiat. `updateSubVbo` (float et int) compte maintenant ses octets dans `stats`.
+- **`Animation2DRenderer` n'avait pas de copie CPU** (le plan le supposait : le lot lisait ses propres tableaux) : `keepCpuData()` ajouté, sinon chaque changement de frame envoyait 32 octets même dessiné par le lot.
+- Tests de `setFrame` et des variantes `out` dans `Animation2DBatchGLTest` (`Animation` a besoin du moteur), pas dans `FrameTexturePositionTest` (inchangé). Test d'allocation du changement de frame : 1 000 contre 4 000 changements (un coût fixe de ~3 Ko existe).
+- « Sens » des sprites du mélange : compris comme le sens de rotation (signe de la vitesse tirée de la graine).
+- **`BatchStress2DGLTest`** : N = 2 000 ; trié, l'image ne peut pas égaler `off` (le dessin seul ne trie jamais : les objets qui se recouvrent changent d'ordre) → trié, chaque mode = `orphan` trié, même nombre de pixels dessinés que non trié ; **formes mêlées = 1 appel** sans les textes de l'écran (les 3 de `stats` comptaient le fond et les deux textes) ; allocations : le minimum de 6 fenêtres de 60 frames après chauffe (les premières fenêtres tournent du code pas encore compilé par le JIT), 4N ≤ N + 16 Ko. `BatchStress2D.displayObjects`/`objectCount` (package-private) pour le test ; `capture`, `countDifferent`, `drawnPixels` de `TileMapBatchGLTest` rendus visibles dans le package.
+
+### Vérifié, et comment
+- `mvn -o -q test` complet vert après chaque étape de code (2, 3, 6).
+- Résultats de `tools/stress.py` au 2026-11-26 : tous les cas sous leurs seuils, sauf `rect-128k-10%` avant son relèvement. Mélange 16 000 : 2,9 à 3,6 ms en 3 002 appels (non trié), 2,8 à 3,0 ms en 5 (trié), ~10 % : 1,7 à 1,9 ms.
+- `BatchStress2DGLTest` : mélange de 2 000, chaque mode = `off` (0 à 3 canaux différents), trié en 3 appels, 396 016 octets pour 60 frames à 2 000 comme à 8 000 objets.
+- En jeu (`scenario.py`), journal propre : `Scene2D`, `BatchRenderers2D` (modes `off` et `orphan`), `ViewCulling2D`, `FallbackScene`, `Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D` ; `leakcheck Scene2D` et `leakcheck BatchStress2D` sans fuite ; `BatchStress2D` : F ×2, `batch`, `stats`, caméra (`input key hold D`, `input scroll 3`, `?camera`), O, M ×4 ; une capture zoomée du mélange (slimes, tuiles, formes, texte corrects) ; `resources` : `stressAtlas` et `stressSlime` chargés.
+- Bancs `python tools/bench.py --isolated --repeat 3` : rectangle texturé visible 70 ns, coloré 73, animation 77 (≤ 90) ; dessins éliminés 38 à 52 ns (≤ 50 à l'arrondi près ; texte éliminé 101, comme sur `dev`). Texte visible 272 à 448 ns sur la branche contre 358 à 473 sur `dev` (`benchTexts` lancé 4 fois sur chacun, dans un worktree de `dev`) : écart du JIT d'une JVM à l'autre, pas de régression.
+
+### À vérifier à la main
+- `BatchStress2D` : F ×2 jusqu'au mélange ; slimes animés sans filet au-dessus (zoom fort) ; M dans chaque mode sans changement d'image ; O (l'ordre des objets qui se recouvrent change, rien ne disparaît) ; Page Up jusqu'à 16 000.
+- Scènes 3D (`Scene3D`, `Scene3DBis`, `Game3D2D`, `TerrainGeneration3D`) : rendu inchangé après l'envoi différé du `Mesh` (journal propre vérifié, image non regardée).
