@@ -1,15 +1,30 @@
 package io.github.mightycode.mightylib.resources.animation;
 
+import io.github.mightycode.mightylib.resources.Resources;
+
 import java.util.HashMap;
+import java.util.Objects;
 
 public final class Animator {
     private final HashMap<String, Animation> animations;
+    // Given to the animations it creates; null: those of the engine of the current view
+    private final Resources resources;
     private Animation currentAnimation;
     private String currentAnimationName;
 
     private boolean animationChanged;
 
+    // Its animations read the resources of the engine of the current view (the usual case)
     public Animator(){
+        this.resources = null;
+        animations = new HashMap<>();
+
+        clear();
+    }
+
+    // Its animations read the given resources: outside of an engine (tests, tools)
+    public Animator(Resources resources){
+        this.resources = Objects.requireNonNull(resources, "resources");
         animations = new HashMap<>();
 
         clear();
@@ -22,11 +37,20 @@ public final class Animator {
     }
 
 
+    // The current animation moves by the time of the tick (GameTime.DeltaTime)
     public void update(){
         if (currentAnimation == null)
             return;
 
         currentAnimation.update();
+    }
+
+    // The current animation moves by this time in seconds
+    public void update(float seconds){
+        if (currentAnimation == null)
+            return;
+
+        currentAnimation.update(seconds);
     }
 
     public void lateUpdate(){
@@ -35,7 +59,7 @@ public final class Animator {
     }
 
     public void addAndInitAnimation(String name, AnimationData animationData, boolean isLooping){
-        Animation animation = new Animation();
+        Animation animation = resources != null ? new Animation(resources) : new Animation();
         animation.init(animationData, isLooping);
 
         addAnimation(name, animation);

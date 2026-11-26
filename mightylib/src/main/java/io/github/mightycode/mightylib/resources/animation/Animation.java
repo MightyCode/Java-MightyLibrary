@@ -8,6 +8,8 @@ import org.joml.Vector2i;
 import org.joml.Vector4f;
 import org.joml.Vector4i;
 
+import java.util.Objects;
+
 public final class Animation {
     private AnimationData animationData;
 
@@ -22,10 +24,17 @@ public final class Animation {
     // Data given by the last data() call
     private AnimationData usedData;
 
-    // Belongs to the engine of the view that creates it
-    private final Resources resources = Views.engine().resources();
+    // Where the data and its texture are read, and their fallbacks
+    private final Resources resources;
 
+    // Reads the resources of the engine of the current view (the usual case)
     public Animation(){
+        this(Views.engine().resources());
+    }
+
+    // Reads the given resources: an animation outside of an engine (tests, tools)
+    public Animation(Resources resources){
+        this.resources = Objects.requireNonNull(resources, "resources");
         this.looping = false;
         this.speed = 1f;
 
@@ -57,16 +66,25 @@ public final class Animation {
     }
 
 
+    // Moves by the time of the tick (GameTime.DeltaTime)
     public void update(){
+        update(GameTime.DeltaTime());
+    }
+
+    /**
+     * Moves by this time in seconds (times the speed), over as many frames as it covers. The data that became usable
+     * since the last call (loaded, or failed to the fallback) restarts the animation first.
+     */
+    public void update(float seconds){
+        AnimationData data = data();
         if (!animationFinished)
-            elapsedTime += GameTime.DeltaTime() * speed;
+            elapsedTime += seconds * speed;
 
-        while(elapsedTime >= data().getFrame(currentFrame).getFrameTime() &&
-                (currentFrame <= data().frameNumber() || looping)){
+        // The frame times are > 0 (refused at loading otherwise): the loop ends
+        while (elapsedTime >= data.getFrame(currentFrame).getFrameTime()) {
+            elapsedTime -= data.getFrame(currentFrame).getFrameTime();
 
-            elapsedTime -= data().getFrame(currentFrame).getFrameTime();
-
-            if (currentFrame + 1 < data().frameNumber()) {
+            if (currentFrame + 1 < data.frameNumber()) {
                 ++currentFrame;
             } else {
                 if (looping)
