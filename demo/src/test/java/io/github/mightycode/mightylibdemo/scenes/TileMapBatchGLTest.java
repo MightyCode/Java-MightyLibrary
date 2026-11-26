@@ -29,8 +29,8 @@ import static org.lwjgl.opengl.GL30C.*;
  */
 @MightySceneTest(config = DemoTestConfig.class)
 class TileMapBatchGLTest {
-    // The picture of the drawing in a framebuffer of the size of the camera of the scene
-    private static ByteBuffer capture(Scene scene, Runnable drawing) {
+    // The picture of the drawing in a framebuffer of the size of the camera of the scene (also BatchStress2DGLTest)
+    static ByteBuffer capture(Scene scene, Runnable drawing) {
         Vector2i size = scene.context().getWindow().getInfo().getVirtualSizeCopy();
         int texture = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -60,7 +60,7 @@ class TileMapBatchGLTest {
     }
 
     // Channels differing by more than 1 (the rounding of the vertices may differ between the two ways)
-    private static int countDifferent(ByteBuffer expected, ByteBuffer actual) {
+    static int countDifferent(ByteBuffer expected, ByteBuffer actual) {
         int different = 0;
         for (int i = 0; i < expected.capacity(); ++i) {
             if (Math.abs((expected.get(i) & 0xFF) - (actual.get(i) & 0xFF)) > 1)
@@ -70,7 +70,7 @@ class TileMapBatchGLTest {
     }
 
     // Pixels not of the clear color of capture
-    private static int drawnPixels(ByteBuffer picture) {
+    static int drawnPixels(ByteBuffer picture) {
         int drawn = 0;
         for (int i = 0; i < picture.capacity(); i += 4) {
             if (Math.abs((picture.get(i) & 0xFF) - 51) > 2 || Math.abs((picture.get(i + 1) & 0xFF) - 77) > 2

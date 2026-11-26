@@ -78,6 +78,7 @@ Choix à faire par l'auteur au moment du projet payant, pas avant. Si le modèle
 | `sounds/chime.wav` | généré par programme pour le projet (arpège de cloches, mono) | aucune |
 | `cubemaps/sky/*` | généré par programme pour le projet (`tools/generate_skybox.py`) | aucune |
 | `layered/hero/*` | généré par programme pour le projet (`tools/generate_layers.py`) | aucune |
+| `textures/world/stressAtlas.png`, `animations/stressSlime.anim` | assemblés par `tools/generate_stress_atlas.py` depuis `textures/world/tileset.png` et `slime.png` (et `slime.anim`), sans autre contenu | ceux de `tileset.png` et `slime.png` (**à confirmer**, ligne `textures/world/*.png`) |
 | shaders GLSL (`mightylib/src/main/resources/assets/mightylib/shaders` et `resources/shaders`) | écrits pour le projet, techniques de LearnOpenGL (`docs/techniquegraphique.md`) | les idées ne sont pas protégées ; vérifier tout code copié |
 
 Les fichiers de test de la bibliothèque (`mightylib/src/test/resources/` : `sounds/select*`, `sounds/sounds.gaintree`, `textures/world/container2.png`) sont des copies des fichiers de `resources/` du même nom : même origine, même statut.

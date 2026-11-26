@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
+import io.github.mightycode.mightylib.resources.animation.Animation;
 import io.github.mightycode.mightylib.resources.animation.Animator;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
@@ -31,9 +32,13 @@ public final class Animation2DRenderer extends MeshRenderer {
 
     // What the mesh has, kept on the CPU for the batched draws
     private float[] positions;
-    private float[] textures;
+    private final float[] textures;
     // Box of the positions (view culling), reused
     private final float[] cullBox = new float[4];
+    // Reused by each frame change (no allocation)
+    private final Vector2i frameSize = new Vector2i();
+    private final Vector2i hotPoint = new Vector2i();
+    private final Vector3f workVector = new Vector3f();
 
     public Animation2DRenderer(String shaderName){
         super(shaderName, true);
@@ -44,10 +49,13 @@ public final class Animation2DRenderer extends MeshRenderer {
 
         texturePosition = RectangularFace.BasicTexturePosition();
 
+        // The frame changes only write the copy: sent to the GPU only when drawn alone (Mesh.updateVbo)
+        getMesh().keepCpuData();
         getMesh().setEboStorage(Mesh.STATIC_STORE);
         getMesh().setEbo(INDICES);
         positions = calculatePosition();
-        textures = texturePos();
+        textures = new float[8];
+        texturePos(textures);
         positionIndex = getMesh().addVboFloat(positions, 2, Mesh.DYNAMIC_STORE);
         textureIndex = getMesh().addVboFloat(textures, 2, Mesh.DYNAMIC_STORE);
 
@@ -90,8 +98,9 @@ public final class Animation2DRenderer extends MeshRenderer {
         animator.lateUpdate();
     }
 
+    // The texture coordinates, position and scale of the current frame (no allocation)
     public void updateInfoForFrame(){
-        this.texturePosition.set(animator.getCurrentAnimation().currentTexturePosition());
+        animator.getCurrentAnimation().currentTexturePosition(texturePosition);
         updateTextures();
 
         updatePosition();
@@ -106,17 +115,19 @@ public final class Animation2DRenderer extends MeshRenderer {
     }
 
     private void updatePosition(){
-        Vector3f temp = new Vector3f(referencePosition.x, referencePosition.y, 0.0f);
+        Vector3f temp = workVector.set(referencePosition.x, referencePosition.y, 0.0f);
 
         // Take into account hot point of each frame of animation
         if (animator != null) {
-            Vector2i hotPoint = animator.getCurrentAnimation().currentHotPoint(horizontalFlip, verticalFlip);
+            Animation animation = animator.getCurrentAnimation();
+            animation.currentHotPoint(horizontalFlip, verticalFlip, hotPoint);
+            animation.getFrameSize(frameSize);
 
             temp.x -= hotPoint.x * animationScale.x;
             temp.y -= hotPoint.y * animationScale.y;
 
-            temp.x += animator.getCurrentAnimation().getFrameSize().x * animationScale.x * offsetRotation.x;
-            temp.y += animator.getCurrentAnimation().getFrameSize().y * animationScale.y * offsetRotation.y;
+            temp.x += frameSize.x * animationScale.x * offsetRotation.x;
+            temp.y += frameSize.y * animationScale.y * offsetRotation.y;
         }
 
         // super call
@@ -165,7 +176,7 @@ public final class Animation2DRenderer extends MeshRenderer {
     }
 
     private void updateTextures() {
-        textures = texturePos();
+        texturePos(textures);
         getMesh().updateVbo(textures, textureIndex);
     }
 
@@ -207,28 +218,21 @@ public final class Animation2DRenderer extends MeshRenderer {
         };
     }
 
-    private float[] texturePos(){
-        Vector4f bounds = new Vector4f(texturePosition);
+    // The texture coordinates of the 4 vertices, flips applied, written in out (8 floats)
+    private void texturePos(float[] out){
+        float left = horizontalFlip ? texturePosition.y : texturePosition.x;
+        float right = horizontalFlip ? texturePosition.x : texturePosition.y;
+        float top = verticalFlip ? texturePosition.w : texturePosition.z;
+        float bottom = verticalFlip ? texturePosition.z : texturePosition.w;
 
-        if (horizontalFlip){
-            float temp = bounds.x;
-            bounds.x = bounds.y;
-            bounds.y = temp;
-        }
-
-        if (verticalFlip){
-            float temp = bounds.z;
-            bounds.z = bounds.w;
-            bounds.w = temp;
-        }
-
-
-        return new float[]{
-                bounds.x, bounds.w,
-                bounds.x, bounds.z,
-                bounds.y, bounds.z,
-                bounds.y, bounds.w
-        };
+        out[0] = left;
+        out[1] = bottom;
+        out[2] = left;
+        out[3] = top;
+        out[4] = right;
+        out[5] = top;
+        out[6] = right;
+        out[7] = bottom;
     }
 
     public Animation2DRenderer setHorizontalFlip(boolean state){
@@ -265,8 +269,8 @@ public final class Animation2DRenderer extends MeshRenderer {
         this.animationScale.x = scale.x;
         this.animationScale.y = scale.y;
 
-        Vector2i info = animator.getCurrentAnimation().getFrameSize();
+        Vector2i info = animator.getCurrentAnimation().getFrameSize(frameSize);
 
-        super.setScale(new Vector3f(info.x * animationScale.x, info.y * animationScale.y, 1f));
+        super.setScale(workVector.set(info.x * animationScale.x, info.y * animationScale.y, 1f));
     }
 }

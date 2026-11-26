@@ -118,11 +118,15 @@ public final class Animation {
     static final float FRAME_INSET = 0.5f;
 
     public Vector4f currentTexturePosition() {
+        return currentTexturePosition(new Vector4f());
+    }
+
+    // Texture coordinates of the current frame (left, right, top, bottom) written in out, without allocation
+    public Vector4f currentTexturePosition(Vector4f out) {
         FrameData data = data().getFrame(currentFrame);
         TextureData texture = texture();
 
-        return FrameTexturePosition(data.getFramePositionReference(), texture.getWidth(), texture.getHeight(),
-                new Vector4f());
+        return FrameTexturePosition(data.getFramePositionReference(), texture.getWidth(), texture.getHeight(), out);
     }
 
     /**
@@ -144,21 +148,47 @@ public final class Animation {
     }
 
     public Vector2i currentHotPoint(boolean horizontalFlip, boolean verticalFlip){
+        return currentHotPoint(horizontalFlip, verticalFlip, new Vector2i());
+    }
+
+    // The hot point of the current frame, mirrored inside the frame by the flips, written in out
+    public Vector2i currentHotPoint(boolean horizontalFlip, boolean verticalFlip, Vector2i out){
         FrameData data = data().getFrame(currentFrame);
+        Vector2i hotPoint = data.getHotPointReference();
+        Vector4i frame = data.getFramePositionReference();
 
-        Vector2i result = data.getHotPointCopy();
-
-        if (horizontalFlip)
-            result.x = data.getSize().x - result.x;
-
-        if (verticalFlip)
-            result.y = data.getSize().y - result.y;
-
-        return result;
+        return out.set(horizontalFlip ? frame.z - hotPoint.x : hotPoint.x,
+                verticalFlip ? frame.w - hotPoint.y : hotPoint.y);
     }
 
 
     public Vector2i getFrameSize(){
-        return data().getFrame(currentFrame).getSize();
+        return getFrameSize(new Vector2i());
+    }
+
+    // Width and height in pixels of the current frame, written in out
+    public Vector2i getFrameSize(Vector2i out){
+        Vector4i frame = data().getFrame(currentFrame).getFramePositionReference();
+        return out.set(frame.z, frame.w);
+    }
+
+    public int getCurrentFrame() {
+        return currentFrame;
+    }
+
+    /**
+     * Makes this frame (from 0) the current one, from its start: seen as a frame change by the next update of the
+     * renderer (isCurrentFrameChanged). The frame of the usable data: while the animation is loading, that of its
+     * fallback, and the animation restarts once loaded.
+     * @throws IndexOutOfBoundsException when the data has no such frame
+     */
+    public void setFrame(int frame) {
+        int count = data().frameNumber();
+        if (frame < 0 || frame >= count)
+            throw new IndexOutOfBoundsException("Frame " + frame + " of an animation of " + count + " frames");
+
+        currentFrame = frame;
+        elapsedTime = 0;
+        animationFinished = false;
     }
 }
