@@ -73,6 +73,12 @@ public class BatchStress2D extends Scene {
     private float counterTimer;
     private float time;
 
+    // The atlas of the mix (tile set and frames of the slime, tools/generate_stress_atlas.py) and its animation
+    @Override
+    protected String[] getInvolvedBatch() {
+        return new String[]{"stress"};
+    }
+
     @Override
     public void launch(String[] args) {
         setClearColor(30, 30, 40, 1f);

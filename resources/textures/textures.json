@@ -48,6 +48,10 @@
 				"file": "tileset.png",
 				"qualityType" : "pixelart"
 			},
+			"stressAtlas" : {
+				"file": "stressAtlas.png",
+				"qualityType" : "pixelart"
+			},
 			"waveCollapseTest" : {
 				"file": "waveCollapseTest.png",
 				"qualityType" : "pixelart"

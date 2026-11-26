@@ -1,0 +1,20 @@
+{
+    "batchs" : [
+        {
+            "type" : "TextureData",
+            "files" : [
+                "stressAtlas"
+            ],
+            "regex" : [
+            ]
+        },
+        {
+            "type" : "AnimationData",
+            "files" : [
+                "stressSlime"
+            ],
+            "regex" : [
+            ]
+        }
+    ]
+}
