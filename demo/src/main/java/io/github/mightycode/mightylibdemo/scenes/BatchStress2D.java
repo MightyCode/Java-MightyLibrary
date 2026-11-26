@@ -74,10 +74,9 @@ public class BatchStress2D extends Scene {
     private static final int MIX_SHAPES = 12;
     private static final int MIX_STROKED_SHAPE = 14;
     private static final int MIX_TEXT = 15;
-    // The tile set is the top of the atlas
+    // The tile set is the top of the atlas (tools/generate_stress_atlas.py)
     private static final String ATLAS = "stressAtlas";
-    private static final int TILESET_WIDTH = 448;
-    private static final int TILESET_HEIGHT = 576;
+    private static final String TILESET = "tileset";
 
     private final List<Renderer> renderers = new ArrayList<>();
     // Turning speed of each renderer, 0 for the texts
@@ -92,7 +91,11 @@ public class BatchStress2D extends Scene {
     private Material spriteMaterial;
     private Material colorMaterial;
     private Material atlasMaterial;
+    // Sizes in pixels of the atlas and of the tile set at its top, read at the launch
+    private int atlasWidth;
     private int atlasHeight;
+    private int tilesetWidth;
+    private int tilesetHeight;
 
     private Text help;
     // Grey rounded rectangle under the texts, to read them over the moving shapes
@@ -114,10 +117,15 @@ public class BatchStress2D extends Scene {
         Camera2D hud = camera2D().copy();
         DemoCamera.free(this);
 
-        spriteMaterial = new Material("texture2D").setMainTexture("tileset");
+        spriteMaterial = new Material("texture2D").setMainTexture(TILESET);
         colorMaterial = new Material("colorShape2D");
         atlasMaterial = new Material("texture2D").setMainTexture(ATLAS);
-        atlasHeight = resources().getResource(TextureData.class, ATLAS).getHeight();
+        TextureData atlas = resources().getResource(TextureData.class, ATLAS);
+        TextureData tileset = resources().getResource(TextureData.class, TILESET);
+        atlasWidth = atlas.getWidth();
+        atlasHeight = atlas.getHeight();
+        tilesetWidth = tileset.getWidth();
+        tilesetHeight = tileset.getHeight();
         // Kept by the scene: N may drop every renderer of one of them, then grow again
         spriteMaterial.retain();
         colorMaterial.retain();
@@ -208,10 +216,10 @@ public class BatchStress2D extends Scene {
     // A tile of the tile set at the top of the atlas, its coordinates in pixels of the atlas
     private RectangleRenderer createTile() {
         RectangleRenderer tile = new RectangleRenderer(atlasMaterial);
-        int tileWidth = TILESET_WIDTH / TILES, tileHeight = TILESET_HEIGHT / TILES;
-        float x = random.nextInt(TILES) * tileWidth / (float) TILESET_WIDTH;
+        int tileWidth = tilesetWidth / TILES, tileHeight = tilesetHeight / TILES;
+        float x = random.nextInt(TILES) * tileWidth / (float) atlasWidth;
         float y = random.nextInt(TILES) * tileHeight / (float) atlasHeight;
-        tile.setTexturePosition(new Vector4f(x, y, x + tileWidth / (float) TILESET_WIDTH,
+        tile.setTexturePosition(new Vector4f(x, y, x + tileWidth / (float) atlasWidth,
                 y + tileHeight / (float) atlasHeight));
         place(tile, 8 + random.nextFloat() * 40);
         return tile;
