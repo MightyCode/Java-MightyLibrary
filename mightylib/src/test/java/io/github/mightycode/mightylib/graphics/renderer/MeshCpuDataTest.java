@@ -24,6 +24,76 @@ class MeshCpuDataTest {
         assertArrayEquals(new float[]{5, 6}, data.vbo(0));
     }
 
+    // Mesh.updateVbo only writes the copy and marks the vbo dirty; Mesh.bind sends the dirty ones then clears them
+    @Test
+    void anUpdateMarksTheVboDirtyUntilSent() {
+        MeshCpuData data = new MeshCpuData();
+        data.addVbo(2, new float[]{1, 2, 3, 4});
+        assertFalse(data.hasDirty(), "a new vbo is sent with its creation");
+        for (int vbo = 0; vbo < 4; ++vbo)
+            assertEquals(-1, data.dirtyStart(vbo));
+
+        data.setVbo(2, new float[]{5, 6, 7, 8});
+        assertTrue(data.hasDirty());
+        assertEquals(0, data.dirtyStart(2));
+        assertEquals(4, data.dirtyEnd(2));
+        assertEquals(-1, data.dirtyStart(0));
+
+        data.clearDirty();
+        assertFalse(data.hasDirty());
+        assertEquals(-1, data.dirtyStart(2));
+        assertArrayEquals(new float[]{5, 6, 7, 8}, data.vbo(2));
+    }
+
+    // Several updates before a draw: one upload of the union of their ranges, with the last values
+    @Test
+    void theRangesOfSeveralUpdatesAreJoined() {
+        MeshCpuData data = new MeshCpuData();
+        data.addVbo(0, new float[8]);
+        data.addVbo(1, new float[8]);
+        data.setSubVbo(0, new float[]{1, 2}, 5 * Float.BYTES);
+        assertEquals(5, data.dirtyStart(0));
+        assertEquals(7, data.dirtyEnd(0));
+
+        data.setSubVbo(0, new float[]{3}, 2 * Float.BYTES);
+        data.setSubVbo(0, new float[]{4}, 5 * Float.BYTES);
+        assertEquals(2, data.dirtyStart(0));
+        assertEquals(7, data.dirtyEnd(0));
+        assertArrayEquals(new float[]{0, 0, 3, 0, 0, 4, 2, 0}, data.vbo(0));
+        assertEquals(-1, data.dirtyStart(1), "the other vbo is untouched");
+
+        // Past the end: only what is inside counts; nothing inside: not dirty
+        data.setSubVbo(1, new float[]{1, 2, 3}, 6 * Float.BYTES);
+        assertEquals(6, data.dirtyStart(1));
+        assertEquals(8, data.dirtyEnd(1));
+        data.clearDirty();
+        data.setSubVbo(1, new float[]{1}, 8 * Float.BYTES);
+        assertFalse(data.hasDirty());
+
+        // A part of an unknown vbo is not kept: not dirty (Mesh sends it now)
+        data.addVbo(2, null);
+        data.setSubVbo(2, new float[]{1}, 0);
+        assertFalse(data.hasDirty());
+
+        // A whole vbo of another size: dirty over its whole new length (Mesh reallocates it)
+        data.setVbo(0, new float[]{1, 2, 3});
+        assertEquals(0, data.dirtyStart(0));
+        assertEquals(3, data.dirtyEnd(0));
+    }
+
+    // Mesh.unloadVBO drops what was not sent
+    @Test
+    void clearingTheVbosDropsTheirDirtyRanges() {
+        MeshCpuData data = new MeshCpuData();
+        data.addVbo(0, new float[]{1, 2});
+        data.setVbo(0, new float[]{3, 4});
+        data.clearVbos();
+        assertFalse(data.hasDirty());
+
+        data.addVbo(0, new float[]{5, 6});
+        assertEquals(-1, data.dirtyStart(0));
+    }
+
     @Test
     void anIntegerOrEarlierVboIsUnknownUntilUpdated() {
         MeshCpuData data = new MeshCpuData();

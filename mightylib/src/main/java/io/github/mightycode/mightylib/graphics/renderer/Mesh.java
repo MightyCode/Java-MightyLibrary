@@ -82,6 +82,8 @@ public class Mesh {
 
     // The copy of the float vbos and of the ebo on the CPU, null until keepCpuData
     private MeshCpuData cpuData;
+    // Reused by the uploads of a part of a vbo, created at the first one
+    private FloatBuffer partUploadBuffer;
     private int glDrawMode;
 
     // The live meshes of the engine of the view that creates the mesh
@@ -197,10 +199,18 @@ public class Mesh {
     }
 
 
+    /**
+     * Replaces the whole vbo. With a copy on the CPU (keepCpuData) only the copy is written: the vbo is sent before
+     * the next draw that reads it (bind), once for all the updates in between, never when the mesh is only drawn
+     * by the 2D batch. Without copy: sent now.
+     */
     public final void updateVbo(float[] vertices, int vboPosition){
-        EngineStats.countBufferUpload((long) vertices.length * Float.BYTES);
-        if (cpuData != null)
+        if (cpuData != null) {
             cpuData.setVbo(vboPosition, vertices);
+            return;
+        }
+
+        EngineStats.countBufferUpload((long) vertices.length * Float.BYTES);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
 
@@ -228,16 +238,25 @@ public class Mesh {
     }
 
 
-    // Replaces the part of the vbo from startIndex, an offset in bytes
+    /**
+     * Replaces the part of the vbo from startIndex, an offset in bytes. Like updateVbo, only written in the copy on
+     * the CPU when the mesh keeps one and knows this vbo (sent before the next draw), sent now otherwise.
+     */
     public final void updateSubVbo(float[] vertices, int vboPosition, int startIndex){
-        if (cpuData != null)
+        if (cpuData != null) {
             cpuData.setSubVbo(vboPosition, vertices, startIndex);
+            if (cpuData.vbo(vboPosition) != null)
+                return;
+        }
+
+        EngineStats.countBufferUpload((long) vertices.length * Float.BYTES);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
     }
 
     public final void updateSubVbo(int[] vertices, int vboPosition, int startIndex){
+        EngineStats.countBufferUpload((long) vertices.length * Integer.BYTES);
         bind();
         glBindBuffer(GL_ARRAY_BUFFER, vbos.get(vboPosition));
         glBufferSubData(GL_ARRAY_BUFFER, startIndex, vertices);
@@ -355,7 +374,8 @@ public class Mesh {
     /**
      * Bind the vertex array of the current OpenGL context. Vertex arrays are not shared between contexts: each
      * context has its own, created at the first bind and rebuilt from the layout (buffers, attributes, element
-     * buffer) when it changed. The buffers themselves are shared.
+     * buffer) when it changed. The buffers themselves are shared. The vbos updated in the copy on the CPU since their
+     * last upload are sent first (keepCpuData, updateVbo).
      */
     public final void bind(){
         GLContext context = GLContext.current();
@@ -369,9 +389,51 @@ public class Mesh {
         else
             glBindVertexArray(entry.id);
 
+        if (cpuData != null && cpuData.hasDirty())
+            uploadDirtyVbos();
+
         // Called for each draw: avoid building the message when checks are disabled
         if (Logger.isGLErrorCheck())
             Logger.CheckOpenGLError("Bind vao buffer : " + entry.id);
+    }
+
+    // Sends the floats of each vbo changed in the copy on the CPU since its last upload (main thread only)
+    private void uploadDirtyVbos() {
+        for (int i = 0; i < vbos.size(); ++i) {
+            int start = cpuData.dirtyStart(i);
+            if (start < 0)
+                continue;
+
+            float[] data = cpuData.vbo(i);
+            glBindBuffer(GL_ARRAY_BUFFER, vbos.get(i));
+            if (vbosSize.get(i) != data.length) {
+                // Size changed: reallocate the storage
+                EngineStats.countBufferUpload((long) data.length * Float.BYTES);
+                glBufferData(GL_ARRAY_BUFFER, data, vbosStorage.get(i));
+                vbosSize.set(i, data.length);
+            } else if (start == 0 && cpuData.dirtyEnd(i) == data.length) {
+                EngineStats.countBufferUpload((long) data.length * Float.BYTES);
+                glBufferSubData(GL_ARRAY_BUFFER, 0, data);
+            } else {
+                int count = cpuData.dirtyEnd(i) - start;
+                EngineStats.countBufferUpload((long) count * Float.BYTES);
+                glBufferSubData(GL_ARRAY_BUFFER, (long) start * Float.BYTES, uploadBuffer(data, start, count));
+            }
+        }
+        cpuData.clearDirty();
+
+        if (Logger.isGLErrorCheck())
+            Logger.CheckOpenGLError("Upload of the vbos changed on the CPU");
+    }
+
+    // A part of an array in the direct buffer kept for the uploads of a part of a vbo (grown when too small)
+    private FloatBuffer uploadBuffer(float[] data, int start, int count) {
+        if (partUploadBuffer == null || partUploadBuffer.capacity() < count)
+            partUploadBuffer = BufferUtils.createFloatBuffer(Math.max(count, partUploadBuffer == null ? 64 : partUploadBuffer.capacity() * 2));
+
+        partUploadBuffer.clear();
+        partUploadBuffer.put(data, start, count).flip();
+        return partUploadBuffer;
     }
 
     private VaoEntry entryFor(GLContext context) {

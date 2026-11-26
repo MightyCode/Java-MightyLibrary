@@ -3,17 +3,26 @@ package io.github.mightycode.mightylib.graphics.renderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * The copy on the CPU of what a Mesh sent to its float vbos and its ebo (Mesh.keepCpuData), kept up to date by its
  * updates, read by the batched draws of MeshRenderer. Without OpenGL. A vbo added before the copy was asked, or of
  * integers, is unknown (null) until updated.
+ * <p>
+ * The updates of a known vbo are only written here: the vbo is marked dirty (the range of floats changed since its
+ * last upload) and the Mesh sends it to the GPU before a draw that reads it (Mesh.bind), once for all the updates
+ * in between.
  */
 final class MeshCpuData {
     private static final int[] NO_INDICES = new int[0];
 
     private final List<float[]> vbos = new ArrayList<>();
+    // Per vbo, the range of floats [dirtyStart, dirtyEnd[ changed since the last upload; dirtyStart -1 when clean
+    private int[] dirtyStart = new int[4];
+    private int[] dirtyEnd = new int[4];
+    private boolean anyDirty;
     private int[] indices = NO_INDICES;
     private int indexCount;
     // -1 without index; Integer.MAX_VALUE when an index is unknown (part of the ebo set before the copy)
@@ -29,9 +38,17 @@ final class MeshCpuData {
     // A new vbo at this index (rank of the vbo in the mesh), its data copied, null when not kept (integers)
     void addVbo(int vbo, float[] data) {
         ++version;
-        while (vbos.size() <= vbo)
+        if (dirtyStart.length <= vbo) {
+            dirtyStart = Arrays.copyOf(dirtyStart, Math.max(vbo + 1, dirtyStart.length * 2));
+            dirtyEnd = Arrays.copyOf(dirtyEnd, dirtyStart.length);
+        }
+        // Sent with its creation, like the unknown ones before it
+        while (vbos.size() <= vbo) {
+            dirtyStart[vbos.size()] = -1;
             vbos.add(null);
+        }
         vbos.set(vbo, data == null ? null : data.clone());
+        dirtyStart[vbo] = -1;
     }
 
     // The whole vbo replaced (the array is copied: the caller may change it after)
@@ -42,6 +59,7 @@ final class MeshCpuData {
             System.arraycopy(data, 0, kept, 0, data.length);
         else
             vbos.set(vbo, data.clone());
+        markDirty(vbo, 0, data.length);
     }
 
     // A part of the vbo replaced from this offset in bytes (like glBufferSubData), what is past its end ignored
@@ -54,12 +72,48 @@ final class MeshCpuData {
         int start = byteOffset / Float.BYTES;
         int count = Math.max(0, Math.min(data.length, kept.length - start));
         System.arraycopy(data, 0, kept, start, count);
+        if (count > 0)
+            markDirty(vbo, start, start + count);
+    }
+
+    private void markDirty(int vbo, int start, int end) {
+        if (dirtyStart[vbo] < 0) {
+            dirtyStart[vbo] = start;
+            dirtyEnd[vbo] = end;
+        } else {
+            dirtyStart[vbo] = Math.min(dirtyStart[vbo], start);
+            dirtyEnd[vbo] = Math.max(dirtyEnd[vbo], end);
+        }
+        anyDirty = true;
+    }
+
+    // A vbo changed since its last upload
+    boolean hasDirty() {
+        return anyDirty;
+    }
+
+    // First float of the vbo changed since its last upload, -1 when it is up to date on the GPU
+    int dirtyStart(int vbo) {
+        return vbo < vbos.size() ? dirtyStart[vbo] : -1;
+    }
+
+    // End (exclusive) of the floats of the vbo changed since its last upload, meaningful when dirtyStart is not -1
+    int dirtyEnd(int vbo) {
+        return dirtyEnd[vbo];
+    }
+
+    // Every vbo sent to the GPU
+    void clearDirty() {
+        for (int i = 0; i < vbos.size(); ++i)
+            dirtyStart[i] = -1;
+        anyDirty = false;
     }
 
     // All the vbos removed (Mesh.unloadVBO): the next one added is the first again
     void clearVbos() {
         ++version;
         vbos.clear();
+        anyDirty = false;
     }
 
     // The vbo, null when unknown; read only
