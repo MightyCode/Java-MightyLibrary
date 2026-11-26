@@ -115,15 +115,15 @@ public final class Camera3D extends Camera {
     public void setViewAngle(float fov) {
         this.fov = fov;
 
-        superUpdateProjection();
+        updateProjection();
     }
 
     @Override
     protected void writeProjection() {
         if (viewMode == EViewMode.Perspective)
-            projection.perspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
+            projection.setPerspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
         else
-            projection.ortho(-windowInfo.getVirtualSizeRef().x / 2f, windowInfo.getVirtualSizeRef().x / 2f,
+            projection.setOrtho(-windowInfo.getVirtualSizeRef().x / 2f, windowInfo.getVirtualSizeRef().x / 2f,
                     -windowInfo.getVirtualSizeRef().y / 2f, windowInfo.getVirtualSizeRef().y / 2f,
                     -10000f, 10000f);
     }
@@ -226,6 +226,6 @@ public final class Camera3D extends Camera {
     public void setViewMode(EViewMode eViewMode) {
         this.viewMode = eViewMode;
 
-       superUpdateProjection();
+        updateProjection();
     }
 }
