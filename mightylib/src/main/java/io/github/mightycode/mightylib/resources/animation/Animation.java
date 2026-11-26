@@ -121,7 +121,7 @@ public final class Animation {
         FrameData data = data().getFrame(currentFrame);
         TextureData texture = texture();
 
-        return FrameTexturePosition(data.getFramePositionCopy(), texture.getWidth(), texture.getHeight(),
+        return FrameTexturePosition(data.getFramePositionReference(), texture.getWidth(), texture.getHeight(),
                 new Vector4f());
     }
 
