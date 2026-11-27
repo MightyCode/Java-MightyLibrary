@@ -241,7 +241,7 @@ Aucune.
 - `RectangleBatchGLTest` annonce son uniform absent voulu.
 
 ### Vérifié
-- `mvn -o package` (1442 + 82 + 86 tests) vert ; CI vert sur la branche (runs 45917372579 et 45917645645).
+- `mvn -o package` (1442 + 84 + 86 tests) vert ; CI vert sur la branche (runs 45917372579 et 45917645645).
 - `scenario.py` : `Scene2D` et `FallbackScene`, journal identique, `problems` = 0 ERROR et 6 WARNING `resources` dans `FallbackScene`.
 - `python tools/analyse.py` : rien de nouveau (reste `IM_BAD_CHECK_FOR_ODD` dans `BatchStress2D.createSlime`, antérieur, pour la revue hebdomadaire).
 - Paquet absent : `Scene3D` ignorée, ou en échec avec `requireDemoAssets`.
