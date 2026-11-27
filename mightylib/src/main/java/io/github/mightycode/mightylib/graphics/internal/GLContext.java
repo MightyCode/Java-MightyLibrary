@@ -1,10 +1,14 @@
 package io.github.mightycode.mightylib.graphics.internal;
 
+import io.github.mightycode.mightylib.utils.ELogLevel;
 import io.github.mightycode.mightylib.utils.Logger;
+import org.lwjgl.opengl.ARBDebugOutput;
 import org.lwjgl.opengl.GL;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL43;
 import org.lwjgl.opengl.GLCapabilities;
-import org.lwjgl.opengl.GLUtil;
+import org.lwjgl.opengl.GLDebugMessageARBCallback;
+import org.lwjgl.opengl.GLDebugMessageCallback;
 import org.lwjgl.opengl.KHRDebug;
 import org.lwjgl.system.Callback;
 
@@ -12,6 +16,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -135,9 +140,9 @@ public final class GLContext {
     }
 
     private void setupDebugMessages() {
-        debugMessageCallback = GLUtil.setupDebugMessageCallback(System.err);
+        debugMessageCallback = InstallDebugCallback(capabilities);
         if (debugMessageCallback == null) {
-            System.err.println("OpenGL debug messages are not supported by this driver");
+            Logger.Warn(Logger.CATEGORY_GL, "OpenGL debug messages are not supported by this driver");
             return;
         }
 
@@ -146,6 +151,90 @@ public final class GLContext {
             GL43.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL43.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
         else if (capabilities.GL_KHR_debug)
             KHRDebug.glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, KHRDebug.GL_DEBUG_SEVERITY_NOTIFICATION, (IntBuffer) null, false);
+    }
+
+    // The driver's messages go to the problem channel (OpenGL 4.3, KHR_debug or ARB_debug_output); null if none
+    private static Callback InstallDebugCallback(GLCapabilities capabilities) {
+        if (capabilities.OpenGL43 || capabilities.GL_KHR_debug) {
+            GLDebugMessageCallback callback = GLDebugMessageCallback.create((source, type, id, severity, length, message, userParam) ->
+                    SendDebugMessage(source, type, id, severity, GLDebugMessageCallback.getMessage(length, message)));
+            if (capabilities.OpenGL43)
+                GL43.glDebugMessageCallback(callback, NULL);
+            else
+                KHRDebug.glDebugMessageCallback(callback, NULL);
+            // A non-debug context may not produce any message without it
+            if ((glGetInteger(GL30.GL_CONTEXT_FLAGS) & GL43.GL_CONTEXT_FLAG_DEBUG_BIT) == 0)
+                glEnable(GL43.GL_DEBUG_OUTPUT);
+            return callback;
+        }
+        if (capabilities.GL_ARB_debug_output) {
+            GLDebugMessageARBCallback callback = GLDebugMessageARBCallback.create((source, type, id, severity, length, message, userParam) ->
+                    SendDebugMessage(source, type, id, severity, GLDebugMessageARBCallback.getMessage(length, message)));
+            ARBDebugOutput.glDebugMessageCallbackARB(callback, NULL);
+            return callback;
+        }
+        return null;
+    }
+
+    private static void SendDebugMessage(int source, int type, int id, int severity, String message) {
+        ELogLevel level = DebugMessageLevel(type, severity);
+        if (level == null)
+            return;
+
+        Logger.Log(level, Logger.CATEGORY_GL, "OpenGL debug message"
+                + "\n\tID: 0x" + Integer.toHexString(id).toUpperCase(Locale.ROOT)
+                + "\n\tSource: " + DebugSourceName(source)
+                + "\n\tType: " + DebugTypeName(type)
+                + "\n\tSeverity: " + DebugSeverityName(severity)
+                + "\n\tMessage: " + message, null);
+    }
+
+    /**
+     * Level of a driver message: an error or a high severity is an error, a medium or low severity or a performance
+     * warning is a warning, the rest (notifications) is ignored (null). The ARB constants have the same values.
+     */
+    static ELogLevel DebugMessageLevel(int type, int severity) {
+        if (type == GL43.GL_DEBUG_TYPE_ERROR || severity == GL43.GL_DEBUG_SEVERITY_HIGH)
+            return ELogLevel.ERROR;
+        if (severity == GL43.GL_DEBUG_SEVERITY_MEDIUM || severity == GL43.GL_DEBUG_SEVERITY_LOW
+                || type == GL43.GL_DEBUG_TYPE_PERFORMANCE)
+            return ELogLevel.WARNING;
+        return null;
+    }
+
+    static String DebugSourceName(int source) {
+        switch (source) {
+            case GL43.GL_DEBUG_SOURCE_API: return "API";
+            case GL43.GL_DEBUG_SOURCE_WINDOW_SYSTEM: return "WINDOW SYSTEM";
+            case GL43.GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHADER COMPILER";
+            case GL43.GL_DEBUG_SOURCE_THIRD_PARTY: return "THIRD PARTY";
+            case GL43.GL_DEBUG_SOURCE_APPLICATION: return "APPLICATION";
+            case GL43.GL_DEBUG_SOURCE_OTHER: return "OTHER";
+            default: return "0x" + Integer.toHexString(source).toUpperCase(Locale.ROOT);
+        }
+    }
+
+    static String DebugTypeName(int type) {
+        switch (type) {
+            case GL43.GL_DEBUG_TYPE_ERROR: return "ERROR";
+            case GL43.GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPRECATED BEHAVIOR";
+            case GL43.GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR: return "UNDEFINED BEHAVIOR";
+            case GL43.GL_DEBUG_TYPE_PORTABILITY: return "PORTABILITY";
+            case GL43.GL_DEBUG_TYPE_PERFORMANCE: return "PERFORMANCE";
+            case GL43.GL_DEBUG_TYPE_OTHER: return "OTHER";
+            case GL43.GL_DEBUG_TYPE_MARKER: return "MARKER";
+            default: return "0x" + Integer.toHexString(type).toUpperCase(Locale.ROOT);
+        }
+    }
+
+    static String DebugSeverityName(int severity) {
+        switch (severity) {
+            case GL43.GL_DEBUG_SEVERITY_HIGH: return "HIGH";
+            case GL43.GL_DEBUG_SEVERITY_MEDIUM: return "MEDIUM";
+            case GL43.GL_DEBUG_SEVERITY_LOW: return "LOW";
+            case GL43.GL_DEBUG_SEVERITY_NOTIFICATION: return "NOTIFICATION";
+            default: return "0x" + Integer.toHexString(severity).toUpperCase(Locale.ROOT);
+        }
     }
 
     // ---- Waiting draws ----
