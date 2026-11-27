@@ -27,8 +27,9 @@ public final class BatchFormat {
 
     // Kinds of the values written (slots)
     static final byte SLOT_FLOAT = 0, SLOT_INT = 1, SLOT_COLOR = 2;
-    // The values of a vertex of BatchFormats.SPRITE: x, y, u, v, color
-    private static final byte[] SPRITE_SLOTS = {SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT, SLOT_COLOR};
+    // The values of a vertex of BatchFormats.SPRITE: x, y, u, v, region (left, right, top, bottom), color
+    private static final byte[] SPRITE_SLOTS = {SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT, SLOT_FLOAT,
+            SLOT_FLOAT, SLOT_FLOAT, SLOT_COLOR};
 
     /** An attribute of a format: its name in GLSL, components, type, read per instance or per vertex. */
     public static final class Attribute {
@@ -77,7 +78,8 @@ public final class BatchFormat {
     private final int[] vertexSlotOffsets;
     private final byte[] instanceSlots;
     private final int[] instanceSlotOffsets;
-    // Vertices of the values of BatchFormats.SPRITE (x, y, u, v, color), without instances: DrawBatch2D.triangles
+    // Vertices of the values of BatchFormats.SPRITE (x, y, u, v, region, color), without instances:
+    // DrawBatch2D.triangles
     private final boolean spriteValues;
     // Formats with instance attributes: the vertices (vertex attributes, floats) and the triangles of an instance
     private final float[] templateVertices;
@@ -210,7 +212,8 @@ public final class BatchFormat {
         return instanceSlots.length;
     }
 
-    // Vertices of the values of BatchFormats.SPRITE (x, y, u, v, color), no instance: what DrawBatch2D.triangles writes
+    // Vertices of the values of BatchFormats.SPRITE (x, y, u, v, region, color), no instance: what
+    // DrawBatch2D.triangles writes
     boolean hasSpriteValues() {
         return spriteValues;
     }
