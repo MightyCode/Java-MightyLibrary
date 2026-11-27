@@ -249,3 +249,28 @@ Quatre scènes de référence (étape 6), inscrites dans `DemoScenes`. Elles app
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/image-comparison`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour.
 - Vérifications manuelles à faire, reprises du « Bilan » : les quatre scènes `Reference*` dans le menu, une image de différence lisible dans l'artefact du CI, et `tools/references.py --key` et `--update` sur la machine de l'utilisateur.
+
+## Bilan
+**Fait** (un commit par étape) : capture en mémoire dans `Screenshot` (PNG sur `Workers`, pont `KitGraphicsAccess`) ; `CapturedImage` et `SceneRunner.capture()` (relecture d'une fenêtre cachée et taille vérifiées) ; `ImageTolerance`, `ImageComparison`, `BatchPictures` dessus ; `RendererKey`, `ReferenceImages` ; quatre scènes `Reference*`, `ReferenceTestConfig`, `ReferenceImagesGLTest` (11 vues, plus un test de déterminisme) ; CI (`ubuntu-24.04`, `requireReferences`, artefact `references`, llvmpipe figé, processeur dans le journal) et `tools/references.py` ; séries `windows-nvidia` et `linux-mesa-llvmpipe-intel` ; docs.
+
+**Écarts au plan et raisons**
+- **Clé de pilote** : pas de `mesa-iris` (le renderer de Mesa pour Intel ne nomme pas son pilote, et « Iris » est aussi un nom de cartes Intel sous Windows) : `mesa-intel`.
+- **Un pilote logiciel a une série par fabricant de processeur** (`linux-mesa-llvmpipe-intel`, `-amd`), décidé avec l'utilisateur : la série Mesa différait entre un runner Intel Xeon 6975P-C et un AMD EPYC 7763 (vue `ReferenceColorSpace2D-picture`, 15 pixels, écart 4 dans la texture réduite : ±2 amplifiés par la correction), même avec llvmpipe limité à SSE 4.1 et 128 bits (`GALLIUM_OVERRIDE_CPU_CAPS`, `LP_NATIVE_VECTOR_WIDTH`, gardés : mêmes instructions entre processeurs d'un même fabricant). La série `-amd` reste à amorcer par la première exécution du CI sur un runner AMD (`python tools/references.py --from-ci`).
+- **Série absente avec `requireReferences`** : la capture est aussi écrite (sinon `--from-ci` n'avait rien à copier pour amorcer une série).
+- **Artefact** : `demo/target/references/` plutôt que `**/target/references/**`, pour garder les dossiers de clé à sa racine (les références des tests GL du kit sont dans `later.md`).
+- **`BatchPictures`** : seuil converti en 1/2000 des pixels (un peu plus strict que l'ancien `capacité / 2000` canaux ; écarts mesurés : 0). `TileMapBatchGLTest` et `BatchStress2DGLTest` de la démo gardent leur copie de la comparaison (`later.md`).
+- **`Reference3D`** : caméra libre à la souris seulement après TAB (le curseur reste libre en ouvrant la scène) ; `viewPos` et `updateView` au `display`, pour qu'une caméra posée par commande entre deux ticks soit vue.
+- **`KitApiTest`** liste les types publics du kit : un ajout à l'API est un choix explicite.
+
+**Vérifié**
+- `mvn -o -q test` vert à chaque étape ; analyse statique (Error Prone, SpotBugs) sans remarque sur le nouveau code.
+- En jeu (`scenario.py`) : commande `screenshot` inchangée (`--scale`, `--rect`) ; dans les scènes `Reference*`, `input key hold D` et `input scroll 3` déplacent et zooment la caméra (`?camera`) ; `leakcheck` des quatre scènes sans fuite ; aucun problème.
+- Déterminisme : deux générations de suite de la série locale donnent `unchanged` ; le test de déterminisme passe en local et sur le CI ; la série Intel est stable entre deux exécutions sur le même processeur.
+- Images de référence relues (planches à demi-échelle), dont la correction `picture` bien appliquée (84 % des pixels changent).
+- **Test d'acceptation** (branche temporaire `test/image-acceptance`, texture de `ReferenceSprites2D` décalée d'un pixel, puis supprimée en local et sur GitHub) : `mvn -o -q test` échoue en local sur les trois vues de la scène (« 5868 different pixels (2.5469 %, 0 allowed), largest difference 234, … differences in 150,10 161x120 »), trois fichiers par vue, image de différence lisible (la texture décalée en rouge sur la scène assombrie) ; le CI échoue de même avec l'artefact `references`.
+
+**À vérifier par l'utilisateur**
+- Ouvrir les quatre scènes `Reference*` depuis le menu : rendu attendu (sprites, carte et animations figées ; formes et textes ; dégradé linéaire / gamma ; cubes éclairés), caméra pilotable (Z Q S D, molette ; WASD et TAB dans `Reference3D`).
+- Lire une image `*.diff.png` d'un échec (artefact `references` d'un CI rouge, ou `demo/target/references/windows-nvidia/` après un changement local).
+- Lancer `python tools/references.py --key` (attendu : `windows-nvidia`) et `--update` (attendu : tout `unchanged`) sur sa machine.
+- Après la première exécution rouge du CI sur un runner AMD : `python tools/references.py --from-ci`, relire, commiter la série `linux-mesa-llvmpipe-amd`.
