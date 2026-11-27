@@ -1,0 +1,14 @@
+{
+	"textures" : {
+		"regions" : {
+			"regionsPixel" : {
+				"file" : "regions.png",
+				"qualityType" : "pixelart"
+			},
+			"regionsLinear" : {
+				"file" : "regions.png",
+				"qualityType" : "linear"
+			}
+		}
+	}
+}

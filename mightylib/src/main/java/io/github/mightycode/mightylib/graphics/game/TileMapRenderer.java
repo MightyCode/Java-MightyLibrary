@@ -90,10 +90,13 @@ public final class TileMapRenderer extends MeshRenderer {
     private static final int NUMBER_INDICES = 4;
     private static final int SIZE_INDICES = 6;
     private static final int SIZE_COORDINATES = 8;
+    // The region of a tile, for each of its 4 vertices (4 floats each)
+    private static final int SIZE_REGIONS = 16;
     // The triangles of a tile, like setTilesIndices
     private static final int[] QUAD_INDICES = {0, 1, 2, 2, 0, 3};
     private final int positionIndex;
     private final int textureIndex;
+    private final int regionIndex;
     // Offset of the left top corner of the map from the position of the renderer, set by the reference
     private final Vector2f referenceOffset;
     private EDirection reference;
@@ -113,6 +116,8 @@ public final class TileMapRenderer extends MeshRenderer {
 
     int[] tilesIndices = null;
     float[] tilesTexturePosition = null;
+    // The tile of the tileset each tile reads only inside (left, right, top, bottom), per vertex
+    float[] tilesTextureRegion = null;
     float[] tilesPosition = null;
 
     // Index of the compact arrays for the batched draw: the column of each tile, the first tile of each row of each
@@ -140,6 +145,8 @@ public final class TileMapRenderer extends MeshRenderer {
                 2, (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
         textureIndex = getMesh().addVboFloat(new float[0],
                 2,  (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
+        regionIndex = getMesh().addVboFloat(Mesh.COMMON_TEXTURE_REGION_CHANNEL, new float[0],
+                4,  (willChange) ? Mesh.DYNAMIC_STORE : Mesh.STATIC_STORE);
 
         animatedTiles = new ArrayList<>();
 
@@ -206,6 +213,7 @@ public final class TileMapRenderer extends MeshRenderer {
 
         tilesIndices = new int[tileNumber * 6];
         tilesTexturePosition = new float[tileNumber * 8];
+        tilesTextureRegion = new float[tileNumber * SIZE_REGIONS];
         tilesPosition = new float[tileNumber * 8];
         tilesColumn = new int[tileNumber];
 
@@ -264,6 +272,7 @@ public final class TileMapRenderer extends MeshRenderer {
 
                     Vector4f tileTextureRect = getTileTextureRect(tileTexturePosition, tileSetIndex);
 
+                    setTextureRegion(tilesTextureRegion, tileCount * SIZE_REGIONS, tileTextureRect);
                     setTexturePosition(tilesTexturePosition, tileCount * SIZE_COORDINATES,
                             tileTextureRect,
                             tileSet.getTileRotation(rawTileType),
@@ -278,13 +287,14 @@ public final class TileMapRenderer extends MeshRenderer {
 
         getMesh().setEbo(tilesIndices);
         getMesh().updateVbo(tilesTexturePosition, textureIndex);
+        getMesh().updateVbo(tilesTextureRegion, regionIndex);
         getMesh().updateVbo(tilesPosition, positionIndex);
     }
 
     /**
      * Batched (one draw for the layers of its category) when its shader has a batch equivalent: only the tiles in
      * the view of its camera are written, a cost of the visible tiles, not of the map; the order of the tiles is the
-     * one of the mesh (layer, then row, then column).
+     * one of the mesh (layer, then row, then column). Each tile read only inside its tile of the tileset.
      */
     @Override
     protected boolean submitToBatch(DrawBatch2D batch) {
@@ -315,6 +325,9 @@ public final class TileMapRenderer extends MeshRenderer {
                 int tile = TileVisibility.FirstInRow(tilesColumn, rowStarts[rowIndex], end, firstColumn);
                 for (; tile < end && tilesColumn[tile] <= lastColumn; ++tile) {
                     int at = tile * SIZE_COORDINATES;
+                    int region = tile * SIZE_REGIONS;
+                    batch.textureRegion(tilesTextureRegion[region], tilesTextureRegion[region + 1],
+                            tilesTextureRegion[region + 2], tilesTextureRegion[region + 3]);
                     for (int corner = 0; corner < NUMBER_INDICES; ++corner) {
                         float x = tilesPosition[at + 2 * corner];
                         float y = tilesPosition[at + 2 * corner + 1];
@@ -386,8 +399,10 @@ public final class TileMapRenderer extends MeshRenderer {
         // A map change needs a full rebuild, an animation only changes texture positions
         if (tilemap.hasBeenUpdated())
             loadTileMapInformation();
-        else if (animationChanged)
+        else if (animationChanged) {
             getMesh().updateVbo(tilesTexturePosition, textureIndex);
+            getMesh().updateVbo(tilesTextureRegion, regionIndex);
+        }
     }
 
     private void updateAnimatedTileTexture(AnimatedTile animatedTile) {
@@ -399,6 +414,7 @@ public final class TileMapRenderer extends MeshRenderer {
             Vector2i tileTexturePosition = getTilePosition(tileSet.getConvertedId(currentTileId), tileSetsNumber[tile.tileSetIndex]);
             Vector4f tileTextureRect = getTileTextureRect(tileTexturePosition, tile.tileSetIndex);
 
+            setTextureRegion(tilesTextureRegion, tile.bufferIndex * SIZE_REGIONS, tileTextureRect);
             setTexturePosition(tilesTexturePosition, tile.bufferIndex * SIZE_COORDINATES,
                     tileTextureRect,
                     tileSet.getTileRotation(currentTileId),
@@ -467,6 +483,16 @@ public final class TileMapRenderer extends MeshRenderer {
         );
     }
 
+    // The region of the 4 corners of a tile (16 floats from index): its rect, before any flip (min, then max)
+    static void setTextureRegion(float[] textureRegion, int index, Vector4f rect) {
+        for (int corner = 0; corner < NUMBER_INDICES; ++corner) {
+            textureRegion[index + 4 * corner] = rect.x;
+            textureRegion[index + 4 * corner + 1] = rect.y;
+            textureRegion[index + 4 * corner + 2] = rect.z;
+            textureRegion[index + 4 * corner + 3] = rect.w;
+        }
+    }
+
     // Texture coordinates of the 4 corners of a tile (8 floats from index). flip: 1 horizontal, 2 vertical, 3 both
     // (originalPosition is flipped in place); rotation: quarter turns, 0 to 3
     static void setTexturePosition(float[] texturePosition, int index, Vector4f originalPosition,
@@ -504,6 +530,7 @@ public final class TileMapRenderer extends MeshRenderer {
         getMesh().setEbo(new int[0]);
         getMesh().updateVbo(new float[0], positionIndex);
         getMesh().updateVbo(new float[0], textureIndex);
+        getMesh().updateVbo(new float[0], regionIndex);
 
         animatedTiles.clear();
     }

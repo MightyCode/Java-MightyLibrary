@@ -835,7 +835,8 @@ public final class DrawBatch2D {
      * A rectangle of the main texture of the material (the texture a texture shader reads; colorShape2D reads
      * none: a colored rectangle), like a RectangleRenderer: size in world units, its reference point (0 to 1 of its
      * size, 0 0 for the top left corner) placed at position, turned by rotation (radians) around it, the part of
-     * the texture region (u0, v0, u1, v1 in its x, y, z, w; null for the whole texture), flipped like
+     * the texture region (u0, v0, u1, v1 in its x, y, z, w, read only inside it like
+     * RectangleRenderer.setTextureRegion; null for the whole texture, without limit), flipped like
      * RectangleRenderer.setTextureFlip, multiplied by color (null for white). False when the material can't be
      * batched now (nothing drawn); true when drawn, or culled (outside the view: nothing written).
      */
@@ -859,6 +860,9 @@ public final class DrawBatch2D {
 
         float u0 = region == null ? 0 : region.x(), v0 = region == null ? 0 : region.y();
         float u1 = region == null ? 1 : region.z(), v1 = region == null ? 1 : region.w();
+        // Read only inside the region (the whole texture: no limit, a repeated texture stays possible)
+        float limitLeft = region == null ? 0 : Math.min(u0, u1), limitRight = region == null ? 0 : Math.max(u0, u1);
+        float limitTop = Math.min(v0, v1), limitBottom = Math.max(v0, v1);
         // Like RectangularFace: a flip is named by its axis, Horizontal mirrors the rows (v), Vertical the columns (u)
         if (flip == EFlip.Horizontal || flip == EFlip.HorizontalVertical) {
             float v = v0;
@@ -886,7 +890,7 @@ public final class DrawBatch2D {
                 wx1, wy1, u0, v0,
                 wx2, wy2, u1, v0,
                 wx3, wy3, u1, v1,
-                color == null ? -1 : color.toIntRGBA());
+                color == null ? -1 : color.toIntRGBA(), limitLeft, limitRight, limitTop, limitBottom);
         drawnOutsideRenderer();
         return true;
     }

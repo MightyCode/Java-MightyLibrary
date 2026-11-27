@@ -40,6 +40,8 @@ public class Mesh {
     public static final int COMMON_VERTEX_POSITION_CHANNEL = 0;
     public static final int COMMON_TEXTURE_POSITION_CHANNEL = 1;
     public static final int COMMON_NORMAL_POSITION_CHANNEL = 2;
+    // 2D: the region of the texture a vertex reads (left, right, top, bottom; 2D/essential/texture2DV.glsl)
+    public static final int COMMON_TEXTURE_REGION_CHANNEL = 2;
 
     private int eboStorage;
 
@@ -290,6 +292,11 @@ public class Mesh {
             vbosEnable.set(index, true);
             layoutChanged();
         }
+    }
+
+    // A vbo of the mesh is on this channel
+    public final boolean hasChannel(int channel) {
+        return vbosChannel.contains(channel);
     }
 
     public final boolean isEnableVbo(int channel) {

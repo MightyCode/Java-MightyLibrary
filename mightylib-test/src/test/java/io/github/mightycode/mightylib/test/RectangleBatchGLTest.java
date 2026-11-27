@@ -200,7 +200,8 @@ class RectangleBatchGLTest {
                 pattern = new Pattern();
                 sprite = new RectangleRenderer(EngineResources.TEXTURE_2D);
                 sprite.setMainTextureChannel(pattern);
-                sprite.setTexturePosition(new Vector4f(0.1f, 0.6f, 0.2f, 0.5f));
+                // drawRegion reads only inside its region, like setTextureRegion
+                sprite.setTextureRegion(new Vector4f(0.1f, 0.6f, 0.2f, 0.5f));
                 sprite.setTextureFlip(EFlip.Horizontal);
                 sprite.setReferenceDirection(EDirection.None);
                 sprite.setSizePix(300, 180);
