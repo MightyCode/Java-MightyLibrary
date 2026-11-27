@@ -83,6 +83,8 @@ public final class TestEngine implements AutoCloseable {
     private boolean closed;
     // Kept between tests by the scene extension: it checks the problems after each test, not at close
     private boolean shared;
+    // The test of this engine failed (extension of headless engines): at close, an unmet announce is not reported
+    private boolean testFailed;
 
     TestEngine(EngineConfig config, boolean headless) {
         this.config = config;
@@ -306,6 +308,12 @@ public final class TestEngine implements AutoCloseable {
         return failure;
     }
 
+    // The test of a lone engine failed: close only reports its unexpected errors (an announce may be unmet because of
+    // the failure). Its announces stay valid until close, which checks the test and the shutdown together
+    void markTestFailed() {
+        testFailed = true;
+    }
+
     /**
      * Headless: the data whose GL element was asked (by a batch or a fallback), with the number of times.
      * Nothing is sent to a graphic card. Empty with a window (the GL elements are real: see the gl command).
@@ -405,7 +413,7 @@ public final class TestEngine implements AutoCloseable {
                     RUNNING.set(false);
                 // The problems of the shutdown included
                 if (checkProblems && engine != null)
-                    failure = problems.failure(true);
+                    failure = problems.failure(!testFailed);
                 problems.uninstall();
             }
         }

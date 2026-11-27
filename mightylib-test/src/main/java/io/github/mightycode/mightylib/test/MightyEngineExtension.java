@@ -13,8 +13,8 @@ import java.nio.file.Paths;
 import java.util.function.Supplier;
 
 /**
- * The extension of @MightyEngineTest: a started headless engine per test, closed after it. After the test, an error
- * of the Logger channel no announce covers fails it (then the problems of the shutdown, at close).
+ * The extension of @MightyEngineTest: a started headless engine per test, closed after it. At its close, an error of
+ * the Logger channel (during the test or its shutdown) no announce of the test covers fails the test.
  */
 public final class MightyEngineExtension implements ParameterResolver, AfterEachCallback {
     private static final ExtensionContext.Namespace NAMESPACE =
@@ -43,12 +43,10 @@ public final class MightyEngineExtension implements ParameterResolver, AfterEach
     @Override
     public void afterEach(ExtensionContext context) {
         ClosedAfterTest started = context.getStore(NAMESPACE).get(TestEngine.class, ClosedAfterTest.class);
-        if (started == null || started.engine.isClosed())
-            return;
-
-        AssertionError failure = started.engine.endTest(context.getExecutionException().isPresent());
-        if (failure != null)
-            throw failure;
+        // The engine is checked at close (CloseableResource of the test): the problems of its shutdown are checked
+        // with the announces of the test
+        if (started != null && !started.engine.isClosed() && context.getExecutionException().isPresent())
+            started.engine.markTestFailed();
     }
 
     static EngineConfig newConfig(Class<? extends Supplier<EngineConfig>> type) {

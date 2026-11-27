@@ -207,6 +207,37 @@ class ProblemsKitTest {
         started().close();
     }
 
+    // MightyEngineExtension: the announces of the test still cover the errors checked at close (its shutdown)
+    @Test
+    void announceCoversTheErrorsCheckedAtClose() {
+        TestEngine engine = started();
+        engine.expectProblem(ELogLevel.ERROR, "repeated until the shutdown");
+        Logger.Error(CATEGORY, "repeated until the shutdown");
+        Logger.Error(CATEGORY, "repeated until the shutdown");
+        engine.close();
+
+        AssertionError unmet = assertThrows(AssertionError.class,
+                () -> started().expectProblem(ELogLevel.ERROR, "never sent").close());
+        assertTrue(unmet.getMessage().contains("never came"), unmet.getMessage());
+    }
+
+    // A failed test of MightyEngineExtension: close reports its unexpected errors, not its unmet announces
+    @Test
+    void failedTestOnlyReportsItsErrorsAtClose() {
+        TestEngine quiet = started();
+        quiet.expectProblem(ELogLevel.ERROR, "never sent");
+        quiet.markTestFailed();
+        quiet.close();
+
+        TestEngine noisy = started();
+        noisy.expectProblem(ELogLevel.ERROR, "never sent");
+        noisy.markTestFailed();
+        Logger.Error(CATEGORY, "not announced");
+        AssertionError failure = assertThrows(AssertionError.class, noisy::close);
+        assertTrue(failure.getMessage().contains("not announced"), failure.getMessage());
+        assertFalse(failure.getMessage().contains("never came"), failure.getMessage());
+    }
+
     @Test
     void problemsAfterCloseAreNotReceived() {
         TestEngine engine = started();
