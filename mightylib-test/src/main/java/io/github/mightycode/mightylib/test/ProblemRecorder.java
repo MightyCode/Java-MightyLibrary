@@ -6,7 +6,9 @@ import io.github.mightycode.mightylib.utils.LogEntry;
 import io.github.mightycode.mightylib.utils.Logger;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -137,8 +139,10 @@ final class ProblemRecorder implements ILogListener {
         if (!unexpected.isEmpty()) {
             message.append(unexpected.size()).append(" unexpected error(s) sent through Logger (announce a wanted one"
                     + " with TestEngine.expectProblem):");
+            List<String> lines = new ArrayList<>();
             for (Received problem : unexpected)
-                message.append("\n  ").append(problem.entry).append(" (thread ").append(problem.entry.thread()).append(")");
+                lines.add(problem.entry + " (thread " + problem.entry.thread() + ")");
+            AppendCounted(message, lines);
         }
         if (!unmet.isEmpty()) {
             if (message.length() > 0)
@@ -149,10 +153,21 @@ final class ProblemRecorder implements ILogListener {
         }
         if (!warnings.isEmpty()) {
             message.append("\nWarnings (").append(warnings.size()).append("):");
+            List<String> lines = new ArrayList<>();
             for (LogEntry warning : warnings)
-                message.append("\n  ").append(warning);
+                lines.add(warning.toString());
+            AppendCounted(message, lines);
         }
 
         return new AssertionError(message.toString(), unexpected.isEmpty() ? null : unexpected.get(0).cause());
+    }
+
+    // One line per distinct text, in the order of their first time, with their number when repeated (each frame)
+    private static void AppendCounted(StringBuilder message, List<String> lines) {
+        Map<String, Integer> counts = new LinkedHashMap<>();
+        for (String line : lines)
+            counts.merge(line, 1, Integer::sum);
+        for (Map.Entry<String, Integer> line : counts.entrySet())
+            message.append("\n  ").append(line.getKey()).append(line.getValue() > 1 ? " (x" + line.getValue() + ")" : "");
     }
 }

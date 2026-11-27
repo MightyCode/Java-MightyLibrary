@@ -228,6 +228,33 @@ class ProblemsKitTest {
         assertNull(MightySceneExtension.Combined(null, null));
     }
 
+    @Test
+    void repeatedErrorIsOneLineWithItsCount() {
+        try (TestEngine engine = started()) {
+            for (int i = 0; i < 3; ++i)
+                Logger.Error(CATEGORY, "each frame");
+            Logger.Error(CATEGORY, "once");
+
+            AssertionError failure = engine.endTest(false);
+            assertNotNull(failure);
+            String thread = " (thread " + Thread.currentThread().getName() + ")";
+            assertTrue(failure.getMessage().endsWith("4 unexpected error(s) sent through Logger (announce a wanted one"
+                    + " with TestEngine.expectProblem):\n  ERROR [kittest] each frame" + thread + " (x3)\n"
+                    + "  ERROR [kittest] once" + thread), failure.getMessage());
+        }
+    }
+
+    @Test
+    void failureAfterATestNamesIt() {
+        AssertionError failure = new AssertionError("Leak: gl.Texture 1->2", new IllegalStateException("cause"));
+        failure.addSuppressed(new AssertionError("other"));
+
+        AssertionError named = MightySceneExtension.Named("MultiWindowScene", failure);
+        assertEquals("After MultiWindowScene: Leak: gl.Texture 1->2", named.getMessage());
+        assertSame(failure.getCause(), named.getCause());
+        assertEquals(1, named.getSuppressed().length);
+    }
+
     // Two settings that differ by strictResources: two engines
     static final class Config implements Supplier<EngineConfig> {
         @Override

@@ -141,7 +141,15 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
             kept.close();
         AssertionError failure = Combined(leak, problems);
         if (failure != null)
-            throw failure;
+            throw Named(context.getDisplayName(), failure);
+    }
+
+    // The check runs after the test: its failure names the test (the scene of a parameterized test, for example)
+    static AssertionError Named(String test, AssertionError failure) {
+        AssertionError named = new AssertionError("After " + test + ": " + failure.getMessage(), failure.getCause());
+        for (Throwable suppressed : failure.getSuppressed())
+            named.addSuppressed(suppressed);
+        return named;
     }
 
     // One failure for the leaks and the problems of a test (the stack trace of the first error as cause)
