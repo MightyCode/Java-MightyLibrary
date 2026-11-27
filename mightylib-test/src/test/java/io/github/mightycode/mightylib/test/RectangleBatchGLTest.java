@@ -9,6 +9,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.resources.EngineResources;
+import io.github.mightycode.mightylib.utils.ELogLevel;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
@@ -78,6 +79,8 @@ class RectangleBatchGLTest {
 
     @Test
     void theBatchedPictureIsThePictureDrawnAlone(SceneRunner runner) {
+        // The value the batch does not give is in no shader: reported, as for any absent uniform
+        runner.engine().expectProblem(ELogLevel.ERROR, "Uniform mlViewportSize2 not found");
         inScene(runner, scene -> {
             List<RectangleRenderer> renderers;
             Pattern pattern;

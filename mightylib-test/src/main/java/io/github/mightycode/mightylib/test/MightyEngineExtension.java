@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.test;
 
 import io.github.mightycode.mightylib.main.EngineConfig;
+import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
@@ -11,8 +12,11 @@ import java.lang.reflect.Constructor;
 import java.nio.file.Paths;
 import java.util.function.Supplier;
 
-/** The extension of @MightyEngineTest: a started headless engine per test, closed after it. */
-public final class MightyEngineExtension implements ParameterResolver {
+/**
+ * The extension of @MightyEngineTest: a started headless engine per test, closed after it. After the test, an error
+ * of the Logger channel no announce covers fails it (then the problems of the shutdown, at close).
+ */
+public final class MightyEngineExtension implements ParameterResolver, AfterEachCallback {
     private static final ExtensionContext.Namespace NAMESPACE =
             ExtensionContext.Namespace.create(MightyEngineExtension.class);
 
@@ -34,6 +38,17 @@ public final class MightyEngineExtension implements ParameterResolver {
                 engine.addSource(Paths.get(source));
             return new ClosedAfterTest(engine.start());
         }, ClosedAfterTest.class).engine;
+    }
+
+    @Override
+    public void afterEach(ExtensionContext context) {
+        ClosedAfterTest started = context.getStore(NAMESPACE).get(TestEngine.class, ClosedAfterTest.class);
+        if (started == null || started.engine.isClosed())
+            return;
+
+        AssertionError failure = started.engine.endTest(context.getExecutionException().isPresent());
+        if (failure != null)
+            throw failure;
     }
 
     static EngineConfig newConfig(Class<? extends Supplier<EngineConfig>> type) {

@@ -13,6 +13,9 @@ import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.utils.ELogLevel;
+import io.github.mightycode.mightylib.utils.LogEntry;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 
 import java.io.IOException;
@@ -39,6 +42,10 @@ import java.util.concurrent.atomic.AtomicReference;
  * calls step. Its time is manual: each step moves it by one tick (1 / TPS), advance moves it further.
  * Created by MightyTest; close it (try-with-resources) to stop it and reset the process-wide state of the engine.
  * Main thread = the thread that started it: call it from that thread only.
+ * <p>
+ * It listens to the problems of the Logger channel from start to close: an error that no
+ * {@link #expectProblem announce} covers fails the test (the JUnit extensions check after each test, a lone engine at
+ * close), and so does an announce that no problem met. Warnings never fail a test: {@link #problems()} gives them.
  */
 public final class TestEngine implements AutoCloseable {
     private static final long NANOS_PER_SECOND = 1_000_000_000L;
@@ -61,6 +68,7 @@ public final class TestEngine implements AutoCloseable {
     private final boolean headless;
     private final List<Path> sources = new ArrayList<>();
     private final RecordingGLSink sink = new RecordingGLSink();
+    private final ProblemRecorder problems = new ProblemRecorder();
     private boolean strictResources = true;
     // The folder of the player data used by the engine; deleted at close when the kit created it
     private Path playerDataFolder;
@@ -73,6 +81,8 @@ public final class TestEngine implements AutoCloseable {
     private final AtomicLong clock = new AtomicLong();
     private boolean owner;
     private boolean closed;
+    // Kept between tests by the scene extension: it checks the problems after each test, not at close
+    private boolean shared;
 
     TestEngine(EngineConfig config, boolean headless) {
         this.config = config;
@@ -124,7 +134,7 @@ public final class TestEngine implements AutoCloseable {
         try {
             usePlayerDataFolder();
         } catch (UncheckedIOException e) {
-            close();
+            close(false);
             throw e;
         }
         if (!sources.isEmpty())
@@ -143,6 +153,7 @@ public final class TestEngine implements AutoCloseable {
         // Only the simulated inputs: a mouse moved or a key pressed at the machine during the tests changes nothing
         KitInputAccess.setRealDevicesIgnored(true);
 
+        problems.install();
         int status;
         try {
             engine = KitEngineAccess.create(config, strictResources);
@@ -150,16 +161,24 @@ public final class TestEngine implements AutoCloseable {
             status = headless ? KitEngineAccess.setupHeadless(engine, sink) : KitEngineAccess.setup(engine);
         } catch (RuntimeException | Error e) {
             // A strict resource that failed, a plugin that threw: the next test starts from a clean state
-            close();
+            close(false);
             throw e;
         }
         if (status != ListError.NO_ERROR) {
-            close();
+            close(false);
             if (status == ListError.LIBRARIES_LOAD_FAIL)
                 throw new GLUnavailableException("GLFW can't start: no screen (display server) here");
             if (status == ListError.WINDOW_CREATION_FAIL)
                 throw new GLUnavailableException("No window with an OpenGL 3.3 core context here");
             throw new IllegalStateException("The engine did not start: error " + status + " (ListError)");
+        }
+
+        // An error while starting (plugin, service, strict resource of the engine...) is not a test to run
+        AssertionError startProblems = problems.failure(false);
+        if (startProblems != null) {
+            close(false);
+            throw new IllegalStateException("The engine started with errors: " + startProblems.getMessage(),
+                    startProblems.getCause());
         }
 
         return this;
@@ -256,6 +275,38 @@ public final class TestEngine implements AutoCloseable {
     }
 
     /**
+     * Announces a problem the current test wants (a failure it provokes): the errors of this level whose message (or
+     * exception) matches the regex (Matcher.find) do not fail the test, and the test fails if none comes. Valid until
+     * the end of the current test (lone engine: until close). Any thread may then send it.
+     */
+    public TestEngine expectProblem(ELogLevel level, String regex) {
+        if (closed)
+            throw new IllegalStateException("The test engine is closed");
+        problems.expect(level, regex);
+        return this;
+    }
+
+    /** The problems received during the current test (lone engine: since start), warnings included, oldest first. */
+    public List<LogEntry> problems() {
+        return problems.problems();
+    }
+
+    // A test begins (scene extension, before each test): the problems before it are not its own
+    void beginTest() {
+        problems.reset();
+    }
+
+    /**
+     * The failure of the problems of the test that ends, null if none; then a new test begins. A test that already
+     * failed only reports its unexpected errors (an announce may be unmet because of its failure).
+     */
+    AssertionError endTest(boolean testFailed) {
+        AssertionError failure = problems.failure(!testFailed);
+        problems.reset();
+        return failure;
+    }
+
+    /**
      * Headless: the data whose GL element was asked (by a batch or a fallback), with the number of times.
      * Nothing is sent to a graphic card. Empty with a window (the GL elements are real: see the gl command).
      */
@@ -293,6 +344,7 @@ public final class TestEngine implements AutoCloseable {
 
     // Kept between tests by the JUnit extension: the next engine to start closes it first
     void markShared() {
+        shared = true;
         SHARED.set(this);
     }
 
@@ -316,13 +368,23 @@ public final class TestEngine implements AutoCloseable {
             throw new IllegalStateException("The test engine is not started (start) or is closed");
     }
 
-    /** Stops the engine, frees everything, resets the process-wide state. Can be called twice. */
+    /**
+     * Stops the engine, frees everything, resets the process-wide state. Can be called twice.
+     * @throws AssertionError once everything is freed, if an error no announce covers came since the start (or since
+     * the last test of the JUnit extension of headless engines), or if an announce was never met
+     */
     @Override
     public void close() {
+        close(!shared);
+    }
+
+    // checkProblems false: closed after a failure that is already reported, or kept by the scene extension
+    private void close(boolean checkProblems) {
         if (closed)
             return;
         closed = true;
 
+        AssertionError failure = null;
         try {
             if (engine != null)
                 KitEngineAccess.shutdown(engine, ListError.NO_ERROR);
@@ -341,8 +403,14 @@ public final class TestEngine implements AutoCloseable {
                 SHARED.compareAndSet(this, null);
                 if (owner)
                     RUNNING.set(false);
+                // The problems of the shutdown included
+                if (checkProblems && engine != null)
+                    failure = problems.failure(true);
+                problems.uninstall();
             }
         }
+        if (failure != null)
+            throw failure;
     }
 
     // A failure is written, never thrown: the test itself passed
@@ -367,7 +435,8 @@ public final class TestEngine implements AutoCloseable {
                 }
             });
         } catch (IOException e) {
-            System.err.println("--Test engine: can't delete the folder of the player data " + folder + " (" + e + ")");
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Test engine: can't delete the folder of the player data " + folder
+                    + " (" + e + ")");
         }
     }
 
