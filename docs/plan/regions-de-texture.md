@@ -94,7 +94,7 @@ Pas de nouvelle scène. Vérification à la main par l'utilisateur dans `BatchRe
 ### Fait
 - Étape 2 : `utils/textureRegion.glsl` (`regionTexCoords`, région passée en `flat`), lue par `sprite2D`, `sprite2DInstanced` et `texture2D` ; `SPRITE` = `aPos`, `inTexCoords`, `inTexRegion`, `inColor` (36 octets), `SPRITE_INSTANCED` reçoit `aTexRegion` (68 octets) ; `DrawBatch2D.textureRegion` collante (remise à zéro par `beginDraw`), surcharges de `quad`, `triangles` et `BatchGeometry2D.WriteTriangles` avec région ; une instance par quad d'une seule région. Tests : `DrawBatch2DTest`, `BatchFormatTest`.
 - Étape 3 : `Animation.FrameTexturePosition` exact (`FRAME_INSET` supprimé) ; régions dans `Animation2DRenderer`, `TileMapRenderer`, `Shape2DRenderer.setTextureRegion` (et `getTextureRegion`), `drawRegion` ; `Mesh.COMMON_TEXTURE_REGION_CHANNEL` et `Mesh.hasChannel`. Test de reproduction `TextureRegionsGLTest` (kit) ; `FrameTexturePositionTest`, `AnimationTest`, `RectangleBatchGLTest` adaptés.
-- Étape 4 : séries `windows-nvidia` et `linux-mesa-llvmpipe-intel` de `ReferenceSprites2D` (trois vues) régénérées et relues ; **`linux-mesa-llvmpipe-amd` pas encore** : trois exécutions de la CI de suite sur un runner Intel (le jeton ne peut pas relancer une exécution : un commit, même vide, en relance une).
+- Étape 4 : séries `windows-nvidia`, `linux-mesa-llvmpipe-intel` et `-amd` de `ReferenceSprites2D` (trois vues) régénérées et relues (la série AMD à la quatrième exécution de la CI : les trois premières sur un runner Intel ; le jeton ne peut pas relancer une exécution, un commit vide en a relancé une).
 - Étape 5 : `architecture.md`, `decisions.md`, `later.md`, `CLAUDE.md`, `licence.md` (fichiers du test).
 
 ### Écarts au plan
