@@ -44,7 +44,7 @@ final class ProblemRecorder implements ILogListener {
 
         boolean matches(LogEntry entry) {
             return entry.level() == level && (pattern.matcher(entry.message()).find()
-                    || entry.error() != null && pattern.matcher(entry.error().toString()).find());
+                    || (entry.error() != null && pattern.matcher(entry.error().toString()).find()));
         }
 
         @Override

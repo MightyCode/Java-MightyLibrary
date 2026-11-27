@@ -88,6 +88,8 @@ public final class Logger {
     }
 
     /** Sends a problem: prints its line to System.err, then gives it to each listener. */
+    // A listener that throws is removed while the list is iterated: the iterator of a CopyOnWriteArrayList reads a copy
+    @SuppressWarnings("ModifyCollectionInEnhancedForLoop")
     public static void Log(ELogLevel level, String category, String message, Throwable error) {
         Objects.requireNonNull(level, "level");
         Objects.requireNonNull(category, "category");
