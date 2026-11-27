@@ -13,6 +13,7 @@
       <w>affero</w>
       <w>apiguardian</w>
       <w>apos</w>
+      <w>asahi</w>
       <w>ascii</w>
       <w>aseprite</w>
       <w>assimp</w>
@@ -27,9 +28,11 @@
       <w>ceil</w>
       <w>changegain</w>
       <w>chnl</w>
+      <w>collabora</w>
       <w>coord</w>
       <w>coords</w>
       <w>couvrable</w>
+      <w>crocus</w>
       <w>ctor</w>
       <w>cubemap</w>
       <w>cubemaps</w>
@@ -52,6 +55,7 @@
       <w>enchaînables</w>
       <w>endswith</w>
       <w>enginecommand</w>
+      <w>etnaviv</w>
       <w>etree</w>
       <w>expanduser</w>
       <w>fabmax</w>
@@ -59,6 +63,7 @@
       <w>findall</w>
       <w>finditer</w>
       <w>fqname</w>
+      <w>freedreno</w>
       <w>gamecommand</w>
       <w>gametime</w>
       <w>gedik</w>
@@ -93,6 +98,7 @@
       <w>l'include</w>
       <w>l'overlay</w>
       <w>l'uniform</w>
+      <w>lavapipe</w>
       <w>leakcheck</w>
       <w>leftdown</w>
       <w>leftup</w>
@@ -100,6 +106,7 @@
       <w>lightpos</w>
       <w>listdir</w>
       <w>litcrates</w>
+      <w>llvmpipe</w>
       <w>logf</w>
       <w>lookat</w>
       <w>loopmirrored</w>
@@ -121,11 +128,13 @@
       <w>newmtl</w>
       <w>nimport</w>
       <w>noqa</w>
+      <w>nouveau</w>
       <w>npackage</w>
       <w>offvuser</w>
       <w>ofwindow</w>
       <w>openal</w>
       <w>oppy</w>
+      <w>panfrost</w>
       <w>partb</w>
       <w>partd</w>
       <w>partf</w>
@@ -133,6 +142,7 @@
       <w>pbos</w>
       <w>pind</w>
       <w>pixelart</w>
+      <w>polaris</w>
       <w>positivez</w>
       <w>poussables</w>
       <w>prec</w>
@@ -144,7 +154,9 @@
       <w>r'extends</w>
       <w>r'private</w>
       <w>r'public</w>
+      <w>radeonsi</w>
       <w>ragdolls</w>
+      <w>raven</w>
       <w>raycasts</w>
       <w>rbos</w>
       <w>readline</w>
@@ -176,6 +188,7 @@
       <w>sety</w>
       <w>sfinal</w>
       <w>skybox</w>
+      <w>softpipe</w>
       <w>soundformats</w>
       <w>spaw</w>
       <w>splitlines</w>
@@ -208,6 +221,7 @@
       <w>vaos</w>
       <w>vbos</w>
       <w>viewpos</w>
+      <w>virgl</w>
       <w>wavecollapse</w>
       <w>wayland</w>
       <w>wbmp</w>
@@ -216,6 +230,7 @@
       <w>xadvance</w>
       <w>xoffset</w>
       <w>yoffset</w>
+      <w>zink</w>
       <w>zsabreblend</w>
       <w>zzalone</w>
       <w>zzbroken</w>

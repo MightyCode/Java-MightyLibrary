@@ -30,7 +30,7 @@ class SceneCaptureGLTest {
 
     private static void assertColor(int expected, int actual, String where) {
         for (int shift = 0; shift <= 16; shift += 8) {
-            if (Math.abs((expected >> shift & 0xFF) - (actual >> shift & 0xFF)) > 1)
+            if (Math.abs(((expected >> shift) & 0xFF) - ((actual >> shift) & 0xFF)) > 1)
                 fail(where + ": " + Integer.toHexString(actual) + " instead of " + Integer.toHexString(expected));
         }
     }

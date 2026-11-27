@@ -15,6 +15,8 @@ class GLContextTest {
         runner.frames(1);
         String version = GL11C.glGetString(GL11C.GL_VERSION);
         System.out.println("--GL of the tests: " + version + " | " + GL11C.glGetString(GL11C.GL_RENDERER));
+        // tools/references.py --key reads this line
+        System.out.println("--Reference key: " + RendererKey.current());
 
         int major = GL11C.glGetInteger(GL32C.GL_MAJOR_VERSION);
         int minor = GL11C.glGetInteger(GL32C.GL_MINOR_VERSION);

@@ -123,8 +123,8 @@ final class BatchPictures {
             for (int y = 0; y < size.y; ++y) {
                 for (int x = 0; x < size.x; ++x) {
                     int index = (x + (size.y - 1 - y) * size.x) * 4;
-                    rgb[x + y * size.x] = (picture.get(index) & 0xFF) << 16 | (picture.get(index + 1) & 0xFF) << 8
-                            | picture.get(index + 2) & 0xFF;
+                    rgb[x + y * size.x] = ((picture.get(index) & 0xFF) << 16)
+                            | ((picture.get(index + 1) & 0xFF) << 8) | (picture.get(index + 2) & 0xFF);
                 }
             }
             return CapturedImage.of(size.x, size.y, rgb);

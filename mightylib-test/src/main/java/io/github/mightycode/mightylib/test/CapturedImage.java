@@ -46,7 +46,7 @@ public final class CapturedImage {
         byte[] rgba = image.rgba();
         int[] rgb = new int[image.width() * image.height()];
         for (int i = 0; i < rgb.length; ++i)
-            rgb[i] = (rgba[i * 4] & 0xFF) << 16 | (rgba[i * 4 + 1] & 0xFF) << 8 | rgba[i * 4 + 2] & 0xFF;
+            rgb[i] = ((rgba[i * 4] & 0xFF) << 16) | ((rgba[i * 4 + 1] & 0xFF) << 8) | (rgba[i * 4 + 2] & 0xFF);
         return new CapturedImage(image.width(), image.height(), rgb);
     }
 

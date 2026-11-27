@@ -52,7 +52,7 @@ public final class ImageComparison {
                 int a = expected.rgb(x, y), b = actual.rgb(x, y);
                 int largest = 0;
                 for (int shift = 0; shift <= 16; shift += 8)
-                    largest = Math.max(largest, Math.abs((a >> shift & 0xFF) - (b >> shift & 0xFF)));
+                    largest = Math.max(largest, Math.abs(((a >> shift) & 0xFF) - ((b >> shift) & 0xFF)));
                 maximum = Math.max(maximum, largest);
 
                 if (largest > tolerance.channelDifference()) {
@@ -75,7 +75,7 @@ public final class ImageComparison {
 
     // A third of each channel: the red of the differences stands out
     private static int darken(int rgb) {
-        return (rgb >> 16 & 0xFF) / 3 << 16 | (rgb >> 8 & 0xFF) / 3 << 8 | (rgb & 0xFF) / 3;
+        return ((((rgb >> 16) & 0xFF) / 3) << 16) | ((((rgb >> 8) & 0xFF) / 3) << 8) | ((rgb & 0xFF) / 3);
     }
 
     /** Same size and no more different pixels than the tolerance allows. */

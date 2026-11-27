@@ -51,9 +51,9 @@ class KitApiTest {
                 .filter(type -> Modifier.isPublic(type.getModifiers()) && !type.isMemberClass())
                 .map(Class::getSimpleName).sorted().collect(Collectors.toList());
         assertEquals(List.of("CapturedImage", "EmptyTestScene", "GLUnavailableException", "ImageComparison",
-                "ImageTolerance", "MightyEngineExtension",
-                "MightyEngineTest", "MightySceneExtension", "MightySceneTest", "MightyTest", "SceneRunner",
-                "TestEngine"), names);
+                "ImageTolerance", "MightyEngineExtension", "MightyEngineTest", "MightySceneExtension",
+                "MightySceneTest", "MightyTest", "ReferenceImages", "RendererKey", "SceneRunner", "TestEngine"),
+                names);
     }
 
     @Test
