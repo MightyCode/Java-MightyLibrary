@@ -114,13 +114,10 @@ class RectangleBatchGLTest {
                 assertTrue(scene.batch2D().lastFrameInstancedDrawCalls() > 0);
                 assertEquals(scene.batch2D().lastFrameDrawCalls(), scene.batch2D().lastFrameInstancedDrawCalls());
 
-                int pixels = capture.size.x * capture.size.y * 4;
-                assertTrue(countDifferent(alone, orphan) <= pixels / 2000, "orphan: " + compare(alone, orphan));
-                assertTrue(countDifferent(alone, ring) <= pixels / 2000, "ring: " + compare(alone, ring));
-                assertTrue(countDifferent(alone, instanced) <= pixels / 2000,
-                        "instanced: " + compare(alone, instanced));
-                System.out.println("--Batch against alone, orphan: " + compare(alone, orphan) + "; ring: "
-                        + compare(alone, ring) + "; instanced: " + compare(alone, instanced));
+                System.out.println("--Batch against alone, orphan: "
+                        + capture.assertSame(alone, orphan, BATCHED, "orphan").describe() + "; ring: "
+                        + capture.assertSame(alone, ring, BATCHED, "ring").describe() + "; instanced: "
+                        + capture.assertSame(alone, instanced, BATCHED, "instanced").describe());
             }
 
             try (Views.Scope ignored = Views.enter(scene)) {
@@ -223,9 +220,7 @@ class RectangleBatchGLTest {
                         new Vector2f(400, 300), new Vector2f(300, 180), new Vector2f(0.5f, 0.5f), 0.7f,
                         new Vector4f(0.1f, 0.2f, 0.6f, 0.5f), EFlip.Horizontal, null)));
 
-                int pixels = capture.size.x * capture.size.y * 4;
-                assertTrue(countDifferent(renderer, explicit) <= pixels / 2000,
-                        "drawRegion: " + compare(renderer, explicit));
+                capture.assertSame(renderer, explicit, BATCHED, "drawRegion");
                 sprite.unload();
                 pattern.delete();
             }

@@ -50,7 +50,8 @@ class KitApiTest {
         List<String> names = kitClasses().stream()
                 .filter(type -> Modifier.isPublic(type.getModifiers()) && !type.isMemberClass())
                 .map(Class::getSimpleName).sorted().collect(Collectors.toList());
-        assertEquals(List.of("CapturedImage", "EmptyTestScene", "GLUnavailableException", "MightyEngineExtension",
+        assertEquals(List.of("CapturedImage", "EmptyTestScene", "GLUnavailableException", "ImageComparison",
+                "ImageTolerance", "MightyEngineExtension",
                 "MightyEngineTest", "MightySceneExtension", "MightySceneTest", "MightyTest", "SceneRunner",
                 "TestEngine"), names);
     }

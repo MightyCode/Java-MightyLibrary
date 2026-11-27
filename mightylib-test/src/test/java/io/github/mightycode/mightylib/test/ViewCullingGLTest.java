@@ -207,7 +207,7 @@ class ViewCullingGLTest {
 
             engine.setViewCulling2D(true);
             ByteBuffer culled = capture.draw(scene, drawing);
-            assertEquals(0, countDifferent(all, culled), name + ": " + compare(all, culled));
+            capture.assertSame(all, culled, SAME, name);
             assertEquals(draws, batch.lastFrameCullTested(), name);
             assertEquals(0, batch.lastFrameCullNoBounds(), name);
             assertEquals(draws, batch.lastFrameDraws() + batch.lastFrameCulled(), name);
@@ -356,7 +356,7 @@ class ViewCullingGLTest {
                     assertEquals(40, batch.lastFrameDraws());
                     engine.setViewCulling2D(true);
                     ByteBuffer culled = capture.draw(scene, drawing);
-                    assertEquals(0, countDifferent(all, culled), compare(all, culled));
+                    capture.assertSame(all, culled, SAME, "culled");
                     assertEquals(40, batch.lastFrameCullTested());
                     assertTrue(batch.lastFrameCulled() > 10, "culled: " + batch.lastFrameCulled());
                     assertEquals(40, batch.lastFrameDraws() + batch.lastFrameCulled());

@@ -54,8 +54,9 @@ class MeshUploadGLTest {
         return uploadedBy(() -> picture = capture.draw(scene, renderer::display));
     }
 
-    private static void assertSamePicture(ByteBuffer expected, ByteBuffer actual, int tolerance) {
-        assertTrue(countDifferent(expected, actual) <= tolerance, compare(expected, actual));
+    private static void assertSamePicture(Capture capture, ByteBuffer expected, ByteBuffer actual,
+                                          ImageTolerance tolerance) {
+        capture.assertSame(expected, actual, tolerance, "the picture of the mesh");
     }
 
     @Test
@@ -76,7 +77,7 @@ class MeshUploadGLTest {
                 });
                 assertEquals(0, beforeDraw, "an update only writes the copy on the CPU");
                 assertEquals(SLANTED.length * Float.BYTES, drawAndUpload(capture, scene, updated));
-                assertSamePicture(wanted, picture, 0);
+                assertSamePicture(capture, wanted, picture, SAME);
                 assertEquals(0, drawAndUpload(capture, scene, updated), "up to date: nothing sent again");
 
                 // Parts: the union of their ranges sent once, with the last values
@@ -86,7 +87,7 @@ class MeshUploadGLTest {
                 updated.getMesh().updateSubVbo(new float[]{0.3f, 1}, 0, 2 * Float.BYTES);
                 updated.getMesh().updateSubVbo(new float[]{1, 0.7f}, 0, 4 * Float.BYTES);
                 assertEquals(4 * Float.BYTES, drawAndUpload(capture, scene, updated));
-                assertSamePicture(wanted, picture, 0);
+                assertSamePicture(capture, wanted, picture, SAME);
 
                 // Without copy on the CPU: sent at the update
                 assertEquals(JUNK.length * Float.BYTES, uploadedBy(() -> expected.getMesh().updateVbo(JUNK, 0)));
@@ -118,13 +119,13 @@ class MeshUploadGLTest {
                 updated.getMesh().updateVbo(JUNK, 0);
                 updated.getMesh().updateVbo(SLANTED, 0);
                 assertEquals(batchOnly, drawAndUpload(capture, scene, updated));
-                assertSamePicture(wanted, picture, capture.size.x * capture.size.y * 4 / 2000);
+                assertSamePicture(capture, wanted, picture, BATCHED);
                 assertEquals(batchOnly, drawAndUpload(capture, scene, updated));
 
                 // Drawn alone later: the vbo still waiting is sent then
                 Views.engine().setBatch2DMode(EBatch2DMode.OFF);
                 assertEquals(SLANTED.length * Float.BYTES, drawAndUpload(capture, scene, updated));
-                assertSamePicture(wanted, picture, 0);
+                assertSamePicture(capture, wanted, picture, SAME);
 
                 expected.unload();
                 updated.unload();
