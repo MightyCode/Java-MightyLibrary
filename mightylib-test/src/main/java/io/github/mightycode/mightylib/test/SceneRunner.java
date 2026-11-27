@@ -139,8 +139,16 @@ public final class SceneRunner {
         }
 
         CompletableFuture<KitGraphicsAccess.WindowImage> request = KitGraphicsAccess.requestImage(window);
-        engine.frames(1);
-        if (!request.isDone())
+        boolean displayed = false;
+        try {
+            engine.frames(1);
+            displayed = request.isDone();
+        } finally {
+            // Not displayed (or the frame failed): the request is not left for a later display
+            if (!request.isDone())
+                KitGraphicsAccess.cancelImageRequests(window);
+        }
+        if (!displayed)
             throw new AssertionError("The window " + window.getInfo().getWindowName() + " was not displayed by the frame");
 
         KitGraphicsAccess.WindowImage image;

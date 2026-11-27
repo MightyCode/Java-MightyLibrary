@@ -45,6 +45,11 @@ public final class KitGraphicsAccess {
                 .thenApply(pixels -> new WindowImage(pixels.width, pixels.height, pixels.rgba));
     }
 
+    // Main thread: the requests of images of the window still waiting fail and are forgotten
+    public static void cancelImageRequests(Window window) {
+        Screenshot.cancelPixelsRequests(window.getInfo().getWindowId());
+    }
+
     // Main thread: false when the driver does not read the back buffer of this window back (hidden window)
     public static boolean readsBackBuffer(Window window) {
         GLContext previous = GLContext.currentOrNull();

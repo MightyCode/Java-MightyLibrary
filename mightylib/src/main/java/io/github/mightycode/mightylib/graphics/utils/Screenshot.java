@@ -104,6 +104,13 @@ public final class Screenshot {
         return request.result;
     }
 
+    // Main thread: the requests of pixels of the window not completed yet fail (their caller gave up waiting)
+    static void cancelPixelsRequests(long windowId) {
+        IOException cancelled = new IOException("The request of the image of the window was cancelled");
+        for (PixelsRequest request : takePixelsRequests(windowId))
+            request.result.completeExceptionally(cancelled);
+    }
+
     // The window is destroyed: what waited for its image fails instead of waiting forever
     public static void cancelRequests(long windowId) {
         IOException closed = new IOException("The window was closed before the screenshot");
