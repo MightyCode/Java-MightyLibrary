@@ -130,10 +130,26 @@ final class BatchPictures {
             return CapturedImage.of(size.x, size.y, rgb);
         }
 
-        // Two pictures of draw within the tolerance, the comparison for a report
+        // The alpha of a picture of draw as a grey image (rows from the top): a framebuffer has a defined alpha,
+        // unlike a window, and a draw that writes a wrong one must show
+        CapturedImage alphaImage(ByteBuffer picture) {
+            int[] grey = new int[size.x * size.y];
+            for (int y = 0; y < size.y; ++y) {
+                for (int x = 0; x < size.x; ++x) {
+                    int alpha = picture.get((x + (size.y - 1 - y) * size.x) * 4 + 3) & 0xFF;
+                    grey[x + y * size.x] = (alpha << 16) | (alpha << 8) | alpha;
+                }
+            }
+            return CapturedImage.of(size.x, size.y, grey);
+        }
+
+        // Two pictures of draw within the tolerance, their colors and their alpha; the comparison of the colors for
+        // a report
         ImageComparison assertSame(ByteBuffer expected, ByteBuffer actual, ImageTolerance tolerance, String what) {
             ImageComparison comparison = ImageComparison.compare(image(expected), image(actual), tolerance);
             comparison.assertMatches(what);
+            ImageComparison.compare(alphaImage(expected), alphaImage(actual), tolerance)
+                    .assertMatches(what + ", alpha");
             return comparison;
         }
 
