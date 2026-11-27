@@ -100,6 +100,7 @@ Pas de nouvelle scène. Vérification à la main par l'utilisateur dans `BatchRe
 ### Écarts au plan
 - La limite de `drawRegion` est passée de l'étape 2 à l'étape 3 : son test GL le compare à un `RectangleRenderer`, qui n'a la même limite qu'avec `setTextureRegion` ; l'étape 2 ne change ainsi aucune image.
 - `Shape2DRenderer` ajoute son VBO de régions à la première `setTextureRegion` (pas de VBO pour les formes qui n'en ont pas), et seulement si le canal 2 est libre : `PointsRenderer` y a ses coins, les formes vectorielles ne lisent pas de région.
+- Après l'étape 4, à la demande de l'utilisateur (l'attente d'un runner AMD) : une seule série Mesa `linux-mesa-llvmpipe` (la série Intel renommée, la série AMD supprimée), `RendererKey` sans fabricant du processeur, tolérance de la seule vue qui diffère entre Intel et AMD (`ReferenceColorSpace2D-picture` : 15 pixels jusqu'à 4 niveaux, 40 permis avec la raison) ; vérifié en comparant les deux séries régénérées : toutes les autres vues à ±1 niveau.
 - `TileMapReferences2D` n'existe pas : les tuiles des références sont dans `ReferenceSprites2D`, seule série qui change.
 - `TextureRegionsGLTest` a sa configuration (le kit n'enregistre pas les loaders des cartes) et ses fichiers (`mightylib-test/src/test/resources/texture-regions`) ; largeur de chaque rangée et colonne de texels à ±1 pixel aussi en `pixelart` : les bords étant sur des centres de pixels, les limites entre texels y tombent aussi et s'arrondissent d'un côté ou de l'autre. Restent exacts : aucun texel voisin, 24 × 40 pixels dessinés.
 

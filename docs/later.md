@@ -37,7 +37,6 @@ Feuille de route, dans l'ordre (suite : `techniquegraphique.md`). Gros point en 
 - **Données du joueur hors `configs/`** (sauvegardes, captures, journaux) : seule `ConfigData` écrit dans le dossier du joueur. Cible : le moteur expose le chemin de ce dossier (le kit le rend déjà par `TestEngine.playerDataFolder()`) et une écriture atomique partagée avec `ConfigData` (fichier temporaire puis renommage, sur un worker), pour que les tests et les jeux ne réécrivent pas le leur.
 - **Images de référence : suites**
   - Séries macOS et d'autres pilotes (une par machine qui lance les tests : `python tools/references.py --update` sur elle).
-  - Séries Mesa de la CI : le fabricant du processeur du runner (Intel ou AMD) est tiré au sort par GitHub, donc régénérer `-intel` et `-amd` demande parfois plusieurs exécutions. Cible si cela gêne : un job qui capture sur les deux (runners auto-hébergés, ou llvmpipe sans les instructions dont le résultat varie entre fabricants, si Mesa le permet).
   - Comparaison perceptuelle (FLIP) si le bruit des pilotes l'exige (aujourd'hui : écart par canal et nombre de pixels, `decisions.md`).
   - Références pour les tests GL du kit, sans scène de démo (un dossier `mightylib-test/src/test/resources/references/`, et un artefact de la CI qui distingue les modules : il ne prend aujourd'hui que `demo/target/references/`).
   - Repli par le framebuffer de la scène si un pilote ne relit pas une fenêtre cachée (`SceneRunner.capture` échoue alors avec ce message ; aucun cas connu).
