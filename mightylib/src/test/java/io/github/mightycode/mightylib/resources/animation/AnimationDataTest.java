@@ -117,10 +117,11 @@ class AnimationDataTest {
         assertEquals(1, data.frameNumber());
     }
 
+    // Bug: an animation of 0 frame loaded, then Animation.update read a null frame 0
     @Test
-    void anAnimationMayHaveNoFrame() throws IOException {
-        AnimationData data = load("hero\n0\n");
-        assertEquals(0, data.frameNumber());
+    void anAnimationOfNoFrameIsRefused() {
+        ResourceException error = assertThrows(ResourceException.class, () -> load("hero\n0\n"));
+        assertTrue(error.getMessage().contains("(line 2)"), error.getMessage());
     }
 
     @Test

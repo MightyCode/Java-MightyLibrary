@@ -62,8 +62,10 @@ public final class AnimationDataLoader extends ResourceLoader {
 
         int numberFrames = TextFormat.integer(new String[]{parts[SIZE_FRAME_POS].trim()}, 0,
                 path, SIZE_FRAME_POS + 1, "number of frames");
-        if (numberFrames < 0)
-            throw TextFormat.error(path, SIZE_FRAME_POS + 1, "number of frames can't be negative");
+        // An animation of no frame has no frame to show (the player reads frame 0)
+        if (numberFrames <= 0)
+            throw TextFormat.error(path, SIZE_FRAME_POS + 1, "number of frames must be greater than 0, got "
+                    + numberFrames);
         if (parts.length < FRAME_ENUM_START_POS + numberFrames)
             throw TextFormat.error(path, parts.length, "expected " + numberFrames + " frames, found "
                     + Math.max(0, parts.length - FRAME_ENUM_START_POS));
