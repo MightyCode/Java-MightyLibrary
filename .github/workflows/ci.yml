@@ -17,6 +17,16 @@ jobs:
       # and more). mightylib.test.requireGL: a test with GL fails without GL instead of being skipped
       - name: Virtual screen and Mesa
         run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
-      # verify: the demo is compiled and tested against the jar of the library, as another project would use it
+      # The demonstration pack (out of git, models/backpack of Scene3D): downloaded from its release, checked against
+      # the sha256 of its manifest, kept in the cache while the manifest does not change
+      - name: Cache of the demonstration pack
+        uses: actions/cache@v4
+        with:
+          path: resources/models/backpack
+          key: demo-assets-${{ hashFiles('tools/demo_assets.json') }}
+      - name: Demonstration pack
+        run: python3 tools/demo_assets.py
+      # verify: the demo is compiled and tested against the jar of the library, as another project would use it.
+      # mightylib.test.requireDemoAssets: the smoke test of Scene3D fails without the pack instead of being skipped
       - name: Compile, test and package
-        run: xvfb-run -a mvn -B verify -Dmightylib.test.requireGL=true
+        run: xvfb-run -a mvn -B verify -Dmightylib.test.requireGL=true -Dmightylib.test.requireDemoAssets=true
