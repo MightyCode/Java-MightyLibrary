@@ -89,3 +89,26 @@ Pas de nouvelle scène. Vérification à la main par l'utilisateur dans `BatchRe
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/texture-regions`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan » : `BatchRenderers2D` et `Scene2D` à fort zoom.
+
+## Bilan
+### Fait
+- Étape 2 : `utils/textureRegion.glsl` (`regionTexCoords`, région passée en `flat`), lue par `sprite2D`, `sprite2DInstanced` et `texture2D` ; `SPRITE` = `aPos`, `inTexCoords`, `inTexRegion`, `inColor` (36 octets), `SPRITE_INSTANCED` reçoit `aTexRegion` (68 octets) ; `DrawBatch2D.textureRegion` collante (remise à zéro par `beginDraw`), surcharges de `quad`, `triangles` et `BatchGeometry2D.WriteTriangles` avec région ; une instance par quad d'une seule région. Tests : `DrawBatch2DTest`, `BatchFormatTest`.
+- Étape 3 : `Animation.FrameTexturePosition` exact (`FRAME_INSET` supprimé) ; régions dans `Animation2DRenderer`, `TileMapRenderer`, `Shape2DRenderer.setTextureRegion` (et `getTextureRegion`), `drawRegion` ; `Mesh.COMMON_TEXTURE_REGION_CHANNEL` et `Mesh.hasChannel`. Test de reproduction `TextureRegionsGLTest` (kit) ; `FrameTexturePositionTest`, `AnimationTest`, `RectangleBatchGLTest` adaptés.
+- Étape 4 : séries `windows-nvidia` et `linux-mesa-llvmpipe-intel` de `ReferenceSprites2D` (trois vues) régénérées et relues ; **`linux-mesa-llvmpipe-amd` pas encore** : trois exécutions de la CI de suite sur un runner Intel (le jeton ne peut pas relancer une exécution : un commit, même vide, en relance une).
+- Étape 5 : `architecture.md`, `decisions.md`, `later.md`, `CLAUDE.md`, `licence.md` (fichiers du test).
+
+### Écarts au plan
+- La limite de `drawRegion` est passée de l'étape 2 à l'étape 3 : son test GL le compare à un `RectangleRenderer`, qui n'a la même limite qu'avec `setTextureRegion` ; l'étape 2 ne change ainsi aucune image.
+- `Shape2DRenderer` ajoute son VBO de régions à la première `setTextureRegion` (pas de VBO pour les formes qui n'en ont pas), et seulement si le canal 2 est libre : `PointsRenderer` y a ses coins, les formes vectorielles ne lisent pas de région.
+- `TileMapReferences2D` n'existe pas : les tuiles des références sont dans `ReferenceSprites2D`, seule série qui change.
+- `TextureRegionsGLTest` a sa configuration (le kit n'enregistre pas les loaders des cartes) et ses fichiers (`mightylib-test/src/test/resources/texture-regions`) ; largeur de chaque rangée et colonne de texels à ±1 pixel aussi en `pixelart` : les bords étant sur des centres de pixels, les limites entre texels y tombent aussi et s'arrondissent d'un côté ou de l'autre. Restent exacts : aucun texel voisin, 24 × 40 pixels dessinés.
+
+### Vérifié
+- `mvn -o -q test` : tout passe (les références régénérées).
+- `TextureRegionsGLTest` échoue sans la limite du shader (pixel bleu de la frame voisine au bord gauche, en `pixelart` et en `linear`) et passe avec.
+- Références : bas du grand slime 6 pixels (une rangée entière) au lieu de 3.
+- En jeu : `scenario.py "scene Scene2D"`, capture du slime : contour régulier, aucun filet.
+- Coût CPU (`tools/stress.py`, machine plus lente que lors de la fixation des seuils : `dev` dépasse lui aussi plusieurs seuils ; mesures alternées branche / `dev` dans les mêmes conditions) : étape 2, `mix-16k` 3,91 / 4,27 ms contre 4,00 / 3,98, rectangles et formes identiques ; étape 3, `mix-16k` 4,09 / 4,15 contre 4,01 / 4,06, `mix-16k-sorted` 3,94 contre 3,68 (+7 %), cas à 10 % égaux. Pas de dépassement dû au changement : le repli en entiers 16 bits n'est pas nécessaire. `bench.py` : écarts dans le bruit (rectangle visible 81,5 → 84 ns, animation 77,6 → 81 ns).
+
+### À vérifier à la main
+- `BatchRenderers2D` et `Scene2D` à fort zoom (molette), déplacements lents (Z Q S D) : aucun filet au-dessus des slimes ni entre les tuiles, la rangée du bas des slimes entière.
