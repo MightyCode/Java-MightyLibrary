@@ -1,13 +1,16 @@
 package io.github.mightycode.mightylib.test;
 
+import io.github.mightycode.mightylib.graphics.utils.KitGraphicsAccess;
 import io.github.mightycode.mightylib.inputs.inputType.ActionInput;
 import io.github.mightycode.mightylib.inputs.IInputManager;
 import io.github.mightycode.mightylib.inputs.InputAction;
 import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
+import io.github.mightycode.mightylib.main.Window;
 import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import org.joml.Vector2i;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -16,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -26,6 +31,8 @@ import java.util.stream.Collectors;
  */
 public final class SceneRunner {
     private final TestEngine engine;
+    // The driver reads the image of a hidden window back (checked at the first capture)
+    private boolean readBackChecked;
 
     SceneRunner(TestEngine engine) {
         this.engine = engine;
@@ -101,6 +108,63 @@ public final class SceneRunner {
 
     public CommandResult execute(String line) {
         return engine.execute(line);
+    }
+
+    // ---- Images ----
+
+    /**
+     * Displays one frame (the time does not move) and gives the final image of the main window of the scene: what
+     * the window shows, read before its buffers are swapped.
+     * @throws AssertionError if the driver does not read the image of a hidden window back, if the window was not
+     * displayed or is minimized, or if its image has not the size of the window (scale of the screen)
+     */
+    public CapturedImage capture() {
+        Scene scene = scene();
+        if (scene == null)
+            throw new IllegalStateException("No scene to capture: start one first");
+        return capture(scene.context().getWindow());
+    }
+
+    /** The final image of this window (a secondary window of a context), after one frame. */
+    public CapturedImage capture(Window window) {
+        engine.requireStarted();
+        if (!window.getInfo().isWindowCreated())
+            throw new IllegalStateException("The window " + window.getInfo().getWindowName() + " is not created");
+
+        if (!readBackChecked) {
+            if (!KitGraphicsAccess.readsBackBuffer(window))
+                throw new AssertionError("This driver does not read the image of a hidden window back (pixel"
+                        + " ownership): the images of the tests can't be captured here");
+            readBackChecked = true;
+        }
+
+        CompletableFuture<KitGraphicsAccess.WindowImage> request = KitGraphicsAccess.requestImage(window);
+        boolean displayed = false;
+        try {
+            engine.frames(1);
+            displayed = request.isDone();
+        } finally {
+            // Not displayed (or the frame failed): the request is not left for a later display
+            if (!request.isDone())
+                KitGraphicsAccess.cancelImageRequests(window);
+        }
+        if (!displayed)
+            throw new AssertionError("The window " + window.getInfo().getWindowName() + " was not displayed by the frame");
+
+        KitGraphicsAccess.WindowImage image;
+        try {
+            image = request.join();
+        } catch (CompletionException e) {
+            throw new AssertionError("No image of the window " + window.getInfo().getWindowName() + ": "
+                    + e.getCause().getMessage(), e.getCause());
+        }
+
+        Vector2i size = window.getInfo().getSizeCopy();
+        if (image.width() != size.x || image.height() != size.y)
+            throw new AssertionError("The image of the window is " + image.width() + "x" + image.height()
+                    + " for a window of " + size.x + "x" + size.y + " (scale of the screen?): compare at a scale of 1");
+
+        return CapturedImage.of(image);
     }
 
     // ---- Inputs of the main window ----

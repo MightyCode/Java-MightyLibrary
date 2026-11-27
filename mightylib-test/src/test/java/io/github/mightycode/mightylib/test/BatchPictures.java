@@ -20,6 +20,12 @@ import static org.lwjgl.opengl.GL30C.*;
 final class BatchPictures {
     private BatchPictures() {}
 
+    // The same picture: no channel differs by more than 1 (the rounding of the vertices may differ between two ways)
+    static final ImageTolerance SAME = ImageTolerance.STRICT.withChannelDifference(1);
+    // A batched draw against the same draw alone: a few pixels of the edges may differ
+    static final ImageTolerance BATCHED = SAME.withDifferentFraction(1 / 2000.0)
+            .withReason("the vertices of a batched draw may be rounded otherwise than alone, at the edges");
+
     // A 2D texture of the test, different in every corner (a gradient and a grid): flips and rotations show
     static final class Pattern implements IRenderTextureBindable {
         static final int SIZE = 64;
@@ -105,11 +111,46 @@ final class BatchPictures {
                 engine.setBatch2DMode(mode);
                 ByteBuffer batched = draw(scene, drawing);
                 assertTrue(scene.batch2D().lastFrameDraws() > 0, mode + ": nothing batched");
-                assertTrue(countDifferent(alone, batched) <= size.x * size.y * 4 / 2000,
-                        mode + ": " + compare(alone, batched));
-                report.append(", ").append(mode).append(": ").append(compare(alone, batched));
+                report.append(", ").append(mode).append(": ")
+                        .append(assertSame(alone, batched, BATCHED, mode.toString()).describe());
             }
             System.out.println(report);
+        }
+
+        // A picture of draw as an image of the kit (rows from the top)
+        CapturedImage image(ByteBuffer picture) {
+            int[] rgb = new int[size.x * size.y];
+            for (int y = 0; y < size.y; ++y) {
+                for (int x = 0; x < size.x; ++x) {
+                    int index = (x + (size.y - 1 - y) * size.x) * 4;
+                    rgb[x + y * size.x] = ((picture.get(index) & 0xFF) << 16)
+                            | ((picture.get(index + 1) & 0xFF) << 8) | (picture.get(index + 2) & 0xFF);
+                }
+            }
+            return CapturedImage.of(size.x, size.y, rgb);
+        }
+
+        // The alpha of a picture of draw as a grey image (rows from the top): a framebuffer has a defined alpha,
+        // unlike a window, and a draw that writes a wrong one must show
+        CapturedImage alphaImage(ByteBuffer picture) {
+            int[] grey = new int[size.x * size.y];
+            for (int y = 0; y < size.y; ++y) {
+                for (int x = 0; x < size.x; ++x) {
+                    int alpha = picture.get((x + (size.y - 1 - y) * size.x) * 4 + 3) & 0xFF;
+                    grey[x + y * size.x] = (alpha << 16) | (alpha << 8) | alpha;
+                }
+            }
+            return CapturedImage.of(size.x, size.y, grey);
+        }
+
+        // Two pictures of draw within the tolerance, their colors and their alpha; the comparison of the colors for
+        // a report
+        ImageComparison assertSame(ByteBuffer expected, ByteBuffer actual, ImageTolerance tolerance, String what) {
+            ImageComparison comparison = ImageComparison.compare(image(expected), image(actual), tolerance);
+            comparison.assertMatches(what);
+            ImageComparison.compare(alphaImage(expected), alphaImage(actual), tolerance)
+                    .assertMatches(what + ", alpha");
+            return comparison;
         }
 
         @Override
@@ -122,19 +163,6 @@ final class BatchPictures {
         }
     }
 
-    // Pixels whose channels differ (by more than 1: the rounding of the vertices may differ between the two ways)
-    static String compare(ByteBuffer expected, ByteBuffer actual) {
-        int different = 0, maximum = 0;
-        for (int i = 0; i < expected.capacity(); ++i) {
-            int difference = Math.abs((expected.get(i) & 0xFF) - (actual.get(i) & 0xFF));
-            maximum = Math.max(maximum, difference);
-            if (difference > 1)
-                ++different;
-        }
-
-        return different + " channels differ by more than 1 (largest difference " + maximum + ")";
-    }
-
     // Pixels not of the clear color of Capture.draw
     static int drawnPixels(ByteBuffer picture) {
         int drawn = 0;
@@ -144,15 +172,6 @@ final class BatchPictures {
                 ++drawn;
         }
         return drawn;
-    }
-
-    static int countDifferent(ByteBuffer expected, ByteBuffer actual) {
-        int different = 0;
-        for (int i = 0; i < expected.capacity(); ++i) {
-            if (Math.abs((expected.get(i) & 0xFF) - (actual.get(i) & 0xFF)) > 1)
-                ++different;
-        }
-        return different;
     }
 
     // Runs the test in the scene of the runner, the batch back to its default mode after it
