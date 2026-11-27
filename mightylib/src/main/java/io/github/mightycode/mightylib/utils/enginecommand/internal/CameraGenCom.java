@@ -192,7 +192,7 @@ public final class CameraGenCom extends BaseCommand {
             json.put("front", toArray(front.x, front.y, front.z));
             json.put("yaw", round(camera3D.getYaw()));
             json.put("pitch", round(camera3D.getPitch()));
-            json.put("fov", round(camera3D.getViewAngle()));
+            json.put("fovDegrees", round(camera3D.getViewAngleDegrees()));
         } else if (camera instanceof Camera2D) {
             Camera2D camera2D = (Camera2D) camera;
             json.put("type", "2D");

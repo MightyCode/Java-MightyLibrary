@@ -28,7 +28,7 @@ import org.joml.Vector4f;
 public class Scene3DBis extends Scene {
     private FreeCamera3DComponent cameraComponent;
 
-    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
+    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(35.5f, new Vector3f(0, 4, 0));
     private CubeRenderer[] cubeTexturedMaterialsDirectional;
 
     private CubeRenderer[] cubeTexturedMaterialsPoint;

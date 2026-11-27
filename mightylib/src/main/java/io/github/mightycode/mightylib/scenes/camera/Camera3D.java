@@ -13,6 +13,9 @@ public final class Camera3D extends Camera {
         Orthographic
     }
 
+    // Vertical view angle of the cameras the engine creates itself (scene without creation info, window view)
+    public static final float DEFAULT_VIEW_ANGLE_DEGREES = 35.5f;
+
     // The camera doesn't read the inputs : FreeCamera3DComponent (or the game) moves and turns it
     private final Vector3f camPos, camFront, camUp;
 
@@ -20,17 +23,18 @@ public final class Camera3D extends Camera {
 
     private float yaw = 180.0f, pitch = 0.0f;
     private float yawCos, yawSin;
-    private float fov;
+    // Vertical view angle, in degrees
+    private float fovDegrees;
 
     private EViewMode viewMode;
 
-    public Camera3D(WindowInfo windowInfo, float fov, Vector3f pos) {
+    public Camera3D(WindowInfo windowInfo, float fovDegrees, Vector3f pos) {
         super(windowInfo);
 
         this.viewMode = EViewMode.Perspective;
         camPos = new Vector3f();
 
-        setViewAngle(fov);
+        setViewAngleDegrees(fovDegrees);
         camFront = new Vector3f(0.0f, 0.0f, -1.0f);
         camUp = new Vector3f(0.0f, 1.0f, 0.0f);
         setPos(pos);
@@ -108,12 +112,12 @@ public final class Camera3D extends Camera {
         return pitch;
     }
 
-    public float getViewAngle() {
-        return fov;
+    public float getViewAngleDegrees() {
+        return fovDegrees;
     }
 
-    public void setViewAngle(float fov) {
-        this.fov = fov;
+    public void setViewAngleDegrees(float fovDegrees) {
+        this.fovDegrees = fovDegrees;
 
         updateProjection();
     }
@@ -121,7 +125,7 @@ public final class Camera3D extends Camera {
     @Override
     protected void writeProjection() {
         if (viewMode == EViewMode.Perspective)
-            projection.setPerspective(fov, windowInfo.getVirtualRatio(), 0.01f, 10000f);
+            projection.setPerspective((float) Math.toRadians(fovDegrees), windowInfo.getVirtualRatio(), 0.01f, 10000f);
         else
             projection.setOrtho(-windowInfo.getVirtualSizeRef().x / 2f, windowInfo.getVirtualSizeRef().x / 2f,
                     -windowInfo.getVirtualSizeRef().y / 2f, windowInfo.getVirtualSizeRef().y / 2f,

@@ -38,8 +38,8 @@ class CameraProjectionTest {
                 : new Matrix4f().setOrtho(0, WIDTH, HEIGHT, 0, -10, 10);
     }
 
-    private static Matrix4f perspective(float fov) {
-        return new Matrix4f().setPerspective(fov, (float) WIDTH / HEIGHT, 0.01f, 10000f);
+    private static Matrix4f perspective(float fovDegrees) {
+        return new Matrix4f().setPerspective((float) Math.toRadians(fovDegrees), (float) WIDTH / HEIGHT, 0.01f, 10000f);
     }
 
     private static Matrix4f ortho3D() {
@@ -74,21 +74,29 @@ class CameraProjectionTest {
 
     @Test
     void a3DPerspectiveComputedTwiceIsThatOfOneComputation() throws ReflectiveOperationException {
-        Camera3D camera = new Camera3D(windowInfo(), 1.2f, new Vector3f());
-        assertMatrix(perspective(1.2f), camera.getProjectionMatrix());
+        Camera3D camera = new Camera3D(windowInfo(), 70f, new Vector3f());
+        assertMatrix(perspective(70f), camera.getProjectionMatrix());
 
         camera.updateProjection();
         camera.updateProjection();
-        assertMatrix(perspective(1.2f), camera.getProjectionMatrix());
+        assertMatrix(perspective(70f), camera.getProjectionMatrix());
     }
 
     @Test
     void anotherAngleGivesItsPerspectiveOnly() throws ReflectiveOperationException {
-        Camera3D camera = new Camera3D(windowInfo(), 1.2f, new Vector3f());
+        Camera3D camera = new Camera3D(windowInfo(), 70f, new Vector3f());
 
-        camera.setViewAngle((float) Math.toRadians(60));
-        assertMatrix(perspective((float) Math.toRadians(60)), camera.getProjectionMatrix());
-        assertEquals((float) Math.toRadians(60), camera.getViewAngle());
+        camera.setViewAngleDegrees(60);
+        assertMatrix(perspective(60), camera.getProjectionMatrix());
+        assertEquals(60f, camera.getViewAngleDegrees());
+    }
+
+    // Bug: the angle in degrees went to JOML as radians (120 gave a view of about 35 degrees)
+    @Test
+    void theViewAngleIsInDegrees() throws ReflectiveOperationException {
+        Camera3D camera = new Camera3D(windowInfo(), 90f, new Vector3f());
+        // A vertical view of 90 degrees: tan(45) = 1, so the y scale of the projection is 1
+        assertEquals(1f, camera.getProjectionMatrix().m11(), 1e-5f);
     }
 
     @Test

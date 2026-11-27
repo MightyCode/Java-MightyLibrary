@@ -24,7 +24,7 @@ import org.joml.Vector3f;
 public class TerrainGeneration3D extends Scene {
     private FreeCamera3DComponent cameraComponent;
 
-    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
+    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(35.5f, new Vector3f(0, 4, 0));
     private MeshRenderer sBlock;
 
     private static final int LINE_SIZE = 5;

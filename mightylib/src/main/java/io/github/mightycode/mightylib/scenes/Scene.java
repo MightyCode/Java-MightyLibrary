@@ -100,7 +100,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
 
         if (info == null) {
             cameraParameters = new Camera3DCreationInfo();
-            cameraParameters.fov = 120f;
+            cameraParameters.fovDegrees = Camera3D.DEFAULT_VIEW_ANGLE_DEGREES;
             cameraParameters.initialPosition = new Vector3f(0, 0, 0);
         } else {
             cameraParameters = info;

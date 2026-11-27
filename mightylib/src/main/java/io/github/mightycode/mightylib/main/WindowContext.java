@@ -118,7 +118,7 @@ public final class WindowContext {
     }
 
     public Camera3D createCamera(Camera3DCreationInfo info){
-        return new Camera3D(window.getInfo(), info.fov, info.initialPosition);
+        return new Camera3D(window.getInfo(), info.fovDegrees, info.initialPosition);
     }
 
 

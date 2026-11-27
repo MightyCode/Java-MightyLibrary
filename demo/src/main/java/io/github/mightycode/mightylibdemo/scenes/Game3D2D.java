@@ -26,7 +26,7 @@ import org.joml.Vector3f;
 public class Game3D2D extends Scene {
     private FreeCamera3DComponent cameraComponent;
 
-    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
+    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(35.5f, new Vector3f(0, 4, 0));
 
     //// 2D World ////
     private RectangleRenderer background;

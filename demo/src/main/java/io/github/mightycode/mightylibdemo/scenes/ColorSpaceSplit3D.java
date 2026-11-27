@@ -21,7 +21,7 @@ import org.joml.Vector4f;
  * move the camera (WASD, the mouse) to see the cubes cross the seam.
  */
 public class ColorSpaceSplit3D extends Scene {
-    private static final Camera3DCreationInfo CAMERA = new Camera3DCreationInfo(90, new Vector3f(0, 3, 5));
+    private static final Camera3DCreationInfo CAMERA = new Camera3DCreationInfo(116.62f, new Vector3f(0, 3, 5));
 
     private CubeRenderer light, colored, material, textured;
     private FreeCamera3DComponent cameraComponent;
