@@ -173,6 +173,8 @@ class ReferenceImagesTest {
             System.setProperty(RendererKey.PROPERTY, key);
             System.setProperty(ReferenceImages.FOLDER_PROPERTY, sources.toString());
             System.setProperty(ReferenceImages.UPDATE_PROPERTY, "true");
+            // The CI gives it to every test
+            System.setProperty(ReferenceImages.REQUIRE_PROPERTY, "false");
             printed(() -> ReferenceImages.assertMatches(filled(0x336699), "Scene-default"));
             assertEquals(0x336699, CapturedImage.read(sources.resolve(key).resolve("Scene-default.png")).rgb(0, 0));
 
