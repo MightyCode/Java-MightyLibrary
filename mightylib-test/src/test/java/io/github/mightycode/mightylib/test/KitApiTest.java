@@ -44,6 +44,17 @@ class KitApiTest {
         assertEquals(API.Status.EXPERIMENTAL, api.status());
     }
 
+    // A public type added to the kit is a change of its API: add it here on purpose
+    @Test
+    void thePublicTypesAreTheKnownOnes() throws Exception {
+        List<String> names = kitClasses().stream()
+                .filter(type -> Modifier.isPublic(type.getModifiers()) && !type.isMemberClass())
+                .map(Class::getSimpleName).sorted().collect(Collectors.toList());
+        assertEquals(List.of("CapturedImage", "EmptyTestScene", "GLUnavailableException", "MightyEngineExtension",
+                "MightyEngineTest", "MightySceneExtension", "MightySceneTest", "MightyTest", "SceneRunner",
+                "TestEngine"), names);
+    }
+
     @Test
     void thePublicClassesAreFinalWithoutPublicField() throws Exception {
         List<String> problems = new ArrayList<>();
