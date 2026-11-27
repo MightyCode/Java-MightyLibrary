@@ -57,14 +57,25 @@ public final class ProblemsGenCom extends BaseCommand {
 
     private CommandResult list(ELogLevel level, int count) {
         ProblemLog problems = log.get();
-        long errors = problems.count(ELogLevel.ERROR);
-        long warnings = problems.count(ELogLevel.WARNING);
+        long errors;
+        long warnings;
+        Map<String, Map<ELogLevel, Long>> byCategory;
+        List<LogEntry> last;
+        int kept;
+        // One state: a problem sent meanwhile (worker) would make the totals differ from the categories
+        synchronized (problems) {
+            errors = problems.count(ELogLevel.ERROR);
+            warnings = problems.count(ELogLevel.WARNING);
+            byCategory = problems.categories();
+            last = problems.last(level, count);
+            kept = problems.size();
+        }
 
         StringBuilder message = new StringBuilder();
         message.append(errors).append(" error(s), ").append(warnings).append(" warning(s)");
 
         JSONObject categories = new JSONObject();
-        for (Map.Entry<String, Map<ELogLevel, Long>> category : problems.categories().entrySet()) {
+        for (Map.Entry<String, Map<ELogLevel, Long>> category : byCategory.entrySet()) {
             JSONObject counts = new JSONObject();
             message.append("\n  ").append(category.getKey()).append(":");
             // The most severe first
@@ -79,7 +90,6 @@ public final class ProblemsGenCom extends BaseCommand {
             categories.put(category.getKey(), counts);
         }
 
-        List<LogEntry> last = problems.last(level, count);
         JSONArray entries = new JSONArray();
         if (!last.isEmpty())
             message.append("\nLast ").append(last.size()).append(level == null ? "" : " " + Name(level)).append(":");
@@ -96,7 +106,7 @@ public final class ProblemsGenCom extends BaseCommand {
         data.put("warnings", warnings);
         data.put("categories", categories);
         data.put("capacity", problems.capacity());
-        data.put("kept", problems.size());
+        data.put("kept", kept);
         data.put("last", entries);
         return CommandResult.ok(message.toString(), data);
     }

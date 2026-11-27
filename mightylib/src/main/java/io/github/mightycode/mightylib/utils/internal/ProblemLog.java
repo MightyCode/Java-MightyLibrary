@@ -17,6 +17,7 @@ import java.util.TreeMap;
 /**
  * The problems the engine received (command {@code problems}): the last ones in a ring, and their counts by level and
  * by category since the start or the last {@link #clear()}. Fed by the {@link Logger} channel from any thread.
+ * Guarded by the instance: synchronize on it to read several values of one state.
  */
 public final class ProblemLog implements ILogListener {
     public static final int DEFAULT_CAPACITY = 200;
