@@ -212,3 +212,42 @@ Aucune.
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/scene-smoke-tests`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait (branche `feature/scene-smoke-tests`)
+- Étape 1 : canal typé dans `Logger` (`ELogLevel`, `LogEntry`, `ILogListener`, `Error`/`Warn`/`Log`, catégories), `LogException` = ERROR `engine`, OpenAL = ERROR `sound` (une ligne au lieu de trois), `CheckOpenGLError` = ERROR `gl`, callback de débogage GL du moteur ; `LoggerTest`, `GLDebugMessagesTest`.
+- Étape 2 : 85 messages de la bibliothèque et 3 de la démo (la démo n'en avait que 3 directs, pas 21) migrés, classement dans le message du commit ; `NoDirectStderrTest` et `DemoNoDirectStderrTest`.
+- Étape 3 : commande `problems` (`ProblemLog`, anneau de 200), `scenario.py` l'interroge et échoue sur un ERROR ; `ProblemsGenComTest`.
+- Étape 4 : contrôle des problèmes du kit (`ProblemRecorder`, `expectProblem`, `problems()`, extensions, `close`, `start`), `@MightySceneTest(strictResources)` ; `ProblemsKitTest` (18 tests).
+- Étape 5 : `DemoScenesSmokeGLTest`, `DemoScenesLenientSmokeGLTest`, `SmokeCases`, `SmokeRun`, `SmokeCasesTest`, `DemoAssets` ; contextes et fenêtres dans `leakSnapshot` (`SceneRunnerTest`).
+- Étape 6 : CI avec le paquet de démonstration en cache et `-Dmightylib.test.requireDemoAssets=true` ; `licence.md`.
+- Étape 7 : branche `tmp/smoke-acceptance` (fuite dans `TextPaddingScene`, exception au `launch` de `CollisionGridScene2D`, `Logger.Error` dans l'`update` de `RopeSimulation2D`) : `mvn test` échoue en local et le CI aussi (run 45917642066), exactement sur ces trois scènes, chaque message nommant la scène et le défaut ; branche supprimée (locale et distante).
+- Étape 8 : documents.
+
+### Bugs révélés et corrigés (un commit chacun)
+- `MatrixRenderer` posait une couleur que `multiColoredShape2D` n'a pas (« Uniform color not found ») : vu par `MeshBatchGLTest` sous le contrôle du kit.
+- `MultiWindowScene` laissait ses seconds contextes ouverts et réutilisait leurs noms (exception au second chargement) : vu par la fumée.
+
+### Écarts au plan
+- `CheckOpenGLError` écrivait dans `System.out` : son ERROR va dans `System.err`.
+- Correspondance du débogage GL : fonction `(type, sévérité)`, la source ne change pas le niveau.
+- Un élément GL en échec est un ERROR en mode strict (`GLResources.setStrict`), un WARNING sinon : sans cela, un shader qui ne compile pas passait les tests stricts.
+- Une fabrique de service qui échoue avant son repli (pas de périphérique audio) donne un WARNING.
+- Deux tests de sources au lieu d'un (`NoDirectStderrTest` pour la bibliothèque, `DemoNoDirectStderrTest` pour la démo) : chaque module lit ses propres sources.
+- Une annonce couvre tous les problèmes qu'elle reconnaît (pas un seul, comme `LogAssert.Expect`) : une erreur répétée à chaque frame s'annonce une fois.
+- Un moteur gardé par `@MightySceneTest` ne contrôle pas les problèmes de son arrêt (inscrit dans `later.md`).
+- Ajouts au kit vus pendant la fumée : un test qui a levé une exception ferme le moteur gardé (sinon fuite négative au test suivant) ; l'échec après un test commence par `After <test>:` ; une ligne répétée est comptée `(xN)`.
+- Aucune scène n'a eu besoin d'arguments de taille : la fumée dure environ 9 s en local, 26 s en CI (42 s avec le redémarrage du moteur après une exception) ; le job complet 2 min 06 (2 min 30 avant).
+- `RectangleBatchGLTest` annonce son uniform absent voulu.
+
+### Vérifié
+- `mvn -o package` (1442 + 82 + 86 tests) vert ; CI vert sur la branche (runs 45917372579 et 45917645645).
+- `scenario.py` : `Scene2D` et `FallbackScene`, journal identique, `problems` = 0 ERROR et 6 WARNING `resources` dans `FallbackScene`.
+- `python tools/analyse.py` : rien de nouveau (reste `IM_BAD_CHECK_FOR_ODD` dans `BatchStress2D.createSlime`, antérieur, pour la revue hebdomadaire).
+- Paquet absent : `Scene3D` ignorée, ou en échec avec `requireDemoAssets`.
+
+### À vérifier à la main par l'utilisateur
+- Journal de la console identique dans `FallbackScene` et `Scene2D`, lignes `--` en rouge comme avant.
+- `problems` dans la console (touche à gauche de 1) après `FallbackScene`.
+- Pas de nouveau message de débogage GL sur votre pilote dans `Scene2D`, `Scene3D` et `BatchStress2D`.
+- Durée du CI et résultat de la branche d'acceptation (runs ci-dessus).
