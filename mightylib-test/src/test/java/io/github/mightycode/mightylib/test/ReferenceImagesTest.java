@@ -71,10 +71,19 @@ class ReferenceImagesTest {
     }
 
     @Test
-    void noSeriesFailsWhenTheReferencesAreRequired() {
+    void noSeriesFailsWhenTheReferencesAreRequired() throws IOException {
         AssertionError e = assertThrows(AssertionError.class,
                 () -> references(false, true).check(filled(0x336699), "Scene-default", ImageTolerance.STRICT));
         assertTrue(e.getMessage().contains(KEY), e.getMessage());
+        // Kept to start the series from the CI
+        assertEquals(0x336699, CapturedImage.read(failure("Scene-default.actual.png")).rgb(0, 0));
+    }
+
+    @Test
+    void noSeriesWritesNothingWhenSkipped() {
+        assertThrows(TestAbortedException.class,
+                () -> references(false, false).check(filled(0x336699), "Scene-default", ImageTolerance.STRICT));
+        assertFalse(Files.exists(failure("Scene-default.actual.png")));
     }
 
     @Test

@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
  * The images a test compares its captures to: one series per driver ({@link RendererKey}), read on the classpath of
  * the test at {@code references/<key>/<name>.png} (so in {@code src/test/resources/references/<key>/}).
  * <ul>
- * <li>No series for this key: the test is skipped, or fails with {@value #REQUIRE_PROPERTY}=true (the CI).</li>
+ * <li>No series for this key: the test is skipped, or fails with {@value #REQUIRE_PROPERTY}=true (the CI), the
+ * capture written.</li>
  * <li>A series without the image: the test fails (a reference not generated), the capture written.</li>
  * <li>A difference beyond the tolerance: the test fails, and {@code <name>.actual.png}, {@code .expected.png} and
  * {@code .diff.png} are written in {@code target/references/<key>/} (from the working folder of the tests).</li>
@@ -97,8 +98,9 @@ public final class ReferenceImages {
             String message = "No reference images for the driver " + key + " (" + RESOURCES + key + "/ on the"
                     + " classpath): generate them with " + UPDATE_COMMAND + ", or give the key of a series with -D"
                     + RendererKey.PROPERTY;
+            // The CI: the captures are kept to start the series from them (tools/references.py --from-ci)
             if (require)
-                throw new AssertionError(message);
+                throw new AssertionError(message + "; the capture is in " + write(image, name + ".actual.png"));
             Assumptions.assumeTrue(false, message);
         }
 

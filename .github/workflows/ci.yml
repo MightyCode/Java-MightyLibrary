@@ -5,7 +5,9 @@ on: push
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # Fixed: the reference images of the driver (linux-mesa-llvmpipe) depend on the version of Mesa. A wanted change
+    # of runner generates that series again in the same commit (tools/references.py --from-ci)
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
@@ -27,6 +29,18 @@ jobs:
       - name: Demonstration pack
         run: python3 tools/demo_assets.py
       # verify: the demo is compiled and tested against the jar of the library, as another project would use it.
-      # mightylib.test.requireDemoAssets: the smoke test of Scene3D fails without the pack instead of being skipped
+      # mightylib.test.requireDemoAssets: the smoke test of Scene3D fails without the pack instead of being skipped.
+      # mightylib.test.requireReferences: an image test fails without the series of the driver instead of being skipped
       - name: Compile, test and package
-        run: xvfb-run -a mvn -B verify -Dmightylib.test.requireGL=true -Dmightylib.test.requireDemoAssets=true
+        run: >-
+          xvfb-run -a mvn -B verify -Dmightylib.test.requireGL=true -Dmightylib.test.requireDemoAssets=true
+          -Dmightylib.test.requireReferences=true
+      # The images of the failed comparisons (actual, expected, diff), per key: read them, or take the actual ones as
+      # the new series with tools/references.py --from-ci
+      - name: Images of the failed comparisons
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: references
+          path: demo/target/references/
+          if-no-files-found: ignore
