@@ -5,8 +5,9 @@ Usage:
     python tools/references.py --key                    # the key of the series of this machine (runs GLContextTest)
     python tools/references.py --update                 # the captures of this machine become its series, then git status
     python tools/references.py --update --test Class    # the same for one test class of the demo
-    python tools/references.py --from-ci [RUN_ID]       # the series of the CI (linux-mesa-llvmpipe) from the artifact
-                                                        # "references" of the last failed run of the current branch
+    python tools/references.py --from-ci [RUN_ID]       # the series of the CI (linux-mesa-llvmpipe-intel or -amd, the
+                                                        # processor of the runner) from the artifact "references" of
+                                                        # the last failed run of the current branch
 A window opens hidden for the tests. Read the changed images (git diff) before committing them.
 Machine specific paths: see tools/scenario.py.
 """
@@ -23,7 +24,8 @@ import scenario  # noqa: E402
 
 ROOT = scenario.ROOT
 SERIES = os.path.join(ROOT, "demo", "src", "test", "resources", "references")
-CI_KEY = "linux-mesa-llvmpipe"
+# The series of the CI: llvmpipe on the processor of the runner (linux-mesa-llvmpipe-intel, -amd)
+CI_PREFIX = "linux-mesa-llvmpipe-"
 ARTIFACT = "references"
 DEFAULT_TEST = "ReferenceImagesGLTest"
 KEY_LINE = re.compile(r"^--Reference key: (\S+)", re.MULTILINE)
@@ -97,21 +99,23 @@ def from_ci(run):
     run = run or last_failed_run()
     with tempfile.TemporaryDirectory(prefix="mightylib-references-") as folder:
         gh("run", "download", run, "--name", ARTIFACT, "--dir", folder)
-        target = os.path.join(SERIES, CI_KEY)
         copied = 0
-        for directory, _, files in os.walk(folder):
-            if os.path.basename(directory) != CI_KEY:
+        # The artifact holds a folder per key: each is a series of the CI (the maker of the processor of the runner)
+        for key in sorted(os.listdir(folder)):
+            source = os.path.join(folder, key)
+            if not os.path.isdir(source) or not key.startswith(CI_PREFIX):
                 continue
-            for name in sorted(files):
+            target = os.path.join(SERIES, key)
+            for name in sorted(os.listdir(source)):
                 if not name.endswith(".actual.png"):
                     continue
                 os.makedirs(target, exist_ok=True)
                 reference = name[:-len(".actual.png")] + ".png"
-                shutil.copyfile(os.path.join(directory, name), os.path.join(target, reference))
-                print("--Reference from the CI " + CI_KEY + "/" + reference)
+                shutil.copyfile(os.path.join(source, name), os.path.join(target, reference))
+                print("--Reference from the CI " + key + "/" + reference)
                 copied += 1
     if not copied:
-        print("No capture of " + CI_KEY + " in the artifact " + ARTIFACT + " of the run " + run)
+        print("No capture of a series " + CI_PREFIX + "* in the artifact " + ARTIFACT + " of the run " + run)
         sys.exit(1)
     git_status()
 
@@ -122,7 +126,7 @@ def main():
     actions.add_argument("--key", action="store_true", help="print the key of the series of this machine")
     actions.add_argument("--update", action="store_true", help="the captures of this machine become its series")
     actions.add_argument("--from-ci", nargs="?", const="", metavar="RUN_ID",
-                         help="the series " + CI_KEY + " from the artifact of a failed run of the CI")
+                         help="the series " + CI_PREFIX + "* from the artifact of a failed run of the CI")
     parser.add_argument("--test", default=DEFAULT_TEST, help="test class of the demo for --update")
     arguments = parser.parse_args()
 

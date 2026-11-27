@@ -5,7 +5,7 @@ on: push
 
 jobs:
   test:
-    # Fixed: the reference images of the driver (linux-mesa-llvmpipe) depend on the version of Mesa. A wanted change
+    # Fixed: the reference images of the driver (linux-mesa-llvmpipe-*) depend on the version of Mesa. A wanted change
     # of runner generates that series again in the same commit (tools/references.py --from-ci)
     runs-on: ubuntu-24.04
     steps:
@@ -34,9 +34,9 @@ jobs:
       # verify: the demo is compiled and tested against the jar of the library, as another project would use it.
       # mightylib.test.requireDemoAssets: the smoke test of Scene3D fails without the pack instead of being skipped.
       # mightylib.test.requireReferences: an image test fails without the series of the driver instead of being skipped
-      # llvmpipe compiles its shaders for the processor of the runner (vector width, FMA, AVX-512): the rounding of the
-      # filtering changed between two runners, so the series linux-mesa-llvmpipe was not stable. The same instructions
-      # on every runner: SSE 4.1 only, vectors of 128 bits (GLContextTest prints "llvmpipe (..., 128 bits)")
+      # llvmpipe compiles its shaders for the processor of the runner (vector width, FMA, AVX-512): the same instructions
+      # on every runner, SSE 4.1 only, vectors of 128 bits (GLContextTest prints "llvmpipe (..., 128 bits)"). Intel and
+      # AMD still round some filtering differently: one series per maker, linux-mesa-llvmpipe-intel and -amd (RendererKey)
       - name: Compile, test and package
         env:
           GALLIUM_OVERRIDE_CPU_CAPS: sse4.1
