@@ -134,6 +134,11 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
 
         // After the return to the empty scene: the unload of the scene of the test is part of it
         AssertionError problems = kept.engine.endTest(testFailed);
+        // A test that threw (not an assertion) may leave a half-loaded scene whose objects are freed later, in the
+        // next test: the next test starts a new engine
+        Throwable thrown = context.getExecutionException().orElse(null);
+        if (thrown != null && !(thrown instanceof AssertionError))
+            kept.close();
         AssertionError failure = Combined(leak, problems);
         if (failure != null)
             throw failure;

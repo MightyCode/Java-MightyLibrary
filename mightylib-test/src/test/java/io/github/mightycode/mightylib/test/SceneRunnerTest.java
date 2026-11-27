@@ -1,8 +1,10 @@
 package io.github.mightycode.mightylib.test;
 
+import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.DisplaySettings;
 import io.github.mightycode.mightylib.main.EWindowMode;
 import io.github.mightycode.mightylib.main.EngineConfig;
+import io.github.mightycode.mightylib.main.WindowConfig;
 import io.github.mightycode.mightylib.registry.EngineRegistry;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.registry.Identifier;
@@ -31,6 +33,17 @@ class SceneRunnerTest {
         }
     }
 
+    // Opens a second context and never closes it
+    public static final class ContextScene extends Scene {
+        Context opened;
+
+        @Override
+        public void launch(String[] args) {
+            super.launch(args);
+            opened = engine().openContext("kit-leaked", new WindowConfig("Leaked").setSize(64, 64), EmptyTestScene::new);
+        }
+    }
+
     static final class Plugin implements IPlugin {
         @Override
         public String namespace() {
@@ -41,6 +54,8 @@ class SceneRunnerTest {
         public void register(EngineRegistry registry) {
             registry.scenes().register(Identifier.of("kitscenes", "key_scene"), KeyScene.class, KeyScene::new,
                     "Counts the presses of SPACE");
+            registry.scenes().register(Identifier.of("kitscenes", "context_scene"), ContextScene.class,
+                    ContextScene::new, "Opens a second context and never closes it");
         }
     }
 
@@ -78,6 +93,23 @@ class SceneRunnerTest {
         assertInstanceOf(EmptyTestScene.class, runner.scene());
         assertSame(engine, runner.engine());
         assertTrue(engine.execute("gl").isSuccess());
+    }
+
+    @Test
+    void aContextLeftOpenIsALeak(SceneRunner runner) {
+        Map<String, Integer> before = runner.leakSnapshot();
+        runner.start("context_scene").untilLoaded();
+        ContextScene scene = assertInstanceOf(ContextScene.class, runner.scene());
+        runner.frames(2).toEmptyScene();
+
+        AssertionError error = assertThrows(AssertionError.class, () -> runner.assertNoLeak(before));
+        assertTrue(error.getMessage().contains("windows.contexts 1->2"), error.getMessage());
+        assertTrue(error.getMessage().contains("windows.kit-leaked.windows 0->1"), error.getMessage());
+
+        // Closed by the test: no leak for the extension
+        scene.opened.requestClose();
+        runner.frames(2);
+        runner.assertNoLeak(before);
     }
 
     @Test
