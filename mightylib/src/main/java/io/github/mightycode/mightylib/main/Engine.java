@@ -43,6 +43,7 @@ import io.github.mightycode.mightylib.services.ServiceKey;
 import io.github.mightycode.mightylib.services.ServiceSet;
 import io.github.mightycode.mightylib.sounds.ISoundService;
 import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.internal.ProblemLog;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
@@ -189,6 +190,12 @@ public final class Engine implements IView {
     @API(status = INTERNAL)
     public ConsoleLog consoleLog() { return consoleLog; }
 
+    // The problems of the Logger channel received from the start to the shutdown (command problems)
+    private final ProblemLog problems = new ProblemLog();
+
+    @API(status = INTERNAL)
+    public ProblemLog problems() { return problems; }
+
     /**
      * The service of this key, as its contract.
      * @throws IllegalArgumentException if no service has this key: test an optional one with hasService
@@ -312,6 +319,7 @@ public final class Engine implements IView {
      */
     private int setupCore(IGLElementSink headlessSink) {
         headless = headlessSink != null;
+        problems.install();
         config.validate(!headless);
         MainThread.setCurrentAsMain();
         Workers.start(config.getMaxThreads());
@@ -743,6 +751,7 @@ public final class Engine implements IView {
             System.out.println("Exit without error");
 
         LogCapture.uninstall();
+        problems.uninstall();
 
         return status;
     }
