@@ -71,7 +71,7 @@ class CameraVersionTest {
         assertChanges(view, () -> camera.moveZ(1));
         assertChanges(view, () -> camera.lookAt(new Vector3f(10, 0, 0)));
         assertChanges(view, camera::updateView);
-        assertChanges(projection, () -> camera.setViewAngle(60));
+        assertChanges(projection, () -> camera.setViewAngleDegrees(60));
         assertChanges(projection, camera::updateProjection);
     }
 }

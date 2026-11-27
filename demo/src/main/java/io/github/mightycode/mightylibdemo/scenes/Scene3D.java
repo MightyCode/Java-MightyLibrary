@@ -39,7 +39,7 @@ import org.joml.Vector4f;
 import java.util.ArrayList;
 
 public class Scene3D extends Scene {
-    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(120, new Vector3f(0, 4, 0));
+    private final static Camera3DCreationInfo SCENE_CCI = new Camera3DCreationInfo(35.5f, new Vector3f(0, 4, 0));
     private MeshRenderer sBlock;
     private MeshRenderer sphere;
 

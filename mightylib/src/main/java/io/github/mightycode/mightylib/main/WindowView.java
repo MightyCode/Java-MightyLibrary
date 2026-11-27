@@ -329,7 +329,7 @@ public abstract class WindowView extends UUID implements IView, IUpdatableDispla
         this.windowContext = windowContext;
 
         try (Views.Scope ignored = Views.enter(this)) {
-            main3DCamera = windowContext.createCamera(new Camera3DCreationInfo(120f, new Vector3f(0, 0, 0)));
+            main3DCamera = windowContext.createCamera(new Camera3DCreationInfo(Camera3D.DEFAULT_VIEW_ANGLE_DEGREES, new Vector3f(0, 0, 0)));
             main2DCamera = new Camera2D(windowContext.getWindow().getInfo(), new Vector2f(0, 0));
 
             scRenderer = new VirtualSceneRenderer(windowContext.getWindow().getInfo(), createVirtualSceneBindable());
