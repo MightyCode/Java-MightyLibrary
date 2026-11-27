@@ -1,5 +1,6 @@
 package io.github.mightycode.mightylib.resources.source;
 
+import io.github.mightycode.mightylib.utils.Logger;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.IOException;
@@ -290,7 +291,7 @@ public final class ResourceSources {
             try {
                 sources.get(i).close();
             } catch (RuntimeException e) {
-                System.err.println("--Can't close the source " + sources.get(i).name() + " : " + e.getMessage());
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Can't close the source " + sources.get(i).name() + " : " + e.getMessage());
             }
         }
     }

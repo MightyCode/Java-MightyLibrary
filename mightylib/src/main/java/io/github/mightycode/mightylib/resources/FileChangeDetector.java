@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.io.IOException;
 import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.FileSystems;
@@ -108,7 +110,7 @@ final class FileChangeDetector {
             try {
                 service = FileSystems.getDefault().newWatchService();
             } catch (IOException | UnsupportedOperationException e) {
-                System.err.println("--Watch: no file system watch service (" + e.getMessage() + "), polling instead");
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Watch: no file system watch service (" + e.getMessage() + "), polling instead");
                 mode = Mode.POLLING;
             }
         }
@@ -133,7 +135,7 @@ final class FileChangeDetector {
                     service.close();
                 } catch (IOException e) {
                     // Stopping: the watch is over anyway, the system frees it with the process
-                    System.err.println("--Watch: the watch service did not close: " + e);
+                    Logger.Warn(Logger.CATEGORY_RESOURCES, "Watch: the watch service did not close: " + e);
                 }
                 service = null;
             }
@@ -174,7 +176,7 @@ final class FileChangeDetector {
                 // Called at every check, even with nothing changed: the receiver groups the changes over time
                 onChanged.accept(tick(System.currentTimeMillis(), events));
             } catch (RuntimeException e) {
-                System.err.println("--Watch: error while checking files: " + e);
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Watch: error while checking files: " + e);
             }
         }
     }
@@ -308,7 +310,7 @@ final class FileChangeDetector {
                         StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY));
             } catch (IOException | RuntimeException e) {
                 registered.put(directory, null);
-                System.err.println("--Watch: cannot watch " + directory + " (" + e + "), polling its files");
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Watch: cannot watch " + directory + " (" + e + "), polling its files");
             }
         }
 

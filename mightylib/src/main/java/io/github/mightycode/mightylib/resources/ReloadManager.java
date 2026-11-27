@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.resources.internal.BatchResources;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -86,7 +88,7 @@ class ReloadManager {
         DataType copy = data.createReloadCopy();
         if (copy == null) {
             if (reportedNoReloadCopy.add(data.getClass()))
-                System.err.println("--" + data.getClass().getSimpleName()
+                Logger.Warn(Logger.CATEGORY_RESOURCES, data.getClass().getSimpleName()
                         + " has no reload copy: emptied while it is read again");
             return false;
         }
@@ -170,7 +172,7 @@ class ReloadManager {
 
         data.reloadCopy = null;
         data.reloadFailed(copy);
-        System.err.println("--" + message + ", the previous version is kept");
+        Logger.Warn(Logger.CATEGORY_RESOURCES, message + ", the previous version is kept");
         resources.dependencies().wakeWaiters(data);
         copyEnded();
     }

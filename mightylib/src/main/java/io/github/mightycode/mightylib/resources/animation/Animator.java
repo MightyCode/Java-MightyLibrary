@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.resources.animation;
 
 import io.github.mightycode.mightylib.resources.Resources;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.HashMap;
 import java.util.Objects;
 
@@ -72,7 +74,7 @@ public final class Animator {
 
     private void addAnimation(String name, Animation animation){
         if (animations.containsKey(name)){
-            System.err.println("Animator already contains an animation called : " + name);
+            Logger.Error(Logger.CATEGORY_ENGINE, "Animator already contains an animation named " + name);
             return;
         }
 
@@ -90,7 +92,7 @@ public final class Animator {
     public void setCurrentAnimation(String name, boolean resetOldAnimation){
         Animation animation = animations.get(name);
         if (animation == null) {
-            System.err.println("No animation named : " + name);
+            Logger.Error(Logger.CATEGORY_ENGINE, "No animation named " + name);
             return;
         }
 

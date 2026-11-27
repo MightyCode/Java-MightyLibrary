@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.apiguardian.api.API;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -54,6 +55,18 @@ public final class GLResources implements IGLElementSink {
     private final HashMap<Class<? extends GLElement>, HashMap<String, GLElement>> resources;
 
     // maxMillisecondsPerFrame: cap of the time spent per frame, -1 to only use the time left in the frame
+    // Strict resources: a GL element that fails is an error, not a warning (its fallback is used either way)
+    private volatile boolean strict;
+
+    /** Strict resources (Resources.setStrict): a GL element that fails is reported as an error. */
+    public void setStrict(boolean strict) {
+        this.strict = strict;
+    }
+
+    public boolean isStrict() {
+        return strict;
+    }
+
     public GLResources(int maxMillisecondsPerFrame) {
         maxNanosPerFrame = maxMillisecondsPerFrame < 0 ? Long.MAX_VALUE : maxMillisecondsPerFrame * NANO_IN_MILLISECOND;
 
@@ -381,7 +394,7 @@ public final class GLResources implements IGLElementSink {
     public void releaseResource(GLElement element, boolean urgent) {
         // Released more than referenced (a user unloaded twice): would delete an element others still use
         if (urgent ? !element.isUrgent() : element.getNumberReference() == element.getNumberUrgentReference()) {
-            System.err.println("--GL element released more than referenced: " + element.getClass().getSimpleName()
+            Logger.Error(Logger.CATEGORY_GL, "GL element released more than referenced: " + element.getClass().getSimpleName()
                     + " " + element.getName() + (urgent ? "" : " (preload)"));
             return;
         }

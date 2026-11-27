@@ -243,7 +243,7 @@ public final class Engine implements IView {
 
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit()) {
-            System.err.println("GLFW fail to initialize");
+            Logger.Error(Logger.CATEGORY_ENGINE, "GLFW fail to initialize");
             return -1;
         }
 
@@ -459,6 +459,7 @@ public final class Engine implements IView {
 
         // The batches send the GL elements of their data (textures) during the loading
         glResources = new GLResources(config.getMaxGLUploadMillisecondsPerFrame());
+        glResources.setStrict(isStrictResources());
         resources.setGLElementSink(glResources);
         // The buffers of the 2D batches of the main window, before any scene draws
         Batches2D.of(this).prepare();
@@ -746,7 +747,7 @@ public final class Engine implements IView {
             status = ListError.LIFECYCLE_HOOK_FAIL;
 
         if (status != ListError.NO_ERROR)
-            System.err.println("Exit with error " + status);
+            Logger.Error(Logger.CATEGORY_ENGINE, "Exit with error " + status);
         else
             System.out.println("Exit without error");
 

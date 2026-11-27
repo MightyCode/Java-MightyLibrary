@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.network;
 
 import io.github.mightycode.mightylib.main.utils.GameTime;
+import io.github.mightycode.mightylib.utils.Logger;
 
 public final class ClientThread extends CommunicationThread {
     public static final int SLEEP_TIME = 10; // MILLISECONDS
@@ -88,7 +89,7 @@ public final class ClientThread extends CommunicationThread {
                                 messageToSend.remove(receivedMessageNumber - 1);
                             }
                         } else {
-                            System.err.println("Message without header : \n" + result);
+                            Logger.Warn(Logger.CATEGORY_ENGINE, "Network message without header, ignored: " + result);
                         }
                     }
                 } else if (shouldTryConnection) {

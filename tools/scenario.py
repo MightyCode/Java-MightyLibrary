@@ -71,6 +71,8 @@ NO_CURSOR_CAPTURE_PROPERTY = "mightylib.input.noCursorCapture"
 # What escapes the Logger of the engine: its lines ("--" and the stack trace that follows) are counted by "problems"
 PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|Error:"
                              r"|^\[LWJGL\] .*error|^\s+Description :")
+# Printed by the Logger after the steps, when the game exits
+EXIT_ERROR_PATTERN = re.compile(r"^--Exit with error")
 # Lines of the stack trace printed under a Logger line
 TRACE_PATTERN = re.compile(r"^\s+at |^\s+\.\.\. \d+ more|^Caused by: |^\s+Suppressed: |^[\w$]+(\.[\w$]+)+(: |$)")
 
@@ -396,6 +398,9 @@ def report_log(log_path):
             # A Logger line and its stack trace are counted by "problems"
             if line.startswith("--"):
                 logger_trace = True
+                # Printed after the last "problems" of the scenario
+                if EXIT_ERROR_PATTERN.search(line):
+                    problems.append(line)
                 continue
             if logger_trace and TRACE_PATTERN.search(line):
                 continue

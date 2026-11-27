@@ -400,7 +400,7 @@ public class MenuScene extends Scene {
     private void fail(String message) {
         error = message;
         errorKey = currentKey();
-        System.err.println("--Menu: " + message);
+        Logger.Warn("demo", "Menu: " + message);
     }
 
     // The scene the panel is about : the one under the mouse, otherwise the selected one

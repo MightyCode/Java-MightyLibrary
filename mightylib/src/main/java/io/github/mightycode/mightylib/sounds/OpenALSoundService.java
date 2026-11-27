@@ -113,7 +113,7 @@ public final class OpenALSoundService implements ISoundService {
                 continue;
 
             if (!sound.init()) {
-                System.err.println("--Sound source not created, no data for the sound: " + info.name);
+                Logger.Warn(Logger.CATEGORY_SOUND, "Sound source not created, no data for the sound: " + info.name);
                 removeAt(i);
                 continue;
             }

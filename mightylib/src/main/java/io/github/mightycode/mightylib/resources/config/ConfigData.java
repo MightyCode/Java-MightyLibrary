@@ -222,11 +222,11 @@ public final class ConfigData extends SingleSourceDataType {
         merged = Merge(defaults, player);
 
         if (playerFile == null) {
-            System.err.println("--Config " + getDataName() + ": no layer of the player, the change is not saved");
+            Logger.Warn(Logger.CATEGORY_CONFIG, "Config " + getDataName() + ": no layer of the player, the change is not saved");
             return CompletableFuture.completedFuture(null);
         }
         if (invalidPlayerLayer) {
-            System.err.println("--Config " + getDataName() + ": " + playerFile + " can't be read, the change is not"
+            Logger.Warn(Logger.CATEGORY_CONFIG, "Config " + getDataName() + ": " + playerFile + " can't be read, the change is not"
                     + " saved (fix or delete the file)");
             return CompletableFuture.completedFuture(null);
         }

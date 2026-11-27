@@ -5,6 +5,8 @@ import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.sounds.ISoundBuffers;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.Locale;
 
 public class SoundData extends SingleSourceDataType {
@@ -80,7 +82,7 @@ public class SoundData extends SingleSourceDataType {
 
         ISoundBuffers buffers = resources().soundBuffers();
         if (buffers == null) {
-            System.err.println("--No sound service to load the sound " + path());
+            Logger.Warn(Logger.CATEGORY_SOUND, "No sound service to load the sound " + path());
             return false;
         }
 
@@ -90,7 +92,7 @@ public class SoundData extends SingleSourceDataType {
         tempInfo = null;
 
         if (bufferId == -1)
-            System.err.println("--The buffer of the sound " + path() + " can't be created");
+            Logger.Warn(Logger.CATEGORY_SOUND, "The buffer of the sound " + path() + " can't be created");
         return bufferId != -1;
     }
 

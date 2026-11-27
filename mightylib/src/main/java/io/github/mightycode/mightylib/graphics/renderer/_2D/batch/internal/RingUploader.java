@@ -90,7 +90,7 @@ final class RingUploader implements IBatchUploader {
             if (!glUnmapBuffer(GL_ARRAY_BUFFER) && !unmapFailureReported) {
                 // The content was lost (display mode change...): the next flushes write it again
                 unmapFailureReported = true;
-                System.err.println("--Ring buffer of the 2D batch: content lost while mapped, drawn once wrong");
+                Logger.Warn(Logger.CATEGORY_GL, "Ring buffer of the 2D batch: content lost while mapped, drawn once wrong");
             }
         }
         glBindBuffer(GL_ARRAY_BUFFER, 0);

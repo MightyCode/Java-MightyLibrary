@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.utils.LoadingElement;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.UUID;
 
 import org.json.JSONObject;
@@ -386,7 +387,7 @@ public abstract class DataType extends UUID implements LoadingElement {
         } else {
             // Back to the initial state: an unload would otherwise wait forever for a loading that failed
             correctlyPreLoaded = false;
-            System.err.println("--Can't load " + getClass().getSimpleName() + " " + dataName);
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Can't load " + getClass().getSimpleName() + " " + dataName);
         }
     }
 

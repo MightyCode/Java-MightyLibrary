@@ -384,7 +384,7 @@ public class Shader extends GLElement {
     // A uniform of a value not found in the current program (removed by the GLSL compiler when unused): reported once
     public void reportMissingUniform(String name) {
         if (reportsMissingUniforms() && missingUniforms.add(name))
-            System.err.println("--Uniform " + name + " not found in shader " + getName()
+            Logger.Error(Logger.CATEGORY_SHADERS, "Uniform " + name + " not found in shader " + getName()
                     + " (unused or absent), its values are ignored");
     }
 
@@ -448,7 +448,7 @@ public class Shader extends GLElement {
             Integer v = value.getObjectTyped(Integer.class);
             glUniform1i(link, v);
         } else {
-            System.err.println("Unknown shader value type : " + value.getType());
+            Logger.Error(Logger.CATEGORY_SHADERS, "Unknown shader value type " + value.getType() + " in shader " + getName());
         }
     }
 }

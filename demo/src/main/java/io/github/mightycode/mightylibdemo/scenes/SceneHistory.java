@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylibdemo.scenes;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -185,7 +187,7 @@ final class SceneHistory {
             return process.exitValue() == 0 ? output.toString(StandardCharsets.UTF_8) : null;
         } catch (IOException e) {
             // No git: the menu sorts by name only
-            System.err.println("--Menu: git unavailable, no dates for the scenes (" + e.getMessage() + ")");
+            Logger.Warn("demo", "Menu: git unavailable, no dates for the scenes (" + e.getMessage() + ")");
             return null;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

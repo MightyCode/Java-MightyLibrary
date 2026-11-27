@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -33,7 +35,7 @@ class FallbackRegistry {
             throw new IllegalStateException("The fallback of " + loader.getResourceNameType() + " must be named " + Resources.FALLBACK_NAME);
 
         if (map.containsKey(Resources.FALLBACK_NAME))
-            System.err.println("--The " + loader.getResourceNameType() + " named " + Resources.FALLBACK_NAME
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "The " + loader.getResourceNameType() + " named " + Resources.FALLBACK_NAME
                     + " is replaced by the fallback of its type");
 
         fallback.setNotManuallyCreated();
@@ -100,7 +102,7 @@ class FallbackRegistry {
             throw new IllegalStateException("Strict resources: unknown " + key);
 
         if (reportedUnknownNames.add(key))
-            System.err.println("--Unknown " + key + (fallback != null ? ", its fallback is used" : ""));
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Unknown " + key + (fallback != null ? ", its fallback is used" : ""));
 
         return fallback;
     }

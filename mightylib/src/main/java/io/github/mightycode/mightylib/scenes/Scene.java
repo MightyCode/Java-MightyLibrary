@@ -24,6 +24,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3D;
 import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.math.UUID;
@@ -478,7 +479,7 @@ public abstract class Scene extends UUID implements IUpdatableDisplayable, IView
             glLoadingStart = System.nanoTime();
         } else if (!glLoadingWarned && System.nanoTime() - glLoadingStart > GL_LOADING_WARNING_NANOS) {
             glLoadingWarned = true;
-            System.err.println("--" + getClass().getSimpleName() + " still waits for GL elements : " + glResources.describeWaitingElements());
+            Logger.Warn(Logger.CATEGORY_ENGINE, getClass().getSimpleName() + " still waits for GL elements : " + glResources.describeWaitingElements());
         }
     }
 

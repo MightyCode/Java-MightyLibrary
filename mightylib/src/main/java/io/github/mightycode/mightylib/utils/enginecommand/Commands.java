@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.main.IView;
 import io.github.mightycode.mightylib.main.Views;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.registry.Identifier;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.internal.ListGeneralCommand;
 
 import java.io.BufferedReader;
@@ -223,7 +224,7 @@ public final class Commands {
                 try {
                     finished = task.getAsBoolean();
                 } catch (RuntimeException e) {
-                    System.err.println("--Command task failed : " + e);
+                    Logger.Error(Logger.CATEGORY_ENGINE, "Command task failed", e);
                     finished = true;
                 }
 
@@ -440,7 +441,7 @@ public final class Commands {
                     terminal.println(result);
                 }
             } catch (IOException e) {
-                System.err.println("Console commands stopped : " + e);
+                Logger.Warn(Logger.CATEGORY_ENGINE, "Console commands stopped: " + e);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
