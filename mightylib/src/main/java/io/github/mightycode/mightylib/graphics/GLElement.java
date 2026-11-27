@@ -2,9 +2,8 @@ package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
-import io.github.mightycode.mightylib.utils.LoadingElement;
-
 import io.github.mightycode.mightylib.utils.ELogLevel;
+import io.github.mightycode.mightylib.utils.LoadingElement;
 import io.github.mightycode.mightylib.utils.Logger;
 
 import java.util.ArrayList;

@@ -54,19 +54,21 @@ public final class GLResources implements IGLElementSink {
 
     private final HashMap<Class<? extends GLElement>, HashMap<String, GLElement>> resources;
 
-    // maxMillisecondsPerFrame: cap of the time spent per frame, -1 to only use the time left in the frame
     // Strict resources: a GL element that fails is an error, not a warning (its fallback is used either way)
     private volatile boolean strict;
 
-    /** Strict resources (Resources.setStrict): a GL element that fails is reported as an error. */
+    /** Strict resources (Resources.setStrict, set by the engine): a GL element that fails is reported as an error. */
+    @API(status = INTERNAL)
     public void setStrict(boolean strict) {
         this.strict = strict;
     }
 
+    @API(status = INTERNAL)
     public boolean isStrict() {
         return strict;
     }
 
+    // maxMillisecondsPerFrame: cap of the time spent per frame, -1 to only use the time left in the frame
     public GLResources(int maxMillisecondsPerFrame) {
         maxNanosPerFrame = maxMillisecondsPerFrame < 0 ? Long.MAX_VALUE : maxMillisecondsPerFrame * NANO_IN_MILLISECOND;
 
