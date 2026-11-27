@@ -158,6 +158,45 @@ class ReferenceImagesTest {
                 "Scene-default", ImageTolerance.STRICT.withDifferentPixels(3)));
     }
 
+    // The entry of the tests reads its properties: key, folder of the update, update, references required
+    @Test
+    void thePublicEntryFollowsTheProperties() throws IOException {
+        String key = "kit-properties-test";
+        String[] properties = {RendererKey.PROPERTY, ReferenceImages.FOLDER_PROPERTY, ReferenceImages.UPDATE_PROPERTY,
+                ReferenceImages.REQUIRE_PROPERTY};
+        String[] previous = new String[properties.length];
+        for (int i = 0; i < properties.length; ++i)
+            previous[i] = System.getProperty(properties[i]);
+        Path failure = ReferenceImages.FAILURE_FOLDER.resolve(key);
+
+        try {
+            System.setProperty(RendererKey.PROPERTY, key);
+            System.setProperty(ReferenceImages.FOLDER_PROPERTY, sources.toString());
+            System.setProperty(ReferenceImages.UPDATE_PROPERTY, "true");
+            printed(() -> ReferenceImages.assertMatches(filled(0x336699), "Scene-default"));
+            assertEquals(0x336699, CapturedImage.read(sources.resolve(key).resolve("Scene-default.png")).rgb(0, 0));
+
+            // No series of this key on the classpath: skipped, or failed when required
+            System.setProperty(ReferenceImages.UPDATE_PROPERTY, "false");
+            assertThrows(TestAbortedException.class,
+                    () -> ReferenceImages.assertMatches(filled(0x336699), "Scene-default"));
+            System.setProperty(ReferenceImages.REQUIRE_PROPERTY, "true");
+            AssertionError e = assertThrows(AssertionError.class,
+                    () -> ReferenceImages.assertMatches(filled(0x336699), "Scene-default"));
+            assertTrue(e.getMessage().contains(key), e.getMessage());
+            assertTrue(Files.exists(failure.resolve("Scene-default.actual.png")));
+        } finally {
+            for (int i = 0; i < properties.length; ++i) {
+                if (previous[i] == null)
+                    System.clearProperty(properties[i]);
+                else
+                    System.setProperty(properties[i], previous[i]);
+            }
+            Files.deleteIfExists(failure.resolve("Scene-default.actual.png"));
+            Files.deleteIfExists(failure);
+        }
+    }
+
     private static String printed(Runnable action) {
         PrintStream previous = System.out;
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
