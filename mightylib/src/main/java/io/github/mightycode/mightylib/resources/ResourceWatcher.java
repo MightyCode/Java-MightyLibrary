@@ -2,6 +2,8 @@ package io.github.mightycode.mightylib.resources;
 
 import io.github.mightycode.mightylib.resources.source.IResourceSource;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -183,7 +185,7 @@ public final class ResourceWatcher {
                     }
                 });
             } catch (IOException e) {
-                System.err.println("--Watch: can't list the folders of " + source.name() + " (" + e + ")");
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Watch: can't list the folders of " + source.name() + " (" + e + ")");
             }
         }
         return directories;

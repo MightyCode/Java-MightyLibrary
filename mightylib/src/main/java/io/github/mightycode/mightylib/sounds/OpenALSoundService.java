@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.sounds;
 
 import io.github.mightycode.mightylib.resources.Resources;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
 import org.json.JSONObject;
 import org.lwjgl.openal.AL;
@@ -112,7 +113,7 @@ public final class OpenALSoundService implements ISoundService {
                 continue;
 
             if (!sound.init()) {
-                System.err.println("--Sound source not created, no data for the sound: " + info.name);
+                Logger.Warn(Logger.CATEGORY_SOUND, "Sound source not created, no data for the sound: " + info.name);
                 removeAt(i);
                 continue;
             }
@@ -217,27 +218,25 @@ public final class OpenALSoundService implements ISoundService {
         alcCloseDevice(device);
     }
 
+    /** An OpenAL error: an {@link io.github.mightycode.mightylib.utils.ELogLevel#ERROR} of the category sound. */
     public static void DisplayError(String action, int error) {
-        System.err.println("Error when " + action + "\n");
+        Logger.Error(Logger.CATEGORY_SOUND, "Error when " + action + ": " + ErrorDescription(error));
+    }
+
+    static String ErrorDescription(int error) {
         switch (error) {
             case AL_INVALID_NAME:
-                System.err.println("A bad name (ID) was passed to an OpenAL function");
-                break;
+                return "A bad name (ID) was passed to an OpenAL function";
             case AL_INVALID_ENUM:
-                System.err.println("An invalid enum value was passed to an OpenAL function");
-                break;
+                return "An invalid enum value was passed to an OpenAL function";
             case AL_INVALID_VALUE:
-                System.err.println("An invalid value was passed to an OpenAL function");
-                break;
+                return "An invalid value was passed to an OpenAL function";
             case AL_INVALID_OPERATION:
-                System.err.println("The requested operation is not valid");
-                break;
+                return "The requested operation is not valid";
             case AL_OUT_OF_MEMORY:
-                System.err.println("The requested operation resulted in OpenAL running out of memory");
-                break;
+                return "The requested operation resulted in OpenAL running out of memory";
             default:
-                System.out.println("UNKNOWN ERROR");
-                break;
+                return "Unknown error " + error;
         }
     }
 }

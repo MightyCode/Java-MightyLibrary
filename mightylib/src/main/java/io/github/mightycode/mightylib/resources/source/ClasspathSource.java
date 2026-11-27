@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.resources.source;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -141,7 +143,7 @@ public final class ClasspathSource implements IResourceSource {
         try {
             ownedFileSystem.close();
         } catch (IOException e) {
-            System.err.println("--Can't close " + name() + " : " + e.getMessage());
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Can't close " + name() + " : " + e.getMessage());
         }
     }
 

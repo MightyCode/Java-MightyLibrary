@@ -2,6 +2,7 @@ package io.github.mightycode.mightylib.algorithms.wavefunctioncollapse;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.data.JSONFile;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2i;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -156,13 +157,13 @@ public final class WaveCollapseRules extends DataType {
 
             Integer id = TileId(key);
             if (id == null) {
-                System.err.println("--Wave collapse rules " + getDataName() + ": the key \"" + key
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Wave collapse rules " + getDataName() + ": the key \"" + key
                         + "\" is not a tile id, ignored");
                 continue;
             }
 
             if (ruleKeys.containsKey(id)) {
-                System.err.println("--Wave collapse rules " + getDataName() + ": the key \"" + key
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Wave collapse rules " + getDataName() + ": the key \"" + key
                         + "\" is the tile " + id + " again (key \"" + ruleKeys.get(id) + "\"), ignored");
                 continue;
             }

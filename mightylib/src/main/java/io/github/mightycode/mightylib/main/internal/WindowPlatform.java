@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.main.internal;
 
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.Locale;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -27,11 +29,11 @@ public final class WindowPlatform {
 
         int hint = Parse(wanted);
         if (hint == GLFW_ANY_PLATFORM) {
-            System.err.println("--Unknown " + PROPERTY + " \"" + wanted + "\": GLFW chooses the platform");
+            Logger.Warn(Logger.CATEGORY_CONFIG, "Unknown " + PROPERTY + " \"" + wanted + "\": GLFW chooses the platform");
             return;
         }
         if (!glfwPlatformSupported(hint)) {
-            System.err.println("--GLFW platform \"" + wanted + "\" not supported here: GLFW chooses the platform");
+            Logger.Warn(Logger.CATEGORY_CONFIG, "GLFW platform \"" + wanted + "\" not supported here: GLFW chooses the platform");
             return;
         }
 

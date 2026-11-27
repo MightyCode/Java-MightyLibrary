@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.internal.IGLSharedState;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.apiguardian.api.API;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -52,6 +53,20 @@ public final class GLResources implements IGLElementSink {
     private final Queue<GLElement> elementToReload = new ArrayDeque<>();
 
     private final HashMap<Class<? extends GLElement>, HashMap<String, GLElement>> resources;
+
+    // Strict resources: a GL element that fails is an error, not a warning (its fallback is used either way)
+    private volatile boolean strict;
+
+    /** Strict resources (Resources.setStrict, set by the engine): a GL element that fails is reported as an error. */
+    @API(status = INTERNAL)
+    public void setStrict(boolean strict) {
+        this.strict = strict;
+    }
+
+    @API(status = INTERNAL)
+    public boolean isStrict() {
+        return strict;
+    }
 
     // maxMillisecondsPerFrame: cap of the time spent per frame, -1 to only use the time left in the frame
     public GLResources(int maxMillisecondsPerFrame) {
@@ -381,7 +396,7 @@ public final class GLResources implements IGLElementSink {
     public void releaseResource(GLElement element, boolean urgent) {
         // Released more than referenced (a user unloaded twice): would delete an element others still use
         if (urgent ? !element.isUrgent() : element.getNumberReference() == element.getNumberUrgentReference()) {
-            System.err.println("--GL element released more than referenced: " + element.getClass().getSimpleName()
+            Logger.Error(Logger.CATEGORY_GL, "GL element released more than referenced: " + element.getClass().getSimpleName()
                     + " " + element.getName() + (urgent ? "" : " (preload)"));
             return;
         }

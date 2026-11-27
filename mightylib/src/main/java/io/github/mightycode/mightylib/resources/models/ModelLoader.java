@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.texture.ColorTextureData;
 import io.github.mightycode.mightylib.resources.texture.ETextureColorSpace;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -198,7 +199,7 @@ public final class ModelLoader extends ResourceLoader {
 
         // Embedded textures ("*0") are not supported yet
         if (file.isEmpty() || file.startsWith("*")) {
-            System.err.println("--Model " + model.getDataName() + " : embedded texture " + file + " ignored");
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Model " + model.getDataName() + " : embedded texture " + file + " ignored");
             return null;
         }
 
@@ -206,11 +207,11 @@ public final class ModelLoader extends ResourceLoader {
         try {
             fullPath = ResourceSources.normalize(folder.isEmpty() ? file : folder + "/" + file);
         } catch (IllegalArgumentException e) {
-            System.err.println("--Model " + model.getDataName() + " : texture out of the sources " + file);
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Model " + model.getDataName() + " : texture out of the sources " + file);
             return null;
         }
         if (resources().sources().size(fullPath) < 0) {
-            System.err.println("--Model " + model.getDataName() + " : texture not found " + fullPath);
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Model " + model.getDataName() + " : texture not found " + fullPath);
             return null;
         }
 
@@ -236,7 +237,7 @@ public final class ModelLoader extends ResourceLoader {
         if (registered.getColorSpace() == role)
             return false;
 
-        System.err.println("--Model " + modelName + " : texture " + registered.getDataName() + " used as "
+        Logger.Warn(Logger.CATEGORY_RESOURCES, "Model " + modelName + " : texture " + registered.getDataName() + " used as "
                 + role.jsonName() + " and " + registered.getColorSpace().jsonName() + ", kept "
                 + registered.getColorSpace().jsonName());
         return true;

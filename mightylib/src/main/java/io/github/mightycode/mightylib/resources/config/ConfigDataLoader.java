@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.source.IResourceSource;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.source.SourceEntry;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -89,7 +90,7 @@ public final class ConfigDataLoader extends ResourceLoader {
                 layer = read(source, path);
             } catch (ResourceException e) {
                 // The other layers keep their values
-                System.err.println("--Config " + config.getDataName() + ": " + e.getMessage() + ", layer ignored");
+                Logger.Warn(Logger.CATEGORY_CONFIG, "Config " + config.getDataName() + ": " + e.getMessage() + ", layer ignored");
                 invalid.add(path + " (" + source.name() + ")");
                 invalidPlayer |= isPlayer;
                 continue;

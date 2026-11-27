@@ -2,7 +2,9 @@ package io.github.mightycode.mightylib.graphics;
 
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.ResourceException;
+import io.github.mightycode.mightylib.utils.ELogLevel;
 import io.github.mightycode.mightylib.utils.LoadingElement;
+import io.github.mightycode.mightylib.utils.Logger;
 
 import java.util.ArrayList;
 
@@ -155,8 +157,9 @@ public abstract class GLElement implements LoadingElement {
         } catch (ResourceException e) {
             loaded = false;
             failed = true;
-            System.err.println("--" + getClass().getSimpleName() + " " + name + " failed: " + e.getMessage()
-                    + ", its fallback is used");
+            // Strict resources (debug mode, test kit): a bug of the project, else a fallback expected by a mod or a player
+            Logger.Log(owner != null && owner.isStrict() ? ELogLevel.ERROR : ELogLevel.WARNING, Logger.CATEGORY_RESOURCES,
+                    getClass().getSimpleName() + " " + name + " failed: " + e.getMessage() + ", its fallback is used", null);
         }
         return true;
     }
@@ -203,7 +206,7 @@ public abstract class GLElement implements LoadingElement {
             done = !loaded || reload(remainingMilliseconds);
         } catch (ResourceException e) {
             done = true;
-            System.err.println("--" + getClass().getSimpleName() + " " + name + " could not be reloaded: "
+            Logger.Warn(Logger.CATEGORY_RESOURCES, getClass().getSimpleName() + " " + name + " could not be reloaded: "
                     + e.getMessage() + ", the previous version is kept");
         }
 

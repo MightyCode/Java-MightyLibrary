@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.internal.GLContext;
 import io.github.mightycode.mightylib.graphics.utils.Screenshot;
 import io.github.mightycode.mightylib.main.internal.WindowPlatform;
 import io.github.mightycode.mightylib.resources.texture.Icon;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.apiguardian.api.API;
 import org.joml.Vector2f;
 import org.joml.Vector2i;
@@ -116,7 +117,7 @@ public final class Window {
         info.windowId = glfwCreateWindow(info.size.x, info.size.y, info.windowName, fullscreen ? monitorHandle : NULL, share);
 
         if (info.windowId == NULL) {
-            System.err.println("--Window \"" + info.windowName + "\" can't be created (see the GLFW error above)");
+            Logger.Error(Logger.CATEGORY_ENGINE, "Window \"" + info.windowName + "\" can't be created (see the GLFW error above)");
             return;
         }
 

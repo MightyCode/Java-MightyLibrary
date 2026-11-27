@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.sound.decoder.*;
 import io.github.mightycode.mightylib.sounds.SoundLoadInfo;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.KeyTree;
 import io.github.mightycode.mightylib.utils.math.KeyTreeNode;
 import org.json.JSONObject;
@@ -75,7 +76,7 @@ public final class SoundLoader extends ResourceLoader {
     @Override
     public void fileDetected(Map<String, DataType> data, String currentPath, String name) {
         if (data.containsKey(name))
-            System.err.println("--Sound name " + name + " used by several files, " + currentPath + " replaces the other");
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Sound name " + name + " used by several files, " + currentPath + " replaces the other");
 
         data.put(name, new SoundData(name, currentPath));
     }

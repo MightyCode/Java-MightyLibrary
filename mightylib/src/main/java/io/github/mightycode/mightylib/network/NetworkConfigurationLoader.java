@@ -4,6 +4,8 @@ import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.Map;
 
 public final class NetworkConfigurationLoader extends ResourceLoader {
@@ -39,7 +41,7 @@ public final class NetworkConfigurationLoader extends ResourceLoader {
     @Override
     public void initWithFile(DataType dataType) {
         if (!(dataType instanceof NetworkConfiguration)) {
-            System.err.println("ERROR LOAD");
+            Logger.Error(Logger.CATEGORY_ENGINE, "NetworkConfigurationLoader can't load a " + dataType.getClass().getSimpleName());
             return;
         }
 

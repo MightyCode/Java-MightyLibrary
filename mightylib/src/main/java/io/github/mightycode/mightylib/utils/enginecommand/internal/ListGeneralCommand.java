@@ -24,6 +24,7 @@ public final class ListGeneralCommand {
         registry.register(new ColorSpaceGenCom());
         registry.register(new PictureGenCom());
         registry.register(new StatsGenCom());
+        registry.register(new ProblemsGenCom());
         registry.register(new ScreenshotGenCom());
         registry.register(new SceneGenCom());
         registry.register(new GLGenCom());

@@ -5,12 +5,18 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRende
 import io.github.mightycode.mightylib.graphics.text.ETextAlignment;
 import io.github.mightycode.mightylib.graphics.text.Text;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
+import io.github.mightycode.mightylib.main.Context;
 import io.github.mightycode.mightylib.main.WindowConfig;
 import io.github.mightycode.mightylib.main.WindowContext;
 import io.github.mightycode.mightylib.main.WindowView;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -30,7 +36,8 @@ public class MultiWindowScene extends Scene {
 
     private WindowContext dialog;
     private WindowContext tools;
-    private int contexts;
+    // The contexts this scene opened: they close with it, like its windows
+    private final List<Context> contexts = new ArrayList<>();
 
     @Override
     public void launch(String[] args) {
@@ -82,11 +89,22 @@ public class MultiWindowScene extends Scene {
         }
 
         if (keyboard.keyPressed(GLFW_KEY_C)) {
-            engine().openContext("second-" + (++contexts),
+            contexts.add(engine().openContext(freeContextName(),
                     new WindowConfig("Second context").setSize(640, 360).setVirtualSize(VIRTUAL_WIDTH, VIRTUAL_HEIGHT),
-                    Scene2D::new);
+                    Scene2D::new));
             System.out.println("--MultiWindowScene: context opened");
         }
+    }
+
+    // The names of the contexts are unique in the engine: one still closing keeps its name
+    private String freeContextName() {
+        Set<String> used = new HashSet<>();
+        for (Context context : engine().contexts().getContexts())
+            used.add(context.getName());
+        int index = 1;
+        while (used.contains("second-" + index))
+            ++index;
+        return "second-" + index;
     }
 
     // A closed window is not in the list of the context anymore
@@ -113,6 +131,11 @@ public class MultiWindowScene extends Scene {
         help.unload();
         status.unload();
         square.unload();
+
+        // Closed by the engine after this frame (their scene and windows are unloaded there)
+        for (Context opened : contexts)
+            opened.requestClose();
+        contexts.clear();
     }
 
     // ---- The windows ----

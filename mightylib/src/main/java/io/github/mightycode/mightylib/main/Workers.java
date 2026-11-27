@@ -1,5 +1,7 @@
 package io.github.mightycode.mightylib.main;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
@@ -73,7 +75,7 @@ public final class Workers {
         executor.shutdown();
         try {
             if (!executor.awaitTermination(SHUTDOWN_WAIT_MILLISECONDS, TimeUnit.MILLISECONDS)) {
-                System.err.println("--Workers still running after " + SHUTDOWN_WAIT_MILLISECONDS + " ms, interrupted");
+                Logger.Error(Logger.CATEGORY_ENGINE, "Workers still running after " + SHUTDOWN_WAIT_MILLISECONDS + " ms, interrupted");
                 executor.shutdownNow();
             }
         } catch (InterruptedException e) {

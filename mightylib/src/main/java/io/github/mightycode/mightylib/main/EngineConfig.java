@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
 import io.github.mightycode.mightylib.registry.IPlugin;
 import io.github.mightycode.mightylib.resources.EngineResources;
@@ -494,7 +495,7 @@ public final class EngineConfig {
             try {
                 return Long.parseLong(property.trim());
             } catch (NumberFormatException e) {
-                System.err.println("--" + WATCH_INTERVAL_PROPERTY + " : not a number ->" + property + "<-, the configured interval is kept");
+                Logger.Warn(Logger.CATEGORY_CONFIG, WATCH_INTERVAL_PROPERTY + " : not a number ->" + property + "<-, the configured interval is kept");
             }
         }
         return watchResourcesInterval;
@@ -522,7 +523,7 @@ public final class EngineConfig {
             try {
                 access = ECommandLevel.Parse(property);
             } catch (IllegalArgumentException e) {
-                System.err.println("--" + COMMAND_ACCESS_PROPERTY + " : " + e.getMessage());
+                Logger.Warn(Logger.CATEGORY_CONFIG, COMMAND_ACCESS_PROPERTY + " : " + e.getMessage());
                 access = defaultCommandAccess();
             }
         } else {
@@ -565,7 +566,7 @@ public final class EngineConfig {
 
         Optional<Boolean> shown = ParseShown(property);
         if (shown.isEmpty()) {
-            System.err.println("--" + name + " : unknown value ->" + property + "<-, expected shown or hidden");
+            Logger.Warn(Logger.CATEGORY_CONFIG, name + " : unknown value ->" + property + "<-, expected shown or hidden");
             return configured;
         }
 
@@ -594,7 +595,7 @@ public final class EngineConfig {
         if (value == ERenderColorSpace.LINEAR || value == ERenderColorSpace.GAMMA)
             return value;
 
-        System.err.println("--" + COLOR_SPACE_PROPERTY + " : unknown value ->" + property + "<-, expected linear or gamma");
+        Logger.Warn(Logger.CATEGORY_CONFIG, COLOR_SPACE_PROPERTY + " : unknown value ->" + property + "<-, expected linear or gamma");
         return colorSpace;
     }
 
@@ -608,7 +609,7 @@ public final class EngineConfig {
         if (value != null)
             return value;
 
-        System.err.println("--" + BATCH_2D_PROPERTY + " : unknown value ->" + property
+        Logger.Warn(Logger.CATEGORY_CONFIG, BATCH_2D_PROPERTY + " : unknown value ->" + property
                 + "<-, expected off, orphan, ring or instanced");
         return batch2DMode;
     }
@@ -625,7 +626,7 @@ public final class EngineConfig {
             case "off":
                 return false;
             default:
-                System.err.println("--" + VIEW_CULLING_2D_PROPERTY + " : unknown value ->" + property
+                Logger.Warn(Logger.CATEGORY_CONFIG, VIEW_CULLING_2D_PROPERTY + " : unknown value ->" + property
                         + "<-, expected on or off");
                 return viewCulling2D;
         }
@@ -643,7 +644,7 @@ public final class EngineConfig {
             case "off":
                 return false;
             default:
-                System.err.println("--" + DEBUG_DRAW_PROPERTY + " : unknown value ->" + property
+                Logger.Warn(Logger.CATEGORY_CONFIG, DEBUG_DRAW_PROPERTY + " : unknown value ->" + property
                         + "<-, expected on or off");
                 return debugDraw;
         }
@@ -658,7 +659,7 @@ public final class EngineConfig {
         if (property.trim().equalsIgnoreCase("silent"))
             return true;
 
-        System.err.println("--" + SOUND_PROPERTY + " : unknown value ->" + property + "<-, expected silent");
+        Logger.Warn(Logger.CATEGORY_CONFIG, SOUND_PROPERTY + " : unknown value ->" + property + "<-, expected silent");
         return false;
     }
 

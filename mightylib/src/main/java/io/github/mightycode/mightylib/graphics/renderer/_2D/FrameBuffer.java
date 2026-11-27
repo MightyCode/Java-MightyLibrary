@@ -65,7 +65,7 @@ public final class FrameBuffer implements IRenderTextureBindable {
         Logger.CheckOpenGLError("FrameBuffer RenderBuffer : " + rbo);
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            System.err.println("Make attention, the framebuffer doesn't work properly");
+            Logger.Error(Logger.CATEGORY_GL, "The framebuffer " + fbo + " is not complete");
     }
 
     public void bindFrameBuffer(){

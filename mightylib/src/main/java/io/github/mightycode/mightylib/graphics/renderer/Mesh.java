@@ -344,7 +344,7 @@ public class Mesh {
             cpuData.setIndices(indices, indicesSize);
 
         if (!useEbo)
-            System.err.print(">(Mesh.java) Providing EBO without using EBO !");
+            Logger.Error(Logger.CATEGORY_GL, "Mesh: indices given to a mesh without EBO, ignored");
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         Logger.CheckOpenGLError("Bind ebo : " + ebo);
@@ -361,7 +361,7 @@ public class Mesh {
     public final void updateEbo(int[] newArray, int startIndex) {
         bind();
         if (!useEbo) {
-            System.err.print(">(Mesh.java) Trying to update array without using EBO !");
+            Logger.Error(Logger.CATEGORY_GL, "Mesh: indices updated on a mesh without EBO, ignored");
             return;
         }
 

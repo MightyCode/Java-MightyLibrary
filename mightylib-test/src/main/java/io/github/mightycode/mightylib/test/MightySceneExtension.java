@@ -26,12 +26,25 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
     public static final String REQUIRE_GL_PROPERTY = "mightylib.test.requireGL";
 
     // The engine kept between the tests, and what it was started from
-    private static final class Kept implements ExtensionContext.Store.CloseableResource {
+    static final class Kept implements ExtensionContext.Store.CloseableResource {
         TestEngine engine;
         Class<?> config;
         String[] sources;
+        boolean strictResources;
         // GL unavailable here: every scene test is skipped with this reason
         String unavailable;
+
+        // The engine was started from these settings (the problems and leaks of a test do not count)
+        boolean sameSettings(MightySceneTest settings) {
+            return config == settings.config() && Arrays.equals(sources, settings.sources())
+                    && strictResources == settings.strictResources();
+        }
+
+        void remember(MightySceneTest settings) {
+            config = settings.config();
+            sources = settings.sources().clone();
+            strictResources = settings.strictResources();
+        }
 
         @Override
         public void close() {
@@ -56,13 +69,14 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
         if (kept.unavailable != null)
             throw unavailable(kept.unavailable, null);
 
-        boolean same = kept.engine != null && !kept.engine.isClosed() && kept.config == settings.config()
-                && Arrays.equals(kept.sources, settings.sources());
+        boolean same = kept.engine != null && !kept.engine.isClosed() && kept.sameSettings(settings);
         if (!same) {
             kept.close();
             TestEngine engine = MightyTest.withWindow(MightyEngineExtension.newConfig(settings.config()));
             for (String source : settings.sources())
                 engine.addSource(Paths.get(source));
+            if (!settings.strictResources())
+                engine.allowResourceFailures();
             try {
                 engine.start();
             } catch (GLUnavailableException e) {
@@ -71,8 +85,7 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
             }
             engine.markShared();
             kept.engine = engine;
-            kept.config = settings.config();
-            kept.sources = settings.sources().clone();
+            kept.remember(settings);
         }
 
         return kept.engine.scenes();
@@ -90,6 +103,7 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
         runner.toEmptyScene();
         if (settings(context).checkLeaks())
             context.getStore(NAMESPACE).put(Map.class, runner.leakSnapshot());
+        runner.engine().beginTest();
     }
 
     @Override
@@ -100,17 +114,53 @@ public final class MightySceneExtension implements BeforeEachCallback, AfterEach
             return;
 
         SceneRunner runner = kept.engine.scenes();
+        boolean testFailed = context.getExecutionException().isPresent();
+        AssertionError leak = null;
         try {
             runner.toEmptyScene();
             Map<String, Integer> before = context.getStore(NAMESPACE).remove(Map.class, Map.class);
-            if (before != null && context.getExecutionException().isEmpty())
+            if (before != null && !testFailed)
                 runner.assertNoLeak(before);
-        } catch (RuntimeException | AssertionError e) {
+        } catch (AssertionError e) {
+            leak = e;
+        } catch (RuntimeException e) {
             // The engine may be in a bad state: the next test starts a new one
-            if (!(e instanceof AssertionError))
-                kept.close();
+            AssertionError problems = kept.engine.endTest(true);
+            kept.close();
+            if (problems != null)
+                e.addSuppressed(problems);
             throw e;
         }
+
+        // After the return to the empty scene: the unload of the scene of the test is part of it
+        AssertionError problems = kept.engine.endTest(testFailed);
+        // A test that threw (not an assertion) may leave a half-loaded scene whose objects are freed later, in the
+        // next test: the next test starts a new engine
+        Throwable thrown = context.getExecutionException().orElse(null);
+        if (thrown != null && !(thrown instanceof AssertionError))
+            kept.close();
+        AssertionError failure = Combined(leak, problems);
+        if (failure != null)
+            throw Named(context.getDisplayName(), failure);
+    }
+
+    // The check runs after the test: its failure names the test (the scene of a parameterized test, for example)
+    static AssertionError Named(String test, AssertionError failure) {
+        AssertionError named = new AssertionError("After " + test + ": " + failure.getMessage(), failure.getCause());
+        for (Throwable suppressed : failure.getSuppressed())
+            named.addSuppressed(suppressed);
+        return named;
+    }
+
+    // One failure for the leaks and the problems of a test (the stack trace of the first error as cause)
+    static AssertionError Combined(AssertionError leak, AssertionError problems) {
+        if (leak == null)
+            return problems;
+        if (problems == null)
+            return leak;
+        AssertionError both = new AssertionError(leak.getMessage() + "\n" + problems.getMessage(), problems.getCause());
+        both.addSuppressed(leak);
+        return both;
     }
 
     @Override

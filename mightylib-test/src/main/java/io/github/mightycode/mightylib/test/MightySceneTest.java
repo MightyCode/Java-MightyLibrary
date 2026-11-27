@@ -16,8 +16,9 @@ import java.util.function.Supplier;
  * JUnit 5, tests with GL (tag "gl"): each test method with a SceneRunner parameter gets the scenes of an engine with a
  * hidden window (MightyTest.withWindow), kept between the tests of the same configuration. Before each test the engine
  * is on the empty scene; after it, back to the empty scene, the GL objects, shared elements, referenced resources and
- * sound sources must be the ones before (the test fails naming them). Without screen or OpenGL 3.3 core, the test is
- * skipped with the reason.
+ * sound sources must be the ones before (the test fails naming them), and no error of the Logger channel may have come
+ * that the test did not announce (TestEngine.expectProblem). Without screen or OpenGL 3.3 core, the test is skipped
+ * with the reason.
  */
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,4 +35,8 @@ public @interface MightySceneTest {
 
     // False: no leak check after each test
     boolean checkLeaks() default true;
+
+    // False: a resource that fails gives its fallback and a warning (TestEngine.allowResourceFailures), for the
+    // tests of failing resources; an engine of its own
+    boolean strictResources() default true;
 }

@@ -271,7 +271,7 @@ public final class Resources {
             if (strict)
                 throw new IllegalStateException("Strict resources: " + message);
 
-            System.err.println("--" + message + ", the shaders and fonts of the engine are not loaded");
+            Logger.Warn(Logger.CATEGORY_RESOURCES, message + ", the shaders and fonts of the engine are not loaded");
             return;
         }
 
@@ -483,7 +483,7 @@ public final class Resources {
         }
 
         boolean replaced = hasFallback(data);
-        System.err.println("--" + message + (replaced ? ", its fallback is used" : ""));
+        Logger.Warn(Logger.CATEGORY_RESOURCES, message + (replaced ? ", its fallback is used" : ""));
 
         data.failed = true;
         dependencies.stopWaiting(data);
@@ -660,7 +660,7 @@ public final class Resources {
 
     public void loadBatch(String batchName) {
         if (!(loadingMethod instanceof BatchResourcesMethod)) {
-            System.err.println("Can't load batch: " + batchName + " when loading method is not BatchResources");
+            Logger.Error(Logger.CATEGORY_RESOURCES, "Can't load batch: " + batchName + " when loading method is not BatchResources");
             return;
         }
 
@@ -674,7 +674,7 @@ public final class Resources {
      */
     public void preloadBatch(String batchName) {
         if (!(loadingMethod instanceof BatchResourcesMethod)) {
-            System.err.println("Can't preload batch: " + batchName + " when loading method is not BatchResources");
+            Logger.Error(Logger.CATEGORY_RESOURCES, "Can't preload batch: " + batchName + " when loading method is not BatchResources");
             return;
         }
 
@@ -696,7 +696,7 @@ public final class Resources {
 
     public void unloadBatch(String batchName) {
         if (!(loadingMethod instanceof BatchResourcesMethod)) {
-            System.err.println("Can't unload batch: " + batchName + " when loading method is not BatchResources");
+            Logger.Error(Logger.CATEGORY_RESOURCES, "Can't unload batch: " + batchName + " when loading method is not BatchResources");
             return;
         }
 
@@ -772,7 +772,7 @@ public final class Resources {
             try {
                 loader.discover(map);
             } catch (RuntimeException e) {
-                System.err.println("--Watch: can't look for new " + loader.getResourceNameType() + " files: "
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Watch: can't look for new " + loader.getResourceNameType() + " files: "
                         + e.getMessage());
                 continue;
             }

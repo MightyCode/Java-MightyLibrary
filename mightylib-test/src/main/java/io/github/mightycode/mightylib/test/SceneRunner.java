@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.scenes.ISceneManager;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.SceneRegistry;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.time.Duration;
@@ -189,7 +190,8 @@ public final class SceneRunner {
 
     /**
      * The OpenGL objects alive and the references of the shared GL elements (names without their #id), the referenced
-     * resources by type, and the sound sources owned. Measured once the urgent GL elements are loaded.
+     * resources by type, the sound sources owned, and the contexts and windows open (windows command). Measured once the
+     * urgent GL elements are loaded.
      */
     public Map<String, Integer> leakSnapshot() {
         engine.loadUntilDone();
@@ -228,6 +230,18 @@ public final class SceneRunner {
         }
 
         counters.put("sound.ownedSources", data("sounds").optInt("owned"));
+
+        // The windows and contexts a scene opened and did not close (names of the contexts as the windows command)
+        JSONArray contexts = data("windows").optJSONArray("contexts");
+        if (contexts != null) {
+            counters.put("windows.contexts", contexts.length());
+            for (int i = 0; i < contexts.length(); ++i) {
+                JSONObject context = contexts.getJSONObject(i);
+                JSONArray windows = context.optJSONArray("windows");
+                counters.merge("windows." + context.optString("name") + ".windows", windows == null ? 0 : windows.length(),
+                        Integer::sum);
+            }
+        }
         return counters;
     }
 

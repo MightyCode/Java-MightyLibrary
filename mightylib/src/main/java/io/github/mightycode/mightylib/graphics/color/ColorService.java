@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.main.MainThread;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.config.ConfigData;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
 
 import java.util.concurrent.CompletableFuture;
@@ -62,7 +63,7 @@ public final class ColorService implements IColorService {
         if (PictureSettings.IsValid(value))
             return value;
 
-        System.err.println("--Config " + config.getDataName() + ": " + key + " " + value + " out of ["
+        Logger.Warn(Logger.CATEGORY_CONFIG, "Config " + config.getDataName() + ": " + key + " " + value + " out of ["
                 + PictureSettings.MIN + ", " + PictureSettings.MAX + "], 1 is used");
         return 1f;
     }

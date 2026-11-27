@@ -8,6 +8,7 @@ import io.github.mightycode.mightylib.resources.ResourceException;
 import io.github.mightycode.mightylib.resources.ResourceLoader;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 import io.github.mightycode.mightylib.resources.source.SourceEntry;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONObject;
 import org.lwjgl.stb.STBImage;
 import org.lwjgl.system.MemoryStack;
@@ -89,12 +90,12 @@ public final class TextureDataLoader extends ResourceLoader {
 
             String name = fileName.substring(0, dot);
             if (data.containsKey(name)) {
-                System.err.println("--Texture " + entry.path() + " is not in textures.json and its name '" + name
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Texture " + entry.path() + " is not in textures.json and its name '" + name
                         + "' is already used: ignored");
                 continue;
             }
 
-            System.err.println("--Texture " + entry.path() + " is not in textures.json: default parameters"
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Texture " + entry.path() + " is not in textures.json: default parameters"
                     + " (realistic, 2D)");
             data.put(name, new TextureData(name, entry.path()));
         }
@@ -181,7 +182,7 @@ public final class TextureDataLoader extends ResourceLoader {
                     return;
                 }
 
-                System.err.println("--Texture " + textureData.getDataName() + ": stb can't read it ("
+                Logger.Warn(Logger.CATEGORY_RESOURCES, "Texture " + textureData.getDataName() + ": stb can't read it ("
                         + STBImage.stbi_failure_reason() + "), ImageIO is used");
             }
             undecoded = toArray(file);

@@ -27,6 +27,7 @@ import io.github.mightycode.mightylib.scenes.camera.Camera3DCreationInfo;
 import io.github.mightycode.mightylib.scenes.Scene;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.DebugInfoCamera3D;
 import io.github.mightycode.mightylib.scenes.camera.cameraComponents.FreeCamera3DComponent;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
 import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import io.github.mightycode.mightylibdemo.main.ActionId;
@@ -226,7 +227,7 @@ public class Scene3D extends Scene {
         Model data = resources().getResource(Model.class, BACKPACK_MODEL);
         if (data == null || !data.isLoaded()) {
             String message = "Model '" + BACKPACK_MODEL + "' missing: run python tools/demo_assets.py";
-            System.err.println("--Scene3D : " + message);
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Scene3D : " + message);
 
             missingBackpackLabel = new Text();
             missingBackpackLabel.setFontSize(20).setText(message);

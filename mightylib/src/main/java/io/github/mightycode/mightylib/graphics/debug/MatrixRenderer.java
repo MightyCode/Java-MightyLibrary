@@ -5,7 +5,6 @@ import io.github.mightycode.mightylib.graphics.renderer.Mesh;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.scenes.camera.Camera2D;
 import io.github.mightycode.mightylib.utils.math.color.Color4f;
-import io.github.mightycode.mightylib.utils.math.color.ColorList;
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 
@@ -41,7 +40,6 @@ public final class MatrixRenderer {
         renderer = new MeshRenderer(EngineResources.MULTI_COLORED_SHAPE_2D, true);
         // Batched with the other 2D draws: the batch reads the geometry on the CPU
         renderer.getMesh().keepCpuData();
-        renderer.setColorMode(ColorList.Red());
         renderer.getMesh().setEboStorage(Mesh.STATIC_STORE);
         renderer.getMesh().setEbo(new int[0]);
         renderer.setReferenceCamera(camera);

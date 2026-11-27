@@ -21,10 +21,12 @@ Steps are game commands (see `help` in the game) plus:
 
 Output is short: a successful step prints "ok" only (and the file of a screenshot); prefix a step with "?" to
 see its whole answer, for example "?gl summary". Failures always print the whole answer.
-Then the problems found in the game log, identical lines counted once.
+Then the problems the engine received (command "problems": errors and warnings sent through its Logger), and the
+problems of the game log that escape the Logger (uncaught exception, [LWJGL], crash before the engine) or come after
+the last "problems" (shutdown), identical lines counted once.
 Without result after --timeout seconds (20 by default) the game is considered blocked: the scenario stops.
 The game is killed after --max-duration seconds whatever it is doing.
-Exit code: 0 if every step succeeded and the log has no problem, 1 otherwise.
+Exit code: 0 if every step succeeded, the engine received no error and the log has no problem, 1 otherwise.
 
 Machine specific paths can be changed with the environment variables MIGHTY_JAVA (java used to run the game),
 MIGHTY_MVN (maven executable) and MIGHTY_MAVEN_JDK (JAVA_HOME used by maven).
@@ -66,10 +68,14 @@ MONITOR_PROPERTY = "mightylib.window.monitor"
 PLATFORM_PROPERTY = "mightylib.glfw.platform"
 STRICT_RESOURCES_PROPERTY = "mightylib.resources.strict"
 NO_CURSOR_CAPTURE_PROPERTY = "mightylib.input.noCursorCapture"
-PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|OpenGL debug|Error:"
-                             r"|^\[LWJGL\] .*error|^\s+Description :"
-                             # OpenAL errors (OpenALSoundService.DisplayError)
-                             r"|Error when |OpenAL function|OpenAL running out|UNKNOWN ERROR")
+# What escapes the Logger of the engine: its lines ("--" and the stack trace that follows) are counted by "problems"
+PROBLEM_PATTERN = re.compile(r"Exception|Exit with error|^\s+at io\.github\.mightycode|Error:"
+                             r"|^\[LWJGL\] .*error|^\s+Description :")
+# Logger lines printed after the last "problems" (shutdown: unload of the last scene, hooks, services), which no
+# command counts: checked with PROBLEM_PATTERN like the rest of the log, plus the OpenAL errors
+SHUTDOWN_PROBLEM_PATTERN = re.compile(r"^--Error when ")
+# Lines of the stack trace printed under a Logger line
+TRACE_PATTERN = re.compile(r"^\s+at |^\s+\.\.\. \d+ more|^Caused by: |^\s+Suppressed: |^[\w$]+(\.[\w$]+)+(: |$)")
 
 
 def run_maven(*goals):
@@ -352,7 +358,33 @@ def run_steps(port, steps, timeout, log_path=None):
             else:
                 print(f"> {step}\n  {compact(answer)}")
             success = success and answer.get("success", False)
+
+        success = report_problems(connection, reader, log_path) and success
     return success
+
+
+# Number of lines of the game log the last "problems" covers: the Logger lines after it are checked by report_log
+problems_checked_lines = 0
+
+
+def count_lines(log_path):
+    if log_path is None or not os.path.exists(log_path):
+        return 0
+    with open(log_path, encoding="utf-8", errors="replace") as file:
+        return sum(1 for _ in file)
+
+
+def report_problems(connection, reader, log_path=None):
+    # The errors and warnings the engine received through its Logger; an error fails the scenario
+    global problems_checked_lines
+    answer = mighty.send(connection, reader, "problems")
+    # The Logger prints a problem before the command can count it: every line counted is in the log by now
+    problems_checked_lines = count_lines(log_path)
+    if not answer.get("success"):
+        print(f"problems: {compact(answer)}")
+        return False
+    print("problems: " + answer.get("message", "").replace("\n", "\n  "))
+    return answer.get("data", {}).get("errors", 0) == 0
 
 
 def stop(process, port):
@@ -373,8 +405,25 @@ def stop(process, port):
 
 
 def report_log(log_path):
+    problems = []
+    logger_trace = False
     with open(log_path, encoding="utf-8", errors="replace") as file:
-        problems = [line.rstrip() for line in file if PROBLEM_PATTERN.search(line)]
+        for index, line in enumerate(file):
+            line = line.rstrip()
+            if index >= problems_checked_lines:
+                # After the last "problems": nothing counted these Logger lines
+                if PROBLEM_PATTERN.search(line) or SHUTDOWN_PROBLEM_PATTERN.search(line):
+                    problems.append(line)
+                continue
+            # A Logger line and its stack trace are counted by "problems"
+            if line.startswith("--"):
+                logger_trace = True
+                continue
+            if logger_trace and TRACE_PATTERN.search(line):
+                continue
+            logger_trace = False
+            if PROBLEM_PATTERN.search(line):
+                problems.append(line)
 
     # A repeated exception is shown once with its number of occurrences
     counts = {}

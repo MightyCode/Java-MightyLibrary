@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.resources;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.resources.internal.BatchResources;
 import io.github.mightycode.mightylib.resources.internal.IGLElementSink;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -119,7 +120,7 @@ class BatchManager {
             // The data referenced by the load, not by the description now (reloaded, new data matching a regex...)
             List<BatchLoad> loads = loadedBatches.get(reference);
             if (loads == null || loads.isEmpty()) {
-                System.err.println("--Batch " + batchName + " unloaded but not loaded");
+                Logger.Error(Logger.CATEGORY_RESOURCES, "Batch " + batchName + " unloaded but not loaded");
                 return;
             }
 
@@ -163,7 +164,7 @@ class BatchManager {
         try {
             content = collectBatch(batchName);
         } catch (RuntimeException e) {
-            System.err.println("--Batch " + batchName + " kept as loaded: " + e.getMessage());
+            Logger.Warn(Logger.CATEGORY_RESOURCES, "Batch " + batchName + " kept as loaded: " + e.getMessage());
             return;
         }
 

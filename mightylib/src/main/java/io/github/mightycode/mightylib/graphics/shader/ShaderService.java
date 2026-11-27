@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.main.MainThread;
 import io.github.mightycode.mightylib.resources.FileMethods;
 import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -71,20 +72,20 @@ public final class ShaderService implements IShaderService {
 
             Object value = entry.get(field);
             if (!(value instanceof String)) {
-                System.err.println("--Shader " + name + ": \"" + field + "\" is not a shader name, drawn alone");
+                Logger.Warn(Logger.CATEGORY_SHADERS, "Shader " + name + ": \"" + field + "\" is not a shader name, drawn alone");
                 continue;
             }
 
             String target = (String) value;
             JSONObject targetEntry = declarations.optJSONObject(target);
             if (targetEntry == null) {
-                System.err.println("--Shader " + name + ": its \"" + field + "\" shader " + target
+                Logger.Warn(Logger.CATEGORY_SHADERS, "Shader " + name + ": its \"" + field + "\" shader " + target
                         + " is not declared, drawn alone");
             } else if (!hasTag(targetEntry, tag)) {
-                System.err.println("--Shader " + name + ": its \"" + field + "\" shader " + target
+                Logger.Warn(Logger.CATEGORY_SHADERS, "Shader " + name + ": its \"" + field + "\" shader " + target
                         + " is not tagged " + tag + ", drawn alone");
             } else if (!formats.containsKey(target)) {
-                System.err.println("--Shader " + name + ": its \"" + field + "\" shader " + target
+                Logger.Warn(Logger.CATEGORY_SHADERS, "Shader " + name + ": its \"" + field + "\" shader " + target
                         + " has no batch format (registry.shaders().batchFormat), drawn alone");
             } else {
                 links.put(name, target);

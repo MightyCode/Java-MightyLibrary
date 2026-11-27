@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.utils.enginecommand.internal;
 
 import io.github.mightycode.mightylib.console.internal.ConsoleLog;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandResult;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
 import io.github.mightycode.mightylib.utils.enginecommand.ECommandLevel;
@@ -156,13 +157,13 @@ public final class DebugServer {
             } catch (BindException e) {
                 // Port already used: try the next one
             } catch (IOException e) {
-                System.err.println("Debug server can't listen on port " + candidate + " : " + e);
+                Logger.Warn(Logger.CATEGORY_ENGINE, "Debug server can't listen on port " + candidate + " : " + e);
                 return false;
             }
         }
 
         if (serverSocket == null) {
-            System.err.println("Debug server can't find a free port from " + port);
+            Logger.Warn(Logger.CATEGORY_ENGINE, "Debug server can't find a free port from " + port);
             return false;
         }
 
@@ -192,7 +193,7 @@ public final class DebugServer {
         try {
             Files.write(Paths.get(portFile), String.valueOf(getPort()).getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            System.err.println("Debug server can't write its port in " + portFile + " : " + e);
+            Logger.Warn(Logger.CATEGORY_ENGINE, "Debug server can't write its port in " + portFile + " : " + e);
         }
     }
 

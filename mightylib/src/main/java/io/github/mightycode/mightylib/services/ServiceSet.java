@@ -1,6 +1,7 @@
 package io.github.mightycode.mightylib.services;
 
 import io.github.mightycode.mightylib.main.Engine;
+import io.github.mightycode.mightylib.utils.ELogLevel;
 import io.github.mightycode.mightylib.utils.Logger;
 
 import java.util.ArrayList;
@@ -41,7 +42,7 @@ public final class ServiceSet {
         for (ServiceDeclaration<?> declaration : declarations) {
             ServiceKey<?> missing = firstMissingRequirement(declaration);
             if (missing != null) {
-                System.err.println("--Service " + declaration + " not created: it requires " + missing
+                Logger.Error(Logger.CATEGORY_ENGINE, "Service " + declaration + " not created: it requires " + missing
                         + ", not created");
                 failed = true;
                 continue;
@@ -52,10 +53,11 @@ public final class ServiceSet {
                 System.out.println("--Service " + declaration + " overridden by a launch option");
 
             IEngineService service = tryCreate(engine, declaration,
-                    override != null ? override : declaration.factory(), "");
+                    override != null ? override : declaration.factory(), "",
+                    override == null && declaration.fallbackFactory() != null);
             boolean fallback = false;
             if (service == null && override == null && declaration.fallbackFactory() != null) {
-                service = tryCreate(engine, declaration, declaration.fallbackFactory(), "fallback of ");
+                service = tryCreate(engine, declaration, declaration.fallbackFactory(), "fallback of ", false);
                 fallback = service != null;
                 if (fallback)
                     System.out.println("--Service " + declaration.key() + ": fallback to "
@@ -63,7 +65,7 @@ public final class ServiceSet {
             }
 
             if (service == null) {
-                System.err.println("--Service " + declaration + " failed"
+                Logger.Error(Logger.CATEGORY_ENGINE, "Service " + declaration + " failed"
                         + (override != null || declaration.fallbackFactory() == null ? ", without fallback"
                         : ", its fallback too"));
                 failed = true;
@@ -93,16 +95,19 @@ public final class ServiceSet {
     }
 
     // Null if the factory failed (reported). LinkageError: a native library or a class of a mod that can't be loaded
-    // (OpenAL), a failure of the factory like any other; the other errors (memory...) stop the engine
+    // (OpenAL), a failure of the factory like any other; the other errors (memory...) stop the engine.
+    // Followed by a fallback (no audio device): a warning, else an error
     private static IEngineService tryCreate(Engine engine, ServiceDeclaration<?> declaration,
-                                            IServiceFactory<?> factory, String what) {
+                                            IServiceFactory<?> factory, String what, boolean fallbackFollows) {
+        ELogLevel level = fallbackFollows ? ELogLevel.WARNING : ELogLevel.ERROR;
         try {
             IEngineService service = factory.create(engine);
             if (service == null)
-                System.err.println("--The " + what + "factory of the service " + declaration + " returned null");
+                Logger.Log(level, Logger.CATEGORY_ENGINE, "The " + what + "factory of the service " + declaration
+                        + " returned null", null);
             return service;
         } catch (RuntimeException | LinkageError e) {
-            Logger.LogException("The " + what + "factory of the service " + declaration + " failed", e);
+            Logger.Log(level, Logger.CATEGORY_ENGINE, "The " + what + "factory of the service " + declaration + " failed", e);
             return null;
         }
     }

@@ -1,6 +1,8 @@
 package io.github.mightycode.mightylib.inputs;
 
 import io.github.mightycode.mightylib.resources.EngineResources;
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -280,7 +282,7 @@ public final class GamepadManager {
     public boolean addMappings(String mappings) {
         boolean added = source.addMappings(mappings);
         if (!added)
-            System.err.println("--Invalid gamepad mappings");
+            Logger.Warn(Logger.CATEGORY_INPUT, "Invalid gamepad mappings");
 
         return added;
     }

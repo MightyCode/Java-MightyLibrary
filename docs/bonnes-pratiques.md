@@ -9,7 +9,7 @@ Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill 
    *Vérification* : les commits de la semaine qui changent un comportement touchent aussi la doc concernée (`git log --since="1 week ago" --stat dev`) ; `current.md` ne contient aucune trace d'objectif terminé.
 3. **Tests verts, et un test pour chaque bug corrigé** quand il peut s'écrire sans GL. La liste du code couvert dans `CLAUDE.md` est à jour.
    *Vérification* : `mvn -o -q test` ; pour chaque correctif de la semaine, le test qui le reproduit (ou la raison de son absence).
-4. **Vérification en jeu** de ce que les tests ne couvrent pas (`tools/scenario.py`, journal sans problème), et description de la vérification manuelle restante.
+4. **Vérification en jeu** de ce que les tests ne couvrent pas (`tools/scenario.py`, journal sans problème : `problems` sans ERROR, aucune ligne suspecte), et description de la vérification manuelle restante.
    *Vérification* : les changements de rendu, d'entrées ou de fenêtre de la semaine ont été lancés en jeu.
 
 ## Cap
@@ -23,8 +23,8 @@ Points que le projet doit continuer à respecter. **Revue hebdomadaire** (skill 
    *Vérification* : les fichiers anciens modifiés dans la semaine ont gagné un test ou une vérification en jeu.
 
 ## Qualité du code
-9. **Exceptions** : jamais `printStackTrace()` ; exception inattendue gérée → `Logger.LogException` ; échec attendu d'une ressource → `ResourceException` ; `InterruptedException` → `Thread.currentThread().interrupt()` puis arrêt.
-   *Vérification* : `grep -rn "printStackTrace()" */src` est vide ; pas de `catch` vide ou qui avale l'erreur sans la signaler.
+9. **Exceptions et problèmes** : jamais `printStackTrace()` ni `System.err` direct, un problème passe par `Logger.Error` (bug) ou `Logger.Warn` (donnée ou réglage invalide attendu), avec sa catégorie ; exception inattendue gérée → `Logger.LogException` ; échec attendu d'une ressource → `ResourceException` ; `InterruptedException` → `Thread.currentThread().interrupt()` puis arrêt.
+   *Vérification* : `NoDirectStderrTest` et `DemoNoDirectStderrTest` passent (ni `System.err.print` ni `printStackTrace()` hors de leurs exceptions) ; pas de `catch` vide ou qui avale l'erreur sans la signaler.
 10. **Fichiers et flux fermés** (try-with-resources), y compris en cas d'erreur.
     *Vérification* : `grep -rn -E "new (FileInputStream|FileReader|FileWriter|Scanner|BufferedReader)" */src`, chaque résultat dans un try-with-resources ou fermé dans un `finally`.
 11. **Analyse statique régulière** : `python tools/analyse.py` (Error Prone + SpotBugs, environ 30 s, Claude peut le lancer) pendant la revue hebdomadaire (`/revue-pratiques`, avec la couverture `python tools/coverage.py`) ; export de l'inspection IntelliJ (*Code → Inspect Code*, export XML dans `target/analyse`, manuel : Claude ne peut pas l'obtenir lui-même) au moins une fois par mois pour le style que ces outils ne regardent pas (point 14). Les catégories à risque sont traitées : `DataFlowIssue`, `AutoCloseableResource`, `NonAtomicOperationOnVolatileField`, `EmptyStatementBody`, `ThrowablePrintStackTrace`, `UNCHECKED_WARNING`.

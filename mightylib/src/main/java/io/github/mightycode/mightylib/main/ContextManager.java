@@ -13,6 +13,8 @@ import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLangu
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 
+import io.github.mightycode.mightylib.utils.Logger;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -146,7 +148,7 @@ public final class ContextManager {
                     continue;
 
                 if (Window.ScreenHandle(window.getDisplay()) == screen) {
-                    System.err.println("--Window \"" + title + "\" : its screen already shows \"" + other.getName()
+                    Logger.Warn(Logger.CATEGORY_CONFIG, "Window \"" + title + "\" : its screen already shows \"" + other.getName()
                             + "\" in exclusive fullscreen, borderless instead");
                     return wanted.copy().setMode(EWindowMode.BORDERLESS);
                 }
@@ -209,7 +211,7 @@ public final class ContextManager {
         try {
             return sources.readString(GamepadManager.MAPPINGS_FILE);
         } catch (IOException e) {
-            System.err.println("--Gamepad mappings file " + GamepadManager.MAPPINGS_FILE + " can't be read : "
+            Logger.Warn(Logger.CATEGORY_INPUT, "Gamepad mappings file " + GamepadManager.MAPPINGS_FILE + " can't be read : "
                     + e.getMessage());
             return null;
         }

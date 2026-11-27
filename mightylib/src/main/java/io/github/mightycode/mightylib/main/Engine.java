@@ -43,6 +43,7 @@ import io.github.mightycode.mightylib.services.ServiceKey;
 import io.github.mightycode.mightylib.services.ServiceSet;
 import io.github.mightycode.mightylib.sounds.ISoundService;
 import io.github.mightycode.mightylib.utils.Logger;
+import io.github.mightycode.mightylib.utils.internal.ProblemLog;
 import io.github.mightycode.mightylib.utils.enginecommand.BaseCommand;
 import io.github.mightycode.mightylib.utils.enginecommand.CommandOwner;
 import io.github.mightycode.mightylib.utils.enginecommand.Commands;
@@ -189,6 +190,12 @@ public final class Engine implements IView {
     @API(status = INTERNAL)
     public ConsoleLog consoleLog() { return consoleLog; }
 
+    // The problems of the Logger channel received from the start to the shutdown (command problems)
+    private final ProblemLog problems = new ProblemLog();
+
+    @API(status = INTERNAL)
+    public ProblemLog problems() { return problems; }
+
     /**
      * The service of this key, as its contract.
      * @throws IllegalArgumentException if no service has this key: test an optional one with hasService
@@ -236,7 +243,7 @@ public final class Engine implements IView {
 
         // Initialize GLFW. Most GLFW functions will not work before doing this.
         if (!glfwInit()) {
-            System.err.println("GLFW fail to initialize");
+            Logger.Error(Logger.CATEGORY_ENGINE, "GLFW fail to initialize");
             return -1;
         }
 
@@ -312,6 +319,7 @@ public final class Engine implements IView {
      */
     private int setupCore(IGLElementSink headlessSink) {
         headless = headlessSink != null;
+        problems.install();
         config.validate(!headless);
         MainThread.setCurrentAsMain();
         Workers.start(config.getMaxThreads());
@@ -451,6 +459,7 @@ public final class Engine implements IView {
 
         // The batches send the GL elements of their data (textures) during the loading
         glResources = new GLResources(config.getMaxGLUploadMillisecondsPerFrame());
+        glResources.setStrict(isStrictResources());
         resources.setGLElementSink(glResources);
         // The buffers of the 2D batches of the main window, before any scene draws
         Batches2D.of(this).prepare();
@@ -738,11 +747,12 @@ public final class Engine implements IView {
             status = ListError.LIFECYCLE_HOOK_FAIL;
 
         if (status != ListError.NO_ERROR)
-            System.err.println("Exit with error " + status);
+            Logger.Error(Logger.CATEGORY_ENGINE, "Exit with error " + status);
         else
             System.out.println("Exit without error");
 
         LogCapture.uninstall();
+        problems.uninstall();
 
         return status;
     }

@@ -6,6 +6,7 @@ import io.github.mightycode.mightylib.main.internal.TickEvent;
 import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.main.utils.GameTime;
 import io.github.mightycode.mightylib.scenes.ISceneManager;
+import io.github.mightycode.mightylib.utils.Logger;
 
 public final class MainLoop {
     private final static float NANO_IN_SECOND = 1000000000.0f;
@@ -170,7 +171,7 @@ public final class MainLoop {
                     Thread.sleep((long)remaining);
                 } catch (InterruptedException e) {
                     // Nothing interrupts the main thread on purpose: the loop goes on with the next frame
-                    System.err.println("--Main loop sleep interrupted");
+                    Logger.Warn(Logger.CATEGORY_ENGINE, "Main loop sleep interrupted");
                 }
             }
         }

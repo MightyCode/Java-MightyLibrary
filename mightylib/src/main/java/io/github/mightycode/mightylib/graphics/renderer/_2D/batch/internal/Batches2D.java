@@ -14,6 +14,7 @@ import io.github.mightycode.mightylib.resources.Resources;
 import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.resources.texture.TextureData;
 
+import io.github.mightycode.mightylib.utils.Logger;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -111,7 +112,7 @@ public final class Batches2D implements IBatchBackend, IGLSharedState {
         if (check == null || check.stamp != program.programStamp() || check.format != format) {
             String error = format.check(program.attributes());
             if (error != null)
-                System.err.println("--Batch program " + program.getName() + ": " + error
+                Logger.Error(Logger.CATEGORY_SHADERS, "Batch program " + program.getName() + ": " + error
                         + ", the shaders linked to it are drawn alone");
             check = new FormatCheck(program.programStamp(), format, error == null);
             formatChecks.put(program, check);
