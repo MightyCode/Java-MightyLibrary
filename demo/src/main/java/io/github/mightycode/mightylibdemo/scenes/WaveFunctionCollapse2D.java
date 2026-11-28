@@ -108,8 +108,6 @@ public class WaveFunctionCollapse2D extends Scene {
         mapRenderer.update();
 
         //mapRenderer.getBackTileMapRenderer().setScale(new Vector3f(4f, 4f, 1f));
-
-        map.clearTileChanges();
     }
 
 

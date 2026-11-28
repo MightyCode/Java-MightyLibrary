@@ -4,6 +4,7 @@ import io.github.mightycode.mightylib.graphics.game.LayersTileMapRenderer;
 import io.github.mightycode.mightylib.graphics.game.TileMapRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
 import io.github.mightycode.mightylib.main.Views;
+import io.github.mightycode.mightylib.main.utils.EngineStats;
 import io.github.mightycode.mightylib.resources.EngineResources;
 import io.github.mightycode.mightylib.resources.map.TileMap;
 import io.github.mightycode.mightylib.scenes.Scene;
@@ -19,6 +20,7 @@ import java.util.function.Consumer;
 import static io.github.mightycode.mightylib.test.BatchPictures.inScene;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A map of 3 x 2 tiles of one texel (red, green, blue tiles), drawn x16 from (16, 16), in two categories of layers:
@@ -134,7 +136,16 @@ class TileMapLayersGLTest {
         });
     }
 
-    // Tile types of the map: 0 the first tile of the tileset (red), -1 empty
+    // The bytes the action sent to buffers of the GPU
+    private static long uploadedBy(Runnable action) {
+        EngineStats.endSecond(1, 1, 0, 0);
+        action.run();
+        EngineStats.endSecond(1, 1, 0, 0);
+        return EngineStats.toJson().getLong("bufferUploadBytesPerSecond");
+    }
+
+    // Tile types of the map: 0 the first tile of the tileset (red), -1 empty. Nothing to clear: each renderer follows
+    // the version of the tiles of the map
     @Test
     void aChangedTileIsDrawnAfterTheUpdate(SceneRunner runner) {
         withLayers(runner, "layers", fixture -> {
@@ -144,8 +155,7 @@ class TileMapLayersGLTest {
                 map.setTileType(0, 0, 0, 2);
                 // Not yet: the renderers are built again by their update
                 assertEquals(5 * TILE_INDICES, fixture.indices("Back"));
-                fixture.layers.update();
-                map.clearTileChanges();
+                assertTrue(uploadedBy(fixture.layers::update) > 0, "built again");
                 assertEquals(6 * TILE_INDICES, fixture.indices("Back"));
                 assertEquals(TILE_INDICES, fixture.indices("Front"));
                 ByteBuffer changed = fixture.draw(fixture.layers::display);
@@ -153,9 +163,11 @@ class TileMapLayersGLTest {
                 assertColor(BLUE, fixture.tile(changed, 0, 0), "changed tile");
                 assertColor(BLUE, fixture.tile(changed, 1, 0), "Front kept");
 
+                assertEquals(0, uploadedBy(fixture.layers::update), "no change: nothing built again");
+                assertEquals(0, uploadedBy(fixture.layers::update), "no change: nothing built again");
+
                 map.setTileType(1, 1, 0, -1);
                 fixture.layers.update();
-                map.clearTileChanges();
                 assertEquals(0, fixture.indices("Front"));
                 ByteBuffer emptied = fixture.draw(fixture.layers::display);
                 assertColor(RED, fixture.tile(emptied, 1, 0), "Back under the emptied Front tile");
@@ -163,7 +175,30 @@ class TileMapLayersGLTest {
                 map.setTileType(0, 2, 1, -1);
                 map.setTileType(0, 0, 0, 0);
                 map.setTileType(1, 1, 0, 2);
-                map.clearTileChanges();
+                fixture.layers.update();
+            }
+        });
+    }
+
+    // One change of the map is seen by the renderer of each category, whatever the order of their updates
+    @Test
+    void everyCategorySeesTheSameChange(SceneRunner runner) {
+        withLayers(runner, "layers", fixture -> {
+            TileMap map = fixture.map;
+            try {
+                map.setTileType(0, 2, 1, 1);
+                map.setTileType(1, 0, 1, 2);
+                fixture.layers.getTileMapRenderer("Front").update();
+                fixture.layers.getTileMapRenderer("Back").update();
+                assertEquals(6 * TILE_INDICES, fixture.indices("Back"));
+                assertEquals(2 * TILE_INDICES, fixture.indices("Front"));
+                ByteBuffer changed = fixture.draw(fixture.layers::display);
+                assertColor(GREEN, fixture.tile(changed, 2, 1), "Back tile");
+                assertColor(BLUE, fixture.tile(changed, 0, 1), "Front tile");
+            } finally {
+                map.setTileType(0, 2, 1, -1);
+                map.setTileType(1, 0, 1, -1);
+                fixture.layers.update();
             }
         });
     }
