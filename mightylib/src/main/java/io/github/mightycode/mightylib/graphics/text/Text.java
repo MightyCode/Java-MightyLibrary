@@ -296,8 +296,10 @@ public final class Text extends MeshRenderer {
     }
 
     private void computeRightUpPosition() {
-        if (shouldNotDrawText())
+        if (shouldNotDrawText()) {
+            emptyBox();
             return;
+        }
 
         // Built with this font: rebuilt by display when the usable font changes (loaded, failed, reloaded)
         FontFace used = usedFont();
@@ -425,6 +427,14 @@ public final class Text extends MeshRenderer {
         getMesh().setEbo(indices);
         getMesh().updateVbo(texturePosition, textureIndex);
         getMesh().updateVbo(charPositions, positionIndex);
+    }
+
+    // Nothing drawn (no font yet, an empty or blank text): the box is the padding alone at its place, not the box of
+    // the previous text (a GUI would still find the mouse over it)
+    private void emptyBox() {
+        rectangleSize.set(padding.x + padding.z, padding.y + padding.w);
+        leftUpPosition.set(position().x, position().y);
+        leftUpPosition.add(Direction.AnchorOffset(reference, rectangleSize.x, rectangleSize.y, new Vector2f()));
     }
 
     // X Y Z W

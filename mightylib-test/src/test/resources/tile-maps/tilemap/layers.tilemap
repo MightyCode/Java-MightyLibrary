@@ -1,0 +1,11 @@
+tileset layerTiles 1
+layerSize 3 2
+layerNumber 1 1
+layerCategory Back 0
+layerCategory Front 1
+layer 0
+1 1 1
+1 1 0
+layer 1
+0 3 0
+0 0 0

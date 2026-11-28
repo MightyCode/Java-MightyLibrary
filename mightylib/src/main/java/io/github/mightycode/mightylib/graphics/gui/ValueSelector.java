@@ -114,8 +114,9 @@ public abstract class ValueSelector<T> {
         typeSelectedName.display();
     }
 
-    public final ValueSelector<T> setCanLoop(){
-        canLoop = true;
+    // Looping (the default): past the last value comes the first, before the first the last; otherwise kept at the ends
+    public final ValueSelector<T> setCanLoop(boolean canLoop){
+        this.canLoop = canLoop;
 
         return setIndex(selected);
     }

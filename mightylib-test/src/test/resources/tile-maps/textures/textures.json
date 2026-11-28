@@ -1,0 +1,10 @@
+{
+	"textures" : {
+		"tiles" : {
+			"layerTiles" : {
+				"file" : "layerTiles.png",
+				"qualityType" : "pixelart"
+			}
+		}
+	}
+}

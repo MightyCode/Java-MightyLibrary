@@ -32,6 +32,7 @@ jobs:
       - name: Demonstration pack
         run: python3 tools/demo_assets.py
       # verify: the demo is compiled and tested against the jar of the library, as another project would use it.
+      # Profile coverage: JaCoCo records every test of the three modules, the module coverage aggregates them
       # mightylib.test.requireDemoAssets: the smoke test of Scene3D fails without the pack instead of being skipped.
       # mightylib.test.requireReferences: an image test fails without the series of the driver instead of being skipped
       # llvmpipe compiles its shaders for the processor of the runner (vector width, FMA, AVX-512): the same instructions
@@ -43,7 +44,7 @@ jobs:
           GALLIUM_OVERRIDE_CPU_CAPS: sse4.1
           LP_NATIVE_VECTOR_WIDTH: 128
         run: >-
-          xvfb-run -a mvn -B verify -Dmightylib.test.requireGL=true -Dmightylib.test.requireDemoAssets=true
+          xvfb-run -a mvn -B -P coverage verify -Dmightylib.test.requireGL=true -Dmightylib.test.requireDemoAssets=true
           -Dmightylib.test.requireReferences=true
       # The images of the failed comparisons (actual, expected, diff), per key: read them, or take the actual ones as
       # the new series with tools/references.py --from-ci
@@ -53,4 +54,18 @@ jobs:
         with:
           name: references
           path: demo/target/references/
+          if-no-files-found: ignore
+      # The coverage per package in the summary of the job, then the floor of the lines (tools/coverage_floor.json,
+      # raised by hand in the commit that adds tests)
+      - name: Coverage summary
+        run: python3 tools/coverage.py --no-run --markdown >> "$GITHUB_STEP_SUMMARY"
+      - name: Coverage floor
+        run: python3 tools/coverage.py --no-run --check
+      # The HTML report of the engine's coverage (python tools/coverage.py --from-ci), even when a test failed
+      - name: Coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/target/site/jacoco-aggregate/
           if-no-files-found: ignore

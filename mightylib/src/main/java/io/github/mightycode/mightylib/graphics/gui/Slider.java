@@ -82,9 +82,14 @@ public abstract class Slider {
     }
 
     public final void update(){
-        if (inputManager.inputPressed(clickActionId)){
-            Vector2f position = referenceCamera.transformPosition(mouseManager.pos());
+        boolean pressed = inputManager.inputPressed(clickActionId);
+        if (!pressed && !isDragging)
+            return;
 
+        // The mouse in the world of the reference camera, where the bar and the button are (read only when used: an
+        // inverted matrix and a few vectors)
+        Vector2f position = referenceCamera.transformPosition(mouseManager.pos());
+        if (pressed){
             if (button.position().x < position.x && button.position().x + button.scale().x > position.x &&
                     button.position().y < position.y && button.position().y + button.scale().y > position.y){
                 isDragging = true;
@@ -93,7 +98,7 @@ public abstract class Slider {
             isDragging = false;
 
         if (isDragging){
-            setButtonPositionDrag(button, buttonBoundaries, mouseManager.pos());
+            setButtonPositionDrag(button, buttonBoundaries, position);
             currentValue = RoundToPrecision(returnCurrentValue(button, buttonBoundaries), maxPrecision);
         }
     }
@@ -140,7 +145,8 @@ public abstract class Slider {
     // Hook: the value at the position of the button, while it is dragged
     protected abstract double returnCurrentValue(RectangleRenderer button, Vector2f buttonBoundaries);
 
-    // Hook: moves the button to the mouse, within the boundaries, while it is dragged
+    // Hook: moves the button to the mouse (in the world of the reference camera), within the boundaries, while it is
+    // dragged
     protected abstract void setButtonPositionDrag(RectangleRenderer button,
                                                   Vector2f buttonBoundaries, Vector2f mousePosition);
 
