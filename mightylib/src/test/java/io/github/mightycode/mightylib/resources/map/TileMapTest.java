@@ -134,7 +134,7 @@ class TileMapTest {
 
         assertEquals(4, map.getTileType(DEFAULT, 0, 1, 1));
         assertEquals(0, map.tilesVersion());
-        assertEquals(0, map.changedTiles());
+        assertEquals(0, map.tileChanges());
     }
 
     @Test
@@ -149,7 +149,7 @@ class TileMapTest {
         map.setTileType(0, 1, 0, 6);
 
         assertEquals(version + 3, map.tilesVersion());
-        assertEquals(3, map.changedTiles());
+        assertEquals(3, map.tileChanges());
     }
 
     @Test
@@ -161,7 +161,7 @@ class TileMapTest {
         map.setTileType(0, 0, 0, -1);
 
         assertEquals(version, map.tilesVersion());
-        assertEquals(0, map.changedTiles());
+        assertEquals(0, map.tileChanges());
     }
 
     @Test
@@ -205,12 +205,12 @@ class TileMapTest {
         assertEquals(-1, map.getTileType("Back", 0, 0, 0), "the file wins");
         assertEquals(2, newer.mapWidth(), "the copy gets the previous version");
         assertTrue(map.tilesVersion() > version, "a reload is a new version of the tiles");
-        assertEquals(0, map.changedTiles());
+        assertEquals(0, map.tileChanges());
 
         assertEquals(1, warnings.size(), warnings.toString());
         assertEquals(ELogLevel.WARNING, warnings.get(0).level());
         assertEquals(Logger.CATEGORY_RESOURCES, warnings.get(0).category());
-        assertEquals("map reloaded: 2 tiles changed by the code are lost", warnings.get(0).message());
+        assertEquals("map reloaded: 2 tile changes made by the code are lost", warnings.get(0).message());
     }
 
     @Test

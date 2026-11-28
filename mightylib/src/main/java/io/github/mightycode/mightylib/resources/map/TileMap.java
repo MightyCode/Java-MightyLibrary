@@ -12,8 +12,9 @@ import java.util.HashMap;
 public final class TileMap extends SingleSourceDataType {
     // Increased at each tile changed and at each reload (main thread): readers compare it to the version they used
     private int tilesVersion;
-    // Tiles changed by the code since the map was loaded or reloaded: lost by a reload, which reports them
-    private int changedTiles;
+    // Tile changes made by the code since the map was loaded or reloaded (a tile changed twice counts twice): lost by
+    // a reload, which reports them
+    private int tileChanges;
 
     private final Vector2i mapSize;
     private final TileSetAtlas tileSetAtlas;
@@ -89,10 +90,10 @@ public final class TileMap extends SingleSourceDataType {
         layersCategoriesFrom = otherFrom;
         layersCategoriesTo = otherTo;
 
-        if (changedTiles > 0)
-            Logger.Warn(Logger.CATEGORY_RESOURCES, getDataName() + " reloaded: " + changedTiles
-                    + " tiles changed by the code are lost");
-        changedTiles = 0;
+        if (tileChanges > 0)
+            Logger.Warn(Logger.CATEGORY_RESOURCES, getDataName() + " reloaded: " + tileChanges
+                    + " tile changes made by the code are lost");
+        tileChanges = 0;
         ++tilesVersion;
     }
 
@@ -149,7 +150,7 @@ public final class TileMap extends SingleSourceDataType {
         layers[layerNumber].setTileType(x, y, type);
 
         if (isLoaded() && previousType != type) {
-            ++changedTiles;
+            ++tileChanges;
             ++tilesVersion;
         }
     }
@@ -163,9 +164,9 @@ public final class TileMap extends SingleSourceDataType {
         return tilesVersion;
     }
 
-    // Tiles changed by the code since the load or the last reload (a reload loses them)
-    int changedTiles() {
-        return changedTiles;
+    // Tile changes made by the code since the load or the last reload (a reload loses them)
+    int tileChanges() {
+        return tileChanges;
     }
 
     public int getTileType(String category, int layerNumber, int x, int y) {
@@ -206,7 +207,7 @@ public final class TileMap extends SingleSourceDataType {
     @Override
     public void internUnload() {
         layers = null;
-        changedTiles = 0;
+        tileChanges = 0;
         tileSetAtlas.clear();
         mapSize.x = 0;
         mapSize.y = 0;

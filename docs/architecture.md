@@ -258,7 +258,7 @@ Un jeu teste son code (loaders, commandes, services, scènes) avec JUnit sans la
 
 ## Pièges connus (non corrigés)
 - Sous Wayland, une sous-fenêtre n'est liée à son parent ni par la position ni par l'empilement (GLFW n'expose pas `xdg_toplevel.set_parent`) : un dialogue peut passer derrière la fenêtre principale ; `BORDERLESS` ne choisit pas son écran.
-- Une `TileMap` relue perd les changements faits par le code (`setTileType`) : le fichier gagne, un WARNING (`resources`) donne le nombre de tuiles perdues (compteur remis à zéro par le chargement et le rechargement).
+- Une `TileMap` relue perd les changements faits par le code (`setTileType`) : le fichier gagne, un WARNING (`resources`) donne le nombre de changements perdus (une tuile changée deux fois compte deux fois ; compteur remis à zéro par le chargement et le rechargement).
 - **Boîte d'un texte** (`leftUpPosition()`, `size()`) recalculée à chaque changement de texte, de taille, de référence, de padding ou de position.
 - **Padding du texte** : `Text.setPadding(gauche, haut, droite, bas)` écarte le texte des bords de son rectangle, qui l'inclut : `size()`, `leftUpPosition()`, la référence (`setReference`) et la position portent sur le rectangle avec padding, l'alignement des lignes sur la largeur du texte seul. Scène : `TextPaddingScene`.
 - `Mesh.updateVbo` réutilise le buffer à taille égale (`glBufferSubData`), sinon réalloue ; les `calculate*()` allouent un `float[]` à chaque appel.
