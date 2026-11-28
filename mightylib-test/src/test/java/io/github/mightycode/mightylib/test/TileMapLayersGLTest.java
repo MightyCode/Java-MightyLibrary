@@ -24,7 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
  * A map of 3 x 2 tiles of one texel (red, green, blue tiles), drawn x16 from (16, 16), in two categories of layers:
  * Back (5 red tiles, the bottom right one empty) then Front (a blue tile at (1, 0)). The names are those a hash map
  * orders the other way: the categories are built and drawn in the order of the map (a HashMap drew Back over Front). A tile changed in the map is
- * drawn after the update of its renderers, an emptied one disappears.
+ * drawn after the update of its renderers, an emptied one disappears. Animated tiles (red to green, blue to green
+ * after half a second) all advance in the same update.
  */
 @MightySceneTest(config = TextureRegionsGLTest.Config.class, sources = "src/test/resources/tile-maps")
 class TileMapLayersGLTest {
@@ -34,13 +35,13 @@ class TileMapLayersGLTest {
 
     // The map loaded, the renderer of its layers placed, its atlas texture sent by a few frames, then the test; the
     // renderer unloaded after it
-    private static void withLayers(SceneRunner runner, Consumer<Fixture> test) {
+    private static void withLayers(SceneRunner runner, String mapName, Consumer<Fixture> test) {
         inScene(runner, scene -> {
             runner.engine().loadUntilDone();
             LayersTileMapRenderer layers = new LayersTileMapRenderer(EngineResources.TEXTURE_2D, true);
             TileMap map;
             try (Views.Scope ignored = Views.enter(scene)) {
-                map = Views.engine().resources().getResource(TileMap.class, "layers");
+                map = Views.engine().resources().getResource(TileMap.class, mapName);
                 layers.setTileMap(map);
                 for (String category : layers.getCategories()) {
                     TileMapRenderer renderer = layers.getTileMapRenderer(category);
@@ -102,7 +103,7 @@ class TileMapLayersGLTest {
 
     @Test
     void eachCategoryHoldsTheNonEmptyTilesOfItsLayersInTheOrderOfTheMap(SceneRunner runner) {
-        withLayers(runner, fixture -> {
+        withLayers(runner, "layers", fixture -> {
             assertEquals(Arrays.asList("Back", "Front"), new ArrayList<>(fixture.layers.getCategories()));
             assertEquals(5 * TILE_INDICES, fixture.indices("Back"));
             assertEquals(TILE_INDICES, fixture.indices("Front"));
@@ -113,7 +114,7 @@ class TileMapLayersGLTest {
     // Front over Back, in every mode of the batch; one category alone draws only its tiles
     @Test
     void theCategoriesAreDrawnInTheOrderOfTheMap(SceneRunner runner) {
-        withLayers(runner, fixture -> {
+        withLayers(runner, "layers", fixture -> {
             for (EBatch2DMode mode : EBatch2DMode.values()) {
                 Views.engine().setBatch2DMode(mode);
                 ByteBuffer all = fixture.draw(fixture.layers::display);
@@ -136,7 +137,7 @@ class TileMapLayersGLTest {
     // Tile types of the map: 0 the first tile of the tileset (red), -1 empty
     @Test
     void aChangedTileIsDrawnAfterTheUpdate(SceneRunner runner) {
-        withLayers(runner, fixture -> {
+        withLayers(runner, "layers", fixture -> {
             TileMap map = fixture.map;
             try {
                 map.setTileType(0, 2, 1, 1);
@@ -170,12 +171,30 @@ class TileMapLayersGLTest {
     // A map set again replaces the renderers (the previous ones unloaded: the kit checks the leaks around the test)
     @Test
     void aMapSetAgainReplacesItsRenderers(SceneRunner runner) {
-        withLayers(runner, fixture -> {
+        withLayers(runner, "layers", fixture -> {
             TileMapRenderer previous = fixture.layers.getTileMapRenderer("Back");
             fixture.layers.setTileMap(fixture.map);
             TileMapRenderer current = fixture.layers.getTileMapRenderer("Back");
             assertNotSame(previous, current, "a new renderer");
             assertEquals(5 * TILE_INDICES, current.getMesh().getIndexCount());
+        });
+    }
+
+    // Both animations change at the same tick: each one advances (the update stopped at the first that changed, the
+    // other ones drifted apart)
+    @Test
+    void everyAnimatedTileAdvancesInTheSameUpdate(SceneRunner runner) {
+        withLayers(runner, "animated", fixture -> {
+            ByteBuffer before = fixture.draw(fixture.layers::display);
+            assertColor(RED, fixture.tile(before, 0, 0), "first frame of the first animation");
+            assertColor(BLUE, fixture.tile(before, 1, 0), "first frame of the second animation");
+
+            // A tick of 0.6 s and more: past the first frame of both (0.5 s)
+            runner.engine().advance(0.6f).step();
+            fixture.layers.update();
+            ByteBuffer after = fixture.draw(fixture.layers::display);
+            assertColor(GREEN, fixture.tile(after, 0, 0), "second frame of the first animation");
+            assertColor(GREEN, fixture.tile(after, 1, 0), "second frame of the second animation");
         });
     }
 }
