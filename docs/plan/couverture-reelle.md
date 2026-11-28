@@ -202,3 +202,63 @@ Aucune nouvelle scène prévue. Si une zone ne peut être testée qu'avec une sc
 | Total | 59 % | 82 % |
 
 - À vérifier à la main : le tableau dans le résumé du job du CI (non lisible par `gh`).
+
+### Étapes 5 à 9 (tests par zone, audit)
+- **Bugs trouvés par les tests et corrigés** (chacun dans son commit, avec le test qui le reproduit) :
+  - `Camera2D.copy()` d'une caméra zoomée était décalée (zoom appliqué depuis 1 autour de sa référence) : `Camera2DTest.aCopyShowsTheSameAsTheCamera`. La Javadoc de `transformPosition` disait monde → écran, c'est écran → monde.
+  - `TileMapRenderer` lisait les calques avec leur numéro dans la carte, `getTileType` l'attend dans la catégorie : une catégorie qui ne commence pas au calque 0 (le `Foreground` de `map2`) n'était jamais dessinée.
+  - `LayersTileMapRenderer` gardait ses catégories dans un `HashMap` : `display()` les dessinait dans l'ordre des hachages (`Front` sous `Back`). Les deux : `TileMapLayersGLTest`.
+  - `Text` vidé gardait la boîte du texte précédent (toujours sous la souris pour un GUI) : `TextLayoutGLTest.anEmptiedTextHasTheBoxOfItsPaddingOnly`.
+  - `Slider` : le clic lisait la souris par la caméra de référence, le glisser sur l'écran : `SliderGLTest.theMouseIsReadInTheWorldOfTheReferenceCamera`.
+  - `ValueSelector.setCanLoop()` remettait la valeur par défaut (impossible d'arrêter la boucle) : devenu `setCanLoop(boolean)`, `ValueSelectorGLTest`.
+- **Relevés sans correction** (`later.md`, « Bugs relevés en passant ») : `DebugInfoCamera2D` (lignes dans l'ordre d'un `HashSet`) ; `KeyboardManager.getKeyByLanguage` lève une `NullPointerException` (hors des zones du plan), test prêt et désactivé `KeyboardLanguageGLTest`.
+- **Écarts au plan** : `DebugInfoCamera2D` sans test (il crée un `Text`, sa seule logique est le défaut noté) ; les sélecteurs, curseurs et textes testés dans le kit avec des entrées données à la main (proxy d'`IInputManager`, souris placée) quand la classe les reçoit, par `SceneRunner.click` sinon ; `ScrollList` (68 %) et `TextField` (78 %) gardent leurs tests actuels (`ListSelection`, `TextFieldModel`), notés pour l'étape 10.
+- **Nouveaux tests** : `Camera2DTest`, `DraggingCameraComponentTest`, `ZoomingCameraComponentTest`, `MovingCameraComponentTest` complété (sans GL) ; dans le kit `TileMapLayersGLTest` (ressources `tile-maps`), `TextLayoutGLTest`, `SliderGLTest`, `ValueSelectorGLTest`, `SceneLifecycleGLTest`, `SceneLoadingFailureGLTest`, `KeyboardLanguageGLTest` (désactivé) ; `LoggerPrefixTest`.
+- **Vérifié** : suite complète verte à chaque étape (1477 + 149 + 95 tests, sautés : les bancs et `KeyboardLanguageGLTest`), images de référence comprises ; le test des tuiles animées échoue avec l'ancienne boucle de `0a0631b1` (essai fait puis annulé).
+- Pas de nouvelle scène de démo, aucune scène `Reference*` touchée : pas de vérification en jeu ni de références à régénérer.
+
+| Paquet (lignes) | Après étapes 2 à 4 (CI) | Après étapes 5 à 9 (local) |
+|---|--:|--:|
+| `scenes` | 91 % | 93 % |
+| `scenes/camera` | 89 % | 92 % |
+| `scenes/camera/cameraComponents` | 87 % | 90 % |
+| `graphics/game` | 94 % | 94 % |
+| `graphics/gui` | 81 % | 88 % |
+| `graphics/text` | 88 % | 90 % |
+| kit `mightylib-test` | 86 % | 87 % |
+| Total | 82,15 % | 82,50 % |
+
+Le plancher reste à 82 jusqu'à l'étape 10 (relevé au total du CI).
+
+#### Audit des corrections de novembre 2026
+Commits de `dev` depuis le 2026-11-01 filtrés sur fix, bug et corrige (66). Écartés : docs, plans, fautes de frappe, avertissements d'IntelliJ, d'Error Prone et de SpotBugs sans changement de comportement, et les « Debug… » (faux positifs du filtre).
+
+| Correction | Test qui la reproduit |
+|---|---|
+| `0a0631b1` tuiles animées désynchronisées | `TileMapLayersGLTest.everyAnimatedTileAdvancesInTheSameUpdate` (ajouté) |
+| `982f3bd2` entrées du contexte principal ignorées | `ResourcesBatchTest.loadBatchLoadsWorkerAndMainContextData` |
+| `d186a976` rechargement et suppression | `ResourcesReloadTest.reloadReadsAgain`, `ResourcesManualTest.deleteManualResource` |
+| `f90d7258` chargement bloqué après F5 | `ResourcesReloadTest` (rechargements menés à leur fin) |
+| `d0a8284f` `getClassFromName` d'un type inconnu | `ResourceSelectionTest.theSyntaxRejectsWhatIsWrong` |
+| `a43f805d` langue du clavier de la configuration | `KeyboardLanguageGLTest` (ajouté, désactivé par le défaut de `getKeyByLanguage`) |
+| `2832d675` barres fines à côté des glyphes | `FontFileTest` (`textureBounds`) |
+| `c106751e` suivi des textures supprimées ; `Texture.unload` | suivi : contrôle de fuites du kit ; `unload` après les données : `later.md` |
+| `0518a99e` chargements bloqués | `ResourcesBatchTest.unloadThenLoadBeforeProcessingKeepsDataLoaded`, `ResourcesFailureTest.unloadAfterAFailedLoadDoesNotGetStuck` |
+| `4c4498de` commandes (mots entre guillemets, doublons, délai) | `CommandsTest` |
+| `26d3be33` bugs de la logique pure | les tests désactivés réactivés dans le commit |
+| `c3faf30d` dossiers ignorés | `ResourceLoaderExploreTest` |
+| `b2a2a77c` `INITIAL_POS`, clones des matériaux | `CollisionRectangleTest`, `MaterialCloneTest` |
+| `d0dd8eba` accroches des renderers | `MeshRendererChannelTest` (canaux), `MaterialTest.theValuesOfTheRendererAreItsOwn` (valeur absente), `RectangleBatchGLTest` (`setTexturePosition`) ; `setSizePix(Vector2f)` : `later.md` |
+| `04100b60` sources en attente, `DataFolder`, préfixe | `DataFolderTest`, `LoggerPrefixTest` (ajouté) ; son OpenAL : `later.md` |
+| `72b11173` préfixe doublé | `LoggerPrefixTest` (ajouté) |
+| `4df320e4` nulls possibles | `ContextManagerTest`, `PolygonTest` |
+| `6d0920c7` infobulle et glisser de `VectorShapes2D` | `VectorShapes2DTest` |
+| `7723172a` couleur de `MatrixRenderer` | `MeshBatchGLTest` (ERROR du canal) |
+| `6b977241` contextes laissés ouverts | `DemoScenesSmokeGLTest` (cas `MultiWindowScene` de `SmokeCases`) |
+| `8ad4b04f` marge du culling | `ViewCullingGLTest` |
+| `0a3f47d1` pas fixe de Box2D | `later.md` (démo, JBox2D à remplacer) |
+
+Tests `@Disabled` : aucun avant cette branche ; `KeyboardLanguageGLTest` désormais, avec sa raison. Les bancs (`DrawBatch2DBenchTest`, `Batch2DCostBenchTest`) ne tournent qu'avec `-Dmightylib.bench=true`.
+
+### Reste (étape 10)
+Plancher au total du CI, puis documents (« Documents à mettre à jour à la fin »), dont les chiffres de `network` (16 %), `resources/models` (82 %), `ScrollList` et `TextField` dans `later.md`.
