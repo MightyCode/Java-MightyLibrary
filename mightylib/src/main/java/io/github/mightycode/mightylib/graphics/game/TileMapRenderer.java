@@ -12,7 +12,12 @@ import io.github.mightycode.mightylib.resources.map.*;
 import io.github.mightycode.mightylib.resources.texture.Texture;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
-import org.joml.*;
+import org.joml.Matrix4f;
+import org.joml.Matrix4fc;
+import org.joml.Vector2f;
+import org.joml.Vector2i;
+import org.joml.Vector4f;
+import org.joml.Vector4fc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -483,41 +488,36 @@ public final class TileMapRenderer extends MeshRenderer {
         );
     }
 
-    // The region of the 4 corners of a tile (16 floats from index): its rect, before any flip (min, then max)
-    static void setTextureRegion(float[] textureRegion, int index, Vector4f rect) {
+    // The region of the 4 corners of a tile (16 floats from index): its rect (left, right, top, bottom), min then max
+    // whatever its order (a flipped rect gives the same region)
+    static void setTextureRegion(float[] textureRegion, int index, Vector4fc rect) {
+        float left = Math.min(rect.x(), rect.y()), right = Math.max(rect.x(), rect.y());
+        float top = Math.min(rect.z(), rect.w()), bottom = Math.max(rect.z(), rect.w());
         for (int corner = 0; corner < NUMBER_INDICES; ++corner) {
-            textureRegion[index + 4 * corner] = rect.x;
-            textureRegion[index + 4 * corner + 1] = rect.y;
-            textureRegion[index + 4 * corner + 2] = rect.z;
-            textureRegion[index + 4 * corner + 3] = rect.w;
+            textureRegion[index + 4 * corner] = left;
+            textureRegion[index + 4 * corner + 1] = right;
+            textureRegion[index + 4 * corner + 2] = top;
+            textureRegion[index + 4 * corner + 3] = bottom;
         }
     }
 
     // Texture coordinates of the 4 corners of a tile (8 floats from index). flip: 1 horizontal, 2 vertical, 3 both
-    // (originalPosition is flipped in place); rotation: quarter turns, 0 to 3
-    static void setTexturePosition(float[] texturePosition, int index, Vector4f originalPosition,
+    // (originalPosition unchanged); rotation: quarter turns, 0 to 3
+    static void setTexturePosition(float[] texturePosition, int index, Vector4fc originalPosition,
                                    int rotation, int flip) {
-        float temp;
-
-        if (flip == 1 || flip == 3){
-             temp = originalPosition.x;
-             originalPosition.x = originalPosition.y;
-             originalPosition.y = temp;
-        }
-
-        if (flip == 2 || flip == 3){
-            temp = originalPosition.z;
-            originalPosition.z = originalPosition.w;
-            originalPosition.w = temp;
-        }
+        boolean horizontal = flip == 1 || flip == 3, vertical = flip == 2 || flip == 3;
+        float x = horizontal ? originalPosition.y() : originalPosition.x();
+        float y = horizontal ? originalPosition.x() : originalPosition.y();
+        float z = vertical ? originalPosition.w() : originalPosition.z();
+        float w = vertical ? originalPosition.z() : originalPosition.w();
 
         // Corners in drawing order: (x, z), (x, w), (y, w), (y, z); each quarter turn starts one corner later.
         // Any other rotation value is drawn without rotation
         int first = rotation >= 1 && rotation <= 3 ? rotation : 0;
         for (int corner = 0; corner < 4; ++corner) {
             int source = (first + corner) % 4;
-            texturePosition[index + 2 * corner] = source < 2 ? originalPosition.x : originalPosition.y;
-            texturePosition[index + 2 * corner + 1] = source == 0 || source == 3 ? originalPosition.z : originalPosition.w;
+            texturePosition[index + 2 * corner] = source < 2 ? x : y;
+            texturePosition[index + 2 * corner + 1] = source == 0 || source == 3 ? z : w;
         }
     }
 

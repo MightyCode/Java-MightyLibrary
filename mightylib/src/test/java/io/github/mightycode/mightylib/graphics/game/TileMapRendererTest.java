@@ -90,4 +90,27 @@ class TileMapRendererTest {
         assertArrayEquals(new float[]{ 0, X, W, X, Z, Y, Z, Y, W, 0 }, corners(0, 2));
         assertArrayEquals(new float[]{ 0, Y, W, Y, Z, X, Z, X, W, 0 }, corners(0, 3));
     }
+
+    // The rect of the tile is read, never flipped in place: the region set after it is still the tile
+    @Test
+    void theTexturePositionLeavesTheRectOfTheTile() {
+        Vector4f rect = new Vector4f(X, Y, Z, W);
+        TileMapRenderer.setTexturePosition(new float[8], 0, rect, 1, 3);
+        assertEquals(new Vector4f(X, Y, Z, W), rect);
+    }
+
+    // The region of each corner: min then max, whatever the order of the rect
+    @Test
+    void theRegionOfATileIsMinThenMaxOnEachCorner() {
+        float[] regions = new float[18];
+        TileMapRenderer.setTextureRegion(regions, 1, new Vector4f(Y, X, W, Z));
+        float[] expected = new float[18];
+        for (int corner = 0; corner < 4; ++corner) {
+            expected[1 + 4 * corner] = X;
+            expected[2 + 4 * corner] = Y;
+            expected[3 + 4 * corner] = Z;
+            expected[4 + 4 * corner] = W;
+        }
+        assertArrayEquals(expected, regions);
+    }
 }
