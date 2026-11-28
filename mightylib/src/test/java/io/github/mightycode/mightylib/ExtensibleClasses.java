@@ -33,7 +33,6 @@ final class ExtensibleClasses {
             "io.github.mightycode.mightylib.graphics.gui.Slider",
             "io.github.mightycode.mightylib.graphics.gui.ValueSelector",
             // Open to the projects, EXPERIMENTAL
-            "io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage",
             "io.github.mightycode.mightylib.physics.tweenings.Tweening"
     );
 

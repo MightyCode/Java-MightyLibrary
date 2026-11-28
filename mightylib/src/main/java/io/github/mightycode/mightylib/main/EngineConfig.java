@@ -3,8 +3,6 @@ package io.github.mightycode.mightylib.main;
 import io.github.mightycode.mightylib.console.internal.ConsoleLog;
 import io.github.mightycode.mightylib.graphics.color.ERenderColorSpace;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.IMonitorSelector;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.utils.Logger;
@@ -47,7 +45,6 @@ public final class EngineConfig {
     private int tps = 60;
     private String iconName;
     private IMonitorSelector monitorSelector = MonitorSelectors.Primary();
-    private KeyboardLanguage keyboardLanguage = QWERTKeyboardLanguage.getInstance();
 
     // Null: no gain tree, every sound keeps a gain of 1
     private String gainTreePath;
@@ -150,11 +147,6 @@ public final class EngineConfig {
      */
     public EngineConfig setMonitorSelector(IMonitorSelector monitorSelector) {
         this.monitorSelector = monitorSelector;
-        return this;
-    }
-
-    public EngineConfig setKeyboardLanguage(KeyboardLanguage keyboardLanguage) {
-        this.keyboardLanguage = keyboardLanguage;
         return this;
     }
 
@@ -450,7 +442,6 @@ public final class EngineConfig {
     public int getTps() { return tps; }
     public String getIconName() { return iconName; }
     public IMonitorSelector getMonitorSelector() { return monitorSelector; }
-    public KeyboardLanguage getKeyboardLanguage() { return keyboardLanguage; }
     public String getGainTreePath() { return gainTreePath; }
     public EEngineMode getMode() { return mode; }
 

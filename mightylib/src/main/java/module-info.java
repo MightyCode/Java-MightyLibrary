@@ -64,7 +64,6 @@ module io.github.mightycode.mightylib {
     exports io.github.mightycode.mightylib.graphics.utils;
     exports io.github.mightycode.mightylib.inputs;
     exports io.github.mightycode.mightylib.inputs.inputType;
-    exports io.github.mightycode.mightylib.inputs.keyboardlanguage;
     exports io.github.mightycode.mightylib.inputs.text;
     exports io.github.mightycode.mightylib.main;
     exports io.github.mightycode.mightylib.main.monitors;

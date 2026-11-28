@@ -8,8 +8,6 @@ import io.github.mightycode.mightylib.inputs.InputManager;
 import io.github.mightycode.mightylib.inputs.InputRegistry;
 import io.github.mightycode.mightylib.inputs.KeyboardManager;
 import io.github.mightycode.mightylib.inputs.MouseManager;
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.QWERTKeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import io.github.mightycode.mightylib.resources.source.ResourceSources;
 
@@ -101,10 +99,7 @@ public final class ContextManager {
         if (!window.getInfo().isWindowCreated())
             return null;
 
-        KeyboardLanguage keyboardLanguage = config.getKeyboardLanguage() != null ?
-                config.getKeyboardLanguage() : QWERTKeyboardLanguage.getInstance();
-
-        KeyboardManager keyboardManager = new KeyboardManager(window.getInfo(), keyboardLanguage);
+        KeyboardManager keyboardManager = new KeyboardManager(window.getInfo());
         MouseManager mouseManager = new MouseManager(window.getInfo());
         IInputManager inputManager = inputManagerFactory.create(keyboardManager, mouseManager, getGamepadManager(),
                 inputRegistry);

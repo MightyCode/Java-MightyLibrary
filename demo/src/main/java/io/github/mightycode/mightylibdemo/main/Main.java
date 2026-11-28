@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylibdemo.main;
 
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.AZERTYKeyboardLanguage;
 import io.github.mightycode.mightylib.main.*;
 import io.github.mightycode.mightylib.main.monitors.MonitorSelectors;
 import io.github.mightycode.mightylib.resources.Resources;
@@ -54,7 +53,6 @@ public class Main {
                 .setProjectName("Java-MightyLibrary")
                 .setFps(70)
                 .setTps(70)
-                .setKeyboardLanguage(AZERTYKeyboardLanguage.getInstance())
                 .setGainTreePath("sounds/sounds.gaintree")
                 .setMode(EEngineMode.DEBUG)
                 // The player turns the cheats on with "cheats on" (always on in DEV)

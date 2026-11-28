@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
 import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.main.WindowInfo;
 
 import org.lwjgl.glfw.GLFWCharCallback;
@@ -25,22 +24,9 @@ public final class KeyboardManager {
     private static final int KEYS = 348;
     private static final int BEGIN_KEYS = 32;
 
-    private static final int MIN_LANGUAGE_KEY = GLFW_KEY_A;
-    private static final int MAX_LANGUAGE_KEY = GLFW_KEY_Z;
-
     private final WindowInfo windowInfo;
     private final boolean[] state = new boolean[KEYS];
     private final boolean[] oldState = new boolean[KEYS];
-
-    private boolean capsLockActivated;
-
-    private int numberKeyPressed;
-
-    private int mainKey;
-
-    private final ArrayList<Integer> wasMain;
-
-    private KeyboardLanguage language;
 
     // Text typed during the tick, given by the system (keyboard layout, dead keys and IME already applied)
     private final StringBuilder incomingText;
@@ -59,17 +45,10 @@ public final class KeyboardManager {
      * Keyboard manager class.
      * Instance the class.
      */
-    public KeyboardManager(WindowInfo info, KeyboardLanguage defaultLanguage){
+    public KeyboardManager(WindowInfo info){
         this.windowInfo = info;
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
-
-        wasMain = new ArrayList<>();
-
-        language = defaultLanguage;
-        mainKey = -1;
-        numberKeyPressed = 0;
-        capsLockActivated = false;
 
         incomingText = new StringBuilder();
         typedText = "";
@@ -182,15 +161,6 @@ public final class KeyboardManager {
         return glfwGetKey(windowInfo.getWindowId(), keyID) == 1;
     }
 
-    public int getKeyByLanguage(int key){
-        return language.translateKeyTo(key);
-    }
-
-    public void setKeyboardLanguage(KeyboardLanguage language){
-        this.language = language;
-        this.language.setManager(this);
-    }
-
     /**
      * Test if the key has just been pressed.
      *
@@ -225,9 +195,7 @@ public final class KeyboardManager {
     public boolean isBlocked() { return blocked; }
 
     public void postUpdate(){
-        boolean mainKeyChanged = false;
         edgesDropped = false;
-        numberKeyPressed = 0;
 
         // Text typed since the last postUpdate, then the simulated one
         incomingText.append(pendingSimulatedText);
@@ -249,36 +217,9 @@ public final class KeyboardManager {
                 events.add(new KeyEvent(key, 0, mods, false, letterOf(key, 0, mods)));
             }
             oldSimulated[key] = simulated;
-
-            if (state[key]){
-                numberKeyPressed += 1;
-
-                if (key >= MIN_LANGUAGE_KEY && key <= MAX_LANGUAGE_KEY){
-                    if (!mainKeyChanged && mainKey != key && !wasMain.contains(key)){
-                        mainKey = key;
-                        mainKeyChanged = true;
-                    }
-                } else {
-                    if (!mainKeyChanged && !wasMain.contains(key)) {
-                        mainKey = key;
-                    }
-                }
-            }
-        }
-
-        if (numberKeyPressed == 0) {
-            mainKey = -1;
-            wasMain.clear();
-        } else {
-            wasMain.removeIf(key -> !getRawKeyState(key));
-
-            wasMain.add(mainKey);
         }
 
         keyEvents = blocked ? Collections.emptyList() : Collections.unmodifiableList(events);
-
-        if (state[GLFW_KEY_CAPS_LOCK] && !oldState[GLFW_KEY_CAPS_LOCK])
-            capsLockActivated = !capsLockActivated;
     }
 
     // Modifiers of a simulated key: the simulated or real modifier keys held
@@ -292,10 +233,4 @@ public final class KeyboardManager {
             mods |= GLFW_MOD_SHIFT;
         return mods;
     }
-
-    public boolean isCapsLock() { return capsLockActivated; }
-
-    public int getMainKeyPressed() { return hidden() ? -1 : mainKey; }
-    public char getCorrespondingCharMainKeyPressed() { return hidden() ? Character.MAX_VALUE : language.translateKeyTo(mainKey); }
-    public int getNumberKeyPressed(){ return hidden() ? 0 : numberKeyPressed; }
 }
