@@ -18,6 +18,7 @@ class SceneLoadingFailureGLTest {
 
     static final class BrokenResourceScene extends Scene {
         boolean failedAtLaunch;
+        boolean fallbackAtLaunch;
         boolean released;
 
         @Override
@@ -29,7 +30,11 @@ class SceneLoadingFailureGLTest {
 
         @Override
         public void launch(String[] args) {
-            failedAtLaunch = resources().getResource(TextureData.class, BROKEN).hasFailed();
+            TextureData broken = resources().getResource(TextureData.class, BROKEN);
+            failedAtLaunch = broken.hasFailed();
+            // What its users get in its place (a Texture reads its size from it, its renderers bind its element)
+            TextureData usable = resources().usable(TextureData.class, broken);
+            fallbackAtLaunch = usable == resources().getFallback(TextureData.class) && resources().isFallback(usable);
         }
 
         @Override
@@ -48,6 +53,7 @@ class SceneLoadingFailureGLTest {
 
         assertTrue(scene.isLaunched());
         assertTrue(scene.failedAtLaunch, "the resource failed before launch");
+        assertTrue(scene.fallbackAtLaunch, "the fallback of the textures used in its place");
 
         runner.toEmptyScene().untilLoaded();
         assertTrue(scene.released);

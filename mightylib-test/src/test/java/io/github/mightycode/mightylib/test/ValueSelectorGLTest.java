@@ -62,7 +62,10 @@ class ValueSelectorGLTest {
                     selector.setIndex(3);
                     assertEquals("low", selector.getSelected(), "looping: after the last, the first");
 
+                    // The selection is kept (not the first value, the default one)
+                    selector.setIndex(1);
                     selector.setCanLoop(false);
+                    assertEquals("medium", selector.getSelected(), "kept by setCanLoop");
                     selector.setIndex(-1);
                     assertEquals("low", selector.getSelected(), "kept at the first");
                     selector.setIndex(7);

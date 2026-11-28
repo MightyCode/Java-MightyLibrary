@@ -23,9 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 /**
  * A map of 3 x 2 tiles of one texel (red, green, blue tiles), drawn x16 from (16, 16), in two categories of layers:
  * Back (5 red tiles, the bottom right one empty) then Front (a blue tile at (1, 0)). The names are those a hash map
- * orders the other way: the categories are built and drawn in the order of the map (a HashMap drew Back over Front). A tile changed in the map is
- * drawn after the update of its renderers, an emptied one disappears. Animated tiles (red to green, blue to green
- * after half a second) all advance in the same update.
+ * orders the other way: the categories are built and drawn in the order of the map (a HashMap drew Back over Front).
+ * A tile changed in the map is drawn after the update of its renderers, an emptied one disappears. Animated tiles
+ * (red to green, blue to green after half a second) all advance in the same update.
  */
 @MightySceneTest(config = TextureRegionsGLTest.Config.class, sources = "src/test/resources/tile-maps")
 class TileMapLayersGLTest {

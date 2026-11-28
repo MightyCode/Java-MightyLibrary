@@ -33,7 +33,8 @@ class KeyboardLanguageGLTest {
 
     @Test
     void theLanguageOfTheConfigurationIsKept() {
-        EngineConfig azerty = new SceneRunnerTest.Config().get().setKeyboardLanguage(AZERTYKeyboardLanguage.getInstance());
+        EngineConfig azerty = new SceneRunnerTest.Config().get()
+                .setKeyboardLanguage(AZERTYKeyboardLanguage.getInstance());
         assertEquals('q', typedBy(azerty, GLFW_KEY_A));
     }
 }
