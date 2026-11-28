@@ -17,18 +17,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // The fixed names of the keys, without GL: every GLFW key of the keyboard has one, a key out of bounds is refused
 class KeyNamesTest {
-    // Every GLFW_KEY_... constant the keyboard manager reads (the aliases LAST and UNKNOWN left out)
+    // Every GLFW_KEY_... constant of a key (UNKNOWN left out): all of them are read by the keyboard manager
     private static Map<String, Integer> glfwKeys() throws IllegalAccessException {
         Map<String, Integer> keys = new HashMap<>();
         for (Field field : GLFW.class.getFields()) {
             if (!field.getName().startsWith("GLFW_KEY_") || field.getType() != int.class
-                    || !Modifier.isStatic(field.getModifiers()))
+                    || !Modifier.isStatic(field.getModifiers()) || "GLFW_KEY_UNKNOWN".equals(field.getName()))
                 continue;
-            int key = field.getInt(null);
-            if (key >= KeyboardManager.BEGIN_KEYS && key < KeyboardManager.KEYS)
-                keys.put(field.getName(), key);
+            keys.put(field.getName(), field.getInt(null));
         }
         return keys;
+    }
+
+    @Test
+    void everyKeyOfGlfwIsInTheBounds() throws IllegalAccessException {
+        List<String> outside = new ArrayList<>();
+        for (Map.Entry<String, Integer> key : glfwKeys().entrySet()) {
+            if (key.getValue() < KeyboardManager.BEGIN_KEYS || key.getValue() >= KeyboardManager.KEYS)
+                outside.add(key.getKey());
+        }
+        assertTrue(outside.isEmpty(), "Keys out of the bounds of the keyboard manager: " + outside);
     }
 
     @Test
@@ -57,6 +65,7 @@ class KeyNamesTest {
         assertEquals("Keypad 1", KeyNames.Of(GLFW.GLFW_KEY_KP_1));
         assertEquals("Keypad Enter", KeyNames.Of(GLFW.GLFW_KEY_KP_ENTER));
         assertEquals("Space", KeyNames.Of(GLFW.GLFW_KEY_SPACE));
+        assertEquals("Menu", KeyNames.Of(GLFW.GLFW_KEY_MENU));
         assertEquals("W", KeyNames.Of(GLFW.GLFW_KEY_W));
     }
 

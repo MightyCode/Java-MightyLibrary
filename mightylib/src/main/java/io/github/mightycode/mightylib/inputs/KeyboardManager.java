@@ -22,7 +22,8 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public final class KeyboardManager {
 
-    static final int KEYS = 348;
+    // Up to GLFW_KEY_LAST (GLFW_KEY_MENU) included
+    static final int KEYS = GLFW_KEY_LAST + 1;
     static final int BEGIN_KEYS = 32;
 
     private final WindowInfo windowInfo;

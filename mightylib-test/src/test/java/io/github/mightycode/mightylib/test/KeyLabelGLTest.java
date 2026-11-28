@@ -24,6 +24,8 @@ class KeyLabelGLTest {
         assertEquals("F5", keyboard.keyLabel(GLFW.GLFW_KEY_F5));
         assertEquals("Left Shift", keyboard.keyLabel(GLFW.GLFW_KEY_LEFT_SHIFT));
         assertEquals("Keypad 1", keyboard.keyLabel(GLFW.GLFW_KEY_KP_1));
+        // The last key of GLFW is a key of the keyboard
+        assertEquals("Menu", keyboard.keyLabel(GLFW.GLFW_KEY_MENU));
     }
 
     @Test
@@ -42,6 +44,6 @@ class KeyLabelGLTest {
     void aKeyOutOfBoundsIsRefused(SceneRunner runner) {
         KeyboardManager keyboard = runner.inputs().getKeyboardManager();
         assertThrows(IllegalArgumentException.class, () -> keyboard.keyLabel(GLFW.GLFW_KEY_UNKNOWN));
-        assertThrows(IllegalArgumentException.class, () -> keyboard.keyLabel(GLFW.GLFW_KEY_MENU));
+        assertThrows(IllegalArgumentException.class, () -> keyboard.keyLabel(GLFW.GLFW_KEY_LAST + 1));
     }
 }

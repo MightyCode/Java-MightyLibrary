@@ -66,6 +66,7 @@ final class KeyNames {
         put(GLFW_KEY_RIGHT_CONTROL, "Right Control");
         put(GLFW_KEY_RIGHT_ALT, "Right Alt");
         put(GLFW_KEY_RIGHT_SUPER, "Right Super");
+        put(GLFW_KEY_MENU, "Menu");
     }
 
     private KeyNames() {}
