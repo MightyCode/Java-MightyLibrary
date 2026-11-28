@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -252,13 +253,12 @@ class TextureRegionsGLTest {
     }
 
     private static void assertRuns(int[] expected, int[] actual, String what) {
-        assertEquals(expected.length, actual.length, what + ": " + java.util.Arrays.toString(actual));
+        assertEquals(expected.length, actual.length, what + ": " + Arrays.toString(actual));
         int total = 0, expectedTotal = 0;
         for (int i = 0; i < expected.length; ++i) {
             // The boundaries between texels on centers of pixels: either side
             assertTrue(Math.abs(expected[i] - actual[i]) <= 1,
-                    what + ": " + java.util.Arrays.toString(actual) + " instead of "
-                            + java.util.Arrays.toString(expected));
+                    what + ": " + Arrays.toString(actual) + " instead of " + Arrays.toString(expected));
             total += actual[i];
             expectedTotal += expected[i];
         }
