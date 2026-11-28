@@ -5,6 +5,7 @@ import io.github.mightycode.mightylib.graphics.renderer.Material;
 import io.github.mightycode.mightylib.graphics.renderer.Renderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.Animation2DRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.EBatch2DMode;
+import io.github.mightycode.mightylib.graphics.renderer._2D.shape.CircleRenderer;
 import io.github.mightycode.mightylib.graphics.renderer._2D.shape.RectangleRenderer;
 import io.github.mightycode.mightylib.main.Engine;
 import io.github.mightycode.mightylib.main.EngineConfig;
@@ -19,6 +20,7 @@ import io.github.mightycode.mightylib.resources.map.TileMap;
 import io.github.mightycode.mightylib.resources.map.TileMapLoader;
 import io.github.mightycode.mightylib.resources.map.TileSetLoader;
 import io.github.mightycode.mightylib.scenes.Scene;
+import io.github.mightycode.mightylib.utils.ELogLevel;
 import io.github.mightycode.mightylib.utils.math.geometry.EFlip;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -81,6 +83,31 @@ class TextureRegionsGLTest {
     @Test
     void theFramesOfALinearSheetAreReadWhole(SceneRunner runner) {
         check(runner, "regionsLinear", true);
+    }
+
+    // setTextureRegion: min then max whatever the order given, removed by setTexturePosition; a vector shape reads no
+    // region: the texture position alone, reported
+    @Test
+    void setTextureRegionOnAShapeThatReadsNoRegionIsReported(SceneRunner runner) {
+        runner.engine().expectProblem(ELogLevel.ERROR, "CircleRenderer\\.setTextureRegion");
+        inScene(runner, scene -> {
+            try (Views.Scope ignored = Views.enter(scene)) {
+                RectangleRenderer rectangle = new RectangleRenderer(EngineResources.TEXTURE_2D);
+                rectangle.setTextureRegion(new Vector4f(0.6f, 0.2f, 0.9f, 0.1f));
+                assertEquals(new Vector4f(0.2f, 0.6f, 0.1f, 0.9f), rectangle.getTextureRegion());
+                assertEquals(new Vector4f(0.6f, 0.2f, 0.9f, 0.1f), rectangle.getTexturePosition());
+                rectangle.setTexturePosition(new Vector4f(0f, 2f, 0f, 2f));
+                assertNull(rectangle.getTextureRegion());
+
+                CircleRenderer circle = new CircleRenderer(EngineResources.TEXTURE_2D);
+                circle.setTextureRegion(FRAME);
+                assertNull(circle.getTextureRegion());
+                assertEquals(FRAME, circle.getTexturePosition());
+
+                rectangle.unload();
+                circle.unload();
+            }
+        });
     }
 
     private static void check(SceneRunner runner, String name, boolean linear) {

@@ -7,12 +7,15 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.IRenderTextureBindab
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.ViewCullBounds;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.BatchGeometry2D;
+import io.github.mightycode.mightylib.utils.Logger;
 import io.github.mightycode.mightylib.utils.math.geometry.Direction;
 import io.github.mightycode.mightylib.utils.math.geometry.EDirection;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.joml.Vector4fc;
+
+import java.util.Arrays;
 
 /**
  * A 2D shape drawn by a MeshRenderer: positions and texture coordinates computed by the subclass (hooks
@@ -28,11 +31,18 @@ public abstract class Shape2DRenderer extends MeshRenderer {
 
     private final int positionIndex, textureIndex;
     private Vector4f texturePosition;
-    // The region of the texture read (setTextureRegion), null without limit; its vbo added at the first region (-1
-    // before, and for a subclass whose mesh has another attribute on its channel: its program reads no region)
-    private Vector4f textureRegion;
+    // The texture position set by setTextureRegion, reused (texturePosition may be a vector of the caller)
+    private final Vector4f regionTexturePosition = new Vector4f();
+    // The region of the texture read (setTextureRegion) when regionLimited, reused; its vbo added at the first region
+    // (-1 before, and for a shape that reads no region: readsTextureRegion)
+    private final Vector4f textureRegion = new Vector4f();
+    private boolean regionLimited;
+    // A region asked on a shape that reads none: reported once
+    private boolean regionUnreadReported;
     private int regionIndex = -1;
     private int meshVertexCount;
+    // The regions of the vertices sent to the vbo, reused while the count of vertices stays
+    private float[] meshRegions = new float[0];
 
     // The geometry is sent at the next display: subclasses' fields are not set yet in this constructor,
     // and several changes in a tick cost a single upload
@@ -100,22 +110,32 @@ public abstract class Shape2DRenderer extends MeshRenderer {
 
     // The region of each vertex (none: zeros, no limit), its vbo added at the first region
     private void uploadRegions(Mesh mesh) {
-        if (regionIndex < 0 && (textureRegion == null || mesh.hasChannel(Mesh.COMMON_TEXTURE_REGION_CHANNEL)))
+        if (regionIndex < 0 && !regionLimited)
             return;
 
-        float[] regions = new float[meshVertexCount * 4];
-        if (textureRegion != null) {
+        if (meshRegions.length != meshVertexCount * 4)
+            meshRegions = new float[meshVertexCount * 4];
+        if (regionLimited) {
             for (int vertex = 0; vertex < meshVertexCount; ++vertex) {
-                regions[4 * vertex] = textureRegion.x;
-                regions[4 * vertex + 1] = textureRegion.y;
-                regions[4 * vertex + 2] = textureRegion.z;
-                regions[4 * vertex + 3] = textureRegion.w;
+                meshRegions[4 * vertex] = textureRegion.x;
+                meshRegions[4 * vertex + 1] = textureRegion.y;
+                meshRegions[4 * vertex + 2] = textureRegion.z;
+                meshRegions[4 * vertex + 3] = textureRegion.w;
             }
+        } else {
+            Arrays.fill(meshRegions, 0f);
         }
         if (regionIndex < 0)
-            regionIndex = mesh.addVboFloat(Mesh.COMMON_TEXTURE_REGION_CHANNEL, regions, 4, Mesh.STATIC_STORE);
+            regionIndex = mesh.addVboFloat(Mesh.COMMON_TEXTURE_REGION_CHANNEL, meshRegions, 4, Mesh.DYNAMIC_STORE);
         else
-            mesh.updateVbo(regions, regionIndex);
+            mesh.updateVbo(meshRegions, regionIndex);
+    }
+
+    // The program of this shape reads the region of each vertex (texture2D): not the vector shapes, nor a mesh with
+    // another attribute on the channel of the regions
+    private boolean readsTextureRegion() {
+        return !(this instanceof VectorShape2DRenderer)
+                && (regionIndex >= 0 || !getMesh().hasChannel(Mesh.COMMON_TEXTURE_REGION_CHANNEL));
     }
 
     // Hook (call super): sends the changed geometry to the mesh, then draws it (drawn alone, not batched)
@@ -151,7 +171,8 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         int state = batchState(place);
 
         BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), batchPositions,
-                batchTextures, null, vertexCount, batchColor(), batchIndices, batchIndices.length, textureRegion);
+                batchTextures, null, vertexCount, batchColor(), batchIndices, batchIndices.length,
+                regionLimited ? textureRegion : null);
         return true;
     }
 
@@ -233,8 +254,8 @@ public abstract class Shape2DRenderer extends MeshRenderer {
         texturePosition = newTexturePosition;
         textureDirty = true;
         batchTextureDirty = true;
-        if (textureRegion != null) {
-            textureRegion = null;
+        if (regionLimited) {
+            regionLimited = false;
             regionDirty = true;
         }
 
@@ -244,14 +265,26 @@ public abstract class Shape2DRenderer extends MeshRenderer {
     /**
      * A region of the texture drawn (left, right, top, bottom in texture coordinates, like setTexturePosition), read
      * only inside it: its outer rows and columns whole, never a texel of a neighbor region (the frames of a sheet,
-     * the tiles of an atlas that touch each other). The vector shapes read no region (their programs: no limit).
+     * the tiles of an atlas that touch each other). No allocation. The vector shapes read no region (their programs:
+     * no limit): for them, the texture position alone, reported once as an error.
      */
     public final Shape2DRenderer setTextureRegion(Vector4fc region){
-        texturePosition = new Vector4f(region);
-        textureRegion = new Vector4f(Math.min(region.x(), region.y()), Math.max(region.x(), region.y()),
-                Math.min(region.z(), region.w()), Math.max(region.z(), region.w()));
+        texturePosition = regionTexturePosition.set(region);
         textureDirty = true;
         batchTextureDirty = true;
+        if (!readsTextureRegion()) {
+            if (!regionUnreadReported) {
+                regionUnreadReported = true;
+                Logger.Error(Logger.CATEGORY_ENGINE, getClass().getSimpleName() + ".setTextureRegion: its program"
+                        + " reads no region of the texture (a vector shape, or another attribute on the channel of the"
+                        + " regions): the texture position alone, without limit");
+            }
+            return this;
+        }
+
+        textureRegion.set(Math.min(region.x(), region.y()), Math.max(region.x(), region.y()),
+                Math.min(region.z(), region.w()), Math.max(region.z(), region.w()));
+        regionLimited = true;
         regionDirty = true;
 
         return this;
@@ -259,7 +292,7 @@ public abstract class Shape2DRenderer extends MeshRenderer {
 
     // The region of setTextureRegion, null without limit
     public final Vector4fc getTextureRegion() {
-        return textureRegion;
+        return regionLimited ? textureRegion : null;
     }
 
     public final Vector4f getTexturePosition() {
