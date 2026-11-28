@@ -86,3 +86,28 @@ Décisions prises :
 
 ### Discussion B — relecture, PR, fusion (`/pr-ml fix/bugs-en-passant`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour. Rien à ajouter ici, sauf la liste des vérifications manuelles du « Bilan ».
+
+## Bilan
+### Fait
+- Étape 2 : `DebugInfoCamera2D` en `LinkedHashSet`, `prec(rotation)`, WARNING (`engine`) sur un nom inconnu (ignoré), `"id"` retiré ; texte construit par `Describe` et noms ajoutés par `AddInfo` (statiques, package-private), testés sans GL par `DebugInfoCamera2DTest`.
+- Étape 3 : package `inputs.keyboardlanguage`, `CharInputEntry`, `setKeyboardLanguage`/`getKeyboardLanguage` d'`EngineConfig` et `WindowConfig`, touche principale et Verr. Maj. maison de `KeyboardManager` supprimés (constructeur `KeyboardManager(WindowInfo)`) ; démo, `module-info`, `ExtensibleClasses`, dictionnaire d'IntelliJ mis à jour ; `KeyboardLanguageGLTest` supprimé.
+- Étape 4 : `KeyboardManager.keyLabel(key)`, table `KeyNames` (package-private), `KeyNamesTest` (sans GL : chaque `GLFW_KEY_*` du clavier nommée, par réflexion sur `GLFW`), `KeyLabelGLTest` (kit), scène `KeyboardLayoutScene` (dans `DemoScenes`, passe le test de fumée).
+- Étape 5 : `TileMap.tilesVersion()` (tuile changée une fois chargée, rechargement) et compteur `changedTiles()` (package-private, remis à zéro par le rechargement et le déchargement) ; `TileChange`, `clearTileChanges`, `getTileChanges`, `hasBeenUpdated` supprimés ; `TileMapRenderer` garde la version construite ; appels de remise à zéro retirés de `Scene2D` et `WaveFunctionCollapse2D`. `WaveFunctionCollapseGrid` et `LayersTileMapRenderer` sans changement (chaque renderer de catégorie suit la version seul).
+- Étape 6 : `TextureUnloadGLTest` par le chemin réel : un lot (`BatchResourcesMethod`) charge la donnée et sa texture, le code partage la texture (`addElementOrReturnIfPresent`), `unloadBatch` décharge la donnée, puis `releaseResource` supprime la texture GL (compte `GenDeleteResources` revenu). Aucun outil ajouté au kit. Vérifié : le test échoue avec la condition d'avant `c106751e` (6 textures au lieu de 5).
+- Étape 7 : `architecture.md`, `later.md`, `decisions.md`, `CLAUDE.md`, `licence.md` (fichiers de test du kit `tile-maps/` et `texture-unload/`).
+
+### Écarts au plan
+- Nom `TileMap.tilesVersion()` au lieu de `version()` : `DataType.getVersion()` existe déjà (version du contenu lu, chargement et rechargement) et `TileMapRenderer` lit les deux (le rechargement attend la texture de l'atlas, une tuile changée non) ; deux méthodes `version()`/`getVersion()` de sens différents auraient été un piège.
+- Le pavé numérique garde toujours son nom fixe (« Keypad 1 ») : GLFW le nomme comme les chiffres de la rangée du haut (« 1 »), ce qui rendrait les textes d'aide ambigus.
+- Un code sans touche GLFW entre les bornes (33 par exemple) est nommé « Key 33 » au lieu d'une exception.
+- Le WARNING du rechargement est testé sans GL (`TileMapTest`, `swapContent` appelé seul).
+
+### Vérifié
+- `mvn -o -q test` complet (GL compris) vert après chaque étape.
+- `scenario.py` : `Scene2D` (`?gl summary`, `?problems`, caméra pilotée, `input key press A`, `leakcheck Scene2D`) sans problème ; `KeyboardLayoutScene` : `GLFW_KEY_W -> Z` et `GLFW_KEY_KP_1 -> Keypad 1` sur la machine AZERTY (`?gl text`), `leakcheck` sans fuite.
+
+### À vérifier à la main
+- `KeyboardLayoutScene` : appuyer sur des lettres, Maj, AltGr, des touches du pavé numérique (Échap ramène au menu) ; les étiquettes suivent la disposition AZERTY de la machine, le texte tapé s'affiche (accents compris : `scenario.py` les abîme par la ligne de commande Windows).
+- `Scene2D` : la tuile 0,0 change à l'appui de la touche de gauche (Q en AZERTY) et la carte n'est pas reconstruite à chaque frame.
+- Rechargement à chaud d'une carte après un changement (`Scene2D`, touche de gauche, puis modifier le fichier de la carte) : WARNING « … reloaded: N tiles changed by the code are lost » dans la console.
+- Une scène avec `DebugInfoCamera2D` (`Scene2D`, `Box2D`, `RopeSimulation2D`) : lignes dans l'ordre d'ajout (position, rotation, zoom), rotation arrondie.
