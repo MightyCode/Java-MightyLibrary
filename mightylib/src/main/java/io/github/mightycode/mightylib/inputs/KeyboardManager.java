@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -21,8 +22,8 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public final class KeyboardManager {
 
-    private static final int KEYS = 348;
-    private static final int BEGIN_KEYS = 32;
+    static final int KEYS = 348;
+    static final int BEGIN_KEYS = 32;
 
     private final WindowInfo windowInfo;
     private final boolean[] state = new boolean[KEYS];
@@ -135,12 +136,12 @@ public final class KeyboardManager {
 
     // Press a key (GLFW_KEY_...) during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
     public void simulateKey(int keyId, int ticks) {
-        checkKey(keyId);
+        CheckKey(keyId);
         keySimulation.press(keyId, ticks);
     }
 
     public void simulateKeyRelease(int keyId) {
-        checkKey(keyId);
+        CheckKey(keyId);
         keySimulation.release(keyId);
     }
 
@@ -149,9 +150,24 @@ public final class KeyboardManager {
         pendingSimulatedText.append(text);
     }
 
-    private void checkKey(int keyId) {
+    static void CheckKey(int keyId) {
         if (keyId < BEGIN_KEYS || keyId >= KEYS)
             throw new IllegalArgumentException("Key must be between " + BEGIN_KEYS + " and " + (KEYS - 1));
+    }
+
+    /**
+     * The label of a key (GLFW_KEY_..., a physical position) in the layout of the system, in upper case: "Z" for
+     * GLFW_KEY_W on an AZERTY keyboard. A key the layout does not name, and the keypad, have a fixed English name
+     * ("Escape", "Left Shift", "Keypad 1"). For help texts and the binding screens; the actions read positions.
+     */
+    public String keyLabel(int key) {
+        CheckKey(key);
+        if (!KeyNames.IsKeypad(key)) {
+            String name = glfwGetKeyName(key, 0);
+            if (name != null && !name.isEmpty())
+                return name.toUpperCase(Locale.ROOT);
+        }
+        return KeyNames.Of(key);
     }
 
     // The real key now (GLFW); never pressed when the real devices are ignored
