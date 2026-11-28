@@ -434,8 +434,7 @@ public final class Engine implements IView {
 
         WindowConfig windowConfig = new WindowConfig(config.getProjectName())
                 .setDisplay(config.getDisplay())
-                .setMonitor(chooseMonitor())
-                .setKeyboardLanguage(config.getKeyboardLanguage());
+                .setMonitor(chooseMonitor());
         // Null: the size of the window when it is created
         Vector2i virtualSize = config.getVirtualSize();
         if (virtualSize != null)

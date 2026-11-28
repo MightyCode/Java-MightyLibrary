@@ -106,8 +106,9 @@ public final class TileMapRenderer extends MeshRenderer {
     private final Vector2f referenceOffset;
     private EDirection reference;
     private TileMap tilemap;
-    // Version of the map the tiles were built with
+    // Version of the map content (load, reload) and of its tiles the tiles were built with
     private int tileMapVersion;
+    private int builtTilesVersion;
     // Texture of the atlas, and the tiles per axis of each tileset when the tiles were built
     private Texture atlasTexture;
     private Vector2i[] tileSetsNumber;
@@ -178,6 +179,7 @@ public final class TileMapRenderer extends MeshRenderer {
         reset();
         this.tilemap = tilemap;
         this.tileMapVersion = tilemap.getVersion();
+        this.builtTilesVersion = tilemap.tilesVersion();
         this.tileSetAtlas = tilemap.tileSetAtlas();
         // The same element as the one a batch listing the map sends during the loading
         atlasTexture = glResources().addElementOrReturnIfPresent(Texture.class, tilemap.createGLElement(), tilemap.glElementName());
@@ -386,6 +388,7 @@ public final class TileMapRenderer extends MeshRenderer {
                 return;
 
             tileMapVersion = tilemap.getVersion();
+            builtTilesVersion = tilemap.tilesVersion();
             loadGeneralInformation();
             loadTileMapInformation();
         }
@@ -402,9 +405,11 @@ public final class TileMapRenderer extends MeshRenderer {
             }
         }
 
-        // A map change needs a full rebuild, an animation only changes texture positions
-        if (tilemap.hasBeenUpdated())
+        // A tile changed since the build needs a full rebuild, an animation only changes texture positions
+        if (tilemap.tilesVersion() != builtTilesVersion) {
+            builtTilesVersion = tilemap.tilesVersion();
             loadTileMapInformation();
+        }
         else if (animationChanged) {
             getMesh().updateVbo(tilesTexturePosition, textureIndex);
             getMesh().updateVbo(tilesTextureRegion, regionIndex);

@@ -1,6 +1,5 @@
 package io.github.mightycode.mightylib.main;
 
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.main.monitors.MonitorInfo;
 import org.joml.Vector2i;
 
@@ -13,8 +12,6 @@ public final class WindowConfig {
     private DisplaySettings display = new DisplaySettings();
     // Null: the size of the window when it is created
     private Vector2i virtualSize;
-    // Null: the one of the engine
-    private KeyboardLanguage keyboardLanguage;
 
     // Null: the main window of the context
     private WindowContext parent;
@@ -68,11 +65,6 @@ public final class WindowConfig {
         return this;
     }
 
-    public WindowConfig setKeyboardLanguage(KeyboardLanguage keyboardLanguage) {
-        this.keyboardLanguage = keyboardLanguage;
-        return this;
-    }
-
     /** The window this one belongs to: it stays above it, is centered on it and closes with it. */
     public WindowConfig setParent(WindowContext parent) {
         this.parent = parent;
@@ -110,8 +102,6 @@ public final class WindowConfig {
 
     // Null when not given: the size of the window when it is created
     public Vector2i getVirtualSize() { return virtualSize != null ? new Vector2i(virtualSize) : null; }
-
-    public KeyboardLanguage getKeyboardLanguage() { return keyboardLanguage; }
 
     public WindowContext getParent() { return parent; }
 

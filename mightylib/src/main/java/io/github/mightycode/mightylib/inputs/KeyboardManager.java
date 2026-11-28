@@ -1,7 +1,6 @@
 package io.github.mightycode.mightylib.inputs;
 
 import io.github.mightycode.mightylib.inputs.internal.InputSimulation;
-import io.github.mightycode.mightylib.inputs.keyboardlanguage.KeyboardLanguage;
 import io.github.mightycode.mightylib.main.WindowInfo;
 
 import org.lwjgl.glfw.GLFWCharCallback;
@@ -11,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import static org.lwjgl.glfw.GLFW.*;
 
@@ -22,25 +22,13 @@ import static org.lwjgl.glfw.GLFW.*;
  */
 public final class KeyboardManager {
 
-    private static final int KEYS = 348;
-    private static final int BEGIN_KEYS = 32;
-
-    private static final int MIN_LANGUAGE_KEY = GLFW_KEY_A;
-    private static final int MAX_LANGUAGE_KEY = GLFW_KEY_Z;
+    // Up to GLFW_KEY_LAST (GLFW_KEY_MENU) included
+    static final int KEYS = GLFW_KEY_LAST + 1;
+    static final int BEGIN_KEYS = 32;
 
     private final WindowInfo windowInfo;
     private final boolean[] state = new boolean[KEYS];
     private final boolean[] oldState = new boolean[KEYS];
-
-    private boolean capsLockActivated;
-
-    private int numberKeyPressed;
-
-    private int mainKey;
-
-    private final ArrayList<Integer> wasMain;
-
-    private KeyboardLanguage language;
 
     // Text typed during the tick, given by the system (keyboard layout, dead keys and IME already applied)
     private final StringBuilder incomingText;
@@ -59,17 +47,10 @@ public final class KeyboardManager {
      * Keyboard manager class.
      * Instance the class.
      */
-    public KeyboardManager(WindowInfo info, KeyboardLanguage defaultLanguage){
+    public KeyboardManager(WindowInfo info){
         this.windowInfo = info;
         Arrays.fill(state, false);
         Arrays.fill(oldState, false);
-
-        wasMain = new ArrayList<>();
-
-        language = defaultLanguage;
-        mainKey = -1;
-        numberKeyPressed = 0;
-        capsLockActivated = false;
 
         incomingText = new StringBuilder();
         typedText = "";
@@ -156,12 +137,12 @@ public final class KeyboardManager {
 
     // Press a key (GLFW_KEY_...) during a number of ticks (or InputSimulation.UNTIL_RELEASE) from the next tick
     public void simulateKey(int keyId, int ticks) {
-        checkKey(keyId);
+        CheckKey(keyId);
         keySimulation.press(keyId, ticks);
     }
 
     public void simulateKeyRelease(int keyId) {
-        checkKey(keyId);
+        CheckKey(keyId);
         keySimulation.release(keyId);
     }
 
@@ -170,9 +151,24 @@ public final class KeyboardManager {
         pendingSimulatedText.append(text);
     }
 
-    private void checkKey(int keyId) {
+    static void CheckKey(int keyId) {
         if (keyId < BEGIN_KEYS || keyId >= KEYS)
             throw new IllegalArgumentException("Key must be between " + BEGIN_KEYS + " and " + (KEYS - 1));
+    }
+
+    /**
+     * The label of a key (GLFW_KEY_..., a physical position) in the layout of the system, in upper case: "Z" for
+     * GLFW_KEY_W on an AZERTY keyboard. A key the layout does not name, and the keypad, have a fixed English name
+     * ("Escape", "Left Shift", "Keypad 1"). For help texts and the binding screens; the actions read positions.
+     */
+    public String keyLabel(int key) {
+        CheckKey(key);
+        if (!KeyNames.IsKeypad(key)) {
+            String name = glfwGetKeyName(key, 0);
+            if (name != null && !name.isEmpty())
+                return name.toUpperCase(Locale.ROOT);
+        }
+        return KeyNames.Of(key);
     }
 
     // The real key now (GLFW); never pressed when the real devices are ignored
@@ -180,15 +176,6 @@ public final class KeyboardManager {
         if (RealDevices.isIgnored())
             return false;
         return glfwGetKey(windowInfo.getWindowId(), keyID) == 1;
-    }
-
-    public int getKeyByLanguage(int key){
-        return language.translateKeyTo(key);
-    }
-
-    public void setKeyboardLanguage(KeyboardLanguage language){
-        this.language = language;
-        this.language.setManager(this);
     }
 
     /**
@@ -225,9 +212,7 @@ public final class KeyboardManager {
     public boolean isBlocked() { return blocked; }
 
     public void postUpdate(){
-        boolean mainKeyChanged = false;
         edgesDropped = false;
-        numberKeyPressed = 0;
 
         // Text typed since the last postUpdate, then the simulated one
         incomingText.append(pendingSimulatedText);
@@ -249,36 +234,9 @@ public final class KeyboardManager {
                 events.add(new KeyEvent(key, 0, mods, false, letterOf(key, 0, mods)));
             }
             oldSimulated[key] = simulated;
-
-            if (state[key]){
-                numberKeyPressed += 1;
-
-                if (key >= MIN_LANGUAGE_KEY && key <= MAX_LANGUAGE_KEY){
-                    if (!mainKeyChanged && mainKey != key && !wasMain.contains(key)){
-                        mainKey = key;
-                        mainKeyChanged = true;
-                    }
-                } else {
-                    if (!mainKeyChanged && !wasMain.contains(key)) {
-                        mainKey = key;
-                    }
-                }
-            }
-        }
-
-        if (numberKeyPressed == 0) {
-            mainKey = -1;
-            wasMain.clear();
-        } else {
-            wasMain.removeIf(key -> !getRawKeyState(key));
-
-            wasMain.add(mainKey);
         }
 
         keyEvents = blocked ? Collections.emptyList() : Collections.unmodifiableList(events);
-
-        if (state[GLFW_KEY_CAPS_LOCK] && !oldState[GLFW_KEY_CAPS_LOCK])
-            capsLockActivated = !capsLockActivated;
     }
 
     // Modifiers of a simulated key: the simulated or real modifier keys held
@@ -292,10 +250,4 @@ public final class KeyboardManager {
             mods |= GLFW_MOD_SHIFT;
         return mods;
     }
-
-    public boolean isCapsLock() { return capsLockActivated; }
-
-    public int getMainKeyPressed() { return hidden() ? -1 : mainKey; }
-    public char getCorrespondingCharMainKeyPressed() { return hidden() ? Character.MAX_VALUE : language.translateKeyTo(mainKey); }
-    public int getNumberKeyPressed(){ return hidden() ? 0 : numberKeyPressed; }
 }

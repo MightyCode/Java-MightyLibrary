@@ -214,8 +214,6 @@ public class Scene2D extends Scene {
         clockwisePolygonRenderer.setRotationZ(rotation.value());
 
         mapRenderer.update();
-
-        map.clearTileChanges();
     }
 
 

@@ -4,43 +4,17 @@ import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.resources.DataType;
 import io.github.mightycode.mightylib.resources.SingleSourceDataType;
 import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2i;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 public final class TileMap extends SingleSourceDataType {
-    public static final class TileChange {
-        private TilePosition position;
-
-        private int from;
-        private int to;
-
-        public TileChange setPosition(TilePosition position){
-            this.position = position;
-            return this;
-        }
-
-        public TileChange setFrom(int from){
-            this.from = from;
-            return this;
-        }
-
-        public TileChange setTo(int to){
-            this.to = to;
-            return this;
-        }
-
-        public TilePosition getPosition() { return position; }
-
-        public int getFrom() { return from; }
-        public int getTo() { return to; }
-    }
-
-    // Correctly loaded serves to detect if save tile changes
-    private final List<TileChange> tileChanges;
+    // Increased at each tile changed and at each reload (main thread): readers compare it to the version they used
+    private int tilesVersion;
+    // Tile changes made by the code since the map was loaded or reloaded (a tile changed twice counts twice): lost by
+    // a reload, which reports them
+    private int tileChanges;
 
     private final Vector2i mapSize;
     private final TileSetAtlas tileSetAtlas;
@@ -59,8 +33,6 @@ public final class TileMap extends SingleSourceDataType {
         super(typeSetUp, dataName, path);
         this.mapSize = new Vector2i();
         this.tileSetAtlas = new TileSetAtlas(dataName);
-
-        this.tileChanges = new ArrayList<>();
 
         layersCategoriesFrom = new HashMap<>();
         layersCategoriesTo = new HashMap<>();
@@ -93,7 +65,7 @@ public final class TileMap extends SingleSourceDataType {
     }
 
     // The atlas objects stay the same (used by the renderers): only their content is exchanged.
-    // The changes made by the code to the previous version are lost.
+    // The file wins: the changes made by the code to the previous version are lost, and reported.
     @Override
     protected void swapContent(DataType copy) {
         TileMap other = (TileMap) copy;
@@ -118,7 +90,11 @@ public final class TileMap extends SingleSourceDataType {
         layersCategoriesFrom = otherFrom;
         layersCategoriesTo = otherTo;
 
-        tileChanges.clear();
+        if (tileChanges > 0)
+            Logger.Warn(Logger.CATEGORY_RESOURCES, getDataName() + " reloaded: " + tileChanges
+                    + " tile changes made by the code are lost");
+        tileChanges = 0;
+        ++tilesVersion;
     }
 
     public void addTileset(TileSet tileset, int startId) {
@@ -165,10 +141,6 @@ public final class TileMap extends SingleSourceDataType {
     public int getLayerCategoryFrom(String category) { return layersCategoriesFrom.get(category); }
 
 
-    public void clearTileChanges(){
-        tileChanges.clear();
-    }
-
     public void setTileType(int layerNumber, int x, int y, int type){
         setTile(layerNumber, x, y, type);
     }
@@ -177,22 +149,23 @@ public final class TileMap extends SingleSourceDataType {
         int previousType = layers[layerNumber].getTile(x, y);
         layers[layerNumber].setTileType(x, y, type);
 
-        if (isLoaded()) {
-
-            if (previousType != type)
-                tileChanges.add(
-                        new TileChange()
-                                .setPosition(new TilePosition(x, y, layerNumber))
-                                .setFrom(previousType)
-                                .setTo(type));
+        if (isLoaded() && previousType != type) {
+            ++tileChanges;
+            ++tilesVersion;
         }
     }
 
-    public boolean hasBeenUpdated(){
-        return !tileChanges.isEmpty();
+    /**
+     * Increased at each tile changed (setTileType with another value, once loaded) and at each reload: a reader
+     * keeps the version it built with and builds again when it differs, nothing to clear. See also getVersion (the
+     * content read from the file, increased by the load and the reload only).
+     */
+    public int tilesVersion() {
+        return tilesVersion;
     }
 
-    public Collection<TileChange> getTileChanges(){
+    // Tile changes made by the code since the load or the last reload (a reload loses them)
+    int tileChanges() {
         return tileChanges;
     }
 
@@ -234,6 +207,7 @@ public final class TileMap extends SingleSourceDataType {
     @Override
     public void internUnload() {
         layers = null;
+        tileChanges = 0;
         tileSetAtlas.clear();
         mapSize.x = 0;
         mapSize.y = 0;

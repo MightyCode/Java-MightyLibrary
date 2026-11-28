@@ -1,0 +1,10 @@
+{
+	"textures" : {
+		"unload" : {
+			"unloadedPainting" : {
+				"file" : "unloadedPainting.png",
+				"qualityType" : "pixelart"
+			}
+		}
+	}
+}

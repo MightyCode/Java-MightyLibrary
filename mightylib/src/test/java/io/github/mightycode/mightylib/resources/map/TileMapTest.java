@@ -1,13 +1,19 @@
 package io.github.mightycode.mightylib.resources.map;
 
+import io.github.mightycode.mightylib.algorithms.OutputCapture;
 import io.github.mightycode.mightylib.graphics.GLElement;
 import io.github.mightycode.mightylib.resources.DataTypeTestAccess;
 import io.github.mightycode.mightylib.resources.texture.Texture;
+import io.github.mightycode.mightylib.utils.ELogLevel;
+import io.github.mightycode.mightylib.utils.ILogListener;
+import io.github.mightycode.mightylib.utils.LogEntry;
+import io.github.mightycode.mightylib.utils.Logger;
 import org.joml.Vector2i;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -34,7 +40,7 @@ class TileMapTest {
         assertEquals(0, map.mapHeight());
         assertEquals(new Vector2i(0, 0), map.getMapSize());
         assertFalse(map.internLoad());
-        assertFalse(map.hasBeenUpdated());
+        assertEquals(0, map.tilesVersion());
     }
 
     @Test
@@ -121,63 +127,41 @@ class TileMapTest {
     }
 
     @Test
-    void changesOfAMapNotLoadedYetAreNotTracked() {
+    void changesOfAMapNotLoadedYetAreNotCounted() {
         map.setInformation(new Vector2i(2, 2), emptyLayers(1, 2, 2), null, null);
 
         map.setTileType(0, 1, 1, 4);
 
         assertEquals(4, map.getTileType(DEFAULT, 0, 1, 1));
-        assertFalse(map.hasBeenUpdated());
+        assertEquals(0, map.tilesVersion());
+        assertEquals(0, map.tileChanges());
     }
 
     @Test
-    void changesOfALoadedMapAreTrackedWithTheirPreviousValue() {
+    void theVersionIncreasesAtEachTileChanged() {
         map.setInformation(new Vector2i(2, 2), emptyLayers(2, 2, 2), null, null);
         DataTypeTestAccess.markLoaded(map);
+        int version = map.tilesVersion();
 
         map.setTileType(0, 1, 0, 4);
+        assertEquals(version + 1, map.tilesVersion());
         map.setTileType(1, 0, 1, 8);
         map.setTileType(0, 1, 0, 6);
 
-        assertTrue(map.hasBeenUpdated());
-        List<TileMap.TileChange> changes = new ArrayList<>(map.getTileChanges());
-        assertEquals(3, changes.size());
-        assertEquals(new TilePosition(1, 0, 0), changes.get(0).getPosition());
-        assertEquals(-1, changes.get(0).getFrom());
-        assertEquals(4, changes.get(0).getTo());
-        assertEquals(new TilePosition(0, 1, 1), changes.get(1).getPosition());
-        assertEquals(4, changes.get(2).getFrom());
-        assertEquals(6, changes.get(2).getTo());
+        assertEquals(version + 3, map.tilesVersion());
+        assertEquals(3, map.tileChanges());
     }
 
     @Test
     void settingTheSameTileIsNotAChange() {
         map.setInformation(new Vector2i(2, 2), emptyLayers(1, 2, 2), null, null);
         DataTypeTestAccess.markLoaded(map);
+        int version = map.tilesVersion();
 
         map.setTileType(0, 0, 0, -1);
 
-        assertFalse(map.hasBeenUpdated());
-    }
-
-    @Test
-    void changesCanBeCleared() {
-        map.setInformation(new Vector2i(2, 2), emptyLayers(1, 2, 2), null, null);
-        DataTypeTestAccess.markLoaded(map);
-        map.setTileType(0, 0, 0, 3);
-
-        map.clearTileChanges();
-
-        assertFalse(map.hasBeenUpdated());
-        assertTrue(map.getTileChanges().isEmpty());
-    }
-
-    @Test
-    void tileChangeSettersChain() {
-        TileMap.TileChange change = new TileMap.TileChange().setPosition(new TilePosition(1, 2, 3)).setFrom(4).setTo(5);
-        assertEquals(new TilePosition(1, 2, 3), change.getPosition());
-        assertEquals(4, change.getFrom());
-        assertEquals(5, change.getTo());
+        assertEquals(version, map.tilesVersion());
+        assertEquals(0, map.tileChanges());
     }
 
     @Test
@@ -189,22 +173,56 @@ class TileMapTest {
         assertEquals("map.tilemap", copy.path());
     }
 
+    // Problems of the map sent during the action
+    private static List<LogEntry> problemsOf(Runnable action) {
+        List<LogEntry> entries = new CopyOnWriteArrayList<>();
+        ILogListener listener = entries::add;
+        Logger.AddListener(listener);
+        try {
+            OutputCapture.errorsOf(action);
+        } finally {
+            Logger.RemoveListener(listener);
+        }
+        return entries.stream().filter(entry -> entry.message().startsWith("map reloaded")).collect(Collectors.toList());
+    }
+
     @Test
-    void reloadExchangesTheContentAndForgetsTheChangesMadeByTheCode() {
+    void reloadExchangesTheContentAndReportsTheChangesMadeByTheCode() {
         map.setInformation(new Vector2i(2, 2), emptyLayers(1, 2, 2), null, null);
         DataTypeTestAccess.markLoaded(map);
         map.setTileType(0, 0, 0, 3);
+        map.setTileType(0, 1, 0, 3);
+        int version = map.tilesVersion();
         TileMap newer = new TileMap("map", "map.tilemap");
         newer.setInformation(new Vector2i(4, 5), emptyLayers(2, 4, 5), new String[]{"Back", "Front"}, new int[]{0, 1});
 
-        map.swapContent(newer);
+        List<LogEntry> warnings = problemsOf(() -> map.swapContent(newer));
 
         assertEquals(4, map.mapWidth());
         assertEquals(5, map.mapHeight());
         assertArrayEquals(new String[]{"Back", "Front"}, map.getLayersCategories());
         assertEquals(1, map.getLayerCategoryFrom("Front"));
+        assertEquals(-1, map.getTileType("Back", 0, 0, 0), "the file wins");
         assertEquals(2, newer.mapWidth(), "the copy gets the previous version");
-        assertFalse(map.hasBeenUpdated());
+        assertTrue(map.tilesVersion() > version, "a reload is a new version of the tiles");
+        assertEquals(0, map.tileChanges());
+
+        assertEquals(1, warnings.size(), warnings.toString());
+        assertEquals(ELogLevel.WARNING, warnings.get(0).level());
+        assertEquals(Logger.CATEGORY_RESOURCES, warnings.get(0).category());
+        assertEquals("map reloaded: 2 tile changes made by the code are lost", warnings.get(0).message());
+    }
+
+    @Test
+    void aReloadWithoutChangeReportsNothing() {
+        map.setInformation(new Vector2i(2, 2), emptyLayers(1, 2, 2), null, null);
+        DataTypeTestAccess.markLoaded(map);
+        int version = map.tilesVersion();
+        TileMap newer = new TileMap("map", "map.tilemap");
+        newer.setInformation(new Vector2i(2, 2), emptyLayers(1, 2, 2), null, null);
+
+        assertTrue(problemsOf(() -> map.swapContent(newer)).isEmpty());
+        assertTrue(map.tilesVersion() > version);
     }
 
     @Test
