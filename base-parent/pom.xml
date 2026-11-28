@@ -198,6 +198,12 @@
                         <useModulePath>false</useModulePath>
                     </configuration>
                 </plugin>
+                <!-- Code coverage (profile coverage of the engine's root pom and of the demo, a game may use it too) -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>0.8.16</version>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>

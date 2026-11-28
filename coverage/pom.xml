@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.github.mightycode</groupId>
+        <artifactId>mightylib-parent</artifactId>
+        <version>1.1-SNAPSHOT</version>
+    </parent>
+
+    <!-- Code coverage of the engine (mightylib and the test kit) by the tests of the three modules: a module of the
+         profile coverage only (root pom), never built otherwise, last of the reactor. report-aggregate reports the
+         classes of the dependencies in the compile scope (the library and the kit) and reads the execution data of all
+         of them (target/*.exec), the test scope included: the demo adds its tests, its code is not measured. The kit
+         is in the test scope of the demo, which is why the aggregation does not live in the demo.
+         Report: coverage/target/site/jacoco-aggregate (tools/coverage.py). In verify, the demo tests run against the
+         jars: JaCoCo identifies a class by its bytes, the same as in target/classes. -->
+    <artifactId>mightylib-coverage</artifactId>
+    <packaging>pom</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.github.mightycode</groupId>
+            <artifactId>mightylib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.mightycode</groupId>
+            <artifactId>mightylib-test</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.mightycode</groupId>
+            <artifactId>mightylib-demo</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>jacoco-aggregate</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report-aggregate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

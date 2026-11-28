@@ -57,6 +57,31 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <!-- Code coverage of the engine by the demo tests, never part of the normal build: mvn -P coverage test (see
+             tools/coverage.py). The demo only records its tests (target/jacoco.exec): the module coverage aggregates
+             them with those of the engine's modules -->
+        <profile>
+            <id>coverage</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jacoco-agent</id>
+                                <goals>
+                                    <goal>prepare-agent</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
