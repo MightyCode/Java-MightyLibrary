@@ -82,9 +82,14 @@ public abstract class Slider {
     }
 
     public final void update(){
-        // The mouse in the world of the reference camera, where the bar and the button are
+        boolean pressed = inputManager.inputPressed(clickActionId);
+        if (!pressed && !isDragging)
+            return;
+
+        // The mouse in the world of the reference camera, where the bar and the button are (read only when used: an
+        // inverted matrix and a few vectors)
         Vector2f position = referenceCamera.transformPosition(mouseManager.pos());
-        if (inputManager.inputPressed(clickActionId)){
+        if (pressed){
             if (button.position().x < position.x && button.position().x + button.scale().x > position.x &&
                     button.position().y < position.y && button.position().y + button.scale().y > position.y){
                 isDragging = true;
