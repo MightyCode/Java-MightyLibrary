@@ -228,10 +228,10 @@ public class Camera2D extends Camera {
     }
 
     /**
-     * Transform a position from world 2D coordinates to screen coordinates
+     * Transform a position from screen coordinates (virtual pixels, the mouse) to world 2D coordinates
      *
-     * @param position world position
-     * @return screen position
+     * @param position screen position
+     * @return world position
      */
     public Vector2f transformPosition(Vector2f position){
         Vector4f computedPosition = view.invert(new Matrix4f())
@@ -240,10 +240,15 @@ public class Camera2D extends Camera {
         return new Vector2f(computedPosition.x, computedPosition.y);
     }
 
+    // The same view: the zoom is copied as it is (setZoomLevel would zoom from 1 and move the copy around its reference)
     public Camera2D copy(){
         Camera2D copy = new Camera2D(windowInfo, camPos, invertView);
-        copy.setZoomLevel(new Vector2f(zoomLevel));
-        copy.setRotation(rotation);
+        copy.minZoomLevel = minZoomLevel;
+        copy.maxZoomLevel = maxZoomLevel;
+        copy.zoomReference.set(zoomReference);
+        copy.zoomLevel = new Vector2f(zoomLevel);
+        copy.rotation = rotation;
+        copy.updateView();
 
         return copy;
     }
