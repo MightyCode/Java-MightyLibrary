@@ -1,11 +1,5 @@
-# Gros point actuel — Tests de non-régression
+# Gros point actuel
 
 **Ce fichier ne contient que ce qui reste à faire, jamais l'historique.** Quand un objectif est atteint (même en partie) : supprimer sa ligne, ou la réécrire pour ne garder que le reste. Aucun « fait », « déjà », « aujourd'hui fait X » : l'état actuel est décrit dans `architecture.md`, l'historique est dans git. Fichier vide → **discuter** avec l'utilisateur du point en tête de `later.md`, puis l'écrire ici (format et cycle de vie : `later.md`, « Écrire `current.md` »). Propositions **à valider avec l'utilisateur avant d'appliquer** ; changements cassants maintenant, avant toute version publiée. Chaque objectif passe par `/planification-ml` avant son implémentation. (U) = le plus urgent.
 
 Philosophie de `decisions.md` : usage courant facile (niveau Processing), réimplémentation (presque) complète possible par héritage + injection. Prérequis de la bibliothèque réutilisable, du modding, du thème et des langues, de Lua et de la physique injectable : chaque commit écrit sans elle ajoute du code à reprendre.
-
-Filet avant les gros chantiers suivants (physique 2D et unité du monde, entités et Lua, effets 2D), qui toucheront caméras, renderers et scènes. Les scénarios s'écrivent en JUnit avec le kit (`SceneRunner`, entrées simulées, fuites vérifiées autour de chaque test par `MightySceneExtension`, images comparées aux références par `ReferenceImages`), plus par `tools/mighty.py`. **Critère de fin** : la couverture mesurée est celle de ce que le CI exécute, et chaque bug connu corrigé a un test qui le reproduit.
-
-- **Couverture réelle** : `tools/coverage.py` ne mesure que les tests sans GL du module `mightylib` ; au 2026-11-26 : `scenes` 14 %, `scenes/camera` 31 %, `scenes/camera/cameraComponents` 1 %, `graphics/game` 14 %, `graphics/gui` 35 %, `graphics/text` 45 %, `resources/models` 9 %, `network` 12 %, total 59 % des lignes.
-  - Cible : `coverage.py` compte aussi les tests GL, ceux du kit et de la démo (ce que le CI exécute vraiment), sur la bibliothèque ; puis des tests pour les zones encore vides de la 2D (caméras, `graphics/game`, GUI, texte).
-  - À décider : quelles zones ajouter dans ce point, lesquelles laisser (réseau, modèles 3D) ; seuil de couverture vérifié ou simple rapport.
