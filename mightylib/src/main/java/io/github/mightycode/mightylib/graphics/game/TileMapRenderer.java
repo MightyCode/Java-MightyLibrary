@@ -241,7 +241,8 @@ public final class TileMapRenderer extends MeshRenderer {
             for (int y = 0; y < tilemap.mapHeight(); ++y) {
                 rowStarts[(layer - layerIndexFrom) * builtRows + y] = tileCount;
                 for (int x = 0; x < tilemap.mapWidth(); ++x) {
-                    rawTileType = tilemap.getTileType(layerCategory, layer, x, y);
+                    // The layer in its category (getTileType counts from the first layer of the category)
+                    rawTileType = tilemap.getTileType(layerCategory, layer - layerIndexFrom, x, y);
 
                     if (rawTileType < 0)
                         continue;

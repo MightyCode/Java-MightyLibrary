@@ -4,16 +4,17 @@ import io.github.mightycode.mightylib.resources.map.TileLayer;
 import io.github.mightycode.mightylib.resources.map.TileMap;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class LayersTileMapRenderer {
+    // In the order of the categories of the map: the order display() draws them in (the back ones first)
     private final Map<String, TileMapRenderer> layerTileMapRenderer;
     private final String shader;
     private final boolean frequentlyUpdate;
 
     public LayersTileMapRenderer(String shader, boolean frequentlyUpdate) {
-        layerTileMapRenderer = new HashMap<>();
+        layerTileMapRenderer = new LinkedHashMap<>();
         this.shader = shader;
         this.frequentlyUpdate = frequentlyUpdate;
     }
