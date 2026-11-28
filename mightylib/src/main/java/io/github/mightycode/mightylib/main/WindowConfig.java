@@ -12,7 +12,6 @@ public final class WindowConfig {
     private DisplaySettings display = new DisplaySettings();
     // Null: the size of the window when it is created
     private Vector2i virtualSize;
-    // Null: the one of the engine
 
     // Null: the main window of the context
     private WindowContext parent;
