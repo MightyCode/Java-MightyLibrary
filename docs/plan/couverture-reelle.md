@@ -260,5 +260,12 @@ Commits de `dev` depuis le 2026-11-01 filtrés sur fix, bug et corrige (66). Éc
 
 Tests `@Disabled` : aucun avant cette branche ; `KeyboardLanguageGLTest` désormais, avec sa raison. Les bancs (`DrawBatch2DBenchTest`, `Batch2DCostBenchTest`) ne tournent qu'avec `-Dmightylib.bench=true`.
 
-### Reste (étape 10)
-Plancher au total du CI, puis documents (« Documents à mettre à jour à la fin »), dont les chiffres de `network` (16 %), `resources/models` (82 %), `ScrollList` et `TextField` dans `later.md`.
+### Étape 10 (plancher et documents)
+- **Plancher** : inchangé à 82. Le CI du commit `592bd8b8` mesure 82,50 % des lignes, et 82,50 arrondi à l'unité inférieure donne 82.
+- **Documents** : `architecture.md` (pom racine, `base-parent`, puce « Couverture » du kit, copie et `transformPosition` de `Camera2D`, catégories de calques, `Text` vide, `setCanLoop`) ; `debug-tools.md` (section `coverage.py` réécrite : défaut complet, `--quick`, `--markdown`, `--check`, `--from-ci`, artefact, plancher) ; `bonnes-pratiques.md` (point 11) ; `CLAUDE.md` (phrase sur `coverage.py`, nouveaux tests, revue hebdomadaire, `current.md`) ; skill `/revue-pratiques` ; `later.md` (« Couverture : ce qui reste » avec les chiffres, bugs relevés, corrections de novembre sans test) ; `current.md` vidé : le point « Tests de non-régression » est terminé, prochaine étape **discuter du point en tête de `later.md`** (kit de test : suites).
+- Le plan n'est pas supprimé (fait par `/pr-ml`).
+
+### À vérifier par l'utilisateur
+- `python tools/coverage.py` (une fenêtre cachée s'ouvre, quelques minutes) et `python tools/coverage.py --quick` sur sa machine.
+- Le résumé du job du CI (tableau par paquet, illisible par `gh`) et l'artefact `coverage` (ouvrir `index.html`).
+- Rien à voir en jeu : aucune scène n'a changé. Les corrections touchent des cas que la démo ne montre pas (copie d'une caméra zoomée, catégorie de calques après le calque 0, texte vidé, curseur avec une caméra de référence déplacée).
