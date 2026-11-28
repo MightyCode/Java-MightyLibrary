@@ -7,6 +7,7 @@ import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatc
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchTarget;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal.IBatchUploader;
 import org.joml.Matrix4f;
+import org.joml.Vector4f;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -75,10 +76,13 @@ class DrawBatch2DTest {
     private static final class FakeUploader implements IBatchUploader {
         private final List<String> log;
         final List<float[]> vertexUploads = new ArrayList<>();
+        // The regions of the texture of the vertices (4 floats each)
+        final List<float[]> regionUploads = new ArrayList<>();
         final List<int[]> colorUploads = new ArrayList<>();
         final List<int[]> indexUploads = new ArrayList<>();
-        // Instances read as BatchFormats.SPRITE_INSTANCED (12 floats), and their bytes
+        // Instances read as BatchFormats.SPRITE_INSTANCED (12 floats, then their regions of 4 floats), and their bytes
         final List<float[]> instanceUploads = new ArrayList<>();
+        final List<float[]> instanceRegionUploads = new ArrayList<>();
         final List<ByteBuffer> instanceBytes = new ArrayList<>();
         final List<ByteBuffer> vertexBytes = new ArrayList<>();
 
@@ -95,11 +99,14 @@ class DrawBatch2DTest {
                 int vertexCount = vertices.remaining() / DrawBatch2D.VERTEX_BYTES;
                 int indexCount = indices.remaining();
                 float[] floats = new float[vertexCount * 4];
+                float[] regions = new float[vertexCount * 4];
                 int[] colors = new int[vertexCount];
                 for (int i = 0; i < vertexCount; ++i) {
-                    for (int j = 0; j < 4; ++j)
+                    for (int j = 0; j < 4; ++j) {
                         floats[i * 4 + j] = vertices.getFloat(i * DrawBatch2D.VERTEX_BYTES + j * 4);
-                    int at = i * DrawBatch2D.VERTEX_BYTES + 16;
+                        regions[i * 4 + j] = vertices.getFloat(i * DrawBatch2D.VERTEX_BYTES + 16 + j * 4);
+                    }
+                    int at = i * DrawBatch2D.VERTEX_BYTES + 32;
                     // Bytes in memory: R, G, B, A
                     colors[i] = (vertices.get(at) & 0xFF) << 24 | (vertices.get(at + 1) & 0xFF) << 16
                             | (vertices.get(at + 2) & 0xFF) << 8 | (vertices.get(at + 3) & 0xFF);
@@ -109,6 +116,7 @@ class DrawBatch2DTest {
                     read[i] = indices.get(i);
 
                 vertexUploads.add(floats);
+                regionUploads.add(regions);
                 colorUploads.add(colors);
                 indexUploads.add(read);
                 vertexBytes.add(copy(vertices));
@@ -118,11 +126,15 @@ class DrawBatch2DTest {
             if (instances.remaining() > 0) {
                 int count = instances.remaining() / DrawBatch2D.INSTANCE_BYTES;
                 float[] floats = new float[count * 12];
+                float[] regions = new float[count * 4];
                 for (int i = 0; i < count; ++i) {
                     for (int j = 0; j < 12; ++j)
                         floats[i * 12 + j] = instances.getFloat(i * DrawBatch2D.INSTANCE_BYTES + j * 4);
+                    for (int j = 0; j < 4; ++j)
+                        regions[i * 4 + j] = instances.getFloat(i * DrawBatch2D.INSTANCE_BYTES + 48 + j * 4);
                 }
                 instanceUploads.add(floats);
+                instanceRegionUploads.add(regions);
                 instanceBytes.add(copy(instances));
                 log.add("uploadInstances " + count);
             }
@@ -832,6 +844,103 @@ class DrawBatch2DTest {
         assertEquals(List.of("upload vertices", "apply i", "draw 0 6"), instancedLog());
     }
 
+    // ---- Regions of the texture ----
+
+    private void triangleOfThreeVertices() {
+        batch.vertex(0, 0, 0, 0, -1);
+        batch.vertex(1, 0, 0, 0, -1);
+        batch.vertex(0, 1, 0, 0, -1);
+    }
+
+    // The region of a draw goes with each vertex written after it; the next draw starts without limit
+    @Test
+    void theRegionIsWrittenWithTheVerticesOfItsDraw() {
+        int a = state("a");
+        batch.beginDraw(a);
+        batch.vertex(5, 5, 0, 0, -1);
+        batch.textureRegion(0.25f, 0.5f, 0.125f, 0.75f);
+        triangleOfThreeVertices();
+        for (int index = 1; index < 4; ++index)
+            batch.index(index);
+        batch.endDraw();
+        batch.beginDraw(a);
+        triangleOfThreeVertices();
+        for (int index = 0; index < 3; ++index)
+            batch.index(index);
+        batch.endDraw();
+        batch.endView();
+
+        float[] none = {0, 0, 0, 0}, region = {0.25f, 0.5f, 0.125f, 0.75f};
+        float[] regions = target.uploader.regionUploads.get(0);
+        for (int vertex = 0; vertex < 7; ++vertex) {
+            assertArrayEquals(vertex >= 1 && vertex <= 3 ? region : none,
+                    Arrays.copyOfRange(regions, 4 * vertex, 4 * vertex + 4), "vertex " + vertex);
+        }
+        // The positions and colors stay at their place
+        assertEquals(5f, target.uploader.vertexUploads.get(0)[0]);
+        assertArrayEquals(new int[]{-1, -1, -1, -1, -1, -1, -1}, target.uploader.colorUploads.get(0));
+        // A value of the draw, not of its state: one run
+        assertEquals(List.of("apply a", "draw 0 6"), draws());
+    }
+
+    @Test
+    void aRegionOutsideOfADrawIsRefused() {
+        assertThrows(IllegalStateException.class, () -> batch.textureRegion(0, 1, 0, 1));
+    }
+
+    // A quad with its region: its 4 vertices limited, the quad without region not
+    @Test
+    void aQuadIsLimitedToItsRegion() {
+        int a = state("a");
+        batch.quad(a, 0, 0f, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, -1, 0.1f, 0.2f, 0.3f, 0.4f);
+        quad(a, 2);
+        batch.endView();
+
+        float[] regions = target.uploader.regionUploads.get(0);
+        for (int vertex = 0; vertex < 8; ++vertex) {
+            assertArrayEquals(vertex < 4 ? new float[]{0.1f, 0.2f, 0.3f, 0.4f} : new float[]{0, 0, 0, 0},
+                    Arrays.copyOfRange(regions, 4 * vertex, 4 * vertex + 4), "vertex " + vertex);
+        }
+        assertArrayEquals(new int[]{-1, -1, -1, -1, 0x11223344, 0x11223344, 0x11223344, 0x11223344},
+                target.uploader.colorUploads.get(0));
+    }
+
+    // Mode INSTANCED: a quad of one region is an instance with it; a quad whose corners have different regions is
+    // drawn by its vertices
+    @Test
+    void aQuadOfOneRegionIsAnInstanceOfIt() {
+        mode = EBatch2DMode.INSTANCED;
+        int state = state("i");
+        batch.quad(state, 0, 0f, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0x11223344,
+                0.1f, 0.2f, 0.3f, 0.4f);
+        affineQuad(state, 1, 0);
+        batch.endView();
+
+        assertEquals(List.of("uploadInstances 2", "applyInstanced i", "instances 0 2"), instancedLog());
+        assertArrayEquals(new float[]{0.1f, 0.2f, 0.3f, 0.4f, 0, 0, 0, 0},
+                target.uploader.instanceRegionUploads.get(0));
+        // The color after the region
+        ByteBuffer instance = target.uploader.instanceBytes.get(0);
+        assertEquals(0x11, instance.get(64) & 0xFF);
+        assertEquals(0x44, instance.get(67) & 0xFF);
+
+        log.clear();
+        int other = state("i");
+        batch.beginDraw(other);
+        batch.textureRegion(0.1f, 0.2f, 0.3f, 0.4f);
+        batch.vertex(0, 1, 0, 1, -1);
+        batch.vertex(0, 0, 0, 0, -1);
+        batch.vertex(1, 0, 1, 0, -1);
+        // Only the bottom differs
+        batch.textureRegion(0.1f, 0.2f, 0.3f, 0.5f);
+        batch.vertex(1, 1, 1, 1, -1);
+        for (int index : new int[]{0, 3, 2, 0, 2, 1})
+            batch.index(index);
+        batch.endDraw();
+        batch.endView();
+        assertEquals(List.of("upload vertices", "apply i", "draw 0 6"), instancedLog());
+    }
+
     // One flush: the runs of quads by instances, the others by vertices, in the order of the runs
     @Test
     void instancedAndVertexRunsMix() {
@@ -925,13 +1034,13 @@ class DrawBatch2DTest {
         batch.endView();
 
         ByteBuffer vertices = target.uploader.vertexBytes.get(0);
-        // 4 sprite vertices (80 bytes) then the line vertices from byte 80 (vertex 5 of 16 bytes)
-        assertEquals(80 + 3 * 16, vertices.remaining());
-        assertEquals(5f, vertices.getFloat(80));
-        assertEquals(42, vertices.getInt(80 + 8));
-        assertEquals(0x11, vertices.get(80 + 12) & 0xFF);
-        assertEquals(7f, vertices.getFloat(80 + 2 * 16));
-        assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1, 5, 6, 7}, target.uploader.indexUploads.get(0));
+        // 4 sprite vertices (144 bytes) then the line vertices from byte 144 (vertex 9 of 16 bytes)
+        assertEquals(144 + 3 * 16, vertices.remaining());
+        assertEquals(5f, vertices.getFloat(144));
+        assertEquals(42, vertices.getInt(144 + 8));
+        assertEquals(0x11, vertices.get(144 + 12) & 0xFF);
+        assertEquals(7f, vertices.getFloat(144 + 2 * 16));
+        assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1, 9, 10, 11}, target.uploader.indexUploads.get(0));
         assertEquals(List.of("apply s", "draw 0 6", "apply l", "draw line 6 3"), draws());
     }
 
@@ -944,9 +1053,9 @@ class DrawBatch2DTest {
         quad(sprite, 0);
         batch.endView();
 
-        // 48 bytes of lines, the sprite starts at 60 (vertex 3 of 20 bytes)
-        assertEquals(60 + 80, target.uploader.vertexBytes.get(0).remaining());
-        assertArrayEquals(new int[]{0, 1, 2, 3, 6, 5, 3, 5, 4}, target.uploader.indexUploads.get(0));
+        // 48 bytes of lines, the sprite starts at 72 (vertex 2 of 36 bytes)
+        assertEquals(72 + 144, target.uploader.vertexBytes.get(0).remaining());
+        assertArrayEquals(new int[]{0, 1, 2, 2, 5, 4, 2, 4, 3}, target.uploader.indexUploads.get(0));
     }
 
     // The padding of a larger vertex goes past the end of the full buffer: it grows, the vertices before are kept
@@ -954,7 +1063,7 @@ class DrawBatch2DTest {
     void thePaddingPastTheEndOfTheBufferGrowsIt() {
         int sprite = state("s");
         int stroke = state("t", BatchFormats.STROKE);
-        // 252 sprite vertices: 5040 bytes of 5120, padded to 5168 for a vertex of 136 bytes
+        // 252 sprite vertices: 9072 bytes of 9216, padded to 9112 for a vertex of 136 bytes
         for (int q = 0; q < 63; ++q)
             quad(sprite, q);
         batch.beginDraw(stroke);
@@ -973,12 +1082,12 @@ class DrawBatch2DTest {
         batch.endView();
 
         ByteBuffer vertices = target.uploader.vertexBytes.get(0);
-        assertEquals(5168 + 3 * 136, vertices.remaining());
-        // The last sprite quad kept, the stroke vertices from vertex 38 of 136 bytes
-        assertEquals(62f, vertices.getFloat(62 * 80));
-        assertEquals(2f, vertices.getFloat(5168 + 2 * 136));
+        assertEquals(9112 + 3 * 136, vertices.remaining());
+        // The last sprite quad kept, the stroke vertices from vertex 67 of 136 bytes
+        assertEquals(62f, vertices.getFloat(62 * 4 * DrawBatch2D.VERTEX_BYTES));
+        assertEquals(2f, vertices.getFloat(9112 + 2 * 136));
         int[] indices = target.uploader.indexUploads.get(0);
-        assertArrayEquals(new int[]{38, 39, 40}, Arrays.copyOfRange(indices, indices.length - 3, indices.length));
+        assertArrayEquals(new int[]{67, 68, 69}, Arrays.copyOfRange(indices, indices.length - 3, indices.length));
     }
 
     // A value of the wrong kind, an index in the middle of a vertex, an end in the middle: refused
@@ -1092,7 +1201,7 @@ class DrawBatch2DTest {
         batch.endView();
 
         assertEquals(List.of("apply d", "instances dot 0 2", "applyInstanced i"), calls().subList(0, 3));
-        // The quad instance from byte 24: 24 / 52 is not a whole sprite instance, logged by the format below
+        // The quad instance from byte 24: 24 / 68 is not a whole sprite instance, logged by the format below
         assertEquals(2 * 12 + DrawBatch2D.INSTANCE_BYTES, target.uploader.instanceBytes.get(0).remaining());
         assertEquals(24, target.uploader.lastSpriteInstanceByte);
     }
@@ -1106,7 +1215,15 @@ class DrawBatch2DTest {
 
     // The same draw value by value, like vertex and index
     private void trianglesByValues(int state, Matrix4f model, float[] textures, float[] colors, int color) {
+        trianglesByValues(state, model, textures, colors, color, null);
+    }
+
+    // The same, limited to a region of the texture (textureRegion) when region is not null
+    private void trianglesByValues(int state, Matrix4f model, float[] textures, float[] colors, int color,
+                                   Vector4f region) {
         batch.beginDraw(state);
+        if (region != null)
+            batch.textureRegion(region.x, region.y, region.z, region.w);
         for (int i = 0; i < 4; ++i) {
             float x = TRIANGLE_POSITIONS[2 * i], y = TRIANGLE_POSITIONS[2 * i + 1];
             batch.vertex(model.m00() * x + model.m10() * y + model.m30(), model.m01() * x + model.m11() * y + model.m31(),
@@ -1137,6 +1254,38 @@ class DrawBatch2DTest {
         assertArrayEquals(target.uploader.indexUploads.get(0), target.uploader.indexUploads.get(1));
         assertEquals(List.of("apply a", "draw 0 18", "apply a", "draw 0 18"), draws());
         assertEquals(3, batch.lastFrameDraws());
+    }
+
+    private static final Vector4f TRIANGLE_REGION = new Vector4f(0.1f, 0.3f, 0.2f, 0.4f);
+
+    // Limited to a region: the bytes of the draw written value by value after textureRegion, in SPRITE and in another
+    // format of its values
+    @Test
+    void trianglesWithARegionAreTheDrawWrittenValueByValue() {
+        BatchFormat spriteValues = BatchFormat.builder("spriteValues")
+                .vertex("aPos", 2, EBatchAttributeType.FLOAT)
+                .vertex("inTexCoords", 2, EBatchAttributeType.FLOAT)
+                .vertex("inTexRegion", 4, EBatchAttributeType.FLOAT)
+                .vertex("inColor", 4, EBatchAttributeType.NORMALIZED_UBYTE)
+                .build();
+        Matrix4f model = new Matrix4f().translate(3, 4, 0).rotateZ(0.3f);
+        for (BatchFormat format : new BatchFormat[]{BatchFormats.SPRITE, spriteValues}) {
+            target.uploader.vertexBytes.clear();
+            target.uploader.regionUploads.clear();
+            int a = state("a", format);
+            trianglesByValues(a, model, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 0, TRIANGLE_REGION);
+            batch.endView();
+            batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 4, 0,
+                    TRIANGLE_INDICES, 6, TRIANGLE_REGION);
+            batch.endView();
+
+            assertEquals(target.uploader.vertexBytes.get(0), target.uploader.vertexBytes.get(1), format.name());
+            float[] regions = target.uploader.regionUploads.get(1);
+            for (int i = 0; i < 4; ++i) {
+                assertArrayEquals(new float[]{0.1f, 0.3f, 0.2f, 0.4f}, Arrays.copyOfRange(regions, 4 * i, 4 * i + 4),
+                        format.name());
+            }
+        }
     }
 
     // An index outside of the vertices: refused, nothing written, the batch goes on
@@ -1199,6 +1348,7 @@ class DrawBatch2DTest {
         BatchFormat spriteValues = BatchFormat.builder("spriteValues")
                 .vertex("aPos", 2, EBatchAttributeType.FLOAT)
                 .vertex("inTexCoords", 2, EBatchAttributeType.FLOAT)
+                .vertex("inTexRegion", 4, EBatchAttributeType.FLOAT)
                 .vertex("inColor", 4, EBatchAttributeType.NORMALIZED_UBYTE)
                 .build();
         int b = state("b", spriteValues);
@@ -1226,7 +1376,7 @@ class DrawBatch2DTest {
             int a = state("a");
             for (int i = 0; i < 2000; ++i)
                 batch.triangles(a, 0, 0f, model, TRIANGLE_POSITIONS, TRIANGLE_TEXTURES, TRIANGLE_COLORS, 4, 0,
-                        TRIANGLE_INDICES, 6);
+                        TRIANGLE_INDICES, 6, i % 2 == 0 ? TRIANGLE_REGION : null);
             long allocated = threads.getThreadAllocatedBytes(thread) - before;
             batch.endView();
             target.uploader.vertexUploads.clear();

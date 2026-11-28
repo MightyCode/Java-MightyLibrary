@@ -16,27 +16,36 @@ class BatchFormatTest {
             .template(null, new int[]{0, 3, 2, 0, 2, 1})
             .build();
 
-    // The sprite format is the fixed format of before: 20 bytes, color at 16
+    // The sprite format: position, texture coordinates, region of the texture (4 floats at 16), color at 32
     @Test
     void theSpriteFormatIsTheFixedOne() {
         BatchFormat sprite = BatchFormats.SPRITE;
-        assertEquals(20, sprite.vertexBytes());
-        assertEquals(20, DrawBatch2D.VERTEX_BYTES);
+        assertEquals(36, sprite.vertexBytes());
+        assertEquals(36, DrawBatch2D.VERTEX_BYTES);
         assertEquals(0, sprite.instanceBytes());
         assertFalse(sprite.hasInstances());
-        assertEquals(16, sprite.attribute("inColor").offset());
-        assertEquals(2, sprite.attribute("inColor").location());
-        // Two floats, two floats, one color
-        assertEquals(5, sprite.slotsPerVertex());
+        assertEquals(16, sprite.attribute("inTexRegion").offset());
+        assertEquals(4, sprite.attribute("inTexRegion").components());
+        assertEquals(2, sprite.attribute("inTexRegion").location());
+        assertEquals(32, sprite.attribute("inColor").offset());
+        assertEquals(3, sprite.attribute("inColor").location());
+        // Two floats, two floats, four floats, one color
+        assertEquals(9, sprite.slotsPerVertex());
+        assertTrue(sprite.hasSpriteValues());
     }
 
+    // The instance of a quad: its region at 48 (one per instance), its color at 64
     @Test
     void theInstancedSpriteFormatIsTheFixedOne() {
         BatchFormat instanced = BatchFormats.SPRITE_INSTANCED;
-        assertEquals(52, instanced.instanceBytes());
-        assertEquals(52, DrawBatch2D.INSTANCE_BYTES);
+        assertEquals(68, instanced.instanceBytes());
+        assertEquals(68, DrawBatch2D.INSTANCE_BYTES);
         assertEquals(8, instanced.vertexBytes());
-        assertEquals(48, instanced.attribute("aColor").offset());
+        assertEquals(48, instanced.attribute("aTexRegion").offset());
+        assertTrue(instanced.attribute("aTexRegion").perInstance());
+        assertEquals(5, instanced.attribute("aTexRegion").location());
+        assertEquals(64, instanced.attribute("aColor").offset());
+        assertEquals(6, instanced.attribute("aColor").location());
         assertEquals(4, instanced.templateVertexCount());
         assertArrayEquals(new int[]{0, 3, 2, 0, 2, 1}, instanced.templateIndices());
     }
@@ -122,7 +131,8 @@ class BatchFormatTest {
     @Test
     void aMatchingProgramReadsTheFormat() {
         assertNull(BatchFormats.SPRITE.check(List.of(
-                new ShaderAttribute("inColor", 2, ShaderAttribute.GL_FLOAT_VEC4),
+                new ShaderAttribute("inColor", 3, ShaderAttribute.GL_FLOAT_VEC4),
+                new ShaderAttribute("inTexRegion", 2, ShaderAttribute.GL_FLOAT_VEC4),
                 new ShaderAttribute("aPos", 0, ShaderAttribute.GL_FLOAT_VEC2),
                 new ShaderAttribute("inTexCoords", 1, ShaderAttribute.GL_FLOAT_VEC2))));
         // Unused attributes removed by the compiler, built-in inputs

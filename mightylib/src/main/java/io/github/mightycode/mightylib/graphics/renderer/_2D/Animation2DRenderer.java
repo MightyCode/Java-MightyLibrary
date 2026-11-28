@@ -22,6 +22,8 @@ public final class Animation2DRenderer extends MeshRenderer {
     private String currentTextureName;
     private final int positionIndex;
     private final int textureIndex;
+    private final int regionIndex;
+    // The edges of the frame (left, right, top, bottom): its texture coordinates before the flips, and its region
     private final Vector4f texturePosition;
 
     private final Vector2f animationScale;
@@ -33,6 +35,8 @@ public final class Animation2DRenderer extends MeshRenderer {
     // What the mesh has, kept on the CPU for the batched draws
     private float[] positions;
     private final float[] textures;
+    // The region of each vertex (the frame, 4 floats each), for the draw alone (texture2D)
+    private final float[] regions = new float[16];
     // Box of the positions (view culling), reused
     private final float[] cullBox = new float[4];
     // Reused by each frame change (no allocation)
@@ -58,6 +62,8 @@ public final class Animation2DRenderer extends MeshRenderer {
         texturePos(textures);
         positionIndex = getMesh().addVboFloat(positions, 2, Mesh.DYNAMIC_STORE);
         textureIndex = getMesh().addVboFloat(textures, 2, Mesh.DYNAMIC_STORE);
+        regionsOfFrame();
+        regionIndex = getMesh().addVboFloat(Mesh.COMMON_TEXTURE_REGION_CHANNEL, regions, 4, Mesh.DYNAMIC_STORE);
 
         referencePosition = new Vector2f();
 
@@ -178,9 +184,22 @@ public final class Animation2DRenderer extends MeshRenderer {
     private void updateTextures() {
         texturePos(textures);
         getMesh().updateVbo(textures, textureIndex);
+        regionsOfFrame();
+        getMesh().updateVbo(regions, regionIndex);
     }
 
-    // Batched like a sprite when its shader has a batch equivalent and its depth test is off (see Renderer)
+    // The region of the 4 vertices: the frame, whatever the flips
+    private void regionsOfFrame() {
+        for (int vertex = 0; vertex < 4; ++vertex) {
+            regions[4 * vertex] = texturePosition.x;
+            regions[4 * vertex + 1] = texturePosition.y;
+            regions[4 * vertex + 2] = texturePosition.z;
+            regions[4 * vertex + 3] = texturePosition.w;
+        }
+    }
+
+    // Batched like a sprite when its shader has a batch equivalent and its depth test is off (see Renderer), read
+    // only inside its frame
     @Override
     protected boolean submitToBatch(DrawBatch2D batch) {
         if (!BatchGeometry2D.CanBatch(isDepthTest(), getMesh().getDrawMode()))
@@ -195,7 +214,7 @@ public final class Animation2DRenderer extends MeshRenderer {
         int state = batchState(place);
 
         BatchGeometry2D.WriteTriangles(batch, state, getLayer(), getSortDepth(), modelMatrix(), positions, textures,
-                positions.length / 2, batchColor(), INDICES, INDICES.length);
+                null, positions.length / 2, batchColor(), INDICES, INDICES.length, texturePosition);
         return true;
     }
 

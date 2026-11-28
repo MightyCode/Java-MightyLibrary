@@ -3,6 +3,7 @@ package io.github.mightycode.mightylib.graphics.renderer._2D.batch.internal;
 import io.github.mightycode.mightylib.graphics.renderer._2D.batch.DrawBatch2D;
 import io.github.mightycode.mightylib.graphics.renderer.utils.EDrawMode;
 import org.joml.Matrix4fc;
+import org.joml.Vector4fc;
 
 /**
  * The geometry of the renderers written in the 2D batch: which can be, and their vertices transformed on the CPU by
@@ -59,9 +60,20 @@ public final class BatchGeometry2D {
     public static void WriteTriangles(DrawBatch2D batch, int state, int layer, float depth, Matrix4fc model,
                                       float[] positions, float[] textures, float[] colors, int vertexCount,
                                       int color, int[] indices, int indexCount) {
+        WriteTriangles(batch, state, layer, depth, model, positions, textures, colors, vertexCount, color, indices,
+                indexCount, null);
+    }
+
+    /**
+     * Same, the texture read only inside region (left, right, top, bottom in x, y, z, w: DrawBatch2D.textureRegion;
+     * null for no limit).
+     */
+    public static void WriteTriangles(DrawBatch2D batch, int state, int layer, float depth, Matrix4fc model,
+                                      float[] positions, float[] textures, float[] colors, int vertexCount,
+                                      int color, int[] indices, int indexCount, Vector4fc region) {
         // Checked once for the draw, written at once (DrawBatch2D.triangles)
         batch.triangles(state, layer, depth, model, positions, textures, colors, vertexCount, color, indices,
-                indexCount);
+                indexCount, region);
     }
 
     /**

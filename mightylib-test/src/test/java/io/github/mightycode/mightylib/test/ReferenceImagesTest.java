@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 // The series of reference images in a temporary folder: missing, required, image missing, difference, update
 class ReferenceImagesTest {
-    private static final String KEY = "linux-mesa-llvmpipe-intel";
+    private static final String KEY = "linux-mesa-llvmpipe";
 
     @TempDir
     Path folder;

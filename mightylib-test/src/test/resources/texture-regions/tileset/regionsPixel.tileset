@@ -1,0 +1,3 @@
+texture regionsPixel
+tilesize 3 5
+parameter false false

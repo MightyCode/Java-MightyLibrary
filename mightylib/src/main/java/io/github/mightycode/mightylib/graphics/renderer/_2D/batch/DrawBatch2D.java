@@ -44,14 +44,17 @@ import static org.apiguardian.api.API.Status.INTERNAL;
  * <p>
  * Low level, for a renderer of its own: beginDraw with a state, then its values in the order of the attributes of its
  * format (put, putInt, putColor: each vertex, or each instance for a format with instances, is complete once its
- * last attribute is written; vertex writes one of BatchFormats.SPRITE), the indices of its triangles (index, formats
- * without instances), endDraw (or quad).
+ * last attribute is written; vertex writes one of BatchFormats.SPRITE, limited to the textureRegion of the draw),
+ * the indices of its triangles (index, formats without instances), endDraw (or quad).
  * <p>
  * View culling: a draw whose box is wholly outside the view of the camera of its state is not written (isCulled,
  * asked by the renderers and the drawing without renderer before they write). Main thread only.
  */
 public final class DrawBatch2D {
-    /** Bytes of a vertex of BatchFormats.SPRITE: position (2 floats, transformed), texture coordinates, color. */
+    /**
+     * Bytes of a vertex of BatchFormats.SPRITE: position (2 floats, transformed), texture coordinates, region of the
+     * texture (4 floats), color.
+     */
     public static final int VERTEX_BYTES = BatchFormats.SPRITE.vertexBytes();
     /** Bytes of an instance of BatchFormats.SPRITE_INSTANCED (mode INSTANCED: quads of sprites as instances). */
     public static final int INSTANCE_BYTES = BatchFormats.SPRITE_INSTANCED.instanceBytes();
@@ -111,6 +114,9 @@ public final class DrawBatch2D {
     // Formats with instances: the byte of its first instance, its instances
     private int drawFirstInstanceByte;
     private int drawInstanceCount;
+    // Region of the texture written by vertex (left, right, top, bottom; no limit when right <= left), no limit at
+    // each beginDraw
+    private float regionLeft, regionRight, regionTop, regionBottom;
 
     // Draws of the segment
     private int drawCount;
@@ -250,6 +256,7 @@ public final class DrawBatch2D {
         drawState = state;
         drawLayer = layer;
         drawDepth = depth;
+        regionLeft = regionRight = regionTop = regionBottom = 0f;
         BatchFormat format = table.formatOf(state);
         if (format != drawFormat) {
             drawFormat = format;
@@ -373,9 +380,25 @@ public final class DrawBatch2D {
     }
 
     /**
+     * The region of the texture the next vertices of the draw are limited to (written by vertex), in texture
+     * coordinates, min then max even for a flipped draw: the batch shader reads only inside it (the outer rows and
+     * columns of the region whole, never a texel of a neighbor region). No limit when right <= left, the region of
+     * each new draw (beginDraw). Several regions in one draw: each vertex has the region set before it.
+     */
+    public void textureRegion(float left, float right, float top, float bottom) {
+        if (!inDraw)
+            throw new IllegalStateException("textureRegion outside of beginDraw and endDraw");
+
+        regionLeft = left;
+        regionRight = right;
+        regionTop = top;
+        regionBottom = bottom;
+    }
+
+    /**
      * A vertex of a draw in BatchFormats.SPRITE (or a format with the same values): position (transformed: world
      * units of the camera of the state), texture coordinates, and color as RGBA in an int (Color4f.toIntRGBA),
-     * multiplied with the texture by the batch shader.
+     * multiplied with the texture by the batch shader; limited to the textureRegion of the draw.
      */
     public void vertex(float x, float y, float u, float v, int rgba) {
         if (!inDraw)
@@ -390,12 +413,17 @@ public final class DrawBatch2D {
             vertices.putFloat(at + 4, y);
             vertices.putFloat(at + 8, u);
             vertices.putFloat(at + 12, v);
+            vertices.putFloat(at + 16, regionLeft);
+            vertices.putFloat(at + 20, regionRight);
+            vertices.putFloat(at + 24, regionTop);
+            vertices.putFloat(at + 28, regionBottom);
             // In memory R, G, B, A: read as 4 normalized bytes
-            vertices.putInt(at + 16, LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba);
+            vertices.putInt(at + 32, LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba);
             vertexBytes += VERTEX_BYTES;
             ++drawVertexCount;
         } else {
             put(x, y, u, v);
+            put(regionLeft, regionRight, regionTop, regionBottom);
             putColor(rgba);
         }
     }
@@ -476,7 +504,7 @@ public final class DrawBatch2D {
 
     /**
      * A quad of this state (BatchFormats.SPRITE): its corners in order around it (triangles 0 3 2 and 0 2 1, like
-     * RectangularFace), each with its texture coordinates, one color.
+     * RectangularFace), each with its texture coordinates, one color; the texture not limited to a region.
      */
     public void quad(int state, int layer, float depth,
                      float x0, float y0, float u0, float v0,
@@ -484,7 +512,18 @@ public final class DrawBatch2D {
                      float x2, float y2, float u2, float v2,
                      float x3, float y3, float u3, float v3,
                      int rgba) {
+        quad(state, layer, depth, x0, y0, u0, v0, x1, y1, u1, v1, x2, y2, u2, v2, x3, y3, u3, v3, rgba, 0f, 0f, 0f, 0f);
+    }
+
+    /** The same quad limited to a region of the texture (textureRegion: left, right, top, bottom). */
+    public void quad(int state, int layer, float depth,
+                     float x0, float y0, float u0, float v0,
+                     float x1, float y1, float u1, float v1,
+                     float x2, float y2, float u2, float v2,
+                     float x3, float y3, float u3, float v3,
+                     int rgba, float regionLeft, float regionRight, float regionTop, float regionBottom) {
         beginDraw(state, layer, depth);
+        textureRegion(regionLeft, regionRight, regionTop, regionBottom);
         vertex(x0, y0, u0, v0, rgba);
         vertex(x1, y1, u1, v1, rgba);
         vertex(x2, y2, u2, v2, rgba);
@@ -497,9 +536,10 @@ public final class DrawBatch2D {
     /**
      * One draw of triangles at once (the draws of the renderers of the engine): vertexCount vertices, their positions
      * by pairs transformed by model, their texture coordinates by pairs (null: 0, 0, the white texture), their colors
-     * as RGBA floats in 0..1 by 4 (null: color, RGBA in an int, for all), then indexCount indices of these vertices.
+     * as RGBA floats in 0..1 by 4 (null: color, RGBA in an int, for all), then indexCount indices of these vertices;
+     * the texture not limited to a region.
      * Checked once for the whole draw; in BatchFormats.SPRITE written straight in the buffers, in another format of the
-     * same values (x, y, u, v, color) value by value like vertex.
+     * same values (x, y, u, v, region, color) value by value like vertex.
      * @throws IllegalArgumentException an index outside of the vertices, arrays too short, or a state whose format has
      * other values or instances (nothing written)
      * @throws IllegalStateException in the middle of another draw
@@ -507,6 +547,18 @@ public final class DrawBatch2D {
     @API(status = INTERNAL)
     public void triangles(int state, int layer, float depth, Matrix4fc model, float[] positions, float[] textures,
                           float[] colors, int vertexCount, int color, int[] triangleIndices, int indexCount) {
+        triangles(state, layer, depth, model, positions, textures, colors, vertexCount, color, triangleIndices,
+                indexCount, null);
+    }
+
+    /**
+     * The same draw limited to a region of the texture: left, right, top, bottom in its x, y, z, w (textureRegion),
+     * null for no limit.
+     */
+    @API(status = INTERNAL)
+    public void triangles(int state, int layer, float depth, Matrix4fc model, float[] positions, float[] textures,
+                          float[] colors, int vertexCount, int color, int[] triangleIndices, int indexCount,
+                          Vector4fc region) {
         if (vertexCount < 0 || indexCount < 0 || positions.length < 2 * vertexCount
                 || (textures != null && textures.length < 2 * vertexCount)
                 || (colors != null && colors.length < 4 * vertexCount) || triangleIndices.length < indexCount)
@@ -523,11 +575,19 @@ public final class DrawBatch2D {
         }
         float m00 = model.m00(), m10 = model.m10(), m30 = model.m30();
         float m01 = model.m01(), m11 = model.m11(), m31 = model.m31();
+        float left = 0f, right = 0f, top = 0f, bottom = 0f;
+        if (region != null) {
+            left = region.x();
+            right = region.y();
+            top = region.z();
+            bottom = region.w();
+        }
         if (drawFormat != BatchFormats.SPRITE) {
             for (int i = 0; i < vertexCount; ++i) {
                 float x = positions[2 * i], y = positions[2 * i + 1];
                 put(m00 * x + m10 * y + m30, m01 * x + m11 * y + m31, textures == null ? 0f : textures[2 * i],
                         textures == null ? 0f : textures[2 * i + 1]);
+                put(left, right, top, bottom);
                 putColor(colors == null ? color : BatchGeometry2D.PackRGBA(colors, 4 * i));
             }
         } else {
@@ -544,12 +604,16 @@ public final class DrawBatch2D {
                 out.putFloat(at + 4, m01 * x + m11 * y + m31);
                 out.putFloat(at + 8, textures == null ? 0f : textures[2 * i]);
                 out.putFloat(at + 12, textures == null ? 0f : textures[2 * i + 1]);
+                out.putFloat(at + 16, left);
+                out.putFloat(at + 20, right);
+                out.putFloat(at + 24, top);
+                out.putFloat(at + 28, bottom);
                 if (colors != null) {
                     int rgba = BatchGeometry2D.PackRGBA(colors, 4 * i);
                     packed = LITTLE_ENDIAN ? Integer.reverseBytes(rgba) : rgba;
                 }
                 // In memory R, G, B, A: read as 4 normalized bytes
-                out.putInt(at + 16, packed);
+                out.putInt(at + 32, packed);
             }
             vertexBytes = at;
             drawVertexCount = vertexCount;
@@ -771,7 +835,8 @@ public final class DrawBatch2D {
      * A rectangle of the main texture of the material (the texture a texture shader reads; colorShape2D reads
      * none: a colored rectangle), like a RectangleRenderer: size in world units, its reference point (0 to 1 of its
      * size, 0 0 for the top left corner) placed at position, turned by rotation (radians) around it, the part of
-     * the texture region (u0, v0, u1, v1 in its x, y, z, w; null for the whole texture), flipped like
+     * the texture region (u0, v0, u1, v1 in its x, y, z, w, read only inside it like
+     * RectangleRenderer.setTextureRegion; null for the whole texture, without limit), flipped like
      * RectangleRenderer.setTextureFlip, multiplied by color (null for white). False when the material can't be
      * batched now (nothing drawn); true when drawn, or culled (outside the view: nothing written).
      */
@@ -795,6 +860,9 @@ public final class DrawBatch2D {
 
         float u0 = region == null ? 0 : region.x(), v0 = region == null ? 0 : region.y();
         float u1 = region == null ? 1 : region.z(), v1 = region == null ? 1 : region.w();
+        // Read only inside the region (the whole texture: no limit, a repeated texture stays possible)
+        float limitLeft = region == null ? 0 : Math.min(u0, u1), limitRight = region == null ? 0 : Math.max(u0, u1);
+        float limitTop = Math.min(v0, v1), limitBottom = Math.max(v0, v1);
         // Like RectangularFace: a flip is named by its axis, Horizontal mirrors the rows (v), Vertical the columns (u)
         if (flip == EFlip.Horizontal || flip == EFlip.HorizontalVertical) {
             float v = v0;
@@ -822,7 +890,7 @@ public final class DrawBatch2D {
                 wx1, wy1, u0, v0,
                 wx2, wy2, u1, v0,
                 wx3, wy3, u1, v1,
-                color == null ? -1 : color.toIntRGBA());
+                color == null ? -1 : color.toIntRGBA(), limitLeft, limitRight, limitTop, limitBottom);
         drawnOutsideRenderer();
         return true;
     }
@@ -1043,6 +1111,7 @@ public final class DrawBatch2D {
      * Mode INSTANCED: the runs of BatchFormats.SPRITE whose state has an instanced program of
      * BatchFormats.SPRITE_INSTANCED and whose triangles are all quads (groups of 6 indices b+0 3 2 0 2 1, like quad:
      * whatever draws they come from, they draw the quad of the vertices b to b+3) that are parallelograms of one color
+     * and one region of the texture
      * get their instances, written from byte at of the drawn instances (runInstanceFirsts, -1 for the others).
      * Returns the bytes of the drawn instances after them.
      */
@@ -1088,7 +1157,8 @@ public final class DrawBatch2D {
         return instances;
     }
 
-    // The quad of the 6 indices at index as an instance at byte at (affine position, affine texture coordinates, color)
+    // The quad of the 6 indices at index as an instance at byte at (affine position, affine texture coordinates,
+    // region, color)
     private boolean writeInstance(IntBuffer drawn, int index, ByteBuffer target, int at) {
         int base = drawn.get(index);
         for (int i = 0; i < 6; ++i) {
@@ -1097,10 +1167,17 @@ public final class DrawBatch2D {
         }
 
         int a0 = base * VERTEX_BYTES, a1 = a0 + VERTEX_BYTES, a2 = a1 + VERTEX_BYTES, a3 = a2 + VERTEX_BYTES;
-        int color = vertices.getInt(a1 + 16);
-        if (vertices.getInt(a0 + 16) != color || vertices.getInt(a2 + 16) != color
-                || vertices.getInt(a3 + 16) != color)
+        int color = vertices.getInt(a1 + 32);
+        if (vertices.getInt(a0 + 32) != color || vertices.getInt(a2 + 32) != color
+                || vertices.getInt(a3 + 32) != color)
             return false;
+        // One region for the 4 corners (the same bits): an instance has one
+        for (int offset = 16; offset < 32; offset += 4) {
+            int region = vertices.getInt(a1 + offset);
+            if (vertices.getInt(a0 + offset) != region || vertices.getInt(a2 + offset) != region
+                    || vertices.getInt(a3 + offset) != region)
+                return false;
+        }
 
         // Corner (0, 0) of the unit quad is vertex 1, its axes go to vertex 2 (x) and vertex 0 (y)
         float x1 = vertices.getFloat(a1), y1 = vertices.getFloat(a1 + 4);
@@ -1125,7 +1202,9 @@ public final class DrawBatch2D {
         target.putFloat(at + 12, xy).putFloat(at + 16, yy).putFloat(at + 20, y1);
         target.putFloat(at + 24, u1).putFloat(at + 28, v1);
         target.putFloat(at + 32, ux).putFloat(at + 36, vx).putFloat(at + 40, uy).putFloat(at + 44, vy);
-        target.putInt(at + 48, color);
+        target.putInt(at + 48, vertices.getInt(a1 + 16)).putInt(at + 52, vertices.getInt(a1 + 20))
+                .putInt(at + 56, vertices.getInt(a1 + 24)).putInt(at + 60, vertices.getInt(a1 + 28));
+        target.putInt(at + 64, color);
         return true;
     }
 

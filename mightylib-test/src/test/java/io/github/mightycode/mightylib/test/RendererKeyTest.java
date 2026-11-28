@@ -4,36 +4,21 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// The key of the series of reference images, from real GL_VENDOR / GL_RENDERER strings and processors
+// The key of the series of reference images, from real GL_VENDOR / GL_RENDERER strings
 class RendererKeyTest {
-    private static final String INTEL = "GenuineIntel";
-    private static final String AMD = "AuthenticAMD";
-
-    // A driver of a graphic card: the processor is not part of the key
     private static String hardware(String os, String vendor, String renderer) {
-        String key = RendererKey.of(os, vendor, renderer, INTEL);
-        assertEquals(key, RendererKey.of(os, vendor, renderer, AMD), "the processor changed the key");
-        return key;
+        return RendererKey.of(os, vendor, renderer);
     }
 
+    // One series per software driver, whatever the processor (a run of the CI on any runner gives it)
     @Test
-    void softwareRenderersNameTheMakerOfTheProcessor() {
-        assertEquals("linux-mesa-llvmpipe-intel", RendererKey.of("Linux", "Mesa", "llvmpipe (LLVM 15.0.7, 256 bits)",
-                INTEL));
-        assertEquals("linux-mesa-llvmpipe-amd", RendererKey.of("Linux", "Mesa", "llvmpipe (LLVM 20.1.2, 128 bits)",
-                AMD));
-        assertEquals("linux-mesa-llvmpipe-amd", RendererKey.of("Linux", "Mesa/X.org", "llvmpipe (LLVM 12.0.0, 256 bits)",
-                AMD));
-        assertEquals("linux-mesa-softpipe-intel", RendererKey.of("Linux", "Mesa", "softpipe", INTEL));
-        // PROCESSOR_IDENTIFIER of Windows: "AMD64" is the architecture of Intel processors too
-        assertEquals("windows-mesa-llvmpipe-intel", RendererKey.of("Windows 11", "Mesa", "llvmpipe (LLVM 17.0.6, 256 bits)",
-                "Intel64 Family 6 Model 158 Stepping 10, GenuineIntel"));
-        assertEquals("windows-mesa-llvmpipe-amd", RendererKey.of("Windows 11", "Mesa", "llvmpipe (LLVM 17.0.6, 256 bits)",
-                "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD"));
-        // Without vendor id: the architecture
-        assertEquals("linux-mesa-llvmpipe-arm", RendererKey.of("Linux", "Mesa", "llvmpipe (LLVM 15.0.7, 128 bits)",
-                "aarch64"));
-        assertEquals("linux-mesa-llvmpipe-unknown", RendererKey.of("Linux", "Mesa", "llvmpipe", null));
+    void softwareRenderersHaveOneKeyWhateverTheProcessor() {
+        assertEquals("linux-mesa-llvmpipe", RendererKey.of("Linux", "Mesa", "llvmpipe (LLVM 15.0.7, 256 bits)"));
+        assertEquals("linux-mesa-llvmpipe", RendererKey.of("Linux", "Mesa", "llvmpipe (LLVM 20.1.2, 128 bits)"));
+        assertEquals("linux-mesa-llvmpipe", RendererKey.of("Linux", "Mesa/X.org", "llvmpipe (LLVM 12.0.0, 256 bits)"));
+        assertEquals("linux-mesa-llvmpipe", RendererKey.of("Linux", "Mesa", "lavapipe"));
+        assertEquals("linux-mesa-softpipe", RendererKey.of("Linux", "Mesa", "softpipe"));
+        assertEquals("windows-mesa-llvmpipe", RendererKey.of("Windows 11", "Mesa", "llvmpipe (LLVM 17.0.6, 256 bits)"));
     }
 
     @Test
@@ -66,16 +51,16 @@ class RendererKeyTest {
     void anUnknownDriverIsItsVendorReduced() {
         assertEquals("windows-microsoft-corporation", hardware("Windows 11", "Microsoft Corporation", "GDI Generic"));
         assertEquals("freebsd-unknown", hardware("FreeBSD", "", ""));
-        assertEquals("unknown-unknown", RendererKey.of(null, null, null, null));
+        assertEquals("unknown-unknown", RendererKey.of(null, null, null));
     }
 
     @Test
     void thePropertyReplacesTheKey() {
-        assertEquals("linux-mesa-llvmpipe-amd", RendererKey.resolve(" linux-mesa-llvmpipe-amd ", "Windows 11",
-                "NVIDIA Corporation", "NVIDIA GeForce RTX 3070/PCIe/SSE2", INTEL));
-        assertEquals("windows-nvidia", RendererKey.resolve("", "Windows 11", "NVIDIA Corporation", "GeForce", INTEL));
-        assertEquals("windows-nvidia", RendererKey.resolve(null, "Windows 11", "NVIDIA Corporation", "GeForce", INTEL));
-        assertThrows(IllegalStateException.class, () -> RendererKey.resolve("Linux Mesa", "Linux", "", "", INTEL));
-        assertThrows(IllegalStateException.class, () -> RendererKey.resolve("../linux", "Linux", "", "", INTEL));
+        assertEquals("linux-mesa-llvmpipe", RendererKey.resolve(" linux-mesa-llvmpipe ", "Windows 11",
+                "NVIDIA Corporation", "NVIDIA GeForce RTX 3070/PCIe/SSE2"));
+        assertEquals("windows-nvidia", RendererKey.resolve("", "Windows 11", "NVIDIA Corporation", "GeForce"));
+        assertEquals("windows-nvidia", RendererKey.resolve(null, "Windows 11", "NVIDIA Corporation", "GeForce"));
+        assertThrows(IllegalStateException.class, () -> RendererKey.resolve("Linux Mesa", "Linux", "", ""));
+        assertThrows(IllegalStateException.class, () -> RendererKey.resolve("../linux", "Linux", "", ""));
     }
 }

@@ -215,12 +215,12 @@ class AnimationTest {
         Animation animation = walk(false);
         animation.update(FIRST + SECOND);
 
-        // Frame 16,0,8,16 of a sheet of 32 x 16, half a texel inside each side
+        // Frame 16,0,8,16 of a sheet of 32 x 16, its exact edges
         Vector4f position = animation.currentTexturePosition();
-        assertEquals(16.5f / SHEET_WIDTH, position.x, 1e-6f);
-        assertEquals(23.5f / SHEET_WIDTH, position.y, 1e-6f);
-        assertEquals(0.5f / SHEET_HEIGHT, position.z, 1e-6f);
-        assertEquals(15.5f / SHEET_HEIGHT, position.w, 1e-6f);
+        assertEquals(16f / SHEET_WIDTH, position.x, 1e-6f);
+        assertEquals(24f / SHEET_WIDTH, position.y, 1e-6f);
+        assertEquals(0f, position.z, 1e-6f);
+        assertEquals(1f, position.w, 1e-6f);
 
         assertEquals(new Vector2i(8, 16), animation.getFrameSize());
         assertEquals(new Vector2i(5, 6), animation.currentHotPoint());
