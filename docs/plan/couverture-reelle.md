@@ -177,3 +177,28 @@ Aucune nouvelle scène prévue. Si une zone ne peut être testée qu'avec une sc
 ### Discussion B — relecture, PR, fusion (`/pr-ml feature/real-coverage`)
 - Le skill `/pr-ml` décrit tout le processus : relecture du diff par rapport à `dev` au regard de ce plan et de son « Bilan », discussion des erreurs, corrections, docs (dont la suppression de ce plan), PR vers `dev`, fusion, retour sur `dev` à jour.
 - Vérifications manuelles à faire, reprises du « Bilan » : `tools/coverage.py` (défaut et `--quick`) sur la machine de l'utilisateur, le résumé du job et l'artefact `coverage` du CI.
+
+## Bilan
+
+### Étapes 2 à 4 (rapport agrégé, `coverage.py`, CI)
+- **Écart au plan : agrégation dans un module `coverage/`, pas dans `demo`.** `report-aggregate` lit l'exécution de toutes les dépendances (portée `test` comprise) mais ne rapporte que les classes des dépendances `compile`/`runtime`/`provided` : depuis la démo, le kit (portée `test`) manquait au rapport. Déclarer le kit en `compile` ou `provided` dans un profil de la démo aurait fait perdre au CI (qui tourne sous `-P coverage`) la vérification que le code principal de la démo n'utilise pas le kit. Le module `coverage` (`mightylib-coverage`, `pom`) n'est déclaré que dans le profil `coverage` du pom racine : il dépend de la bibliothèque et du kit en `compile` et de la démo en `test`. Rapport : `coverage/target/site/jacoco-aggregate/`.
+- La version de JaCoCo est passée dans le `pluginManagement` de `base-parent` (la démo n'hérite pas du pom racine).
+- Aucune exclusion gardée : `main/monitors` est exécuté par les tests GL (41 %).
+- Vérifié : `mvn -o -P coverage test` et `verify` verts (1458 + 122 + 95 tests, seuls les bancs sautés), tests d'allocation et images de référence compris ; rapport avec les groupes `mightylib` et `mightylib-test`, sans `mightylibdemo`. `coverage.py` : défaut, `--quick`, `--no-run`, `--classes`, `--lines`, `--markdown`, `--check` (échoue avec un plancher à 99), `--from-ci 46140564806`. CI du commit `46edc06f` vert, artefact `coverage` (3 Mo, HTML, XML, CSV).
+- Plancher : 82 (CI : 82,15 % des lignes, 22688/27618).
+- `--quick` redonne les anciens chiffres par paquet ; son total passe de 59 % à 56 % parce que le code GL n'est plus exclu du dénominateur.
+
+| Paquet (lignes) | Avant (`--quick`, 2026-11-26) | Après (tout, CI) |
+|---|--:|--:|
+| `scenes` | 14 % | 91 % |
+| `scenes/camera` | 31 % | 89 % |
+| `scenes/camera/cameraComponents` | 1 % | 87 % |
+| `graphics/game` | 14 % | 94 % |
+| `graphics/gui` | 35 % | 81 % |
+| `graphics/text` | 45 % | 88 % |
+| `resources/models` | 9 % | 82 % |
+| `network` | 12 % | 16 % |
+| kit `mightylib-test` | – | 86 % |
+| Total | 59 % | 82 % |
+
+- À vérifier à la main : le tableau dans le résumé du job du CI (non lisible par `gh`).
